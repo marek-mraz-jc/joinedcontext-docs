@@ -15,17 +15,20 @@ The Portal REST API provides administrative and platform management capabilities
 
 ## 2. Error Response Format (RFC 7807)
 
-All errors return `application/problem+json`:
+An error answers `application/problem+json` (`joinedcontext-portal/src/error.rs`):
 
 ```json
 {
   "type": "https://joinedcontext.com/errors/resource-not-found",
   "title": "Resource Not Found",
   "status": 404,
-  "detail": "ContextSpace 'mobility-traffic' does not exist in project 'city-center'",
-  "instance": "/api/v1/projects/city-center/spaces/mobility-traffic"
+  "detail": "ContextSpace 'mobility-traffic' does not exist in project 'city-center'"
 }
 ```
+
+`type`, `title` and `status` are always there; `detail` is the one sentence a page shows as it is.
+No route sets `instance`: the member stays absent rather than repeating the URL the caller just
+called.
 
 One optional member is added to RFC 7807's own: `errors`, a list of strings, present when a single
 request violated more than one rule and the caller can act on all of them at once. A form marks
@@ -45,6 +48,34 @@ something to show.
   ]
 }
 ```
+
+`type` is `https://joinedcontext.com/errors/{slug}`, and the slug is what a client branches on:
+
+| Slug | Status | What it means |
+|---|---|---|
+| `invalid-request` | 400 | the body or a parameter is wrong; `errors` carries every violation at once |
+| `unauthorized` | 401 | no live session and no accepted bearer token |
+| `forbidden` | 403 | the verb the caller's bindings lack, named in `detail` (PF-50) |
+| `self-approval` | 403 | the author of a proposal approving their own (CC-41) |
+| `resource-not-found` | 404 | not there, or not readable by this caller: one answer for both (R20) |
+| `conflict` | 409 | the state moved under the request, or a name is taken |
+| `unsupported-media-type` | 415 | a `PATCH` whose content type is neither patch type of section 4 |
+| `not-implemented` | 501 | the route exists and this form of it does not, such as `?revision=` on a list |
+| `service-unavailable` | 503 | a tier the route needs did not answer: the forge, the database, Model Tools, a runner |
+| `internal-error` | 500 | anything else; `detail` says nothing about the cause |
+| `rate-limit-exceeded` | 429 | the basemap proxy's own bucket, with the limit in `detail` |
+
+Three answers carry a JSON document of their own instead of a problem, all `application/json`:
+
+- the verdict gate's `409` (sections 4 and 21): `error`, `check`, `reason`, `detail`;
+- the routes the operations registry answers directly, `POST …/ops/{name}` and the draft routes
+  of section 4: `403 {"error": "forbidden", "role": …}`,
+  `422 {"error": "invalid_input", "path": …, "message": …}` and
+  `409 {"error": "draft_conflict", "current": …}` (`joinedcontext-portal/src/ops/mod.rs`);
+- `POST /api/v1/mcp`, which answers JSON-RPC errors because its clients read that shape
+  (section 21).
+
+A client that reads the status code and then `type` or `error` handles all of them.
 
 ## 3. Session and Identity (CC-40, CC-42)
 
@@ -87,13 +118,15 @@ authorization code flow with PKCE runs server-side and the result is an encrypte
 Every configuration kind is also served as a resource collection under the same `/api/v1` prefix as the rest of the Portal API (no Kubernetes-style group path in URLs; `apiVersion`/`kind` live only inside the manifest body):
 
 ```text
-GET    /api/v1/projects/{project}/{plural}            list (labelSelector, fieldSelector, limit, continue, revision)
+GET    /api/v1/projects/{project}/{plural}            list (labelSelector, fieldSelector, limit, continue)
 GET    /api/v1/projects/{project}/{plural}/{name}     one manifest incl. status
 POST   /api/v1/projects/{project}/{plural}            create  → 202 + Change (merge request)
-PUT    …/{plural}/{name}                                                       replace → 202 + Change
-PATCH  …/{plural}/{name}   (application/apply-patch+yaml | merge-patch+json)   → 202 + Change
-DELETE …/{plural}/{name}                                                       → 202 + Change (explicit deletion lane)
-POST   …/{plural}?dryRun=All                                                   validate + plan, no change created
+PUT    /api/v1/projects/{project}/{plural}/{name}     replace → 202 + Change
+PATCH  /api/v1/projects/{project}/{plural}/{name}     application/merge-patch+json or
+                                                      application/apply-patch+yaml → 202 + Change
+DELETE /api/v1/projects/{project}/{plural}/{name}     → 202 + Change (explicit deletion lane)
+POST   /api/v1/projects/{project}/{plural}?dryRun=All validate + plan, no change created
+GET    /api/v1/projects                                 the projects this caller may read
 GET    /api/v1/blueprints                               the Blueprint catalogue of the organization
 GET    /api/v1/endpoints                                every Endpoint of every project the caller may read, each with its project (PF-60, PF-61)
 POST   /api/v1/projects                                 open a project → 202 + Change: project.yaml and the creator's steward binding in one merge request (PF-65, PF-66)
@@ -126,6 +159,16 @@ Every list and get answers under `read` of a binding whose scope covers the proj
 a project the caller may not read is `404` on every route of this section, on `export`,
 `/revisions`, `permissions/me` and the MCP resources alike, the one answer for "missing" and
 "not yours". A write answers `403` with the missing verb (PF-50).
+
+A list takes `labelSelector`, `fieldSelector`, `limit` and `continue`. It does not take
+`revision`: a list of a past revision is `501` naming where that answer lives, because the
+repository at a revision is `GET …/export?revision={commit}` of section 10 and the mirror holds
+the default branch alone (`joinedcontext-portal/src/api/resources.rs`).
+
+`GET /api/v1/projects` answers a `kind: List` whose items carry `name` and nothing else, the
+projects the caller may read (PF-59). A project no binding covers is not in it, which is the same
+answer as `404` on its routes and discloses no department's project list to a session that may not
+see it.
 
 `{plural}` is the kind's plural from the catalogue in
 [Development/04-manifest-kinds.md §2](../Development/04-manifest-kinds.md#2-standard-kind-catalog),
@@ -270,6 +313,57 @@ Example write result:
   }
 }
 ```
+
+### Drafts of a manifest (AG-61, UI-47, UI-48)
+
+A form saves what a person has typed before anything is proposed. A draft is shared, not
+per-browser: the window, an assistant run and an MCP client see the same one, so a person who asks
+the assistant to fill a field watches it appear in the open form
+(`joinedcontext-portal/src/api/drafts.rs`).
+
+```text
+GET    /api/v1/projects/{project}/drafts                       one line per draft
+GET    /api/v1/projects/{project}/drafts/{kind}/{name}         one draft with its manifest and verdict
+PUT    /api/v1/projects/{project}/drafts/{kind}/{name}         save it; body { "manifest": …, "expectedVersion": n }
+DELETE /api/v1/projects/{project}/drafts/{kind}/{name}         discard it → { "dropped": true }
+GET    /api/v1/projects/{project}/drafts/events                the same changes as Server-Sent Events
+```
+
+```json
+{
+  "project": "helsinki",
+  "kind": "DataSource",
+  "name": "hsl-citybikes-free",
+  "manifest": { "…": "the manifest as the form holds it, whole" },
+  "verdict": { "ok": true, "findings": [], "checkedAt": "2026-09-18T12:00:00Z", "inputDigest": "sha256:…" },
+  "touchedBy": "jana.kovacova",
+  "touchedKind": "person",
+  "version": 7,
+  "updatedAt": "2026-09-18T12:00:04Z"
+}
+```
+
+- Writing or discarding a draft needs `propose` on its kind, the verb the proposal itself needs:
+  a draft is the proposal before it is sent, and a caller who may not propose an `Endpoint` may not
+  park one either. Reading one asks what reading the manifest asks, so a draft of a space the
+  caller may not read is `404` like the manifest would be (PF-59, R20).
+- `version` counts up on every save. Send the version you read as `expectedVersion` and a save
+  against a newer draft is refused with `409 {"error": "draft_conflict", "current": 9}` instead of
+  overwriting what the other window wrote; omit it and the last save wins.
+- `touchedBy` is the caller's username and `touchedKind` is how they reached it: `person`,
+  `api-key`, `mcp` or `run`, so a form can say the assistant wrote this, not you.
+- A literal secret under one of the secret keys of section 5 is `400` here as it is on a write
+  (MF-24): a draft is a manifest on its way to Git.
+- `?workspace={name}` addresses the drafts of one workspace (section 22). A draft of a workspace is
+  not a draft of the project, and the query is absent for the project's own.
+- `/drafts/events` streams `put`, `verdict` and `drop` events, each carrying `kind`, `name`,
+  `version`, `touchedBy`, `touchedKind` and `updatedAt`, with the SSE id set to the version. Every
+  event is checked against the reader's bindings as it passes, so a revoked binding stops the flow
+  without a reconnect. A keep-alive comment goes every fifteen seconds and the answer carries
+  `Cache-Control: no-cache` and `X-Accel-Buffering: no`, so no proxy buffers the stream.
+- A draft never becomes a resource by itself. A proposal names it
+  (`{"draft": {"kind": …, "name": …}}`, section 21) or carries the manifest; the Change that
+  results forgets the draft its check created.
 
 ## 5. Change Proposals and Approvals (CC-34, CC-41, CC-63, UI-23…UI-25)
 
@@ -434,7 +528,7 @@ POST /api/v1/projects/{project}/pipelines/test
 - The answer is the trace of Architecture/08 §7: `input`, `mapping`, `validation`, `errors`. A manifest the kind refuses is `400` (MF-37); no runner, or a runner that does not answer within three seconds, is `503`; a second test while one runs in the project is `409`.
 - A mapping that yields an array is one entity per element in `mapping` and `validation`, at most 20 (PL-48).
 - An error of stage `mapping` carries `step`, the index into `spec.steps` of the step it failed at (PL-52); `lint` and `runner` errors have no step and leave it absent.
-- A derived pipeline (`spec.source.endpointRef`, the studio's `kpi` preset, PL-45) is tested on a page of its source endpoint: `sample.url` is that endpoint's `…/ngsi-ld/v1/entities?type=…&attrs=…` URL (the runner fetches it with the pipeline's read grant) or `sample.text` is such a page, `format: json`; the page reaches the mapping as one message, so a fold yields one entity in `mapping` and `validation` checks it as an indicator (PF-43): `calculationFormula`, `derivedFrom` and `computedBy` missing are `problems`, not a `200` that admission would later refuse.
+- A derived pipeline (`spec.source.endpointRef`, the studio's `kpi` preset, PL-45) is tested on a page of its source endpoint: `sample.url` is that endpoint's `…/ngsi-ld/v1/entities?type=…&attrs=…` URL (the runner fetches it with the pipeline's read grant) or `sample.text` is such a page, `format: json`; the page reaches the mapping as one message, so a fold yields one entity in `mapping` and `validation` checks it as an indicator (PF-43): `calculationFormula`, `derivedFrom` and `computedBy` missing are `problems`, not a `200` that admission then refuses.
 - Nothing is written, no `secretRef` is resolved, the stream is deleted whatever happened.
 
 ## 8. User Preferences (UI-09, UI-10)
@@ -730,6 +824,35 @@ POST /api/v1/webhooks/sync/{project}/{name}                  signed, no session
   rather than fetching it anonymously (MF-31). A `platformApi` origin is read through the partner's
   own `/revisions` and `/export` of this section and through nothing else (MF-32).
 
+### The mirror itself (MF-04, CC-08, OPS-51)
+
+Four routes are about the Portal's own copy of the repository rather than about any project
+(`joinedcontext-portal/src/api/sync.rs`, `joinedcontext-portal/src/api/webhook.rs`,
+`joinedcontext-portal/src/api/health.rs`):
+
+```text
+GET  /api/v1/sync              how the background mirror sync stands; a session, no project
+POST /api/v1/webhooks/gitea    the forge's own hook: signed, no session
+GET  /api/v1/health            liveness; public
+GET  /api/v1/ready             readiness; public
+```
+
+- `/sync` answers `lastSync` (a Unix instant), `revision`, `manifests`, `lastError` and `leader`,
+  which is the replica that reconciles. It never carries the repository URL, the branch or a
+  token: a browser reads it, and none of those is the browser's business.
+- `/webhooks/gitea` is what makes a merged change visible without waiting for the next tick. The
+  body is authenticated by an HMAC-SHA256 in `x-gitea-signature` against the configured webhook
+  secret, and the previous one while a rotation runs, so a rotation never closes the door
+  (T-0982). A push to the default branch or a merged pull request answers `202` and starts a sync;
+  any other event answers `204`; a body that is not JSON is `400`, a missing or wrong signature
+  `401`, and an instance with no webhook secret configured `503`, because a hook nobody can
+  authenticate is refused rather than trusted.
+- `/health` answers `{"name": …, "version": …, "status": "ok"}` whenever the process serves, and
+  it is the liveness probe. `/ready` is the readiness probe (OPS-51): `503 {"status": "loading"}`
+  until this replica's mirror holds the repository, `200 {"status": "ready"}` afterwards. A Portal
+  configured without a forge has no repository to wait for and is ready at once. Both are public,
+  because a probe has no session.
+
 ## 11. Model Tools preview (DM-10, DM-17, DM-18, DM-19)
 
 The LinkML editor needs a compiled preview on every keystroke, and the compilation runs in Model
@@ -738,8 +861,8 @@ the `ngsi_ld_kind` post-processor (DM-18). The Portal calls it for the browser, 
 reaches a third-party host itself and Model Tools needs no ingress:
 
 ```text
-GET  /api/v1/tools/sdm-catalog   the Smart Data Models catalogue index, by subject and model
-                                 (?subject= fills that subject's attribute names)
+GET  /api/v1/tools/sdm-catalog   the Smart Data Models catalogue index: subjects, their models
+                                 and each model's attribute names (?refresh=true refills the cache)
 POST /api/v1/tools/generate      LinkML source  → JSON Schema, @context, SHACL, OWL, example
 POST /api/v1/tools/import-sdm    a Smart Data Models model id → the same artifacts as LinkML
 POST /api/v1/tools/infer-schema  a sample file (multipart, ≤ 10 MiB: CSV, XLSX, JSON, PDF)
@@ -827,11 +950,12 @@ The editor's operations (DM-13) are `addClass`, `removeClass`, `renameClass`, `s
   daily; `?refresh=true` asks for a refresh now, and an index Model Tools could not refresh is
   answered from the cache with `stale: true` rather than withheld (DM-12). The index carries no
   URLs: a model is named by its catalogue identifier, and fetching it is `import-sdm`.
-- `attributes` is present only on the models of the subject named by `?subject=`. The catalogue
-  publishes no aggregate carrying the attributes of all 1118 models, so a subject is filled from
-  the models' own schemas when the wizard opens it and cached from then on; without the parameter
-  the index costs one fetch and answers no attribute names. `?subject=` accepts a subject the
-  index already lists and nothing else, so a browser cannot steer a fetch with it either.
+- `refresh` is the only parameter the route takes, and the only thing a caller may steer: which
+  catalogue is fetched is Model Tools' own allowlist (DM-10), never the request
+  (`joinedcontext-portal/src/tools/model_tools.rs`). The index is passed through as Model Tools
+  wrote it, so `attributes` is there for every model whose schema that build read and `[]` for the
+  rest; the wizard narrows by subject and searches by attribute in the browser, over the one index
+  it already holds.
 - `linkml` is the LinkML source itself. `import-sdm` answers with it, because an import produces
   the document the editor then edits, and its `annotations` carry `spec.source.repository`,
   `spec.source.path` and `spec.source.commit` so the import is reproducible and its provenance
@@ -852,8 +976,8 @@ The editor's operations (DM-13) are `addClass`, `removeClass`, `renameClass`, `s
   real data beats a value derived from a range.
 - `generatorVersion` is the version that produced the artifacts. CI invokes the same image version
   as the preview (DM-19), so a preview and a committed artifact set can be compared.
-- The request body is capped; a larger source is `413`. The routes are session routes and carry the
-  CSRF token like every other mutating Portal call.
+- A source over 512 KiB is `413`, and a sample over 10 MiB the same. The routes are session routes
+  and carry the CSRF token like every other mutating Portal call.
 - `503` with `problem+json` when no Model Tools URL is configured or the container does not answer
   within the compile timeout. The editor then shows the source without a preview, not an error.
 
@@ -1062,8 +1186,8 @@ GET /api/v1/branding/favicon     the favicon file, from the same mount
 }
 ```
 
-- Both routes are unauthenticated on purpose: the login page needs the name and the logo before
-  anyone has signed in, and the block holds no secret. They answer `Cache-Control: public,
+- All three routes are unauthenticated on purpose: the login page needs the name and the logo
+  before anyone has signed in, and the block holds no secret. They answer `Cache-Control: public,
   max-age=300`, the only API answers a browser may keep.
 - Every colour is validated as a hex triplet or sextet; anything else is replaced by the neutral
   default before it is served, because the UI writes these values into CSS custom properties
@@ -1072,9 +1196,12 @@ GET /api/v1/branding/favicon     the favicon file, from the same mount
 - The logo and the favicon are file names, never URLs. A value carrying a scheme, a host or `..`
   is dropped, and the file is read from the branding file's own directory: the two assets the
   ConfigMap carries are the only files those routes can reach.
-- A missing, unreadable or invalid file is not an error. The Portal answers the neutral defaults
-  and logs the reason, so an installation whose ConfigMap has not been rendered looks plain rather
-  than failing to load.
+- A branding file that is missing, unreadable or not valid YAML is not an error: the Portal logs
+  the reason and answers the neutral defaults, so an installation whose ConfigMap has not been
+  rendered looks plain rather than failing to load. The two asset routes have nothing to fall back
+  to and answer `404` with `problem+json` when the block names no logo or favicon, or the file
+  behind the name is not readable (`joinedcontext-portal/src/api/branding.rs`); a page renders its
+  own mark then, and never a broken image.
 
 ## 16. Open-data catalogue status (EP-62…EP-67)
 
@@ -1205,7 +1332,7 @@ GET /api/v1/projects/{project}/federation-graph   who reads whose data, as nodes
   `serviceAccountRef` name (PF-48).
 - The graph is a projection of the manifests plus reported health. It holds no state and is not a
   second opinion about who talks to whom.
-- Both routes need a session, like every other project route.
+- Every route of this section needs a session, like every other project route.
 
 ## 18. Assistant catalog search (AG-58, UI-46)
 
@@ -1381,13 +1508,14 @@ Verdict:
 Drafts (also operations: jc_draft_put, jc_draft_get, jc_draft_drop):
   { "project": "helsinki", "kind": "DataSource", "name": "hsl-citybikes-free",
     "manifest": {…}, "verdict": {…} | null, "version": 7,
-    "touchedBy": { "kind": "run" | "person" | "mcp" | "apiKey", "id": "…" }, "updatedAt": "…" }
+    "touchedBy": "jana.kovacova", "touchedKind": "person" | "api-key" | "mcp" | "run",
+    "updatedAt": "…" }                                 # the REST routes are §4
   Draft changes are `draft` events on the activity stream (§7 of Architecture/09).
   jc_draft_list (GET /projects/{project}/drafts) answers one line per draft and never the
   manifest or the verdict's trace, the way jc_resource_list answers a line per resource:
   { "items": [{ "kind": "DataSource", "name": "hsl-citybikes-free", "version": 7,
-                "touchedBy": …, "touchedKind": "person", "updatedAt": "…",
-                "verdict": { "ok": true, "findings": 0 } | null }] }
+                "touchedBy": "jana.kovacova", "touchedKind": "person", "updatedAt": "…",
+                "verdict": { "ok": true, "findings": 0, "checkedAt": "…" } | null }] }
   A caller that needs a draft reads it with jc_draft_get. A project holding 44 drafts answered
   2.3 MB of manifests and verdict traces, which is more than one model call can carry, so the
   assistant could answer nothing at all while those drafts existed (T-2248).
@@ -1580,7 +1708,7 @@ A write the owner's rights do not cover is refused as it is outside a workspace:
 
 ```json
 {
-  "type": "https://joinedcontext.com/problems/forbidden",
+  "type": "https://joinedcontext.com/errors/forbidden",
   "title": "Forbidden",
   "status": 403,
   "detail": "Proposing a Pipeline needs a role with propose on Pipeline in helsinki."
