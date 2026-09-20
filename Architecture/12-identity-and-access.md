@@ -80,8 +80,8 @@ metadata: { name: air-quality-team, namespace: org }
 spec:
   description: The air quality domain, measurement and modelling
   members:
-    - { user: jana.kovacova@banskabystrica.sk }
-    - { user: peter.novak@banskabystrica.sk }     # not in Keycloak yet: a warning, in force at first login
+    - { user: jana.kovacova@example.org }
+    - { user: peter.novak@example.org }     # not in Keycloak yet: a warning, in force at first login
 ```
 
 A `Group` is the people a binding names at once (PF-62). The reconciler owns the Keycloak group it creates for each manifest, marked `managed-by: joinedcontext`: members are added and pruned to match, a rename follows the manifest, and an edit made in the Keycloak console is overwritten on the next reconcile and reported as drift, the same shape as every other drift the reconciler reports (PF-63). A Keycloak group without the mark is somebody else's and is left alone. So a fresh environment recreates membership from the repository, a membership change is a merge request in the red lane like a `Role` or a `RoleBinding`, and a `subjects[].group` in a binding or a `ServiceAccount` names a manifest, refused at validation when none exists (PF-64), where today it would silently match nobody. The one binding still read from Keycloak is the bootstrap administrators' group of the platform settings file (PF-52), because it has to exist before the first manifest does.
@@ -105,7 +105,7 @@ apiVersion: joinedcontext.com/v1alpha1
 kind: RoleBinding
 metadata: { name: ovzdusie-developers, namespace: org }
 spec:
-  subjects: [{ group: air-quality-team }, { user: jana.kovacova@banskabystrica.sk }]
+  subjects: [{ group: air-quality-team }, { user: jana.kovacova@example.org }]
   role: pipeline-developer
   scope: { project: ovzdusie }              # organization | project | contextSpace
   validity: { notAfter: "2026-12-31T23:59:59Z" }
@@ -182,7 +182,7 @@ spec:
     - kind: api-key              # for systems that cannot do OAuth (devices, legacy ETL); hashed at rest, shown once
       name: legacy-push
       expiresAt: "2027-03-01T00:00:00Z"
-      ipAllowList: ["185.12.0.0/22"]
+      ipAllowList: ["203.0.113.0/24"]
   limits: { requestsPerMinute: 1200 }
 # status (never in Git): keycloak clientId, keyIds, lastUsedAt per credential, rotation state
 ```

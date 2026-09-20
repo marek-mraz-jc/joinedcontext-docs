@@ -159,8 +159,8 @@ loses it in the same second, and step 4 is what stops the reconciler putting it 
 
 ```bash
 scripts/emergency-revoke.sh --instance dev --policy public-read \
-  --service-account helsinki-air-quality-conformance --idm https://idm.2.28.67.127.sslip.io \
-  --verify-url "https://2.28.67.127.sslip.io/api/endpoint/<slug>/ngsi-ld/v1/entities?type=X" \
+  --service-account helsinki-air-quality-conformance --idm https://idm.example.org \
+  --verify-url "https://portal.example.org/api/endpoint/<slug>/ngsi-ld/v1/entities?type=X" \
   --verify-token-file .secrets/compromised-token
 ```
 

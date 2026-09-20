@@ -213,7 +213,7 @@ data: {"seq":16,"tool":"cargo_build","command":"cargo build --release","exitCode
 
 id: 17
 event: commit
-data: {"seq":17,"sha":"7f1b2c4d","message":"feat: scaffold axum server and bike station table view","author":"agent:app-builder@hel.fi","url":"https://git.example.fi/hel/org/commit/7f1b2c4d"}
+data: {"seq":17,"sha":"7f1b2c4d","message":"feat: scaffold axum server and bike station table view","author":"agent:app-builder@example.org","url":"https://git.example.fi/hel/org/commit/7f1b2c4d"}
 
 id: 18
 event: preview

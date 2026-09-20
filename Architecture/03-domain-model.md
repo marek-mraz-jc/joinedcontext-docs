@@ -349,7 +349,7 @@ spec:
   contacts:
     - role: administrative          # administrative | technical | data-protection | security
       name: "Odbor digitalizácie"
-      email: digital@hel.fi
+      email: digital@example.org
 ```
 
 ### Project

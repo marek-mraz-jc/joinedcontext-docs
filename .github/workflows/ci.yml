@@ -25,6 +25,7 @@ jobs:
       - run: python3 scripts/lint-mermaid.py
       - run: python3 scripts/audit-component-matrix.py
       - run: python3 scripts/verify-runbooks.py
+      - run: python3 scripts/check-examples-are-safe.py
       - name: the manifest and API checkers need a yaml and a schema library
         run: pip install --quiet --disable-pip-version-check pyyaml==6.0.3 jsonschema==4.26.0
       - run: python3 scripts/audit-i18n-docs.py
@@ -70,6 +71,7 @@ jobs:
           python3 scripts/lint-mermaid.py --selftest
           python3 scripts/audit-component-matrix.py --selftest
           python3 scripts/verify-runbooks.py --selftest
+          python3 scripts/check-examples-are-safe.py --selftest
           python3 scripts/audit-i18n-docs.py --selftest
           python3 scripts/verify-openapi-snippets.py --selftest
           python3 scripts/validate-doc-manifests.py --selftest
