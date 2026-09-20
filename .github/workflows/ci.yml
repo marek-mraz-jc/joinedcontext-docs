@@ -75,6 +75,12 @@ jobs:
           echo "OPENAPI_JSON=${RUNNER_TEMP}/code/joinedcontext-portal/ui/openapi.json" >> "$GITHUB_ENV"
       - name: what the docs assert about the code is true of the code (T-2139)
         run: python3 scripts/check-docs-against-code.py
+      - name: the configuration reference is the one the code generates (T-2140, OPS-27)
+        # Coverage, not a byte comparison: the platform is read at a pinned tag above, so a
+        # sentence reworded on main must not turn this lane red. A variable read and not on the
+        # page, a variable on the page nothing reads, and a secret read straight into a log
+        # line are all failures. Regenerate with `--write`.
+        run: python3 scripts/generate-config-reference.py
       - name: and the routes the API pages print are in the Portal's OpenAPI
         # The leg has been in verify-openapi-snippets.py since T-0096 and named what would
         # enable it; OPENAPI_JSON is now set, so this run is the one that uses it. Reported
@@ -122,6 +128,7 @@ jobs:
           python3 scripts/verify-runbooks.py --selftest
           python3 scripts/check-examples-are-safe.py --selftest
           python3 scripts/check-docs-against-code.py --selftest
+          python3 scripts/generate-config-reference.py --selftest
           python3 scripts/audit-i18n-docs.py --selftest
           python3 scripts/verify-openapi-snippets.py --selftest
           python3 scripts/validate-doc-manifests.py --selftest
