@@ -65,6 +65,29 @@ OUR_PREFIXES = (
     "tests/",
     "scripts/",
 ) + tuple(f"{name}/" for name in REPOSITORIES)
+# Which repositories a *bare* path — one with no repository name in front of it — can live in.
+# A claim is judged only when every repository that could hold it is checked out: `ci.yml`
+# fetches the two public ones, so `tests/etsi-ttf/expected_failures.json` (conformance) would
+# otherwise be reported as missing when it exists and simply was not fetched (T-2141).
+BARE_PREFIX_OWNERS = {
+    "crates/": ("joinedcontext-platform",),
+    "ui/src/": ("joinedcontext-portal",),
+    "ui/tests/": ("joinedcontext-portal",),
+    "charts/": ("joinedcontext-deployment",),
+    "schemas/": ("joinedcontext-platform",),
+    "tests/": (
+        "joinedcontext-conformance",
+        "joinedcontext-deployment",
+        "joinedcontext-platform",
+        "joinedcontext-portal",
+    ),
+    "scripts/": (
+        "joinedcontext-conformance",
+        "joinedcontext-deployment",
+        "joinedcontext-platform",
+    ),
+}
+
 # `deployment/…` is left out on purpose: `just dev-apply` assembles that directory from the
 # component templates, so a page naming a file in it is describing a generated tree rather
 # than a committed one, and this gate checks what is committed.
@@ -136,8 +159,28 @@ def is_history(relative: pathlib.PurePath) -> bool:
     return bool(relative.parts) and relative.parts[0] in HISTORY
 
 
+def judgeable(claimed: str, checkouts: frozenset[str]) -> bool:
+    """Whether a missing path is a finding or simply a repository nobody fetched.
+
+    A path that names its own repository (`joinedcontext-conformance/tests/…`) is judged when
+    that repository is there. A bare one is judged only when every repository that could hold
+    it is there; otherwise the checker has not read the tree that would prove it (T-2141).
+    """
+    for name in REPOSITORIES:
+        if claimed.startswith(f"{name}/"):
+            return name in checkouts
+    for prefix, owners in BARE_PREFIX_OWNERS.items():
+        if claimed.startswith(prefix):
+            return all(owner in checkouts for owner in owners)
+    return True
+
+
 def problems_of(
-    relative: pathlib.PurePath, text: str, paths: set[str], code_text: str
+    relative: pathlib.PurePath,
+    text: str,
+    paths: set[str],
+    code_text: str,
+    checkouts: frozenset[str] = frozenset(REPOSITORIES),
 ) -> list[str]:
     bad: list[str] = []
     history = is_history(relative)
@@ -146,6 +189,8 @@ def problems_of(
             if not claimed.startswith(OUR_PREFIXES):
                 continue
             if claimed in paths:
+                continue
+            if not judgeable(claimed, checkouts):
                 continue
             bad.append(f"{relative}:{lineno}: no such file in any repository: {claimed}")
 
@@ -166,13 +211,20 @@ def problems_of(
 
 def check(docs: pathlib.Path, code: pathlib.Path) -> list[str]:
     paths, code_text = inventory(code, docs)
+    checkouts = frozenset(present(code))
     bad: list[str] = []
     for path in sorted(docs.rglob("*.md")):
         if any(part in SKIP_DIRECTORIES for part in path.parts):
             continue
         relative = path.relative_to(docs)
         bad.extend(
-            problems_of(relative, path.read_text(encoding="utf-8"), paths, code_text)
+            problems_of(
+                relative,
+                path.read_text(encoding="utf-8"),
+                paths,
+                code_text,
+                checkouts,
+            )
         )
     return bad
 
@@ -262,6 +314,32 @@ def selftest() -> int:
         if any("nothing reads" in problem or "no such operation" in problem for problem in history):
             print("a decision was held to today's code:", *history, sep="\n  ", file=sys.stderr)
             return 1
+
+        # A path that lives in a repository nobody fetched is unchecked, not missing: CI
+        # fetches platform and portal only, and `tests/etsi-ttf/…` is the conformance
+        # repository's (T-2141). With every owner present the same claim is a finding again.
+        (docs / "Decisions" / "adr-n-021.md").unlink()
+        (docs / "Architecture" / "elsewhere.md").write_text(
+            "---\ntitle: A page about another repository\n---\n\n"
+            "# A page about another repository\n\n"
+            "The expected failures live in `tests/etsi-ttf/expected_failures.json`.\n",
+            encoding="utf-8",
+        )
+        if any("no such file" in problem for problem in check(docs, code)):
+            print(
+                "a path in a repository that was never fetched was called missing",
+                file=sys.stderr,
+            )
+            return 1
+        for name in REPOSITORIES:
+            (code / name).mkdir(parents=True, exist_ok=True)
+        if not any("no such file" in problem for problem in check(docs, code)):
+            print(
+                "with every repository present a missing path stopped being a finding",
+                file=sys.stderr,
+            )
+            return 1
+        (docs / "Architecture" / "elsewhere.md").unlink()
 
         # And with no code tree at all the checker reports nothing rather than everything.
         if check(docs, root / "nowhere"):

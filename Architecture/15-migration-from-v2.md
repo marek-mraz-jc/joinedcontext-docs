@@ -16,7 +16,7 @@ The table below documents the disposition of each legacy component, identifying 
 |---|---|---|---|---|
 | **`portal-backend`** (Spring Boot) | Replaced | **Portal API** (Rust / Axum) | [ADR-N-001](../Decisions/adr-n-001-rust-typescript-stack.md) | Reduces memory footprint from ~1.5 GB to ~35 MB; instant cold start; eliminates Spring overhead. |
 | **`portal-frontend`** (Next.js) | Replaced | **Portal UI** (React 19 / Vite) | [ADR-N-001](../Decisions/adr-n-001-rust-typescript-stack.md) | Eliminates BFF proxy layers; compiles types directly from backend OpenAPI contracts. |
-| **`config-adapters`** (Java) | Replaced | **`jcctl` Reconciler** (Rust) | [ADR-N-005](../Decisions/adr-n-005-reconciler-jcctl-in-rust.md) | Replaces runtime Kafka configuration events with declarative GitOps reconciliation. |
+| **`config-adapters`** (Java) | Replaced | **the Portal's reconciler** (Rust, in process; `jcctl` is the same logic as a CLI) | [ADR-N-005](../Decisions/adr-n-005-reconciler-jcctl-in-rust.md) | Replaces runtime Kafka configuration events with declarative GitOps reconciliation. |
 | **Apache Kafka & Strimzi** | Dropped | **Gitea Git Repository** | [ADR-N-004](../Decisions/adr-n-004-configuration-as-code-and-gitea.md) | Eliminates Kafka cluster, Zookeeper/KRaft, and outbox/saga compensation cascades. |
 | **Apache NiFi** | Replaced | **Bento Pipelines** (Go) | [ADR-N-006](../Decisions/adr-n-006-bento-pipelines-supersede-nifi.md) | Stream memory dropped by 85%; pipeline logic versioned directly as text manifests. |
 | **`authz-adapter` & OPA sidecar**| Replaced | **Context Gateway** (Rust PEP/PDP) | [ADR-N-003](../Decisions/adr-n-003-context-gateway-in-rust.md) | In-process AST query rewriting eliminates the multi-hop decision latency bottleneck. |
@@ -27,19 +27,19 @@ The table below documents the disposition of each legacy component, identifying 
 | **GeoServer Cloud** | Converted to Addon | **Endpoint OGC Representation** | [ADR-N-002](../Decisions/adr-n-002-context-space-and-endpoint-model.md) | Core serves OGC API Features natively; GeoServer moved to optional addon. |
 | **Apache Superset** | Converted to Addon | **Portal Dashboards** | [ADR-N-011](../Decisions/adr-n-011-maplibre-deckgl-dashboards.md) | Embedded MapLibre/deck.gl visualizer in Portal; Superset retained as addon. |
 | **HashiCorp Vault** | Replaced | **SOPS+age / OpenBao** | [ADR-N-012](../Decisions/adr-n-012-secrets-sops-openbao.md) | Replaces BSL-licensed Vault with 100% open-source secret engines (MPL 2.0). |
-| **CloudNativePG Operator** | Kept | **CloudNativePG Operator** | ADR 004 | Retained as authoritative PostgreSQL cluster operator across all profiles. |
-| **Linkerd Service Mesh** | Kept | **Linkerd Service Mesh** | ADR 024 | Mandatory `cluster-authenticated` mTLS retained across all instance namespaces. |
-| **Keycloak IAM** | Kept with Change | **Keycloak IAM** | ADR 007 | Retained for OIDC and OID4VCI; token introspection replaced by JWKS verification inside the Portal and the Context Gateway. |
+| **CloudNativePG Operator** | Kept | **CloudNativePG Operator** | inherited, [13 §5](13-security.md#5-inherited-controls-and-their-changes) | Retained as authoritative PostgreSQL cluster operator across all profiles. |
+| **Linkerd Service Mesh** | Kept | **Linkerd Service Mesh** | inherited, [13 §5](13-security.md#5-inherited-controls-and-their-changes) | Mandatory `cluster-authenticated` mTLS retained across all instance namespaces. |
+| **Keycloak IAM** | Kept with Change | **Keycloak IAM** | [ADR-N-018](../Decisions/adr-n-018-token-verification-in-the-peps.md) | Retained for OIDC and OID4VCI; token introspection replaced by JWKS verification inside the Portal and the Context Gateway. |
 
 ## 2. Migration Execution Sequence
 
 The platform migration executes in six ordered phases:
 
-1. **Deploy Shared Operators:** Deploy CloudNativePG and Kyverno operators via `deployment/helmfile-operators.yaml`.
+1. **Deploy Shared Operators:** `helmfile -f deployment/helmfile-operators.yaml sync -e <env>`, once per cluster. It installs the CloudNativePG operator watching every namespace and the Kyverno ClusterPolicies of the `runtime-policies` component; Kyverno itself, cert-manager and Traefik come with the cluster distribution.
 2. **Bootstrap Identity & Git Forge:** Deploy Keycloak and Gitea in the instance namespace; import legacy Keycloak realms and configure OIDC clients.
 3. **Transform Metadata to Manifests:** Export relational DataPools, DataSets, and DataStructures from the legacy `portal` database and compile them into `projects/`, `datamodels/`, and `endpoints/` YAML manifests.
 4. **Initialize Org Repository:** Commit generated manifests into the authoritative Gitea repository and execute initial reconciliation via `jcctl apply`.
-5. **Migrate Context & Telemetry Data:** Export entities from the legacy context broker and FROST server, rewrite identifiers to conform to ADR 001 URN standards, and import into Antares Context Spaces.
+5. **Migrate Context & Telemetry Data:** Export entities from the legacy context broker and FROST server, rewrite identifiers to the URN scheme of [03 §3](03-domain-model.md), and import into Antares Context Spaces.
 6. **Switch Ingress & Decommission:** Deploy standalone APISIX routing configurations, verify representation parity on all Endpoints, reroute public DNS, and decommission legacy JVM workloads.
 
 ## 3. Data Migration Rules
@@ -68,7 +68,7 @@ Sensor observations residing in legacy FROST-Server databases are migrated to st
 
 ## 4. Documentation Reference Mapping
 
-| Legacy Documentation Location (`civitas-core-docs_v2`) | New Documentation Location (`docs_new`) | Scope of Change |
+| Legacy Documentation Location (`civitas-core-docs_v2`) | New Documentation Location (this repository) | Scope of Change |
 |---|---|---|
 | `Architecture/Architecture_General/` | [Architecture/01-overview.md](01-overview.md) & [02-principles.md](02-principles.md) | Rewritten to reflect Rust and NGSI-LD architecture. |
 | `Architecture/domain_model.md` | [Architecture/03-domain-model.md](03-domain-model.md) | Replaced DataPool and DataSet model with Context Spaces and Endpoints. |

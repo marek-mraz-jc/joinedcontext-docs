@@ -10,15 +10,19 @@ description: Wire-level specification of /cs, the DCAT-AP space record and the N
 
 ## 1. Resource tree
 
+Served today (`crates/context-gateway/src/app.rs`):
+
 ```text
 /cs                                     catalog of the spaces the caller may discover (SP-11)
 /cs/{space}                             DCAT-AP dataset record of one space (SP-10)
 /cs/{space}/ngsi-ld/v1/…                the CIM 009 resource tree, byte for byte (SP-03)
 /cs/{space}/mcp                         MCP Streamable HTTP instance of the space (SP-14)
-/cs/{space}/schema/…                    the space's model artifacts (SP-04)
-/cs/{space}/dump/…                      dated immutable snapshots (SP-04)
-/cs/{space}/access                      the caller's effective grant document (EP-55)
 ```
+
+Specified and not built yet: `/cs/{space}/schema/…` (SP-04), `/cs/{space}/dump/…` (SP-04) and
+`/cs/{space}/access` (EP-55). The record and the HTML page of §3 still link the first and the
+third, so those links answer `404` today; T-2373 tracks it. The endpoint surface serves the same
+three under a slug: `/api/endpoint/{slug}/schema/index.json` and `/api/endpoint/{slug}/access`.
 
 No other child exists. Anything else under `/cs/{space}/` answers `404`, the same answer a space the caller may not discover gives, so a probe learns nothing either way (SP-06, R20).
 
@@ -34,17 +38,25 @@ Accept: application/ld+json
 ```json
 {
   "@context": "https://www.w3.org/ns/dcat.jsonld",
+  "@id": "https://hel.example.fi/cs",
   "@type": "dcat:Catalog",
   "dct:title": "joinedcontext context spaces",
   "dcat:dataset": [
-    { "@id": "https://hel.example.fi/cs/air-quality", "@type": "dcat:Dataset", "dct:title": "Ilmanlaatu" }
+    {
+      "@id": "https://hel.example.fi/cs/air-quality",
+      "@type": "dcat:Dataset",
+      "dct:identifier": "air-quality",
+      "dct:title": "Ilmanlaatu"
+    }
   ]
 }
 ```
 
+A catalog entry carries the identity of a space and nothing else: the title, the description and the services are in the record behind it, so the catalog of a hundred spaces stays one page.
+
 ## 3. The space record: `GET /cs/{space}`
 
-Returns the DCAT-AP dataset record of one space, whose distributions are exactly the children of §1: the NGSI-LD tree and the MCP instance as `dcat:DataService`, each dump as a `dcat:Distribution`, and the MQTT topic namespace as an access service (SP-10, ADR 011). One URL hands a human, a program and an agent the same entry point.
+Returns the DCAT-AP dataset record of one space. Its `dcat:service` list is what the space actually offers: the NGSI-LD tree always, the MCP instance when the space's endpoint enables the `mcp` representation, and the schema artifacts (SP-10). There is no dump `dcat:Distribution` and no MQTT access service in the record today; `dct:accrualPeriodicity` marks a sandbox space as irregular so a catalogue that copies the record does not treat it as a lasting dataset (PF-19). One URL hands a human, a program and an agent the same entry point.
 
 Content negotiation on `Accept`, with `application/ld+json` as the default:
 
@@ -66,13 +78,15 @@ Accept: text/turtle
 <https://hel.example.fi/cs/air-quality> a dcat:Dataset ;
     dct:identifier "air-quality" ;
     dct:title "Ilmanlaatu" ;
-    dcat:distribution <https://hel.example.fi/cs/air-quality/dump/latest.nq.gz> .
+    dcat:service <https://hel.example.fi/cs/air-quality/ngsi-ld/v1/> .
 
 <https://hel.example.fi/cs/air-quality/ngsi-ld/v1/> a dcat:DataService ;
     dct:title "NGSI-LD API" ;
     dcat:endpointURL <https://hel.example.fi/cs/air-quality/ngsi-ld/v1/> ;
     dcat:servesDataset <https://hel.example.fi/cs/air-quality> .
 ```
+
+The Turtle serialization carries the NGSI-LD service only; the JSON-LD record carries all three services, and a client that needs the MCP or schema service reads that one (`crates/context-gateway/src/handlers/space_surface.rs`).
 
 A caller with no grant on the space gets `404`, never `403`: a refusal that distinguishes the two would confirm the space exists (SP-06, R20).
 
