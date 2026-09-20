@@ -18,7 +18,7 @@ Four levels of publisher appear, and they are not interchangeable.
 
 | level | body | territory | people |
 |---|---|---|---|
-| `region` | Banskobystrický samosprávny kraj (BBSK), IČO 37828100 | the whole kraj, NUTS `SK032`, 13 okresy | 611 124 at the end of 2024 |
+| `region` | Banskobystrický samosprávny kraj (BBSK), IČO 37828100 | the whole kraj, NUTS `SK032`, 13 okresy | 607 581 at the end of 2025 |
 | `city` | Mesto Banská Bystrica, IČO 00313271 | the city, LAU `SK0321508438` | 72 123 in the city's own register |
 | `national` | ŠÚ SR, MIRRI (the NKOD catalogue), SHMÚ, NCZI | the whole state, broken down to kraj and okres | |
 | `operator` | ŽSR, SAD, a utility | a network, not a territory | |
@@ -83,7 +83,7 @@ first pipeline has something to be checked against.
 
 | feed | slice | value |
 |---|---|---|
-| `om7102rr` | `SK032`, end of 2023 then 2024, both sexes | 614 356, then 611 124 |
+| `om7102rr` | `SK032`, end of 2023, 2024 then 2025, both sexes | 614 356, 611 124, then 607 581 |
 | `om7102rr` | `SK0321` (okres Banská Bystrica), same window | 107 199, then 106 604 |
 | `zp3803rs` | `SK032`, 2022 then 2023, solid emissions in tonnes | 5 354.3, then 4 037.7 |
 | `zp3803rs` | `SK032`, same years, nitrogen oxides in tonnes | 6 523.9, then 5 560.0 |

@@ -20,7 +20,7 @@ and a rule already in force is cited so it can be checked. The feeds these space
 | body | Banskobystrický samosprávny kraj | Mesto Banská Bystrica |
 | `orgDomain` | `bbsk.sk` | `banskabystrica.sk` |
 | territory | the kraj, NUTS `SK032`, 13 okresy | the city, LAU `SK0321508438` |
-| people | 611 124 | 72 123 |
+| people | 607 581 at the end of 2025 | 72 123 on 2026-09-20 |
 | holds the application | yes | no |
 
 They are two projects because they are two publishers with two mandates. A figure of one

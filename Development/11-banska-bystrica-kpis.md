@@ -17,7 +17,7 @@ where every input below was fetched from and found to answer.
 
 | project | indicators of | territory each one declares |
 |---|---|---|
-| `bbsk` | Banskobystrický samosprávny kraj, 611 124 people | `kraj`, or `okres-{name}` for one of the 13 |
+| `bbsk` | Banskobystrický samosprávny kraj, 607 581 people | `kraj`, or `okres-{name}` for one of the 13 |
 | `banskabystrica` | Mesto Banská Bystrica, 72 123 people | `mesto`, or `cast-{name}` |
 
 An indicator of `bbsk` reads the `kraj` space and nothing else; an indicator of
@@ -35,6 +35,24 @@ in its `name`. The allowed values are in
 Both indicators read `banskabystrica`/`ovzdusie`, the space whose `AirQualityObserved` entities
 carry `pm10` and `pm25` as Properties in µg/m³ (UN/CEFACT `GQ`).
 
+### The window ends at the newest reading, not at the clock
+
+A 24-hour mean over "the last 24 hours" is empty whenever the stations stopped reporting, and an
+empty mean shown as a zero reads as clean air. The pipeline therefore takes the newest
+`dateObserved` in the space as the end of the window and subtracts 24 hours from it, so the
+indicator is always the most recent day the stations did report.
+
+Two things make that honest rather than convenient. `calculationPeriod` carries the window it
+actually used, so a viewer reads the dates and not an assumption; and `updatedAt` is the run, so
+the distance between `calculationPeriod.end` and `updatedAt` is how stale the source is. On the
+seeded demonstration data that distance is visible and correct: the readings are fixed, the
+indicator says which day they are from, and nothing pretends the air was measured this morning.
+
+A window with no reading in it at all — an empty space, a query that matched nothing — is the
+"not measured" entity of
+[the contract, section 5](10-banska-bystrica-contract.md#5-a-window-with-no-readings),
+never a zero.
+
 ### `pm10-24h-mesto`
 
 | | |
@@ -44,7 +62,7 @@ carry `pm10` and `pm25` as Properties in µg/m³ (UN/CEFACT `GQ`).
 | Question | Is the air the city breathes over a day within the European limit? |
 | Reads | `AirQualityObserved.pm10.value`, every entity of `ovzdusie` whose `dateObserved` falls in the window |
 | Formula | arithmetic mean over the stations that reported |
-| Window | rolling 24 hours, ending at the run |
+| Window | the 24 hours ending at the newest reading in the space (below) |
 | Unit | µg/m³, `unitCode: GQ` |
 | Refresh | hourly |
 | Source row | `ovzdusie`, the seeded stations of T-0945 (survey §5) |
