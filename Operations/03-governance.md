@@ -6,147 +6,131 @@ description: Interaction lanes, role-based governance, audit trail inspection, a
 
 # Platform Governance, Auditing & Approvals
 
-joinedcontext balances organisational data sovereignty, strict administrative oversight, and agile engineering self-service. This chapter establishes the operational governance procedures, approval workflows, and audit practices.
+How a change to the platform's configuration gets approved, who may approve what, and where to look afterwards. Read this before you give somebody a role or answer an auditor.
 
 ---
 
-## 1. Interaction Lanes & Approvals in Practice
+## 1. The three lanes
 
-All configuration changes in the platform follow one of three risk-classified interaction lanes ([CC-63](../Requirements/city-as-code.md#11-interaction-lanes-and-sandboxes)).
+Every configuration change is a merge request in the organization repository, and its lane decides who has to agree to it ([CC-63](../Requirements/city-as-code.md#11-interaction-lanes-and-sandboxes)).
 
 ```mermaid
 flowchart TD
-    CHANGE["Configuration Change Request<br/>(UI Form / API / Agent MCP)"]
-    RISK{"Risk Classification Engine<br/>(Conftest Policies)"}
-    
+    CHANGE["Change proposed<br/>(Portal form, API or MCP tool)"]
+    RISK{"jcctl lanes.rs<br/>classifies the change"}
+
     CHANGE --> RISK
-    
-    RISK -->|Low Risk| GREEN["Green Lane (Self-Service)"]
-    RISK -->|Medium Risk| YELLOW["Yellow Lane (Single Approver)"]
-    RISK -->|High Risk| RED["Red Lane (Multi-Sig Review)"]
-    
-    GREEN --> AUTO["Policy Bot Merges PR<br/>(< 10s Reconcile)"]
-    YELLOW --> DOMAIN["Domain Approver Review in UI<br/>(Visual Diff Approved)"]
-    RED --> MULTI["Full Approval Chain<br/>(City Admin + SecOps)"]
-    
-    AUTO --> APPLY["jcctl apply"]
-    DOMAIN --> APPLY
-    MULTI --> APPLY
+
+    RISK -->|sandbox or workspace| GREEN["Green: policy bot merges"]
+    RISK -->|shared space| YELLOW["Yellow: one approver"]
+    RISK -->|deletion, identity, federation| RED["Red: full chain"]
+
+    GREEN --> MERGE["Merged into the organization repository"]
+    YELLOW --> MERGE
+    RED --> MERGE
+    MERGE --> LIVE["Portal reconciler and the components that read the repository"]
 ```
 
-### Lane Assignment Matrix
+### Lane assignment
 
-| Lane | Risk Class | Qualifying Operations | Approval Mechanism | Latency Target |
-|---|---|---|---|---|
-| **Green** | Low | Personal workspace spaces, private draft subscriptions, test pipelines, UI theme/dashboard styling within project | Automated policy bot merges MR upon passing CI tests | < 10 seconds |
-| **Yellow** | Medium | Ingestion pipelines writing to shared Context Spaces, new Data Models, Endpoints restricted to organization | Single Domain Approver clicks "Approve" in Portal UI | Minutes to hours |
-| **Red** | High | Public Endpoints, federation Context Source Registrations (CSRs), deletions of shared spaces, lane policy edits | Multi-signature: Domain Approver + City Admin / SecOps | Formal review window |
+The lane of a change is decided by `jcctl` (`crates/jcctl/src/lanes.rs`) and carried in the Change envelope the Portal renders. Three rules decide it, in this order:
 
-### Operationalizing Approvals
+1. A deletion is always red (CC-63, CC-19).
+2. A change to a kind that is a federation edge or an identity decision is red whatever it does: `Organization`, `Policy`, `ScopeDefinition`, `ServiceAccount`, `SharedSpaceReference`, `DataOffer`, `DataAgreement`, `DataSpaceParticipant`, `ContextSourceRegistration`, `Role`, `RoleBinding`.
+3. Everything else is green or yellow by what it touches: work inside a personal workspace or a sandbox space is green, a change to a shared Context Space is yellow.
 
-Approvers do not navigate raw git repositories. The Portal UI renders the change summary and visual plan diff:
-
-1. Approver opens **Pending Approvals** in the Portal UI.
-2. The UI displays what changes in plain language: *"Project Mobility adds an endpoint publishing 4 attributes of VehicleObserved publicly."*
-3. The approver inspects the `jcctl plan` diff:
-   - Green lines indicate new resources.
-   - Yellow lines indicate attribute adjustments.
-   - Red lines indicate resource removals.
-4. Clicking **Approve** issues a signed approval to Gitea via the API, triggering immediate automated deployment.
-
----
-
-## 2. Role-Based Access Control Matrix
-
-Identity is provided by Keycloak via OIDC ([I1](../Requirements/policy-firewall.md#21-identity-stack-i1i4-canonical-here)). Rights are bound to Git ownership and Context Gateway policy evaluation ([CC-41](../Requirements/city-as-code.md#6-roles-and-identity)):
-
-| Platform Role | Scope | Key Capabilities | Typical Assignee |
+| Lane | Approval | Who | Typical change |
 |---|---|---|---|
-| **Viewer** | Organization / Project | Read-only inspection of dashboards, live context data, and flow statuses | External stakeholders, read-only staff |
-| **Domain Editor** | Project | Authors pipelines, instantiates blueprints, manages spaces; submits MRs | Data Engineers, Domain Specialists |
-| **Domain Approver** | Organization / Project | Reviews and approves Yellow-Lane merge requests; manages project access | Domain Leads, Data Stewards |
-| **City Admin** | Organization | Full merge authority, manages lane policies, creates projects, revokes tokens | Lead IT Architects, SecOps |
+| **Green** | The policy bot merges once CI passes | nobody, and the path is still a commit that can be reverted (CC-64) | a sandbox space, a draft pipeline, work in a personal workspace |
+| **Yellow** | One approver clicks Approve in the Portal | a role whose rules grant `approve` on the kind | a pipeline writing to a shared space, a new Data Model, an Endpoint for the organization |
+| **Red** | The full chain | an approver plus an organization-scoped role | any deletion, a public Endpoint, a `Policy`, a `Role` or `RoleBinding`, a registration, a data space agreement |
+
+A public Endpoint is the one case where the verb is not enough: approving it needs a role whose `approve` rule names `spec.audience: public`, which the seeded set calls `publisher`. An approver without it is refused by name rather than silently.
+
+### Approving one
+
+Approvers work in the Portal, not in the forge.
+
+1. Open **Approvals** in the Portal. The list holds the changes whose lane needs somebody, and nothing a caller may not read.
+2. Read what the change does. The page renders the plan for the change: which resources are added, changed and removed, and the manifest diff behind each one.
+3. Click **Approve**. The Portal checks the caller's roles for the `approve` verb on every kind the change touches, and refuses with the rule that failed. A change touching a public Endpoint needs the role whose `approve` is constrained to a public audience, `publisher` in the seeded set, and the refusal says so (EP-76, PF-71).
+4. The approval is recorded on the merge request. What is merged is what the components read; nothing is applied out of band.
 
 ---
 
-## 3. Auditing & Forensic Queries
+## 2. Roles as the platform seeds them
 
-Every platform interaction produces an immutable audit record across three correlated planes ([CC-44](../Requirements/city-as-code.md#6-roles-and-identity)):
+Identity comes from Keycloak over OIDC ([I1](../Requirements/policy-firewall.md#21-identity-stack-i1i4-canonical-here)). What a signed-in person may do is decided by `Role` and `RoleBinding` manifests in the organization repository, evaluated by the Portal on every request ([CC-41](../Requirements/city-as-code.md#6-roles-and-identity)); a token carries no permission of its own.
 
-1. **Configuration History:** Immutable git commits in Gitea containing author identity, approver signature, and commit timestamp.
-2. **Authorization Decisions:** Structured JSON logs emitted by the Context Gateway recording every allow/deny decision, user identity, and matching policy URN.
-3. **Identity & Authentication:** Keycloak security events tracking logins, token exchanges, and failed authentication attempts.
+A role's rules pair kinds with verbs, and the verbs are `read`, `propose`, `approve` and `delete`. The set an instance starts from is seeded with the repository (`components/context-gateway/seed/<instance>/` in `joinedcontext-deployment`):
 
-### Forensic Query Examples
+| Role | Verbs | Kinds | Who holds it |
+|---|---|---|---|
+| `viewer` | `read` | everything the project holds | every signed-in member of the organization (PF-61) |
+| `pipeline-editor`, `model-editor`, `endpoint-editor`, `app-editor` | `propose` | the one kind in the name | the people who build that kind of thing |
+| `steward` | `propose`, `approve` | the project's kinds | data stewards of a project |
+| `approver` | `approve` | the project's kinds | whoever signs off other people's work |
+| `org-admin` | `propose`, `approve`, `delete` | organization-wide | the two or three people who run the instance |
 
-#### Audit Query 1: Who modified a pipeline configuration?
+Bind a person by adding a `RoleBinding` in the repository, which is itself a red-lane change. Nobody is given a role by clicking in the Portal, and no role is granted by a Keycloak group alone.
+
+## 3. Reading the audit trail
+
+Three planes hold what happened, and they are correlated by time and by the identity each one records ([CC-44](../Requirements/city-as-code.md#6-roles-and-identity), OPS-42):
+
+1. **What was configured.** Commits in the organization repository: author, approver, message, timestamp.
+2. **What was decided.** The Context Gateway writes one structured JSON line per policy decision to stdout, with the operation and the verdict; the counter behind the same decisions is `jc_gateway_pdp_decisions_total`, labelled by operation and verdict.
+3. **Who signed in.** Keycloak security events: logins, token issuance, failures.
+
+None of the three stays in a pod. The `audit-logging` component runs a Vector daemonset that reads the container logs of the Context Gateway, Keycloak and the forge, and writes gzipped newline-delimited JSON to `audit/{component}/{date}/` in the artifact store's bucket, which is object-locked (OPS-42, PF-29). A record joins the trail because of the pod it came from, so no component can drop itself out of the trail by changing what it logs.
+
+### Who changed a pipeline
 
 ```bash
 git log -n 5 --pretty=format:"%h - %an (%ae), %ad : %s" \
   projects/mobility/pipelines/traffic-sensor/bento.yaml
 ```
 
-#### Audit Query 2: Extracting Gateway Denials from Loki
+### Which requests the gateway refused
 
-Querying all rejected requests across the last 24 hours:
+Fetch the day's object from the bucket and read it with `jq`; there is no log query service in this deployment.
 
-```logql
-{app_kubernetes_io_name="context-gateway"} 
-  | json 
-  | verdict = "DENY" 
-  | line_format "{{.timestamp}} - Identity: {{.client_id}} - Resource: {{.target_urn}} - Reason: {{.reason}}"
+```bash
+aws s3 cp "s3://<bucket>/audit/context-gateway/2026-09-20/" - --recursive \
+  | gunzip \
+  | jq -r 'select(.fields.message == "write refused" or .fields.refusal)
+           | "\(.timestamp) \(.fields.slug // "-") \(.fields.refusal // .fields.message)"'
 ```
 
-#### Audit Query 3: Tracking Agent Autonomous Actions
-
-Find all changes proposed or merged by an AI agent:
+### What an agent proposed
 
 ```bash
 git log --grep="Co-Proposed-By:" --all --pretty=fuller
 ```
 
----
+## 4. Personal data
 
-## 4. Data Protection & Privacy Governance (GDPR / DPV)
+- **Tag it in the model.** Personal attributes in a Data Model carry W3C Data Privacy Vocabulary purpose markers ([MIM4-R10](../Requirements/access-control.md#15-mim4-personal-data-management-trust)), so a reader of the model can see which attributes are personal without opening the data.
+- **Keep it out of the public Endpoint.** An Endpoint hides an attribute with `spec.hiddenAttributes`, and the gateway strips it from every representation, every file download and every notification. That is the control that decides what leaves the platform, not the tag.
+- **Erasure is a write, and the platform has no command for it.** Deleting a subject today means deleting its entity through an Endpoint that grants the delete, and the temporal history with it. `jcctl` has no privacy verb, and a request that has to erase history across spaces is an operator procedure that nobody has written down yet. Do not promise an automated Article 17 workflow to a data protection officer on the strength of this page.
 
-In compliance with European Data Protection regulations:
+## 5. Routine reviews
 
-- **Attribute-Level Tagging:** Personal data attributes in Data Models must be tagged with W3C Data Privacy Vocabulary (DPV) purpose markers ([MIM4-R10](../Requirements/access-control.md#15-mim4-personal-data-management-trust)).
-- **Automated Retention Enforcement:** Spaces storing personal context data must define automated time-to-live retention policies in their space manifest.
-- **Right to Erasure (Article 17):** Executing an erasure request on an individual subject:
+### Every quarter: who holds which role
 
-  ```bash
-  jcctl privacy purge-subject \
-    --space mobility-users \
-    --subject-urn "urn:ngsi-ld:Person:hel.fi:residents:user-94812"
-  ```
-
-  The command deletes the primary entity and purges temporal historical observations from CloudNativePG.
-
----
-
-## 5. Routine Operational Reviews
-
-### Quarterly Access Review
-
-Every 90 days, City Administrators must review active assignments:
-
-1. Export active permissions registry:
+1. Render the effective role table from the repository:
 
    ```bash
-   jcctl governance export-permissions --out ./audit/q3-permissions.csv
+   jcctl roles render --repo-dir ./<organization-repo>
    ```
 
-2. Verify that inactive accounts or users who changed departments have their roles revoked.
-3. Review SOPS age key access lists.
+2. Compare it with the people who still work here, and remove the `RoleBinding` of anybody who does not. Each removal is a red-lane change, which is the audit record of the review.
+3. Check who can decrypt the repository's secrets: the public keys in `.sops.yaml`.
 
-### AI Agent Quota & Tool Budget Audit
+### Every month: the agents
 
-SecOps audits active AI agent permissions monthly:
-
-- Ensure agents hold zero direct database or broker write credentials.
-- Verify that agent elicitation prompts and risky-action confirmations are functioning.
-- Inspect agent token expiration limits (maximum 30 days before mandatory rotation).
+- No agent holds a database or broker credential. Agents reach data through an Endpoint and its Policy, with a `ServiceAccount` client of their own.
+- Every agent's client is audience-bound and short-lived. Rotate the client secret of any that is not, and read [Requirements/agents.md](../Requirements/agents.md) for what an agent's identity is required to be; DPoP proofs are named there and are not implemented today (T-2358).
 
 ## Related
 
