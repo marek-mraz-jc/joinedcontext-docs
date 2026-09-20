@@ -113,7 +113,7 @@ Family **EP** (EP-01…EP-77). Owning chapter: [Architecture/04-context-spaces-a
 
 ## 14. Endpoint-level publication narrowing
 
-- **EP-61** [P][S] — An Endpoint MAY declare `spec.projection.hiddenAttributes`; the gateway MUST intersect that list with the caller's policy projection before any representation is encoded, so an Endpoint can only narrow and never widen what the Policy grants (EP-06, EP-07, R9); a write through the Endpoint that touches a hidden attribute MUST be refused whole like one outside the grant (GW17), so what an Endpoint does not show cannot be changed through it.
+- **EP-61** [P][S] — An Endpoint MAY declare `spec.projection.hiddenAttributes`; the gateway MUST intersect that list with the caller's policy projection before any representation is encoded, so an Endpoint can only narrow and never widen what the Policy grants (EP-06, EP-07, R9); a write through the Endpoint that touches a hidden attribute MUST be refused whole like one outside the grant (GW17), so what an Endpoint does not show cannot be changed through it. A `hiddenAttributes` entry naming a member the gateway serves whatever the grants say — the identity members `id`, `type`, `@context`, `@id`, `@type` and `scope`, and the broker-set `createdAt`, `modifiedAt`, `deletedAt` and `expiresAt` (EP-71) — MUST be refused when the manifest is validated, with a reason naming the member: an entry that is accepted and then serves the member anyway is a narrowing the steward believes in and the gateway does not apply.
 
 ## 15. Publication to an open-data portal
 
