@@ -103,12 +103,15 @@ One shared `Button` carries four variants and three sizes, and which one a page 
 to be the author's taste. These are the rules, and `ui/tests/button_rules.test.tsx` is where they
 are held:
 
-- **One `primary` per view.** A page, and each dialog on it, has at most one primary button: the
-  one thing a person came to do. A second primary is two answers to the same question. Everything
-  else is `secondary` or `ghost`.
+- **One `primary` per view.** A page, and each dialog on it, offers at most one primary *action*:
+  the one thing a person came to do. The same action offered twice — in the page header and again
+  in the empty list — is one action and stays primary in both; a second, different primary is two
+  answers to the same question. Everything else is `secondary` or `ghost`. The shell around the
+  page is not the view: the assistant's bubble is the Portal's own affordance on every page.
 - **A label is a verb and its object.** "Propose the change", "Remove the role", "Ask the
-  assistant" — never "OK", "Submit", "Yes" or a bare noun, in any of the four languages. A label
-  key lives under the page's own namespace and reads as an action in all of them.
+  assistant" — never "OK", "Submit", "Yes", "Done" or a bare noun, in any of the four languages.
+  A label key lives under the page's own namespace and reads as an action in all of them. A bare
+  verb is allowed where its object is the thing beside it, as "Send" is beside a message box.
 - **`danger` is for what cannot be undone, and it asks first.** A destructive button opens a
   `ConfirmDialog`; the confirmation is never the focused control when the dialog opens, and never
   the button `Enter` presses by default. Removing a resource asks for its name typed back.
