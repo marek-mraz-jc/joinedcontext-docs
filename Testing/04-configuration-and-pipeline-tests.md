@@ -20,9 +20,10 @@ kind: ContextSpace
 metadata:
   name: ovzdusie
   namespace: banskabystrica
-spec:
   title:
     sk: Ovzdušie
+spec:
+  urnSegment: ovzdusie
 ```
 
 One command validates a whole repository:
