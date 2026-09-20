@@ -1413,6 +1413,14 @@ route's problem document.
     → 202 { "changeId": "chg-00000081", "lane": "yellow", "url": "…", "change": { … "phase": "Rejected" } }
   An assistant or application run calling jc_change_approve or jc_change_reject is refused
   (AG-11): 403 problem "an agent never approves or rejects a change; a person does (AG-11)".
+  Five more operations are the person's in the same way, refused for a run whatever its profile
+  names and so absent from its `GET …/ops` and its `tools/list`: jc_run_create, jc_run_cancel and
+  jc_run_publish (a run does not drive another run), jc_run_answer (a run does not answer the
+  question a run asked the person it acts for, AG-45), and jc_service_account_key_mint,
+  jc_service_account_key_rotate and jc_service_account_key_revoke (a run does not mint or retire
+  the credentials the platform authenticates with). Each refusal names its own act. Proposing a
+  deletion is not among them: jc_resource_delete and jc_project_delete stay open to a run and to
+  an MCP client, because a deletion is a Red change a person still approves (AG-77, CC-39).
   The rejection's reason is written on the merge request beside who rejected it; the REST route
   takes it as `{ "reason": "…" }` too.
   A run reaches this registry through the proxy's `/v1/mcp`, which the Portal serves on its
