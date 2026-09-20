@@ -9,6 +9,18 @@ Date: 2026-09-05
 Status: Accepted  
 Decision Makers: Architecture Board
 
+:::note One grammar, and what carries it today
+Decision 2 says the gateway parses `q`, `scopeQ` and `geoQ` with the broker's own
+`antares-ql` parser compiled as a shared Rust library. No such dependency exists:
+`crates/context-gateway/Cargo.toml` links none, and the grammar work is the gateway's own —
+`src/query.rs` refuses a `type` or a `q` the specification does not allow (GW31) and
+`src/pdp/scope_folding.rs` folds the scope grants, with `is_balanced` in
+`src/pdp/evaluator.rs` establishing that a caller's filter can be conjoined at all. The
+decision — one grammar, folded into the caller's query rather than filtered afterwards —
+holds and is enforced; the shared library named to carry it was not built. Checked
+2026-09-20 (T-2228); nothing below is rewritten.
+:::
+
 ## 1. Context
 
 CIVITAS/CORE v2 implemented security enforcement by routing requests through Apache APISIX, which invoked an external Open Policy Agent (OPA) sidecar over HTTP via the `opa` plugin. OPA in turn queried an external Spring Boot AuthZ Adapter, which queried PostgreSQL tables (ADR 023).
