@@ -52,8 +52,14 @@ jobs:
         # them. Pinned for the same reason the schemas are — an unrelated platform push must
         # not turn this lane red at a random hour. Bump both tags together with a commit that
         # says which claim moved.
+        # The platform is read at `main` and not at the last tag: the docs-first rule means a
+        # page lands before the code it describes, so a tree 64 commits behind reports every
+        # file the pages name as missing — seven of them at once on 2026-09-20, all present on
+        # main. The Portal has been read at `main` for the same reason. What the pin bought,
+        # a lane that an unrelated push cannot redden, is bought instead by the checker itself:
+        # it judges a claim only against a tree it actually read (T-2141, T-2366).
         env:
-          JC_PLATFORM_TAG: jc-core-v0.7.46
+          JC_PLATFORM_TAG: main
           JC_PORTAL_TAG: main
         run: |
           set -eu

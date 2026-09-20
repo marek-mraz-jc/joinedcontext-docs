@@ -167,6 +167,31 @@ def is_history(relative: pathlib.PurePath) -> bool:
     return bool(relative.parts) and relative.parts[0] in HISTORY
 
 
+# Which repository a page describes, for the variable leg. A variable is read wherever it is
+# read, and the checker cannot tell "nothing reads this" from "the tree that reads it was not
+# fetched": `ci.yml` fetches the platform and the Portal, so `JC_NETPOL_SETTLE`
+# (`joinedcontext-deployment/scripts/smoke.sh`) and every variable of the conformance suites
+# read as unread claims, nineteen of them at once. The path leg already answers this with
+# `BARE_PREFIX_OWNERS`; the same rule, keyed by the page, because a page about the conformance
+# suites names the conformance suites' variables (T-2141, T-2366).
+PAGE_OWNERS: dict[str, tuple[str, ...]] = {
+    "Testing/02-conformance-tests.md": ("joinedcontext-conformance",),
+    "Testing/03-frontend-and-e2e-tests.md": ("joinedcontext-conformance", "joinedcontext-portal"),
+    "Testing/05-deployment-and-performance-tests.md": (
+        "joinedcontext-conformance",
+        "joinedcontext-deployment",
+    ),
+    "Testing/06-security-tests.md": ("joinedcontext-conformance", "joinedcontext-platform"),
+    "Deployment/08-security-hardening.md": ("joinedcontext-deployment",),
+}
+
+
+def variables_judgeable(relative: pathlib.PurePath, checkouts: frozenset[str]) -> bool:
+    """Whether this page's variables can be judged at all from the trees that were fetched."""
+    owners = PAGE_OWNERS.get(str(relative))
+    return owners is None or all(owner in checkouts for owner in owners)
+
+
 def judgeable(claimed: str, checkouts: frozenset[str]) -> bool:
     """Whether a missing path is a finding or simply a repository nobody fetched.
 
@@ -207,6 +232,8 @@ def problems_of(
 
         for name in ENVIRONMENT.findall(line):
             if name in USER_SIDE or name in code_text:
+                continue
+            if not variables_judgeable(relative, checkouts):
                 continue
             bad.append(f"{relative}:{lineno}: nothing reads this variable: {name}")
 
@@ -373,6 +400,35 @@ def selftest() -> int:
             )
             return 1
         (docs / "Architecture" / "elsewhere.md").unlink()
+
+        # The same rule for a variable, keyed by the page: `Deployment/08` describes the
+        # deployment repository, so `JC_NETPOL_SETTLE` is unchecked while that tree is absent
+        # and a finding once it is there (T-2141, T-2366).
+        page = docs / "Deployment" / "08-security-hardening.md"
+        page.parent.mkdir(parents=True, exist_ok=True)
+        page.write_text(
+            "---\ntitle: Security hardening\n---\n\n# Security hardening\n\n"
+            "The settle window is `JC_NETPOL_SETTLE` seconds.\n",
+            encoding="utf-8",
+        )
+        deployment = code / "joinedcontext-deployment"
+        present_before = deployment.is_dir()
+        if present_before:
+            deployment.rename(code / "put-aside")
+        if any("JC_NETPOL_SETTLE" in problem for problem in check(docs, code)):
+            print("a variable of a repository nobody fetched was called unread", file=sys.stderr)
+            return 1
+        if present_before:
+            (code / "put-aside").rename(deployment)
+        else:
+            deployment.mkdir()
+        if not any("JC_NETPOL_SETTLE" in problem for problem in check(docs, code)):
+            print(
+                "with its repository present an unread variable stopped being a finding",
+                file=sys.stderr,
+            )
+            return 1
+        page.unlink()
 
         # And with no code tree at all the checker reports nothing rather than everything.
         if check(docs, root / "nowhere"):
