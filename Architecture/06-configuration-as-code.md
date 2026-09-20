@@ -77,7 +77,19 @@ blueprints/
   {blueprint_name}/
     blueprint.yaml                      # The whole blueprint: version, riskClass,
                                         # allowedRoles, parameter schema, templates
+.jc/
+  seed-manifest.txt                     # the paths the installation's seed owns, one per line,
+                                        # written by the forge bootstrap and read by its next
+                                        # run; not a manifest and read by nothing else (T-2392)
 ```
+
+Everything above `.jc/` is written by people and by the Portal on their behalf. `.jc/` is the
+installation's own bookkeeping: the forge bootstrap seeds a new organization with a starting set
+of manifests, and it has to be able to tell a file it wrote last time from a file somebody else
+wrote — otherwise correcting a seed file's path leaves the old copy behind, two manifests declare
+one identity, and the gateway refuses the whole repository. The record holds paths and nothing
+else, is generated from the mounted seed rather than read out of the repository's own manifests,
+and a path that is not in it is never the bootstrap's to remove.
 
 ### Encrypted secret files (CC-06, ADR-N-012)
 
