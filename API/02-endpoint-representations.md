@@ -104,6 +104,17 @@ The signal is asked for rather than volunteered because it tells a caller that s
 there to hide: an unauthorised prober who reads `NGSILD-Results-Restricted` on an answer they
 never asked about learns that the space holds more than they saw.
 
+Two query parameters of the read grammar choose *which attribute* a decision is taken on, so each
+carries a rule of its own ([AG-85](../Requirements/agents.md), T-2299). `geoproperty` is forwarded
+with the caller's own geo query where no grant draws an area; where a grant draws one, the area was
+written for CIM 009's default `location`, and a `geoproperty` naming another attribute is `400
+BadRequestData` naming the parameter (clause 5.5.2) rather than the grant's polygon tested against
+an attribute it was never written for. `geometryProperty` chooses the GeoProperty that becomes the
+`geometry` of a GeoJSON answer, which is a value the response narrowing no longer recognises as
+that attribute: it is admitted only when the grant covers the attribute and the endpoint does not
+hide it, and is otherwise `400` naming the parameter. The MCP surface refuses both in the same
+words (§8).
+
 ### Problem types
 
 Every refusal is `application/problem+json` (RFC 7807) with a `type` under
