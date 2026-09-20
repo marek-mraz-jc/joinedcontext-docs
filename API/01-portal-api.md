@@ -431,6 +431,7 @@ POST /api/v1/projects/{project}/pipelines/test
 - `sample.text` is at most 5 MiB and never leaves memory; `sample.url` instead makes the runner fetch it under its own egress policy. `format` is `csv`, `json` or `text` (the default, one message as it is).
 - The answer is the trace of Architecture/08 §7: `input`, `mapping`, `validation`, `errors`. A manifest the kind refuses is `400` (MF-37); no runner, or a runner that does not answer within three seconds, is `503`; a second test while one runs in the project is `409`.
 - A mapping that yields an array is one entity per element in `mapping` and `validation`, at most 20 (PL-48).
+- An error of stage `mapping` carries `step`, the index into `spec.steps` of the step it failed at (PL-52); `lint` and `runner` errors have no step and leave it absent.
 - A derived pipeline (`spec.source.endpointRef`, the studio's `kpi` preset, PL-45) is tested on a page of its source endpoint: `sample.url` is that endpoint's `…/ngsi-ld/v1/entities?type=…&attrs=…` URL (the runner fetches it with the pipeline's read grant) or `sample.text` is such a page, `format: json`; the page reaches the mapping as one message, so a fold yields one entity in `mapping` and `validation` checks it as an indicator (PF-43): `calculationFormula`, `derivedFrom` and `computedBy` missing are `problems`, not a `200` that admission would later refuse.
 - Nothing is written, no `secretRef` is resolved, the stream is deleted whatever happened.
 

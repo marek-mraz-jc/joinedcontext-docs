@@ -754,9 +754,22 @@ A mapping is tested where it will run, on the project's pipeline runner, and nev
 }
 ```
 
+An error of stage `mapping` also carries `step`: the index into `spec.steps` of the step the
+message failed at, counted as the manifest writes them (PL-52), so a lane with several processors
+says which one threw rather than only that the mapping did. The harness stamps it: before every
+author step it writes that step's index into the message's metadata unless the message has already
+failed, so the number that survives to the capture route is the step the failure happened at, not
+the last step to run. Nothing else carries a `step`: a `lint` error belongs to the document and a
+`runner` error to the stream, and both leave it absent. A reader that does not understand `step`
+reads the trace exactly as before.
+
+```json
+{ "stage": "mapping", "step": 2, "line": null, "message": "expected string, got number" }
+```
+
 A mapping that yields an array is split into one entity per element before validation, the same `unarchive` the reconciler renders (PL-47), capped at 20 so a feed of thousands answers in the same three seconds (PL-48). When the candidate reads an `http` DataSource the studio offers that URL as the sample: the runner fetches it under its own egress policy and the first test runs on the live feed with no file. The same harness with no compute is the dry run's feed probe for an `http` DataSource (MF-39): `probe.records`, `probe.bytes` and the first record, beside the plan, before anything is proposed. The studio does not propose a `bloblang` pipeline whose mapping has not passed the test since it last changed (PL-49): Propose stays disabled with the reason until the test is green for the text in the editor.
 
-Nothing is written: no Git, no broker, no endpoint, no `secretRef` resolved. The runner refuses a harness that does not lint, and its answer carries the line numbers the trace reports; a processor that throws is a `mapping` error naming the message. One test stream per project at a time, three seconds, then gone. The studio (§7 of Architecture/09) runs the test on the manifest being edited, draws the stages, underlines an error at its line, and drafts the `DataSource`, the type and the Bloblang mapping from a dropped CSV or JSON sample so the first test runs before anything is typed (PL-44).
+Nothing is written: no Git, no broker, no endpoint, no `secretRef` resolved. The runner refuses a harness that does not lint, and its answer carries the line numbers the trace reports; a processor that throws is a `mapping` error naming the message. One test stream per project at a time, three seconds, then gone. The studio (§7 of Architecture/09) runs the test on the manifest being edited, draws the stages, paints the step an error names red and the steps behind it grey (PL-56), underlines an error at its line, and drafts the `DataSource`, the type and the Bloblang mapping from a dropped CSV or JSON sample so the first test runs before anything is typed (PL-44).
 
 ## Related
 
