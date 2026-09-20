@@ -29,7 +29,11 @@ DEFINITION = re.compile(
 ID = r"[A-Z][A-Za-z0-9]*?-?\d+"
 RANGE = re.compile(rf"^\s*({ID})\s*(?:[…–—-]{{1,3}}\s*({ID}))?\s*$")
 SPLIT = re.compile(r"^([A-Za-z]+)-?(\d+)$")
-SKIP = {"00-index.md", "traceability.md"}
+SKIP = {"00-index.md", "traceability.md", "compliance-matrix.md"}
+# A row of the generated compliance matrix: `| **EP-27** | [P] | tested | fast ci | … |`
+MATRIX_ROW = re.compile(r"^\|\s*\*\*([A-Z][A-Za-z0-9]*?-?\d+(?:-[A-Za-z]+\d+)?)\*\*\s*\|"
+                        r"[^|]*\|\s*(tested|built|open)\s*\|")
+STATES = ("tested", "built", "open")
 
 
 def family_of(identifier: str) -> str | None:
@@ -93,6 +97,29 @@ def table_after(text: str, heading: str) -> list[list[str]]:
     return rows[1:] if rows else []  # drop the header row
 
 
+def states_in(path: Path, problems: list[str]) -> set[str] | None:
+    """Every requirement the generated compliance matrix gives a state (T-2142, TS-19).
+
+    `None` when the page is not there at all, which is the corpus of the self-test and of a
+    checkout that has never run `tasks/compliance index`; a page that is there says `tested`,
+    `built` or `open` for every requirement, and a requirement it has forgotten is one a reader
+    cannot tell a proof from a wish about.
+    """
+    if not path.exists():
+        return None
+    stated: set[str] = set()
+    for line in path.read_text(encoding="utf-8").splitlines():
+        match = MATRIX_ROW.match(line)
+        if match:
+            stated.add(match.group(1))
+    if not stated:
+        problems.append(
+            f"{path.name} names no requirement with one of the states {', '.join(STATES)}: "
+            "the page or this check is wrong"
+        )
+    return stated
+
+
 def check(root: Path) -> list[str]:
     problems: list[str] = []
     requirements = root / "Requirements"
@@ -106,6 +133,7 @@ def check(root: Path) -> list[str]:
     if not matrix_rows:
         problems.append("traceability.md holds no matrix table")
     matrix_covered = covered_ids(matrix_rows, problems, "traceability.md")
+    stated = states_in(requirements / "compliance-matrix.md", problems)
 
     defined_anywhere = False
     for path in sorted(requirements.glob("*.md")):
@@ -134,6 +162,11 @@ def check(root: Path) -> list[str]:
         for identifier in sorted(defined):
             if identifier not in matrix_covered and family_of(identifier) not in matrix_covered:
                 problems.append(f"{identifier} ({path.name}) is in no family range of traceability.md")
+            if stated is not None and identifier not in stated:
+                problems.append(
+                    f"{identifier} ({path.name}) has no state in compliance-matrix.md: regenerate "
+                    "it with `tasks/compliance index` (T-2142)"
+                )
 
     if not defined_anywhere:
         problems.append("no requirement bullet found at all: the parser or the corpus is wrong")
@@ -172,6 +205,19 @@ title: Traceability
 """
 
 
+COMPLIANCE = """---
+title: Compliance
+---
+
+# Requirement Compliance Matrix
+
+| Requirement | Tags | State | Lane | Tests |
+|---|---|---|---|---|
+| **EP-01** | [P] | tested | fast ci | platform `crates/x/tests/a.rs::b` |
+| **EP-02** |  | built | | `crates/x/src/a.rs` |
+"""
+
+
 def selftest() -> int:
     cases: list[tuple[str, str, str, str | None]] = [
         ("a family in sync", "", "", None),
@@ -182,6 +228,11 @@ def selftest() -> int:
          "EP-03 (endpoints.md) is in no family range"),
         ("a row without a test family", "", "| EP-04 | [Architecture/04.md](../Architecture/04.md) |  |",
          "EP-04 names no test family"),
+        # T-2142: the compliance matrix above states EP-01 and EP-02 and nothing else.
+        ("a requirement with no state in the compliance matrix",
+         "- **EP-03** — A third requirement.",
+         "| EP-03 | [Architecture/04.md](../Architecture/04.md) | [Testing/01.md](../Testing/01.md) |",
+         "EP-03 (endpoints.md) has no state in compliance-matrix.md"),
     ]
     failures = []
     for name, extra, extra_row, expected in cases:
@@ -192,6 +243,7 @@ def selftest() -> int:
                 FAMILY.format(extra=extra, extra_row=extra_row), encoding="utf-8"
             )
             (requirements / "traceability.md").write_text(MATRIX, encoding="utf-8")
+            (requirements / "compliance-matrix.md").write_text(COMPLIANCE, encoding="utf-8")
             problems = check(Path(tmp))
             if expected is None and problems:
                 failures.append(f"{name}: reported {problems}")
@@ -204,14 +256,31 @@ def selftest() -> int:
         body = FAMILY.format(extra="", extra_row="")
         (requirements / "endpoints.md").write_text(body[: body.index("## Traceability")], encoding="utf-8")
         (requirements / "traceability.md").write_text(MATRIX, encoding="utf-8")
+        (requirements / "compliance-matrix.md").write_text(COMPLIANCE, encoding="utf-8")
         if not any("no `## Traceability` table" in problem for problem in check(Path(tmp))):
             failures.append("a family file without a traceability table was accepted")
+
+    # T-2142: a corpus with no compliance matrix at all is not a failure — the page is
+    # generated in another repository — but a matrix that states nothing is.
+    with tempfile.TemporaryDirectory() as tmp:
+        requirements = Path(tmp) / "Requirements"
+        requirements.mkdir(parents=True)
+        (requirements / "endpoints.md").write_text(FAMILY.format(extra="", extra_row=""), encoding="utf-8")
+        (requirements / "traceability.md").write_text(MATRIX, encoding="utf-8")
+        if check(Path(tmp)):
+            failures.append("a corpus without a compliance matrix was refused")
+        (requirements / "compliance-matrix.md").write_text("# empty\n", encoding="utf-8")
+        if not any("names no requirement with one of the states" in p for p in check(Path(tmp))):
+            failures.append("a compliance matrix stating nothing was accepted")
 
     for failure in failures:
         print(f"FAIL {failure}", file=sys.stderr)
     if failures:
         return 1
-    print("ok: an unmapped requirement, a missing table and a row without a test all go red")
+    print(
+        "ok: an unmapped requirement, a missing table, a row without a test and a requirement "
+        "with no state all go red"
+    )
     return 0
 
 
