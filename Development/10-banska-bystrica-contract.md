@@ -20,7 +20,7 @@ and a rule already in force is cited so it can be checked. The feeds these space
 | body | Banskobystrický samosprávny kraj | Mesto Banská Bystrica |
 | `orgDomain` | `bbsk.sk` | `banskabystrica.sk` |
 | territory | the kraj, NUTS `SK032`, 13 okresy | the city, LAU `SK0321508438` |
-| people | 614 356 | 72 123 |
+| people | 611 124 | 72 123 |
 | holds the application | yes | no |
 
 They are two projects because they are two publishers with two mandates. A figure of one
@@ -138,7 +138,7 @@ is a different case and section 5 gives it a value of its own.
   "name": { "type": "Property", "value": "emisie-tuhe-okres-brezno" },
   "currentValue": {
     "type": "Property",
-    "value": 5354.3,
+    "value": 4037.7,
     "unitCode": "TNE",
     "observedAt": "2026-09-20T06:00:00Z"
   },
@@ -166,8 +166,10 @@ is a different case and section 5 gives it a value of its own.
 ```
 
 `TNE` is the UN/CEFACT common code for tonne. `C62` is the code for a plain count, `MTQ` for a
-cubic metre. The value is the one `zp3803rs` returned for `SK032` in 2023; a KPI whose number
-was typed rather than read is the defect this whole chain exists to prevent.
+cubic metre. The value is the one `zp3803rs` returned for `SK032` in 2023, decoded by the cube's
+own dimension index and not by assuming its years ascend, which they do not. A KPI whose number
+was typed rather than read, or read against the wrong year, is the defect this whole chain exists
+to prevent.
 
 ## 5. A window with no readings
 

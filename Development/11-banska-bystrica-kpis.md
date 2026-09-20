@@ -17,7 +17,7 @@ where every input below was fetched from and found to answer.
 
 | project | indicators of | territory each one declares |
 |---|---|---|
-| `bbsk` | Banskobystrický samosprávny kraj, 614 356 people | `kraj`, or `okres-{name}` for one of the 13 |
+| `bbsk` | Banskobystrický samosprávny kraj, 611 124 people | `kraj`, or `okres-{name}` for one of the 13 |
 | `banskabystrica` | Mesto Banská Bystrica, 72 123 people | `mesto`, or `cast-{name}` |
 
 An indicator of `bbsk` reads the `kraj` space and nothing else; an indicator of
@@ -108,7 +108,7 @@ static. No value is carried forward and relabelled as current.
 | English | Solid particulate emissions per square kilometre |
 | Question | How much particulate matter do large and medium sources release per square kilometre of this territory? |
 | Reads | `StatisticalObservation.value`, cube `zp3803rs`, indicator `ODPAD_TONY_KM2`, pollutant `1` (tuhé emisie) |
-| Formula | the publisher's own value for the territory, taken as published, not recomputed |
+| Formula | the publisher's own value for the territory, taken as published, not recomputed, and decoded by the cube's dimension index rather than by assuming an order |
 | Window | one calendar year, the latest the cube carries |
 | Unit | tonnes per km², `unitCode: TNE` with the per-km² divisor named in `calculationFormula` |
 | Refresh | annual |

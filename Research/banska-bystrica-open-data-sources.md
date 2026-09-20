@@ -18,15 +18,16 @@ Four levels of publisher appear, and they are not interchangeable.
 
 | level | body | territory | people |
 |---|---|---|---|
-| `region` | Banskobystrický samosprávny kraj (BBSK), IČO 37828100 | the whole kraj, NUTS `SK032`, 13 okresy | 614 356 at the end of 2024 |
+| `region` | Banskobystrický samosprávny kraj (BBSK), IČO 37828100 | the whole kraj, NUTS `SK032`, 13 okresy | 611 124 at the end of 2024 |
 | `city` | Mesto Banská Bystrica, IČO 00313271 | the city, LAU `SK0321508438` | 72 123 in the city's own register |
 | `national` | ŠÚ SR, MIRRI (the NKOD catalogue), SHMÚ, NCZI | the whole state, broken down to kraj and okres | |
 | `operator` | ŽSR, SAD, a utility | a network, not a territory | |
 
 Both population figures were read from the feeds in section 3, not from a press page. The kraj
 figure is the end-of-2024 stock in `om7102rr`; a rounded "640 000" that circulates for BBSK is
-about 4 % high. The city figure is the sum of the 105 age rows the city itself publishes, and the
-ŠÚ SR okres figure for the same territory is 107 199, because an okres is not a city. A city
+about 5 % high, and the kraj lost 3 232 people between the end of 2023 and the end of 2024. The
+city figure is the sum of the 105 age rows the city itself publishes, and the ŠÚ SR okres figure
+for the same territory is 106 604, because an okres is not a city. A city
 number presented as a regional one is wrong by a factor of eight in population alone, and that
 error is invisible on a dashboard, so every row below says which project it belongs to.
 
@@ -67,6 +68,14 @@ with the date each was last updated. Territories are NUTS and LAU codes, so `SK0
 curl -s 'https://data.statistics.sk/api/v2/dimension/om7102rr/om7102rr_vuc?lang=sk'
 ```
 
+**Read the index, never the order.** `value` is flat and row-major over `size`, and the position
+of a code inside a dimension is `dimension.{name}.category.index`, which is **not** sorted.
+`om7102rr_obd` comes back `["2024", "2023"]` and `vh5003rr_rok` comes back `["2023", "2022"]`:
+newest first. A reader who assumes the years ascend reports every number against the wrong year,
+and the value is real, so nothing about it looks wrong. Every consumer of these feeds decodes by
+the index, and `tests/test_bystrica_pipelines.py` in the deployment repository fails on a mapping
+that does not.
+
 ## 3. What the feeds actually returned
 
 The numbers below came out of the requests in section 2 on 2026-09-20. They are here so that the
@@ -74,12 +83,12 @@ first pipeline has something to be checked against.
 
 | feed | slice | value |
 |---|---|---|
-| `om7102rr` | `SK032`, end of 2023 and 2024, both sexes | 611 124, then 614 356 |
-| `om7102rr` | `SK0321` (okres Banská Bystrica), same window | 106 604, then 107 199 |
-| `zp3803rs` | `SK032`, 2022 and 2023, solid emissions in tonnes | 4 037.7, then 5 354.3 |
-| `zp3803rs` | `SK032`, same years, nitrogen oxides in tonnes | 5 560.0, then 6 523.9 |
-| `vh5003rr` | city `SK0321508438`, 2022 and 2023, total drinking water | 3 868, then 3 991 |
-| `vh5003rr` | `SK032`, same years | 21 589, then 22 337 |
+| `om7102rr` | `SK032`, end of 2023 then 2024, both sexes | 614 356, then 611 124 |
+| `om7102rr` | `SK0321` (okres Banská Bystrica), same window | 107 199, then 106 604 |
+| `zp3803rs` | `SK032`, 2022 then 2023, solid emissions in tonnes | 5 354.3, then 4 037.7 |
+| `zp3803rs` | `SK032`, same years, nitrogen oxides in tonnes | 6 523.9, then 5 560.0 |
+| `vh5003rr` | city `SK0321508438`, 2022 then 2023, total drinking water | 3 991, then 3 868 |
+| `vh5003rr` | `SK032`, same years | 22 337, then 21 589 |
 | `pr3117qr` | `SK032`, 2025, unemployed by age, thousands of persons | 11.7 in the first quarter, 12.7 in the second |
 | city age register | all 105 rows summed | 72 123 inhabitants, ages 0 to 104 |
 
