@@ -90,7 +90,7 @@ Deploying an application to production generates a declarative `App` manifest th
 3. Click **Open the merge request** to submit the `App` manifest to Approvals.
 4. An approver opens `/projects/helsinki/approvals`, reviews the manifest diff, and clicks **Approve**.
 5. Once merged, the application is live at `/apps/news-feed-summary/` behind platform authentication.
-6. To retire an application, open `/projects/helsinki/apps`, locate the application card, click **Delete**, confirm the name, and click **Propose removal**.
+6. To retire an application, open `/projects/helsinki/apps`, locate the application card, click **Remove**, confirm the name, and click **Propose removal**.
 
 #### By asking the assistant
 
