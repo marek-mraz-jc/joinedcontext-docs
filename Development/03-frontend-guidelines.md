@@ -97,9 +97,39 @@ Neither is optional and neither is a later pass:
 - Every control is reachable and operable from the keyboard, and announces itself to a screen reader. A `div` with an `onClick` is not a button.
 - Every string a person reads comes from the locale files in `src/locales`; the UI ships Slovak, English, German and Czech. A literal in a component is a string that cannot be translated and that the locale checks will refuse.
 
+## 5. Buttons
+
+One shared `Button` carries four variants and three sizes, and which one a page reaches for used
+to be the author's taste. These are the rules, and `ui/tests/button_rules.test.tsx` is where they
+are held:
+
+- **One `primary` per view.** A page, and each dialog on it, has at most one primary button: the
+  one thing a person came to do. A second primary is two answers to the same question. Everything
+  else is `secondary` or `ghost`.
+- **A label is a verb and its object.** "Propose the change", "Remove the role", "Ask the
+  assistant" — never "OK", "Submit", "Yes" or a bare noun, in any of the four languages. A label
+  key lives under the page's own namespace and reads as an action in all of them.
+- **`danger` is for what cannot be undone, and it asks first.** A destructive button opens a
+  `ConfirmDialog`; the confirmation is never the focused control when the dialog opens, and never
+  the button `Enter` presses by default. Removing a resource asks for its name typed back.
+- **A button that starts a request shows `loading` and refuses the second click.** The spinner is
+  the button's own (`loading`), not a sentence beside it, and the request is sent once.
+- **A button a caller may not use stays, disabled, with the reason** (UI-44). `Button` renders the
+  reason only when it is both `disabled` and given a `disabledReason`; `PermissionGuard` passes
+  both. A reason alone leaves the button live, which is not a refusal.
+- **An icon-only button has a name and a tooltip.** `aria-label` for the screen reader, `title`
+  for the pointer, and the two say the same thing.
+- **The hit area is at least 24 × 24 CSS px** (WCAG 2.5.8), which is what the `xs` and `sm` sizes
+  are measured against.
+- **In a dialog, Cancel comes before the action**, in that order, in every dialog on every page.
+
+A control that is not one of these is not a hand-made `<button>`: it is a missing prop on the
+shared component, and that is where it is added.
+
 ## Related
 
 - [00-intro](00-intro.md) — the repositories and the toolchain.
 - [02-backend-guidelines](02-backend-guidelines.md) — the OpenAPI document this client is generated from.
 - [../Architecture/09-portal.md](../Architecture/09-portal.md) — what the Portal is and what it serves.
+- [../Requirements/portal-and-ui.md](../Requirements/portal-and-ui.md) — UI-44, the disabled-with-a-reason rule the button rules build on.
 - [../Architecture/10-dashboards-and-visualization.md](../Architecture/10-dashboards-and-visualization.md) — the map and dashboard rules in full.
