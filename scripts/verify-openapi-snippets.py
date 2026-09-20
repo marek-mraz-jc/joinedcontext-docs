@@ -31,6 +31,11 @@ PARAM = re.compile(r"\{([^}/]+)\}")
 # without a hostname of its own (AP-12, AP-14, Architecture/16 §5)
 ALLOWED_PREFIXES = ("/api/v1", "/api/endpoint", "/apps", "/cs", "/ngsi-ld/v1",
                     "/healthz", "/livez", "/readyz", "/.well-known")
+# The published specification is the Portal's own (utoipa over its axum router), so only the
+# Portal's surface is looked up in it. `/api/endpoint`, `/cs`, `/ngsi-ld/v1` and `/apps` are
+# the gateway's and the apps host's, documented here and served elsewhere; holding them to a
+# document that cannot contain them would report a gap that is not one.
+SPEC_SCOPE = ("/api/v1",)
 FORBIDDEN = re.compile(r"^/apis/")
 PROBLEM_MEMBERS = ("type", "title", "status")
 
@@ -132,7 +137,13 @@ def check(root: Path) -> list[str]:
         for spec_route in paths:
             shapes.setdefault(PARAM.sub("{}", spec_route), []).append(spec_route)
         for (method, path), where in sorted(found.items(), key=lambda item: item[1]):
-            shape = PARAM.sub("{}", path)
+            # A documented route often shows the query it takes (`?limit=20`,
+            # `?format=yaml|json|zip`). A specification path never carries one, so the
+            # comparison is on the path alone: the query is documented per parameter.
+            bare = path.split("?", 1)[0]
+            if not bare.startswith(SPEC_SCOPE):
+                continue
+            shape = PARAM.sub("{}", bare)
             if shape not in shapes:
                 problems.append(f"{where}: {method} {path} is in no path of the published specification")
                 continue
@@ -184,7 +195,7 @@ GET    /api/endpoint/{endpointSlug}/ngsi-ld/v1/entities   entities
         ("problem+json without status", page.replace(', "status": 404', ""), "omits status", None),
         ("no route at all", "---\ntitle: API\n---\n\n# API\n\nProse.\n", "no documented route was found", None),
         ("route missing from the specification", page, "is in no path of the published specification",
-         {"paths": {"/api/v1/projects/{project}/{plural}": {"get": {}, "post": {}}}}),
+         {"paths": {"/api/v1/projects/{project}/changes": {"get": {}, "post": {}}}}),
         ("method missing from the specification", page, "without POST",
          {"paths": {"/api/v1/projects/{project}/{plural}": {"get": {}},
                     "/api/endpoint/{endpointSlug}/ngsi-ld/v1/entities": {"get": {}}}}),

@@ -202,9 +202,11 @@ cluster rebuild, not a manifest change, and it is the same decision as the plugi
 rather than a second one.
 
 What holds it in the meantime: `just dev-smoke` measures the window on every run and prints
-its length, and fails the run if the window outlasts the settle time (`JC_NETPOL_SETTLE`,
-30 seconds by default). So the hole is bounded and a regression is visible, which is the most
-a manifest-level control can do about a controller-level gap.
+its length beside the pass line (`settled after 8s`), so a regression is visible to whoever
+reads the run. It is a measurement and not yet a bound — the probe gives the controller up to
+72 seconds and reports whatever it took, and no length fails the run. Turning the number into
+a ceiling is [T-2337](https://github.com/marek-mraz/joinedcontext-deployment); until it lands,
+"bounded" means "watched", which is less than this page used to claim.
 
 ### Layer 7: Admission and Runtime Policy Enforcement
 
