@@ -54,12 +54,13 @@ flowchart TD
 
 ## 3. What a published image carries
 
-`image.yml` runs on every push to `main` and on a `v*` tag in `joinedcontext-platform` and `joinedcontext-portal`, and builds with Docker Buildx under `id-token: write`. `image-ckan.yml` in `joinedcontext-deployment` builds the catalogue image the same way, and `image.yml` in `joinedcontext-conformance` runs on a `v*` tag only. Four things leave the lane with the image:
+`image.yml` runs on every push to `main` and on a `v*` tag in `joinedcontext-platform` and `joinedcontext-portal`, and builds with Docker Buildx under `id-token: write`. `image-ckan.yml` in `joinedcontext-deployment` builds the catalogue image the same way, and `image.yml` in `joinedcontext-conformance` runs on a `v*` tag only. Five things leave the lane with the image:
 
 | Carried | Produced by | Detail |
 |---|---|---|
 | Tags | the build step | `:${{ github.sha }}` and `:main`. Everything downstream refers to the digest the step printed, never to a tag |
 | An SBOM | `sbom: true` on the build | a BuildKit attestation holding an SPDX 2.3 document, scanned by Syft inside BuildKit |
+| A second SBOM | `cosign attest --yes --type cyclonedx …@<digest>` | a CycloneDX 1.6 document, produced by Trivy from the pushed digest and attested to that digest under the lane's own identity (OPS-41). The lane reads it back before it lets the image through, so a lane that stops attesting goes red |
 | Provenance | `provenance: true` on the build | a SLSA build definition naming the workflow, the Dockerfile and the request, at BuildKit's default `min` level, so it names the build's inputs by reference and not every file read |
 | A signature | `cosign sign --yes …@<digest>` | keyless, against the GitHub Actions OIDC issuer; no signing key is held anywhere |
 
@@ -77,6 +78,18 @@ docker buildx imagetools inspect "ghcr.io/marek-mraz/joinedcontext-portal@${dige
 
 The document answers `SPDX-2.3`, and its creators are `Organization: Anchore, Inc`, `Tool: syft-v1.51.0` and `Tool: buildkit-v0.32.2`.
 
+Read the CycloneDX document the same way, by digest and by the identity that attested it:
+
+```bash
+cosign verify-attestation --type cyclonedx \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --certificate-identity https://github.com/marek-mraz-jc/joinedcontext-platform/.github/workflows/image.yml@refs/heads/main \
+  "ghcr.io/marek-mraz-jc/joinedcontext-platform@${digest}" \
+  | jq -r '.payload | @base64d | fromjson | "\(.predicateType) \(.predicate.bomFormat) \(.predicate.specVersion)"'
+```
+
+Run on 2026-09-20 against `sha256:4d4de42cb36ddfe8aa5e2eccacc57e302478576dbb939a5b9f63657daa0d00a7`, the digest the `image` lane published for `main` at commit `27fdb310b0`, it printed `https://cyclonedx.org/bom CycloneDX 1.6` and reported on standard error that the claims were validated, that they exist in the transparency log, and that the certificate subject is `https://github.com/marek-mraz-jc/joinedcontext-platform/.github/workflows/image.yml@refs/heads/main`. The attested document names the same digest as its subject and, for that image, 12 components. Only digests published after that commit carry it: an older image verifies its signature and answers `no matching attestations` here.
+
 Verify the signature against the workflow that is allowed to produce it, rather than against a key:
 
 ```bash
@@ -88,15 +101,16 @@ cosign verify \
 
 The identity is the subject alternative name in the Fulcio certificate the signature carries, which is where the two values above were read from: an image signed by any other workflow, repository or branch fails this check even though it is signed.
 
+Both steps an image lane performs after the push — the Trivy scan and the `cosign` signature — also exist as reusable workflows in `joinedcontext-deployment/.github/workflows/` (`reusable-container-scan.yml`, `reusable-container-sign.yml`). No workflow in any of the five repositories calls them: every image lane carries the two steps inline, next to the build step that produced the digest they read. They are kept, not deleted, as the building blocks of a component image lane that does not exist yet, and the README of that folder says so beside the table (T-2415).
+
 ## 4. Where the chain and the requirements disagree
 
-The gates above are what the workflows run today. Three statements of the requirement set are not yet true of them, and each is a task rather than a sentence this page softens:
+The gates above are what the workflows run today. Two statements of the requirement set are not yet true of them, and each is a task rather than a sentence this page softens:
 
-- **OPS-41 asks for CycloneDX, the images attest SPDX 2.3.** The format is BuildKit's, and the CycloneDX lane that exists, `joinedcontext-deployment/.github/workflows/reusable-container-scan.yml`, produces `sbom.cdx.json` through Trivy and is called by no workflow in any of the five repositories. Either the image lanes attach a CycloneDX attestation beside the SPDX one, or OPS-41 names the format the platform ships; T-2412 carries the decision.
 - **TS-24 asks for `npm audit` beside `cargo audit`.** Only `cargo audit` and `cargo deny` run. [../Testing/06-security-tests.md](../Testing/06-security-tests.md) records the gap and owns it.
 - **Provenance is `min`, not `max`.** The attestation names the workflow, the commit and the Dockerfile; it does not list every source file of the build. Nothing in the requirement set asks for `max` yet, and raising it makes the attestation large enough to be worth a decision.
 
-The SSDLC claim of this page is therefore the chain of §1 to §3 and nothing more: a gate that exists and blocks, plus three named gaps.
+The SSDLC claim of this page is therefore the chain of §1 to §3 and nothing more: a gate that exists and blocks, plus two named gaps.
 
 ## Related
 
