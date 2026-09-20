@@ -67,7 +67,7 @@ authorization code flow with PKCE runs server-side and the result is an encrypte
 {
   "subject": "b7c1e0f4-2c17-4b7c-9a2f-8f0b0f6b3d21",
   "username": "jana.kovacova",
-  "email": "aino.virtanen@hel.fi",
+  "email": "aino.virtanen@example.org",
   "name": "Aino Virtanen",
   "roles": ["portal-viewer", "space-editor"]
 }
@@ -302,7 +302,7 @@ A listed proposal carries what a reviewer decides on, not what the forge stores:
         "phase": "PendingApproval"
       },
       "summary": { "key": "change.summary.update", "params": { "kind": "Endpoint", "name": "public-air", "fields": 1 } },
-      "author": { "name": "Aino Virtanen", "email": "aino.virtanen@hel.fi" },
+      "author": { "name": "Aino Virtanen", "email": "aino.virtanen@example.org" },
       "createdAt": "2026-09-06T09:14:22Z"
     }
   ]
@@ -1042,7 +1042,7 @@ GET /api/v1/branding/favicon     the favicon file, from the same mount
   "instanceName": "Banská Bystrica Context",
   "shortName": "BB Context",
   "organisation": "Mesto Banská Bystrica",
-  "contactEmail": "opendata@banskabystrica.sk",
+  "contactEmail": "opendata@example.org",
   "logo": "logo.svg",
   "colours": { "primary": "#0000bf", "secondary": "#0072c6", "accent": "#ffe977", "background": "#ffffff", "text": "#1a1a1a" },
   "fonts": { "heading": "HelsinkiGrotesk, system-ui, sans-serif", "body": "system-ui, sans-serif" },
@@ -1546,7 +1546,7 @@ A workspace:
   "name": "bikes-cleanup",
   "title": "Bike stations cleanup",
   "project": "helsinki",
-  "owner": "jana@hel.fi",
+  "owner": "jana@example.org",
   "branch": "workspace/bikes-cleanup",
   "baseRevision": "9c1f0ab",
   "scope": { "kind": "project" },

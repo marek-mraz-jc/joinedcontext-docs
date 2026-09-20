@@ -19,7 +19,7 @@ global:
     organisation: "Mesto Banská Bystrica"         # legal publisher, DCAT-AP dcterms:publisher
     orgDomain: "banskabystrica.sk"                # URN segment, Keycloak realm display, did:web
     domain: "bb.example.com"                      # the platform host
-    contactEmail: "opendata@banskabystrica.sk"    # DCAT-AP contact point, e-mail templates
+    contactEmail: "opendata@example.org"    # DCAT-AP contact point, e-mail templates
     licenseDefault: "CC-BY-4.0"                   # default dataset licence
     logo: "logo.svg"                              # served from the platform origin
     favicon: "favicon.svg"

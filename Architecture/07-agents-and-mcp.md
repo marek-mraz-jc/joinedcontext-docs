@@ -290,7 +290,7 @@ sequenceDiagram
      ```text
      feat(transport): optimize streetlight dimming schedule
 
-     Co-Proposed-By: Mikko Laine <mikko.laine@hel.fi>
+     Co-Proposed-By: Mikko Laine <mikko.laine@example.org>
      Signed-off-by: Agent-Optimizer <agent-optimizer@service.joinedcontext.local>
      ```
 
