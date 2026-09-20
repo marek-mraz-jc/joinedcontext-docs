@@ -65,6 +65,7 @@ How "what the caller asked for" meets "what the caller is granted":
 - **GW32** — A batch that would **change or remove** stored entities (`entityOperations/upsert`, `update`, `merge`, `delete`) MUST be refused `403` whole when any matching policy decides from the stored entity — a `q` or a granted area — because such a batch addresses its entities in the payload, so there is nothing to read first and no entity tag to write under (R45). `entityOperations/create` is unaffected: a create has no stored state. The refusal MUST tell the caller to write one entity per request, and MUST NOT name the policy (GW6). Write authority that has to cover batches is partitioned by URN prefix (ADR 001) rather than by a condition.
 - **GW33** [gateway, conformance] — The NGSI-LD read surface of an Endpoint answers as ETSI GS CIM 009 specifies. A grant narrows the result set of a well-formed read (GW10–GW12); it MUST NOT change a status code the specification fixes, and no deviation from it is recorded as accepted. Concretely: a query naming no selector (an `id` list or `idPattern` alone, 5.7.2.4) is `400 BadRequestData` even when the caller's grants would have selected a type for it. A client of ours that relied on the narrowing names its type instead; the conformance suite, not the client, fixes the surface.
 - **GW19** — Deletes are writes: same containment rules as GW16.
+- **GW34** [S] — A grant that names one of the five CIM 009 Table 4.20-2 operation groups (`federationOps`, `associationOps`, `updateOps`, `retrieveOps`, `redirectionOps`) MUST be evaluated as exactly the operations that table lists for it and as no others, and a name that is neither a Table 4.20-1 operation nor one of those groups MUST be refused when the `Policy` is validated rather than ignored (R8, Architecture/03 §Policy).
 
 ## 5. Tenants, pinning and chaining
 
@@ -149,6 +150,7 @@ ends the evaluation with DENY, whatever the group's other grants say (GW4).
 | GW31 | [Architecture/05-context-gateway.md#2-reads-vs-writes-enforcement-gw15gw19](../Architecture/05-context-gateway.md#2-reads-vs-writes-enforcement-gw15gw19) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | GW33 | [Architecture/05-context-gateway.md#2-reads-vs-writes-enforcement-gw15gw19](../Architecture/05-context-gateway.md#2-reads-vs-writes-enforcement-gw15gw19) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | GW32 | [Architecture/05-context-gateway.md#2-reads-vs-writes-enforcement-gw15gw19](../Architecture/05-context-gateway.md#2-reads-vs-writes-enforcement-gw15gw19) | [Testing/06-security-tests.md#2-policy-bypass--privilege-escalation-regression-suite](../Testing/06-security-tests.md#2-policy-bypass--privilege-escalation-regression-suite) |
+| GW34 | [Architecture/05-context-gateway.md#2-reads-vs-writes-enforcement-gw15gw19](../Architecture/05-context-gateway.md#2-reads-vs-writes-enforcement-gw15gw19) | [Testing/06-security-tests.md#2-policy-bypass--privilege-escalation-regression-suite](../Testing/06-security-tests.md#2-policy-bypass--privilege-escalation-regression-suite) |
 
 ## Related
 

@@ -13,7 +13,7 @@ This document provides end-to-end traceability cross-referencing requirement fam
 |---|---|---|---|---|
 | **R1–R43** | Access Control & Federation | `access-control.md` | Context Gateway (PEP + in-process PDP), Context Broker (Antares) | TTF Robot Conformance Suite, Gateway Rewriter Property Tests, Integration Tests |
 | **MIM0–MIM10** | OASC Interoperability | `access-control.md` (Part II) | Context Gateway, Data Models, DCAT-AP Catalog, OGC Features Translator | MIM0 API checks, Schema validation, Conformance ATS |
-| **GW1–GW33** | Gateway Firewall Rules | `gateway-firewall.md` | Context Gateway (PEP), APISIX Data Plane, Antares RLS | Gateway Property Tests (`proptest`), Adversarial Bleed Corpus |
+| **GW1–GW34** | Gateway Firewall Rules | `gateway-firewall.md` | Context Gateway (PEP), APISIX Data Plane, Antares RLS | Gateway Property Tests (`proptest`), Adversarial Bleed Corpus |
 | **R44–R60** | Policy Firewall Extensions | `policy-firewall.md` | Context Gateway, ETag Validator, Bitstring Verifier | ETag Conditional Write Tests, Revocation Reaper Tests |
 | **I1–I4** | Identity & Credentials | `policy-firewall.md` | Keycloak, VCVerifier, Trusted Issuers Registry | Keycloak OIDC Integration Tests, OID4VP Verification Tests |
 | **CC-01–CC-84** | Configuration-as-Code & Reconciler | `city-as-code.md` | Gitea (Org Repo), `jcctl` Reconciler, Minijinja Engine | `jcctl plan`/`apply` Idempotency Tests, Conftest Rego Gates |
