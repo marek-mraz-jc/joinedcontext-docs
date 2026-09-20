@@ -5,46 +5,60 @@ title: "Components & Optional Add-ons"
 
 # Components & Optional Add-ons
 
-The platform cleanly separates the core runtime from optional functional add-ons. Core components provide identity, context storage, API translation, CaC reconciliation, and basic pipeline execution. Add-ons extend visualization, BI, legacy OGC compatibility, and automated agent workflows.
+Every directory under `components/` in `joinedcontext-deployment`, what it deploys, and which ones an installation adds rather than gets. The list below is that directory, so a component not in it is not deployable today.
 
-## 1. Core Components vs. Add-ons Matrix
+## 1. The Components
 
-| Component | Class | Language / Engine | Responsibility |
+Twelve are in the shipped `components` list of `defaults/environment/global.yaml` and make up a working installation; the rest are added to that list by an environment that wants them.
+
+| Component | In the default list | Engine | What it deploys |
 |---|---|---|---|
-| **context-broker** | Core | Rust (Antares) | Canonical NGSI-LD Context Broker & RLS data store |
-| **context-gateway** | Core | Rust (Axum) | PEP firewall, AST rewriter, representation translator, MCP |
-| **portal** | Core | Rust + React | Portal API (Axum) & Portal UI (Vite/TS/MapLibre) |
-| **jcctl** | Core | Rust | Reconciler daemon, plan/apply/drift engine, CaC MCP |
-| **gitea** | Core | Go | In-cluster Git forge, CODEOWNERS engine, Gitea Actions |
-| **pipeline-runner**| Core | Go (Bento) | Resident streams runner & CronJob batch executor |
-| **apisix** | Core | Lua / NGINX | Standalone edge routing, TLS, rate-limiting, OIDC ingress |
-| **keycloak** | Core | Java (Standard) | Central IAM, OIDC, OID4VCI status lists |
-| **postgres** | Core | CNPG Operator | High-availability PostgreSQL database clusters |
-| **openid-connect** | Core | APISIX plugin | `openid-connect` in session mode on the Portal and every App on Demand route, one confidential OIDC client `edge` per realm (ADR-N-019) |
-| **model-tools** | Core | Python (LinkML) | Stateless generator image: LinkML artifacts, schema-automator imports, mapping compilation |
-| **artifact-store** | Core | Rust (RustFS, S3 API) | Object-locked store for rendered schema artifacts, compiled mappings, dumps, exports, app builds, file cache (ADR-N-015) |
-| **audit-logging** | Core | Rust (Vector) | Node collector shipping the audit stream to object-locked storage, 90 day retention (OPS-42) |
-| **sandbox-reaper** | Core | CronJob (kubectl) | Deletes sandbox namespaces past their TTL, 14 day ceiling (OPS-44, PF-19) |
-| **frost** | Add-on | Java | Dedicated SensorThings API (STA) broker for high-volume IoT |
-| **geoserver** | Add-on | Java | Legacy WFS/WMS mapping services |
-| **grafana** | Add-on | Go | Infrastructure observability and public data dashboards |
-| **superset** | Add-on | Python | Business intelligence, OLAP, and SQL reporting |
-| **masterportal** | Add-on | JavaScript | Modular 2D/3D geoportal interface |
-| **agent-runner** | Add-on | Python / Rust | OpenHands agent runtime in isolated workspace Jobs and `jc-agent-proxy` credential-free internal proxy (ADR-N-014, ADR-N-020, Architecture/19) |
-| **functions** | Add-on | Rust | `jc-functions`, the QuickJS runtime of generated applications' serverless functions, called by the Portal alone (Architecture/20 §3) |
-| **dataspace-connector** | Add-on | post-MVP, engine not chosen | Dataspace Protocol catalog, negotiation, transfer; ODRL agreements → Policy changes (ADR-N-016, DS-06); not shipped until a data-space partner appears; requires OpenBao |
-| **openbao** | Add-on | Go | Vault-compatible secrets management engine (MPL 2.0) |
+| **prepare** | yes | helmfile hooks | Creates the namespaces and annotates them for Linkerd injection and the inbound policy |
+| **secrets** | yes | helm + SOPS | Generates every password the platform owns and resolves the ones an operator supplies |
+| **networkpolicies** | yes | NetworkPolicy | The default-deny and per-component policies, and their Linkerd counterparts |
+| **runtime-policies** | yes | Kyverno | Admission and runtime policies, `Audit` or `Enforce` per `global.runtimePolicies.failureAction` |
+| **postgres** | yes | CloudNativePG | The operator and one PostgreSQL cluster with the platform's databases |
+| **artifact-store** | yes | Rust (RustFS, S3 API) | Object-locked store for rendered schemas, compiled mappings, dumps, exports, app builds and the gateway's file cache ([ADR-N-015](../Decisions/adr-n-015-artifact-store-rustfs.md)) |
+| **keycloak** | yes | Java | The realm, its clients and its client scopes, including `mcp:portal` |
+| **apisix** | yes | Lua / NGINX | The standalone edge: the rendered route table, TLS, rate limiting, and the `openid-connect` plugin in session mode that logs every person in through the `edge` client ([ADR-N-019](../Decisions/adr-n-019-login-at-the-edge-apisix-openid-connect.md)) |
+| **gitea** | yes | Go | The in-cluster forge, plus a bootstrap Job that creates the configuration repository, the teams and the tokens the Portal and the gateway read. Gitea Actions is off: the component deploys no runner |
+| **context-broker** | yes | Rust (Antares) | The NGSI-LD broker over the shared schema with row-level security |
+| **pipeline-runner** | yes | Bento | The resident streams runner and the CronJobs for scheduled pipelines |
+| **context-gateway** | yes | Rust (axum) | The Policy Enforcement Point, the query rewriter, the representation translators and the Data MCP server |
+| **model-tools** | yes | Python (LinkML) | Stateless generator behind the model editor: LinkML artifacts, schema-automator imports, mapping compilation |
+| **portal** | yes | Rust + React | One process: the Portal API, the embedded UI and the reconciler |
+| **observability** | yes | OpenTelemetry Collector | Fills the Portal's Activity stream |
+| **audit-logging** | yes | Rust (Vector) | Ships the audit stream of the gateway, Keycloak and the forge to object-locked storage, 90 days (OPS-42) |
+| **sandbox-reaper** | yes | CronJob (kubectl) | Deletes sandbox namespaces past their TTL, 14 day ceiling (OPS-44, PF-19) |
+| **monitoring** | yes | Prometheus Operator | Scrape configuration and edge alerting, last in the list because it scrapes the components above it (OPS-16, TS-22) |
+| **ckan** | added | Python | The open-data catalogue on `data.<domain>`, with DCAT-AP publication |
+| **grafana** | added | Go | Infrastructure observability and public data dashboards |
+| **agent-runner** | added | Rust | `jc-agent-proxy` from the platform image: the credential-free internal proxy an agent run reaches ([ADR-N-020](../Decisions/adr-n-020-agent-runner-and-credential-proxy.md), [Architecture/19](../Architecture/19-agent-runner.md)) |
+| **functions** | added | Rust | `jc-functions`, the QuickJS runtime of a generated application's serverless functions, called by the Portal alone ([Architecture/20](../Architecture/20-app-sdk.md) §3) |
+| **demo-feeds** | added | NATS | A demo broker and live publisher for a development cluster. Not a platform component and never in a production list |
+
+There is no `jcctl` component: the reconciler is part of the Portal, and `jcctl` is the CLI over the same manifests ([00-intro.md](00-intro.md) §1).
+
+### Named in the architecture, not deployable yet
+
+These have a decision or a requirement behind them and no directory under `components/`, so adding one to a `components` list fails the render: **frost** (a dedicated SensorThings broker for high-volume IoT), **geoserver** (WFS and WMS), **superset** (BI and SQL reporting), **masterportal** (a 2D and 3D geoportal), **openbao** (Vault-compatible secret management), and **dataspace-connector** (the Dataspace Protocol catalogue, negotiation and transfer, whose engine is not chosen and which is not shipped until a data-space partner appears, [ADR-N-016](../Decisions/adr-n-016-data-space-connector.md), DS-06).
 
 ## 2. Enabling an Add-on
 
-Add-ons are registered in `deployment/environments/<env>/global.yaml.gotmpl` under the `components` list:
+An added component goes into the `components` list of `deployment/environments/<env>/global.yaml.gotmpl`. That list replaces the shipped one rather than extending it, and its order is the deploy order, so copy the shipped list and add to it:
 
 ```yaml
 components:
-  # ... core components ...
-  - frost          # Enables FROST-Server
-  - grafana        # Enables Grafana Add-on
-  - agent-runner   # Enables OpenHands Agent Runner
+  # the shipped list of defaults/environment/global.yaml, in its order
+  - prepare
+  # ...
+  - portal
+  # then what this environment adds
+  - ckan
+  - grafana
+  - agent-runner
+  - functions   # before portal if the Portal is to be told its address
+  - monitoring  # last: it scrapes everything above
 ```
 
 ## 3. How Add-ons Consume Platform Endpoints
@@ -73,35 +87,34 @@ The `agent-runner` component packages the autonomous builder infrastructure spec
 
 ### Deployed Workloads
 
-1. **`proxy` (`jc-agent-proxy`)**: A single-replica Deployment in the instance namespace executing the Rust proxy daemon. It holds references to Keycloak, Gitea, and model provider credentials via `secretRef`.
-2. **`workspaces`**: Configuration for the dedicated `agents` execution namespace, including default-deny NetworkPolicies, resource quotas, and RBAC granting the Portal service account permissions to schedule and delete workspace Jobs.
-3. **`seed`**: Declarative seed manifests providing the `app-builder` `AgentProfile` and `app-from-prompt` `Blueprint`.
+The component deploys one release: **`proxy`**, the Rust `jc-agent-proxy` daemon, one replica in `development` and two in `production`. It reads its Keycloak, Gitea and model-provider credentials by `secretRef` and holds none of them in its values.
+
+The workspace namespace with its quotas and policies, and the seeded `app-builder` `AgentProfile` and `app-from-prompt` `Blueprint`, are not separate releases of this component: the namespace is prepared by `prepare` and `networkpolicies`, and the seed manifests live in the configuration repository the Portal reconciles.
 
 ### Configuration Parameters
 
+The component has one release, `proxy`, from `charts/workload`. Its whole environment surface is six keys:
+
 ```yaml
 agent-runner:
-  enabled: true
-  namespace: "dev-agents"
   proxy:
-    image:
-      repository: ghcr.io/marek-mraz/jc-agent-proxy
-      tag: "v0.1.0"
-      digest: "sha256:1a2b3c..."
-    replicas: 1
-    resources:
-      requests: { cpu: 100m, memory: 128Mi }
-      limits: { cpu: 500m, memory: 512Mi }
-    model:
-      provider: anthropic
-      baseUrl: "https://api.anthropic.com"
-      secretRef: model-provider-key
-  workspaces:
-    quota:
-      maxJobs: 5
-      maxCpu: "8"
-      maxMemory: "16Gi"
+    enabled: true
+    # Defaults to the instance namespace, or `{instanceSlug}-agent-runner` when
+    # singleNamespace is false.
+    namespace: dev
+    # The project whose endpoints the proxy's own client may read. Its Keycloak client is
+    # `{project}-agent-proxy` and the ServiceAccount manifest of that name in that project is
+    # what the gateway resolves its token to (PF-46).
+    project: helsinki
+    # An OpenAI-compatible API by default; `anthropic` switches the proxy to the Messages API.
+    modelBase: https://openrouter.ai/api/v1
+    modelProvider: openai-compatible
+    # One key, `key`, in this Secret in the proxy's namespace. Operator-supplied: never
+    # generated, never committed. Declare it through the `secrets` component and SOPS.
+    modelKeySecret: agent-runner-model-key
 ```
+
+The image is the platform image (`ghcr.io/marek-mraz-jc/joinedcontext-platform`, pinned by digest in `components/agent-runner/images.yaml`), which carries `jc-agent-proxy` beside the gateway and `jcctl`. Resources come from `components/agent-runner/values/proxy/<profile>-values.yaml.gotmpl`: 50m CPU and 64Mi requested in `development`, 100m and 128Mi in `production` with two replicas.
 
 ### Network Policies & Isolation
 
@@ -112,11 +125,8 @@ agent-runner:
 ### Verification
 
 ```bash
-# Verify proxy health
-kubectl exec -it deploy/portal -c portal -- curl -s http://jc-agent-proxy:8080/healthz
-
-# Verify workspace namespace isolation
-kubectl get networkpolicies -n dev-agents
+kubectl exec deploy/portal -c portal -- wget -qO- http://jc-agent-proxy:8080/healthz
+kubectl get networkpolicies
 ```
 
 ## 5. Application Functions Runtime (`functions`)
@@ -134,6 +144,9 @@ The `functions` component runs `jc-functions` from the platform image (Architect
 
 ## Related
 
-- [00-intro](00-intro.md) — deployment chapter order.
+- [00-intro](00-intro.md) — the stack these components make up.
+- [03-configuration](03-configuration.md) — the values each component reads.
+- [02-installation](02-installation.md) — where the `components` list is written.
+- [19-agent-runner](../Architecture/19-agent-runner.md) — what the agent-runner proxy refuses and why.
 - [01-runbooks](../Operations/01-runbooks.md) — what to do when it breaks.
 - [13-security](../Architecture/13-security.md) — the security model being deployed.
