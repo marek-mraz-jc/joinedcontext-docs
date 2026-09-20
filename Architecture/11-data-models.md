@@ -222,14 +222,17 @@ it is named in our namespace and mapped.
 Schema drift that silently alters the meaning of historical observations is prohibited:
 
 - Every LinkML model revision is assigned a discrete Semantic Version (`1.0.0`, `1.1.0`).
-- The Context Gateway exposes published context files under version-pinned, immutable HTTP URLs (SP-13):
+- The Context Gateway serves published artifacts under version-pinned, immutable URLs on the Endpoint that publishes them (SP-13). The version segment is the model's **major**, never its full version (DM-22), and the file names are the ones the generator writes:
 
   ```text
-  https://{host}/cs/{space}/schema/v1/context.jsonld
-  https://{host}/cs/{space}/schema/v1/model.json
+  https://{host}/api/endpoint/{slug}/schema/index.json
+  https://{host}/api/endpoint/{slug}/schema/v1/context.jsonld
+  https://{host}/api/endpoint/{slug}/schema/v1/model.linkml.yaml
+  https://{host}/api/endpoint/{slug}/schema/v1/model.schema.json
+  https://{host}/api/endpoint/{slug}/schema/v1/model.shacl.ttl
   ```
 
-- The path `schema/context.jsonld` operates as a temporary redirect to the latest version. Live subscriptions and pipeline ingest processes MUST pin exact versioned URLs in their `Link` headers.
+  `model.owl.ttl`, `model.rdf.ttl` and `model.md` are served the same way. SP-04 gives a space a `schema/` child of its own beside `ngsi-ld/v1/`, `mcp` and `dump/`; the gateway routes `/cs/{space}`, `/cs/{space}/ngsi-ld/v1/*` and `/cs/{space}/mcp` and no more (`context-gateway` `src/app.rs`), so every URL above is the Endpoint's until the space's children are built. There is no unversioned alias and nothing redirects to "latest" — a caller reads `index.json` to learn which majors exist and then pins one, which is what makes a live subscription's `Link` header safe to keep.
 
 ### 4.1 `kind: DataModel`
 
@@ -326,7 +329,7 @@ On every change the editor calls Model Tools and shows, side by side:
 | Example entity | `gen-python` + example generator, or the imported Smart Data Models example re-validated | documentation, pipeline golden tests, agent `describe_schema` |
 | Form | rjsf rendering of the JSON Schema with the model's `uiSchema` manifest | create/edit entity dialogs in the Portal |
 | Filter & layer options | slot classification (numeric → range filter/`sizeBy`; enum → select/`colorBy`; datetime → temporal; GeoProperty → map layer) | Dashboards and Layers (chapter 10) |
-| Documentation | `gen-doc` (Markdown) | `/cs/{space}/schema/` human view |
+| Documentation | `gen-doc` (Markdown) | `model.md` on the schema surface, rendered in the Portal |
 | SHACL / OWL / RDF | `gen-shacl`, `gen-owl`, `gen-rdf` | `schema/v{n}/model.shacl.ttl`, `model.owl.ttl`, `model.rdf.ttl` on the space and on every endpoint (§8); external validators, ontology tooling, federation partners |
 | RDF Data Cube | `gen-qb` | `schema/v{n}/model.qb.ttl`, on a model that declares a Data Structure Definition only (DM-60); SDMX-shaped statistical consumers. Not built: no model declares one yet, and [Architecture/03 §2](03-domain-model.md#when-one-number-is-not-the-indicator-dm-60) says what would unblock it |
 | Diff vs previous version | JSON Schema structural diff | version classification (§6.4) and the merge request description |
@@ -350,7 +353,7 @@ LinkML and schema-automator are Python and have no Rust implementation. They run
 
 Model Tools holds no credentials, reads no platform state and writes nothing; its only inputs are the LinkML document and, for imports, a Smart Data Models model reference. This keeps the "custom code is Rust/TypeScript" rule intact for everything that has state or authority; Model Tools is a pure function packaged as a tool. If a Rust LinkML generator reaches parity later, it replaces the image without any manifest change.
 
-The image is `ghcr.io/marek-mraz-jc/joinedcontext-platform/model-tools`, built from `tools/model-tools/` in the platform repository, signed and pinned by digest like every other image (DM-19). It listens on **8080** as uid `10001`, writes nothing outside `/tmp`, and answers four routes:
+The image is `ghcr.io/marek-mraz-jc/joinedcontext-platform/model-tools`, built from `tools/model-tools/` in the platform repository, signed and pinned by digest like every other image (DM-19). It listens on **8080** as uid `10001`, writes nothing outside `/tmp`, and answers five routes:
 
 | Route | Body | Answers |
 |---|---|---|
@@ -358,6 +361,7 @@ The image is `ghcr.io/marek-mraz-jc/joinedcontext-platform/model-tools`, built f
 | `GET /catalog?refresh=&subject=` | — | the Smart Data Models index, cached with a daily refresh (DM-12); `subject=` fills that subject's attribute names |
 | `POST /generate` | `{"source"}` | the artifact set of one LinkML document |
 | `POST /import-sdm` | `{"model"}` | the same set, plus the LinkML an import produced |
+| `POST /infer-schema` | `{"file", "format"}`, the sample base64 in JSON | a draft model from one sample: `linkml`, `operations`, `detectedTypes`, `matches`, `untyped`, `rows` (§6.7, DM-54, DM-55) |
 
 The Portal's three routes in [API/01 §11](../API/01-portal-api.md) are these, proxied, and the field names are identical on both sides. The catalogue cache is per replica and in memory; nothing Model Tools holds has to survive a restart or be shared with the other replica, which is what DM-18's "stateless" means here.
 
@@ -494,7 +498,7 @@ spec:
 
    **Where the two artifacts live.** `spec.artifacts.bloblang` and `spec.artifacts.gatewayIr` name them, both relative to the manifest, both committed and both reviewed. Naming them rather than deriving the paths is the same rule DM-02 applies to a DataModel's artifacts: what runs is what a reviewer approved, not what a compiler would produce now. A Mapping used only in replicate mode may carry the Bloblang alone; a `viewMappingRef` or a live `mappingRef` without `gatewayIr` is refused at apply time, because the gateway has nothing to interpret.
 
-4. **Use**: a `Pipeline` references it with `spec.mappingRef` and the reconciler injects the compiled Bloblang as a `mapping` processor into the rendered `bento.yaml` (Bento remains the only runtime, Bloblang the only runtime language); `jcctl model migrate --mapping …` applies the same compiled mapping to existing entities of a space for a v1→v2 migration through the gateway; agents call `describe_mapping`/`preview_mapping` on the data MCP.
+4. **Use**: a `Pipeline` references it with `spec.mappingRef` and the reconciler injects the compiled Bloblang as a `mapping` processor into the rendered `bento.yaml` (Bento remains the only runtime, Bloblang the only runtime language); for a v1→v2 migration of entities already written, DM-41 asks for `jcctl model migrate --mapping {name} --space {space}` to apply the same compiled mapping through the gateway in planned batches — `jcctl` has no `migrate` verb yet, so today a major-version migration is a `Pipeline` that reads the space through its Endpoint and writes the mapped entities back; agents call `describe_mapping`/`preview_mapping` on the data MCP.
 5. **Guarantee**: because the mapping compiles from a schema-checked specification and the gateway validates writes against the target JSON Schema (DM-27), a pipeline that uses only `mappingRef` cannot emit an entity that violates the target model. The `native` blocks are the only place where that guarantee is suspended, and they are visible as such in review.
 
 ### 7.5 Mappings across context spaces and instances (federation)
@@ -600,7 +604,7 @@ the gateway cannot perform already follows.
 
 ### 7.6 SSSOM for vocabulary alignment
 
-Where two organisations (or a Smart Data Model and a local model) mean the same thing with different terms, the alignment is recorded as an SSSOM mapping set (`subject_id`, `predicate_id`, `object_id`, `mapping_justification`, `confidence`, `author`) under `datamodels/alignments/*.sssom.tsv`, exposed at `/cs/{space}/schema/alignments/` and mirrored into the LinkML `exact_mappings`/`close_mappings` of the affected slots. SSSOM never executes anything; it feeds the Mappings editor's pre-fill and the federation partners' understanding of our terms (ADR 008).
+Where two organisations (or a Smart Data Model and a local model) mean the same thing with different terms, the alignment is recorded as an SSSOM mapping set (`subject_id`, `predicate_id`, `object_id`, `mapping_justification`, `confidence`, `author`) under `datamodels/alignments/*.sssom.tsv`, exposed under the space's `schema/` child once SP-04's children are routed, and mirrored into the LinkML `exact_mappings`/`close_mappings` of the affected slots. SSSOM never executes anything; it feeds the Mappings editor's pre-fill and the federation partners' understanding of our terms ([ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md)).
 
 ---
 
@@ -626,7 +630,7 @@ Everything comes out of one Model Tools run with one recorded generator version,
 
 ### 8.2 Where it is served
 
-- `/cs/{space}/schema/v{n}/…`, the full model (SP-04), for project members.
+- `/cs/{space}/schema/v{n}/…`, the full model for project members, is SP-04's child path and is not routed yet; a member reads the full model through an Endpoint of the space that grants it.
 - `/api/endpoint/{slug}/schema/v{n}/…`, the **granted projection** (EP-46…EP-52): types, slots and enum values the endpoint's policies do not allow are absent from every format, computed from the same policy decision as data requests. A partner who only sees three attributes sees a SHACL shape with three property shapes.
 - **MCP**: `describe_schema(entityType, format)` returns any of the formats, and the same files are MCP resources `schema://{slug}/v{n}/{artifact}`, so an agent can hand the SHACL to its own validator or load the LinkML into its own tooling without scraping HTTP.
 - Every data response links back: `Link: rel="describedby"` to the JSON Schema and the SHACL of each returned type; the DCAT-AP record lists the artifacts as `dct:conformsTo` and as distributions.

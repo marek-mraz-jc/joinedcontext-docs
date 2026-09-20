@@ -11,11 +11,12 @@ One LinkML model per Context Space is the truth (DM-01). An Endpoint exposes a s
 
 ## 1. The manifest
 
-- **MP-01** [P][S] — `kind: ModelProjection` MUST be a manifest under configuration as code (CC family) that names one space's DataModel and version (`spec.dataModelRef`), lists the exposed classes (`spec.classes[]`, each with `name` and `slots[]`) and MAY carry a residual filter (`spec.filter` with `q`, `scopeQ`, `geoQ`, `temporalQ` in NGSI-LD query syntax); CI and `jcctl plan` MUST refuse a projection naming a class or slot the referenced model version does not have, listing every offending name.
+- **MP-01** [P][S] — `kind: ModelProjection` MUST be a manifest under configuration as code (CC family) that names one space's DataModel and version (`spec.dataModelRef`), lists the exposed classes (`spec.classes[]`, each with `name` and `slots[]`) and MAY carry a residual filter (`spec.filter` with `q`, `scopeQ`, `geoQ`, `temporalQ` in NGSI-LD query syntax); `jcctl validate` MUST refuse a projection naming a class or slot the referenced model version does not have, listing every offending name.
+  > Note: A class absent from `spec.classes` is not exposed at all; a class listed with an empty `slots` is exposed with identity only, `id` and `type`. The check reads the model's LinkML source beside its manifest, so a typo fails at validation rather than as an Endpoint that serves nothing. Today it runs in `jcctl validate` alone: a write through the Portal API parses the manifest but does not yet cross-check it against the model (T-2376).
 
 ## 2. Endpoints and policies reference it
 
-- **MP-02** [S] — An Endpoint's policy set MAY name a `ModelProjection` (`spec.projectionRef`) instead of restating types and attribute names, several Endpoints MAY share one, and the gateway MUST intersect the projection with the caller's grants exactly as it intersects an inline rule (GW10, GW11, R9), so a projection narrows and never widens and is not an authorization by itself.
+- **MP-02** [S] — An Endpoint MAY name a `ModelProjection` (`spec.projectionRef`) instead of restating types and attribute names, several Endpoints MAY share one, and the gateway MUST intersect the projection with the caller's grants exactly as it intersects an inline rule (GW10, GW11, R9), so a projection narrows and never widens and is not an authorization by itself.
 
 ## 3. The schema surface renders from it
 

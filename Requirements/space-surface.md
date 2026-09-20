@@ -42,6 +42,13 @@ for the **SP-01…SP-21** family.
   `.well-known/oauth-protected-resource`. No other invented segments;
   in particular there is no `endpoint/` intermediary and no
   per-representation ad-hoc naming.
+  > Note: the gateway routes `ngsi-ld/v1/` and `mcp` today
+  > (`context-gateway` `src/app.rs`). `schema/`, `dump/` and the protected-resource
+  > document are the permitted set this requirement fixes, not a set that answers:
+  > the schema artifacts are served on the Endpoint (EP-46…EP-52) and the dated dumps
+  > (SP-13) are not built. The space record advertises what is routed and grows with it
+  > (`handlers/space_surface.rs::children`, T-2379), so a discovery document never names
+  > a path that answers 404.
 
 ## 2. Tenancy without a client-facing tenant header
 
@@ -162,7 +169,7 @@ for the **SP-01…SP-21** family.
 | SP-05–SP-09 | [Architecture/04-context-spaces-and-endpoints.md#2-tenancy-without-client-headers-sp-05sp-09](../Architecture/04-context-spaces-and-endpoints.md#2-tenancy-without-client-headers-sp-05sp-09) | [Testing/06-security-tests.md#2-policy-bypass--privilege-escalation-regression-suite](../Testing/06-security-tests.md#2-policy-bypass--privilege-escalation-regression-suite) |
 | SP-10–SP-13 | [Architecture/04-context-spaces-and-endpoints.md#3-the-endpoint-model](../Architecture/04-context-spaces-and-endpoints.md#3-the-endpoint-model) | [Testing/02-conformance-tests.md#1-etsi-gs-cim-009-ngsi-ld-conformance](../Testing/02-conformance-tests.md#1-etsi-gs-cim-009-ngsi-ld-conformance) |
 | SP-14–SP-20 | [Architecture/07-agents-and-mcp.md#1-dual-mcp-surfaces](../Architecture/07-agents-and-mcp.md#1-dual-mcp-surfaces) | [Testing/06-security-tests.md#4-mcp-authorization--isolation-testing](../Testing/06-security-tests.md#4-mcp-authorization--isolation-testing) |
-| SP-21 | [Architecture/06-configuration-as-code.md#3-the-jcctl-reconciler-engine](../Architecture/06-configuration-as-code.md#3-the-jcctl-reconciler-engine) | [Testing/04-configuration-and-pipeline-tests.md#3-pull-request-plan--reconciler-idempotency](../Testing/04-configuration-and-pipeline-tests.md#3-pull-request-plan--reconciler-idempotency) |
+| SP-21 | [Architecture/06-configuration-as-code.md#3-the-reconciler-engine](../Architecture/06-configuration-as-code.md#3-the-reconciler-engine) | [Testing/04-configuration-and-pipeline-tests.md#3-pull-request-plan--reconciler-idempotency](../Testing/04-configuration-and-pipeline-tests.md#3-pull-request-plan--reconciler-idempotency) |
 | SP-22 | [Architecture/05-context-gateway.md#3-cache-architecture--revocation-propagation-r40-r48](../Architecture/05-context-gateway.md#3-cache-architecture--revocation-propagation-r40-r48) | [Testing/06-security-tests.md#2-policy-bypass--privilege-escalation-regression-suite](../Testing/06-security-tests.md#2-policy-bypass--privilege-escalation-regression-suite) |
 
 ## Related

@@ -14,13 +14,16 @@ The Context Gateway is a high-performance security proxy and representation tran
 |  Inbound Request (via APISIX Edge Reverse Proxy)                                                  |
 |         |                                                                                         |
 |         v                                                                                         |
-|  Stage 1: Identity & Token Extraction (OIDC Bearer JWT, RFC 9449 DPoP, X-Consumer-Identity)       |
+|  Stage 0: Header sanitization, before routing or anything reading a header (EP-21)                |
+|         |                                                                                         |
+|         v                                                                                         |
+|  Stage 1: Identity & token verification (OIDC bearer JWT against the realm's JWKS)                |
 |         |                                                                                         |
 |         v                                                                                         |
 |  Stage 2: Endpoint / Space Resolver (O(1) in-memory RwLock map; slug -> space + policy metadata)  |
 |         |                                                                                         |
 |         v                                                                                         |
-|  Stage 3: Tenant Pinning & Header Sanitization (Strip NGSILD-Tenant, apply internal tenant)      |
+|  Stage 3: Tenant pinning (NGSILD-Tenant set from the resolved Space, never from the request)      |
 |         |                                                                                         |
 |         v                                                                                         |
 |  Stage 4: antares-ql Query AST Parser (Strict parse of q, scopeQ, geoQ, temporalQ, attrs)         |
@@ -41,9 +44,13 @@ The Context Gateway is a high-performance security proxy and representation tran
 
 ## 1. Execution Pipeline Stages
 
-### Stage 1: Identity & Token Extraction
+### Stage 0: Header Sanitization (EP-21, GW20, GW25)
 
-The gateway receives requests from APISIX. It validates that the request originated from the meshed ingress via Linkerd mTLS. It extracts the caller identity:
+Every handler calls `tenancy::strip_client_headers` as its first statement, before routing, before authentication and before anything reads a header (`crates/context-gateway/src/middleware/tenancy.rs`). It removes `NGSILD-Tenant`, `X-Userinfo`, `X-Access-Token`, `X-Allowed-Scope-Ids`, `X-Endpoint-Slug` and `X-Consumer-Identity`, and it removes every value of each name rather than the first, so a repeated header leaves no copy behind for whoever reads the last one. APISIX drops the same six at the edge; the gateway does not rely on that, because nothing downstream may depend on an enforcement it did not perform itself.
+
+### Stage 1: Identity & Token Verification
+
+The gateway receives requests from APISIX and verifies the bearer token itself, against the realm's JWKS. The edge does not do it: the realm signs ES256 and the APISIX `openid-connect` plugin verifies RS and HS signatures only, so the plugin would refuse every token the realm issues. It validates that the request originated from the meshed ingress via Linkerd mTLS, and extracts the caller identity:
 
 - Verified OIDC claims (`sub`, `iss`, `client_id`).
 - Verified Verifiable Presentation claims forwarded by the VCVerifier.
@@ -58,9 +65,9 @@ The incoming path is matched:
 - `/api/endpoint/{endpointSlug}/*`: Endpoint access. Resolves `{slug}` in the pre-compiled in-memory endpoint cache to extract `contextSpaceId`, `policySet`, `enabledRepresentations`, and `audience`.
 - Unknown spaces or slugs terminate immediately with `404 Not Found` (R20).
 
-### Stage 3: Tenant Pinning & Header Sanitization (GW20, SP-05–SP-07)
+### Stage 3: Tenant Pinning (GW20, SP-05–SP-07)
 
-Any incoming client header matching `NGSILD-Tenant` is unconditionally dropped. The gateway sets the internal tenant header matching the resolved Context Space:
+The client's own `NGSILD-Tenant` is already gone: Stage 0 dropped it before any of this ran. With the Space resolved, the gateway sets the internal tenant header from that Space and from nothing the request carried:
 
 ```http
 NGSILD-Tenant: {resolved_space_id}

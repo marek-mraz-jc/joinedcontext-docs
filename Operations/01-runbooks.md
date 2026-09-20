@@ -6,7 +6,9 @@ description: Step-by-step diagnostic and remediation procedures for platform ale
 
 # Operational Runbooks
 
-This document contains standard operating procedures (SOPs) for responding to alerts, mitigating service interruptions, and conducting emergency administrative tasks.
+Step by step procedures for the nine failures an operator of a joinedcontext instance meets. Each one names what you see, what to look at, what to change and how to know it worked.
+
+Two things to fix before you need them. Prometheus scraping is off unless an environment sets `global.metrics.enabled: true`, and the only alert rules this deployment ships are the two APISIX ones in `components/monitoring/values/monitoring/base-values.yaml.gotmpl`; every other symptom below is something a person notices, not something that pages them. And the namespace in the commands is the instance's own: `global.instanceSlug` (`dev` by default) with `global.singleNamespace: true`, or `<instanceSlug>-<component>` when it is false. The examples write `-n dev`.
 
 ---
 
@@ -14,16 +16,18 @@ This document contains standard operating procedures (SOPs) for responding to al
 
 ### Symptoms
 
-- Prometheus alert `CityConfigurationDriftDetected` firing.
-- Portal UI displays a warning chip: **"Configuration Drift Detected"** on a Context Space.
-- `jcctl drift` returns non-zero status with field diffs.
+- `jcctl drift` reports resources whose live state no longer matches the repository.
+- A Context Space in the Portal shows a drift warning.
+- Somebody changed something through a door that does not write the repository.
 
 ### Diagnosis
 
-1. Execute drift inspection via `jcctl`:
+1. Ask the repository what it expects, against live state:
 
    ```bash
-   jcctl plan --repo-dir ./helsinki-repo --gateway-url http://context-gateway:9090
+   jcctl drift --repo-dir ./<organization-repo> \
+     --gateway-url http://context-gateway.dev.svc.cluster.local:8080 \
+     --token-file .secrets/jcctl-token --json
    ```
 
 2. Identify the modified resources:
@@ -32,27 +36,32 @@ This document contains standard operating procedures (SOPs) for responding to al
 
 ### Remediation
 
-- **Option A (Revert to Git Truth):** Overwrite live state with authoritative repository manifests:
+- **Revert to what the repository says.** Re-apply the manifests; the live change is gone.
 
   :::danger
-  `--revert` discards every live change the repository does not describe. Export the drift first
-  (Option B) if anyone might still need it.
+  This discards every live change the repository does not describe. Write the drift out first
+  (below) if anyone might still need it.
   :::
 
   ```bash
-  jcctl apply --revert --repo-dir ./helsinki-repo
+  jcctl apply --repo-dir ./<organization-repo> \
+    --gateway-url http://context-gateway.dev.svc.cluster.local:8080 \
+    --token-file .secrets/jcctl-token
   ```
 
-- **Option B (Adopt Live State):** If the live change is legitimate, export the live state into a pull request:
+- **Adopt the live change.** Write the drifted resources out as manifests and open a merge request with them:
 
   ```bash
-  jcctl export --space <space-id> --out ./patches/drift-adopt.yaml
-  # Create branch, commit patch, and open Yellow-Lane Merge Request
+  jcctl drift --repo-dir ./<organization-repo> \
+    --gateway-url http://context-gateway.dev.svc.cluster.local:8080 \
+    --token-file .secrets/jcctl-token \
+    --adopt-dir ./patches/drift-adopt
+  # commit what it wrote, open the merge request, let its lane decide who approves
   ```
 
 ### Verification
 
-Execute `jcctl plan --assert-empty`. The command must return zero diff.
+`jcctl drift` prints no drifted resource, and `jcctl plan` against the same checkout reports nothing to change.
 
 ---
 
@@ -60,16 +69,16 @@ Execute `jcctl plan --assert-empty`. The command must return zero diff.
 
 ### Symptoms
 
-- CI deployment job failed during `jcctl apply`.
-- Portal UI flow status shows **"Error (Partial Apply)"**.
-- Alert `CityReconcilerApplyFailed` firing.
+- `jcctl apply` in CI exited non-zero part way through.
+- A resource in the Portal is stuck short of Live.
 
 ### Diagnosis
 
 1. Retrieve reconciler failure logs:
 
    ```bash
-   kubectl logs -n joinedcontext -l app.kubernetes.io/name=jcctl --tail=200
+   # the reconciler runs inside the Portal process, so its lines are the Portal's
+   kubectl logs -n dev -l app.kubernetes.io/name=portal --tail=200
    ```
 
 2. Determine failing wave:
@@ -96,16 +105,16 @@ Check flow status in Portal UI: status must transition from *Error* to *Live*.
 
 ### Symptoms
 
-- Influx of HTTP 429 Too Many Requests errors.
-- Alert `GatewayRateLimitExceededHigh` firing.
-- Latency spike on public endpoint route.
+- Callers of one Endpoint receive `429` with a `Retry-After` header.
+- `APISIXHigh5xxRate` fires, or latency on the public route rises.
 
 ### Diagnosis
 
 1. Inspect APISIX access logs filtered by endpoint slug:
 
    ```bash
-   kubectl logs -n joinedcontext -l app.kubernetes.io/name=apisix -c apisix --tail=500 | grep "/api/endpoint/<slug>"
+   kubectl logs -n dev -l app.kubernetes.io/name=apisix -c apisix --tail=500 \
+     | grep "/api/endpoint/<slug>"
    ```
 
 2. Identify abusive client IP addresses or compromised API tokens.
@@ -121,17 +130,15 @@ Check flow status in Portal UI: status must transition from *Error* to *Live*.
        requestsPerMinute: 60 # Throttle from 1000
    ```
 
-2. **Apply IP Blacklist in APISIX:** If an individual IP is conducting a denial-of-service attack, inject an emergency drop rule:
+   The gateway keys one bucket per Endpoint and caller, the caller being the presented credential or, without one, the client address the edge saw. An anonymous flood from one address is bounded by the address bucket; a flood from many addresses is bounded per Endpoint only by what you set here.
 
-   ```bash
-   jcctl emergency-block-ip --ip 198.51.100.24
-   ```
+2. **Block an address at the edge.** There is no platform command for this. APISIX carries the rule: add the `ip-restriction` plugin to the route in `components/<component>/apisix-routes.yaml` in `joinedcontext-deployment` and apply the component. Write down why and when to remove it.
 
-3. Commit and merge the updated endpoint manifest.
+3. Commit and merge the updated Endpoint manifest; the gateway re-reads it within a second.
 
 ### Verification
 
-Monitor Prometheus metric `apisix_http_status{status="429"}`: rate limit enforcement drops backend load to safe thresholds.
+The endpoint answers `429` with `RateLimit-Limit`, `RateLimit-Remaining` and `Retry-After` while the flood lasts, and the broker's load falls. With metrics on, `apisix_http_status{status="429"}` counts it.
 
 ---
 
@@ -186,41 +193,49 @@ exits non-zero when it is over the bound (5 seconds by default, per
 
 ---
 
-## 5. Runbook 5: Secret Key Rotation
+## 5. Runbook 5: Rotating the SOPS age key and other secrets
 
 ### Scope
 
-Rotating the repository SOPS age encryption key, Keycloak client secrets, or PostgreSQL passwords.
+The age key that decrypts the deployment repository's `secrets.enc.yaml`, Keycloak client secrets, and PostgreSQL passwords.
 
-### Procedure: SOPS age Master Key Rotation
+### The age key never enters the cluster
 
-1. Generate new age keypair:
+Encrypted values are resolved by `vals` while `helmfile` templates or applies, so the plaintext exists only in that process's memory and the private key belongs to whoever runs it (`SOPS_AGE_KEY_FILE`, or a workflow secret in CI). There is no Kubernetes Secret holding it, and rotating it changes nothing inside the cluster until the next apply.
 
-   ```bash
-   age-keygen -o new_key.txt
-   ```
+### Procedure
 
-2. Add new public key to `.sops.yaml` alongside existing key.
-3. Re-encrypt all secrets across the repository:
+1. Generate the new keypair and read its recipient:
 
    ```bash
-   find projects/ -name "*.enc.yaml" -exec sops updatekeys {} +
+   age-keygen -o .secrets/age-<env>-new.key     # mode 600, never committed
+   recipient=$(age-keygen -y .secrets/age-<env>-new.key)
    ```
 
-4. Update Kubernetes Secret holding the private key in cluster:
+2. Add the new recipient beside the old one in `.sops.yaml` of `joinedcontext-deployment`, so both keys decrypt while the rotation is in progress.
+
+3. Re-encrypt every file to both recipients:
 
    ```bash
-   kubectl create secret generic sops-age-key \
-     --from-file=key.txt=new_key.txt \
-     -n joinedcontext --dry-run=client -o yaml | kubectl apply -f -
+   find deployment/environments -name 'secrets.enc.yaml' -exec sops updatekeys -y {} +
    ```
 
-5. Remove old public key from `.sops.yaml` and re-encrypt repository files once deployed.
+4. Hand the new key to everybody and everything that applies: the operators' `.secrets/`, and the repository secret the CI workflow reads.
+
+5. Render with the new key alone, then remove the old recipient from `.sops.yaml` and re-encrypt once more:
+
+   ```bash
+   SOPS_AGE_KEY_FILE=.secrets/age-<env>-new.key \
+     scripts/render.sh <env> /tmp/rendered.yaml
+   ```
+
+### Keycloak client secrets and database passwords
+
+A generated secret is rotated by the platform rather than by hand: delete the Kubernetes Secret the component owns and apply the component again, which generates a new value and rolls the workloads that mount it. A client secret a department holds is rotated with `scripts/emergency-revoke.sh --service-account <client>`, which is Runbook 4.
 
 ### Verification
 
-Decrypt one rotated file with the new key only (`sops -d projects/<p>/secrets/<file>.enc.yaml`), and
-confirm the reconciler pod restarted cleanly and reports no `sops: no matching keys` error.
+`scripts/render.sh` with only the new key set renders without a `sops` error, the components that mount a rotated secret come back up, and a login through the Portal still works.
 
 ---
 
@@ -228,15 +243,15 @@ confirm the reconciler pod restarted cleanly and reports no `sops: no matching k
 
 ### Symptoms
 
-- PostgreSQL primary pod crashed or node failure.
-- Alert `PostgresClusterDegraded` or `CNPGFailoverTriggered`.
+- The PostgreSQL primary pod is gone or its node failed.
+- `kubectl cnpg status postgres-cluster` shows no healthy primary, or reads and writes fail at the Endpoint.
 
 ### Diagnosis
 
 1. Inspect CloudNativePG cluster status:
 
    ```bash
-   kubectl cnpg status postgres-cluster -n joinedcontext
+   kubectl cnpg status postgres-cluster -n dev
    ```
 
 2. Verify if automatic failover promoted a healthy standby replica.
@@ -246,7 +261,7 @@ confirm the reconciler pod restarted cleanly and reports no `sops: no matching k
 If primary is unresponsive and operator promotion has stalled:
 
 ```bash
-kubectl cnpg promote postgres-cluster <healthy-replica-pod> -n joinedcontext
+kubectl cnpg promote postgres-cluster <healthy-replica-pod> -n dev
 ```
 
 ### Remediation (Point-In-Time Recovery from S3)
@@ -257,13 +272,13 @@ last good instant (OPS-10). It keeps its name — every component connects to
 is applied, and the restored one must archive somewhere else than it reads from.
 
 1. Choose the instant, inside the 30-day retention window, and write it down as an ISO 8601
-   string in UTC: `2026-08-15T14:30:00Z`. `kubectl cnpg status postgres-cluster -n joinedcontext`
+   string in UTC: `2026-08-15T14:30:00Z`. `kubectl cnpg status postgres-cluster -n dev`
    shows the oldest and newest backup the archive holds.
 
 2. Stop the writers so nothing reconnects into a half-recovered database:
 
    ```bash
-   kubectl scale deploy/portal deploy/context-gateway --replicas=0 -n joinedcontext
+   kubectl scale deploy/portal deploy/context-gateway --replicas=0 -n dev
    ```
 
 3. Set the restore in `deployment/environments/<env>/global.yaml.gotmpl`. The new
@@ -287,19 +302,19 @@ is applied, and the restored one must archive somewhere else than it reads from.
    :::danger
    Deleting the `Cluster` destroys its volumes, and everything written after the target time
    with them. If the instance still answers at all, take a final backup first
-   (`kubectl cnpg backup postgres-cluster -n joinedcontext`): it is the only copy of that
+   (`kubectl cnpg backup postgres-cluster -n dev`): it is the only copy of that
    window.
    :::
 
    ```bash
-   kubectl delete cluster postgres-cluster -n joinedcontext
+   kubectl delete cluster postgres-cluster -n dev
    ```
 
 5. Apply the restore and watch the recovery job replay the WAL:
 
    ```bash
    helmfile apply -e <env> --selector component=postgres
-   kubectl cnpg status postgres-cluster -n joinedcontext
+   kubectl cnpg status postgres-cluster -n dev
    ```
 
 6. Once the data is verified, set `recovery.enabled` back to `false` and keep the new
@@ -312,7 +327,7 @@ to be valid before an incident needs it.
 
 ### Verification
 
-`kubectl cnpg status postgres-cluster -n joinedcontext` reports one healthy primary and every
+`kubectl cnpg status postgres-cluster -n dev` reports one healthy primary and every
 replica streaming, and a read through an Endpoint returns the entity written before the incident.
 
 ---
@@ -321,42 +336,42 @@ replica streaming, and a read through an Endpoint returns the entity written bef
 
 ### Symptoms
 
-- Pods matching `pipeline-runner-*` in `CrashLoopBackOff`.
-- Alert `PodOOMKilled` firing for a project pipeline runner.
-- Bento streams halting processing.
+- Pods matching `pipeline-runner-*` restart, with `OOMKilled` as the last state.
+- Ingestion stops and the pipeline's Live status in the Portal goes stale.
 
 ### Diagnosis
 
 1. Identify crashing container:
 
    ```bash
-   kubectl describe pod -n joinedcontext -l app.kubernetes.io/name=pipeline-runner
+   kubectl describe pod -n dev -l app.kubernetes.io/name=pipeline-runner \
+     | grep -A3 "Last State"
    ```
 
-2. Check memory consumption per stream using Bento metrics endpoint:
+2. Read what the runner itself reports. Bento serves `/metrics` on port 4195, the same port as its stream API:
 
    ```bash
-   kubectl exec -it <pod-name> -n joinedcontext -- curl -s http://localhost:4195/metrics | grep bento_memory
+   kubectl exec -n dev <pod-name> -- wget -qO- http://localhost:4195/metrics | head -40
    ```
 
 ### Remediation
 
-1. **Immediate Relief:** Increase project runner memory limits in `platform-settings.yaml`:
+1. **Give the pipeline more room.** A `Pipeline` manifest carries its own ceiling, which is a merge request like any other change:
 
    ```yaml
-   quotas:
-     projects:
-       mobility:
-         runnerMemoryLimit: 2Gi # Increased from 1Gi
+   # projects/mobility/pipelines/traffic-sensor/pipeline.yaml
+   spec:
+     quotas:
+       maxMemoryMb: 2048 # the runner default is a 1024Mi limit (PL-11)
    ```
 
-2. **Split Streams:** If a project hosts >50 streams, configure the reconciler to deploy a second runner replica partitioned by stream name ([Architecture Chapter 05](../Architecture/08-pipelines.md)).
-3. Merge change and verify runner stabilizes.
+2. **Raise the pool's own limit** when every stream in it grew, in `components/pipeline-runner/values/runner/<env>-values.yaml.gotmpl` of `joinedcontext-deployment`, and apply the component. The default is a 256Mi request and a 1024Mi limit.
+3. **Split the pool.** A pool holds at most 50 resident streams (PL-12). Past that, move streams to a second pool in the repository; nothing partitions them by itself ([Architecture chapter 08](../Architecture/08-pipelines.md)).
 
 ### Verification
 
 The runner pod stays `Running` across a full ingest window with no new `OOMKilled` restarts
-(`kubectl get pods -n joinedcontext -l app.kubernetes.io/name=pipeline-runner`), and the stream lag
+(`kubectl get pods -n dev -l app.kubernetes.io/name=pipeline-runner`), and the stream lag
 metric returns to its pre-incident level.
 
 ---
@@ -365,9 +380,8 @@ metric returns to its pre-incident level.
 
 ### Symptoms
 
-- Gitea pod unavailable or database partition.
-- Portal UI reports: **"Configuration service unavailable (Read-Only Mode)"**.
-- Alert `GiteaServiceUnreachable` firing.
+- The Gitea pod is unavailable, or its database is.
+- Proposing or approving a change in the Portal fails; reading data does not.
 
 ### Operational Posture (CC-55)
 
@@ -382,14 +396,14 @@ Per architecture invariant **CC-55**, platform serving is completely decoupled f
 1. Check Gitea pod status:
 
    ```bash
-   kubectl get pods -n joinedcontext -l app.kubernetes.io/name=gitea
+   kubectl get pods -n dev -l app.kubernetes.io/name=gitea
    ```
 
 2. Inspect Gitea database status in CloudNativePG.
 3. If necessary, restart Gitea deployment:
 
    ```bash
-   kubectl rollout restart deployment/gitea -n joinedcontext
+   kubectl rollout restart deployment/gitea -n dev
    ```
 
 ### Verification
@@ -403,16 +417,15 @@ interval, and the config freeze notice is removed from the Portal.
 
 ### Symptoms
 
-- PostgreSQL enters read-only emergency mode.
-- PVC utilization > 95%.
-- Alert `DiskSpaceRunningCriticallyLow`.
+- Writes fail and PostgreSQL logs a full volume.
+- The cluster's PVC is above 95% used.
 
 ### Diagnosis
 
 Check PVC capacity:
 
 ```bash
-kubectl get pvc -n joinedcontext -l cnpg.io/cluster=postgres-cluster
+kubectl get pvc -n dev -l cnpg.io/cluster=postgres-cluster
 ```
 
 ### Remediation (Online Volume Expansion)
@@ -437,7 +450,7 @@ kubectl get pvc -n joinedcontext -l cnpg.io/cluster=postgres-cluster
 
 ### Verification
 
-`kubectl get pvc -n joinedcontext` shows the new capacity bound, the cluster leaves read-only mode,
+`kubectl get pvc -n dev` shows the new capacity bound, the cluster leaves read-only mode,
 and a write through an Endpoint succeeds.
 
 ## Related

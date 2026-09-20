@@ -10,6 +10,8 @@ Date: 2026-08-02
 Scope: Access-control layer (APISIX PEP + PDP) in front of NGSI-LD Context Brokers, and its behaviour across federated digital twins (FDT).
 Related: ADR 001 (URN), ADR 002 (Policy entity), ADR 003 (ODRL mapping), ADR 004 (Scopes), ADR 005 (ScopeDefinition), ADR 006 (privilege bleed), ADR 007 (@context discovery), ADR 009 (secured subscriptions), ADR 010 (LOD read-only), ADR 011 (MQTT).
 
+Family **R** (R1…R43) and family **MIM** (MIM0…MIM10). Owning chapter: [Architecture/05-context-gateway.md](../Architecture/05-context-gateway.md). Verified by: [Testing/01-backend-tests.md](../Testing/01-backend-tests.md) and [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md). R44…R60 and I1…I4 continue this numbering in [policy-firewall.md](policy-firewall.md).
+
 Keywords MUST / SHOULD / MAY per RFC 2119.
 
 ## 1. Architecture and enforcement point
@@ -90,11 +92,10 @@ With ~100 context brokers/tenants federated via Context Source Registrations, a 
 
 Derived from the published OASC MIM texts (oasc/accessing-data-mim-0 repo; oasc/oasc-mims gitbook for MIM1–MIM10). Part I (R1–R43) specifies the ETSI/ADR access-control layer; Part II specifies what the platform must offer per MIM. Where a MIM defines its own requirement IDs (MIM0, MIM7), they are cited. MIM8, MIM9 and MIM10 have no published specification upstream (work-item stage; their standalone repos are empty), so their requirements reflect only the stated objectives.
 
-*Numbering note:* the Slovak procurement templates in
-`../procurement/mims.md` carry a second, upstream-derived numbering
-(`MIMn.Cn.Rn.n`). The two schemes are mapped capability-level in that
-file's header; this document is canonical for the platform-facing
-`MIMn-Rn` IDs.
+*Numbering note:* procurement documents derived from the OASC texts carry a second numbering
+(`MIMn.Cn.Rn.n`). This document is canonical for the platform-facing `MIMn-Rn` IDs, and a
+capability-level mapping between the two schemes lives with the procurement document that needs
+it, not here.
 
 **Consumer classes**, every capability MUST serve three classes, tagged per requirement:
 

@@ -40,7 +40,7 @@ sequenceDiagram
     
     Tester->>UI: Fills login form & clicks "Sign In"
     UI->>GW: POST /api/auth/login
-    GW-->>UI: JWT Auth Token (DPoP)
+    GW-->>UI: JWT Auth Token (OIDC bearer)
     Tester->>UI: Clicks "+ New Context Space"
     UI->>Tester: Renders RJSF Form from JSON Schema
     Tester->>UI: Enters name, selects LinkML schema, clicks "Create"
