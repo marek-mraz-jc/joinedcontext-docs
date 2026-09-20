@@ -20,9 +20,9 @@ kind: ContextSpace
 metadata:
   name: ovzdusie
   namespace: banskabystrica
+  title: Ovzdušie
 spec:
-  title:
-    sk: Ovzdušie
+  defaultLocale: sk
 ```
 
 One command validates a whole repository:
