@@ -189,7 +189,7 @@ first and the application reads it from here.
 
 | id | project | territory | unit | window | refresh | thresholded |
 |---|---|---|---|---|---|---|
-| `pm10-24h-mesto` | `banskabystrica` | `mesto` | µg/m³ | rolling 24 h | hourly | yes |
+| `pm10-24h-mesto` | `banskabystrica` | `mesto` | µg/m³ | 24 h to the newest reading | hourly | yes |
 | `pm25-rok-mesto` | `banskabystrica` | `mesto` | µg/m³ | calendar year to date | daily | yes |
 | `spotreba-vody-obyvatel-mesto` | `banskabystrica` | `mesto` | l/person/day | calendar year | annual | no, context |
 | `emisie-tuhe-km2-{territory}` | `bbsk` | `kraj` + 13 okresy | t/km² | calendar year | annual | no, context |
