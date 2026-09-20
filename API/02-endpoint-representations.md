@@ -96,8 +96,9 @@ anything reads them, whatever the client sent ([GW20](../Requirements/gateway-fi
 | `NGSILD-Results-Restricted: true` | response | the answer was narrowed by policy, sent **only** in answer to the request header above; a caller who did not ask reads the answer as what it is ([R22](../Requirements/access-control.md), [GW12](../Requirements/gateway-firewall.md)) |
 | `NGSILD-Warning` | response | what the caller has to know to read the answer they got: which entity types this request was not allowed to select on, because it filters or orders on an attribute they do not serve on this endpoint. Sent to every caller, and it names only types the caller may read ([MP-02](../Requirements/model-projections.md), [R9](../Requirements/access-control.md)) |
 | `NGSILD-Results-Count` | response | the broker's count of the matching entities, forwarded only when the gateway dropped none of them; an answer the gateway narrowed carries no count, because the difference is the number of entities withheld ([R22](../Requirements/access-control.md)) |
+| `Link: <…/schema/v{major}/model.schema.json>; rel="describedby"; type="application/schema+json"` | response | where the shapes of what was just answered are, one pair per model major the endpoint publishes: the JSON Schema and, as a second `Link`, `model.shacl.ttl` with `type="text/turtle"`. On every data response of every representation — the NGSI-LD tree, `file.*`, the OGC items and the SensorThings sets — and on no refusal, because a `404` that named a schema would tell a caller who was refused that the endpoint exists ([EP-50](../Requirements/endpoints.md), [EP-03](../Requirements/endpoints.md)). The link is the same for every caller of one endpoint, so it changes no `Vary`; what the document behind it holds is projected to the grant when it is fetched ([EP-47](../Requirements/endpoints.md)) |
 | `Cache-Control: private, no-store` | response | every answer is one caller's, because it is the intersection of the URL with that caller's grants; a shared cache may not store it. A document the gateway wants revalidated instead of re-read carries `private, no-cache` with a strong `ETag` ([EP-51](../Requirements/endpoints.md), [R9](../Requirements/access-control.md)) |
-| `Vary: Authorization, Accept, NGSILD-Results-Restricted` | response | what the answer differs by, so a cache keyed on the URL alone cannot mix two callers ([R9](../Requirements/access-control.md)) |
+| `Vary: Authorization, Accept, Accept-Language, NGSILD-Results-Restricted` | response | what the answer differs by, so a cache keyed on the URL alone cannot mix two callers ([R9](../Requirements/access-control.md)). `Accept-Language` is among them because a `LanguageProperty` is flattened to the caller's own language in a GeoJSON feature (§6) and in the OGC landing page ([EP-37](../Requirements/endpoints.md), [EP-32](../Requirements/endpoints.md)) |
 | `X-Userinfo`, `X-Access-Token`, `X-Allowed-Scope-Ids`, `X-Endpoint-Slug`, `X-Consumer-Identity` | request | identity, established from the verified token only |
 
 The signal is asked for rather than volunteered because it tells a caller that something was
@@ -150,12 +151,12 @@ Converts spatial NGSI-LD entities into standard RFC 7946 GeoJSON.
 - **Feature `id`:** Bound to the entity URN.
 - **`geometry`:** Extracted from the primary `location` GeoProperty. An entity without one is not a
   Feature and is left out of the collection.
-- **`properties`:** One key per remaining attribute, carrying its `value` or a Relationship's
-  `object`. The JSON-LD keywords are dropped and `type` keeps the entity's NGSI-LD type
-  (`translators/geojson.rs`).
-- The attribute's `unitCode` and `observedAt` do **not** reach `properties` today, though EP-37 asks
-  for them; **T-2380** tracks the gap. A caller who needs the unit or the instant of a reading asks
-  the NGSI-LD surface or `file.csv`, which carry both.
+- **`properties`:** One key per remaining attribute, by the table of §6: the attribute's `value` or
+  a Relationship's `object` under its own name, and the `unitCode` and `observedAt` it carries
+  under `{name}_unitCode` and `{name}_observedAt` (T-2380). An attribute that carries neither gains
+  no keys. A `LanguageProperty` is the one text of the caller's `Accept-Language`, which the answer
+  names in `Vary` ([EP-37](../Requirements/endpoints.md)). The JSON-LD keywords are dropped and
+  `type` keeps the entity's NGSI-LD type (`translators/geojson.rs`).
 
 ```json
 {
@@ -171,6 +172,8 @@ Converts spatial NGSI-LD entities into standard RFC 7946 GeoJSON.
       "properties": {
         "type": "WeatherObserved",
         "temperature": 22.4,
+        "temperature_unitCode": "CEL",
+        "temperature_observedAt": "2026-08-15T12:00:00Z",
         "refDistrict": "urn:ngsi-ld:District:hel.fi:air-quality:kallio"
       }
     }
