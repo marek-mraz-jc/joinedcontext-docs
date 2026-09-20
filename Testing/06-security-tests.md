@@ -195,16 +195,16 @@ switched off. Every row here is a priority 1 defence, so while any row is `open`
 and the platform is not ready for its first production apply. The owner signs this table before
 that apply; "Never forced" applies to the signature as much as to the work.
 
-State of the register on 2026-09-20: 50 vectors, 1 proven, 49 open.
+State of the register on 2026-09-20: 50 vectors, 5 proven, 45 open.
 
 | Surface | Vector | Task | Requirements | Test | State |
 |---|---|---|---|---|---|
 | apps | A generated app attacks the person, the platform or another app | T-1706 | AP-19, AP-63 |  | open |
 | apps | The build lane runs untrusted code | T-1707 | AP-13, AP-72 |  | open |
-| assistant | Prompt injection through data the assistant reads | T-1691 | AG-46, AG-11 |  | open |
-| assistant | The assistant acts with the platform's rights instead of the person's | T-1692 | AG-70 |  | open |
-| assistant | Exfiltration through the assistant's outputs | T-1693 | AG-52, AP-63 |  | open |
-| assistant | Cost and loop exhaustion of the model key | T-1694 | AG-14 |  | open |
+| assistant | Prompt injection through data the assistant reads | T-1691 | AG-46, AG-11 | `joinedcontext-portal/tests/attack_assistant_tests.rs::an_instruction_a_manifest_carries_reaches_the_model_as_data_and_is_never_called`, `joinedcontext-portal/tests/attack_assistant_tests.rs::a_call_the_data_wrote_is_refused_and_the_person_is_told_why`, `joinedcontext-portal/tests/attack_assistant_tests.rs::an_instruction_the_persons_message_carries_is_never_a_call_the_portal_runs` | proven |
+| assistant | The assistant acts with the platform's rights instead of the person's | T-1692 | AG-70 | `joinedcontext-portal/tests/attack_assistant_tests.rs::a_run_mints_no_key_for_a_person_who_may_not_read_service_accounts`, `joinedcontext-portal/tests/attack_assistant_tests.rs::a_conversation_starts_no_run_of_its_own_and_cancels_none`, `joinedcontext-portal/tests/agent_runs_tests.rs::a_second_person_neither_reads_nor_steers_a_run_that_is_not_theirs` | proven |
+| assistant | Exfiltration through the assistant's outputs | T-1693 | AG-52, AP-63 | `joinedcontext-portal/tests/attack_assistant_tests.rs::a_route_outside_the_portal_never_becomes_a_navigate_event`, `joinedcontext-portal/tests/attack_assistant_tests.rs::a_draft_is_written_in_the_runs_own_project_and_in_no_other`, `joinedcontext-portal/src/apps/static_host.rs::a_plain_app_may_not_be_framed_and_talks_only_to_the_platform` | proven |
+| assistant | Cost and loop exhaustion of the model key | T-1694 | AG-14 | `joinedcontext-portal/tests/attack_assistant_tests.rs::a_model_that_keeps_calling_one_tool_stops_at_the_call_ceiling_and_says_so`, `joinedcontext-portal/tests/agent_runs_tests.rs::a_conversation_above_the_daily_quota_is_refused_like_any_run` | proven |
 | availability | One anonymous caller takes the single node down | T-1715 | GW26, OPS-16 |  | open |
 | availability | A slow or dead dependency stalls everything | T-1716 | OPS-51 |  | open |
 | cluster | A compromised pod moves sideways | T-1710 | OPS-29, PL-23 |  | open |

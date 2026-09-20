@@ -5,10 +5,13 @@ title: "Installation Guide"
 
 # Installation Guide
 
-The platform uses a two-tier Helmfile execution architecture:
+Install the platform on a prepared cluster ([01-prerequisites.md](01-prerequisites.md)), and know it worked. Copying `defaults/deployment` gives three entrypoints, and an installation uses either the first or the other two:
 
-1. **Shared Operators Layer** (`deployment/helmfile-operators.yaml`): Deployed once per cluster. Installs CloudNativePG operator, Strimzi (if messaging addons are used), and cluster-scoped Kyverno policies.
-2. **Instance Layer** (`deployment/helmfile-instance.yaml.gotmpl`): Deployed per instance or city tenant namespace.
+1. **All in one pass** (`deployment/helmfile.yaml`): every component, operators included, into one namespace. This is what one cluster needs and what the reference cluster runs.
+2. **Shared operators** (`deployment/helmfile-operators.yaml`): once per cluster. It renders the operator halves of `prepare`, `postgres`, `runtime-policies` and `networkpolicies` (the CloudNativePG operator and the cluster-scoped Kyverno policies) and sets them to watch every namespace, so one operator serves every instance on the cluster. The operator namespace is `global.operators.namespace`, `jc-operators` when unset.
+3. **One instance** (`deployment/helmfile-instance.yaml.gotmpl`): everything except those operator halves, once per instance. Each instance lives in the namespace named by its `global.instanceSlug`.
+
+Steps 3 and 5 below are the second path. For a single cluster, run `helmfile -f deployment/helmfile.yaml -e <env> sync` once instead and skip step 3.
 
 ## 1. Step 1: Clone Deployment Repository
 
@@ -60,13 +63,14 @@ components:
   - context-broker
   - context-gateway
   - portal
-  - jcctl
   - pipeline-runner
 ```
 
+`components` overrides the shipped list in `defaults/environment/global.yaml`, which is longer and ordered for a reason: the forge comes after Keycloak and the edge because its init registers its OIDC login against `idm.<domain>`, and the two components that read a token it mints come after it. Add to the shipped list rather than retyping it, and keep its order. There is no `jcctl` component: the reconciler is part of the Portal ([00-intro.md](00-intro.md) §1).
+
 ## 3. Step 3: Deploy Shared Operators
 
-Ensure operators are installed in the `joinedcontext-operators` namespace:
+Install the operators once per cluster. They land in `global.operators.namespace`, which defaults to `jc-operators`:
 
 ```bash
 helmfile -f deployment/helmfile-operators.yaml -e production sync
@@ -78,21 +82,22 @@ Verify that operator CRDs (`clusters.postgresql.cnpg.io`, `clusterpolicies.kyver
 kubectl get crd | grep -E 'cnpg|kyverno'
 ```
 
-## 4. Step 4: Pre-generate Required Secrets
+## 4. Step 4: Secrets The Platform Does Not Generate
 
-Generate the mandatory initial secrets before triggering the instance deployment:
+The `secrets` component generates every password the platform itself owns, so there is nothing to pre-create for a plain installation. Two kinds of secret are yours because the platform cannot invent them:
 
-```bash
-INSTANCE_SLUG="prod"
-kubectl create namespace "${INSTANCE_SLUG}" || true
+- **Mail**: Keycloak's SMTP is off by default (`keycloak.app.smtp.enabled: false`). Turn it on and a Secret named by `keycloak.app.smtp.existingSecret`, `keycloak-smtp` by default, must exist in Keycloak's namespace with the keys `host`, `port`, `from`, `user` and `password`. It is a real mail account, so it is never generated.
+- **Object storage for backups**: the credentials the CloudNativePG Barman store uses ([07-backup-restore.md](07-backup-restore.md)).
 
-# Keycloak SMTP configuration for invitations and verification
-kubectl create -n "${INSTANCE_SLUG}" secret generic keycloak-smtp \
-  --from-literal=host='smtp.city.example.com' \
-  --from-literal=port='587' \
-  --from-literal=from='noreply@city.example.com' \
-  --from-literal=user='smtp-user' \
-  --from-literal=password='super-secret-smtp-password'
+Declare both through the `secrets` component and SOPS rather than typing them into a shell, so the value is encrypted in the repository and never in a shell history or a process list. `components/secrets/README.md` has the round trip, and `SOPS_AGE_KEY_FILE` has to be in the environment of whoever runs `helmfile`:
+
+```yaml title="deployment/environments/production/secrets.yaml.gotmpl"
+managedSecrets:
+  - keycloak:
+      app:
+        keycloak-smtp:
+          password: ref+sops://environments/production/secrets.enc.yaml#/smtp/password
+          componentNamespaces: [keycloak]
 ```
 
 ## 5. Step 5: Sync Instance Deployment
@@ -103,32 +108,29 @@ Execute the instance release pipeline:
 helmfile -f deployment/helmfile-instance.yaml.gotmpl -e production sync
 ```
 
-Monitor pod readiness in the namespace:
+Wait for every rollout, then check the installation answers:
 
 ```bash
-kubectl get pods -n prod -w
+./scripts/wait-rollouts.sh prod
+./scripts/smoke.sh "https://city.example.joinedcontext.com" "https://idm.city.example.joinedcontext.com"
 ```
 
-## 6. Step 6: Initial Login & Configuration-as-Code Bootstrap
+`wait-rollouts.sh` returns when every Deployment and StatefulSet of the namespace is available; `smoke.sh` asks the edge, the Portal, the gateway and Keycloak for the responses a working installation gives. A non-zero exit names what answered wrongly, which is where [09-troubleshooting.md](09-troubleshooting.md) starts.
 
-1. Retrieve initial generated credentials:
+## 6. Step 6: First Login
+
+The configuration repository already exists at this point: the forge's bootstrap Job creates the organization and the repository named by `global.configRepo` (`joinedcontext/configuration` unless overridden), creates every team the group map can place a person in, and mints the tokens the Portal and the gateway read. Nothing asks an operator to connect the two.
+
+1. Read the generated credentials. Both Secrets are in the namespace of the component that owns them, which is the instance namespace under the shipped `singleNamespace: true`:
 
    ```bash
-   # Keycloak Master Admin Password
    kubectl get secret -n prod keycloak-admin-user -o jsonpath='{.data.password}' | base64 -d && echo
-   
-   # Gitea Administrator Credentials
    kubectl get secret -n prod gitea-admin-credentials -o jsonpath='{.data.password}' | base64 -d && echo
    ```
 
-2. Log in to `https://idm.city.example.joinedcontext.com/admin/prod/console`.
-3. Log in to `https://portal.city.example.joinedcontext.com` using `admin@city.example.com`.
-4. The Portal will prompt to initialize the primary **Organization** and connect to the in-cluster Gitea instance (`https://city.example.joinedcontext.com/git/city-org/city-config`).
-5. Run the initial reconciliation via CLI or trigger via the Portal UI:
-
-   ```bash
-   kubectl exec -n prod deploy/jcctl -- jcctl apply --repo-dir /var/git/city-config
-   ```
+2. The Keycloak administrator signs in at `https://idm.city.example.joinedcontext.com/admin/master/console`. The installation's own realm is named after `global.instanceSlug`, `prod` here, and is selected in that console.
+3. Open `https://portal.city.example.joinedcontext.com` and sign in through Keycloak as `global.initialUserEmail`. Login happens at the edge, so the Portal is reached through its own host and not by port-forward ([ADR-N-019](../Decisions/adr-n-019-login-at-the-edge-apisix-openid-connect.md)).
+4. Nothing needs to be reconciled by hand. The Portal's reconciler reads the configuration repository on its own tick and applies what it declares; `jcctl apply --repo-dir <path>` does the same from a checkout, for a person who wants to see a plan first (`jcctl plan --repo-dir <path>`). There is no reconciler pod to exec into.
 
 ## 7. Air-Gapped Installation (OPS-19…OPS-21)
 
@@ -155,17 +157,30 @@ The archive is complete by construction: an image or chart the deployment can as
 
 ```bash
 scripts/load-airgap.sh --archive joinedcontext-airgap-<date>.tar.gz \
-                       --registry registry.internal:5000
+                       --registry registry.internal:5000 \
+                       [--charts-dir deployment/airgap-charts] [--tls-verify=false]
 ```
 
-Every image is pushed to the internal registry under the same digest it was packaged with, so the digest in `images.yaml` still identifies the same bytes and signature verification still applies (OPS-20). Charts are unpacked to a local directory that helmfile reads instead of the upstream repositories.
+Every image is pushed to the internal registry under the same digest it was packaged with, so the digest in `images.yaml` still identifies the same bytes and signature verification still applies (OPS-20). Charts are unpacked into `--charts-dir`, `deployment/airgap-charts` by default, which helmfile reads instead of the upstream repositories.
 
-The loader also writes `airgap-images.yaml.gotmpl` beside the charts, an ordinary values file that repoints every `images.<component>.<part>.repository` at the internal registry and keeps each digest. Copy it into `deployment/environments/<env>/` and the six installation steps proceed as written.
+Then point the deployment at that registry. `defaults/environment/images.yaml.gotmpl` assembles every `components/*/images.yaml` into `.Values.images`, and an environment's own `images.yaml.gotmpl` merges over it, so an air-gapped environment carries one:
 
-The loader talks to the internal registry and the local filesystem, and resolves no other host: no fallback to a public registry, no chart repository to add, no update check (OPS-21).
+```yaml title="deployment/environments/production/images.yaml.gotmpl"
+images:
+  portal:
+    portal:
+      repository: registry.internal:5000/marek-mraz-jc/joinedcontext-portal
+```
+
+One entry per `images.<component>.<release>.repository`, each keeping its digest: the registry host is the only thing that changes, which is what keeps signature verification working. `load-airgap.sh` prints `global.imageRegistry` as the knob to set, and no chart, template or values file reads that key, so overriding the repositories is what works today.
+
+The loader talks to the internal registry and the local filesystem, and resolves no other host: no fallback to a public registry, no chart repository to add, no update check (OPS-21). Its test asserts that by recording every destination the script names.
 
 ## Related
 
-- [00-intro](00-intro.md) — deployment chapter order.
-- [01-runbooks](../Operations/01-runbooks.md) — what to do when it breaks.
-- [13-security](../Architecture/13-security.md) — the security model being deployed.
+- [01-prerequisites](01-prerequisites.md) — what the cluster must provide before step 1.
+- [03-configuration](03-configuration.md) — every value the environment file in step 2 can carry.
+- [09-troubleshooting](09-troubleshooting.md) — where a failed `smoke.sh` is diagnosed.
+- [07-backup-restore](07-backup-restore.md) — the object-store credentials step 4 names.
+- [01-runbooks](../Operations/01-runbooks.md) — the procedures for running it afterwards.
+- [13-security](../Architecture/13-security.md) — the security model this installation enforces.

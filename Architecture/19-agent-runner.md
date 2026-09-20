@@ -188,15 +188,17 @@ The `jc-agent-proxy` daemon exposes a strictly scoped REST API on port 8080 with
 | Route | Method | Target Destination | Credential Injected | Rejection Criteria |
 |---|---|---|---|---|
 | `/v1/llm/{*rest}` | `POST` | Configured Model Provider (e.g., Anthropic, OpenAI) | Provider API Key (via `secretRef`) | Body exceeding size limit (4 MiB); cumulative token budget exhausted; the model call past `AgentProfile.spec.limits.stepsPerRun` (AG-25, AG-51); path not matching chat/completions/messages. |
-| `/v1/data/{*rest}` | `GET`, `POST` | `http://context-gateway/api/endpoint/{run.slug}/{rest}` | Scoped Keycloak JWT (`aud: {run.slug}`) | Path traversal (`..`); write methods (`POST`, `PATCH`, `PUT`, `DELETE`) on read-only runs; client-supplied `NGSILD-Tenant` or slug headers. |
-| `/v1/data/endpoints/{slug}/{*rest}` | `GET`, `POST` | `http://context-gateway/api/endpoint/{slug}/{rest}` | Scoped Keycloak JWT (`aud: {slug}`) | A `slug` outside the run context's `endpointSlugs` (every endpoint of the run, the primary first, AP-44); otherwise the rules of `/v1/data/{*rest}`. |
+| `/v1/data/{*rest}` | any | `http://context-gateway/api/endpoint/{run.slug}/{rest}` | Scoped Keycloak JWT (`aud: {run.slug}`) | Path traversal (`..`); write methods (`POST`, `PATCH`, `PUT`, `DELETE`) on read-only runs; client-supplied `NGSILD-Tenant` or slug headers. |
+| `/v1/data/endpoints/{slug}/{*rest}` | any | `http://context-gateway/api/endpoint/{slug}/{rest}` | Scoped Keycloak JWT (`aud: {slug}`) | A `slug` outside the run context's `endpointSlugs` (every endpoint of the run, the primary first, AP-44); otherwise the rules of `/v1/data/{*rest}`. |
 | `/v1/data/mcp` | `POST` | `http://context-gateway/api/endpoint/{run.slug}/mcp` | Scoped Keycloak JWT (`aud: {run.slug}`) | Requests invoking mutation tools (`upsert_entity`, `create_subscription`) without declared write rights. |
-| `/v1/forge/{*rest}` | `GET`, `POST`, `PUT` | In-Cluster Gitea API | Gitea Forge Token (via `secretRef`) | Branch not matching `agent/app-{name}/{runId}`; file path outside `projects/{project}/apps/{name}/`; direct writes to default branch. |
-| `/v1/packages/{host}/{*rest}` | `GET` | Upstream Package Registries (e.g., `crates.io`, `npmjs.org`) | None | Host not present in profile allow-list; non-HTTPS protocols; response payloads exceeding 50 MiB. |
+| `/v1/forge/{*rest}` | any | In-Cluster Gitea API | Gitea Forge Token (via `secretRef`) | Branch not matching `agent/app-{name}/{runId}`; file path outside `projects/{project}/apps/{name}/`; direct writes to default branch. |
+| `/v1/packages/{host}/{*rest}` | `GET` | Upstream Package Registries (e.g., `crates.io`, `npmjs.org`) | None | Host not present in profile allow-list; non-HTTPS protocols; a response over the profile's `limits.maxResponseBytes`. |
 | `/v1/fetch?url={url}` | `GET` | Upstream documentation or package URL | None | Host not in `AgentProfile.spec.egress.allowedHosts`; redirects outside the allow-list; payload exceeding `limits.maxResponseBytes`; non-text content type; cumulative `egress.maxBytesPerRun` spent; URL with userinfo or a credential-looking query parameter. |
 | `/v1/mcp` | `POST` | `http://portal-internal:9090/internal/agent-runs/{run}/mcp` (the Portal internal listener, not routed at the edge) | Proxy Service Account Bearer Token | An operation the run's `AgentProfile` does not name (AG-70); approving or rejecting a change, on any profile (AG-11); starting, cancelling or publishing another run, answering the question a run asked its person (AG-45), and minting, rotating or revoking a service account's key, all on any profile (AG-11); bringing a workspace back or throwing one away (AG-82); a run that has ended. The Portal runs the call as the person who started the run, narrowed by the profile, so a profile never widens anyone. |
-| `/v1/runs/events` | `POST` | `http://portal-internal:9090/agent-runs/events` (the Portal internal listener, not routed at the edge) | Proxy Service Account Bearer Token | Event payload exceeding 64 KiB; event rate above the run profile's `limits.requestsPerMinute`, which every AgentProfile declares; ticket/run mismatch. |
-| `/v1/diagnostics/{component}/{id}` | `GET` | `http://portal-internal:9090/agent-runs/{run}/diagnostics/{component}/{id}` | Proxy Service Account Bearer Token | Component other than `pipeline` or `change`; an id that is not a name; a resource outside the run's project (the Portal answers `404`). The body is redacted (AG-56) before the workspace sees it (AG-57). |
+| `/v1/runs/events` | `POST` | `http://portal-internal:9090/internal/agent-runs/events` (the Portal internal listener, not routed at the edge) | Proxy Service Account Bearer Token | Event payload exceeding 64 KiB; event rate above the run profile's `limits.requestsPerMinute`, which every AgentProfile declares; ticket/run mismatch. |
+| `/v1/diagnostics/{component}/{id}` | `GET` | `http://portal-internal:9090/internal/agent-runs/{run}/diagnostics/{component}/{id}` | Proxy Service Account Bearer Token | Component other than `pipeline` or `change`; an id that is not a name; a resource outside the run's project (the Portal answers `404`). The body is redacted (AG-56) before the workspace sees it (AG-57). |
+| `/v1/runs/inbox?after={seq}&wait={secs}` | `GET` | `http://portal-internal:9090/internal/agent-runs/{run}/inbox` | Proxy Service Account Bearer Token | The run comes from the ticket and never from the query, so a workspace cannot ask what was said to another run (AG-46, AG-52); a `wait` above 25 seconds is clamped rather than held. This is the long poll §3 step 5 answers a person's message on. |
+| `/healthz` | `GET` | None | None | Answers `ok` to the readiness probe and nothing else. |
 | `/*` | Any | None | None | Returns `403 Forbidden` (`application/problem+json`). |
 
 ### 4.1 Egress Allow-List for Builder Runs (AG-65)
@@ -224,14 +226,19 @@ Security boundaries are enforced through layered infrastructure primitives:
 
 ## 6. Limits and Cost Governance
 
-Every execution is governed by structural resource and financial boundaries declared in the governing `AgentProfile`:
+Every execution is governed by resource and financial boundaries the governing `AgentProfile` declares. None of them has a code default: `limits` and `model` are required fields, so a profile that leaves one out is refused at validation rather than falling back to a number nobody chose. The values below are the seeded `app-builder` profile's (`components/agent-runner/seed/app-builder.yaml`), which is what a run uses until an organization writes its own:
 
-- **Step Limit**: Maximum reasoning-action cycles per run (default: 120 steps).
-- **Wall-Clock Timeout**: Maximum total duration for job execution (default: 20 minutes, maximum: 60 minutes).
-- **Concurrency Cap**: Maximum active runs per organization (default: 2 concurrent runs).
-- **Model Token Budget**: Hard limit on input and output tokens consumed across all LLM requests (default: 2,000,000 tokens).
-- **Response Size Cap**: Maximum payload size for individual package or HTTP downloads (default: 8 MiB).
-- **Rate Limit**: Maximum proxy requests per minute per run (default: 240 requests/min).
+| Limit | Field | `app-builder` | Ceiling in the code |
+|---|---|---|---|
+| Reasoning-action cycles per run | `limits.stepsPerRun` | 120 | greater than zero |
+| Wall clock per run | `limits.wallClock` | `PT20M` | `PT1H`, refused above (AG-41) |
+| Active runs per organization | `limits.concurrentRunsPerOrganization` | 2 | greater than zero |
+| Input and output tokens per run | `model.maxTokensPerRun` | 2,000,000 | — |
+| One package or fetch response | `limits.maxResponseBytes` | 2 MiB | greater than zero |
+| Proxy requests per minute per run | `limits.requestsPerMinute` | 60 | — |
+| Egress bytes per run | `egress.maxBytesPerRun` | absent, so 16 MiB | meaningless without `allowedHosts` |
+
+Two caps are the proxy's own and no profile moves them: a request body over 4 MiB is refused on every route (`routes/body.rs`), and a single run event over 64 KiB is refused on `/v1/runs/events`.
 
 ## 7. Attribution and Audit
 

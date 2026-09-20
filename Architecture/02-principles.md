@@ -26,7 +26,7 @@ Every external and inter-service interface is exposed through open, standardized
 
 ## 5. Open Source by Default
 
-The platform is developed, documented, and released under permissive open-source licenses (Apache 2.0 and MIT), ensuring that all deployment manifests, container recipes, tooling, and test suites remain public with zero closed-source or commercial-only feature gates. Implemented in [14-components.md](14-components.md) and requirement family [PF](../Requirements/platform.md).
+The platform is developed, documented, and released under the European Union Public Licence 1.2, the reciprocal licence the European Commission publishes for public-sector software; every workspace declares it (`license = "EUPL-1.2"` in `joinedcontext-platform/Cargo.toml` and `joinedcontext-portal/Cargo.toml`, `joinedcontext-deployment/LICENSE`, and the Antares broker). Deployment manifests, container recipes, tooling, and test suites are public, and no capability is behind a closed-source or commercial-only gate. Implemented in [14-components.md](14-components.md) and requirement family [PF](../Requirements/platform.md).
 
 ## 6. Cloud-Native Architecture
 
@@ -50,11 +50,11 @@ Multi-tenancy is enforced at administrative, logical, and data layers through Or
 
 ## 11. Security and Privacy by Design
 
-Security is implemented as a continuous default through mandatory mutual TLS across all pods, least-privilege execution tokens, strict separation between the policy control plane and data payloads, and fail-closed evaluation on every authorization and routing decision. Implemented in [05-context-gateway.md](05-context-gateway.md), [13-security.md](13-security.md), and requirement families [R](../Requirements/access-control.md) and [GW](../Requirements/gateway-firewall.md).
+Security is a continuous default: mutual TLS between workloads, carried by the Linkerd proxy and made mandatory by a Kyverno policy that refuses any Pod without the sidecar in a namespace annotated `linkerd.io/inject=enabled` (a workload opts out only explicitly, and the opt-out is itself policed); least-privilege execution tokens; strict separation between the policy control plane and data payloads; and fail-closed evaluation on every authorization and routing decision. Implemented in [05-context-gateway.md](05-context-gateway.md), [13-security.md](13-security.md), and requirement families [R](../Requirements/access-control.md) and [GW](../Requirements/gateway-firewall.md).
 
 ## 12. Configuration as Code First
 
-All declarative platform configuration including tenants, routing rules, access policies, data models, subscriptions, and pipelines must be authored, reviewed, versioned, and stored in Git as the authoritative source of truth, converged to live services solely by `jcctl`. Implemented in [06-configuration-as-code.md](06-configuration-as-code.md) and requirement family [CC](../Requirements/city-as-code.md).
+All declarative platform configuration, including Organizations, Projects, Context Spaces, routing rules, access policies, data models, subscriptions, and pipelines, is authored, reviewed, versioned, and stored in Git as the authoritative source of truth. One elected Portal replica converges it to the live services in process, and it carries `jcctl` as a library, so the reconciler and the command line read a manifest the same way and nothing else writes to a live service. Implemented in [06-configuration-as-code.md](06-configuration-as-code.md) and requirement family [CC](../Requirements/city-as-code.md).
 
 ## 13. AI Agents as First-Class Principals
 

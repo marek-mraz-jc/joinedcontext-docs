@@ -153,3 +153,11 @@ Requirement family **AP-01…AP-71** for AI-generated, purpose-built application
 | AP-64…AP-67 | Applications, SDK, Artifacts & Basemaps | [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | AP-68…AP-71 | Durability, Resumption & Draft Governance | [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | AP-72…AP-74 | Source in git, one build by digest | [20-app-sdk.md#6-publication](../Architecture/20-app-sdk.md#6-publication) | [Testing/06-security-tests.md#2-policy-bypass--privilege-escalation-regression-suite](../Testing/06-security-tests.md#2-policy-bypass--privilege-escalation-regression-suite) |
+
+## Related
+
+- [app-sdk.md](app-sdk.md) — the package, the template and the runtime a generated application is built on.
+- [agents.md](agents.md) — the run that generates an application and the proxy it works through.
+- [Architecture/16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) — how the platform builds, hosts and secures an application.
+- [Architecture/19-agent-runner.md](../Architecture/19-agent-runner.md) — the runner, the workspace and the credential proxy behind a build.
+- [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) — the suites that prove these requirements.

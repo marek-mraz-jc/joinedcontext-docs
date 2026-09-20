@@ -413,7 +413,17 @@ Transitions the App manifest to `lifecycle: published` via standard Gitea pull r
 
 ## 7. Internal Proxy Endpoints
 
-Served on the Portal's separate internal listener (`JC_INTERNAL_BIND`, port 9090), which APISIX does not route and a NetworkPolicy opens to the agent proxy alone, so these three calls are not part of the public URL scheme at all. Authenticated via `Authorization: Bearer <proxy-token>`.
+Served on the Portal's separate internal listener (`JC_INTERNAL_BIND`, `joinedcontext-portal/src/config.rs`), which APISIX does not route and a NetworkPolicy opens to the agent proxy alone, so none of these calls is part of the public URL scheme. Authenticated via `Authorization: Bearer <proxy-token>`.
+
+There are five (`src/api/agent_runs.rs`, `internal_router`):
+
+| Route | What it is for |
+|---|---|
+| `POST /internal/agent-runs/events` | the run's events, relayed; a body over 64 KiB is refused on this door as on the proxy's |
+| `GET /internal/agent-runs/{id}` | the run's parameters, `ticketHash` and profile constraints |
+| `GET /internal/agent-runs/{id}/inbox` | what the person said, in `seq` order |
+| `POST /internal/agent-runs/{id}/mcp` | the operations registry: the same MCP dispatcher a person's client speaks to, entered as the person who started the run and narrowed by the run's profile (AG-64, AG-70) |
+| `GET /internal/agent-runs/{id}/diagnostics/{component}/{name}` | §7.1 |
 
 ### Receive Run Events from Proxy
 
@@ -543,6 +553,34 @@ Error responses:
 - `400 Bad Request`: Returned if `continues` references a run ID that does not exist or references a run whose `kind` is not `"conversation"`.
 - `403 Forbidden`: Returned if the authenticated caller lacks the required assistant permission in the project (the `propose` verb on the `App` resource kind).
 - `409 Conflict`: Returned when posting an instruction to a run that has reached a terminal state (`cancelled`, `expired`, `failed`, or completed). To resume dialogue, clients must invoke this route with `continues: <runId>`.
+
+### Proposing an Endpoint
+
+The assistant's share tool, which renders manifests and writes nothing (EP-72, PF-50).
+
+```http
+POST /api/v1/projects/{project}/assistant/propose-endpoint HTTP/1.1
+Content-Type: application/json
+
+{
+  "contextSpace": "air-quality",
+  "name": "public-air",
+  "title": "Ilmanlaatu",
+  "audience": "project-list",
+  "allowedProjects": ["mobility"],
+  "representations": ["ngsi-ld", "geojson"],
+  "hiddenAttributes": ["contactPoint"],
+  "entityTypes": ["AirQualityObserved"],
+  "rateLimits": { "requestsPerMinute": 600 }
+}
+```
+
+Response `200 OK`: `lane`, the fresh 26-character `slug` the Portal minted (never the model, EP-02),
+the rendered `endpoint` manifest, the `policies` granting `retrieveOps` on the named types, any
+placeholder `groups` a consumer project still needs, and `prefill` for the Endpoint form. Nothing
+is created: the person submits the prefilled form through the ordinary change flow. A caller who
+may not `propose` an `Endpoint` here gets `403` (PF-50); `audience` defaults to `project-list`,
+never to `public`.
 
 ## 9. Agent Access
 

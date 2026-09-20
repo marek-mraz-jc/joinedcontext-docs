@@ -9,14 +9,17 @@ Family **OPS** (OPS-01…OPS-51). Owning chapter: [13-security.md](../Architectu
 
 This chapter specifies the operational, deployment, and Site Reliability Engineering (SRE) requirements for operating the federated digital twin platform in production Kubernetes environments.
 
+The family runs OPS-01…OPS-51 with two holes: no OPS-24 and no OPS-25 were ever issued.
+
 ## 1. Helmfile Component Architecture
 
-- **OPS-01** — The platform deployment MUST be managed using Helmfile with modular component definitions adhering to the structure in `civitas-core-deployment`:
-  - `components/<component>/civitas-component.yaml` — Component metadata.
+- **OPS-01** — The platform deployment MUST be managed using Helmfile with modular component definitions adhering to the structure in `joinedcontext-deployment`:
+  - `components/<component>/component.yaml` — Component metadata, validated against `component.schema.json`.
   - `components/<component>/charts.yaml` — Pinned chart versions.
   - `components/<component>/images.yaml` — Pinned image tags and digests.
   - `components/<component>/values/` — Environment values.
 - **OPS-02** — Environment-specific overrides MUST reside strictly within the `deployment/` directory. Upstream default configurations in `defaults/` and `components/` MUST remain unmodified.
+  > Note: `deployment/` is the operator's own checkout, not a directory of this repository: values live in `deployment/environments/<env>/`, and `.ci/example-deployments/` holds the layout. The defaults they override are in `defaults/environment/global.yaml`.
 - **OPS-03** — The platform MUST support single-namespace deployment (`global.singleNamespace: true`) and multi-namespace deployment (`global.singleNamespace: false`).
 
 ## 2. Deployment Profiles and Resource Governance
@@ -72,10 +75,10 @@ This chapter specifies the operational, deployment, and Site Reliability Enginee
 - **OPS-26** [S] — All platform namespaces MUST enforce a default-deny NetworkPolicy for both Ingress and Egress traffic, permitting communication exclusively through explicit per-component allow rules.
 - **OPS-27** [S] — Every workload container MUST run under a dedicated Kubernetes ServiceAccount with `automountServiceAccountToken: false`, unless direct Kubernetes API communication is explicitly required by the component architecture.
 - **OPS-28** [S] — Container images deployed across all environments MUST be pinned to immutable SHA-256 cryptographic digests with `pullPolicy: IfNotPresent`; mutable tags and `latest` references MUST be rejected during manifest validation.
-- **OPS-29** [S] — Kyverno Pod Security Standard baseline policies and platform runtime policies MUST operate in `failureAction: Enforce` in production profiles; any workload exemption MUST be documented via the `mesh.civitas-core/opt-out-reason` annotation.
+- **OPS-29** [S] — Kyverno Pod Security Standard baseline policies and platform runtime policies MUST operate in `failureAction: Enforce` in production profiles; any workload exemption MUST be documented via the `mesh.joinedcontext.com/opt-out-reason` annotation, which the `justify-linkerd-inject-opt-out` policy reads.
 - **OPS-30** [S] — Inter-service communication across all instance namespaces MUST be authorized and encrypted via Linkerd mutual TLS under a `cluster-authenticated` inbound policy, with the public APISIX data-plane ingress port explicitly scoped via a Linkerd `Server` resource.
 - **OPS-31** [S] — The APISIX Admin API MUST be physically disabled (`admin.enabled: false`) with etcd removed from core; routing configurations MUST be rendered exclusively by `jcctl` into declarative standalone `apisix.yaml` files and validated prior to ConfigMap deployment.
-- **OPS-32** [S] — The edge gateway MUST unconditionally sanitize inbound request headers by stripping `NGSILD-Tenant`, `X-Userinfo`, `X-Access-Token`, `X-Allowed-Scope-Ids`, `X-Endpoint-Slug`, and untrusted `X-Forwarded-*` headers before forwarding traffic to upstream services.
+- **OPS-32** [S] — The edge gateway MUST unconditionally sanitize inbound request headers by stripping `NGSILD-Tenant`, `X-Userinfo`, `X-Access-Token`, `X-Allowed-Scope-Ids`, `X-Endpoint-Slug`, `X-Consumer-Identity`, and untrusted `X-Forwarded-*` headers before forwarding traffic to upstream services.
 - **OPS-33** [S] — Token authentication MUST happen in the receiving service (Portal, Context Gateway): OpenID Connect JWT signatures (ES256) validated against the Keycloak JSON Web Key Set, cached and refreshed in the background, no per-request introspection. The edge gateway MUST forward `Authorization` untouched and MUST NOT be configured as a token verifier (its `openid-connect` plugin cannot verify ES256); a route whose upstream does not verify tokens MUST NOT be exposed as authenticated.
 - **OPS-34** [S] — The edge gateway MUST inject HTTP security headers on all outbound responses via the `response-rewrite` plugin, including HSTS with preload, `X-Content-Type-Options: nosniff`, `X-Frame-Options`, `Referrer-Policy`, Content Security Policy, and `Cache-Control: no-store` on authenticated API endpoints.
 - **OPS-35** [S] — The edge gateway MUST enforce tiered rate limiting across all routes using distinct rate-limiting classes for anonymous public traffic, authenticated API consumers, and high-throughput telemetry ingestion pipelines.

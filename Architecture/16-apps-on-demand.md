@@ -14,7 +14,7 @@ flowchart LR
     BP["Blueprint app-from-prompt<br/>→ kind: App + dataNeeds"]
     REPO["Org repository<br/>apps/{name}/ (manifest + source)"]
     CI["CI: build · tests · SBOM · dataNeeds ⊆ granted check"]
-    REC["jcctl apply<br/>renders Endpoint + Policy from dataNeeds"]
+    REC["Portal reconciler<br/>renders Endpoint + Policy from dataNeeds"]
     EP["/api/endpoint/{slug}/ (only the declared types, attrs, operations)"]
     RUN["App runtime<br/>static SPA under /apps/{name}/ or container"]
     U --> AG --> BP --> REPO --> CI --> REC --> EP
@@ -318,7 +318,7 @@ An application can generate artifacts directly in the browser (PDF reports, CSV 
 
 Map views require a basemap. Fetching tiles or vector styles directly from public third-party tile providers (such as OpenStreetMap or OpenFreeMap) leaks user coordinates and viewing activity to external parties and violates preview frame sandbox isolation. All basemap tile and style requests route through the Portal API:
 
-- `GET /api/v1/projects/{project}/basemap/{style}/{z}/{x}/{y}.{ext}`
+- `GET /api/v1/projects/{project}/basemap/{style}/{z}/{x}/{tile}` — the last segment is the Y coordinate with its extension, `0.png`
 - `GET /api/v1/projects/{project}/basemap/{style}/style.json`
 
 The routes need no session: a basemap carries none of the platform's data, and the sandboxed preview frame holds no session to send (AP-63). They answer any origin, because that frame has none, and they are still not a proxy: only the configured style is served, only coordinates in its zoom range are fetched, and each client is rate-capped. The Portal writes the absolute style URL into the SDK configuration of the document it serves (`basemap` beside `slug`), and the SDK's map loads that URL and nothing else; without it the map draws on a plain background. Coordinate parameters (`z`, `x`, `y`) are validated against numeric bounds before any upstream request is made. Upstream provider settings (URL template, attribution text, zoom range, and optional credential keys as `secretRef`) are defined in deployment configuration and never exposed to client browsers. The Portal provides a local disk tile cache with a configured storage ceiling and TTL eviction. Attribution is mandatory. If no basemap upstream is configured, the route returns HTTP 404 Problem Details (`application/problem+json`); the map layer renders data points over a neutral canvas background with an explicit status message.

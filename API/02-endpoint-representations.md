@@ -56,7 +56,7 @@ Standard ETSI property-object structure:
       "coordinates": [19.146, 48.736]
     }
   },
-  "@context": "https://joinedcontext.com/schema/context.jsonld"
+  "@context": "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.8.jsonld"
 }
 ```
 
@@ -130,6 +130,7 @@ Every refusal is `application/problem+json` (RFC 7807) with a `type` under
 | the operation, type, attribute, scope or area is outside every grant | 403 | `forbidden` |
 | a verified token whose `azp` names no `ServiceAccount` in the repository, or an account whose project the endpoint's audience excludes | 403 | `forbidden` |
 | a write whose entity id is not an NGSI-LD URN of this organization and this space | 400 | `urn-scheme` |
+| a write method on a read-only representation (`file.*`, OGC, STA) | 405 | `method-not-allowed`, with `Allow: GET, HEAD, OPTIONS` |
 | the broker behind the endpoint did not answer | 502 | `upstream-unavailable` |
 
 - **EP-03** [endpoints] — an unknown slug and an endpoint the caller may not use answer the same 404.
@@ -148,8 +149,14 @@ Path: `/api/endpoint/{endpointSlug}/file.geojson`
 Converts spatial NGSI-LD entities into standard RFC 7946 GeoJSON.
 
 - **Feature `id`:** Bound to the entity URN.
-- **`geometry`:** Extracted from the primary `location` or `GeoProperty`.
-- **`properties`:** Normalized attributes flattened to simple key-value pairs, by the table of §6: the value under the attribute's own name, and the `unitCode` and `observedAt` it carries under `{name}_unitCode` and `{name}_observedAt`. An attribute that carries neither gains no keys, and a `LanguageProperty` is the one text of the caller's `Accept-Language`, which the answer names in `Vary` ([EP-37](../Requirements/endpoints.md)).
+- **`geometry`:** Extracted from the primary `location` GeoProperty. An entity without one is not a
+  Feature and is left out of the collection.
+- **`properties`:** One key per remaining attribute, by the table of §6: the attribute's `value` or
+  a Relationship's `object` under its own name, and the `unitCode` and `observedAt` it carries
+  under `{name}_unitCode` and `{name}_observedAt` (T-2380). An attribute that carries neither gains
+  no keys. A `LanguageProperty` is the one text of the caller's `Accept-Language`, which the answer
+  names in `Vary` ([EP-37](../Requirements/endpoints.md)). The JSON-LD keywords are dropped and
+  `type` keeps the entity's NGSI-LD type (`translators/geojson.rs`).
 
 ```json
 {
@@ -166,7 +173,8 @@ Converts spatial NGSI-LD entities into standard RFC 7946 GeoJSON.
         "type": "WeatherObserved",
         "temperature": 22.4,
         "temperature_unitCode": "CEL",
-        "temperature_observedAt": "2026-08-15T12:00:00Z"
+        "temperature_observedAt": "2026-08-15T12:00:00Z",
+        "refDistrict": "urn:ngsi-ld:District:hel.fi:air-quality:kallio"
       }
     }
   ]
@@ -177,23 +185,26 @@ Converts spatial NGSI-LD entities into standard RFC 7946 GeoJSON.
 
 ## 4. Tabular CSV Representation
 
-Path: `/api/endpoint/{endpointSlug}/file.csv` (also `file.json`, `file.geojson`, `file.xlsx`, `file.zip`; EP-41…EP-45)
+Path: `/api/endpoint/{endpointSlug}/file.csv` (also `file.geojson`, `file.xlsx`, `file.zip`; EP-41…EP-45)
 
 All `file.*` children accept the NGSI-LD `GET /entities` query parameters and stream the result as an attachment:
 
 ```http
 GET /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/file.csv?type=WeatherObserved&q=temperature>20&humanHeaders=true
-Accept-Language: sk
 ```
 
 ```http
 HTTP/1.1 200 OK
 Content-Type: text/csv; charset=utf-8; header=present
-Content-Disposition: attachment; filename="weather-WeatherObserved-20260905T120000Z.csv"
-ETag: "q=…;modifiedAt=2026-09-05T11:58:41Z"
+Content-Disposition: attachment; filename="zt4qm7ge2xdv6ksb3ncf5arw2y.csv"
 ```
 
-`file.zip` bundles `data.jsonld`, `data.csv`, `data.xlsx`, `data.geojson`, `schema/`, `dataset.jsonld` (DCAT-AP) and `README.txt`. Limits: `spec.fileLimits.maxFileRows` / `spec.fileLimits.maxFileBytes` on the Endpoint manifest (413 when exceeded). Only `.xlsx` is served, never legacy `.xls`.
+The file is named after the endpoint slug and the extension, which are both literals the gateway
+controls, so nothing a caller sent reaches the `Content-Disposition` header. A download carries no
+`ETag`: the body is a whole query answered afresh, and a validator over a paged export would have to
+be computed by running the export. `file.zip` is §5a. Limits: `spec.fileLimits.maxFileRows` /
+`spec.fileLimits.maxFileBytes` on the Endpoint manifest (413 when exceeded). Only `.xlsx` is served,
+never legacy `.xls`.
 
 Exports entities as flat tabular data with RFC 4180 compliance.
 
@@ -250,9 +261,9 @@ The workbook is written in the same pass as the CSV, from the same flattened row
 
 Path: `/api/endpoint/{endpointSlug}/file.zip`
 
-One download that a colleague can open without the platform: the same query in every
-representation the endpoint serves, the schemas that describe it, and the catalogue record that
-says where it came from (EP-41, EP-51). `Content-Type: application/zip` and
+One download that a colleague can open without the platform: the same query as JSON-LD, GeoJSON and
+CSV, the schemas that describe it, and the catalogue record that says where it came from (EP-41,
+EP-51). The workbook of §5 is not in the bundle — a spreadsheet opens the CSV. `Content-Type: application/zip` and
 `Content-Disposition: attachment; filename="{slug}-{YYYYMMDD}.zip"` (EP-43).
 
 ```text
@@ -260,15 +271,15 @@ says where it came from (EP-41, EP-51). `Content-Type: application/zip` and
   data/entities.jsonld          normalized JSON-LD, the same bytes /ngsi-ld/v1 would answer
   data/entities.geojson         the FeatureCollection of file.geojson
   data/entities.csv             the rows of file.csv, human headers off
-  schema/v{n}/{Type}.json       JSON Schema of every type in the export (EP-51)
-  schema/v{n}/{Type}.context.jsonld
+  schema/v{n}/model.schema.json    the seven documents of §7a, one set per model major
+  schema/v{n}/context.jsonld       (`model.shacl.ttl`, `model.owl.ttl`, `model.rdf.ttl`,
+  schema/v{n}/…                     `model.linkml.yaml` and `model.md` beside them)
   dcat.jsonld                   DCAT-AP dataset record of this download
   manifest.json                 what was asked for and what came back
 ```
 
-`manifest.json` carries the endpoint slug, the space, the query string the caller sent, the export
-instant in UTC, the row count and the types included, so a bundle found on a disk two years later
-still says what it is. `dcat.jsonld` is the space's own DCAT-AP record narrowed to this download,
+`manifest.json` carries `endpoint`, `space`, `query`, `exportedAt`, `types`, `rows` and `files`, so
+a bundle found on a disk two years later still says what it is. `dcat.jsonld` is the space's own DCAT-AP record narrowed to this download,
 with one `dcat:Distribution` per file above.
 
 Every file is produced in one pass over one paged query, so the four representations of a bundle
@@ -299,11 +310,13 @@ Implements OGC 17-069r4 (Part 1: Core), 18-058r1 (Part 2: CRS by reference) and 
 | `GET /` | — | Landing page: `links` to `api`, `conformance`, `collections`; title/description from the endpoint manifest |
 | `GET /api` | DataModel JSON Schemas | Per-endpoint OpenAPI 3.0.3 document (`application/vnd.oai.openapi+json;version=3.0`) |
 | `GET /conformance` | — | Exactly the five classes of EP-30: Part 1 `conf/core`, `conf/oas30`, `conf/geojson`, Part 2 `conf/crs`, Part 3 `conf/basic-cql2` |
-| `GET /collections` | `GET /ngsi-ld/v1/types` (narrowed) | One collection per entity type with a GeoProperty |
-| `GET /collections/{type}` | `GET /ngsi-ld/v1/types/{type}` + extent query | `extent.spatial` cached `maxAgeSeconds` |
-| `GET /collections/{type}/items` | `POST /ngsi-ld/v1/entityOperations/query` | `bbox`→`geoQ`, `datetime`→`temporalQ`, `filter`→`q`, `limit`, `next` |
-| `GET /collections/{type}/items/{urn}` | `GET /ngsi-ld/v1/entities/{urn}` | 404 for forbidden or missing (R20) |
-| anything else | — | 405 + `Allow: GET, HEAD, OPTIONS` |
+| `GET /collections` | the endpoint's model types, narrowed to the grant, plus one sampled page | One collection per entity type that carries a geometry |
+| `GET /collections/{type}` | the same sample for that one type | `extent.spatial` is computed from a sampled page on every request; the gateway caches no extent, so the `maxAgeSeconds` EP-32 describes is a property of a cache that does not exist |
+| `GET /collections/{type}/items` | `GET /ngsi-ld/v1/entities?type=…` | `bbox`→`georel`/`geometry`/`coordinates`, `datetime`→`timerel`/`timeAt`, `filter`→ the same three plus `q`, `limit`, `next`→`offset` |
+| `GET /collections/{type}/items/{urn}` | `GET /ngsi-ld/v1/entities?type=…&id={urn}&limit=1` | 404 for forbidden, missing, or carrying no geometry (R20) |
+| any other path under the tree | — | 404 |
+| `OPTIONS` | — | 204 + `Allow: GET, HEAD, OPTIONS` |
+| any other method | — | 405 + `Allow: GET, HEAD, OPTIONS` |
 
 ### Example: items query
 
@@ -313,25 +326,23 @@ Accept: application/geo+json
 Accept-Language: sk
 ```
 
-is rewritten by the gateway (after grant intersection) to
+is rewritten by the gateway (after grant intersection) into one NGSI-LD query of the entities
+resource — the parameters of clause 5.7.2, never an `entityOperations/query` body:
 
 ```http
-POST /ngsi-ld/v1/entityOperations/query
+GET /ngsi-ld/v1/entities?type=AirQualityObserved&limit=2&offset=0&georel=intersects&geometry=Polygon&coordinates=[[[19.10,48.70],[19.20,48.70],[19.20,48.76],[19.10,48.76],[19.10,48.70]]]&timerel=after&timeAt=2026-09-01T00:00:00Z&timeproperty=observedAt&q=pm10>50
 NGSILD-Tenant: air-quality
-Content-Type: application/json
-
-{"type":"Query","entities":[{"type":"AirQualityObserved"}],
- "q":"pm10>50",
- "geoQ":{"georel":"intersects","geometry":"Polygon","coordinates":[[[19.10,48.70],[19.20,48.70],[19.20,48.76],[19.10,48.76],[19.10,48.70]]],"geoproperty":"location"},
- "temporalQ":{"timerel":"after","timeAt":"2026-09-01T00:00:00Z","timeproperty":"observedAt"}}
 ```
+
+The tenant is pinned by the gateway and is the space of the resolved endpoint, whatever the client
+sent (§2a). Each grant's own residual is conjoined with the caller's `q` before it is sent, so the
+line above is the caller's half of a query the PDP has already narrowed.
 
 and answered as
 
 ```json
 {
   "type": "FeatureCollection",
-  "numberMatched": 37,
   "numberReturned": 2,
   "timeStamp": "2026-09-05T12:00:00Z",
   "features": [
@@ -340,33 +351,45 @@ and answered as
       "id": "urn:ngsi-ld:AirQualityObserved:hel.fi:air-quality:st-01",
       "geometry": {"type": "Point", "coordinates": [19.145, 48.735]},
       "properties": {
-        "pm10": 63.2, "pm10_unitCode": "GQ", "pm10_observedAt": "2026-09-05T11:50:00Z",
+        "pm10": 63.2,
         "name": "Kallio", "refDevice": "urn:ngsi-ld:Device:hel.fi:air-quality:dev-01"
       },
       "links": [
-        {"rel": "alternate", "type": "application/ld+json", "href": "https://{host}/api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/ngsi-ld/v1/entities/urn:ngsi-ld:AirQualityObserved:hel.fi:air-quality:st-01"},
-        {"rel": "describedby", "type": "application/schema+json", "href": "https://{host}/api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/schema/v1/AirQualityObserved.json"}
+        {"rel": "self", "type": "application/geo+json", "href": "…/collections/AirQualityObserved/items/urn:ngsi-ld:AirQualityObserved:hel.fi:air-quality:st-01"},
+        {"rel": "alternate", "type": "application/ld+json", "href": "https://{host}/api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/ngsi-ld/v1/entities/urn:ngsi-ld:AirQualityObserved:hel.fi:air-quality:st-01"}
       ]
     }
   ],
   "links": [
     {"rel": "self", "type": "application/geo+json", "href": "…/items?bbox=…&limit=2"},
+    {"rel": "collection", "type": "application/json", "href": "…/collections/AirQualityObserved"},
     {"rel": "next", "type": "application/geo+json", "href": "…/items?bbox=…&limit=2&next=b2Zmc2V0PTI"}
   ]
 }
 ```
 
+The collection carries `numberReturned` and no `numberMatched`: counting what this caller may see
+costs a second query on every page, so the `next` link is offered on the only evidence a page
+carries — a full page may have another behind it — and the last page is simply empty
+(`translators/ogc.rs`, EP-36). A feature carries no `rel="describedby"` link either; **T-2381**
+tracks EP-50.
+```
+
 ### Property flattening (EP-37)
 
-| NGSI-LD | GeoJSON `properties` |
-|---|---|
-| `Property.value` | `{name}` |
-| `Property.unitCode` | `{name}_unitCode` |
-| `Property.observedAt` | `{name}_observedAt` |
-| `Relationship.object` | `{name}` (URN string) |
-| `LanguageProperty` | value for `Accept-Language`, fallback to the model's default locale |
-| primary `GeoProperty` | `geometry` |
-| other `GeoProperty` | `{name}` as a GeoJSON geometry object |
+| NGSI-LD | GeoJSON `properties` | Served today |
+|---|---|---|
+| `Property.value` | `{name}` | yes |
+| `Relationship.object` | `{name}` (URN string) | yes |
+| primary `GeoProperty` | `geometry` | yes |
+| other `GeoProperty` | `{name}` as a GeoJSON geometry object | yes |
+| an attribute with neither `value` nor `object` | `{name}`, as it stands | yes |
+| `Property.unitCode` | `{name}_unitCode` | no — **T-2380** |
+| `Property.observedAt` | `{name}_observedAt` | no — **T-2380** |
+| `LanguageProperty` | value for `Accept-Language`, fallback to the model's default locale | no — the language map lands whole, **T-2380** |
+
+The four rows marked yes are `translators/geojson.rs`; the OGC surface and `file.geojson` share
+that one function, so what a GIS client sees on one it sees on the other.
 
 ### CQL2 subset (EP-35)
 
@@ -420,7 +443,7 @@ is a view of the same projected entity page.
 
 | Method + path | Answers with | Notes |
 |---|---|---|
-| `GET /` | service document | `value` lists the five sets below, as SensorThings requires |
+| `GET /` | service document | `value` lists all eight Sensing sets with their URLs, and `serverSettings.conformance` names the three classes this read surface satisfies (`datamodel`, `resource-path`, `request-data`) |
 | `GET /Things` | one `Thing` per entity | `@iot.id` is the entity URN, `@iot.selfLink` its own URL |
 | `GET /Things('{urn}')` | one `Thing` | `404` for an entity the caller may not read (R20) |
 | `GET /Things('{urn}')/Locations` | the entity's `location` | empty `value` when the type declares no `GeoProperty` |
@@ -490,9 +513,16 @@ because a filter that is silently ignored returns more rows than the caller aske
 
 ## 7a. Schema surface (`schema/`)
 
-Path: `/api/endpoint/{endpointSlug}/schema/`
+Path: `/api/endpoint/{endpointSlug}/schema/index.json` and `…/schema/v{major}/{artifact}`
 
-Publishes what the data contains, in every mainstream formalism, narrowed to the endpoint's grant (EP-46…EP-52). Rendered once at publish time by Model Tools, stored in the artifact store, streamed with sha256 `ETag`s.
+Publishes what the data contains, in every mainstream formalism, narrowed to the endpoint's grant
+(EP-46…EP-52). Two routes: `schema/index.json` is the catalogue, `schema/v{major}/{artifact}` is one
+document. `{artifact}` is a file name or its short alias — `model.schema.json`/`json-schema`,
+`context.jsonld`/`context`, `model.shacl.ttl`/`shacl`, `model.owl.ttl`/`owl`, `model.rdf.ttl`/`rdf`,
+`model.linkml.yaml`/`linkml`, `model.md`/`docs`, and `model` for whatever `Accept` asks for. The
+documents are built per request from the checked-in artifacts (or derived from the grants when a
+model has none) and carry a strong sha256 `ETag`; nothing is addressed per type, because a major
+renders as one document over every class it declares.
 
 ```http
 GET /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/schema/index.json
@@ -502,36 +532,52 @@ GET /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/schema/index.json
 {
   "endpoint": "zt4qm7ge2xdv6ksb3ncf5arw2y",
   "models": [{
-    "name": "hki-air-quality", "version": 2, "sourceCommit": "3f9c2e1",
+    "name": "hki-air-quality", "version": 2, "semver": "2.1.0",
     "types": ["AirQualityObserved", "District"],
-    "redacted": true,
     "artifacts": {
-      "model.linkml.yaml":  { "type": "text/yaml",               "bytes": 8123,  "sha256": "9c1e…" },
-      "model.schema.json":  { "type": "application/schema+json", "bytes": 15220, "sha256": "4a77…" },
-      "context.jsonld":     { "type": "application/ld+json",     "bytes": 2310,  "sha256": "b0d2…" },
-      "model.shacl.ttl":    { "type": "text/turtle",             "bytes": 6980,  "sha256": "e51f…" },
-      "model.owl.ttl":      { "type": "text/turtle",             "bytes": 5402,  "sha256": "17c3…" },
-      "model.rdf.ttl":      { "type": "text/turtle",             "bytes": 7115,  "sha256": "c8a9…" },
-      "model.md":           { "type": "text/markdown",           "bytes": 11890, "sha256": "0f4b…" },
-      "example.jsonld":     { "type": "application/ld+json",     "bytes": 1204,  "sha256": "77de…" }
+      "model.linkml.yaml":  { "type": "text/yaml",                 "bytes": 8123,  "sha256": "9c1e…" },
+      "model.schema.json":  { "type": "application/schema+json",   "bytes": 15220, "sha256": "4a77…" },
+      "context.jsonld":     { "type": "application/ld+json",       "bytes": 2310,  "sha256": "b0d2…" },
+      "model.shacl.ttl":    { "type": "text/turtle",               "bytes": 6980,  "sha256": "e51f…" },
+      "model.owl.ttl":      { "type": "text/turtle; profile=\"owl\"", "bytes": 5402, "sha256": "17c3…" },
+      "model.rdf.ttl":      { "type": "text/turtle",               "bytes": 7115,  "sha256": "c8a9…" },
+      "model.md":           { "type": "text/markdown",            "bytes": 11890, "sha256": "0f4b…" }
     },
-    "generators": { "linkml": "1.9.3", "model-tools": "2026.09.1" }
+    "redacted": true
   }]
 }
 ```
 
+`version` is the model's major, the number the path carries; `semver` is its full version.
+`redacted` appears only when the grant left something out (never what), and `types` lists the
+classes this caller may read. There is no `sourceCommit` and no `generators` block: what a caller
+can check is the digest of the bytes it just fetched, which is the `sha256` here and the `ETag`
+there.
+
 ```http
-GET /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/schema/v2/AirQualityObserved.shacl.ttl
+GET /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/schema/v2/model.shacl.ttl
 ```
 
 ```turtle
 @prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix hki: <https://hel.example.fi/schema/air-quality/> .
-hki:AirQualityObserved a sh:NodeShape ;
-  sh:closed true ; sh:ignoredProperties ( rdf:type ) ;
-  sh:property [ sh:path hki:pm10 ; sh:datatype xsd:float ; sh:maxCount 1 ] ,
-              [ sh:path hki:pm25 ; sh:datatype xsd:float ; sh:maxCount 1 ] ,
-              [ sh:path hki:qualityBand ; sh:in ( "A" "B" "C" ) ; sh:minCount 1 ] .
+
+<urn:joinedcontext:model:hki-air-quality:v2:AirQualityObservedShape>
+  a sh:NodeShape ;
+  sh:targetClass <urn:joinedcontext:model:hki-air-quality:v2:AirQualityObserved> ;
+  sh:closed false ;
+  sh:property [
+    sh:path <urn:joinedcontext:model:hki-air-quality:v2:pm10> ;
+    sh:name "pm10" ;
+    sh:datatype xsd:float ;
+    sh:maxCount 1
+  ] ;
+  sh:property [
+    sh:path <urn:joinedcontext:model:hki-air-quality:v2:qualityBand> ;
+    sh:name "qualityBand" ;
+    sh:in ( "A" "B" "C" ) ;
+    sh:minCount 1 ;
+    sh:maxCount 1
+  ] .
 ```
 
 The gateway serves the JSON Schema and the `@context` from the repository checkout, not from a running compiler: `DataModel.spec.artifacts` names the files Model Tools generated beside the LinkML source and committed in the same commit ([DM-02](../Requirements/data-models.md)), so what the endpoint publishes is exactly what was reviewed, minus what the grant forbids. `schema/v{major}/json-schema` is an alias of `model.schema.json`, and `schema/v{major}/context.jsonld` of the `@context`. A model whose artifacts are not in the checkout still answers both: the gateway derives them from the endpoint's grants, so the schema describes what the caller may actually read even before the model is compiled.
@@ -555,9 +601,17 @@ fetch returns, the same digest the REST index publishes and the same one the `ET
 
 ## 7b. Access surface (`access`)
 
-Path: `/api/endpoint/{endpointSlug}/access` (also `/cs/{space}/access`)
+Path: `/api/endpoint/{endpointSlug}/access` and `POST …/access/check`. The space surface links a
+`/cs/{space}/access` child but the router does not serve one yet (**T-2373**), so a caller reads the
+grants through the endpoint slug.
 
-Returns the caller's effective grants (EP-55…EP-60). Same decision as the data paths, three representations by `Accept`.
+Returns the caller's effective grants (EP-55…EP-60). Same decision as the data paths, four
+representations chosen by `Accept`, read in the order the caller wrote them: `application/json` (and
+`application/ld+json`) for the AuthZEN document, `application/odrl+json` for the ODRL policy,
+`text/turtle` for the same policy as RDF, and
+`application/vnd.joinedcontext.grant-ast+json` for the residual as a condition tree. An `Accept` this
+surface does not serve is answered with the AuthZEN document rather than a `406`: the caller asked
+what they may do, and there is always an answer to that.
 
 The default, `application/json`, is the AuthZEN permissions document: one entry per entity type the caller may touch, and nothing about the types it may not (EP-59, [R20](../Requirements/policy-firewall.md)).
 
@@ -580,11 +634,37 @@ Accept: application/json
 }
 ```
 
-`actions` are CIM 009 Table 4.20-1 names with groups expanded, `attributes` the readable and writable slots, `constraints` the residual the gateway would add to any request. An unconstrained principal gets `"actions": ["*"]` and `"attributes": "*"`. A `prohibitions` entry overrides a permission that would otherwise match ([GW8](../Requirements/gateway-firewall.md)).
+`actions` are CIM 009 Table 4.20-1 names with groups expanded — never `"*"`, because the expanded
+list is what the caller can check a request against. `attributes` is the readable and writable slots,
+or the string `"*"` when the grant names no whitelist and therefore reaches every attribute of the
+types it names. `constraints` carries whichever of `q`, `scopeQ`, `geoQ` and `temporalQ` the grant
+sets, and nothing for the ones it does not. An Endpoint that declares a rate limit adds a `limits`
+object (`requestsPerMinute`, and `burst` when it is set) beside `permissions`, so a caller reads the
+limit before meeting it. A `prohibitions` entry overrides a permission that would otherwise match
+([GW8](../Requirements/gateway-firewall.md)).
 
-`POST …/access/check` answers one prospective request with `{"decision": true|false}`. A permitted decision may name the policy that permitted it; a refusal names nothing, because the reason is the rule, and the rule is not the caller's business ([GW6](../Requirements/gateway-firewall.md)).
+`POST …/access/check` answers one prospective request. The body is an AuthZEN request:
+`action.name` is required and is a CIM 009 operation, `resource.type` is optional and narrows the
+question to one entity type. A body that is not JSON or that omits `action.name` is a `400` saying
+which. A permitted decision names the policy's assigner, a refusal names nothing, because the reason
+is the rule and the rule is not the caller's business
+([GW6](../Requirements/gateway-firewall.md)):
 
-The other two representations:
+```http
+POST /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/access/check
+Content-Type: application/json
+
+{"action": {"name": "retrieveEntity"}, "resource": {"type": "AirQualityObserved"}}
+```
+
+```json
+{"decision": true, "context": {"reason": "policy_grant_matched", "assigner": "did:web:hel.fi"}}
+```
+
+A prohibition covering the action ends it, whatever any permission says, and answers
+`{"decision": false}`.
+
+The other three representations:
 
 ```http
 GET /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/access
@@ -609,6 +689,9 @@ Accept: application/odrl+json
 }
 ```
 
+The same ODRL policy is served as RDF to a caller that sends `Accept: text/turtle` — one document,
+two serializations, so a catalogue that reads Turtle needs no JSON-LD processor.
+
 ```http
 GET /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/access
 Accept: application/vnd.joinedcontext.grant-ast+json
@@ -629,9 +712,11 @@ Accept: application/vnd.joinedcontext.grant-ast+json
 }
 ```
 
-An unconstrained principal (for example a `service` App with full write rights on its own space) receives `"operations": ["*"]`, `"project": "*"` and no `where`. Types the caller may not see are absent.
+An unconstrained principal (for example a `service` App with full write rights on its own space)
+receives `"project": "*"` and no `where`; `operations` is the expanded list of what it may do, as in
+the AuthZEN document. Types the caller may not see are absent.
 
-`scopeQ`, `geoQ` and `temporalQ` have a known shape, so they become `where` branches. A residual `q` does not: it is an NGSI-LD query filter, and [R56](../Requirements/policy-firewall.md) allows exactly one grammar for those, the broker's own parser compiled to Wasm, which the gateway does not host. So `q` travels verbatim beside `where`, and a client applies it as it applies any other NGSI-LD filter. Leaving it out would understate the residual and let a client compile a filter wider than its grant. When the R56 parser lands in the gateway, `q` becomes another `where` branch and the verbatim string stays for compatibility.
+`scopeQ`, `geoQ` and `temporalQ` have a known shape, so they become `where` branches. A residual `q` does not: it is an NGSI-LD query filter, and [R56](../Requirements/policy-firewall.md) allows exactly one grammar for those, the broker's own parser compiled to Wasm, which the gateway does not host. So `q` travels verbatim beside `where`, and a client applies it as it applies any other NGSI-LD filter. Leaving it out would understate the residual and let a client compile a filter wider than its grant.
 
 ## 8. Model Context Protocol (MCP)
 

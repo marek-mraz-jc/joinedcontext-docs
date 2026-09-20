@@ -102,6 +102,11 @@ jobs:
             echo "the markdown lint accepted an unlabelled code fence" >&2
             exit 1
           }
+      - name: every command the README tells a newcomer to type still works (T-2144)
+        run: |
+          set -eu
+          python3 scripts/check-readme-commands.py --selftest
+          python3 scripts/check-readme-commands.py
       - name: each checker fails the corpus it is meant to reject
         run: |
           set -eu

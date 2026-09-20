@@ -47,93 +47,128 @@ In Topology Option B, APISIX acts as the primary external ingress gateway:
 
 ## 2. Public URL Surface and Path-Based Route Table
 
-The platform consolidates external routing under a single primary domain `{host}` (e.g., `city.example.com`), with Keycloak identity management on `idm.{host}`. Services are partitioned by clean URL prefixes.
+The platform consolidates external routing under a primary domain `{host}` (for example `city.example.com`). The Portal has a host of its own, `portal.{host}`; Keycloak is on `idm.{host}` and the open-data catalogue on `data.{host}`. The apex keeps the shared surfaces and redirects everything else to the Portal host (ADR-N-019).
 
-| Route ID | Path Pattern | Host Constraint | Upstream Service | Auth Mode | Rate Limit Class | Applied Plugins | Description |
+Every row below is one entry of `components/<component>/apisix-routes.yaml` with its plugin config in `components/<component>/apisix-plugins.yaml`. Priority decides which route wins when two patterns match; APISIX takes the highest.
+
+| Route ID | Path Pattern | Host | Priority | Upstream Service | Auth Mode | Rate Limit | Notable plugins |
 |---|---|---|---|---|---|---|---|
-| `portal-ui` | `/*` | `portal.{host}` | `portal:8080` | Edge session (`openid-connect`, `unauth_action: auth`) | Class 1 (Standard) | `request-id`, `serverless-pre-function`, `openid-connect`, `proxy-rewrite`, `response-rewrite` | Portal single-page UI; the edge logs the person in and hands the Portal `X-Userinfo` and `X-Access-Token` (ADR-N-019). |
-| `portal-api` | `/api/v1/*` | `portal.{host}` | `portal:8080` | Edge session or OIDC Bearer Token (`unauth_action: pass`) | Class 2 (Authenticated) | `request-id`, `serverless-pre-function`, `openid-connect`, `proxy-rewrite`, `response-rewrite` | Portal REST API: a browser session becomes `X-Access-Token`, a bearer caller passes through and the Portal verifies the token itself. |
-| `context-space` | `/cs/:space/*` | `{host}` | `context-gateway:8080` | OIDC Bearer Token, verified by the Context Gateway | Class 2 (Authenticated) | `request-id`, `serverless-pre-function`, `proxy-rewrite`, `response-rewrite` | Canonical NGSI-LD space surface for direct tenant members. |
-| `context-endpoint`| `/api/endpoint/:slug/*` | `{host}`, `portal.{host}` | `context-gateway:8080` | Token or anonymous, decided by the Context Gateway PEP | Class 2 / Class 3 | `request-id`, `serverless-pre-function`, `cors`, `proxy-rewrite`, `response-rewrite` | Shared Endpoint surface exposing NGSI-LD, GeoJSON, OGC, STA. The apex is canonical (the DCAT record names it); the Portal host serves the same route, because the Portal UI hands out endpoint links on its own origin. |
-| `apps-surface` | `/apps/*` | `{host}` | `portal:8080` | Edge session (`openid-connect`, `unauth_action: auth`) | Class 1 (Standard) | `request-id`, `serverless-pre-function`, `openid-connect`, `response-rewrite` | Hosts compiled bundles of `static` Apps on Demand behind the edge login; cookie path `/apps/`. |
-| `app-{name}` | `/apps/{name}/*` | `{host}` | `app-{name}:8080` (service/fullstack) or `portal:8080` (static) | Edge session (`openid-connect`; `unauth_action: pass` for `visibility: public`) | Class 1 (Standard) | `request-id`, `serverless-pre-function`, `openid-connect`, `response-rewrite` | One route per App, rendered by jcctl with a higher priority than `apps-surface`; cookie path `/apps/{name}/`, logout `/apps/{name}/logout` (AP-26…AP-29). |
-| `gitea-forge` | `/git/*` | `{host}` | `gitea:3000` | Basic / Token | Class 2 (Authenticated) | `request-id`, `proxy-rewrite` | Internal Git forge for pull requests and CI pipelines. |
-| `well-known` | `/.well-known/*` | `{host}` | `portal:8080` | Anonymous | Class 1 (Standard) | `request-id`, `cors`, `response-rewrite` | Serves DID documents and platform discovery metadata. |
-| `keycloak-idm` | `/*` | `idm.{host}` | `keycloak:8080` | Identity Provider | Class 2 (Authenticated) | `request-id`, `serverless-pre-function`, `proxy-rewrite` | Keycloak login pages, token issuance, and account console. |
-| `grafana-addon` | `/grafana/*` | `{host}` | `grafana:3000` | OIDC / Session | Class 2 (Authenticated) | `request-id`, `proxy-rewrite` | Optional operational metrics and data dashboards. |
+| `portal-ui` | `/*` | `portal.{host}` | 1 | `portal:8080` | Edge session (`openid-connect`, `unauth_action: auth`) | Class 1 | `openid-connect`, `proxy-rewrite` |
+| `portal-metrics` | `/metrics` | `portal.{host}` | 5 | terminates at the edge | none | none | `fault-injection` answering `404` |
+| `portal-well-known` | `/.well-known/oauth-protected-resource*` | `portal.{host}` | 5 | `portal:8080` | Anonymous (RFC 9728 discovery, AG-60) | 600/min per IP | `proxy-rewrite` |
+| `portal-api` | `/api/v1/*` | `portal.{host}` | 10 | `portal:8080` | Edge session or OIDC bearer (`unauth_action: pass`) | Class 2 | `openid-connect`, `proxy-rewrite` |
+| `apps-surface` | `/apps/*` | `{host}` | 25 | `portal:8080` | Edge session (`unauth_action: auth`) | Class 1 | `openid-connect`, cookie `jc_edge_apps` on `/apps/` |
+| `portal-redirect` | `/*` | `{host}` | 1 | terminates at the edge | none | none | `redirect` to `https://portal.{host}/` |
+| `context-space` | `/cs/*` | `{host}` | 15 | `context-gateway:8080` | OIDC bearer, verified by the Context Gateway | Class 2 | `proxy-buffering` off, `limit-count` |
+| `context-endpoint` | `/api/endpoint/*` | `{host}` | 20 | `context-gateway:8080` | Bearer or anonymous, decided by the Context Gateway PEP | Class 3 and Class 4 | `cors`, `proxy-buffering` off, `limit-conn` |
+| `context-endpoint-portal` | `/api/endpoint/*` | `portal.{host}` | 20 | `context-gateway:8080` | Edge session becomes the bearer, or a bearer passes through | Class 3 and Class 4 | as above, plus `openid-connect` |
+| `gitea-forge` | `/git/*` | `{host}` | 10 | `gitea-http:3000` | Basic or token, verified by Gitea | Class 2 | `proxy-rewrite` |
+| `grafana` | `/grafana*` | `{host}` | 5 | `grafana:3000` | Grafana's own OIDC login | Class 2 | `proxy-rewrite` |
+| `ckan` | `/*` | `data.{host}` | default | `ckan:5000` | CKAN's own login | Class 1 | `proxy-rewrite` |
+| `ckan-redirect` | `/ckan*` | `{host}` | 5 | terminates at the edge | none | none | `redirect` to `https://data.{host}/` |
+| `keycloak` | `/*` | `idm.{host}` | default | `keycloak-app-keycloakx-http:80` | Identity provider | none at the edge | `proxy-rewrite` |
+| `app-{name}` | `/apps/{name}/*` | `{host}` | 30 | `app-{name}:8080` (service and fullstack) or `portal:8080` (static) | Edge session; `unauth_action: pass` for `visibility: public` | Class 1 | `openid-connect`, cookie path `/apps/{name}/`, logout `/apps/{name}/logout` (AP-26…AP-29) |
 
-Internal Prometheus metrics (`:9091/apisix/prometheus/metrics`) and APISIX control ports are strictly bound to internal pod IPs and omitted from external routing.
+The `app-{name}` row is the one route this table describes that no chart renders: `jcctl` builds it from an `App` manifest (section 3). Every other row exists in the deployment repository today.
+
+Three routes answer at the edge and never dial the upstream their entry declares: `portal-metrics` (`404`, so the scrape path says nothing from outside the cluster), `portal-redirect` (`302` to the Portal host) and `ckan-redirect` (`302` to the catalogue host).
+
+The `context-endpoint` routes refuse one path of their own before anything else runs: a URI matching `^/api/endpoint/[^/]+/egress/` is answered `403` in the rewrite phase. That is the notification delivery path, which carries no token by design (R46) and is reachable in-cluster only; published at the edge it would be a delivery-forging surface.
+
+APISIX's own Prometheus surface and control ports are not routed. `global.metrics.enabled` turns the `prometheus` plugin on; the Admin API is disabled outright (`apisix.admin.enabled: false`), because standalone mode has none (ADR-N-007).
 
 ## 3. Declarative Standalone Configuration (apisix.yaml)
 
-In accordance with ADR-N-007, APISIX operates in standalone file mode without an external etcd cluster. The configuration is rendered into a ConfigMap by `jcctl` and mounted to `/usr/local/apisix/conf/apisix.yaml`.
+In accordance with ADR-N-007, APISIX runs in standalone file mode with no etcd cluster and no Admin API. The whole routing table is one file.
+
+### Who renders the file today
+
+Two renderers exist, and only one of them is wired into a deployment:
+
+1. **The `configuration` chart** (`components/apisix/charts/configuration/templates/configmap.yaml`) renders the platform routes. It reads every `components/<component>/apisix-routes.yaml` and `components/<component>/apisix-plugins.yaml`, merges them into `upstreams`, `routes` and `plugin_configs`, appends `#END`, and writes the ConfigMap `apisix-standalone-config` in the APISIX namespace. This is what runs on a cluster today.
+2. **`jcctl`** (`crates/jcctl/src/apisix.rs`, `pub fn render`) renders the same file from the manifests in a configuration repository, including one `app-{name}` route per `App`. The function and its tests exist; no CLI subcommand and no deployment step calls it yet, so no cluster is served from its output.
+
+Until `jcctl` is wired in, an `App` route reaches the edge only when a chart contributes it. The chart's own template says so in a comment, and this page says so here rather than describing the finished shape as the current one.
+
+### How the file reaches APISIX
+
+The chart mounts the ConfigMap and symlinks it to `conf/apisix.yaml` inside the container. An init container first copies the image's own `conf/` into a writable volume and deletes the `apisix.yaml` that ships in the image, or the symlink fails with `File exists` and the gateway crash-loops. `/usr/local/apisix/conf/apisix.yaml` is therefore a path inside the running container, not a file in any repository.
+
+### What the rendered file looks like
+
+The shape below is the chart's output with one route of each kind. Both secrets appear as APISIX environment-variable references, so their values come from Kubernetes Secrets and never sit in Git (AP-27).
 
 ```yaml
-# Generated by jcctl — DO NOT EDIT DIRECTLY
-# Source: projects/*/endpoints/*.yaml and platform-settings.yaml
-
-routes:
+plugin_configs:
   - id: portal-ui
-    uri: /*
-    priority: 1
-    upstream_id: upstream-portal
-    plugin_config_id: pc-public-web
-
-  - id: portal-api
-    uri: /api/v1/*
-    priority: 10
-    upstream_id: upstream-portal
-    plugin_config_id: pc-authenticated-api
-
-  - id: app-air-quality-today            # one per App, rendered from kind: App
-    uri: /apps/air-quality-today/*
-    priority: 30
-    upstream_id: upstream-app-air-quality-today
-    plugins:                               # the edge login, cookie scoped to the app (AP-26…AP-29)
+    desc: "Portal user interface behind the edge login"
+    plugins:
+      request-id:
+        include_in_response: true
+      serverless-pre-function:
+        phase: rewrite
+        functions:
+          - >-
+            return function()
+              local forged = {
+                "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
+                "X-Endpoint-Slug", "X-Consumer-Identity",
+                "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
+                "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+              }
+              for _, header in ipairs(forged) do
+                ngx.req.clear_header(header)
+              end
+            end
+      limit-count:
+        count: 300
+        time_window: 60
+        key_type: var
+        key: remote_addr
+        rejected_code: 429
+        policy: local
+        show_limit_quota_header: true
       openid-connect:
         client_id: edge
         client_secret: ${EDGE_CLIENT_SECRET}
         discovery: https://idm.city.example.com/realms/city/.well-known/openid-configuration
         bearer_only: false
-        unauth_action: auth                # `pass` for visibility: public
-        use_jwks: false                    # the code flow's ID token is verified through discovery;
-        use_pkce: true                     # a presented bearer is left to the upstream (unauth_action)
-        redirect_uri: https://city.example.com/apps/air-quality-today/callback
-        logout_path: /apps/air-quality-today/logout
-        post_logout_redirect_uri: https://city.example.com/apps/air-quality-today/
+        use_jwks: false
+        use_pkce: true
+        ssl_verify: true
+        unauth_action: auth
+        redirect_uri: https://portal.city.example.com/callback
+        logout_path: /logout
+        post_logout_redirect_uri: https://portal.city.example.com/
         set_userinfo_header: true
         set_access_token_header: true
         set_id_token_header: false
-        session:                           # flat keys: APISIX 3.17 ignores a nested `cookie:` block
+        set_refresh_token_header: false
+        session:
           secret: ${OIDC_SESSION_SECRET}
-          cookie_name: jc_edge_app_air-quality-today
-          cookie_path: /apps/air-quality-today/
+          cookie_name: jc_edge
+          cookie_path: /
           cookie_secure: true
           cookie_http_only: true
           cookie_same_site: Lax
           idling_timeout: 3600
+          rolling_timeout: 3600
           absolute_timeout: 36000
-
-  - id: context-space
-    uri: /cs/*
-    priority: 15
-    upstream_id: upstream-context-gateway
-    plugin_config_id: pc-context-firewall
-
-  - id: context-endpoint
-    uri: /api/endpoint/*
-    priority: 20
-    upstream_id: upstream-context-gateway
-    plugin_config_id: pc-endpoint-surface
-
-  - id: gitea-forge
-    uri: /git/*
-    priority: 10
-    upstream_id: upstream-gitea
-    plugin_config_id: pc-public-web
+      proxy-rewrite:
+        headers:
+          set:
+            X-Forwarded-Proto: https
+            X-Forwarded-Port: '443'
+      response-rewrite:
+        headers:
+          set:
+            Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+            X-Content-Type-Options: "nosniff"
+            X-Frame-Options: "SAMEORIGIN"
+            Referrer-Policy: "no-referrer"
 
 upstreams:
-  - id: upstream-portal
+  - id: portal-ui
     type: roundrobin
     nodes:
       "portal.prod.svc.cluster.local:8080": 1
@@ -142,16 +177,7 @@ upstreams:
       send: 30
       read: 30
 
-  - id: upstream-app-air-quality-today
-    type: roundrobin
-    nodes:
-      "app-air-quality-today.prod.svc.cluster.local:8080": 1   # the app container itself (AP-26)
-    timeout:
-      connect: 6
-      send: 30
-      read: 30
-
-  - id: upstream-context-gateway
+  - id: context-endpoint
     type: roundrobin
     nodes:
       "context-gateway.prod.svc.cluster.local:8080": 1
@@ -164,104 +190,37 @@ upstreams:
       idle_timeout: 60
       requests: 1000
 
-  - id: upstream-gitea
-    type: roundrobin
-    nodes:
-      "gitea-http.prod.svc.cluster.local:3000": 1
-    timeout:
-      connect: 6
-      send: 60
-      read: 60
+routes:
+  - id: portal-ui
+    name: "portal-ui"
+    desc: "Portal user interface"
+    uri: "/*"
+    priority: 1
+    host: "portal.city.example.com"
+    upstream_id: portal-ui
+    plugin_config_id: portal-ui
 
-plugin_configs:
-  - id: pc-public-web
-    plugins:
-      request-id:
-        include_in_response: true
-      response-rewrite:
-        headers:
-          set:
-            Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
-            X-Content-Type-Options: "nosniff"
-            X-Frame-Options: "SAMEORIGIN"
-            Referrer-Policy: "strict-origin-when-cross-origin"
-
-  - id: pc-authenticated-api
-    plugins:
-      request-id:
-        include_in_response: true
-      response-rewrite:
-        headers:
-          set:
-            Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
-            X-Content-Type-Options: "nosniff"
-            X-Frame-Options: "DENY"
-            Cache-Control: "no-store, no-cache, must-revalidate"
-
-  - id: pc-context-firewall
-    plugins:
-      request-id:
-        include_in_response: true
-      serverless-pre-function:
-        phase: rewrite
-        functions:
-          - >-
-            return function()
-              ngx.req.clear_header("NGSILD-Tenant")
-              ngx.req.clear_header("X-Userinfo")
-              ngx.req.clear_header("X-Access-Token")
-              ngx.req.clear_header("X-Allowed-Scope-Ids")
-              ngx.req.clear_header("X-Endpoint-Slug")
-              ngx.req.clear_header("X-Consumer-Identity")
-            end
-      response-rewrite:
-        headers:
-          set:
-            Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
-            X-Content-Type-Options: "nosniff"
-            Cache-Control: "no-store, no-cache, must-revalidate"
-
-  - id: pc-endpoint-surface
-    plugins:
-      request-id:
-        include_in_response: true
-      serverless-pre-function:
-        phase: rewrite
-        functions:
-          - >-
-            return function()
-              ngx.req.clear_header("NGSILD-Tenant")
-              ngx.req.clear_header("X-Userinfo")
-              ngx.req.clear_header("X-Access-Token")
-              ngx.req.clear_header("X-Allowed-Scope-Ids")
-              ngx.req.clear_header("X-Endpoint-Slug")
-              ngx.req.clear_header("X-Consumer-Identity")
-            end
-      cors:
-        allow_origins_by_regex:
-          - "^https://.+\\.city\\.example\\.com$"
-        allow_methods: "GET,HEAD,POST,OPTIONS"
-        allow_headers: "Authorization,Content-Type,Accept,Link"
-        allow_credential: true
-      response-rewrite:
-        headers:
-          set:
-            Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
-            X-Content-Type-Options: "nosniff"
+  - id: context-endpoint
+    name: "context-endpoint"
+    desc: "Shared context endpoint representation surface"
+    uri: "/api/endpoint/*"
+    priority: 20
+    host: "city.example.com"
+    upstream_id: context-endpoint
+    plugin_config_id: context-endpoint
 
 #END
 ```
 
-### The `#END` Marker Requirement
+One key names the route, its upstream and its plugin config: the chart iterates one map and emits the same id three times. A route whose id has no entry under `plugins` is rendered without `plugin_config_id` and runs with no plugin at all.
 
-Per stack verdict S7, APISIX standalone mode requires that `apisix.yaml` end with the literal string `#END`. If this marker is omitted, APISIX's internal parser fails to commit the reload and continues serving the previous configuration without raising an error. The `jcctl` compiler automatically appends `#END` as the final line of all rendered gateway manifests.
+### The `#END` marker
 
-### The `jcctl` Reconciliation Lifecycle
+APISIX standalone mode requires `apisix.yaml` to end with the literal string `#END`. Without it APISIX commits nothing and keeps serving the previous configuration without raising an error (stack verdict S7). Both renderers append it as the final line: the chart template writes it, and `jcctl::apisix::END_MARKER` carries it.
 
-1. **Compilation:** `jcctl` evaluates committed `Endpoint` and `App` manifests in Git, rendering the unified `apisix.yaml`.
-2. **Pre-Apply Validation:** Before updating Kubernetes, `jcctl` validates syntax and plugin schemas.
-3. **ConfigMap Application:** `jcctl` updates the `apisix-standalone-config` ConfigMap in the instance namespace.
-4. **Hot Reload:** APISIX worker processes poll `/usr/local/apisix/conf/apisix.yaml` every 1 second. When file modification is detected, workers reload routes in memory within 1 second without dropping active connections.
+### Reload
+
+APISIX workers re-read the file and reload routes in memory when it changes. A ConfigMap update reaches the pod's filesystem on the kubelet's sync period, which is up to a minute, and the gateway picks it up within a second of the file changing. Existing connections are not dropped.
 
 ## 4. Plugin Chain Architecture by Route Class
 
@@ -272,40 +231,45 @@ Every request processed by APISIX executes through an ordered sequence of gatewa
 ```mermaid
 flowchart LR
     InReq["Inbound Request"] --> P1["1. request-id"]
-    P1 --> P2["2. serverless-pre-function<br/>(Strip Inbound Trust Headers)"]
-    P2 --> P3["3. limit-req / limit-count<br/>(Class Rate Limiting)"]
-    P3 --> P4["4. cors<br/>(Regex Origin Match)"]
-    P4 --> P5["5. proxy-rewrite<br/>(Host & Proto Injection)"]
-    P5 --> Forward["Forward to Upstream via Mesh<br/>(Authorization header untouched)"]
-    Forward --> P6["6. response-rewrite<br/>(HSTS, CSP, X-Content-Type)"]
-    P6 --> OutResp["Outbound Response"]
+    P1 --> P2["2. serverless-pre-function<br/>(clear forgeable headers)"]
+    P2 --> P3["3. limit-count / limit-conn<br/>(class rate limiting)"]
+    P3 --> P4["4. cors<br/>(regex origin match)"]
+    P4 --> P5["5. openid-connect<br/>(edge session, browser routes only)"]
+    P5 --> P6["6. proxy-rewrite<br/>(X-Forwarded-Proto and -Port)"]
+    P6 --> Forward["Forward to Upstream via Mesh<br/>(Authorization header untouched)"]
+    Forward --> P7["7. response-rewrite<br/>(HSTS, nosniff, frame, referrer)"]
+    P7 --> OutResp["Outbound Response"]
 ```
 
 ### Plugin Parameterization Specifications
 
-1. **`request-id`:** Injected at the initial evaluation phase. Generates an RFC 4122 UUIDv4 and sets `X-Request-Id` on incoming request headers and outgoing response headers (`include_in_response: true`).
-2. **`serverless-pre-function` (Header Sanitization):** Runs during the `rewrite` phase. Unconditionally drops headers that could forge tenant identity or authorization claims:
+1. **`request-id`:** generates an RFC 4122 UUIDv4, sets `X-Request-Id` on the upstream request and returns it to the client (`include_in_response: true`). Every route carries it, the refusing ones included.
+2. **`serverless-pre-function` (header sanitisation):** runs in the `rewrite` phase on every route and clears the headers a client could use to claim a tenant, an identity or an origin it does not have (T-0026):
    - `NGSILD-Tenant`
    - `X-Userinfo`
    - `X-Access-Token`
    - `X-Allowed-Scope-Ids`
    - `X-Endpoint-Slug`
    - `X-Consumer-Identity`
-   - Untrusted `X-Forwarded-*` headers
-3. **`limit-req` / `limit-count` (Tiered Rate Limiting):**
-   - **Class 1 (Standard Web / UI):** 300 requests per minute per IP.
-   - **Class 2 (Authenticated APIs):** 1,200 requests per minute per client identity.
-   - **Class 3 (High-Throughput Streams):** 5,000 requests per minute per pipeline service account.
-   - **Class 4 (Bulk File Exports):** 10 concurrent requests per client.
-4. **`cors`:** Evaluates incoming browser `Origin` headers against the approved domain regex (`^https://.+\.${DOMAIN}$`). Rejects wildcard origins when `allow_credential: true` is configured.
-5. **No token verification at the edge.** APISIX forwards `Authorization: Bearer <token>` untouched; the Portal and the Context Gateway verify every token themselves (signature against the realm JWKS, `iss`, `aud`, `exp`, `nbf`; see [12-identity-and-access §3](../Architecture/12-identity-and-access.md)). Reason: the realm signs ES256 only (TR-03187 AR-11) and APISIX's `openid-connect` plugin (lua-resty-openidc) verifies RS- and HS-family signatures only, so with `use_jwks: true` every ES256 token is refused with `401`, and introspection would put Keycloak on the path of every request. A service behind APISIX that does not verify tokens is not exposed on an authenticated route; the route stays closed until its upstream verifies. The endpoint surface receives anonymous requests as well: the Context Gateway PEP decides between a public representation and `401`.
-6. **`proxy-rewrite`:** Ensures correct protocol representation upstream (`X-Forwarded-Proto: https`, `X-Forwarded-Port: 443`).
-7. **`response-rewrite` (Security Headers):** Closes legacy gap deployment#242 by injecting mandatory security headers:
+   - `X-Forwarded-Host`, `X-Forwarded-Proto`, `X-Forwarded-Port`, `X-Forwarded-Prefix`, `X-Forwarded-Server`, `X-Real-IP`
+
+   `X-Forwarded-For` is deliberately kept: nginx maintains it and the per-IP rate limit keys on it. The `openid-connect` plugin sets `X-Userinfo` and `X-Access-Token` afterwards, which is what makes them trustworthy upstream: the client's copies are already gone.
+3. **`limit-count` and `limit-conn` (tiered rate limiting):** counted per APISIX worker with `policy: local`, so a gateway with several replicas allows the ceiling per replica. Every limit answers `429` and sets the quota headers.
+   - **Class 1 (standard web and UI):** 300 requests per minute, keyed on `remote_addr`. `portal-ui`, `apps-surface`, `ckan`.
+   - **Class 2 (authenticated APIs):** 1,200 requests per minute, keyed on the `Authorization` header. `portal-api`, `context-space`. The bearer is not verified at the edge, so the bucket is per token string rather than per subject, and it resets when a client renews its token.
+   - **Class 3 (high-throughput streams):** 5,000 requests per minute, keyed on `Authorization` and `remote_addr` together. The `context-endpoint` routes, which are what pipeline runners write telemetry to.
+   - **Class 4 (bulk file exports):** 10 concurrent requests, keyed the same way, on the `context-endpoint` routes beside Class 3. A GeoJSON or CSV export holds its connection for minutes, which a per-minute count does not bound.
+   - `portal-well-known` carries its own limit of 600 per minute per IP; `keycloak`, `grafana` and the three routes that answer at the edge carry none.
+4. **`cors`:** only the `context-endpoint` routes configure it. Origins are matched against `^https://.+\.${DOMAIN}$`, methods are `GET,HEAD,OPTIONS`, headers are `Authorization,Content-Type`, and `allow_credential` is `false`. A page on another host gets no response, and no browser credential travels with a cross-origin call.
+5. **No token verification at the edge.** APISIX forwards `Authorization: Bearer <token>` untouched; the Portal and the Context Gateway verify every token themselves (signature against the realm JWKS, `iss`, `aud`, `exp`, `nbf`; see [12-identity-and-access §3](../Architecture/12-identity-and-access.md)). Reason: the realm signs ES256 only (TR-03187 AR-11) and APISIX's `openid-connect` plugin (lua-resty-openidc) verifies RS- and HS-family signatures only, so with `use_jwks: true` every ES256 token is refused with `401`, and introspection would put Keycloak on the path of every request. That is why `use_jwks: false` and no `introspection_endpoint` are set on every route that runs the plugin. The ID token of the code flow is verified against the realm JWKS, which is why the `edge` client signs RS256 by a per-client override. A service behind APISIX that does not verify tokens is not exposed on an authenticated route; the route stays closed until its upstream verifies. The endpoint surface receives anonymous requests as well: the Context Gateway PEP decides between a public representation and `401`.
+6. **`openid-connect` (edge session):** runs in session mode on the browser routes with the one confidential realm client `edge` (AP-27). `unauth_action: auth` sends a person without a session to Keycloak (`portal-ui`, `apps-surface`, `app-{name}`); `unauth_action: pass` lets a call without a session through to the upstream (`portal-api`, and an `app-{name}` of a `visibility: public` App). `use_pkce: true`, because the realm template sets `pkce.code.challenge.method: S256` on every browser client. The session cookie is host-only, `Secure`, `HttpOnly`, `SameSite=Lax`, idles out after 3,600 s and ends after 36,000 s, within the realm's own SSO idle time and max lifespan (AP-29). Each surface has its own cookie name and path so a browser never presents the wrong session to a route: `jc_edge` on `/`, `jc_edge_apps` on `/apps/`, `jc_edge_app_{name}` on `/apps/{name}/`. The `session.*` keys are the flat lua-resty-session 4 ones; APISIX 3.17 accepts a nested `session.cookie.path` and ignores it, which would land the cookie on `/`.
+7. **`proxy-rewrite`:** sets `X-Forwarded-Proto: https` and `X-Forwarded-Port: 443` for the upstream, after the client's own copies were cleared.
+8. **`response-rewrite` (security headers):** sets the headers below. `X-Frame-Options` is `SAMEORIGIN` on `portal-ui` and on `ckan`, whose resource previews frame themselves, and `DENY` everywhere else. `Referrer-Policy` is `no-referrer` on the Portal routes and `strict-origin-when-cross-origin` on `ckan` and the gateway routes.
    - `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload`
    - `X-Content-Type-Options: nosniff`
-   - `X-Frame-Options: SAMEORIGIN` (Portal UI) / `DENY` (APIs)
-   - `Referrer-Policy: strict-origin-when-cross-origin`
-   - `Cache-Control: no-store, no-cache, must-revalidate` (Authenticated APIs)
+   - `X-Frame-Options`
+   - `Referrer-Policy`
+   - `Cache-Control: no-store, no-cache, must-revalidate` on the gateway routes
 
 ### Extended Timeouts for Bulk Exports
 
@@ -314,7 +278,7 @@ Standard API gateways configure aggressive 6-second timeouts. Bulk spatial queri
 - **Connect Timeout:** 6 seconds.
 - **Send Timeout:** 60 seconds.
 - **Read Timeout:** 300 seconds (5 minutes) on `context-gateway` upstreams.
-- **Buffering:** Response buffering is disabled (`proxy_buffering: off`) for Server-Sent Events (SSE) and large dataset exports to allow streaming directly to clients.
+- **Buffering:** the `proxy-buffering` plugin sets `disable_proxy_buffering: true` on the three `context-*` routes, so Server-Sent Events and large exports reach the client as they are produced. With buffering on, a 300-second read timeout only means the client waits 300 seconds for the first byte.
 
 ## 5. Upstream Transport Security and Service Mesh Policy
 
@@ -326,91 +290,33 @@ The APISIX pod runs Linkerd sidecars. The public data-plane port (9080) is gover
 
 - **Meshed Ingress (Option A / B):** `accessPolicy: all-authenticated`. Traffic is rejected unless originating from an authenticated mesh identity.
 - **Unmeshed Ingress (Option A with host-level ingress):** `accessPolicy: all-unauthenticated`. Permits plaintext TCP traffic from the unmeshed ingress controller to port 9080 only.
-- **Administrative Ports:** Port 9091 (metrics) and port 9092 (internal control) remain governed by the namespace-wide `cluster-authenticated` policy.
+- **Every other port:** the Admin API (9180) does not exist, because `apisix.admin.enabled` is `false` and standalone mode has none (ADR-N-007). The control port (9090) and the Prometheus surface stay governed by the namespace's default inbound policy, which is mandatory mTLS.
+
+The same template also declares a second `Server` for the cert-manager HTTP-01 solver pod on port 8089 with `accessPolicy: all-unauthenticated`. The challenge is a public HTTP GET of one random token, and the unmeshed ingress controller has to reach it or the edge certificate is never issued.
 
 ## 6. Network Policies for APISIX Gateway
 
-Network policies isolate the APISIX gateway, enforcing strict default-deny boundaries on both ingress and egress.
+`components/apisix/networkpolicies.yaml` puts a default-deny boundary on both directions. The shape below is what that file declares, rendered into a `NetworkPolicy` per entry by the platform's policy chart.
 
-```yaml
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: apisix-lockdown
-  namespace: prod
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/name: apisix
-  policyTypes:
-    - Ingress
-    - Egress
-  ingress:
-    # Ingress permitted from external LoadBalancer or Ingress Controller
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: ingress-nginx
-      ports:
-        - protocol: TCP
-          port: 9080
-        - protocol: TCP
-          port: 9443
-  egress:
-    # CoreDNS resolution
-    - to:
-        - namespaceSelector: {}
-          podSelector:
-            matchLabels:
-              k8s-app: kube-dns
-      ports:
-        - protocol: UDP
-          port: 53
-        - protocol: TCP
-          port: 53
-    # Context Gateway PEP
-    - to:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: context-gateway
-      ports:
-        - protocol: TCP
-          port: 8080
-    # Portal (one application: API + embedded UI + reconciler)
-    - to:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: portal
-      ports:
-        - protocol: TCP
-          port: 8080
-    # Apps on Demand: the app container of every service/fullstack app (AP-26)
-    - to:
-        - podSelector:
-            matchLabels:
-              joinedcontext.com/app: "true"
-      ports:
-        - protocol: TCP
-          port: 8080
-    # Keycloak OIDC Provider
-    - to:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: keycloakx
-      ports:
-        - protocol: TCP
-          port: 8080
-    # Linkerd Mesh Proxy Control
-    - ports:
-        - protocol: TCP
-          port: 4143
-        - protocol: TCP
-          port: 4191
-```
+Ingress: one rule, TCP 9080 from anywhere. The gateway is the public entry point, and the Linkerd `Server` of section 5 is what decides whether an unauthenticated connection on that port is accepted.
+
+Egress: CoreDNS, then one rule per upstream the rule file routes to, and nothing else. A route added without a matching egress line fails at the gateway, which is the point.
+
+| To | Port | Why |
+|---|---|---|
+| `kube-dns` in `kube-system` | UDP/TCP 53 | every rule below names a Service |
+| Keycloak (`app.kubernetes.io/instance: keycloak-app`) | TCP 8080 | the `keycloak` route |
+| Portal and Context Gateway | TCP 8080 | the Portal and gateway routes |
+| Gitea (`gitea-forge`) | TCP 3000 | the `gitea-forge` route |
+| `0.0.0.0/0` | TCP 443 and 8443 | the `openid-connect` plugin calls the **public** issuer host for discovery, tokens, JWKS and userinfo. The `iss` claim carries that host, so the in-cluster Keycloak Service is no substitute. kube-proxy DNATs the node address to the ingress controller's pod IP before this rule is evaluated, so there is no `except` for the cluster CIDRs, and the port the rule sees is the controller's container port (ingress-nginx binds 443, Traefik 8443). |
+
+CKAN and Grafana are routed but have no egress rule of their own in this file; a deployment that enables either adds one, or its route answers `502`.
+
+A second entry in the same file opens ingress to the cert-manager HTTP-01 solver pod, for the same reason the Linkerd `Server` does.
 
 ## 7. Observability, Logging, and Alerting
 
-APISIX provides comprehensive telemetry on traffic throughput, latency percentiles, and configuration reload states.
+APISIX reports traffic throughput, latency percentiles and configuration reload state. The `prometheus` plugin is enabled by `global.metrics.enabled`.
 
 ### Structured JSON Access Logs
 
@@ -484,14 +390,14 @@ Common operational incidents and their remediation procedures are detailed below
   kubectl exec -it deploy/apisix -c apisix -n prod -- tail -n 2 /usr/local/apisix/conf/apisix.yaml
   ```
 
-- **Remediation:** Append `#END` to the template and re-apply via `jcctl apply`.
+- **Remediation:** append `#END` as the final line of the template that produced the file and apply the chart again. Both renderers write it; a hand-edited ConfigMap is the way to lose it.
 
 ### Upstream Connection Timeout (HTTP 504)
 
 - **Symptom:** Large GeoJSON exports or temporal aggregation queries terminate with HTTP 504 Gateway Timeout after 6 seconds.
-- **Root Cause:** Upstream timeout in `apisix.yaml` defaulted to legacy 6-second timeout.
-- **Verification:** Check `apisix.yaml` upstream `timeout.read` setting.
-- **Remediation:** Update `context-gateway` upstream definition with `read: 300` and reload.
+- **Root Cause:** the route's entry names no `timeout`, so the chart's defaults apply: connect 6, send 30, read 30.
+- **Verification:** read `timeout.read` for that upstream in the rendered file.
+- **Remediation:** add a `timeout` block with `read: 300` to the route's entry in `components/<component>/apisix-routes.yaml` and apply the chart again. The three `context-*` routes already carry it.
 
 ### Token Validation Failures (HTTP 401)
 

@@ -64,7 +64,7 @@ global:
     storageClass:
       rwo: standard-rwo
 
-  # Metrics and Monitoring Scrape Generation
+  # ServiceMonitor generation for the monitoring component. Off by default.
   metrics:
     enabled: true
 ```
@@ -100,23 +100,29 @@ kubectl get secret -n dev keycloak-user-demo-steward -o jsonpath='{.data.passwor
 
 ### Context Broker (`components/context-broker`)
 
+Antares is configured by environment variables, set in
+`components/context-broker/values/broker/base-values.yaml.gotmpl` and overridable per environment
+under `context-broker.broker`. There is no `engine` key: the broker is the chart, so a different
+broker is a different chart ([00-intro.md](00-intro.md) §1).
+
 ```yaml
 context-broker:
   broker:
-    engine: antares # Supported: antares, stellio, scorpio
-    antares:
-      logLevel: info
-      temporalBackend: postgres
-      maxPaginationLimit: 1000
-      defaultPaginationLimit: 50
+    env:
+      ANTARES_STORE: postgres
+      ANTARES_BUS: local
+      # Row-level security on the shared schema, which is what keeps one space out of another.
+      ANTARES_REQUIRE_RLS: '1'
+      ANTARES_MAX_CONNECTIONS: '512'
     resources:
-      requests:
-        cpu: 500m
-        memory: 1Gi
-      limits:
-        cpu: 2000m
-        memory: 4Gi
+      requests: { cpu: 200m, memory: 256Mi }
+      limits: { cpu: '2', memory: 1Gi }
 ```
+
+The database password is never a value: `envSecret.PGPASSWORD` names the Secret `db-antares`, which
+the `secrets` component generates, and `ANTARES_DATABASE_URL` interpolates it at start-up. The
+readiness and liveness probes are `/q/ready` and `/q/health` on container port 9090, which is what a
+`kubectl describe` shows when a broker will not become Ready.
 
 ### Context Gateway (`components/context-gateway`)
 
@@ -176,27 +182,32 @@ MCP route refuses with `401` and `WWW-Authenticate: Bearer resource_metadata=…
 
 ### Pipeline Runner (`components/pipeline-runner`)
 
+The resident runner runs Bento in streams mode: `command: [/bento]` with
+`args: [-w, -r, /streams/resources.yaml, streams, …]`, one argument per stream. The streams
+themselves are not written here: the Portal's reconciler renders them from the project's Pipeline
+manifests into the ConfigMap the runner mounts at `/streams`. What an environment sets is the
+project the runner serves and its size.
+
 ```yaml
 pipeline-runner:
   runner:
-    engine: bento
-    image:
-      repository: ghcr.io/warpstreamlabs/bento
-      tag: 4.24.0
-    streamsMode:
-      enabled: true
-      configPath: "/etc/bento/streams"
+    project: helsinki
     resources:
-      requests:
-        cpu: 200m
-        memory: 256Mi
-      limits:
-        cpu: 1000m
-        memory: 1Gi
+      requests: { cpu: 100m, memory: 256Mi }
+      limits: { cpu: 1000m, memory: 1024Mi }
 ```
+
+The image is pinned in `components/pipeline-runner/images.yaml` (`ghcr.io/warpstreamlabs/bento`
+1.21.1 with its digest) and the same pin serves the scheduled CronJobs, so there is one Bento version
+per installation. Scheduled pipelines take their own values from
+`components/pipeline-runner/values/scheduled/`, including `activeDeadlineSeconds` (300 by default) and
+`concurrencyPolicy: Forbid`.
 
 ## Related
 
-- [00-intro](00-intro.md) — deployment chapter order.
+- [02-installation](02-installation.md) — where the environment file this page describes is created.
+- [04-components-and-addons](04-components-and-addons.md) — which components these values configure.
+- [05-monitoring-logging](05-monitoring-logging.md) — what `global.metrics.enabled` turns on.
+- [10-edge-routing-apisix](10-edge-routing-apisix.md) — the route table the APISIX values render.
 - [01-runbooks](../Operations/01-runbooks.md) — what to do when it breaks.
 - [13-security](../Architecture/13-security.md) — the security model being deployed.

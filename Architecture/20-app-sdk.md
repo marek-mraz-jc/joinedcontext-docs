@@ -55,7 +55,7 @@ The application never picks how its requests travel; the document the Portal ser
 
 ## 2. The template application
 
-A run does not start from an empty folder. It starts from `sdk/template/`, a complete application that works for any endpoint from its schema alone, with its tests passing (SDK-19):
+A run does not start from an empty folder. It starts from `joinedcontext-portal/sdk/template/`, a complete application that works for any endpoint from its schema alone, with its tests passing (SDK-19). Every path below is inside the generated application, which is that template copied — read them there:
 
 ```text
 apps/{name}/
@@ -63,6 +63,9 @@ apps/{name}/
   PROMPT.md                   # the request (AP-03)
   package.json                # react, react-dom, echarts, recharts, maplibre-gl, deck.gl, @joinedcontext/sdk pinned; vitest
   index.html                  # the page shell, not writable by the model
+  tsconfig.json               # the project's TypeScript configuration, not writable
+  vite.config.ts              # the build, not writable
+  test-setup.ts               # what vitest loads before a test file
   src/
     main.tsx                  # mounts <App/> inside the SDK provider, not writable
     jc-types.ts               # rendered from the endpoint's LinkML, not writable
@@ -76,6 +79,7 @@ apps/{name}/
     pages/Overview.tsx        # stat tiles and a chart card per entity type
     pages/TypePage.tsx        # one type: filter bar, table, map, chart, detail, edit form when writes are granted
     pages/TypePage.test.tsx   # renders against stubTransport
+    pages/shape.ts            # what a page needs from one type's schema: its attributes, its geometry, its label, its filters
     design-tokens.json        # colours, typography, spacing, radii, chart palette, map colours; change it and the whole app re-themes
     app.css                   # the application's own styles over the token variables
   functions/
