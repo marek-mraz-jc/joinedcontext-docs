@@ -427,11 +427,32 @@ To balance strict governance with operational velocity, configuration changes pa
 | Dimension | Green Lane (Self-Service) | Yellow Lane (Domain Review) | Red Lane (Governance Review) |
 |---|---|---|---|
 | **Risk Class** | `riskClass: green` | `riskClass: yellow` | `riskClass: red` |
-| **Typical Changes** | Ephemeral sandbox creation, private dashboard adjustments, team subscriptions. | New resident pipeline, new data model version, endpoint creation within an existing space. | Public endpoint publication, cross-city federation registration, identity role changes, any resource deletion. |
+| **Typical Changes** | Ephemeral sandbox creation, private dashboard adjustments. | New resident pipeline, new data model version, endpoint creation within an existing space. | Public endpoint publication, cross-city federation registration, identity role changes, a standing egress of context data, any resource deletion. |
 | **Authoring** | Portal UI generated form or MCP `instantiate_blueprint`. | Portal UI or Git pull request. | Git pull request only. |
 | **Approval Gate** | **Auto-Approved:** Conftest policy bot evaluates constraints in CI and auto-merges (CC-63). | **Single Approver:** Approved in-app by the domain owner (CODEOWNERS) (CC-34). | **Full Approval Chain:** Multiple approvals required (Security, Platform Admin, Data Owner). |
 | **Latency Budget** | ≤ 5 seconds from form submit to live deployment (CC-65). | Minutes to hours (Human-dependent). | Days (Formal governance cycle). |
 | **Drift Action** | Automatically reverted or reaped upon TTL expiry. | Monitored; requires manual in-app resolution. | Monitored; triggers critical platform security alert. |
+
+### The kinds that are Red whatever their spec holds (CC-63, PF-52)
+
+The lane of a change is the lane of its riskiest file, and for these kinds the risk is the kind
+itself: no field of the manifest can make the change smaller, so `classify`
+(`joinedcontext-portal/src/change.rs`) answers Red before it reads the spec.
+
+| Kind | Why it is Red |
+|---|---|
+| `ServiceAccount`, `Role`, `RoleBinding`, `Group`, `Policy`, `ScopeDefinition` | they hand out access, and a membership is the binding that names it (PF-52, PF-62) |
+| `Organization`, `Project` | they create the scope every other grant is written against |
+| `Environment` | one file decides the domain of every URN, the image every workload runs and where a `secretRef` is resolved, for a whole environment at once (CC-73, CC-75) |
+| `ContextSourceRegistration`, `SharedSpaceReference`, `DataSpaceParticipant`, `DataOffer`, `DataAgreement` | they reach another organization with the data of this one (MF-36, DS-17) |
+| `Subscription` | a standing egress: `spec.notification.endpoint.uri` is an address the platform posts to and `spec.notification.attributes`, empty meaning every granted attribute, says what it posts, for every matching entity, until somebody stops it |
+| `CkanInstance` | the same, by copy rather than by notification: the DataStore mirror of an Endpoint writes its rows to the host in `spec.url` with the token in `spec.apiTokenRef` (EP-65…EP-67) |
+
+A `Subscription` and a `CkanInstance` were Yellow until 2026-09-20, which meant that continuous
+publication of context data to a host of the proposer's choosing took one approval while a one-off
+federation edge over the same data took the full chain. Both were moved to Red, and the reason is
+the address in the spec rather than the volume: what leaves the platform on a schedule nobody
+watches is reviewed like what leaves it once.
 
 ### Sandboxes expire (CC-67, OPS-44, PF-19)
 

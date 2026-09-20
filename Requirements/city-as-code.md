@@ -358,7 +358,8 @@ one or more manifests; *flow*, a blueprint instance as shown to [H] users.
 - **CC-63** — The plane MUST implement risk-classed lanes bound to
   `riskClass` (CC-59): *green*, merge request auto-approved by a
   policy bot; *yellow*, one domain approver (CC-34); *red*
-  (cross-domain, public exposure, federation edges, any deletion) —
+  (cross-domain, public exposure, federation edges, a standing egress
+  of context data to an address the manifest names, any deletion) —
   the full approval chain. Lane assignment MUST be enforced in CI and
   the forge, not only rendered in the portal.
 - **CC-64** — The green lane MUST remain a full repository path:
