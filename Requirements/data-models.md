@@ -87,7 +87,7 @@ This chapter specifies how data models are authored, imported, generated, versio
 
 ## 10. Federation: foreign models and cross-space mappings
 
-- **DM-48** — When a `SharedSpaceReference` or a `ContextSourceRegistration` targets a remote endpoint (this instance or another), the reconciler MUST fetch `schema/index.json`, `model.linkml.yaml`, `context.jsonld` and `example.jsonld` for every exposed model version and commit them as **foreign DataModels** (`spec.source.remote: { url, version, sha256, fetchedAt }`, lifecycle `mirrored`), in the same change as the reference; a peer without a schema surface MUST be flagged in the plan and MAY still be referenced without a model.
+- **DM-48** — When a `SharedSpaceReference` or a `ContextSourceRegistration` targets a remote endpoint (this instance or another), the reconciler MUST fetch `schema/index.json`, `model.linkml.yaml`, `context.jsonld` and `example.jsonld` under that endpoint's schema surface (EP-46) for every exposed model version and commit them as **foreign DataModels** (`spec.source.remote: { url, version, sha256, fetchedAt }`, lifecycle `mirrored`), in the same change as the reference; a peer without a schema surface MUST be flagged in the plan and MAY still be referenced without a model.
 - **DM-49** — Foreign DataModels MUST be read-only in the editor, MUST NOT be referenced by local Endpoints as their own model, and MUST be re-fetched on the reference's `schedule` (default 24 h); a changed sha256 MUST open a merge request showing the schema diff and listing local Mappings that reference the model (DM-25 spirit).
 - **DM-50** — The editor MUST offer "Map to local model" on a foreign model and "Map from local model" on a local one, producing an ordinary `kind: Mapping` (DM-33…DM-42) whose golden test defaults to the peer's `example.jsonld`.
 - **DM-51** — A `ContextSourceRegistration` MAY carry `spec.mappingRef`; the Context Gateway MUST then translate federated responses through the Mapping and rewrite outgoing `attrs`, `q`, `geoQ` attribute names and enum values through its inverse. Live translation MUST accept only the invertible subset (`populated_from` renames, `value_mappings`, linear `unit_conversion`, `cast`); `expr` slots MUST be returned but marked non-filterable in the projected schema; `native` blocks MUST be rejected at apply time with a message pointing to replicate mode.
@@ -124,3 +124,11 @@ This chapter specifies how data models are authored, imported, generated, versio
 | DM-54…DM-55 | Inference from a sample | [11-data-models.md §6.7](../Architecture/11-data-models.md#67-a-model-from-a-sample-dm-54-dm-55) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-56–DM-57 | Saving a model | [11-data-models.md §6.8](../Architecture/11-data-models.md#68-saving-a-model-dm-56-dm-57) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-58 | Reusing a term you did not define | [11-data-models.md §3.1](../Architecture/11-data-models.md#31-reusing-a-term-you-did-not-define-dm-58) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
+| DM-59…DM-60 | QUDT anchors and Data Structure Definitions | [11-data-models.md](../Architecture/11-data-models.md) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
+
+## Related
+
+- [model-projections.md](model-projections.md) — what an Endpoint exposes of a model.
+- [endpoints.md](endpoints.md) — the schema surface a model is served through.
+- [Architecture/11-data-models.md](../Architecture/11-data-models.md) — the editor, the generator and the artifact store.
+- [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) — the suites that prove these requirements.

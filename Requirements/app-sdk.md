@@ -5,9 +5,13 @@ title: "App SDK (SDK)"
 
 # App SDK
 
-Family **SDK** (SDK-01…SDK-28). Owning chapter: [Architecture/20-app-sdk.md](../Architecture/20-app-sdk.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
+Family **SDK** (SDK-01…SDK-30). Owning chapter: [Architecture/20-app-sdk.md](../Architecture/20-app-sdk.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
 
 Generated `static` applications are code written against one platform package, `@joinedcontext/sdk` ([ADR-N-022](../Decisions/adr-n-022-generated-applications-are-code-on-the-app-sdk.md)). This family defines the package, the template application a generation run starts from (interface, serverless functions and tests), the runtime that executes functions, the one-shot first run, the editing agent that follows and the preview that shows the result. The application rules of [apps.md](apps.md) still hold; this family says how a generated application meets them.
+
+A path written `src/…` or `functions/…` is a path inside the generated application, whose
+template is `joinedcontext-portal/sdk/template/`. A path that begins with a repository name is a
+path in this platform's own tree.
 
 ## 1. The package
 
