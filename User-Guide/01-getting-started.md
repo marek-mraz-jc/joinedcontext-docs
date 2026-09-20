@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "Getting Started"
-description: Five things a first day in the Portal is made of, each done by hand and each asked of the assistant in one sentence.
+description: Your first hour in the Portal, task by task, each one done by hand and asked of the assistant in one sentence.
 ---
 
 # Getting Started
