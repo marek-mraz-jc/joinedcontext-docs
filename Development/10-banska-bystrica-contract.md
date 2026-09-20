@@ -20,7 +20,7 @@ and a rule already in force is cited so it can be checked. The feeds these space
 | body | Banskobystrický samosprávny kraj | Mesto Banská Bystrica |
 | `orgDomain` | `bbsk.sk` | `banskabystrica.sk` |
 | territory | the kraj, NUTS `SK032`, 13 okresy | the city, LAU `SK0321508438` |
-| people | 614 356 | 72 123 |
+| people | 611 124 | 72 123 |
 | holds the application | yes | no |
 
 They are two projects because they are two publishers with two mandates. A figure of one
@@ -35,10 +35,10 @@ short name into an id is the mistake this table exists to prevent.
 
 | project | space `metadata.name` | `{space}` segment | holds |
 |---|---|---|---|
-| `bbsk` | `kraj` | `bbsk-kraj` | the national feeds filtered to `SK032` and its okresy, as fetched |
-| `bbsk` | `kpi` | `bbsk-kpi` | `KeyPerformanceIndicator` entities only |
-| `banskabystrica` | `mesto` | `banskabystrica-mesto` | the city's own feeds, as fetched |
-| `banskabystrica` | `kpi` | `banskabystrica-kpi` | `KeyPerformanceIndicator` entities only |
+| `bbsk` | `bbsk-kraj` | `bbsk-kraj` | the national feeds filtered to `SK032` and its okresy, as fetched |
+| `bbsk` | `bbsk-kpi` | `bbsk-kpi` | `KeyPerformanceIndicator` entities only |
+| `banskabystrica` | `banskabystrica-mesto` | `banskabystrica-mesto` | the city's own feeds, as fetched |
+| `banskabystrica` | `banskabystrica-kpi` | `banskabystrica-kpi` | `KeyPerformanceIndicator` entities only |
 | `banskabystrica` | `ovzdusie` | `ovzdusie` | the thirteen seeded `AirQualityObserved` entities of T-0945 |
 
 `ovzdusie` predates PF-84 and its entity ids are already published, so its space manifest pins
@@ -55,9 +55,11 @@ spec:
   defaultLocale: sk
 ```
 
-The KPI spaces are named `kpi` and render as `{project}-kpi`, which is the default PF-54 asks
-for. A space named `kpi` in both projects would collide on a name that must be unique in the
-Organization; the rendered segment is what keeps them apart.
+A space name is unique in the whole Organization, not in its project (PF-44), so a space named
+`kraj` or `kpi` in both projects would collide. Each name therefore carries its project, which
+is also what PF-84 renders the segment as, and every space pins the segment so no published id
+can move under anyone. That the name and the segment are the same string is deliberate: it is
+one thing to get right instead of two, and it is what the seed's own check asserts.
 
 ## 3. Entity ids
 
@@ -136,7 +138,7 @@ is a different case and section 5 gives it a value of its own.
   "name": { "type": "Property", "value": "emisie-tuhe-okres-brezno" },
   "currentValue": {
     "type": "Property",
-    "value": 5354.3,
+    "value": 4037.7,
     "unitCode": "TNE",
     "observedAt": "2026-09-20T06:00:00Z"
   },
@@ -150,7 +152,7 @@ is a different case and section 5 gives it a value of its own.
   },
   "derivedFrom": {
     "type": "Relationship",
-    "object": "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kraj:kraj-read"
+    "object": "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kraj:bbsk-kraj"
   },
   "computedBy": {
     "type": "Relationship",
@@ -164,8 +166,10 @@ is a different case and section 5 gives it a value of its own.
 ```
 
 `TNE` is the UN/CEFACT common code for tonne. `C62` is the code for a plain count, `MTQ` for a
-cubic metre. The value is the one `zp3803rs` returned for `SK032` in 2023; a KPI whose number
-was typed rather than read is the defect this whole chain exists to prevent.
+cubic metre. The value is the one `zp3803rs` returned for `SK032` in 2023, decoded by the cube's
+own dimension index and not by assuming its years ascend, which they do not. A KPI whose number
+was typed rather than read, or read against the wrong year, is the defect this whole chain exists
+to prevent.
 
 ## 5. A window with no readings
 
@@ -188,7 +192,7 @@ zero. A zero is a measurement, and a dashboard cannot tell it apart from a real 
   },
   "derivedFrom": {
     "type": "Relationship",
-    "object": "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kraj:kraj-read"
+    "object": "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kraj:bbsk-kraj"
   },
   "computedBy": {
     "type": "Relationship",
@@ -249,18 +253,17 @@ Every read and every write goes through an Endpoint and its Policy. Endpoints ar
 minted slug, never by a name, so the paths below are the shape and not the literal URL
 (`https://{host}/api/endpoint/{endpointSlug}/ngsi-ld/v1/entities`, EP-02, EP-22).
 
-| project | endpoint | over | audience | who reads it |
-|---|---|---|---|---|
-| `bbsk` | `kraj-read` | `kraj` | `organization` | the pipelines that compute the region's KPIs |
-| `bbsk` | `kraj-write` | `kraj` | `project-list`, `[bbsk]` | the ingestion pipeline's service account only |
-| `bbsk` | `kpi-public` | `kpi` | `public` | the application, and anybody |
-| `bbsk` | `kpi-write` | `kpi` | `project-list`, `[bbsk]` | the computing pipeline's service account only |
-| `banskabystrica` | `mesto-read` | `mesto` | `organization` | the pipelines that compute the city's KPIs |
-| `banskabystrica` | `mesto-write` | `mesto` | `project-list`, `[banskabystrica]` | the ingestion pipeline's service account only |
-| `banskabystrica` | `kpi-shared` | `kpi` | `project-list`, `[bbsk]` | the region's application, through the share of section 8 |
-| `banskabystrica` | `kpi-write` | `kpi` | `project-list`, `[banskabystrica]` | the computing pipeline's service account only |
+One door per space, and the Policies on it decide who may read and who may write. A second
+endpoint for writing would be a second thing to keep in step with the first.
 
-One endpoint is `public`: `bbsk`'s `kpi-public`, which is what the demonstration shows. Creating
+| project | endpoint | over | audience | who reaches it |
+|---|---|---|---|---|
+| `bbsk` | `bbsk-kraj` | `bbsk-kraj` | `organization` | the pipelines, reading and writing with the `pipelines` service account |
+| `bbsk` | `bbsk-kpi` | `bbsk-kpi` | `public` | the application and anybody, reading; the computing pipeline, writing |
+| `banskabystrica` | `banskabystrica-mesto` | `banskabystrica-mesto` | `organization` | the pipelines, reading and writing |
+| `banskabystrica` | `banskabystrica-kpi` | `banskabystrica-kpi` | `project-list`, `[bbsk]` | the region's application, reading through the share of section 8; the city's pipeline, writing |
+
+One endpoint is `public`: `bbsk`'s `bbsk-kpi`, which is what the demonstration shows. Creating
 it is a red-lane Change that a binding with `approve` on the kind and the public constraint has
 to approve (PF-72), and that approval is part of the demonstration rather than a step around it.
 The two raw spaces are never public: they are a copy of somebody else's published data, and
@@ -285,14 +288,15 @@ spec:
   alias: mesto-kpi                 # how bbsk addresses it locally
   endpointRef:
     project: banskabystrica
-    name: kpi-shared               # audience project-list, [bbsk], see section 7
+    name: banskabystrica-kpi       # audience project-list, [bbsk], see section 7
   schedule:
     interval: 24h                  # how often the peer's schema surface is mirrored (DM-49)
 ```
 
 Two things follow and both are deliberate. The region reads the city's indicators and cannot
-write them, because `kpi-shared` grants reads and the city's own `kpi-write` is not shared. And
-the city can revoke by changing one audience, without the region's application being rebuilt.
+write them, because the city's grant to the group `bbsk` is `retrieveOps` on
+`KeyPerformanceIndicator` and its write grant is bound to its own `pipelines` service account.
+And the city revokes by changing one audience, without the region's application being rebuilt.
 
 ## 9. What each task may now assume
 
@@ -300,8 +304,8 @@ the city can revoke by changing one audience, without the region's application b
 |---|---|
 | T-2305 | the projects, domains, space names and rendered segments of sections 1 and 2 |
 | T-2306 | the KPI attribute set of section 4 and the territory tokens of section 6 |
-| T-2307 | the entity of section 4, the empty window of section 5, and `kpi-write` |
-| T-2308 | the same two entities, read through `kpi-public` and the share of section 8 |
+| T-2307 | the entity of section 4, the empty window of section 5, and the `bbsk-kpi` and `banskabystrica-kpi` endpoints |
+| T-2308 | the same two entities, read through `bbsk-kpi` and the share of section 8 |
 | T-2309 | that `state` and `threshold` are the view's, not the entity's |
 
 The two examples in sections 4 and 5 are validated against the platform's published
