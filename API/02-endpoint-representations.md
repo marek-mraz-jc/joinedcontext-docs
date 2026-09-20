@@ -185,7 +185,7 @@ Converts spatial NGSI-LD entities into standard RFC 7946 GeoJSON.
 
 ## 4. Tabular CSV Representation
 
-Path: `/api/endpoint/{endpointSlug}/file.csv` (also `file.geojson`, `file.xlsx`, `file.zip`; EP-41…EP-45)
+Path: `/api/endpoint/{endpointSlug}/file.csv` (also `file.json`, `file.geojson`, `file.xlsx`, `file.zip`; EP-41…EP-45)
 
 All `file.*` children accept the NGSI-LD `GET /entities` query parameters and stream the result as an attachment:
 
@@ -198,6 +198,11 @@ HTTP/1.1 200 OK
 Content-Type: text/csv; charset=utf-8; header=present
 Content-Disposition: attachment; filename="zt4qm7ge2xdv6ksb3ncf5arw2y.csv"
 ```
+
+`file.json` is the same download as one array of entities: the NGSI-LD documents
+`/ngsi-ld/v1/entities` would answer, over the whole dataset rather than one broker page, projected
+to the caller's grants and served as `application/json` (T-2382). It is what a script that already
+reads NGSI-LD wants from a download; `file.csv` is what a spreadsheet wants.
 
 The file is named after the endpoint slug and the extension, which are both literals the gateway
 controls, so nothing a caller sent reaches the `Content-Disposition` header. A download carries no
