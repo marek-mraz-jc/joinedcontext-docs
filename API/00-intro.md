@@ -11,7 +11,7 @@ joinedcontext exposes standard-first, versioned programmatic interfaces. The pla
 - **ETSI GS CIM 009 (NGSI-LD V1.9.1):** Core context data operations. That is the version the default broker implements and the version the conformance suite runs (1822 cases); a page citing an older one is citing a specification this platform does not serve.
 - **OGC API - Features Part 1:** Geospatial feature queries.
 - **OGC SensorThings API (STA) v1.1:** Time-series sensor streams.
-- **Model Context Protocol (MCP 2026-07-28):** Autonomous AI agent tool integration.
+- **Model Context Protocol:** autonomous agent tool integration. The Portal's MCP server negotiates `2026-07-28`, `2025-11-25`, `2025-06-18` or `2025-03-26` and answers with the newest the client names (`joinedcontext-portal/src/mcp/mod.rs`); an endpoint's own MCP server speaks `2025-06-18` (`joinedcontext-platform/crates/context-gateway/src/mcp/endpoint_facade.rs`).
 - **OpenAPI 3.1:** Platform management and administrative operations.
 
 ---
@@ -31,7 +31,7 @@ flowchart LR
         PORTAL["1. Portal Management API<br/>/api/v1/..."]
         SPACE["2. Canonical Space Surface<br/>/cs/{space}/..."]
         ENDPOINT["3. Shared Endpoint Surface<br/>/api/endpoint/{endpointSlug}/..."]
-        MCP_CFG["4. Configuration MCP<br/>/mcp/jcctl"]
+        MCP_SRV["4. Portal MCP<br/>/api/v1/mcp"]
     end
     
     CLIENT --> EDGE
@@ -39,7 +39,7 @@ flowchart LR
     RATE --> PORTAL
     RATE --> SPACE
     RATE --> ENDPOINT
-    RATE --> MCP_CFG
+    RATE --> MCP_SRV
 ```
 
 | API Surface | Base Path URL | Purpose | Primary Consumer |
@@ -47,7 +47,8 @@ flowchart LR
 | **Portal Management API** | `https://{host}/api/v1/...` | Managing projects, organizations, blueprints, and approvals | Portal UI, CI systems, admin scripts |
 | **Canonical Space Surface** | `https://{host}/cs/{space}/...` | Direct NGSI-LD access for the project owning the space | Project team members, resident pipelines |
 | **Shared Endpoint Surface** | `https://{host}/api/endpoint/{endpointSlug}/...`| Multi-representation data consumption (GeoJSON, CSV, OGC, MCP) | Dashboards, external users, QGIS, agents |
-| **Configuration MCP** | `https://{host}/mcp/jcctl` | GitOps configuration planning and blueprint instantiation | AI Agents (Claude Code, OpenHands) |
+| **Portal MCP** | `https://{host}/api/v1/mcp` | The management API as agent tools: proposing manifests, opening changes, reading a project | AI agents (Claude Code, OpenHands) |
+| **Endpoint and space MCP** | `https://{host}/api/endpoint/{endpointSlug}/mcp`, `https://{host}/cs/{space}/mcp` | The context data of one endpoint or space as agent tools, under the same Policy as every other read | AI agents |
 
 ---
 
@@ -60,7 +61,7 @@ All API endpoints are protected by default (fail-closed, [R5](../Requirements/ac
 - **Protocol:** OpenID Connect (OIDC) / OAuth 2.1 via Keycloak ([I1](../Requirements/policy-firewall.md#21-identity-stack-i1i4-canonical-here)).
 - **Header:** `Authorization: Bearer <jwt>`
 - **Token Claims:** Tokens carry client identity (`sub`) and tenant membership only. **Tokens never carry permissions or roles** ([I4](../Requirements/policy-firewall.md#21-identity-stack-i1i4-canonical-here)); permissions are evaluated dynamically at the gateway using stored `Policy` entities.
-- **DPoP Support:** High-security endpoints support Demonstrating Proof-of-Possession (RFC 9449) to eliminate token replay risks.
+- **Proof of possession:** not implemented. Tokens are bearer tokens today, bound to the audience of the endpoint they were minted for and short-lived; nothing in the platform verifies a DPoP proof (RFC 9449). [AG-02](../Requirements/agents.md) asks for one on the agent surfaces, and T-2358 tracks the gap.
 
 ### Anonymous Public Access
 
@@ -70,7 +71,9 @@ Endpoints with `audience: public` permit unauthenticated access. Requests withou
 
 ## 3. Rate Limiting Headers
 
-Every API response communicates rate-limit status via IETF draft standard headers:
+Two limiters stand in front of a request and they do not speak the same header.
+
+The gateway's own limiter, which an `Endpoint` configures, answers every request on the endpoint and space surfaces with the IETF draft headers (`crates/context-gateway/src/middleware/rate_limit.rs`):
 
 ```http
 RateLimit-Limit: 1000
@@ -78,7 +81,9 @@ RateLimit-Remaining: 942
 RateLimit-Reset: 28
 ```
 
-If an application exceeds its quota, the gateway rejects the request with **HTTP 429 Too Many Requests** and returns an RFC 7807 problem document containing a `Retry-After: <seconds>` header.
+The edge limiter is APISIX's `limit-count` with `show_limit_quota_header`, which writes `X-RateLimit-Limit` and `X-RateLimit-Remaining` instead (`joinedcontext-deployment/components/portal/apisix-plugins.yaml`). A client that wants one number reads both names.
+
+A caller over its quota gets **HTTP 429 Too Many Requests**, an RFC 7807 problem document and a `Retry-After: <seconds>` header carrying the same seconds as `RateLimit-Reset`.
 
 ---
 
@@ -89,13 +94,13 @@ Errors are returned strictly as `application/problem+json` documents:
 ```json
 {
   "type": "https://joinedcontext.com/errors/forbidden",
-  "title": "Access Denied by Policy",
+  "title": "Forbidden",
   "status": 403,
-  "detail": "The current policy grant does not permit operation 'updateEntity' on this attribute set.",
-  "instance": "/cs/air-quality/ngsi-ld/v1/entities/urn:ngsi-ld:Device:hel.fi:air-quality:dev-01",
-  "requestId": "req-94820-a8f"
+  "detail": "the write touches an attribute outside the grant: operatorPhone"
 }
 ```
+
+`type` is always `https://joinedcontext.com/errors/{slug}` (`crates/jc-core/src/error.rs`). `detail` and `instance` are present when there is something safe to say, and never carry an upstream URL, a tenant, a broker error body or a policy name. One extension member exists: `requestId`, written on a `500` so a report can be matched to a log line, and on nothing else. A `400` from the Portal may carry `errors`, one entry per violation, so a form can mark every bad field in one pass.
 
 ### Existence Masking
 
@@ -107,14 +112,15 @@ To prevent reconnaissance, requesting an unauthorized resource via single-entity
 
 The platform hosts standard well-known endpoints for automated client and agent self-configuration:
 
-- `/.well-known/openid-configuration`: Keycloak discovery metadata.
-- `/.well-known/oauth-protected-resource`: OAuth 2.1 resource server metadata per RFC 9728.
-- `/schema/context.jsonld`: Authoritative platform JSON-LD default context ([ADR-N-007](../Decisions/adr-n-007-apisix-standalone-no-etcd.md)).
+- `https://idm.{host}/realms/{realm}/.well-known/openid-configuration`: the realm's own OIDC discovery document. Keycloak serves it; the platform does not proxy it, and the APISIX routes read it from there (`components/portal/apisix-plugins.yaml`).
+- `/.well-known/oauth-protected-resource` and `/.well-known/oauth-protected-resource/api/v1/mcp`: RFC 9728 metadata of the Portal MCP server (`joinedcontext-portal/src/mcp/mod.rs`).
+- `/api/endpoint/{endpointSlug}/.well-known/oauth-protected-resource`: the same document for one endpoint's MCP server, which names that endpoint's audience (`crates/context-gateway/src/app.rs`).
+- `/api/endpoint/{endpointSlug}/schema/index.json`: the model an endpoint serves — its classes, their slots and the generated JSON Schema. There is no platform-wide `/schema/context.jsonld`; a `@context` belongs to a space's model and is served under its endpoint.
 
 ## Related
 
 - [R5](../Requirements/access-control.md) — referenced above.
 - [I1](../Requirements/policy-firewall.md) — referenced above.
 - [GW22](../Requirements/gateway-firewall.md) — referenced above.
-- [ADR-N-007](../Decisions/adr-n-007-apisix-standalone-no-etcd.md) — referenced above.
+- [AG-02](../Requirements/agents.md) — referenced above.
 - [04-context-spaces-and-endpoints](../Architecture/04-context-spaces-and-endpoints.md) — the model behind the endpoints.

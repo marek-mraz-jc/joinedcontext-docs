@@ -14,13 +14,13 @@ joinedcontext platform is engineered to conform with BSI TR-03187 (Level 1+) for
 |  [ ZONE 1: Public Untrusted Edge ]  (Internet, External Sensors, Public Consumers)                |
 |         |                                                                                         |
 |         v (TLS 1.3 Termination, Rate Limiting, DDoS Shield)                                      |
-|  [ ZONE 2: Gateway DMZ (APISIX + Context Gateway PEP + VCVerifier) ]                              |
+|  [ ZONE 2: Gateway DMZ (APISIX + Context Gateway PEP) ]                                           |
 |         |                                                                                         |
 |         v (Mandatory Linkerd mTLS with cluster-authenticated policy)                               |
 |  [ ZONE 3: Core Data Plane (Antares Broker, PostgreSQL CNPG with RLS) ]                           |
 |         ^                                                                                         |
 |         | (Reconcile Loop / Scoped Service Accounts)                                              |
-|  [ ZONE 4: Configuration & CI Plane (Gitea Forge, Gitea Actions, jcctl Daemon) ]                |
+|  [ ZONE 4: Configuration & CI Plane (Gitea Forge, Gitea Actions, Portal reconciler) ]              |
 |                                                                                                   |
 |  [ ZONE 5: Workload Runners (Isolated Bento Streams & OpenHands Agent Sandboxes) ]               |
 +---------------------------------------------------------------------------------------------------+
@@ -31,9 +31,9 @@ joinedcontext platform is engineered to conform with BSI TR-03187 (Level 1+) for
 | Trust Zone | Components | Threat Scenarios | Enforced Mitigations |
 |---|---|---|---|
 | **Zone 1: Public Edge** | Public DNS, Ingress | Volumetric DDoS, credential stuffing, URI tampering, TLS downgrade. | APISIX rate-limiting, TLS 1.3 ciphers only, IP connection throttling, WAF filtering. |
-| **Zone 2: Gateway DMZ** | APISIX, Context Gateway (PEP + in-process PDP), Keycloak | Token forging, header spoofing, query injection, privilege bleed. | Strict JWT signature verification, mandatory tenant header stripping (GW20), antares-ql AST sanitization, fail-closed policy evaluation (GW5). |
-| **Zone 3: Core Data Plane** | Antares Broker, PostgreSQL, TimescaleDB | Direct broker access, cross-tenant data leakage, SQL injection. | Broker is unroutable except via Context Gateway (R1); Linkerd mTLS enforced; PostgreSQL Row-Level Security (RLS) active on all tables (GW23). |
-| **Zone 4: Config & CI Plane** | Gitea, Gitea Actions, `jcctl` | Unauthorized commits, CI pipeline escape, unreviewed manifest merges. | Protected Git branches, CODEOWNERS validation (CC-41), Conftest policy checks, non-root runner isolation. |
+| **Zone 2: Gateway DMZ** | APISIX, Context Gateway (PEP + in-process PDP), Keycloak. FIWARE VCVerifier belongs to this zone in the identity design ([12 §1](12-identity-and-access.md)) and no environment deploys it yet. | Token forging, header spoofing, query injection, privilege bleed. | Strict JWT signature verification, mandatory tenant header stripping (GW20), antares-ql AST sanitization, fail-closed policy evaluation (GW5). |
+| **Zone 3: Core Data Plane** | Antares Broker, PostgreSQL, TimescaleDB | Direct broker access, cross-tenant data leakage, SQL injection. | Broker is unroutable except via Context Gateway (R1); Linkerd mTLS enforced; row-level security on the broker's tenant tables, `ENABLE` and `FORCE`, with the session tenant pinned on every pooled connection (GW23, `antares-sql`). |
+| **Zone 4: Config & CI Plane** | Gitea, Gitea Actions, the Portal's reconciler | Unauthorized commits, CI pipeline escape, unreviewed manifest merges. | Protected Git branches, CODEOWNERS validation (CC-41), Conftest policy checks, non-root runner isolation. |
 | **Zone 5: Workload Runners** | Bento Stream Runners, Agent Runners | Malicious pipeline configs, indirect prompt injection, data exfiltration. | Runners execute with non-root security contexts (`readOnlyRootFilesystem`), NetworkPolicies block east-west traffic, agent elicitation prompts (CC-63). |
 
 ---
@@ -45,7 +45,7 @@ The following table documents conformance against BSI TR-03187 architectural req
 | Requirement ID | Requirement Description | Implementation in joinedcontext platform | Conformance Status |
 |---|---|---|---|
 | **AR-1** | Principle of Least Privilege | Dedicated Kubernetes ServiceAccounts per component; non-root execution (UID 1000); fail-closed policy evaluation (GW5); granular attribute-level masking. | **CONFORMANT** |
-| **AR-2** | Deprecate Insecure Client Tech | Zero Flash/Java-applets/ActiveX; pure HTML5/WebGL frontend with strict Content Security Policy (CSP). | **CONFORMANT** |
+| **AR-2** | Deprecate Insecure Client Tech | Zero Flash/Java-applets/ActiveX; the Portal ships one HTML5 bundle and no plugin runtime. The edge sets HSTS, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` and `Referrer-Policy`; it sets no `Content-Security-Policy`, so the frontend's own script origins are unrestricted. | **PARTIAL** |
 | **AR-3** | Prune Unused Dependencies | Rust single-binary compilation with `cargo-deny`; multi-stage Dockerfiles shipping zero build compilers or package managers. | **CONFORMANT** |
 | **AR-4** | Version Pinning | All container images pinned by cryptographic SHA-256 digest; Rust dependencies locked via `Cargo.lock`; npm packages via `pnpm-lock.yaml`. | **CONFORMANT** |
 | **AR-9** | Updatable Secrets | Secrets externalized into SOPS-encrypted files or OpenBao; automatic runtime rotation without image rebuilds. | **CONFORMANT** |
@@ -59,16 +59,16 @@ The following table documents conformance against BSI TR-03187 architectural req
 ## 3. Secrets Management Architecture (S6, CC-06)
 
 - **No Plaintext in Git:** Committing unencrypted secrets to the Org Repository is strictly prohibited (CC-06) and blocked by pre-commit hooks and CI secret scanners.
-- **SOPS + Age Encryption (Default):** For organisational deployments, secrets are stored in Git as SOPS-encrypted files using `age` public keys. Only the `jcctl` daemon in the cluster holds the corresponding private key to decrypt credentials during sync wave execution.
-- **OpenBao Integration (Regional Scale):** Regional deployments deploy OpenBao (MPL 2.0 open-source fork of Vault) as an in-cluster secret engine. Manifests contain named references (`secretRef: db-password`) resolved at runtime.
+- **SOPS + Age Encryption (Default):** For organisational deployments, secrets are stored in Git as SOPS-encrypted files using `age` public keys. Only the Portal holds the corresponding private key, read from the file `JC_PORTAL_SOPS_AGE_KEY_FILE` names, and it decrypts a credential while it reconciles the sync wave that needs it.
+- **OpenBao Integration (Regional Scale):** the Portal resolves a `secretRef` through OpenBao (the MPL 2.0 fork of Vault) when `JC_PORTAL_OPENBAO_ADDR`, `JC_PORTAL_OPENBAO_ROLE` and `JC_PORTAL_OPENBAO_JWT_PATH` name one, authenticating with its own Kubernetes ServiceAccount token. A manifest names the reference (`secretRef: db-password`) either way, so a deployment moves between SOPS and OpenBao without a manifest changing. No environment in `joinedcontext-deployment` deploys OpenBao today; the SOPS path is what runs.
 
 ---
 
 ## 4. End-to-End Audit Trail (CC-44, CC-58)
 
-The platform provides a complete, tamper-evident audit trail constructed from three immutable logs:
+Three logs together answer who changed what, who read what, and who signed in. None of them is signed or write-once, so each is as trustworthy as the system that keeps it — Gitea, the gateway's log sink, Keycloak's database:
 
-1. **Configuration Audit (Git):** Every platform modification is permanently recorded in Gitea Git commits, including cryptographic commit signatures, merge approvers, and `Co-Proposed-By:` trailers for agent actions.
+1. **Configuration Audit (Git):** Every platform modification is permanently recorded in Gitea Git commits, with the merge approvers and, for a commit an agent proposed, the `Co-Proposed-By:` trailer naming the person whose run it was (AG-18, `agent-proxy` `routes/forge.rs`). Nothing signs these commits: the record is Gitea's, and a reader trusts the forge rather than a signature.
 2. **Access & Decision Logs (Context Gateway):** The Context Gateway emits structured JSON audit events to `stdout` capturing caller identities, requested URIs, decision reasons, and matched `Policy` IDs (GW6). Sensitive headers and credentials are automatically masked.
 3. **Identity Audit (Keycloak):** Keycloak logs all login attempts, MFA challenges, token exchanges, and administrative user modifications to persistent audit tables.
 

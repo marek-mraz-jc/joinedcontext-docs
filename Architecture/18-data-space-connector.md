@@ -14,7 +14,7 @@ flowchart LR
         CAT["Catalog (DSP)<br/>Datasets = published Endpoints<br/>Offers = ODRL from Policy set"]
         NEG["Contract negotiation (DSP)"]
         TP["Transfer process (DSP)<br/>HTTP pull → Endpoint URL + token"]
-        MAP["ODRL ↔ Policy mapper (ADR 003, R26, R52)"]
+        MAP["ODRL ↔ Policy mapper (ADR-N-003, R26, R52)"]
         EP["/api/endpoint/{slug}/… (all representations)"]
         GW["Context Gateway (PEP/PDP)"]
         CAT --> NEG --> MAP --> EP
@@ -35,7 +35,7 @@ flowchart LR
 |---|---|---|
 | Identity | who the participant is: `did:web:{orgDomain}` (the same domain as the URN scheme, PF-41), Verifiable Credentials issued by Keycloak OID4VCI (I1), presented through the Decentralized Claims Protocol (DCP) | Keycloak, wallet of the organisation |
 | Contract | catalog, offers, negotiation, agreements, transfer processes per the IDSA/Eclipse **Dataspace Protocol (DSP)** | connector addon `dataspace-connector` |
-| Policy | translating an ODRL agreement into `Policy` entities and back | ODRL mapper in the Context Gateway (ADR 003) |
+| Policy | translating an ODRL agreement into `Policy` entities and back | ODRL mapper in the Context Gateway ([ADR-N-003](../Decisions/adr-n-003-context-gateway-in-rust.md)) |
 | Data | serving the data under the agreement | the Endpoint (EP-01…EP-60), unchanged |
 
 The connector never reaches the broker, the database or a space directly. It has two outputs only: a set of `Policy` entities (through a Git change, like every other grant) and a transfer token whose audience is one Endpoint. Everything the connector can grant, the Endpoint enforces (EP-06); everything the connector cannot grant does not exist.
@@ -78,6 +78,8 @@ Token lifecycle is the connector's job: it refreshes transfer tokens before expi
 - **Symmetry across instances.** Two joinedcontext instances negotiate exactly like two strangers: DSP between their connectors, then Endpoints. Nothing shortcuts the contract layer because both sides happen to run the same software.
 
 ### What the gateway checks on a transfer token (DS-01, DS-02, DS-11, DS-12)
+
+This part is not waiting for the connector: `context-gateway` `auth/dataspace_token.rs` runs it today, against the `DataAgreement` manifests a reconcile loads, and `MAX_LIFETIME` there is the 15 minutes the table names.
 
 A transfer token is an ordinary realm token — the platform has one identity provider and no
 second trust root — with two claims the connector adds: `agreementId` and `participant`. The
