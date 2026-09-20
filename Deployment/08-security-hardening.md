@@ -205,7 +205,7 @@ What holds it in the meantime: `just dev-smoke` measures the window on every run
 its length beside the pass line (`settled after 8s`), so a regression is visible to whoever
 reads the run. It is a measurement and not yet a bound — the probe gives the controller up to
 72 seconds and reports whatever it took, and no length fails the run. Turning the number into
-a ceiling is [T-2337](https://github.com/marek-mraz/joinedcontext-deployment); until it lands,
+a ceiling is [T-2360](https://github.com/marek-mraz/joinedcontext-deployment); until it lands,
 "bounded" means "watched", which is less than this page used to claim.
 
 ### Layer 7: Admission and Runtime Policy Enforcement

@@ -80,7 +80,7 @@ jobs:
         # enable it; OPENAPI_JSON is now set, so this run is the one that uses it. Reported
         # and not yet blocking: it finds 19 routes on API/01 and API/04 that the Portal's own
         # specification has no path for, and each of them is either a stale page (T-2141) or
-        # a route the router serves without a utoipa annotation (T-2338). It becomes a gate
+        # a route the router serves without a utoipa annotation (T-2361). It becomes a gate
         # in the commit that closes the second of those — the step above is already a gate,
         # so a new stale route cannot arrive unnoticed in the meantime.
         continue-on-error: true
