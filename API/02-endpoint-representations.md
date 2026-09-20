@@ -151,6 +151,14 @@ Converts spatial NGSI-LD entities into standard RFC 7946 GeoJSON.
 - **Feature `id`:** Bound to the entity URN.
 - **`geometry`:** Extracted from the primary `location` GeoProperty. An entity without one is not a
   Feature and is left out of the collection.
+- **An answer with no geometry at all:** `400`, by
+  [EP-10](../Requirements/endpoints.md) — the caller asked a non-spatial type for a spatial
+  representation, and an empty FeatureCollection would read as "nothing here today" instead of
+  "this endpoint has no geography". `helsinki-news` on the dev cluster is the live example:
+  `NewsArticle` carries no `location`, so `/file.geojson` answers
+  `{"type": "https://joinedcontext.com/errors/bad-request", "detail": "no entity in the answer
+  carries a geometry"}`. An answer with no entities at all is an empty collection and a `200`:
+  nothing to show is not a type error (`translators/geojson.rs`).
 - **`properties`:** One key per remaining attribute, by the table of §6: the attribute's `value` or
   a Relationship's `object` under its own name, and the `unitCode` and `observedAt` it carries
   under `{name}_unitCode` and `{name}_observedAt` (T-2380). An attribute that carries neither gains
