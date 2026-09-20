@@ -6,8 +6,21 @@ title: "ADR-N-009: Model Context Protocol Surfaces and Agent Governance"
 # ADR-N-009: Model Context Protocol Surfaces and Agent Governance
 
 Date: 2026-09-05  
-Status: Accepted  
+Status: Superseded  
+Superseded by: [ADR-N-021](adr-n-021-one-operation-registry-behind-ui-api-assistant-and-mcp.md)  
 Decision Makers: Architecture Board
+
+:::note Read this with ADR-N-021
+Decision 2 names two MCP surfaces. The Data MCP is what the gateway serves today, at
+`/cs/{space}/mcp` and `/api/endpoint/{endpointSlug}/mcp`, exactly as written. The
+Configuration MCP is not: `jcctl serve --mcp` was never built — `crates/jcctl/src` has no MCP
+module — and the configuration surface is the Portal's `POST /api/v1/mcp`, one adapter over
+the operation registry
+([ADR-N-021](adr-n-021-one-operation-registry-behind-ui-api-assistant-and-mcp.md)). The agent
+lanes of decision 3 and the principal rules of decision 1 stand unchanged and are enforced
+today. Nothing below is rewritten: this is the decision as it was taken on 2026-09-05, and
+what replaced half of it (T-2228).
+:::
 
 ## 1. Context
 

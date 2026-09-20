@@ -5,6 +5,11 @@ Every `Decisions/adr-n-*.md` must appear in the `ADR-N` table of `Decisions/00-r
 with the same id, title, status and date, and every row of that table must point at a file
 that exists. A register that drifts from the decisions is a governance record nobody can trust.
 
+A `Superseded` decision must also say what replaced it, on a `Superseded by:` line naming an
+ADR this register holds (T-2228). A decision whose text still stands and whose status says it
+does not, with nothing to read instead, is worse than no status at all: the reader is told the
+page is wrong and not where the right page is.
+
     check-adr-register.py [docs-root]
     check-adr-register.py --selftest
 """
@@ -22,6 +27,7 @@ ROW = re.compile(
     r"^\|\s*\[(ADR-N-\d+)\]\(([^)]+)\)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|"
 )
 STATUSES = {"Accepted", "Superseded", "Proposed"}
+SUCCESSOR = re.compile(r"ADR-N-\d+")
 
 
 def field(text: str, name: str) -> str | None:
@@ -38,6 +44,7 @@ def read_adr(path: Path) -> tuple[str | None, dict[str, str | None]]:
             "title": heading.group(2) if heading else None,
             "status": field(text, "Status"),
             "date": field(text, "Date"),
+            "superseded_by": field(text, "Superseded by"),
         },
     )
 
@@ -91,6 +98,24 @@ def check(root: Path) -> list[str]:
                 problems.append(f"{identifier}: {key} is {adr[key]!r} in the file, {row[key]!r} in the register")
         if adr["status"] is not None and adr["status"] not in STATUSES:
             problems.append(f"{path.name}: status {adr['status']!r} is not one of {sorted(STATUSES)}")
+        if adr["status"] == "Superseded":
+            successor = adr["superseded_by"]
+            if successor is None:
+                problems.append(
+                    f"{path.name}: Superseded without a `Superseded by:` line naming its successor"
+                )
+            elif not SUCCESSOR.search(successor):
+                problems.append(
+                    f"{path.name}: `Superseded by: {successor}` names no ADR-N id"
+                )
+            else:
+                named = SUCCESSOR.findall(successor)
+                unknown = [one for one in named if one not in register]
+                if unknown:
+                    problems.append(
+                        f"{path.name}: `Superseded by:` names {', '.join(unknown)}, "
+                        "which the register does not hold"
+                    )
 
     for identifier, row in sorted(register.items()):
         if identifier not in seen:
@@ -106,7 +131,7 @@ title: "{id}: {title}"
 
 Date: {date}
 Status: {status}
-
+{superseded_by}
 ## 1. Context
 """
 
@@ -125,12 +150,30 @@ title: "Architecture Decision Register"
 
 
 def selftest() -> int:
-    good = dict(id="ADR-N-001", title="The First Decision", status="Accepted", date="2026-09-05")
+    good = dict(
+        id="ADR-N-001",
+        title="The First Decision",
+        status="Accepted",
+        date="2026-09-05",
+        superseded_by="",
+    )
     cases = [
         ("a register in sync", good, {}, "", None),
         ("a diverging title", good | {"title": "A Renamed Decision"}, {}, "",
          "title is 'A Renamed Decision' in the file, 'The First Decision' in the register"),
         ("a diverging status", good | {"status": "Superseded"}, {}, "", "status is 'Superseded'"),
+        ("superseded with nothing to read instead",
+         good | {"status": "Superseded"}, {"status": "Superseded"}, "",
+         "Superseded without a `Superseded by:` line"),
+        ("superseded by a decision the register does not hold",
+         good | {"status": "Superseded", "superseded_by": "Superseded by: [ADR-N-099](adr-n-099-ghost.md)\n"},
+         {"status": "Superseded"}, "",
+         "names ADR-N-099, which the register does not hold"),
+        ("superseded by a decision the register holds",
+         good | {"status": "Superseded", "superseded_by": "Superseded by: [ADR-N-002](adr-n-002-two.md)\n"},
+         {"status": "Superseded"},
+         "| [ADR-N-002](adr-n-002-two.md) | The Second | **Accepted** | 2026-09-05 | Summary. |\n",
+         None),
         ("a diverging date", good | {"date": "2026-01-01"}, {}, "", "date is '2026-01-01'"),
         ("a status outside the vocabulary", good | {"status": "Draft"}, {"status": "Draft"}, "",
          "is not one of ['Accepted', 'Proposed', 'Superseded']"),
@@ -146,9 +189,16 @@ def selftest() -> int:
             decisions = Path(tmp) / "Decisions"
             decisions.mkdir(parents=True)
             (decisions / "adr-n-001-one.md").write_text(ADR.format(**adr), encoding="utf-8")
+            if name == "superseded by a decision the register holds":
+                (decisions / "adr-n-002-two.md").write_text(
+                    ADR.format(id="ADR-N-002", title="The Second", status="Accepted",
+                               date="2026-09-05", superseded_by=""),
+                    encoding="utf-8",
+                )
             if name == "an ADR file nobody listed":
                 (decisions / "adr-n-002-two.md").write_text(
-                    ADR.format(id="ADR-N-002", title="The Second", status="Accepted", date="2026-09-05"),
+                    ADR.format(id="ADR-N-002", title="The Second", status="Accepted",
+                               date="2026-09-05", superseded_by=""),
                     encoding="utf-8",
                 )
             (decisions / "00-register.md").write_text(
@@ -166,7 +216,10 @@ def selftest() -> int:
         print(f"FAIL {failure}", file=sys.stderr)
     if failures:
         return 1
-    print("ok: a renamed, restatused, redated, unlisted or missing ADR all go red")
+    print(
+        "ok: a renamed, restatused, redated, unlisted or missing ADR all go red, "
+        "and so does a Superseded one with no successor or an unknown one"
+    )
     return 0
 
 
