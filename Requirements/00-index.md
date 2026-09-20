@@ -66,6 +66,7 @@ Every platform capability MUST serve three distinct consumer classes without int
 ## Related
 
 - [traceability.md](traceability.md) — end-to-end traceability matrix mapping requirement ranges to architecture and tests.
+- [compliance-matrix.md](compliance-matrix.md) — every requirement with the named tests that prove it and the lane that runs them.
 - [platform.md](platform.md) — fundamental platform and domain invariants.
 - [access-control.md](access-control.md) — core access control and MIM interoperability requirements.
 - [city-as-code.md](city-as-code.md) — declarative configuration plane requirements.

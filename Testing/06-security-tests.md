@@ -174,6 +174,82 @@ The test harness injects adversarial payloads into entity property values:
 2. **Result Isolation:** MCP tool outputs are returned as data objects, never as executable code or system prompt overrides.
 3. **Attribution Integrity:** Even if an agent proposes an unauthorized manifest change via `propose_change`, CI Conftest gates and protected branch rules reject the pull request automatically.
 
+## 7. The production security gate
+
+The register below is the platform's go-live gate. One row per attack vector, each owned by a
+task, each naming the requirements it proves and the test that replays the attack. It is the
+record an auditor and the owner read, and the BSI TR-03187 matrix in
+[Architecture 13](../Architecture/13-security.md) links to it.
+
+`joinedcontext-conformance/scripts/security_gate.py` turns the table into a gate. It fails when a
+row names a requirement `Requirements/` does not define, when a `proven` row names a test that no
+repository holds or that is switched off, and when a row that is not `proven` names a test anyway.
+Test names resolve through the index `scripts/compliance.py` builds, so renaming a test in a
+repository turns the gate red instead of quietly ending the proof
+([compliance matrix](../Requirements/compliance-matrix.md)). The `compliance` workflow runs it
+after the compliance check; an agent runs `tasks/compliance check` and the gate script from a
+sandbox, where all five clones are present.
+
+A row is `proven` only when a named test replays the attack and goes red when the defence is
+switched off. Every row here is a priority 1 defence, so while any row is `open` the gate is red
+and the platform is not ready for its first production apply. The owner signs this table before
+that apply; "Never forced" applies to the signature as much as to the work.
+
+State of the register on 2026-09-20: 50 vectors, 1 proven, 49 open.
+
+| Surface | Vector | Task | Requirements | Test | State |
+|---|---|---|---|---|---|
+| apps | A generated app attacks the person, the platform or another app | T-1706 | AP-19, AP-63 |  | open |
+| apps | The build lane runs untrusted code | T-1707 | AP-13, AP-72 |  | open |
+| assistant | Prompt injection through data the assistant reads | T-1691 | AG-46, AG-11 |  | open |
+| assistant | The assistant acts with the platform's rights instead of the person's | T-1692 | AG-70 |  | open |
+| assistant | Exfiltration through the assistant's outputs | T-1693 | AG-52, AP-63 |  | open |
+| assistant | Cost and loop exhaustion of the model key | T-1694 | AG-14 |  | open |
+| availability | One anonymous caller takes the single node down | T-1715 | GW26, OPS-16 |  | open |
+| availability | A slow or dead dependency stalls everything | T-1716 | OPS-51 |  | open |
+| cluster | A compromised pod moves sideways | T-1710 | OPS-29, PL-23 |  | open |
+| cluster | Kyverno, Pod Security and admission in enforce | T-1711 | OPS-29 |  | open |
+| cluster | Secrets at rest, in Git and in the cluster | T-1712 | CC-06 |  | open |
+| edge | A header the edge should own arrives from outside | T-1672 | GW12, AG-38 |  | open |
+| edge | A route without the auth plugin its sibling has | T-1673 | OPS-31 |  | open |
+| edge | TLS, HSTS and the security headers on every host | T-1674 | OPS-27 |  | open |
+| edge | Request smuggling and oversized requests at the edge | T-1675 | GW26 |  | open |
+| edge | The admin surfaces are reachable from the internet | T-1676 | OPS-31 |  | open |
+| forge | The forge as a side door to the configuration | T-1703 | CC-41, PF-51 |  | open |
+| gateway | A caller widens what a Policy allows | T-1696 | EP-74, GW33 |  | open |
+| gateway | A tenant header or an entity id of another space | T-1697 | EP-01, PF-84 |  | open |
+| gateway | The JSON-LD context and other URLs the gateway fetches for a caller | T-1698 | R46 |  | open |
+| gateway | Notifications as an amplifier or a leak | T-1699 | R46, PL-23 |  | open |
+| gateway | File and bulk surfaces as a resource bomb | T-1700 | GW26 |  | open |
+| identity | A token from the wrong realm, client, audience or algorithm | T-1677 | PF-46 | `joinedcontext-platform/crates/context-gateway/tests/attack_identity_token_tests.rs::an_algorithm_the_key_is_not_of_is_refused_however_plausible_the_header_looks`, `joinedcontext-platform/crates/context-gateway/tests/attack_identity_token_tests.rs::the_published_verification_key_signs_nothing_when_it_comes_back_as_an_hmac_secret` | proven |
+| identity | Session fixation, theft and logout | T-1678 | PF-46 |  | open |
+| identity | A write without the CSRF token, or from another origin | T-1679 | PF-46 |  | open |
+| identity | Password guessing and the demo accounts in production | T-1680 | PF-46 |  | open |
+| identity | Open redirect and code interception at login | T-1681 | PF-46 |  | open |
+| import | Archives, bundles and YAML as the attack | T-1704 | CC-08, MF-05 |  | open |
+| import | SyncSource, import by URL and peer schema mirrors as SSRF | T-1705 | MF-28, DM-49 |  | open |
+| operate | Data loss: a database, a volume, the forge, the cluster | T-1717 | OPS-44 |  | open |
+| operate | Nobody notices an attack | T-1718 | CC-44, CC-58 |  | open |
+| operate | A credential is leaked and must be rotated today | T-1719 | OPS-45 |  | open |
+| operate | Production is dev with another name | T-1720 | CC-73, CC-75 |  | open |
+| operate | An outside tester has not looked at it | T-1721 | OPS-27 |  | open |
+| pipelines | A pipeline as a way out: Bloblang, processors, URLs and secrets | T-1701 | PL-18, PL-23, MF-39 |  | open |
+| pipelines | Pipelines of two projects share a process | T-1702 | PL-07 |  | open |
+| portal | A person of project A reads or writes project B | T-1682 | PF-59, R20 |  | open |
+| portal | The check is made on one value and the action taken on another | T-1683 | PF-57 |  | open |
+| portal | Privilege escalation through a grant | T-1684 | PF-52, PF-58 |  | open |
+| portal | A secret in a manifest, a log, an error, a Change or an export | T-1685 | MF-24 |  | open |
+| portal | Mass assignment and unknown fields | T-1686 | MF-05 |  | open |
+| portal | Stored and reflected script in anything a person types | T-1687 | AG-46 |  | open |
+| portal | Paging, filters and sort as an injection or a scan | T-1688 | CC-24 |  | open |
+| proxy | The credential proxy hands a token to the wrong host, path or run | T-1695 | AG-52, AG-38 |  | open |
+| registry | An MCP client or an agent reaches an operation a person must perform | T-1689 | AG-11, AG-82 |  | open |
+| registry | The MCP endpoint without a token, with another audience, or as a confused deputy | T-1690 | AG-64, PF-46 |  | open |
+| supply | A poisoned dependency or image | T-1713 | OPS-27 |  | open |
+| supply | The CI as an attacker's foothold | T-1714 | OPS-27 |  | open |
+| tenancy | Organisation and project isolation, end to end | T-1708 | PF-32, PF-59 |  | open |
+| workspaces | A copy or a preview as a way around review | T-1709 | PF-82, PF-83, CC-81 |  | open |
+
 ## Related
 
 - [R20](../Requirements/access-control.md) — referenced above.

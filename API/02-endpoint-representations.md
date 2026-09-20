@@ -104,6 +104,17 @@ The signal is asked for rather than volunteered because it tells a caller that s
 there to hide: an unauthorised prober who reads `NGSILD-Results-Restricted` on an answer they
 never asked about learns that the space holds more than they saw.
 
+Two query parameters of the read grammar choose *which attribute* a decision is taken on, so each
+carries a rule of its own ([AG-85](../Requirements/agents.md), T-2299). `geoproperty` is forwarded
+with the caller's own geo query where no grant draws an area; where a grant draws one, the area was
+written for CIM 009's default `location`, and a `geoproperty` naming another attribute is `400
+BadRequestData` naming the parameter (clause 5.5.2) rather than the grant's polygon tested against
+an attribute it was never written for. `geometryProperty` chooses the GeoProperty that becomes the
+`geometry` of a GeoJSON answer, which is a value the response narrowing no longer recognises as
+that attribute: it is admitted only when the grant covers the attribute and the endpoint does not
+hide it, and is otherwise `400` naming the parameter. The MCP surface refuses both in the same
+words (§8).
+
 ### Problem types
 
 Every refusal is `application/problem+json` (RFC 7807) with a `type` under
@@ -534,7 +545,11 @@ being kept back: a caller who reads `internalNote` in a list of what they may no
 attribute exists, on which type, and that it was worth hiding. A caller for whom nothing was left out
 gets no `redacted` key at all, so its absence is the whole answer and its presence tells them to ask
 for wider access rather than to guess. The same rule holds for the MCP `describe_schema` summary,
-which is the same document.
+which is the same document with the reading order added: `recommended: "linkml"` and one entry per
+artifact carrying its `format`, `mediaType`, `bytes`, `sha256` and `schema://` URI, LinkML first.
+Those entries are listed per model major rather than per model, because a major is what a fetch
+addresses — two models of one major render into one document — and the digest is of the bytes that
+fetch returns, the same digest the REST index publishes and the same one the `ETag` carries.
 
 ## 7b. Access surface (`access`)
 
