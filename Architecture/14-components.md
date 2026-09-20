@@ -26,11 +26,11 @@ Platform components are cleanly partitioned between core services and pluggable 
 - **Interfaces:** HTTP/2 CIM 009 REST endpoints; TCP PostgreSQL protocol with CNPG.
 - **State & Failure Behavior:** Stateless broker workers backed by PostgreSQL. Scale-out read replicas supported via streaming replication. Unreachable database triggers HTTP 503 on incoming broker requests.
 
-### `jcctl` Reconciler (`jcctl`)
+### jcctl (`jcctl`)
 
-- **Primary Role:** Configuration plane reconciler executing GitOps plan, apply, export, and drift detection routines.
-- **Interfaces:** Git over SSH/HTTPS to Gitea; CIM 009 management calls to Context Gateway and Broker; Kubernetes API for ConfigMap updates.
-- **State & Failure Behavior:** Runs as a CLI tool and single-replica leader-elected controller. Reconciles state in strict waves; transient failures pause reconciliation without rolling back converged preceding waves (CC-18).
+- **Primary Role:** the configuration plane as a command, shipped by `joinedcontext-platform` and deployed as no workload of its own: `validate`, `plan`, `apply`, `drift`, `export`, `import`, `sync`, `model`, `roles`, `pipeline test`, `artifacts rebuild`, `publish ckan` (`crates/jcctl/src/main.rs`). A person or a CI lane runs it against a repository checkout.
+- **Interfaces:** the repository on disk; CIM 009 management calls to the Context Gateway and the broker.
+- **State & Failure Behavior:** one verb, one exit code, no daemon and no lease. The reconciling loop that runs *inside* the cluster is the Portal's (`portal` component, `src/reconciler/`), which is where leader election, the waves and CC-18's "a transient failure pauses without rolling back the waves already converged" live.
 
 ### Portal (one application) (`portal`)
 
@@ -48,13 +48,13 @@ Platform components are cleanly partitioned between core services and pluggable 
 
 - **Primary Role:** Resident telemetry stream processor operating in Bento Streams Mode.
 - **Interfaces:** Inbound MQTT, WebSockets, Kafka, HTTP; outbound HTTPS to Context Gateway Endpoints.
-- **State & Failure Behavior:** Pod-per-project deployment scaled horizontally via HPA or KEDA. Individual stream failures route to dead-letter storage without crashing adjacent streams (PL-08).
+- **State & Failure Behavior:** one Deployment per project, one replica (PL-08, PL-12): a project is scaled by its own runner pool and not by replicas of one pool, so the production values set `replicaCount: 1` and no autoscaler. Bento streams mode keeps one stream's failure inside that stream; the runner's other streams carry on, and a failed message is retried and then dropped with a log line — there is no dead-letter sink in the rendered stream today.
 
 ### APISIX Edge Gateway (`apisix`)
 
 - **Primary Role:** Perimeter edge ingress, TLS termination, rate limiting, header sanitization and route mapping; bearer tokens pass through to the verifying service (Portal, Context Gateway).
 - **Interfaces:** Inbound HTTPS ports 80/443; outbound HTTP to internal cluster Services over Linkerd mTLS.
-- **State & Failure Behavior:** Fully stateless data plane mounting `/usr/local/apisix/conf/apisix.yaml`. Polls configuration file every 1 second; missing `#END` marker causes reload rejection while retaining previous active routes.
+- **State & Failure Behavior:** Fully stateless data plane. The routes are a ConfigMap the `configuration` chart renders, mounted into the container's own `/usr/local/apisix/conf` (a path inside the APISIX image, not in this platform's tree). APISIX polls that file every second; a missing `#END` marker makes it refuse the reload and keep the routes it already has.
 
 ### Keycloak IAM (`keycloak`)
 
@@ -65,7 +65,7 @@ Platform components are cleanly partitioned between core services and pluggable 
 ### Gitea Forge & Actions Runner (`gitea`)
 
 - **Primary Role:** In-cluster Git repository, pull request review, protected branches, and CI automation runner.
-- **Interfaces:** Web UI, Git over SSH/HTTPS, webhook dispatches to `jcctl`.
+- **Interfaces:** Web UI, Git over SSH/HTTPS, webhook dispatches to the Portal (`/api/v1/.../sync-sources` webhook routes, signed with the shared HMAC secret).
 - **State & Failure Behavior:** A single-replica Deployment holding one ReadWriteOnce volume for the bare repositories, with metadata in PostgreSQL. One replica is the ceiling: the volume cannot be shared, so the forge fails over rather than scaling out, which is why OPS-06's two-replica floor covers the stateless core and not this. Outages freeze configuration changes while data serving continues unaffected (CC-55).
 
 ### Artifact Store (RustFS) (`artifact-store`)
@@ -100,7 +100,7 @@ Platform components are cleanly partitioned between core services and pluggable 
 
 ## 3. Pluggable Addon Ecosystem
 
-Specialized workloads connect to the platform strictly through standard Endpoints:
+Specialized workloads connect to the platform strictly through standard Endpoints. An addon is opt-in per installation and is registered by naming it in an environment's `components` list; the `addons` render surface of `joinedcontext-deployment` is what proves one still renders. Of the addons below, only `agent-runner` (with its proxy), `functions` and `grafana` are components in that repository today — the rest of this list is the integration contract each addon has to meet when it is packaged, not something an operator can switch on now:
 
 - **Apache Superset** (`superset`): Advanced business intelligence consuming data via Endpoint SQL or CSV representations.
 - **Grafana** (`grafana`): Operational metrics and timeseries visualizations querying Endpoint STA representations.
@@ -110,7 +110,7 @@ Specialized workloads connect to the platform strictly through standard Endpoint
 - **FROST-Server** (`frost`): dedicated SensorThings API broker for high-volume IoT series, fed through Endpoint STA representations.
 - **GeoServer** (`geoserver`): legacy WFS and WMS services for clients that cannot speak OGC API Features.
 - **Data Space Connector** (`dataspace-connector`): Dataspace Protocol catalog, contract negotiation and transfer; agreed ODRL policies become Endpoint grants ([18-data-space-connector.md](18-data-space-connector.md)).
-- **OpenBao** (`openbao`): Enterprise Vault-compatible secret storage for regional deployments.
+- **OpenBao** (`openbao`): the Portal resolves a `secretRef` through OpenBao when `JC_PORTAL_OPENBAO_ADDR`, `JC_PORTAL_OPENBAO_ROLE` and `JC_PORTAL_OPENBAO_JWT_PATH` name one. No chart for it ships in `joinedcontext-deployment` yet, so SOPS with age is the path every environment runs today (13 §3).
 - **Application Functions Runtime** (`functions`): `jc-functions`, a Rust service embedding QuickJS that runs one generated application function per invocation in a fresh context (64 MiB, 5 s, 16 concurrent per replica). It holds no credential and no code of its own. Only the Portal calls it, with a token of audience `jc-functions`, and it reaches only the Context Gateway, so a function reads and writes through the application's endpoint and that endpoint's Policy ([20-app-sdk.md §3](20-app-sdk.md#3-functions-and-their-runtime), SDK-21…SDK-23).
 
 For detailed addon integration patterns and deployment configurations, see [Deployment/04-components-and-addons.md](../Deployment/04-components-and-addons.md).

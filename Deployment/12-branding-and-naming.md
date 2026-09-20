@@ -37,14 +37,16 @@ global:
       offered: ["sk", "en"]
 ```
 
-Every value is a string or a list of strings. Colours are hex triplets or sextets and are validated as such before anything renders them, because a colour token reaches a browser as a CSS custom property and a value that is not a colour is a way into the page (OPS-46). The logo and the favicon are file names, never URLs: they sit beside the branding file in the same ConfigMap and the Portal serves them from its own origin at `/api/v1/branding/logo` and `/api/v1/branding/favicon`.
+Every value is a string or a list of strings. Colours are hex triplets or sextets and are validated as such before anything renders them, because a colour token reaches a browser as a CSS custom property and a value that is not a colour is a way into the page (OPS-46). The logo and the favicon are file names, never URLs: they sit beside the branding file in the same ConfigMap and the Portal serves them from its own origin at `/api/v1/branding/logo` and `/api/v1/branding/favicon`. Those two names are the whole of the route: `GET /api/v1/branding/{asset}` accepts `logo` and `favicon` and answers `404` to anything else, so the path can reach no file the ConfigMap does not carry. The content type comes from the file's own extension (`.svg`, `.png`, `.jpg`, `.webp`, `.ico`).
+
+A colour the Portal UI cannot read is named in the browser console and skipped; the token keeps the default it already had rather than taking a value that is not a colour.
 
 ## 2. Who reads what
 
 | Consumer | Reads | Effect |
 |---|---|---|
-| Portal API | the whole block, from `JC_BRANDING_FILE` | answers `GET /api/v1/branding` (public, cached) |
-| Portal UI | that endpoint at runtime | page title, sidebar and login logo, colour tokens (`--portal-color-primary`, `--portal-color-secondary`, `--portal-color-accent`, `--portal-color-surface`, `--portal-color-surface-fg`), font stacks (`--portal-font-heading`, `--portal-font-sans`), language switcher, footer organisation and contact |
+| Portal API | the whole block, from `JC_BRANDING_FILE` | answers `GET /api/v1/branding` with `Cache-Control: public, max-age=300` |
+| Portal UI | that endpoint at runtime | page title, sidebar and login logo, colour tokens (`--portal-color-primary`, `--portal-color-primary-fg`, `--portal-color-secondary`, `--portal-color-accent`, `--portal-color-surface`, `--portal-color-surface-fg`), font stacks (`--portal-font-heading`, `--portal-font-sans`), language switcher, footer organisation and contact |
 | CKAN | `instanceName`, `organisation`, `logo`, `favicon`, `colours`, `languages` | site title, site logo, theme tokens, `locale_default` and `locales_offered`, and the organization the publisher creates for a project |
 | DCAT-AP records | `organisation`, `contactEmail`, `licenseDefault`, `domain` | `dcterms:publisher`, `dcat:contactPoint`, the default `dcterms:license` of a distribution |
 | Keycloak | `instanceName`, `orgDomain`, `colours`, `logo` | realm display name and login theme |

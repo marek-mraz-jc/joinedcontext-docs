@@ -14,7 +14,7 @@ The platform centralizes authentication and organizational hierarchy inside Keyc
 |  Keycloak (OIDC / OAuth 2.1 / OID4VCI Credential Issuer / User & Group Store)                     |
 |         |                                                   |                                     |
 |         v (OIDC Tokens / JWTs)                              v (OID4VP Verifiable Presentations)   |
-|  APISIX Gateway (routes, limits, header hygiene)     FIWARE VCVerifier (OID4VP / Trust Registry)  |
+|  APISIX Gateway (routes, limits, header hygiene)     FIWARE VCVerifier (OID4VP, not deployed yet)  |
 |         |                                                   |                                     |
 |         v                                                   v                                     |
 |  Context Gateway (Identity Extracted -> Evaluated against Policy Entities by the in-process PDP)             |
@@ -26,9 +26,9 @@ The platform centralizes authentication and organizational hierarchy inside Keyc
 The platform enforces four non-negotiable identity rules:
 
 - **I1, Pure OIDC & OID4VCI:** Keycloak is deployed strictly as an OpenID Connect provider and Verifiable Credential issuer. Keycloak Authorization Services (UMA) and fine-grained resource policy servers are explicitly disabled.
-- **I2, Decoupled Verifiable Presentations:** External Verifiable Presentations (OID4VP) are processed by FIWARE VCVerifier, which exchanges valid presentations for short-lived internal JWTs consumed by standard APISIX plugins.
+- **I2, Decoupled Verifiable Presentations:** External Verifiable Presentations (OID4VP) are to be processed by FIWARE VCVerifier, which exchanges a valid presentation for a short-lived internal JWT that the ordinary APISIX plugins consume. No environment deploys it: OID4VP is the design this rule fixes, and today every caller arrives with a realm token.
 - **I3, Peer Federation Identity:** Peer digital twins in a federation NEVER receive local Keycloak user accounts. Peer identities are established via W3C Decentralized Identifiers (`did:web`) verified against the European Trusted Issuers Registry (TIR).
-- **I4, Zero Permissions in Tokens:** Authentication tokens carry identity assertions exclusively (`sub`, `iss`, `client_id`, `email`). Tokens NEVER contain permissions, role lists, or scope grants. All authorization is determined dynamically by the Context Gateway PEP querying OPA.
+- **I4, Zero Permissions in Tokens:** Authentication tokens carry identity assertions exclusively (`sub`, `iss`, `client_id`, `email`). Tokens NEVER contain permissions, role lists, or scope grants. All authorization is decided by the Context Gateway's own in-process PDP against the `Policy` entities of the policy space ([ADR-N-003](../Decisions/adr-n-003-context-gateway-in-rust.md)); the legacy OPA sidecar it replaced is gone (13 §5).
 
 ---
 
@@ -193,7 +193,7 @@ spec:
 - **Rotation and revocation** are Portal actions: *Rotate* issues a new key with an overlap window (default 24 h) and shows both as active until the old one is dropped; *Revoke* is immediate at the gateway (the PDP's principal cache is invalidated by the Portal API event). Expiring keys notify the owner 14 and 3 days ahead; unused keys (90 days) are flagged.
 - **Pipeline runners** are ServiceAccounts rendered by the reconciler from the `Pipeline` manifest (`oauth-client`, roles from `spec.access`), so a pipeline's identity appears on the same page as everything else.
 - **Autonomous agents** are ServiceAccounts with `roles` restricted to the lanes they may use (AG-xx) and short-lived OAuth 2.1 tokens.
-- **jcctl reconciler** is the one platform-owned ServiceAccount, with write grants confined to the administrative space and the artifact store.
+- **The Portal's reconciler** holds the platform-owned account. Its Keycloak client is `portal-reconciler`, separate from the login client on purpose, with `manage-users` and `query-groups` in `realm-management` and nothing else, so the client people log in with cannot write anybody into a group.
 
 ### One identity provider for everyone: users, apps, workloads
 
@@ -202,7 +202,8 @@ Keycloak is the only place identities come from. Humans log in through OIDC at t
 | Caller | Credential | Calls |
 |---|---|---|
 | Portal → Context Gateway, Gitea, RustFS | platform ServiceAccount `portal` (client credentials) | resource API reads/writes on behalf of the reconciler; user-initiated calls forward the **user's** token instead |
-| jcctl reconciler → broker admin API, Keycloak admin API, APISIX config | ServiceAccount `jcctl`, the only account with administrative grants | tenant creation, client provisioning, `apisix.yaml` writes |
+| the Portal's reconciler → the realm's groups | client `portal-reconciler` (`manage-users`, `query-groups`) | brings the realm's platform-owned groups to what `users/groups/` says (PF-63), and nothing else |
+| the Portal → the Keycloak admin API | `JC_PORTAL_KEYCLOAK_ADMIN_CLIENT_ID` and its secret, both halves or neither | provisioning the clients a `ServiceAccount` manifest declares |
 | Bento runners, derived pipelines, `container` compute | ServiceAccount rendered from the `Pipeline` | writes through the target Endpoint |
 | Apps on Demand (`service`, `fullstack`) | the edge login (APISIX `openid-connect`, client `edge`) for the user **plus** the app's own ServiceAccount for background calls | the app Endpoint only |
 | Data space connector, Agent Runner, conformance runners | their ServiceAccounts | Endpoints, MCP surfaces |

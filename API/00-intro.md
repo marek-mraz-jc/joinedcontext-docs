@@ -23,7 +23,7 @@ flowchart LR
     CLIENT["API Client / Browser / Agent"]
     
     subgraph EDGE["Public Gateway Edge (APISIX)"]
-        AUTH["OIDC & DPoP Verification"]
+        AUTH["OIDC Bearer Verification"]
         RATE["Rate Limiting & Routing"]
     end
     

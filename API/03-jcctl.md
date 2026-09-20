@@ -23,7 +23,6 @@ jcctl [COMMAND] [OPTIONS]
 | **`import`** | `<source> --repo-dir <path>`, `[--namespace <slug>]`, `[--org-domain <d>]`, `[--conflict fail\|skip\|replace\|rename]` | Imports a manifest or an unpacked bundle, rewritten for this project (MF-20…MF-24, PF-22) |
 | **`export`** | `--repo-dir <path>`, `--project <slug>`, `--out-dir <path>` | Writes `projects/{p}/` of the checkout as a bundle: manifests without `status` or secret values, native files verbatim, and a `kind: Bundle` index (MF-16, MF-17) |
 | **`validate`**| `--repo-dir <path>` | Executes local JSON Schema and Conftest validation on manifests |
-| **`serve`** | `--port <num>` | Runs `jcctl` in daemon mode exposing health, status, and CaC MCP server |
 | **`schema export`** | `--out <dir>` | Writes the JSON Schema draft-07 of every manifest kind to `<dir>/{Kind}.json` (default `schemas/kinds`, MF-09, CC-12) |
 | **`model generate`** | `--repo-dir <path>` | Renders every DataModel's artifacts through Model Tools and writes the ones `spec.artifacts` declares (DM-02, DM-32) |
 | **`model diff`** | `--repo-dir <path>` | The same render, compared with what is committed; exit 2 and the stale paths on any difference (DM-02) |
@@ -31,6 +30,21 @@ jcctl [COMMAND] [OPTIONS]
 | **`model import`** | `<dataModel.Subject/Model> --out <file>` | Imports one Smart Data Models model and writes the LinkML source it becomes (DM-07…DM-11) |
 | **`workspace render`** | `--repo-dir <path>`, `--prefix <ws-name->`, `[--out-dir <dir>]` | The workspace preview render of the checkout: `prefix` in front of every project namespace, space segment and id of this organization; one file per manifest under `<dir>`, else one YAML stream on stdout. Refused when a name would stay unprefixed (CC-78, PF-83) |
 | **`workspace diff`** | `--base-dir <checkout of the base>`, `--repo-dir <checkout of the workspace>`, `[--json]` | What the workspace creates, changes (field by field) and removes against its base, as the Portal's compare lists it; exit 2 when it changes something (CC-79) |
+| **`model infer`** | `--file <sample.csv\|xlsx\|json\|pdf>`, `[--url <url>]` | Reads one sample file and proposes the LinkML model it fits (DM-07) |
+| **`roles render\|seed\|input`** | `--repo-dir <path>`, and for `input` `--base-dir`, `--changes`, `--author` | The role taxonomy: what the repository declares, seeding it, and the input a change's reviewers are computed from |
+| **`pipeline test`** | `--pipeline <manifest.yaml>`, `--sample <file>`, `[--format csv\|json\|text]`, `[--capture <url>]` | Runs one pipeline over one sample without a runner, which is what the Portal's studio calls |
+| **`artifacts rebuild`** | `--repo-dir <path>`, `--out-dir <dir>`, `[--space <name>]`, `[--revision <sha>]` | Re-renders a space's committed artifacts into a directory |
+| **`sync`** | `--repo-dir <path>`, `--source <project>/<name>`, `--checkout <dir>`, `[--state <file>]`, `[--once]`, `[--json]` | Runs one `SyncSource` against a checkout, once or on its schedule |
+| **`publish ckan`** | `--repo-dir <path>`, `--project <slug>`, `--host <gateway host>`, `[--organization-title <t>]`, `[--api-token-env <VAR>]`, `[--age-key-file <path>]`, `[--withdraw]` | Publishes the project's open datasets to a CKAN portal, or withdraws them |
+
+`jcctl --help` prints the same list; `crates/jcctl/src/main.rs` holds it as one `USAGE` string, so a
+command that is not in that string does not exist. **There is no `jcctl serve`**: nothing runs
+`jcctl` as a daemon and there is no configuration MCP server behind it. The MCP servers the
+platform has are the Portal's at `/api/v1/mcp` and an endpoint's or space's own; see
+[00-intro](00-intro.md).
+
+`plan` and `import` take `--json` as well, and `apply` takes `--prune` and `--confirm-deletions`;
+`export` takes `--revision <sha>`.
 
 ## 2. Connecting to a platform
 
