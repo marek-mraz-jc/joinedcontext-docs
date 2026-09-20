@@ -408,6 +408,25 @@ spec:
   validity: { from: "2026-09-01T00:00:00Z", to: "2027-09-01T00:00:00Z" }
 ```
 
+`operations` takes the CIM 009 Table 4.20-1 operation names, and the five **named operation groups**
+of Table 4.20-2 beside them (R8, GW34). A group is a name for the table's own list and nothing more:
+the PDP expands it to exactly these operations, so a grant of `retrieveOps` is a grant of
+`retrieveEntity` and `queryEntity` and of nothing else, and an operation nobody granted stays refused
+(GW-18). A name that is neither an operation nor a group is refused when the manifest is validated;
+it is never ignored.
+
+| Group | Writes | Expands to |
+|---|---|---|
+| `retrieveOps` | no | `retrieveEntity`, `queryEntity` |
+| `updateOps` | yes | `updateEntity`, `updateAttrs`, `replaceEntity`, `replaceAttrs` |
+| `associationOps` | no | `retrieveEntity`, `queryEntity`, `queryBatch`, `retrieveEntityTypes`, `retrieveEntityTypeDetails`, `retrieveEntityTypeInfo`, `retrieveAttrTypes`, `retrieveAttrTypeDetails`, `retrieveAttrTypeInfo`, `createSubscription`, `updateSubscription`, `retrieveSubscription`, `querySubscription`, `deleteSubscription` |
+| `federationOps` | no | everything `associationOps` expands to, plus `retrieveEntityMap`, `updateEntityMap`, `deleteEntityMap`, `createEntityMapQueryEntity` |
+| `redirectionOps` | yes | `createEntity`, `updateEntity`, `appendAttrs`, `updateAttrs`, `deleteAttrs`, `deleteEntity`, `mergeEntity`, `replaceEntity`, `replaceAttrs`, `retrieveEntity`, `queryEntity`, `purgeEntity`, `retrieveEntityTypes`, `retrieveEntityTypeDetails`, `retrieveEntityTypeInfo`, `retrieveAttrTypes`, `retrieveAttrTypeDetails`, `retrieveAttrTypeInfo`, `retrieveEntityMap`, `updateEntityMap`, `deleteEntityMap`, `createEntityMapQueryEntity` |
+
+"Writes" is what the change lane and the Portal read to mark a grant as one that can change context
+data: a group counts as a write when any operation it stands for writes, which raises the review lane
+and never lowers it (AP-09).
+
 ### ScopeDefinition
 
 ```yaml
