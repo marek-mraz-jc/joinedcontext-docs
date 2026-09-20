@@ -43,7 +43,7 @@ The test suite is executed across four operational modes:
 ### Execution in CI
 
 Both ETSI lanes run from the conformance runner image
-(`ghcr.io/marek-mraz/joinedcontext-conformace`), which carries Robot Framework and the suite
+(`ghcr.io/marek-mraz-jc/joinedcontext-conformance`), which carries Robot Framework and the suite
 libraries. `NGSILD_URL` selects the matrix, `NGSILD_TENANT` and `NGSILD_TOKEN` carry the tenant
 header and the bearer token, and `NGSILD_ORG_DOMAIN` and `NGSILD_SPACE` are the org-domain and
 space segments of the entity identifiers the suite mints.
@@ -89,7 +89,7 @@ are rendered `application/problem+json` with platform error types, where clause 
 
 ```bash
 docker run --rm -e NGSILD_URL=https://{host}/cs/{space}/ngsi-ld/v1 \
-  -v "$PWD/reports:/reports" ghcr.io/marek-mraz/joinedcontext-conformace:main etsi
+  -v "$PWD/reports:/reports" ghcr.io/marek-mraz-jc/joinedcontext-conformance:main etsi
 ```
 
 The full Testing Task Force suite is `tests/etsi-ttf/`. It fetches the official suite at a pinned
@@ -100,7 +100,7 @@ commit rather than vendoring it, and runs all five legs — `CommonBehaviours`,
 ```bash
 docker run --rm -e NGSILD_URL=https://{host}/cs/{space}/ngsi-ld/v1 \
   -e TTF_LEGS="CommonBehaviours ContextInformation" \
-  -v "$PWD/reports:/reports" ghcr.io/marek-mraz/joinedcontext-conformace:main etsi-ttf
+  -v "$PWD/reports:/reports" ghcr.io/marek-mraz-jc/joinedcontext-conformance:main etsi-ttf
 ```
 
 Reports (`output.xml`, `log.html`, `report.html`) land in `reports/etsi-ttf/`.

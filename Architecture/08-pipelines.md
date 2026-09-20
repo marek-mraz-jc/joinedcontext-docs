@@ -422,7 +422,7 @@ print(json.dumps([{
 }]))
 ```
 
-The reconciler renders a `container` compute into one CronJob in the project namespace (PL-35, PL-46). The Job has one container from the `analysis-runner` image the deployment pins for `runtime` (`ghcr.io/marek-mraz/joinedcontext-analysis-runner-python@sha256:…`), the script mounted from a ConfigMap the reconciler fills from the merged commit, and an entrypoint that does the three steps the script must not: fetch the page (`GET {sourceEndpoint}/ngsi-ld/v1/entities?type=…&attrs=…` with the pipeline's ServiceAccount token, one page, PL-42 `ids` when set), pipe it to the script's stdin, and POST the array the script printed to `{targetEndpoint}/ngsi-ld/v1/entityOperations/upsert?options=update`. Stderr is captured as the run's error; a non-zero exit writes nothing.
+The reconciler renders a `container` compute into one CronJob in the project namespace (PL-35, PL-46). The Job has one container from the `analysis-runner` image the deployment pins for `runtime` (`ghcr.io/marek-mraz-jc/joinedcontext-analysis-runner-python@sha256:…`), the script mounted from a ConfigMap the reconciler fills from the merged commit, and an entrypoint that does the three steps the script must not: fetch the page (`GET {sourceEndpoint}/ngsi-ld/v1/entities?type=…&attrs=…` with the pipeline's ServiceAccount token, one page, PL-42 `ids` when set), pipe it to the script's stdin, and POST the array the script printed to `{targetEndpoint}/ngsi-ld/v1/entityOperations/upsert?options=update`. Stderr is captured as the run's error; a non-zero exit writes nothing.
 
 ```yaml
 apiVersion: batch/v1
@@ -443,7 +443,7 @@ spec:
           serviceAccountName: pipeline-bikes-available-avg
           containers:
             - name: compute
-              image: ghcr.io/marek-mraz/joinedcontext-analysis-runner-python@sha256:…
+              image: ghcr.io/marek-mraz-jc/joinedcontext-analysis-runner-python@sha256:…
               args: ["/compute/main.py"]
               env:
                 - { name: JC_ORG_DOMAIN, value: hel.fi }

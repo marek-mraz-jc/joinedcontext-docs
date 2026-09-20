@@ -350,7 +350,7 @@ LinkML and schema-automator are Python and have no Rust implementation. They run
 
 Model Tools holds no credentials, reads no platform state and writes nothing; its only inputs are the LinkML document and, for imports, a Smart Data Models model reference. This keeps the "custom code is Rust/TypeScript" rule intact for everything that has state or authority; Model Tools is a pure function packaged as a tool. If a Rust LinkML generator reaches parity later, it replaces the image without any manifest change.
 
-The image is `ghcr.io/marek-mraz/joinedcontext-platform/model-tools`, built from `tools/model-tools/` in the platform repository, signed and pinned by digest like every other image (DM-19). It listens on **8080** as uid `10001`, writes nothing outside `/tmp`, and answers four routes:
+The image is `ghcr.io/marek-mraz-jc/joinedcontext-platform/model-tools`, built from `tools/model-tools/` in the platform repository, signed and pinned by digest like every other image (DM-19). It listens on **8080** as uid `10001`, writes nothing outside `/tmp`, and answers four routes:
 
 | Route | Body | Answers |
 |---|---|---|
@@ -365,7 +365,7 @@ The two callers must run the same image (DM-19), so the configuration repository
 
 ```yaml
 modelTools:
-  image: ghcr.io/marek-mraz/joinedcontext-platform/model-tools@sha256:6f1c…
+  image: ghcr.io/marek-mraz-jc/joinedcontext-platform/model-tools@sha256:6f1c…
   generatorVersion: linkml-1.11.1
 ```
 

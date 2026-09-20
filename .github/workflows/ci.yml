@@ -33,10 +33,10 @@ jobs:
         # Pinned, not `main`: an unrelated platform push must not turn this lane red at a
         # random hour. Bump the tag when a new kind lands, which is the same moment the
         # "Schema not published yet" list on Development/04-manifest-kinds.md shortens.
-        env: { JC_SCHEMAS_TAG: jc-core-v0.7.44 }
+        env: { JC_SCHEMAS_TAG: jc-core-v0.7.46 }
         run: |
           set -eu
-          curl -sSL "https://github.com/marek-mraz/joinedcontext-platform/archive/refs/tags/${JC_SCHEMAS_TAG}.tar.gz" \
+          curl -sSL "https://github.com/marek-mraz-jc/joinedcontext-platform/archive/refs/tags/${JC_SCHEMAS_TAG}.tar.gz" \
             | tar -xz -C "${RUNNER_TEMP}" --strip-components=2 --wildcards '*/schemas/kinds/*'
           # An empty directory would make every manifest "check" against nothing.
           test -n "$(ls -A "${RUNNER_TEMP}/kinds")"
