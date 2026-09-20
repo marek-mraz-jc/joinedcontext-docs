@@ -1,154 +1,133 @@
 ---
 sidebar_position: 6
 title: Deployment & Performance Testing
-description: Helmfile rendering, Kyverno security audits, blue/green disaster recovery drills, and k6 performance benchmarks.
+description: Rendering and policy gates, the k3d variant matrix, the recovery drill, the smoke test, and the k6 budgets.
 ---
 
 # Deployment & Performance Testing
 
-This chapter covers testing of Kubernetes deployment artifacts, service mesh policies, failover procedures, and load benchmarking.
+This page is for whoever changes a chart, a value or the edge: what renders and gates it, how a whole instance is brought up in CI, how a recovery drill is run, and which performance budgets a benchmark has to keep. The deployment lives in `joinedcontext-deployment` as Helmfile components. Read off the code on 2026-09-20.
 
 ---
 
-## 1. Manifest Linting & Kyverno PSS Scans
+## 1. Render, then gate the rendering
 
-The deployment configuration lives in `civitas-core-deployment` using Helmfile.
-
-Before deployment manifests are applied to any cluster, they are rendered and evaluated against Kubernetes Pod Security Standards (PSS) **Restricted** profile:
+Nothing reaches a cluster before its rendered manifests pass. One environment at a time:
 
 ```bash
-# 1. Render all component templates
-helmfile -f deployment/helmfile.yaml template -e staging > rendered_manifests.yaml
-
-# 2. Evaluate Kyverno policies locally
-kyverno apply .ci/policies/base/ --resource rendered_manifests.yaml
+scripts/render.sh dev rendered-dev.yaml          # helmfile template, one file
+kubeconform -strict -ignore-missing-schemas -summary rendered-dev.yaml
+conftest test --all-namespaces -p policies rendered-dev.yaml
+python3 scripts/ci/check-image-digests.py rendered-dev.yaml
 ```
 
-### Validated Security Invariants
+`--deployed` drops Helm test hooks, which `helmfile sync` never applies: what is not applied must not be judged as if it were.
 
-- `runAsNonRoot: true` and `runAsUser: 1000` enforced on all containers.
-- `readOnlyRootFilesystem: true` on all pods.
-- `capabilities.drop: ["ALL"]` present on every container security context.
-- `allowPrivilegeEscalation: false` strictly enforced.
-- Linkerd sidecar injection annotation `linkerd.io/inject: enabled` present on all meshed workloads.
+The fast lane runs that sequence for every environment, then two secret scans over the rendered output (`scripts/check-rendered-secrets.py`, `gitleaks detect` with `.ci/gitleaks-rendered.toml`, `scripts/check-secrets.py`) and compares the object list with the golden one in `.ci/golden/local.txt`. A new object in the diff is not a failure by itself; leaving the golden list unchanged is.
 
----
+### Kyverno
 
-## 2. Test Deployment Matrix
+`kyverno test .ci/policies` runs the policy unit tests in the fast lane. The hourly `ci-full` lane applies the policies to the rendered `local` and `production` environments through `.ci/policies/verify-kyverno-policies.sh`, which is the admission answer rather than the shift-left copy. The same four workload properties are asserted twice on purpose: `policies/workloads.rego` fails a pull request, Kyverno fails a rollout.
 
-CI validates the platform against a matrix of deployment configurations using ephemeral `k3d` clusters:
-
-| Matrix Parameter | Permutations Tested in CI |
+| Asserted | Where it comes from |
 |---|---|
-| **Namespace Architecture** | Single Namespace (`global.singleNamespace: true`) vs Multi-Namespace (`global.singleNamespace: false`) |
-| **Operational Profile** | `development` (single replica, light) vs `production` (HPA, PDBs, HA CloudNativePG) |
-| **Service Mesh** | Linkerd mTLS Enabled (`defaultInboundPolicy: cluster-authenticated`) vs Disabled |
-| **Runtime Policies** | Kyverno `failureAction: Enforce` vs `Audit` |
+| `runAsNonRoot`, no uid 0 | `policies/workloads.rego`, Kyverno restricted profile |
+| `capabilities.drop: [ALL]` | the same two |
+| a memory limit on every container | the same two |
+| a ServiceAccount of its own, never the namespace `default` | the same two |
+| every image pinned by digest | `scripts/ci/check-image-digests.py` |
 
 ---
 
-## 3. Disaster Recovery & Blue/Green Upgrade Drills
+## 2. The k3d variant matrix
 
-The platform must survive catastrophic infrastructure loss with zero configuration loss ([CC-50](../Requirements/city-as-code.md#8-export-portability-and-upgrade)).
+`scripts/test-deployment-variants.sh` brings a whole instance up in a fresh k3d cluster, one variant after another, and asserts after each deployment that every pod is Running and Ready or Completed and that every Deployment, StatefulSet and DaemonSet rolled out. A variant is a triplet of toggles:
 
-### Automated Blue/Green Upgrade Drill
+| Axis | Value written into the scratch `testing` environment |
+|---|---|
+| multi-namespace | `global.singleNamespace` |
+| multi-instance | two-layer operators plus instance, against an all-in-one helmfile |
+| service mesh | `global.serviceMesh.enable`, with the Linkerd control plane |
 
-Executed weekly in automated test pipelines:
-
-```mermaid
-sequenceDiagram
-    participant CI as Automated Test Runner
-    participant V1 as Active Broker Cluster (v1.6)
-    participant V2 as Standby Broker Cluster (v1.7)
-    participant Repo as City Git Repository
-    participant GW as Context Gateway
-    
-    CI->>V2: Deploys empty new broker version
-    CI->>Repo: Runs jcctl apply --gateway-url V2
-    Note over V2: State reconstructed entirely from Git
-    CI->>V2: Runs jcctl plan --assert-empty
-    CI->>GW: Reroutes gateway upstream to V2
-    CI->>GW: Executes smoke test suite against live endpoints
-    CI->>V1: Decommissions V1 cluster
+```bash
+./scripts/test-deployment-variants.sh --list      # the matrix
+./scripts/test-deployment-variants.sh 0,0,0       # one variant
+./scripts/test-deployment-variants.sh             # all eight
 ```
 
-### PostgreSQL Point-In-Time Recovery (PITR) Drill
-
-Automated tests simulate a catastrophic database corruption:
-
-1. Simulates drop of PostgreSQL platform databases.
-2. Triggers CloudNativePG (CNPG) recovery from Barman S3-compatible object storage.
-3. Clones org repository and runs `jcctl plan`.
-4. Confirms that zero database mutations or configuration drift are detected.
+The hourly `ci-full` lane runs `0,0,0` as the `k3d-deploy` job and the whole matrix as `deployment-variants`, each with a 900 second budget per variant, and uploads the cluster's state when a variant fails. `--state-values-set` is not forwarded to the components, which is why the harness owns the scratch environment and writes the toggles into its values file.
 
 ---
 
-## 4. Load & Performance Testing with k6
+## 3. The recovery drill
 
-The Context Gateway and Context Broker must satisfy rigorous performance budgets under sustained load. Scenarios execute in CI against a dedicated test environment.
+`scripts/dr-drill.sh` is the restore half of the drill (OPS-11, OPS-12, [CC-50](../Requirements/city-as-code.md#8-export-portability-and-upgrade)), in the order Runbook 6 gives it:
 
-```mermaid
-flowchart LR
-    K6["k6 Load Generator<br/>(1,000 Virtual Users)"]
-    GW["Context Gateway (PEP)<br/>(2 Replicas)"]
-    CB["Antares Broker<br/>(PostgreSQL Backend)"]
-    
-    K6 -->|HTTPS 5,000 rps| GW
-    GW -->|Filtered Internal Hop| CB
+1. back the database up into the object store the instance carries,
+2. lose the database, the way an incident loses it,
+3. bring it back from the archive at an instant inside the retention window (OPS-10),
+4. replay the repository's seed entities through the gateway (CC-72), and
+5. ask `jcctl plan` for a diff, and assert there is none.
+
+Steps 4 and 5 are the point. A drill that stops at step 3 proves the database came back; these two prove the platform came back, because every component reads its manifests from Git and the seed entities are the one state the repository cannot project by itself.
+
+```bash
+scripts/dr-drill.sh --check                  # preconditions only, writes nothing
+scripts/dr-drill.sh --env local --slug local
 ```
 
-### Performance Budgets & Gating Thresholds
+The deployment half is deliberately not in this script: the k3d lane above already brings a whole instance up, and a second harness for the same thing would drift from the first.
 
-| Scenario | Load Profile | Performance Target | Hard Failure Threshold |
-|---|---|---|---|
-| **Single Entity Read (`GET /entities/{id}`)** | 5,000 rps sustained | p95 < 8 ms, p99 < 15 ms | p99 > 25 ms or >0.01% errors |
-| **Filtered Query (`q` + `scopeQ`)** | 1,500 rps sustained | p95 < 25 ms, p99 < 50 ms | p99 > 80 ms or >0.05% errors |
-| **High-Volume Telemetry Ingestion (POST)** | 2,000 writes/sec | p95 < 30 ms, p99 < 60 ms | p99 > 100 ms or >0.01% errors |
-| **GeoJSON Export (>5,000 features)** | 100 concurrent streams| Time to first byte < 120 ms| TTFB > 250 ms |
-| **MCP Tool Invocation (`query_entities`)** | 500 tool calls/sec | p95 < 35 ms, p99 < 70 ms | p99 > 120 ms |
+---
 
-### Example k6 Scenario Definition
+## 4. The smoke test of a live instance
 
-```javascript
-// tests/performance/k6-entity-query.js
-import http from 'k6/http';
-import { check, sleep } from 'k6';
+`just dev-smoke` runs `scripts/smoke.sh <base-url> <idm-url>` from outside the cluster and then `scripts/smoke-forge-login.sh`, because the forge login button can fail with everything else green. Every check asserts an exact status over a valid TLS chain, with no `-k`, so an expired certificate fails the run. A check whose subject is not deployed in this instance is reported as skipped rather than passed: it never ran.
 
-export const options = {
-  stages: [
-    { duration: '1m', target: 500 },
-    { duration: '3m', target: 2000 },
-    { duration: '1m', target: 0 },
-  ],
-  thresholds: {
-    http_req_duration: ['p(95)<25', 'p(99)<50'],
-    http_req_failed: ['rate<0.001'],
-  },
-};
+Applying and smoking `dev` belong to the hourly batch, not to a push.
 
-export default function () {
-  const params = {
-    headers: {
-      'Authorization': `Bearer ${__ENV.TEST_TOKEN}`,
-      'Accept': 'application/ld+json',
-    },
-  };
-  
-  const res = http.get(
-    'http://localhost:8080/api/endpoint/mobility-data/ngsi-ld/v1/entities?type=VehicleObserved&q=speed>50',
-    params
-  );
-  
-  check(res, {
-    'status is 200': (r) => r.status === 200,
-    'header restricted present': (r) => r.headers['Ngsild-Results-Restricted'] !== undefined,
-  });
-  sleep(0.05);
-}
+---
+
+## 5. The k6 budgets
+
+`tests/k6/budgets.js` in `joinedcontext-conformance` is the single place the thresholds live, shared by the benchmark scripts and by `selftest.js`, which feeds them synthetic samples so that a budget nobody can fail is caught.
+
+| Budget | Threshold | Requirement |
+|---|---|---|
+| gateway overhead against the broker on the same entity, p99 | under 5 ms | EP-28 |
+| gateway read, p95 | under 50 ms | OPS-18 |
+| sustained reads | at least 95 % of `rate × duration`, counted | TS-22 (5000 rps per replica) |
+| iterations the arrival rate could not start | none | TS-22 |
+| failed requests | under 0.1 % | TS-22 |
+| checks | all of them pass | TS-22 |
+| endurance: failed requests, memory growth | under 0.01 %, no growth verdict | TS-22 |
+| export: time to first byte, p95 | under 1 s | EP-44 |
+| export: whole download | under 300 s, no timeout | EP-44 |
+| endpoint: `file.geojson` time to first byte, p95 | under 1 s | EP-05 |
+| endpoint: answers missing the `RateLimit` field | none | EP-20 |
+| endpoint: 429s | none under the limit, at least one in a deliberate burst | EP-20 |
+
+Two decisions in that file are worth knowing. The 5 ms is the gateway's own overhead, measured against the broker on the same entity: a 5 ms budget on the total read would be a budget on the broker, the network and the dataset size instead of on anything this platform controls. And the sustained rate is asserted as a counter rather than as a rate, because k6 divides a metric rate by the whole run, setup and graceful stop included, which understates the plateau.
+
+Memory growth is a least-squares slope of the resident set over the run, expressed as a percentage of the mean per minute, so a soak reports the number the gate used rather than a verdict alone.
+
+### Running one
+
+```bash
+GATEWAY_URL=https://{host}/cs/{space}/ngsi-ld/v1 \
+  BROKER_URL=http://antares.joinedcontext.svc:8080/ngsi-ld/v1 \
+  JC_K6_SCRIPT=gateway-latency-load.js JC_K6_RATE=5000 JC_K6_DURATION=1m \
+  jc-conformance k6
 ```
+
+The four scripts are `gateway-latency-load.js` (latency and throughput), `gateway-endurance.js` (a 30 minute soak), `bulk-export.js` (streaming export, needs `EXPORT_URL`) and `transport_endpoint_load.js` (one endpoint's representations, needs `ENDPOINT_URL`). `run.sh` refuses to start without the URL its script needs, and says on stderr which budget an unset variable leaves unmeasured: without `BROKER_URL` there is no EP-28 overhead, without `JC_K6_BURST_RATE` the EP-20 limiter is never proven. `scripts/compare-latency.py` compares a run's summary with the rolling seven-day history in `benchmarks/latency-history.json` and fails a regression over 5 %; its `--selftest` proves it flags a degradation and respects a baseline.
+
+No benchmark runs by itself today: the `k6` and `nightly-benchmarks` workflows are `workflow_dispatch` only while the private repositories' Actions minutes are metered, and there is no `criterion` microbenchmark in the Rust repositories at all.
 
 ## Related
 
-- [CC-50](../Requirements/city-as-code.md) — referenced above.
-- [00-strategy](00-strategy.md) — test families and where each lives.
-- [testing](../Requirements/testing.md) — the TS requirements.
+- [00-strategy.md](00-strategy.md) — which lane each of these runs in.
+- [04-configuration-and-pipeline-tests.md](04-configuration-and-pipeline-tests.md) — the policies behind the render gate.
+- [CC-50](../Requirements/city-as-code.md) — the portability the drill proves.
+- [TS-22](../Requirements/testing.md) — the load requirement the budgets carry.
+- [06-security-tests.md](06-security-tests.md) — the scans that run beside these lanes.

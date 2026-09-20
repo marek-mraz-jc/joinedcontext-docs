@@ -1,195 +1,195 @@
 ---
 sidebar_position: 1
 title: Testing Strategy & Quality Gates
-description: End-to-end testing pyramid, environment boundaries, quality gates, and Definition of Done for the joinedcontext platform.
+description: Which suites exist, which CI lane runs them, what must be green before a change lands, and the Definition of Done per change type.
 ---
 
 # Testing Strategy & Quality Gates
 
-This chapter defines the normative verification framework for the next-generation joinedcontext platform. Every component, manifest, translation layer, and deployment artifact must pass automated gates prior to merging or release.
+This page tells you which checks a change has to pass, where each suite lives and which lane runs it. Read it before your first commit to any of the five repositories; the pages after it describe the suites themselves. Everything below was read off the workflows and the test trees on 2026-09-20, and a claim the code does not support is listed in section 6 rather than written as fact.
 
-Testing guarantees the architectural invariants established across the platform:
+Testing holds the invariants the architecture rests on:
 
-- The Context Broker remains a vanilla, spec-compliant ETSI GS CIM 009 engine ([CC-01](../Requirements/city-as-code.md#1-architecture-and-source-of-truth)).
-- The Context Gateway enforces strict fail-closed authorization, AST query rewriting, and tenant isolation without query parameter leaks ([R1–R15](../Requirements/access-control.md#1-architecture-and-enforcement-point), [GW1–GW31](../Requirements/gateway-firewall.md#1-verdicts-the-three-levels)).
-- The org repository remains the sole source of truth for platform configuration ([CC-02](../Requirements/city-as-code.md#1-architecture-and-source-of-truth)), reconciled idempotently by `jcctl` ([CC-18](../Requirements/city-as-code.md#3-reconciler-jcctl)).
-- All user-facing APIs, representation serializers, and data-flow pipelines operate predictably under load.
+- The Context Broker stays a vanilla ETSI GS CIM 009 engine ([CC-01](../Requirements/city-as-code.md#1-architecture-and-source-of-truth)), so the ETSI suite runs against the broker alone and against the same data through the gateway.
+- The Context Gateway fails closed, rewrites queries and keeps spaces apart with no leak through a query parameter ([R1–R15](../Requirements/access-control.md#1-architecture-and-enforcement-point), [GW1–GW31](../Requirements/gateway-firewall.md#1-verdicts-the-three-levels)).
+- The organization repository stays the single source of truth ([CC-02](../Requirements/city-as-code.md#1-architecture-and-source-of-truth)), reconciled without surprises by `jcctl` ([CC-18](../Requirements/city-as-code.md#3-reconciler-jcctl)).
+- Every representation of an endpoint answers within its budget and shows the same data as every other one.
 
 ---
 
-## 1. The Test Pyramid
-
-The platform enforces a five-tier testing pyramid. Lower tiers provide immediate feedback in local development and commit hooks; upper tiers evaluate end-to-end system properties and resilience in continuous integration.
+## 1. Four layers, and where each one lives
 
 ```mermaid
 flowchart TD
-    E2E["Tier 5: End-to-End, Deployment & Performance (k6, k3d, Chaos)"]
-    SEC["Tier 4: Security & Conformance (ETSI Robot, OGC CITE, Fuzzing, ZAP)"]
-    INT["Tier 3: Service Integration (sqlx, Testcontainers, Gitea API)"]
-    PROP["Tier 2: Property & Contract Tests (proptest, schemathesis, ajv)"]
-    UNIT["Tier 1: Unit Tests (cargo test, vitest, bento test)"]
+    CLUSTER["4 - cluster: just dev-apply, just dev-smoke, live Portal journeys"]
+    SUITE["3 - conformance: ETSI Robot, OGC ATS, STA, MCP, DSP, schemathesis, security, chaos, k6, Playwright"]
+    CONTRACT["2 - contract: openapi_tests, kind_documentation_tests, jcctl model diff, render plus kubeconform plus conftest"]
+    UNIT["1 - in repository: cargo test, vitest, bento test, pytest"]
 
-    UNIT --> PROP
-    PROP --> INT
-    INT --> SEC
-    SEC --> E2E
+    UNIT --> CONTRACT
+    CONTRACT --> SUITE
+    SUITE --> CLUSTER
 ```
 
-### Tier 1: Unit Testing
+### Layer 1: in the repository
 
-- **Rust Backend:** Crate-level unit tests testing pure functions, parsers, serializers, and state machines. Executed via `cargo test --workspace --lib`.
-- **Frontend:** Isolated component testing using Vitest and React Testing Library. Executed via `pnpm test:unit`.
-- **Pipelines:** Processor logic and transformation validation using native Bento unit testing via `bento test ./...`.
+| Where | Command | Covers |
+|---|---|---|
+| `joinedcontext-platform` | `cargo test --workspace --lib --bins --locked` | `crates/jc-core`, `crates/context-gateway`, `crates/jcctl`, `crates/agent-proxy`, `crates/functions` |
+| `joinedcontext-platform` | `cargo test -p <crate> --test <file>` | the integration tests beside each crate, one file per behaviour |
+| `joinedcontext-platform` | `bento lint ./examples/ingestion/*/bento.yaml`, `bento test ./examples/ingestion/...` | pipeline processors and their golden cases |
+| `joinedcontext-platform` | `pytest -q` in `tools/model-tools` | the model generator and its TypeScript output |
+| `joinedcontext-portal` | `cargo test --workspace --lib --bins` | the axum API, the reconciler and the app lanes |
+| `joinedcontext-portal` | `pnpm lint`, `pnpm test`, `pnpm build` in `ui/` and in `sdk/` | React components and hooks, one test file per screen under `ui/tests/` |
+| `joinedcontext-deployment` | `pytest tests -q` | the rendered manifests, the chart values and the edge contracts |
+| `joinedcontext-docs` | the checkers under `scripts/` | links, front matter, traceability, and what the pages assert about the code |
 
-### Tier 2: Property-Based & Contract Testing
+Test binaries in the Rust repositories are integration tests, so the fast lane's `--lib --bins` does not run them. A change that alters a shape has to be run with the whole crate, `cargo test -p <crate>`, or the fast lane will pass a break.
 
-- **Property-Based Verification:** Evaluates mathematical invariants of the policy engine and representation serializers using `proptest`. Generates thousands of arbitrary request/policy pairs to prove absence of privilege bleed ([R57](../Requirements/policy-firewall.md#33-correctness--verification-the-actual-blockers)).
-- **API Contract Verification:** Validates that OpenAPI schemas generated by `utoipa` in `portal-api` match runtime responses using `schemathesis`. Confirms that the generated TypeScript client (`openapi-typescript`) compiles cleanly against the frontend.
+### Layer 2: contract
 
-### Tier 3: Service Integration Testing
+The generated surface is checked against its own consumers inside the repository that produces it: `cargo test --test openapi_tests` in the Portal (the OpenAPI document matches the routes), `cargo test -p jc-core --test kind_documentation_tests` in the platform (every manifest kind is documented), `jcctl model diff --repo-dir examples/datamodels` (the committed artifacts are the ones the generator renders), and `helmfile template` plus `kubeconform -strict` plus `conftest test -p policies` for every deployment environment.
 
-- **Database Integration:** Exercises data-access layers against real PostgreSQL instances using `sqlx::test` with per-test transaction rollbacks.
-- **Service Boundaries:** Validates HTTP interactions between `portal-api`, `jcctl`, and the local Gitea instance using Testcontainers or in-memory wiremock servers.
+### Layer 3: conformance
 
-### Tier 4: Security & Conformance Testing
+`joinedcontext-conformance` holds the suites that need a running system. Its own fast lane proves the runners rather than the platform: every Robot suite dry-runs, every pytest suite collects, and each verdict script has a `--selftest` that feeds it a broken result and expects red. The suites themselves are dispatched against a deployment.
 
-- **Standards Conformance:** Validates the Context Gateway and Context Broker against the official ETSI NGSI-LD Testing Task Force suite, OGC TEAM-ENGINE for OGC API Features, and SensorThings API conformance suites.
-- **Security Scans:** Integrates static analysis (`cargo deny`, `semgrep`), dynamic penetration scanning (OWASP ZAP baseline), container vulnerability assessments (Trivy), and secret leakage detection (`gitleaks`).
+| Suite | Where | Runs against |
+|---|---|---|
+| ETSI NGSI-LD smoke, 31 cases | `tests/etsi/smoke.robot` | the gateway on `dev` |
+| ETSI NGSI-LD Testing Task Force | `tests/etsi-ttf/` | a throwaway broker in CI, never `dev` |
+| Gateway transparency | `tests/etsi-ttf/compare_transparency.py` | broker and gateway side by side |
+| OGC API Features Part 1 ATS | `tests/ogc/` through TEAM Engine | an endpoint's `ogc/features/` surface |
+| SensorThings Sensing Profile | `tests/sta/` | an endpoint's `sta/v1.1/` surface, by assertions on the bodies |
+| MCP framing and isolation | `tests/mcp/` | the per-space and per-endpoint MCP surfaces |
+| Dataspace Protocol TCK | `tests/dsp/` | the connector |
+| OpenAPI fuzzing | `tests/schemathesis/` | the Portal API and the gateway |
+| Access control, representations, agent red-teaming | `tests/security/` | two spaces, one without a grant |
+| Data models and mapping parity | `tests/models/` | the published artifacts and both mapping engines |
+| DCAT-AP record and CKAN publication | `tests/ckan/` | the artifact store and CKAN |
+| Chaos drills | `tests/chaos/` | a deployment with a fault injected |
+| Load and endurance | `tests/k6/` | the gateway and one endpoint |
+| Browser journeys, WCAG scan | `e2e/` | a live Portal |
 
-### Tier 5: Deployment, End-to-End & Performance Testing
+`scripts/generate-qualification-report.py` aggregates the suite reports into one verdict; `allow_missing` names the suites a run may skip without failing the gate.
 
-- **Ephemeral Cluster Integration:** Deploys full platform releases into short-lived `k3d` clusters using Helmfile. Executes Playwright browser journeys that exercise real UI interactions without mocked backend APIs.
-- **Performance & Chaos:** Executes k6 load scenarios verifying throughput and sub-10ms latency budgets. Injects chaos drills (broker crashes, forge partitions, database failovers) to verify graceful degradation ([CC-55](../Requirements/city-as-code.md#9-non-functional)).
+### Layer 4: cluster
+
+One cluster, `dev`, is both the workbench and the demo target. It is applied from `main` with `just dev-apply` and checked with `just dev-smoke` from `joinedcontext-deployment`, once an hour, batching everything that went green since the last apply. The full ETSI Testing Task Force suite is never pointed at `dev`; only `tests/etsi/smoke.robot` touches it.
 
 ---
 
-## 2. Environment Boundaries & Data Policy
+## 2. The two CI lanes
 
-In compliance with BSI TR-03187 requirement **ORG-7** (Tests and developments must not run on production environments), testing is strictly isolated across distinct environments.
+Every repository has a fast lane named `ci` and a slow lane. The fast lane is the merge gate: it runs on every pull request and on every push to `main`, and it stays under five minutes. Actions minutes are metered on the three private repositories and ran out once, so there the slow lanes are `workflow_dispatch` only until the owner restores them, with the former `push` and `schedule` lines kept in a comment beside each `on:`.
 
-| Environment | Purpose | Target Infrastructure | Data Profile |
+| Repository | `ci` runs | Slow lane | Trigger |
 |---|---|---|---|
-| **Local / Dev** | Feature development and unit tests | Local workstation, Docker, k3d | Ephemeral synthetic fixtures |
-| **CI Runner** | Merge request validation and gating | Ephemeral containerized runners, k3d | Deterministic synthetic datasets |
-| **Staging** | Pre-release qualification, integration | Dedicated Kubernetes cluster | Anonymized or generated synthetic datasets |
-| **Production** | Live organisational operations | Production Kubernetes cluster | Authoritative live operational data |
+| `joinedcontext-platform` | workflow pin check, `cargo fmt --all --check`, `cargo clippy --workspace --all-targets --locked -- -D warnings`, `cargo test --workspace --lib --bins --locked`, `cargo doc -p jc-core`, kind documentation, model generator pytest and `jcctl model diff`, `bento lint` and `bento test`, gitleaks | `ci-full`: `cargo test --workspace --all-targets --all-features`, `cargo audit`, `cargo deny check`, Trivy filesystem | hourly schedule and on demand |
+| `joinedcontext-portal` | the same Rust gates, `cargo test --test openapi_tests`, the SDK lane (`pnpm typecheck`, `pnpm test`, `pnpm build`), the UI lane (`pnpm lint`, `pnpm test`, `pnpm build`), the reference apps, gitleaks | `ci-full`: whole workspace with all features, `cargo audit`, `cargo deny check`, Trivy, Playwright journeys for `ui/`, the SDK and each app | hourly schedule and on demand |
+| `joinedcontext-deployment` | `just _dev-assemble`, then per environment `helmfile template`, `kubeconform -strict`, image digest check, `conftest test -p policies`, rendered-secret and gitleaks scans, the golden object list in `.ci/golden/local.txt`, Kyverno policy unit tests, `pytest tests -q` | `ci-full`: Kyverno applied to rendered output, README commands, `scripts/test-deployment-variants.sh` and a k3d deployment | on demand |
+| `joinedcontext-conformance` | shellcheck, Robot dry runs, pytest collection, the `--selftest` of every verdict script, and the analysers that need no deployment (pipeline escape, project isolation, the forge side doors, the compliance and security gates) | one workflow per suite, plus `compliance`, `qualification-report`, `forge-side-door` and `readme` | on demand, each with its target URL as an input |
+| `joinedcontext-docs` | the checkers under `scripts/`, each with its own `--selftest`, markdownlint, and the truth gate against checkouts of the two public repositories | `docs-build` | on demand |
 
-### Synthetic Test Data Policy
-
-1. **Zero Production Data in Pre-Production:** Real citizen data, personal identifiers, production credentials, or unredacted IoT streams must never be imported into Development, CI, or Staging environments.
-2. **Deterministic Seed Generation:** Test data must be produced via reproducible generators using deterministic seeds. For entity generation, tests use `fake-rs` or custom generators producing valid URNs per [ADR-N-001](../Decisions/adr-n-001-rust-typescript-stack.md).
-3. **Data Model Conformance:** All synthetic entities must validate against the published JSON Schema draft-07 schemas derived from the LinkML domain models ([CC-12](../Requirements/city-as-code.md#2-repository-and-manifest-model)).
+`image.yml` in the platform and the Portal builds, signs and pushes the image by digest on every push to `main`. It is an artifact lane, not a verdict: `dev-apply` deploys what it publishes, so it is queued per ref instead of cancelled.
 
 ---
 
-## 3. CI Quality Gates
+## 3. What has to be green before a change lands
 
-Every pull request and merge to the main branch is subjected to mandatory quality gates executed in Gitea Actions.
+Trunk based, no branch protection, no pull requests for the MVP. The fast lane is the safety net.
 
-| Gate Identifier | Stage / Scope | Tooling & Checks | Blocking? | Failure Resolution Owner |
-|---|---|---|---|---|
-| `gate-lint-rust` | Code Style / Linting | `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings` | Yes | Committer |
-| `gate-lint-ts` | Code Style / Linting | `pnpm lint`, `pnpm typecheck`, Prettier | Yes | Committer |
-| `gate-unit-backend` | Unit Tests | `cargo test --workspace --lib` | Yes | Committer |
-| `gate-unit-frontend`| Unit Tests | `vitest run --coverage` | Yes | Committer |
-| `gate-proptest` | Correctness Invariants| `cargo test -p context-gateway --test proptests` | Yes | Security / Core Team |
-| `gate-manifest-schema`| Configuration | `jcctl validate --schema-dir ./schemas` | Yes | Committer |
-| `gate-conftest` | Policy As Code | `conftest test ./projects/... -p ./policies` | Yes | Author / Approver |
-| `gate-plan-diff` | GitOps Review | `jcctl plan --diff` published as MR comment | Yes | Reviewer / Approver |
-| `gate-pipeline-lint`| Ingestion Streams | `bento lint ./projects/**/bento.yaml`, `bento test` | Yes | Pipeline Author |
-| `gate-security-sast`| Security Scan | `gitleaks detect`, `cargo deny check`, `trivy fs` | Yes | Committer / SecOps |
-| `gate-e2e-playwright`| User Journeys | Playwright running on ephemeral k3d deployment | Yes | QA / Fullstack Dev |
-| `gate-conformance` | Standards Compliance| Robot Framework against Context Gateway endpoint | Yes | Core Team |
-| `gate-performance` | Latency / Throughput | k6 load scenario against staging baseline | Yes (if >5% regr.) | Core Team |
+1. Before the push, run only what the change touches: the test file or module you wrote (`cargo test -p <crate> --test <file>`, `pnpm vitest run <files>`, the render and `kubeconform` of the one chart), plus `cargo fmt --check` and `cargo clippy -p <crate> -- -D warnings`, or `pnpm lint` and `pnpm typecheck` for TypeScript.
+2. Right after the push, write the edge cases for what landed: empty input, an unknown name, no permission, a conflict, a red verdict, a secret typed into a field. They do not block the first push; the change is not done without them.
+3. The slow lanes are nobody's wait. `ci-full` fires on its own schedule, the cluster apply and the suites run in the hourly batch, and a red lane becomes a task.
+
+A red `main` comes before new work. Fix it forward: never revert without a task, never force-push, never disable or weaken a check to get green.
 
 ---
 
-## 4. Code Coverage & Ratchet Policy
+## 4. Environments and test data
 
-Code coverage is monitored continuously. The platform enforces a non-decreasing "coverage ratchet" policy: a merge request is blocked if it decreases test coverage for any affected component.
+`deployment/helmfile.yaml` defines eight environments: `testing`, `local`, `production`, `staging`, `smoke-test`, `dev`, `recovery-test` and `addons` for the optional add-ons. CI renders and gates each of them. One of them exists as a cluster today, the single-node `dev`, which is why a demo and a fix cycle share it.
 
-```text
-Minimum Required Coverage Baselines:
-├── crates/context-gateway   : 85% line coverage, 80% branch coverage
-├── crates/jcctl           : 85% line coverage, 80% branch coverage
-├── crates/portal-api        : 80% line coverage, 75% branch coverage
-├── crates/shared-kinds      : 90% line coverage, 85% branch coverage
-└── apps/portal-ui           : 75% line coverage, 70% branch coverage
-```
+| Environment | Purpose | Runs where | Data |
+|---|---|---|---|
+| `local` | a developer's own render and unit runs | workstation, k3d | fixtures in the test trees |
+| `testing`, `smoke-test`, `recovery-test` | the CI render gate, the k3d deployment test and the recovery drill | ephemeral runners | generated, thrown away with the cluster |
+| `dev` | the one live cluster: workbench and demo target | single-node k3s | seeded synthetic entities |
+| `staging`, `production` | rendered and gated, not yet deployed | not created yet | live data once they exist |
 
-Coverage is measured in CI using `cargo-tarpaulin` or `cargo-llvm-cov` for Rust crates, and `@vitest/coverage-v8` for frontend applications. Pull requests that introduce complex logic paths without corresponding unit or property tests are rejected automatically.
+### Test data
 
----
-
-## 5. Flakiness Quarantine Policy
-
-Flaky tests erode confidence in the CI pipeline. To maintain high engineering velocity while preserving strict gates, the platform employs a structured quarantine procedure:
-
-1. **Detection:** A test that fails intermittently without code changes (e.g. failing in 1 of 5 retries on identical git commits) is flagged automatically by the CI test reporter.
-2. **Quarantine Tagging:**
-   - In Rust: Test attribute is updated to `#[ignore = "quarantine: issue #<id>"]`.
-   - In TypeScript: Test is flagged with `test.skip('quarantine: issue #<id>', ...)`.
-   - In Playwright: Test is moved to `tests/quarantine/`.
-3. **Tracking & SLA:** A high-priority defect ticket must be logged immediately. The quarantined test must be root-caused, fixed, and un-quarantined within **7 calendar days**. If unresolved within 7 days, the ticket escalates to a release blocker.
-4. **Isolated Quarantine Execution:** Quarantined tests continue to execute in a non-blocking diagnostic CI job to gather telemetry and debug logs under load.
+1. No production data outside production. Real personal identifiers, production credentials and unredacted observation streams never enter a fixture, a test cluster or a CI run.
+2. Fixtures are committed and deterministic. The suites read them from `tests/*/fixtures/`, so two runs of the same commit compare.
+3. Every entity id a test mints follows `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}`, and the gateway refuses any other prefix with 400. A suite pointed at another deployment therefore takes that deployment's organization domain as an input.
+4. No secret, live host or real person appears in a fixture or on a page. Secrets reach a workload by `secretRef` and are resolved by the reconciler.
 
 ---
 
-## 6. Definition of Done (DoD) per Change Type
+## 5. Definition of Done per change type
 
-A task or merge request cannot be closed or merged until all applicable Definition of Done criteria are fulfilled.
+### A. Rust changes in `joinedcontext-platform` or `joinedcontext-portal`
 
-### A. Rust Backend Changes (`context-gateway`, `jcctl`, `portal-api`)
+- [ ] Unit tests for the new functions and for each branch, in the crate that owns the logic.
+- [ ] An integration test file for the behaviour a caller sees, named after that behaviour.
+- [ ] Edge cases covered: empty, unknown name, no permission, conflict, malformed input.
+- [ ] `cargo fmt --all --check` and `cargo clippy --workspace --all-targets -- -D warnings` clean, with no `allow(...)` added.
+- [ ] No `unwrap`, `expect` or panic on a request path.
+- [ ] A shape change run with the whole crate, not only the fast lane's `--lib --bins`.
+- [ ] The OpenAPI document regenerated by `utoipa` and `cargo test --test openapi_tests` green.
 
-- [ ] Unit tests added for all new functions and branch conditions.
-- [ ] Property-based tests updated or added if authorization, query rewriting, or data mapping logic was modified.
-- [ ] Database schema changes backed by clean `sqlx` migration files with matching rollback/test suites.
-- [ ] OpenAPI specification updated automatically via `utoipa`, and generated TypeScript client regenerated without compile errors.
-- [ ] Zero warnings reported by `cargo clippy --all-targets -- -D warnings`.
-- [ ] Code formatted per `cargo fmt`.
-- [ ] Coverage meets or exceeds the component baseline.
+### B. TypeScript changes in `ui/` or `sdk/`
 
-### B. TypeScript Frontend Changes (`portal-ui`)
+- [ ] A test file under `ui/tests/` for the screen or hook, exercising the control a person clicks.
+- [ ] `pnpm lint` and `pnpm typecheck` clean, with no `any` and no `ts-ignore`.
+- [ ] Keyboard path and screen reader labels checked; the WCAG scan in `e2e/accessibility/wcag.spec.ts` stays green.
+- [ ] Every new string added to `ui/src/locales/en.json`, `sk.json`, `cs.json` and `de.json`; `ui/tests/i18n.test.tsx` and the locale style test prove it.
+- [ ] `pnpm build` succeeds, which runs `tsc -b` over the tests as well.
 
-- [ ] Visual components covered by Vitest and React Testing Library tests.
-- [ ] New user workflows covered by an end-to-end Playwright journey executing against real UI controls.
-- [ ] Automated accessibility verification (`axe-core`) confirms zero WCAG 2.1 AA violations.
-- [ ] Translation keys added across all supported locales (`sk`, `en`, `de`, `cs`) and validated via `pnpm i18n:validate`.
-- [ ] Responsive design verified across mobile, tablet, and desktop viewports.
-- [ ] Production build succeeds without warnings (`pnpm build`).
+### C. Manifest and blueprint changes
 
-### C. Manifest & Blueprint Changes (`projects/`, `blueprints/`)
+- [ ] `jcctl validate --repo-dir <path>` passes.
+- [ ] `conftest` policies pass: quotas, permitted types, role restrictions.
+- [ ] Blueprint expansion asserted byte identical across runs.
+- [ ] `jcctl plan --repo-dir <path>` read before the change is applied, and applying twice yields an empty second plan.
 
-- [ ] Manifest validates against published JSON Schema draft-07 schemas (`jcctl validate`).
-- [ ] Conftest policies pass without violation (risk class, quotas, role restrictions).
-- [ ] Blueprint template expansion verified to be deterministic and pure (byte-identical across runs).
-- [ ] `jcctl plan` diff verified and reviewed in the pull request.
-- [ ] Idempotency confirmed: applying the change twice yields an empty diff on the second run.
+### D. Pipeline changes
 
-### D. Pipeline Changes (`bento.yaml`)
+- [ ] `bento lint` passes over the manifest.
+- [ ] Golden input to output cases pass via `bento test`, or `jcctl pipeline test --pipeline <manifest.yaml> --sample <file>` for a sample file.
+- [ ] Egress hosts declared and matched against the NetworkPolicy allowlist.
+- [ ] Credentials by `secretRef` only, never a literal token.
 
-- [ ] Pipeline passes `bento lint`.
-- [ ] Golden input-to-output test cases pass via `bento test`.
-- [ ] External network dependencies declared and matched against NetworkPolicy egress allowlists.
-- [ ] Credentials referenced strictly via `secretRefs`; no plaintext tokens present.
+### E. Chart and deployment changes
 
-### E. Helm Chart & Infrastructure Changes (`components/`, `helmfile.yaml`)
+- [ ] `scripts/render.sh <env> <out>` renders every environment, `kubeconform -strict` and `conftest` pass.
+- [ ] Kyverno restricted profile passes on the rendered output.
+- [ ] Images pinned by digest; the digest check in the render job proves it.
+- [ ] `.ci/golden/local.txt` updated in the same commit when the object list changes, and the diff explained in the commit message.
+- [ ] NetworkPolicies still default deny.
 
-- [ ] Manifests render cleanly via `helmfile template`.
-- [ ] Manifests pass Kyverno Pod Security Standards (PSS) restricted profile scan.
-- [ ] Clean deployment and rollback tested on an ephemeral `k3d` test cluster.
-- [ ] NetworkPolicies updated to maintain default-deny posture.
+### F. Documentation changes
 
-### F. Documentation Changes
+- [ ] The docs fast lane green, including the truth gate: every path, environment variable and operation a page names exists in the code.
+- [ ] Contract changes land here first, in their own commit, before the code that follows them.
+- [ ] An ADR published when a boundary or a non-negotiable decision moves.
 
-- [ ] Relative links verified; no broken anchor tags or missing references.
-- [ ] Any updated API behavior reflected in relevant OpenAPI specs and user guides.
-- [ ] ADR published if architectural boundaries or non-negotiable decisions were altered.
+---
+
+## 6. What the requirements ask for and is not built yet
+
+These are open requirements, not descriptions of the platform. A reader comparing this page with [Requirements/testing.md](../Requirements/testing.md) meets them first, so they are named here.
+
+- **TS-01** asks for unit test coverage verified in CI. No coverage tool is configured in any repository; the lanes assert that the tests pass, not how much they cover.
+- **TS-02**, **TS-03** ask for property-based tests with `proptest` over query rewriting and the representation translators. `proptest` is in no manifest. Those invariants are covered today by hand written cases: the gateway's edge-case test files and the representation parity suite in `tests/security/representations.py`.
+- **TS-20** asks CI to post the `jcctl plan` diff as a merge request comment. No workflow runs `jcctl plan`; the MVP has no pull requests to comment on.
+- **TS-24** asks for `npm audit` beside `cargo audit`. Only `cargo audit` and `cargo deny check` run, in the hourly `ci-full` lane.
 
 ## Related
 
-- [CC-01](../Requirements/city-as-code.md) — referenced above.
-- [R1–R15](../Requirements/access-control.md) — referenced above.
-- [GW1–GW31](../Requirements/gateway-firewall.md) — referenced above.
-- [R57](../Requirements/policy-firewall.md) — referenced above.
-- [testing](../Requirements/testing.md) — the TS requirements.
+- [01-backend-tests.md](01-backend-tests.md) — the Rust suites and how to run one.
+- [02-conformance-tests.md](02-conformance-tests.md) — the standards suites and their verdict scripts.
+- [06-security-tests.md](06-security-tests.md) — the access control, injection and secret hygiene suites.
+- [testing](../Requirements/testing.md) — the TS family this page is verified against.
+- [13-security.md](../Architecture/13-security.md) — the trust zones and the BSI TR-03187 controls the security suites check.

@@ -1,176 +1,125 @@
 ---
 sidebar_position: 5
 title: Configuration Plane & Pipeline Testing
-description: Manifest schema validation, Conftest policy gates, reconciler idempotency, and Bento pipeline testing.
+description: What validates a manifest, what gates an organization repository's merge request, and how a Bento pipeline is linted and tested.
 ---
 
 # Configuration Plane & Pipeline Testing
 
-The platform configuration is stored declaratively as code in the org repository ([CC-02](../Requirements/city-as-code.md#1-architecture-and-source-of-truth)). This chapter describes the validation pipelines that verify configuration manifests, Conftest policy guardrails, and Bento ingestion pipelines.
+This page is for whoever writes or reviews a manifest: what refuses a bad one, which gate runs where, and how a pipeline is proven before it ingests anything. The platform configuration lives as manifests in the organization repository ([CC-02](../Requirements/city-as-code.md#1-architecture-and-source-of-truth)). Two separate gates exist, and mixing them up is the usual confusion: `jcctl` validates the manifests of an organization repository, while `conftest` gates the Kubernetes manifests the deployment renders. Read off the code on 2026-09-20.
 
 ---
 
-## 1. Manifest Schema Validation
+## 1. Manifest validation
 
-Every manifest committed to the org repository must adhere to the standard envelope schema ([CC-09](../Requirements/city-as-code.md#2-repository-and-manifest-model)):
+Every manifest carries the envelope from `crates/jc-core/src/envelope.rs`: `apiVersion: joinedcontext.com/v1alpha1`, and `joinedcontext.com/v1alpha2` for `Pipeline`, which still reads a `v1alpha1` document as the `v1alpha2` it means.
 
-```yaml excerpt
+```yaml
 apiVersion: joinedcontext.com/v1alpha1
-kind: ContextSpace # or DataModel, Policy, Subscription, Endpoint, Pipeline
+kind: ContextSpace
 metadata:
-  name: air-quality
-  namespace: helsinki
+  name: ovzdusie
+  namespace: banskabystrica
 spec:
-  # Literal spec or NGSI-LD payload
+  title:
+    sk: Ovzdušie
 ```
 
-In CI, every YAML manifest is validated against published JSON Schema draft-07 schemas using `jcctl validate`:
+One command validates a whole repository:
 
 ```bash
-jcctl validate --repo-dir ./helsinki-repo --schemas-dir ./schemas/kinds
+jcctl validate --repo-dir ./banskabystrica
 ```
 
-Schemas reject unknown properties, missing metadata, invalid URN structures, and malformed entity payloads prior to pull request review.
+It is stronger than a schema check, and it is worth knowing why. Each manifest is parsed into its typed kind by `jc-core` with `deny_unknown_fields`, so a misspelled field and a literal password beside a `secretRef` are both parse errors rather than ignored keys. The typed parse then runs the cross-field invariants a schema cannot express, and each manifest must sit at the path its kind prescribes (MF-06). A finding names the file, the document inside it, the line and the field. A manifest that writes the organization's domain where `{orgDomain}` belongs is a warning, because the same file could not then render two environments (CC-74).
+
+The draft-07 schemas themselves are published by `jcctl schema export [--out <dir>]`; the Portal's forms are built from them. There is no `--schemas-dir` or `--schema-dir` option, and no separate schema directory to point at: the types are the schema.
 
 ---
 
-## 2. Conftest Policy Guardrails (OPA / Rego)
+## 2. The gate on an organization repository
 
-Platform security constraints and governance rules are codified as Open Policy Agent (OPA) policies and evaluated using `conftest`.
+`jcctl roles render --repo-dir <path>` writes four things into the organization repository from the `Role` and `RoleBinding` manifests under `users/`: `CODEOWNERS`, `policies/roles.json`, `policies/roles.rego` and the repository's own `.gitea/workflows/ci.yaml`. That workflow is the gate every merge request there passes, and it runs in the forge the organization uses, Gitea:
 
-```mermaid
-flowchart LR
-    MR["GitLab / Gitea Pull Request"] --> FILES["Touched Manifest Files"]
-    FILES --> CONFTEST["conftest test"]
-    CONFTEST --> P1["Policy 1: Quotas & Resource Caps"]
-    CONFTEST --> P2["Policy 2: Risk Class & Allowed Roles"]
-    CONFTEST --> P3["Policy 3: Scope Confinement (/admin)"]
-    CONFTEST --> P4["Policy 4: Zero Plaintext Secrets"]
-    CONFTEST --> P5["Policy 5: Public Dashboards / Endpoints"]
-    P1 & P2 & P3 & P4 & P5 -->|Pass| GATE["Gate Passed (Green / Yellow Lane)"]
-    P1 & P2 & P3 & P4 & P5 -->|Violate| BLOCK["MR Blocked with Explanation"]
-```
+1. **Every manifest parses and sits where its kind prescribes.** `jcctl validate --repo-dir /repo` in the pinned platform image (MF-09).
+2. **The rendered files are what `users/` says.** `jcctl roles render` is run again and `git diff --exit-code` compares `CODEOWNERS`, `policies/roles.json`, `policies/roles.rego`, `policies/tests` and the workflow itself. A hand-edited policy fails here (PF-51).
+3. **The author's bindings allow every change.** `jcctl roles input` builds a document from the diff (the author's login, their groups, and one entry per changed manifest with its path, action, kind, name, project and the whole document), then `conftest verify -p policies` and `conftest test /tmp/input.json -p policies -d policies/roles.json` decide (PF-52).
 
-### Mandated Conftest Policies
+`policies/roles.rego` denies a change no binding covers, and a rule may carry constraints on a manifest field: `equals`, `in` and `notIn`, evaluated against the document itself. That is how "this role may only publish endpoints whose audience is not public" is written today. There is no quota policy and no separate plaintext-secret policy: an inline credential is refused one step earlier, by the typed parse, and no quota is implemented anywhere in the code.
 
-#### 1. Quota Enforcement
+### Which changes need an approver
 
-Verifies that a project does not declare more than its allocated limit of active Context Spaces, resident pipeline streams, or public Endpoints:
-
-```rego
-# policies/quotas.rego
-package platform.quotas
-
-deny[msg] {
-    spaces := [s | s := input[_]; s.kind == "ContextSpace"]
-    count(spaces) > 10
-    msg := sprintf("Quota exceeded: Project declares %d spaces (max: 10)", [count(spaces)])
-}
-```
-
-#### 2. Risk Class & Role Validation
-
-Asserts that the author of the pull request possesses the required role declared in the blueprint metadata ([CC-59](../Requirements/city-as-code.md#10-blueprint-authorization-and-resource-ownership)).
-
-#### 3. Scope Confinement
-
-Validates that `ScopeDefinition` and `Policy` entities do not grant permissions outside the organizational unit's assigned scope tree ([ADR-N-004](../Decisions/adr-n-004-configuration-as-code-and-gitea.md)).
-
-#### 4. Zero Plaintext Secrets
-
-Scans all manifests to guarantee credentials are not embedded directly:
-
-```rego
-# policies/secrets.rego
-package platform.security
-
-deny[msg] {
-    input.kind == "Pipeline"
-    walk(input.spec, [path, value])
-    re_match("(?i)(password|secret|token|api_key)", path[count(path)-1])
-    not startswith(value, "secretRef:")
-    msg := sprintf("Plaintext secret detected at %v. Must use secretRef!", [path])
-}
-```
-
-#### 5. Public Endpoint & Dashboard Safety
-
-A dashboard marked `visibility: public` may **only** bind to layers referencing Endpoints whose `audience` is explicitly configured as `public`. Binding a public dashboard to an internal Context Space is blocked.
+`crates/jcctl/src/lanes.rs` derives the approval lane from what a change does, never from what the author says about it: green is auto-approved by the policy bot, yellow needs one domain approver, red needs the full chain. A proposal takes the lane of its strictest change, so one deletion among twenty additions still needs the red chain. Deletion, public exposure, federation and identity kinds are red; raising an agent profile's limits or widening its egress is red as well ([CC-63](../Requirements/city-as-code.md), CC-70, AG-47). `crates/jcctl/tests/lanes_tests.rs` is where a new kind's lane is asserted.
 
 ---
 
-## 3. Pull Request Plan & Reconciler Idempotency
+## 3. Conftest in our own repositories
 
-### Automated Plan in Merge Requests
+In `joinedcontext-deployment` the same tool gates the rendered Kubernetes manifests, per environment, in the fast lane: `conftest test --all-namespaces -p policies rendered-<env>.yaml` with conftest pinned to 0.69.0 by version and checksum. Three policies, all in package `main`:
 
-On every pull request, Gitea Actions executes:
+| Policy | What it denies |
+|---|---|
+| `policies/workloads.rego` | a container that does not set `runAsNonRoot`, asks for uid 0, does not `drop: [ALL]`, declares no memory limit, or shares the namespace's `default` ServiceAccount |
+| `policies/egress.rego` | a NetworkPolicy for a workload that fetches addresses somebody else chose (the pipeline runner, the gateway) whose egress leaves a private range reachable |
+| `policies/edge.rego` | an edge configuration whose rate-limit answer is not `application/problem+json` with a `Retry-After` |
 
-```bash
-jcctl plan --repo-dir . --gateway-url $STAGING_GATEWAY_URL > plan_output.txt
-```
-
-The resulting field-level diff is posted as an automated review comment, detailing exact creates, updates, and deletes.
-
-### Idempotency Assertion
-
-Automated integration tests apply the change into a transient broker and execute `jcctl plan` immediately afterward:
-
-```bash
-jcctl apply --plan plan_output.json
-jcctl plan --assert-empty
-```
-
-If the second plan detects any residual mutation, the reconciler has failed idempotency, and the build is failed.
+Kyverno asserts the workload properties again at admission; the Rego copy fails a pull request instead of a rollout. `kyverno test .ci/policies` runs the policy unit tests in the same lane.
 
 ---
 
-## 4. Bento Pipeline Testing
+## 4. Plan and idempotency
 
-Ingestion and ETL pipelines written for `warpstreamlabs/bento` are treated as first-class software artifacts.
+```bash
+jcctl plan --repo-dir ./banskabystrica [--gateway-url <url>] [--token-file <path>] [--json]
+jcctl apply --repo-dir ./banskabystrica [--prune] [--confirm-deletions]
+jcctl drift --repo-dir ./banskabystrica [--json] [--adopt-dir <path>]
+```
 
-### Repository Layout
+`plan` prints what the repository declares and, with `--gateway-url`, what the live side holds. Idempotency is asserted in `crates/jcctl/tests/apply_tests.rs`: apply, plan again, and the second plan is empty ([CC-18](../Requirements/city-as-code.md#3-reconciler-jcctl)). Drift is the same comparison in the other direction, and `--adopt-dir` writes the live state out as manifests to adopt.
+
+There is no `--assert-empty` and no `--diff` flag, and no CI lane of ours posts a plan as a merge request comment: [TS-20](../Requirements/testing.md) is open, and the MVP has no pull requests to comment on. In the Portal the plan a person reads before approving is rendered from the same `ChangeSet`.
+
+---
+
+## 5. Bento pipelines
+
+A pipeline folder holds the platform manifests and the Bento configuration side by side:
 
 ```text
-projects/mobility/pipelines/traffic-counter/
-├── pipeline.yaml              # Platform envelope & deployment class
-├── bento.yaml                 # Native Bento stream configuration
-├── bento_bento_test.yaml      # Golden tests for bento.yaml
-└── tests/                     # Fixtures too large to inline, and their own configs
-    └── decoder.yaml
+examples/ingestion/csv-fetch/
+├── pipeline.yaml            # the platform envelope: kind Pipeline
+├── datasource.yaml          # kind DataSource: where the data comes from
+├── bento.yaml               # the Bento stream configuration
+└── bento_bento_test.yaml    # golden cases for bento.yaml
 ```
 
-Bento pairs a test definition with the configuration of the same name in the same folder, so
-the tests for `bento.yaml` live in `bento_bento_test.yaml` beside it. A test file under
-`tests/` is only found when it is named after a configuration in that folder, which is where
-binary fixtures and the decoder configurations that read them belong.
+Bento pairs a test definition with the configuration of the same name in the same folder, which is why the tests for `bento.yaml` live in `bento_bento_test.yaml` beside it. A test under `tests/` is only found when it is named after a configuration in that folder, which is where binary fixtures and the decoder configurations that read them belong; `examples/ingestion/gtfs-rt/` is the example that needs both.
 
-### Pipeline Linting & Unit Testing
-
-In CI, every pipeline stream is linted and executed against test fixtures:
+The fast lane in `joinedcontext-platform` lints and runs every one of the 15 examples under `examples/ingestion/`:
 
 ```bash
-# Verify syntax and connector configurations
-bento lint ./projects/*/pipelines/*/bento.yaml
-
-# Execute golden file unit tests
-bento test ./projects/...
+bento lint ./examples/ingestion/*/bento.yaml ./examples/ingestion/gtfs-rt/tests/decoder.yaml
+bento test ./examples/ingestion/...
 ```
 
-`bento lint` refuses a configuration whose environment interpolations are unset, so CI exports
-a placeholder for each one before it runs; the runner gets the real value from its
-ServiceAccount. Lint only the Bento configurations: a pipeline folder also holds platform
-manifests, which are a different schema and are validated by `jcctl`.
+Two things to know before you run it. `bento lint` refuses a configuration whose environment interpolations are unset, so the lane exports a placeholder for each one; the runner gets the real value from its ServiceAccount. And lint only the Bento configurations: the platform manifests in the same folder are a different schema and are checked by `jcctl`.
 
-The worked examples are in the platform repository under `examples/ingestion/`, and the fast
-CI lane there lints and runs all four of them (PL-22).
+One pipeline against one sample file, without a cluster:
 
-### Network Egress Verification
+```bash
+jcctl pipeline test --pipeline examples/ingestion/csv-fetch/pipeline.yaml --sample sample.csv --format csv
+```
 
-A pipeline's declared `secretRefs` and external endpoints are verified against the Kubernetes NetworkPolicy allowlist. Pipelines attempting to connect to undeclared external IPs or unapproved ports are rejected in CI.
+It renders the manifest into a Bento configuration with an `http_client` input for the sample URL, so the fetch obeys the runner's own egress policy rather than a path that exists only in a test.
+
+### What is not checked
+
+A pipeline declares where it reads from, and the runner's NetworkPolicy declares where it may reach. No gate compares the two today: a manifest naming a host the policy does not allow validates here and fails at runtime, where the runner's log names the refused address. The egress policy above asserts the shape of that NetworkPolicy, not its agreement with a particular pipeline.
 
 ## Related
 
-- [CC-02](../Requirements/city-as-code.md) — referenced above.
-- [ADR-N-004](../Decisions/adr-n-004-configuration-as-code-and-gitea.md) — referenced above.
-- [00-strategy](00-strategy.md) — test families and where each lives.
-- [testing](../Requirements/testing.md) — the TS requirements.
+- [00-strategy.md](00-strategy.md) — the lanes these checks run in.
+- [01-backend-tests.md](01-backend-tests.md) — the `jcctl` test files behind this page.
+- [CC-02](../Requirements/city-as-code.md) — the repository as the source of truth.
+- [ADR-N-004](../Decisions/adr-n-004-configuration-as-code-and-gitea.md) — why the configuration lives in a forge.
+- [testing](../Requirements/testing.md) — the TS family this page is verified against.

@@ -152,7 +152,7 @@ Requirement family **AP-01…AP-71** for AI-generated, purpose-built application
 | AP-61…AP-63 | Forms that write | [16-apps-on-demand.md §8](../Architecture/16-apps-on-demand.md#8-forms-that-write-through-the-endpoint) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | AP-64…AP-67 | Applications, SDK, Artifacts & Basemaps | [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | AP-68…AP-71 | Durability, Resumption & Draft Governance | [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
-| AP-72…AP-74 | Source in git, one build by digest | [20-app-sdk.md#6-publication](../Architecture/20-app-sdk.md#6-publication) | [Testing/06-security-tests.md#2-policy-bypass--privilege-escalation-regression-suite](../Testing/06-security-tests.md#2-policy-bypass--privilege-escalation-regression-suite) |
+| AP-72…AP-74 | Source in git, one build by digest | [20-app-sdk.md#6-publication](../Architecture/20-app-sdk.md#6-publication) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 
 ## Related
 

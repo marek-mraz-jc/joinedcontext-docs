@@ -393,5 +393,5 @@ The `cargo` test covers what Bento cannot see: both manifests parse through `jc-
 - [06-pipelines](06-pipelines.md) — what Bento is, how a pipeline is deployed and how it is debugged.
 - [Architecture/08 §6](../Architecture/08-pipelines.md#6-external-feeds-the-datasource-kind-mf-35-pl-39) — the `DataSource` kind and the Bento input each type becomes.
 - [04-manifest-kinds](04-manifest-kinds.md) — every kind, its plural and its path in the repository.
-- [Testing/04](../Testing/04-configuration-and-pipeline-tests.md#4-bento-pipeline-testing) — where pipeline tests live and what CI runs.
+- [Testing/04](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) — where pipeline tests live and what CI runs.
 - [Requirements/pipelines](../Requirements/pipelines.md) — PL-01…PL-39, the normative statements behind these recipes.

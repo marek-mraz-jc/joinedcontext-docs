@@ -295,10 +295,10 @@ rows 9 and GW24 (both rung-4, both candidate ETSI CRs).
 
 | Requirement Range | Architecture Section | Test Family |
 |---|---|---|
-| I1–I4 | [Architecture/12-identity-and-access.md#1-identity-stack-specification-i1i4](../Architecture/12-identity-and-access.md#1-identity-stack-specification-i1i4) | [Testing/01-backend-tests.md#4-portal-api-integration--database-testing](../Testing/01-backend-tests.md#4-portal-api-integration--database-testing) |
-| R44–R50 | [Architecture/05-context-gateway.md#3-cache-architecture--revocation-propagation-r40-r48](../Architecture/05-context-gateway.md#3-cache-architecture--revocation-propagation-r40-r48) | [Testing/06-security-tests.md#2-policy-bypass--privilege-escalation-regression-suite](../Testing/06-security-tests.md#2-policy-bypass--privilege-escalation-regression-suite) |
-| R51–R55 | [Architecture/12-identity-and-access.md#4-authzen-discovery-endpoints-r51-r16-r17](../Architecture/12-identity-and-access.md#4-authzen-discovery-endpoints-r51-r16-r17) | [Testing/02-conformance-tests.md#6-dataspace-protocol-conformance](../Testing/02-conformance-tests.md#6-dataspace-protocol-conformance) |
-| R56–R60 | [Architecture/05-context-gateway.md#1-execution-pipeline-stages](../Architecture/05-context-gateway.md#1-execution-pipeline-stages) | [Testing/01-backend-tests.md#1-property-based-testing-in-context-gateway](../Testing/01-backend-tests.md#1-property-based-testing-in-context-gateway) |
+| I1–I4 | [Architecture/12-identity-and-access.md#1-identity-stack-specification-i1i4](../Architecture/12-identity-and-access.md#1-identity-stack-specification-i1i4) | [Testing/01-backend-tests.md#4-the-portal](../Testing/01-backend-tests.md#4-the-portal) |
+| R44–R50 | [Architecture/05-context-gateway.md#3-cache-architecture--revocation-propagation-r40-r48](../Architecture/05-context-gateway.md#3-cache-architecture--revocation-propagation-r40-r48) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
+| R51–R55 | [Architecture/12-identity-and-access.md#4-authzen-discovery-endpoints-r51-r16-r17](../Architecture/12-identity-and-access.md#4-authzen-discovery-endpoints-r51-r16-r17) | [Testing/02-conformance-tests.md#6-dataspace-protocol](../Testing/02-conformance-tests.md#6-dataspace-protocol) |
+| R56–R60 | [Architecture/05-context-gateway.md#1-execution-pipeline-stages](../Architecture/05-context-gateway.md#1-execution-pipeline-stages) | [Testing/01-backend-tests.md#2-the-context-gateway-harness](../Testing/01-backend-tests.md#2-the-context-gateway-harness) |
 
 ## Related
 

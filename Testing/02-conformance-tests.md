@@ -1,44 +1,38 @@
 ---
 sidebar_position: 3
 title: Conformance & Standards Verification
-description: Automated compliance suites for ETSI GS CIM 009, OGC API Features, SensorThings API, and MCP.
+description: The standards suites, what each one claims, which surfaces they run against, and how to run one.
 ---
 
 # Conformance & Standards Verification
 
-joinedcontext avoids proprietary vendor lock-in by adhering strictly to open standards. Every release is tested against official external compliance suites to prove protocol conformance.
+This page is for whoever has to prove that a surface still speaks its standard: which suite covers it, what the platform claims, and what a run needs. Every suite lives in `joinedcontext-conformance`, one folder per standard, each with a `run.sh` and a README. The claims below were read off the code on 2026-09-20; where a suite asserts more than the code implements, this page says so.
+
+Run one suite through the runner's entrypoint, which takes suite folder names and writes its reports under `JC_REPORTS_DIR`:
+
+```bash
+NGSILD_URL=https://{host}/cs/{space}/ngsi-ld/v1 jc-conformance etsi
+```
+
+The suites with a runner today are `etsi`, `etsi-ttf`, `ogc`, `sta`, `mcp`, `dsp`, `schemathesis`, `security`, `models`, `ckan`, `chaos`, `pipelines`, `e2e`, `playwright` and `k6`. Each has a `workflow_dispatch` lane of its own in the conformance repository, with the target URL as an input; the fast lane there proves the runners rather than the platform.
 
 ---
 
 ## 1. ETSI GS CIM 009 NGSI-LD Conformance
 
-The platform's context broker and security gateway must pass the official ETSI NGSI-LD Testing Task Force (TTF) Robot Framework test suite.
+The broker and the gateway in front of it are held to the official ETSI NGSI-LD Testing Task Force Robot Framework suite.
 
-```mermaid
-flowchart TD
-    ROBOT["ETSI Robot Framework Suite<br/>(official test cases)"]
-    
-    subgraph SUT["System Under Test Matrix"]
-        M1["Matrix 1: Vanilla Antares Broker (Direct)"]
-        M2["Matrix 2: Broker behind Context Gateway (PEP Embedded)"]
-        M3["Matrix 3: Broker behind Context Gateway (PEP Standalone)"]
-        M4["Matrix 4: Broker via Shared Endpoint Slug (/api/endpoint/{endpointSlug}/ngsi-ld/v1)"]
-    end
-    
-    ROBOT --> M1
-    ROBOT --> M2
-    ROBOT --> M3
-    ROBOT --> M4
-```
+### System under test matrices
 
-### Testing Matrix
+Three matrices can be run today:
 
-The test suite is executed across four operational modes:
+1. **The vanilla broker.** The NGSI-LD API root of the broker itself. This is baseline engine compliance, and it is also what proves the suite: two cases used to demand `200` where clause 5.7.2.4 mandates `BadRequestData`.
+2. **A context space through the gateway**, `/cs/{space}/ngsi-ld/v1`. The same data with the enforcement point in front of it ([SP-03](../Requirements/space-surface.md#1-url-scheme)).
+3. **An endpoint slug**, `/api/endpoint/{endpointSlug}/ngsi-ld/v1`. A standard NGSI-LD client against one endpoint's own root.
 
-1. **Vanilla Context Broker:** Confirms baseline engine compliance.
-2. **Context Gateway in Embedded Mode:** Proves that compiling the PEP inside the broker preserves standard semantics.
-3. **Context Gateway in Standalone Mode:** Proves transparent proxy operation through APISIX and the Rust gateway.
-4. **Endpoint Slug URL Path:** Validates that standard NGSI-LD clients execute successfully against `/api/endpoint/{endpointSlug}/ngsi-ld/v1/...` ([SP-03](../Requirements/space-surface.md#1-url-scheme)).
+[Architecture/05](../Architecture/05-context-gateway.md#4-deployment-modes-embedded-vs-standalone) also describes an embedded mode, the enforcement point compiled into the broker. No code implements it: the broker does not depend on the gateway crate, so there is no fourth matrix to run, and the suite README's fourth entry is a plan rather than a lane.
+
+Matrices 2 and 3 differ from matrix 1 in more than latency. A broker accepts any syntactically valid URN; the gateway refuses an identifier whose organization and context space are not the endpoint's ([SP-02](../Requirements/space-surface.md#1-url-scheme), GW20), so a suite that mints its own identifiers has to be given the deployment's `NGSILD_ORG_DOMAIN` and `NGSILD_SPACE` or every case fails on its fixtures instead of on the clause under test.
 
 ### Execution in CI
 
@@ -77,6 +71,11 @@ clause 5.7.2.4 mandates `BadRequestData` for a query with no type selector, attr
 geoquery or local scope. A suite nothing executes can disagree with the specification it cites and
 still look healthy.
 
+Beside it in `tests/etsi/` are three temporal suites, run when their URL is given: `temporal.robot`
+(CIM 009 clauses 6.18 to 6.20), `temporal_projected.robot` through a ModelProjection, and
+`temporal_federated.robot` over Context Source registrations. `NGSILD_PROJECTED_URL` and
+`NGSILD_FEDERATED_URL` select them; empty skips them instead of failing.
+
 Matrix 3 is 28 of those 31 today, measured against the published gateway image in front of the
 same broker, with the endpoint table loaded from a three-manifest repository (a context space, a
 public endpoint, and a policy granting the role `public` the operations the suite performs). The
@@ -93,9 +92,10 @@ docker run --rm -e NGSILD_URL=https://{host}/cs/{space}/ngsi-ld/v1 \
 ```
 
 The full Testing Task Force suite is `tests/etsi-ttf/`. It fetches the official suite at a pinned
-commit rather than vendoring it, and runs all five legs — `CommonBehaviours`,
-`ContextInformation`, `ContextSource`, `DistributedOperations` and `jsonldContext` — unless
-`TTF_LEGS` narrows the run to some of them:
+commit rather than vendoring it, and `run.sh` runs all five legs by default: `CommonBehaviours`,
+`ContextInformation`, `ContextSource`, `DistributedOperations` and `jsonldContext`. `TTF_LEGS`
+narrows the run, and the `etsi-ttf` workflow's own default input leaves `DistributedOperations`
+out, so a dispatch with the defaults runs four of the five:
 
 ```bash
 docker run --rm -e NGSILD_URL=https://{host}/cs/{space}/ngsi-ld/v1 \
@@ -107,8 +107,8 @@ Reports (`output.xml`, `log.html`, `report.html`) land in `reports/etsi-ttf/`.
 
 Two properties of the system under test decide whether a failure in this suite means anything.
 
-The suite runs three mock servers of its own — a notification receiver, a Context Source and an
-`@context` server — and binds each on `TTF_CALLBACK_HOST` while telling the system under test to
+The suite runs three mock servers of its own, a notification receiver, a Context Source and an
+`@context` server, and binds each on `TTF_CALLBACK_HOST` while telling the system under test to
 call back on that same address, so it has to be an address of the runner that the system under
 test can reach (`127.0.0.1` when both share a network namespace, the runner's routable address on
 a cluster). `run.sh` refuses a value it cannot bind rather than letting Robot stall on it.
@@ -142,88 +142,96 @@ therefore cannot rot, and a deviation cannot be parked indefinitely.
 
 ---
 
-## 2. OGC API - Features Part 1 Conformance
+## 2. OGC API - Features Part 1
 
-Endpoints configured with geospatial representations expose data via OGC API - Features Part 1: Core ([SP-04](../Requirements/space-surface.md#1-url-scheme)).
+Endpoints that carry a geospatial representation serve OGC API - Features ([SP-04](../Requirements/space-surface.md#1-url-scheme)).
 
-### Conformance Classes Claimed
+### Conformance classes claimed
 
-The platform formally claims and tests compliance for:
+The landing page advertises exactly the five classes in `crates/context-gateway/src/translators/ogc.rs`:
 
 - `http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core`
-- `http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/oas30` (OpenAPI 3.0 definition)
+- `http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/oas30`
 - `http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/geojson`
-- `http://www.opengis.net/spec/ogcapi-features-2/1.0/conf/crs` (Coordinate Reference Systems)
-- `http://www.opengis.net/spec/cql2/1.0/conf/basic-cql2`, `…/conf/cql2-text`, `…/conf/cql2-json` (CQL2 basic subset mapped to `q`, EP-35)
-- `http://www.opengis.net/spec/ogcapi-features-3/1.0/conf/filter`, `…/conf/features-filter`
+- `http://www.opengis.net/spec/ogcapi-features-2/1.0/conf/crs`
+- `http://www.opengis.net/spec/ogcapi-features-3/1.0/conf/basic-cql2`
 
-Not claimed and not advertised: HTML, Part 4 (Create/Replace/Update/Delete), advanced/spatial/temporal CQL2 beyond EP-35.
+Not claimed and not advertised: HTML output, Part 4 (create, replace, update, delete), the CQL2 text and JSON conformance classes of their own, and anything in CQL2 beyond the subset [EP-35](../Requirements/endpoints.md) lists. The compiler refuses an unsupported construct by name rather than ignoring it, which is why a filter the endpoint cannot honour is a `400` and never a silently wider answer.
 
-### Automated TEAM-ENGINE Validation
+### The two runs
 
-Verification is performed using OGC's official `ets-ogcapi-features10` test suite:
+`tests/ogc/` runs the query contract the platform owns (`test_cql2_filtering.py`: the advertised class list, `bbox`, `datetime`, CQL2 comparison and its refusals, pagination, `404` on an unknown feature, `405` on every write) and then the official `ets-ogcapi-features10` Abstract Test Suite through TEAM Engine, whose image is pinned by digest in `run.sh`. `tests/ogc/check_ogc_results.py` turns the TestNG document into the verdict, because the runtime exits `0` even when cases failed.
 
 ```bash
-docker run --rm --network host \
-  -v $(pwd)/reports/ogc:/root/teamengine/reports \
-  ogccite/ets-ogcapi-features10:latest \
-  http://localhost:8080/api/endpoint/test-slug/ogc/features
+OGC_LANDING_URL=https://{host}/api/endpoint/{slug}/ogc/features jc-conformance ogc
 ```
 
+`OGC_COLLECTIONS` bounds how many collections the Abstract Test Suite walks (three by default, `-1` for all), and `TE_BASE_URL` points the run at a TEAM Engine that is already up instead of starting one.
+
 ---
 
-## 3. OGC SensorThings API (STA) v1.1 Verification
+## 3. OGC SensorThings API v1.1
 
-Endpoints exposing IoT sensor feeds project NGSI-LD entities into OGC SensorThings API v1.1 Sensing profiles.
+An endpoint with the SensorThings representation projects entities into the Sensing profile read path. OGC publishes no CITE suite for v1.1, so `tests/sta/` asserts the profile against the response bodies.
 
-### Conformance Classes
+`sta/v1.1/` advertises three requirement classes, from `crates/context-gateway/src/translators/sta.rs`: `http://www.opengis.net/spec/iot_sensing/1.1/req/datamodel`, `.../req/resource-path` and `.../req/request-data`.
 
-| Conformance Class | Status | Architectural Basis |
+| Query option | State | How it is served |
 |---|---|---|
-| **Core Sensing Entities** | Claimed | `Things`, `Datastreams`, `Observations`, `Locations`, `ObservedProperties` |
-| **Observation Filtering ($filter)** | Claimed | Transpiled to NGSI-LD `q` and `temporalQ` queries |
-| **Field Projection ($select)** | Claimed | Transpiled to NGSI-LD `attrs` parameter |
-| **Entity Expansion ($expand)** | Claimed | Supported for parent/child relations (`Datastream/Observations`) |
-| **DataArray Extension** | Not Claimed | Excluded by design; raw bulk arrays are handled via Parquet export |
-| **MultiDatastream Extension** | Not Claimed | Multi-property streams are modeled as separate NGSI-LD Datastreams |
-| **Tasking / Actuation Core** | Not Claimed | Write operations must use native NGSI-LD or Bento pipeline ingests |
+| `$filter` | implemented | compiled into the NGSI-LD `q` and a temporal window; a predicate it cannot compile is a `400` |
+| `$expand` | implemented | parent to child relations, `Datastream/Observations` |
+| `$top`, `$skip` | implemented | one page per broker request, `$skip` becomes `lastN`, bounded by the gateway's own maximum |
+| `$count` | implemented | `@iot.count` on the collection |
+| `$orderby` | partly | newest first is honoured on the page; any other ordering is not |
+| `$select` | **not implemented** | the gateway reads no `$select`; it is neither transpiled to `attrs` nor refused |
 
-Conformance is asserted using an automated integration suite verifying HTTP response bodies against OGC 15-078r6 schemas.
+The last row is a claim this documentation set and `tests/sta/README.md` both made and the code does not keep. Until the gateway either serves `$select` or refuses it, `tests/sta/test_sta_sensing.py::test_ts08_select_returns_only_the_requested_fields` is a red case waiting for a dispatch, not a proven class.
 
----
-
-## 4. Model Context Protocol (MCP) Compliance
-
-The Context Gateway serves an MCP Streamable HTTP endpoint for AI agent interaction ([SP-14](../Requirements/space-surface.md#4-per-space-mcp-instances)).
-
-### Conformance Assertions
-
-MCP endpoints are evaluated against the official TypeScript SDK compliance validator (`@modelcontextprotocol/inspector`):
-
-1. **Stateless HTTP Transport:** Asserts compliance with MCP Streamable HTTP (2026-07-28 spec). Long-lived SSE connections must not leak memory.
-2. **JSON-RPC 2.0 Compatibility:** Verifies structured error handling, request/response batching, and notification events.
-3. **OAuth 2.1 Resource Server Binding:** Proves endpoint serves `/.well-known/oauth-protected-resource` metadata per RFC 9728 and validates RFC 8707 audience tags.
-4. **Tool Annotation Integrity:** Confirms that read-only tools carry `readOnlyHint: true` and mutations carry `destructiveHint: true`.
+Not claimed: the DataArray extension, MultiDatastream, and Tasking or Actuation. Bulk reads leave through the file representations (`file.csv`, `file.xlsx`, `file.zip`, `file.geojson`), not through an STA array, and every write to `sta/v1.1/` is a `405`.
 
 ---
 
-## 5. JSON-LD 1.1 Specification Conformance
+## 4. Model Context Protocol
 
-The platform's data-modeling pipeline converts LinkML schemas into valid JSON-LD 1.1 `@context` definitions and JSON Schema draft-07 artifacts ([CC-12](../Requirements/city-as-code.md#2-repository-and-manifest-model)).
+The gateway serves an MCP Streamable HTTP surface per space and per endpoint, and the Portal serves one for the configuration plane ([SP-14](../Requirements/space-surface.md#4-per-space-mcp-instances)).
 
-Tests evaluate the `@context` generator against the W3C JSON-LD 1.1 official test suite:
+`tests/mcp/` is a pytest suite of the platform's own, not the TypeScript inspector. It asserts:
 
-- Expansion, Compaction, and Flattening algorithms conform to W3C recommendations.
-- Internationalized attribute mappings utilize `@container: @language`.
-- Terms map unambiguously to fully qualified IRIs without namespace collisions.
+1. **The handshake.** `initialize` negotiates the protocol version the gateway implements, `2025-06-18`, and the capabilities it announces.
+2. **JSON-RPC 2.0 framing.** Responses, errors and notifications carry the shapes the specification requires.
+3. **RFC 9728 binding.** An anonymous call is a `401` whose `WWW-Authenticate` names `resource_metadata`, and that metadata document answers `200` without a login redirect.
+4. **Tool annotations.** A query tool declares `annotations.readOnlyHint: true`; a mutating tool declares `destructiveHint`.
+5. **Isolation.** A token for one space reaches no other space's tools, resources or prompts, and a private space's surface says no more than an unknown one.
+6. **Read parity.** `test_mcp_read_parity.py` asks the same question over MCP and over the REST surface and fails when the two answers differ, so a tool cannot become a second, wider read path.
 
-## 6. Dataspace Protocol conformance
+`tests/mcp/selftest.py` runs those assertions against `stub_mcp_server.py` in a broken configuration in the fast lane, so a check that can no longer fail is caught on the commit that breaks it.
 
-The connector addon runs the Dataspace Protocol conformance test kit in both roles in CI, plus platform-level tests: an accepted agreement yields exactly the Policy entities the ODRL mapper predicts (DS-10), agreements cannot exceed the Endpoint ceiling (DS-03), and termination revokes tokens and grants within 5 s (DS-12).
+---
+
+## 5. Data model artifacts and JSON-LD
+
+The data modelling path turns LinkML sources into the artifacts an endpoint publishes ([CC-12](../Requirements/city-as-code.md#2-repository-and-manifest-model)). `tests/models/` holds it to them, against a projects tree given by `PROJECTS_DIR`:
+
+- The generated artifacts are committed beside their source: `json-schema/{name}.v{major}.json`, `context/{name}.v{major}.jsonld`, `docs/{name}.md`, `examples/{name}.example.jsonld`.
+- The committed JSON Schema is draft-07, with none of the 2019-09 or 2020-12 keywords.
+- The semantic version major matches the `v{major}` segment of the artifact paths, and the lifecycle is one of `draft`, `published`, `deprecated`, `retired`.
+- The served SHACL shapes accept the committed example entity expanded with the served `@context`, and reject an entity that violates the model. pySHACL does the validation; `selftest_endpoint.py` proves toothless shapes go red.
+- `test_mapping_parity.py` runs the same mapping through both engines and fails when they disagree.
+
+There is no run of the W3C JSON-LD 1.1 test suite here. The `@context` documents are checked by expanding the committed examples through them, which is the property the platform depends on; the algorithms themselves are the JSON-LD library's.
+
+---
+
+## 6. Dataspace Protocol
+
+`tests/dsp/` runs the Eclipse Dataspace Protocol test kit, pinned by digest, against the connector addon as the system under test ([DS-05](../Requirements/data-space.md)). `check_dsp_results.py` decides the verdict, because the runtime exits `0` even when every case failed. The lane is `workflow_dispatch` with the connector's DSP URL, its base URL and its `did:web` participant id as inputs.
+
+The platform half of the protocol is covered in the gateway crate rather than here: `crates/context-gateway/tests/odrl_compiler_tests.rs` asserts that an accepted agreement yields exactly the grants the ODRL mapper predicts and that an agreement cannot exceed the endpoint's ceiling, and the dataspace token files assert what a foreign token may reach.
 
 ## Related
 
-- [SP-03](../Requirements/space-surface.md) — referenced above.
-- [CC-12](../Requirements/city-as-code.md) — referenced above.
-- [00-strategy](00-strategy.md) — test families and where each lives.
-- [testing](../Requirements/testing.md) — the TS requirements.
+- [00-strategy.md](00-strategy.md) — the lanes, and which of these suites the hourly batch runs.
+- [01-backend-tests.md](01-backend-tests.md) — the in-crate tests behind these surfaces.
+- [05-deployment-and-performance-tests.md](05-deployment-and-performance-tests.md) — the k6 budgets and the chaos drills.
+- [SP-03](../Requirements/space-surface.md) — the URL scheme the matrices walk.
+- [testing](../Requirements/testing.md) — the TS family this page is verified against.

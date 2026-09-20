@@ -26,7 +26,7 @@ One LinkML model per Context Space is the truth (DM-01). An Endpoint exposes a s
 
 | Requirement Range | Architecture Section | Test Family |
 |---|---|---|
-| MP-01…MP-03 | [Architecture/04-context-spaces-and-endpoints.md#3b-the-named-projection-of-a-model](../Architecture/04-context-spaces-and-endpoints.md#3b-the-named-projection-of-a-model) | [Testing/01-backend-tests.md#1-property-based-testing-in-context-gateway](../Testing/01-backend-tests.md#1-property-based-testing-in-context-gateway) |
+| MP-01…MP-03 | [Architecture/04-context-spaces-and-endpoints.md#3b-the-named-projection-of-a-model](../Architecture/04-context-spaces-and-endpoints.md#3b-the-named-projection-of-a-model) | [Testing/01-backend-tests.md#2-the-context-gateway-harness](../Testing/01-backend-tests.md#2-the-context-gateway-harness) |
 
 ## Related
 

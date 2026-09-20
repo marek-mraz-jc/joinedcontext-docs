@@ -1,152 +1,94 @@
 ---
 sidebar_position: 4
 title: Frontend, UI & End-to-End Testing
-description: Unit testing, accessibility audits, and comprehensive Playwright browser journeys for the Portal UI.
+description: The Portal UI test suites, the browser journeys, the accessibility audit and the locale checks.
 ---
 
 # Frontend, UI & End-to-End Testing
 
-The user-facing Portal UI is built with Vite, React 19, TypeScript, TanStack Query/Router, and MapLibre GL JS / deck.gl. This chapter outlines the frontend verification strategy.
+This page is for whoever changes a screen: which suite covers it, how a journey reaches the view, and what has to hold before the change lands. The Portal UI is Vite, React 19, TypeScript, TanStack Query and Router, `@rjsf/core` forms, MapLibre GL and deck.gl, and i18next with ICU. Everything named here was read off the trees on 2026-09-20.
+
+Three suites cover the frontend, in two repositories:
+
+| Suite | Where | Runs |
+|---|---|---|
+| Component and hook tests | `joinedcontext-portal`, `ui/tests/`, over 200 files | every push, in the fast lane |
+| Playwright specs against a built UI | `joinedcontext-portal`, `ui/e2e/` | the hourly `ci-full` lane |
+| Browser journeys against a live deployment | `joinedcontext-conformance`, `e2e/journeys/`, 18 specs | dispatched at a deployment |
 
 ---
 
-## 1. Unit & Component Testing with Vitest
+## 1. Component tests with Vitest
 
-Unit tests execute in Vitest using `jsdom` or `happy-dom`. Components are rendered using `@testing-library/react`.
+`pnpm test` in `ui/` runs Vitest over `ui/tests/` in `jsdom`, with `@testing-library/react` and `@testing-library/user-event`. One file per screen, hook or mapper, named after it.
 
-### Testing Scope
+What the files assert:
 
-- **Schema-Driven Form Widgets:** Asserts that `@rjsf/core` custom widgets render correctly from JSON Schema draft-07 schemas, enforce validation rules, and emit sanitized data.
-- **State Reducers & URL Sync:** Validates that search filters, pagination tokens, and sorting states synchronize bidirectionally with URL search parameters.
-- **Client Mocking:** Network requests from the generated `openapi-typescript` client are intercepted via Mock Service Worker (`msw`), ensuring tests run without live server dependencies.
+- **Schema-driven forms.** The `@rjsf/core` widgets render from the JSON Schema the API publishes, refuse what the schema refuses, and show the help text of the UiSchema. `ui/tests/form_help.test.ts` holds that help to one sentence in each of the four shipped locales, which is why adding a schema field breaks a test you did not write.
+- **State and URL.** Filters, pagination cursors and sort order survive a round trip through the URL search parameters.
+- **The API client.** The generated `openapi-typescript` client is exercised against a stubbed `fetch`; there is no Mock Service Worker in the tree.
+- **Accessibility of a component.** `ui/tests/a11y.test.tsx` runs `axe-core` over rendered components, ahead of the browser audit.
+
+`pnpm lint` and `pnpm typecheck` are the other two gates. `pnpm typecheck` is `tsc -b`, which type checks `ui/tests` as well; `tsc -p` alone misses them. There is no Prettier in this repository and no coverage report: `eslint` and `tsc -b` are the format and type gate.
+
+---
+
+## 2. Playwright, twice
+
+### Against a built UI, in `joinedcontext-portal`
+
+`pnpm e2e` in `ui/` starts the built UI through Playwright's `webServer` and drives Chromium only. `ui/e2e/` covers the screens a person clicks (dashboards, pipelines, sharing, approvals, the pipeline editor, the preview bridge) and `ui/e2e/live/` holds the journeys that need a real deployment behind the UI: the assistant reading and creating, a workspace copy, secrets never echoed, refusals for a viewer, hostile names, and the forms checklist. Visual baselines live in `ui/e2e/visual.spec.ts-snapshots` and are only ever regenerated from a CI artifact, never from a developer's machine, because a different font renders a different picture.
+
+### Against a live deployment, in `joinedcontext-conformance`
+
+`e2e/journeys/` is 18 specs run against `BASE_URL` with Keycloak OIDC login. Chromium by default; `E2E_ALL_BROWSERS` adds Firefox and WebKit.
+
+```text
+01-onboarding-login      07-endpoints-manager     13-dashboard-live
+02-blueprint-flow        08-service-account-key   14-drift-revert-adopt
+03-approval-review       09-pipelines             15-session
+04-map-dashboard         10-approval-round-trip   16-role-permissions
+05-deckgl-visualization  11-access-matrix         17-assistant-navigation
+06-drift-management      12-localization          18-generate-application
+```
+
+Two rules make these journeys worth their runtime:
+
+1. **No shortcut URLs.** A journey reaches a view by clicking what a person clicks, through `getByRole` and `getByLabel`. A view unreachable for a keyboard user fails here instead of passing an audit nobody can open.
+2. **A missing fixture skips, a missing credential fails.** `PORTAL_DENSE_DASHBOARD` unset skips the deck.gl journey, because an absent dataset is not a defect of the Portal; `PORTAL_USER` unset fails the run and names the variable, because a silent anonymous run would look like a broken Portal. `JC_DRIFT_TOKEN` is the scoped ServiceAccount that writes the drift for journey 14, never an admin credential.
+
+`e2e/README.md` lists every variable and what an unset one does. Reports land under `JC_REPORTS_DIR`.
+
+---
+
+## 3. The accessibility audit
+
+`e2e/accessibility/wcag.spec.ts` runs `@axe-core/playwright` with the WCAG 2.1 A and AA tags over the nine core views, each opened by clicking: the landing dashboard, the flow gallery, approvals, data models, context spaces, pipelines, endpoints, data access and dashboards. A tenth case opens a generated blueprint form and audits it, because a form built from a schema at runtime is where a label goes missing ([TS-13](../Requirements/testing.md), UI-15, UI-16).
+
+A serious or critical violation fails the case, and the report names the view. Keyboard paths are asserted in the journeys themselves: a control a journey cannot reach with `Tab` and `Enter` fails the journey.
+
+---
+
+## 4. Locale completeness
+
+Four locales ship: Slovak (`sk`), English (`en`), German (`de`) and Czech (`cs`), all under `ui/src/locales/`. `scripts/check-i18n.py` in the conformance repository makes three checks, and its `--selftest` proves each one goes red on a bundle that breaks it:
+
+1. **Key parity.** Every key of the reference bundle exists in every other locale, and no locale carries a key the reference dropped.
+2. **Placeholder parity.** Every ICU argument a message uses exists in its translation, so a translated string never renders `{name}` or drops the value.
+3. **ICU syntax.** Braces balance, and every `plural`, `select` and `selectordinal` block declares the `other` category ICU requires.
+
+With `--sources ui/src` it also asserts that every key used in the code as `t('…')` exists in the reference bundle, because a mistyped key renders the key itself to the reader.
 
 ```bash
-# Execute frontend unit test suite with coverage
-pnpm --filter portal-ui test:unit --coverage
+python3 scripts/check-i18n.py --locales ui/src/locales --sources ui/src
 ```
 
----
-
-## 2. Playwright End-to-End User Journeys
-
-Playwright tests execute in real Chromium, Firefox, and WebKit browsers. **Shortcut URL mutations are strictly forbidden**: tests must navigate by clicking real buttons, filling forms, and responding to dialogues, precisely mirroring real user interaction.
-
-```mermaid
-sequenceDiagram
-    actor Tester as Playwright Browser Engine
-    participant UI as Portal UI (React)
-    participant GW as Context Gateway
-    participant Broker as Context Broker
-    
-    Tester->>UI: Fills login form & clicks "Sign In"
-    UI->>GW: POST /api/auth/login
-    GW-->>UI: JWT Auth Token (OIDC bearer)
-    Tester->>UI: Clicks "+ New Context Space"
-    UI->>Tester: Renders RJSF Form from JSON Schema
-    Tester->>UI: Enters name, selects LinkML schema, clicks "Create"
-    UI->>GW: POST /api/v1/spaces (Creates MR in Gitea)
-    GW-->>UI: 201 Created (Status: Deploying)
-    UI-->>Tester: Displays live status chip: "Deploying" -> "Live"
-```
-
-### The 12 Mandatory End-to-End User Journeys
-
-Every pull request qualifying for release must pass the 12 platform journeys:
-
-#### Journey 1: User Onboarding & Organization Setup
-
-Navigates to the Organization management console, enters invitation details for a new user, checks invitation email simulation, completes first-login password creation, and verifies presence in the organization directory ([User Guide 07](../User-Guide/07-users-roles-approvals.md)).
-
-#### Journey 2: Project Creation & Team Assignment
-
-Selects the organization, clicks "Create Project", fills project metadata, selects team members from Keycloak groups, assigns project-scoped roles, and validates that the project dashboard renders cleanly.
-
-#### Journey 3: Context Space Initialization
-
-Opens a project, clicks "Add Context Space", fills the identifier and human title, selects storage tier options, and verifies the space transitions from *Draft* to *Live*.
-
-#### Journey 4: LinkML Model Import & Authoring
-
-Opens the Data Models view, clicks "Import Smart Data Model", searches the FIWARE catalog for `WeatherObserved`, reviews generated LinkML YAML, edits an attribute slot, validates real-time preview of JSON Schema and `@context`, and publishes the model ([User Guide 03](../User-Guide/03-data-models.md)).
-
-#### Journey 5: Ingestion Pipeline Deployment
-
-Navigates to the Blueprint Gallery, selects the "MQTT Ingestion Flow", inputs broker connection parameters, selects the target Context Space and Data Model, fills credentials into secret inputs, and clicks "Deploy Flow" ([User Guide 04](../User-Guide/04-pipelines.md)).
-
-#### Journey 6: Live Data Exploration
-
-Opens the Context Space entity explorer, triggers a simulated MQTT message via a test fixture, observes real-time appearance of the entity on the screen, and inspects its normalized properties.
-
-#### Journey 7: Multi-Layer Dashboard Construction
-
-Navigates to Dashboards, clicks "Create Dashboard", adds a MapLibre base layer, adds a point layer bound to the Context Space, configures dynamic `colorBy` rules on an ambient temperature attribute, adds a deck.gl heatmap overlay, and saves the dashboard ([User Guide 06](../User-Guide/06-dashboards.md)).
-
-#### Journey 8: Endpoint Configuration & Data Sharing
-
-Opens Endpoint Management, creates a new Endpoint, enables GeoJSON, CSV, and MCP representations, sets audience to *Organization*, copies the generated URL slug, and executes an external curl request verifying data output ([User Guide 05](../User-Guide/05-endpoints-and-sharing.md)).
-
-#### Journey 9: External Tool Connectivity (QGIS & Excel)
-
-Launches a test fixture acting as QGIS connecting to the Endpoint's `/ogc/features` URL, verifies feature collection negotiation, then simulates an Excel CSV export checking UTF-8 encoding and header structure.
-
-#### Journey 10: In-App Merge Request Approval (Yellow Lane)
-
-Submits a change modifying a shared pipeline configuration, logs in as a designated Domain Approver, navigates to the pending approvals tab, reviews the visual `jcctl plan` diff, clicks "Approve & Merge", and monitors deployment progress to completion ([User Guide 07](../User-Guide/07-users-roles-approvals.md)).
-
-#### Journey 11: Drift Detection & Automated Resolution
-
-Injects an out-of-band attribute modification directly into the broker, navigates to the Space settings, observes the "Drift Detected" warning chip, clicks "Review Drift", clicks "Revert to Git Truth", and verifies the broker returns to the manifest specification.
-
-#### Journey 12: Project Export & Disaster Recovery Drill
-
-Navigates to Project Settings, clicks "Export Archive", downloads the exported zip file, opens a fresh scratch environment, uploads the archive via "Import Project", and asserts that all spaces, data models, dashboards, and pipelines restore identically ([User Guide 09](../User-Guide/09-export-import.md)).
-
-#### Journey 13: Application Generation and Interactive Agent Run
-
-Navigates to Applications, selects "New Application", chooses a published Endpoint, inspects the schema and live sample preview, inputs functional requirements, confirms the derived dataNeeds checklist, and submits. Monitors the live conversation feed over Server-Sent Events, answers a required questionnaire prompt rendered via dynamic schema forms, verifies that commits appear in Gitea with co-attribution trailers, inspects the sandboxed preview iframe, and submits a publication change proposal (AP-51, AP-55, UI-38).
-
----
-
-## 3. Automated Accessibility Testing (a11y)
-
-In conformance with WCAG 2.1 Level AA:
-
-- Every Playwright test executes `axe-core` analysis across every visited page state:
-
-```typescript
-// apps/portal-ui/e2e/accessibility.spec.ts
-import { test, expect } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
-
-test('dashboard page must meet WCAG 2.1 AA standards', async ({ page }) => {
-  await page.goto('/projects/mobility/dashboards/traffic-overview');
-  await page.waitForSelector('.maplibre-gl-map');
-
-  const accessibilityScanResults = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-    .analyze();
-
-  expect(accessibilityScanResults.violations).toEqual([]);
-});
-```
-
-- Full keyboard navigation workflows are verified: users must be able to navigate lists, open modals, complete forms, and trigger approvals using <kbd>Tab</kbd>, <kbd>Enter</kbd>, <kbd>Space</kbd>, and arrow keys alone.
-
----
-
-## 4. Internationalization (i18n) Completeness Tests
-
-The portal supports four languages: Slovak (`sk`), English (`en`), German (`de`), and Czech (`cs`). A dedicated CI script verifies translation completeness:
-
-1. **Source Code Extraction:** Scans all React source files for translation keys (`t('...')`).
-2. **Key Parity Check:** Asserts that every extracted key exists in all four locale resource bundles (`locales/*.json`). Missing keys fail the build.
-3. **ICU Syntax Verification:** Validates that MessageFormat syntax (plurals, select statements, variables) compiles without syntax errors.
+Inside the Portal repository the same ground is held by `ui/tests/i18n.test.tsx` and `ui/tests/locale_style.test.ts`, which run in the fast lane. There is no `pnpm i18n:validate` script; the checker above is the CI form.
 
 ## Related
 
-- [User Guide 07](../User-Guide/07-users-roles-approvals.md) — referenced above.
-- [User Guide 03](../User-Guide/03-data-models.md) — referenced above.
-- [User Guide 04](../User-Guide/04-pipelines.md) — referenced above.
-- [User Guide 06](../User-Guide/06-dashboards.md) — referenced above.
-- [00-strategy](00-strategy.md) — test families and where each lives.
-- [testing](../Requirements/testing.md) — the TS requirements.
+- [00-strategy.md](00-strategy.md) — the lanes these suites run in.
+- [02-conformance-tests.md](02-conformance-tests.md) — the standards suites beside the journeys.
+- [TS-13](../Requirements/testing.md) — the accessibility requirement this page is verified against.
+- [User Guide 07](../User-Guide/07-users-roles-approvals.md) — the approval flow journeys 3 and 10 walk.
+- [User Guide 06](../User-Guide/06-dashboards.md) — the dashboards journeys 4, 5 and 13 open.
