@@ -8,7 +8,9 @@ title: "Gateway Firewall (GW)"
 Status: Draft
 Date: 2026-08-07
 Scope: The rule/verdict model of the NGSI-LD gateway ("firewall") and its enforcement in the Antares broker. Complements `access-control.md` (R1–R43: architecture, policy model, federation); this document specifies the rule chain, the three verdicts, and the request-intersection algebra.
-Related: ADR 002 (Policy entity), ADR 004 (Scopes), ADR 006 (privilege bleed), `AntaresBroker/docs/deep-analysis.md` (shared-schema tenancy + RLS).
+Related: ADR 002 (Policy entity), ADR 004 (Scopes), ADR 006 (privilege bleed), `AntaresBroker/docs/src/storage.md` (shared-schema tenancy and the row-level-security belt).
+
+Family **GW** (GW1…GW34). Owning chapter: [Architecture/05-context-gateway.md](../Architecture/05-context-gateway.md). Verified by: [Testing/01-backend-tests.md](../Testing/01-backend-tests.md).
 
 Keywords MUST / SHOULD / MAY per RFC 2119.
 

@@ -185,7 +185,7 @@ Rules that make bundles portable: identity is `(group, kind, namespace, name)` a
 | `DataOffer` | `projects/{p}/spaces/{s}/dataspace/offers/` | `schema/kinds/DataOffer.json` | Connector catalog Dataset + ODRL offer for referenced Endpoints (DS-07, DS-08) |
 | `DataAgreement` | `projects/{p}/dataspace/agreements/` | `schema/kinds/DataAgreement.json` | Status written by the connector; compiled `Policy` entities (provider) or token `secretRef` in OpenBao (consumer) (DS-09…DS-15) |
 | `App` | `projects/{p}/apps/{n}/app.yaml` | `schema/kinds/App.json` | Portal static host / Deployment; renders `Endpoint` + `Policy` from `dataNeeds` (AP-05) |
-| `SyncSource` | `projects/{p}/sync/` or `sync/` (org) | `schema/kinds/SyncSource.json` | `jcctl serve` sync loop (MF-27) |
+| `SyncSource` | `projects/{p}/sync/` or `sync/` (org) | `schema/kinds/SyncSource.json` | the sync loop, in the Portal beside the reconciler (`src/server.rs`, MF-27) or `jcctl sync` on the command line |
 | `UiSchema` | `portal/forms/{Kind lowercased}.uischema.yaml` | `schema/kinds/UiSchema.json` | Portal UI form arrangement, read straight from the repository (UI-02) |
 | `Bundle` (download index) | not stored; generated on download | `schema/kinds/Bundle.json` | Import wizard / `jcctl import` |
 | `Change` (server-side) | not stored; returned by resource-API writes | `schema/kinds/Change.json` | Portal API (merge request, lane, plan) |
@@ -345,12 +345,12 @@ a blueprint that needs a credential takes a `secretRef` name as a parameter.
 
 ---
 
-## 3. The `jcctl` Reconciler Engine
+## 3. The Reconciler Engine
 
-The reconciler binary (`jcctl`) is implemented in Rust. It operates in two modes:
+The reconciler is Rust, and it is one body of code with two front ends. There is no reconciler daemon of its own: the Portal is the daemon.
 
-1. **CLI Mode:** Used by engineers and CI pipelines (`jcctl plan`, `jcctl apply`, `jcctl export`).
-2. **Daemon Mode (`jcctl serve`):** Runs inside the cluster, listening for Git push webhooks, providing the read-only status API for the Portal UI, and executing scheduled drift checks.
+1. **Command line (`jcctl`):** engineers and CI pipelines run `jcctl validate`, `jcctl plan`, `jcctl apply`, `jcctl drift`, `jcctl export`, `jcctl import` and `jcctl sync`. Running `jcctl` with no arguments prints the full list; there is no `jcctl serve`.
+2. **In the cluster (the Portal):** the Portal links `jcctl` as a library rather than shelling out to it, so the same loader decides what a manifest is in both places and the Portal cannot disagree with CI about a repository (`joinedcontext-portal/src/reconciler`). A periodic loop re-reads the manifests from Gitea at the default branch HEAD, compiles their live status and swaps them into an in-memory mirror atomically; a run that cannot load the repository keeps the last revision that did, because serving half a repository reads as deletion. Only one replica reconciles, elected with a PostgreSQL advisory lock, and it is that replica that syncs streams, apps, roles and the Keycloak realm and runs the drift scan; every other replica keeps its own read-only mirror, so a new pod of a rolling update serves while the old one still holds the lock (OPS-51). The `SyncSource` loop runs beside it on the same replica (MF-28, CC-03).
 
 ### Reconciler Commands
 
@@ -427,11 +427,32 @@ To balance strict governance with operational velocity, configuration changes pa
 | Dimension | Green Lane (Self-Service) | Yellow Lane (Domain Review) | Red Lane (Governance Review) |
 |---|---|---|---|
 | **Risk Class** | `riskClass: green` | `riskClass: yellow` | `riskClass: red` |
-| **Typical Changes** | Ephemeral sandbox creation, private dashboard adjustments, team subscriptions. | New resident pipeline, new data model version, endpoint creation within an existing space. | Public endpoint publication, cross-city federation registration, identity role changes, any resource deletion. |
+| **Typical Changes** | Ephemeral sandbox creation, private dashboard adjustments. | New resident pipeline, new data model version, endpoint creation within an existing space. | Public endpoint publication, cross-city federation registration, identity role changes, a standing egress of context data, any resource deletion. |
 | **Authoring** | Portal UI generated form or MCP `instantiate_blueprint`. | Portal UI or Git pull request. | Git pull request only. |
 | **Approval Gate** | **Auto-Approved:** Conftest policy bot evaluates constraints in CI and auto-merges (CC-63). | **Single Approver:** Approved in-app by the domain owner (CODEOWNERS) (CC-34). | **Full Approval Chain:** Multiple approvals required (Security, Platform Admin, Data Owner). |
 | **Latency Budget** | ≤ 5 seconds from form submit to live deployment (CC-65). | Minutes to hours (Human-dependent). | Days (Formal governance cycle). |
 | **Drift Action** | Automatically reverted or reaped upon TTL expiry. | Monitored; requires manual in-app resolution. | Monitored; triggers critical platform security alert. |
+
+### The kinds that are Red whatever their spec holds (CC-63, PF-52)
+
+The lane of a change is the lane of its riskiest file, and for these kinds the risk is the kind
+itself: no field of the manifest can make the change smaller, so `classify`
+(`joinedcontext-portal/src/change.rs`) answers Red before it reads the spec.
+
+| Kind | Why it is Red |
+|---|---|
+| `ServiceAccount`, `Role`, `RoleBinding`, `Group`, `Policy`, `ScopeDefinition` | they hand out access, and a membership is the binding that names it (PF-52, PF-62) |
+| `Organization`, `Project` | they create the scope every other grant is written against |
+| `Environment` | one file decides the domain of every URN, the image every workload runs and where a `secretRef` is resolved, for a whole environment at once (CC-73, CC-75) |
+| `ContextSourceRegistration`, `SharedSpaceReference`, `DataSpaceParticipant`, `DataOffer`, `DataAgreement` | they reach another organization with the data of this one (MF-36, DS-17) |
+| `Subscription` | a standing egress: `spec.notification.endpoint.uri` is an address the platform posts to and `spec.notification.attributes`, empty meaning every granted attribute, says what it posts, for every matching entity, until somebody stops it |
+| `CkanInstance` | the same, by copy rather than by notification: the DataStore mirror of an Endpoint writes its rows to the host in `spec.url` with the token in `spec.apiTokenRef` (EP-65…EP-67) |
+
+A `Subscription` and a `CkanInstance` were Yellow until 2026-09-20, which meant that continuous
+publication of context data to a host of the proposer's choosing took one approval while a one-off
+federation edge over the same data took the full chain. Both were moved to Red, and the reason is
+the address in the spec rather than the volume: what leaves the platform on a schedule nobody
+watches is reviewed like what leaves it once.
 
 ### Sandboxes expire (CC-67, OPS-44, PF-19)
 
@@ -451,7 +472,7 @@ Age is `metadata.creationTimestamp` and nothing else, because that is the one ti
 
 A namespace without the label is never a candidate. Sandboxes are labelled at creation by the green lane, so an unlabelled namespace is a permanent one, and the reaper has to be wrong in the direction that keeps data.
 
-The `sandbox-reaper` CronJob is what enforces this on a cluster ([Components](../Deployment/04-components-and-addons.md#1-the-components)).
+The `sandbox-reaper` CronJob is what enforces this on a cluster ([Components](../Deployment/04-components-and-addons.md#1-core-components-vs-add-ons-matrix)).
 
 ---
 
@@ -538,13 +559,23 @@ metadata:
 spec:
   source:
     git: { url: https://git.region.sk/udp/datamodels.git, ref: main, path: models/transport, secretRef: { name: region-git-ro } }
-  schedule: { interval: 30m }        # or { webhook: true }
+  schedule: { interval: 30m }        # or { webhook: true }, which needs the webhook block below
   mode: mirror                       # source wins inside the synced subtree; local edits show as drift
   selector: { joinedcontext.com/tier: standard }
   conflictPolicy: replace
   prune: false                       # deletions are never implied (CC-19)
   autoMerge: false                   # true = green lane for this subtree; enabling it is a red-lane change (CC-70)
 ```
+
+A webhook-driven source is pushed by its origin rather than polled, and the credential for that is the source's own:
+
+```yaml excerpt
+  webhook:                                        # required by schedule: { webhook: true }
+    secretRef: { name: region-hook }              # what the origin signs the request body with
+    previousSecretRef: { name: region-hook-old }  # optional: accepted while the origin's hook is moved
+```
+
+`spec.webhook.secretRef` is an HMAC secret the reconciler resolves like every other `secretRef` and hands to nobody (MF-44, MF-24). One per source, because the signature covers the body and not the path — a secret shared between sources would let the origin of one force a run of every other, in projects it has no binding in. A `schedule: { webhook: true }` with no `webhook` block is refused when it is written, and every refusal at the webhook route is the same `401`, so the door tells an unauthenticated caller nothing about which sources exist ([API/01 section 10](../API/01-portal-api.md), PF-59).
 
 Every run is an import: same validation, same plan, same lanes, one merge request when the plan is not empty. `status` shows `Synced | OutOfSync | PendingApproval | Error | Paused`, the last source revision and the open merge request; the project page offers **Sync now**, **Pause**, **Detach**. Sync runs with the owner's grants only (CC-04) and reaches a remote instance solely through its public resource API and endpoints (MF-32).
 
