@@ -1,100 +1,113 @@
 ---
 sidebar_position: 6
 title: Endpoints, Data Sharing & Integration
-description: Creating multi-representation Endpoints to share data with Grafana, QGIS, Excel, and AI agents.
+description: Publishing multi-representation endpoints, configuring audiences, projections, filters, and cross-project sharing.
 ---
 
 # Endpoints, Data Sharing & Integration
 
-In joinedcontext, context spaces are private by default. The **only** way external software, public portals, other projects, or AI agents can access data is through an **Endpoint** ([SP-01](../Requirements/space-surface.md#1-url-scheme)).
+In the joinedcontext platform, context spaces are private by default. The only mechanism for external systems, partner projects, public portals, or AI agents to access context data is through an Endpoint. This guide explains how to publish endpoints, configure audiences and representations, apply attribute projections and area filters, connect third-party tools, and reference shared endpoints across projects. It is written for data stewards, GIS analysts, and integration engineers.
 
----
+Every change to an endpoint follows the change approval flow: you configure the endpoint form, run **Check**, click **Propose change**, and an approver reviews and merges the proposal in Approvals. Public endpoints route through the Red lane and require typing the resource name to confirm.
 
-## 1. Creating a Data Endpoint
+## 1. Endpoint Boundaries and Audiences
 
-1. Open your project, select your **Context Space**, and navigate to **Endpoints**.
-2. Click **+ Create Endpoint**.
-3. Fill in configuration:
-   - **Title:** `Public Transit Live Feed`
-   - **Audience:**
-     - *Project-Only:* Accessible only to members of this project.
-     - *Organization:* Accessible to any department in the city administration.
-     - *Public:* Accessible anonymously worldwide (Open Data).
-   - **Enabled Representations:** Toggle on the required formats (NGSI-LD, GeoJSON, CSV, XLSX, OGC Features, STA, MCP).
-   - **Attribute Whitelist (Projection):** Select only attributes permitted for exposure (e.g. `vehicleId`, `speed`, `location`). Sensitive fields (e.g. `driverId`) are omitted.
-4. Click **Generate Endpoint**.
+An Endpoint provides a policy-guarded view over one Context Space. Access is controlled by the endpoint audience:
 
-The gateway generates an unguessable 128-bit random URL slug:
-`https://portal.joinedcontext.com/api/endpoint/7d8a9b2c3e1f405a/...`
+- **Selected projects (`project-list`):** Only specified collaborative projects within the organization can query or reference this endpoint.
+- **Organization (`organization`):** Any signed-in user or service account in the city administration can access this endpoint.
+- **Public (`public`):** Open to anonymous callers worldwide for reading. Anonymous callers cannot write data or register subscriptions.
 
----
+Each endpoint has its own address: a 26-character random slug nobody can guess.
+`https://{host}/api/endpoint/{slug}/`
 
-## 2. Connecting External Tools
+## 2. Publishing an Endpoint
 
-```mermaid
-flowchart LR
-    EP["Endpoint Slug<br/>/api/endpoint/7d8a9b2c3e1f405a/"]
-    
-    EP -->|/file.geojson| QGIS["QGIS / Desktop GIS"]
-    EP -->|/ngsi-ld/v1/...| GRAF["Grafana Dashboard"]
-    EP -->|/file.csv| EXCEL["Excel / Power BI"]
-    EP -->|/mcp| AGENT["AI Agent (Claude / OpenHands)"]
-```
+### Create a New Endpoint
 
-### A. Connecting QGIS
+#### By hand
 
-1. In QGIS, open the Data Source Manager and select **WFS / OGC API - Features**.
-2. Click **New Connection**.
-3. Enter URL: `https://portal.joinedcontext.com/api/endpoint/{endpointSlug}/ogc`
-4. If the endpoint audience is *Organization*, select Bearer Auth and paste an API key from a service account (User-Guide/07 §4) or use the QGIS OAuth2 plugin with the client snippet.
-5. Click **Connect**. QGIS discovers collections automatically and renders vector layers on the map.
+1. Navigate to **Endpoints** at `/projects/helsinki/endpoints`.
+2. Click **New endpoint**.
+3. In **Name**, enter `helsinki-bikes`. In **Title**, enter `City bikes live feed`.
+4. In **Context Space**, select `helsinki`.
+5. Click **Generate slug** to mint a random address.
+6. Under **Audience**, select `Public: anyone with the address` (or `Organization`).
+7. Under **Representations**, check the needed formats: `NGSI-LD API`, `GeoJSON`, `CSV`, `Excel (xlsx)`, and `MCP for AI assistants`.
+8. Under **Model projection**, tick the classes (e.g. `BikeHireDockingStation`) and slots to expose. Identity slots `id` and `type` remain locked.
+9. Click **Check**. You should see the verdict chip display `Checked`.
+10. Click **Propose change**.
+11. In `/projects/helsinki/approvals`, an approver enters `helsinki-bikes` into **Resource name confirmation** and clicks **Approve**.
 
-### B. Connecting Grafana
+The live journey `share.spec.ts` replays these steps.
 
-1. In Grafana, install the **Infinity** datasource plugin.
-2. Create a new query pointing to:
-   `https://portal.joinedcontext.com/api/endpoint/{endpointSlug}/file.geojson`
-3. Add a **Geomap** panel. Grafana renders live entity positions and updates dynamically.
+#### By asking the assistant
 
-### C. Connecting Microsoft Excel / Power BI
+Type into the assistant composer:
+`Set the helsinki-bikes endpoint's rate limit to 300 requests per minute`
 
-1. In Excel, select **Data > From Web**.
-2. Enter the CSV export URL:
-   `https://portal.joinedcontext.com/api/endpoint/{endpointSlug}/file.csv`
-3. Excel parses columns and dates automatically. Click **Load**.
+The assistant opens `/projects/helsinki/endpoints` with the form open and the rate limit updated. You run **Check** and click **Propose change**. An approver confirms it in Approvals.
 
-### D. Connecting AI Agents via MCP
+The live journey `change.spec.ts` replays these steps.
 
-1. Copy the MCP Streamable HTTP URL:
-   `https://portal.joinedcontext.com/api/endpoint/{endpointSlug}/mcp`
-2. Configure your agent client (e.g. Claude Code or OpenHands) with the URL and bearer token.
-3. The agent discovers available tools and queries data autonomously ([User Guide 08](./08-working-with-ai-agents.md)).
+## 3. Filtering Attributes and Geographic Areas
 
----
+### Manage Filters on the Endpoint Page
 
-## 3. Rotating & Revoking Endpoints
+#### By hand
 
-- **Rotating a Slug:** If an endpoint URL is leaked, open Endpoint Settings and click **Rotate Slug**. A new URL is generated immediately; the old slug becomes invalid instantly.
-- **Revoking an Endpoint:** Click **Delete Endpoint**. Deletion creates a pull request. Once merged, the gateway terminates the route.
+1. On `/projects/helsinki/endpoints`, click the endpoint title to open its detail page at `/projects/helsinki/endpoints/helsinki-bikes`.
+2. Review the live URL, audience, and enabled representations.
+3. Under **Filtering**, view the active queries.
+4. To add an attribute condition, scroll to **Add a condition**: choose **Attribute** (`availableBikeNumber`), **Condition** (`is greater than`), enter `Value` as `0`, and click **Add to the query**.
+5. To restrict geographically, scroll to **Set the area from a box**: enter coordinates in **West**, **South**, **East**, and **North**, then click **Use this area**.
+6. You should see the entity count update to show how many records match the filter.
+7. Click **Propose this filter**.
+8. In `/projects/helsinki/approvals`, an approver reviews and merges the filter change.
 
-## 4. Using data that lives in another space or another city
+#### By asking the assistant
 
-When you add a shared endpoint (from another project, or from another organisation's platform) the platform reads its published model first and shows it under **Data models → Foreign models**. You cannot edit it, but you can:
+Type into the assistant composer:
+`Propose a filter for endpoint helsinki-bikes with query availableBikeNumber>0`
 
-- **Map to my model**, a guided mapping from their fields to yours (renames, units, enum values, simple formulas). Save it and choose **Replicate** (a pipeline copies their data into your space in your model) or **Live** (your queries are translated on the fly; only simple mappings qualify, the wizard tells you which).
-- **Watch for changes**, when they publish a new model version you get a change proposal showing what moved and which of your mappings are affected.
+The assistant updates the projection filter and opens `/projects/helsinki/endpoints/helsinki-bikes`. You inspect the matching count and click **Propose this filter**.
 
-The other direction works the same way: mark one of your mappings as **Published** and consumers can download it next to your schema, or create a **View endpoint** that already serves your data in their model (for example as Smart Data Models).
+## 4. Connecting External Tools
 
-## 5. Sharing with organisations you do not know yet
+### Connect GIS, Analytics, and Agent Clients
 
-For partners outside your platform (another city, a national platform, a company in a data space) open **Data space → Offers** and publish an endpoint with the conditions under which others may use it (purpose, area, time, attribution, price). Partners find it in the data space catalog, request it, and, when the request matches your conditions, get access automatically; counter-proposals land in **Data space → Requests** for you to accept or decline. Access is always through the same endpoint link, so what they can read is exactly what the endpoint allows and never more.
+Copy endpoint addresses using the **Copy URL** button beside any slug:
 
-The other way round, **Data space → Catalog** lists what other participants offer. Request a dataset, and once agreed use it like any shared endpoint: mount it, replicate it with a pipeline, or federate live queries.
+- **QGIS & Desktop GIS:** Add a new vector layer using the GeoJSON representation at `https://{host}/api/endpoint/{slug}/file.geojson`, or add an OGC API Features connection pointing to `https://{host}/api/endpoint/{slug}/ogc/features`.
+- **Microsoft Excel & Power BI:** Select **Data > From Web** and enter the CSV export URL `https://{host}/api/endpoint/{slug}/file.csv`.
+- **Grafana:** In the Infinity datasource plugin, query `/file.geojson` to plot live positions on a Geomap panel.
+- **AI Agents (MCP):** Connect external agent environments (such as Claude Code) to `https://{host}/api/endpoint/{slug}/mcp`. The agent discovers query tools automatically according to the endpoint policy.
+- The schema and what you may do: `https://{host}/api/endpoint/{slug}/schema/v1/AirQualityObserved.json` is the published schema of one type, and `https://{host}/api/endpoint/{slug}/access` answers what the caller of that moment may read and write.
+
+## 5. Cross-Project Data Sharing
+
+### Reference a Shared Endpoint
+
+#### By hand
+
+1. Navigate to `/projects/helsinki/endpoints`.
+2. Scroll to the **Shared with this project** section.
+3. Review endpoints that other projects in the organization have shared with `helsinki`.
+4. On the chosen row, click **Use in this project**.
+5. A change proposal is submitted to declare a `SharedSpaceReference`.
+6. In `/projects/helsinki/approvals`, an approver approves the reference. Once merged, the status chip shows **Referenced**.
+7. To view all published endpoints across every project in the organization, open **All endpoints** at `/endpoints`.
+
+#### By asking the assistant
+
+Type into the assistant composer:
+`What endpoints are shared with project helsinki?`
+
+The assistant checks the cross-project directory and lists accessible endpoints, their source projects, and their published entity types.
 
 ## Related
 
-- [SP-01](../Requirements/space-surface.md) — referenced above.
-- [User Guide 08](./08-working-with-ai-agents.md) — referenced above.
-- [00-intro](00-intro.md) — user guide overview.
-- [01-getting-started](01-getting-started.md) — first steps in the Portal.
+- [Getting Started](./01-getting-started.md): first steps in the Portal.
+- [Pipelines & Ingestion](./04-pipelines.md): ingesting data through target endpoints.
+- [Dashboards & Visualization](./06-dashboards.md): drawing the entities of an endpoint on a map.
+- [Collaborating with AI Agents](./08-working-with-ai-agents.md): connecting autonomous agents to endpoints via MCP.

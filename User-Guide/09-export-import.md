@@ -1,91 +1,113 @@
 ---
 sidebar_position: 10
 title: Export, Portability & Project Duplication
-description: One-click project archiving, template duplication, and full disaster recovery procedures.
+description: Downloading project archives, importing bundles, configuring sync sources, and publishing open data to CKAN.
 ---
 
 # Export, Portability & Project Duplication
 
-joinedcontext ensures zero vendor lock-in. All platform configurations can be exported, cloned, or restored with full fidelity ([CC-49](../Requirements/city-as-code.md#8-export-portability-and-upgrade)).
+All platform configurations can be exported, cloned, imported, or synchronized with external repositories. Every imported resource compiles into a reviewable change proposal in Approvals, ensuring that foreign configurations never overwrite local state without review.
 
----
+```mermaid
+flowchart LR
+    BUNDLE["Export Bundle (.zip / .yaml)"] --> CHECK["Check Bundle (Dry Run)"]
+    CHECK --> REPORT["Inspect Import Report"]
+    REPORT --> PROPOSE["Propose as One Change"]
+    PROPOSE --> APPROVE["Approver Merges"]
+```
 
-## 1. Exporting a Project Archive
+## 1. Exporting a Project or Resource
 
-1. Navigate to your project and open **Project Settings**.
-2. Select **Export & Portability**.
-3. Click **Download Full Project Archive**.
-4. The platform packages:
-   - All LinkML Data Models and compiled schemas.
-   - All Context Space and Policy manifests.
-   - Bento pipeline stream configurations.
-   - Dashboard and layer definitions.
-   - Audit trail metadata.
-5. The downloaded `.zip` archive represents a standalone, self-describing project repository.
+You can package an entire project or an individual manifest into portable archive formats.
 
----
+### Downloading a Configuration Archive
 
-## 2. Project Duplication (Templating)
+#### By hand
 
-To replicate an existing project configuration (e.g. rolling out an identical *Smart Parking* setup to a new organisational district):
+1. Open `/projects/helsinki/endpoints` or any resource view in the project.
+2. In the row menu or page header, click **Export**.
+3. In the dialog titled **Download configuration**, choose the target **Format**:
+   - **Whole project (configuration, schemas and data models)** for a complete ZIP archive including schemas and documentation.
+   - **YAML** for multi-document manifest streams.
+   - **JSON list** for structured manifest objects.
+   - **ZIP archive** for manifests, native files, and an index.
+4. Select the desired **Revision** (Current is selected by default).
+5. Click **Download**.
+You should see your browser download the package containing manifests, LinkML schemas, and pipeline configurations.
 
-1. In the Projects overview, click the menu on the source project and select **Duplicate Project**.
-2. Enter the new Project Name: `Smart Parking - District West`.
-3. Enter the new Slug: `smart-parking-west`.
-4. Review parameter substitutions (e.g. updating geographic scope prefix from `/geo/FI/HKI/Keskusta` to `/geo/FI/HKI/Lansi`).
-5. Click **Confirm Duplication**. The platform clones the manifest tree and opens a single merge request initializing the new project.
+#### By asking the assistant
 
----
+Type into the assistant composer: `Export the helsinki project as a ZIP archive`. The assistant opens the export dialog with the whole project format selected for confirmation.
 
-## 3. Importing Manifests or a Bundle
+## 2. Importing Configuration Bundles
 
-1. Open the project (or the organization) and choose **Import**.
-2. Drop a `.yaml` file, a multi-document YAML, a `.zip` bundle, or paste a URL.
-3. Pick the target: this project, or **Create new project from bundle**. The wizard shows how names, references and URN prefixes will be rewritten.
-4. Pick what happens on name collisions: **Fail** (default), **Skip**, **Replace**, or **Rename**.
-5. Review the **Preview**: what will be created, updated or deleted, and which approval lane it lands in.
-6. Click **Import**. A single change is created; green-lane content is live in seconds, everything else waits for the approver named in the preview.
+You can restore an exported archive or load manifests into an existing project.
 
-Secrets are never inside a bundle. After import, open **Secrets** and provide the values the imported `secretRef`s point to.
+### Loading an External Bundle
 
-## 4. Keeping a Project in Sync with an External Source
+#### By hand
 
-Use **Sync** when a project should follow something maintained elsewhere: a regional data-model repository, a published bundle, or a partner city's instance.
+1. In the sidebar navigation, click **Import** to navigate to `/projects/helsinki/import`.
+2. Under **Archive or manifests**, click browse and select a `.zip`, `.yaml`, or `.json` file.
+3. In **Project to import into**, confirm `helsinki`. Every imported manifest is rewritten into it.
+4. In **Organisation domain**, enter `hel.fi` or leave blank to use the instance default.
+5. In **A resource this project already has**, choose collision behavior:
+   - **Stop the import**: stops if any named resource already exists.
+   - **Leave ours alone**: skips existing resources and imports remaining ones.
+   - **Replace ours**: overwrites existing manifests with bundle versions.
+   - **Import under a new name**: renames conflicting incoming manifests.
+6. Click **Check the bundle** to execute a dry run.
+You should see the report titled **What this import would do**, summarizing created, replaced, skipped, and renamed files alongside required credentials.
+7. Click **Propose the import**.
+8. Navigate to `/projects/helsinki/approvals` and approve the proposed change.
 
-1. Project → **Sync** → **Add source**.
-2. Choose the source type: **Git repository** (URL, branch, folder), **Bundle URL**, or **Another platform instance** (URL and project).
-3. Choose credentials (a secret reference), the schedule (every N minutes or on webhook), and the mode: **Mirror** (the source is authoritative for this subtree; local edits show as drift) or **One-shot**.
-4. Leave **Prune** off unless deletions in the source should be proposed here too; they still need approval.
-5. Save. Each run creates a change only when something differs; the project page shows `Synced`, `Out of sync`, `Pending approval` or `Error`, with **Sync now**, **Pause** and **Detach**.
+#### By asking the assistant
 
-Everything you do here can also be done with `jcctl export | import | sync` or by an AI agent through the configuration tools; the same validation and approvals apply.
+The assistant cannot read local files from your computer without browser file selection. Upload the bundle on `/projects/helsinki/import` or attach a text sample directly to the composer drop zone.
 
-## 5. Disaster Recovery Restoration
+## 3. Keeping in Sync with External Sources
 
-To restore an entire organisational deployment onto a clean, empty cluster ([CC-50](../Requirements/city-as-code.md#8-export-portability-and-upgrade)):
+A SyncSource keeps your project in step with an upstream: a repository, a published bundle, or another instance's API.
 
-1. Deploy baseline infrastructure via Helmfile:
+### Adding an Upstream Synchronization Source
 
-   ```bash
-   helmfile -f deployment/helmfile.yaml apply -e production
-   ```
+#### By hand
 
-2. Clone the authoritative City Git Repository:
+1. In the sidebar navigation, click **Sync** to open `/projects/helsinki/syncsources`.
+2. In the header origin selector, select **A Git repository**, **A published bundle**, or **Another instance's API**.
+3. Click **Add source**.
+4. In the dialog, set **Name** to `regional-models-sync`, **Clone URL** to `https://git.example.org/models.git`, and **Run every** to `6h`.
+5. Set **Mode** to `mirror` and **When a resource already exists** to `fail`.
+6. Click **Propose the source**.
+7. An approver merges the proposal in Approvals.
+8. Once applied, the card displays observed revision and sync state. Click **Sync now** to trigger an immediate pull, **Pause** to hold syncs, or **Detach** to remove the SyncSource while keeping imported resources.
 
-   ```bash
-   git clone https://gitea.joinedcontext.com/helsinki/city-repo.git
-   ```
+#### By asking the assistant
 
-3. Execute `jcctl apply`:
+Type into the assistant composer: `Add a git sync source called regional-models-sync reading https://git.example.org/models.git every 6h`. The assistant opens the form on `/projects/helsinki/syncsources` with values populated for review.
 
-   ```bash
-   jcctl apply --repo-dir ./city-repo --gateway-url http://context-gateway:9090
-   ```
+## 4. Publishing Open Data to CKAN
 
-All spaces, schemas, policies, pipelines and dashboards are recreated; a following `jcctl plan` must be empty (CC-18).
+Public endpoints can be published directly to an open-data portal using native DCAT-AP metadata.
+
+### Registering a Catalogue and Publishing Datasets
+
+#### By hand
+
+1. Navigate to `/projects/helsinki/ckan`.
+2. Under **Catalogues**, enter **Name** as `helsinki-ckan`, **URL** as `https://data.example.org`, and **Default organization** as `helsinki-region-context`.
+3. In **API token secret**, enter the name of the secret holding your credentials, such as `ckan-token`.
+4. Click **Propose catalogue**.
+5. Once merged, open `/projects/helsinki/endpoints` and edit your public endpoint, such as `helsinki-bikes`.
+6. In the endpoint configuration, select `helsinki-ckan` as the target open-data catalogue.
+You should see the dataset listed under Published endpoints with direct links to DCAT-AP records and DataStore mirrors.
+
+#### By asking the assistant
+
+Type into the assistant composer: `Publish the helsinki-bikes endpoint to the open data catalogue`. The assistant opens the endpoint configuration dialog with catalogue fields pre-filled.
 
 ## Related
 
-- [CC-49](../Requirements/city-as-code.md) — referenced above.
-- [00-intro](00-intro.md) — user guide overview.
-- [01-getting-started](01-getting-started.md) — first steps in the Portal.
+- [02-organizations-projects-spaces.md](./02-organizations-projects-spaces.md): projects, context spaces and the boundaries between them.
+- [07-users-roles-approvals.md](./07-users-roles-approvals.md): reviewing proposals and resolving configuration drift.
+- [10-role-guides.md](./10-role-guides.md): role-specific checklists for administrators and stewards.

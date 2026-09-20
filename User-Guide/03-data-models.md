@@ -1,131 +1,136 @@
 ---
 sidebar_position: 4
 title: Data Modeling & The LinkML Editor
-description: Authoring, importing, and versioning data models using LinkML, JSON Schema draft-07, and JSON-LD contexts.
+description: Authoring, importing, adapting, and versioning data models using LinkML, model projections, and mappings.
 ---
 
 # Data Modeling & The LinkML Editor
 
-In joinedcontext, data structure contracts are modeled using **LinkML** (Linked Open Data Modeling Language). This chapter explains how to author, import, and version organisational data models.
+In the joinedcontext platform, all data structure contracts are modeled using LinkML (Linked Open Data Modeling Language). This guide explains how to import standard Smart Data Models, author custom classes and slots, configure endpoint projections, build mappings, and govern schema versions. It is written for data architects, stewards, and integration engineers.
 
----
+Every change to a data model follows the standard change flow: you edit the model, click **Check**, click **Save model**, and an approver reviews and merges the proposal in Approvals before schemas are compiled.
 
-## 1. Why LinkML?
+## 1. LinkML Models and Schema Evolution
 
-LinkML provides a single, technology-agnostic source of truth for entity structures:
+LinkML provides a single source of truth for entity definitions. From one model definition, the platform derives:
 
-- **Automatic Derivations:** From a single LinkML definition, the platform automatically derives:
-  - Strict JSON Schema draft-07 schemas for API validation and form rendering ([CC-12](../Requirements/city-as-code.md#2-repository-and-manifest-model)).
-  - Standards-compliant JSON-LD 1.1 `@context` files for semantic interoperability ([ADR-N-007](../Decisions/adr-n-007-apisix-standalone-no-etcd.md)).
-  - TypeScript types and SQL table definitions.
-- **Spec-Native Interoperability:** Prevents proprietary schema lock-in and bridges Smart Data Models directly into NGSI-LD.
+- Strict JSON Schema draft-07 schemas for API payload validation.
+- Standard JSON-LD `@context` files for semantic interoperability.
+- SHACL shapes, OWL and RDF renderings, documentation pages and one validated example entity, served beside the schema on every endpoint that publishes the model.
 
----
+Schema changes are classified by their impact:
 
-## 2. The Visual LinkML Editor
+- **Additive change:** Adding optional slots or classes routes through the Yellow lane.
+- **Breaking change:** Renaming slots, changing types, or removing properties raises the version major, requires explicit confirmation, and routes through the Red lane.
 
-The portal features a built-in visual modeling environment:
+## 2. Importing a Data Model
 
-```mermaid
-flowchart LR
-    Catalog["Smart Data Models Catalog"] -->|Import| Editor
-    subgraph Editor["Visual LinkML Editor"]
-        Visual["Visual Class & Slot Builder"]
-        YAML["Raw YAML Code Editor"]
-        Preview["Real-Time Derivation Preview"]
-    end
-    Visual <--> YAML
-    YAML --> Preview
-    Preview --> Out1["JSON Schema (draft-07)"]
-    Preview --> Out2["JSON-LD @context"]
-```
+### Import a Smart Data Model
 
-### Navigating the Editor Interface
+#### By hand
 
-1. **Class Palette:** Lists defined entity types (e.g. `AirQualityObserved`, `WasteContainer`).
-2. **Properties (Slots) Panel:** Configures attribute names, types, multiplicity (cardinality), descriptions, and unit codes.
-3. **Live Derivation Tabs:** Real-time inspectors showing:
-   - Generated JSON Schema draft-07.
-   - Compiled JSON-LD `@context`.
-   - Synthetic mock entity matching the schema.
+1. Navigate to **Data models** at `/projects/helsinki/models`.
+2. Select the **Import** tab.
+3. Under **Smart Data Models catalogue**, type `WeatherObserved` in **Search models and attributes**.
+4. Select `WeatherObserved` from the list.
+5. In the preview panel, review the attributes. Click **Only required** to retain mandatory slots, or select specific attributes. Unchecked upstream slots are marked deprecated so partner payloads validate.
+6. In **Space for this model**, pick `helsinki`.
+7. Click **Import WeatherObserved**. The source loads directly into the editor.
+8. In the **Editor** tab, click **Check**. You should see the severity chip confirm the update.
+9. Click **Save model**. An approver reviews and merges the proposal in Approvals.
 
----
+#### By asking the assistant
 
-## 3. Importing Smart Data Models
+Type into the assistant composer:
+`Import the WeatherObserved model from Smart Data Models into the helsinki project`
 
-1. In your Context Space, navigate to **Data Models** and click **Import Standard Model**.
-2. Select from curated domains: *Mobility, Environment, Energy, Smart Cities (FIWARE / GSMA)*.
-3. Search for the model (e.g. `Streetlight`).
-4. Click **Import Model into Editor**.
-5. The model imports with all standard attributes pre-configured. You can extend the model with organisational-specific attributes (e.g. `maintenanceContractorId`).
+The assistant fetches the model, configures the draft, and opens `/projects/helsinki/models` with the editor populated. You click **Check**, click **Save model**, and an approver approves the change.
 
----
+### Infer a Model from a File
 
-## 4. Authoring Custom Models in LinkML
+#### By hand
 
-You can write LinkML YAML directly in the code editor:
+1. On `/projects/helsinki/models`, open the **Import** tab.
+2. Under **Model from a file**, drop a CSV or JSON sample file into the upload zone.
+3. You should see the preview dialog displaying inferred classes, columns, detected data types, and catalogue matches.
+4. Click **Populate the editor**.
+5. In the **Editor** tab, enter `Name` as `city-weather` and select `Space` as `helsinki`.
+6. Click **Check**, then click **Save model**. An approver merges the change in Approvals.
 
-```yaml
-id: https://joinedcontext.com/models/waste-management
-name: WasteManagement
-prefixes:
-  core: https://joinedcontext.com/schema/
-  schema: http://schema.org/
-imports:
-  - linkml:types
+#### By asking the assistant
 
-classes:
-  WasteContainer:
-    description: A public smart waste receptacle.
-    slots:
-      - id
-      - type
-      - fillLevel
-      - temperature
-      - location
+Attach a CSV or JSON file in the assistant panel and type:
+`Draft a data model from this sample file.`
 
-slots:
-  fillLevel:
-    range: float
-    description: Percentage fill level from 0.0 to 1.0.
-    minimum_value: 0.0
-    maximum_value: 1.0
-  location:
-    range: string
-    description: GeoJSON point string representing coordinates.
-```
+The assistant analyzes the sample structure, populates the LinkML editor, and presents the draft at `/projects/helsinki/models`.
 
----
+## 3. Editing Classes and Slots
 
-## 5. Model Versioning & Approval Lanes
+### Author Attributes in the Visual Editor
 
-Data models evolve through strict Semantic Versioning:
+#### By hand
 
-- **Patch (1.0.0 -> 1.0.1):** Typo fixes, description adjustments (Green Lane - auto-approved).
-- **Minor (1.0.0 -> 1.1.0):** Adding new optional attributes, non-breaking enum additions (Yellow Lane - Domain Approver).
-- **Major (1.0.0 -> 2.0.0):** Renaming attributes, removing attributes, changing cardinalities (Red Lane - City Admin).
+1. On `/projects/helsinki/models`, select the **Editor** tab and switch to the **Structure** view.
+2. Under **Classes**, select `WeatherObserved` or type a name into **New class** and click **Add**.
+3. Under **Slots**, click a slot to edit, or enter a name in **New slot** and click **Add**.
+4. In the slot detail panel, configure:
+   - **Range:** Choose `float`, `string`, `integer`, or an enum.
+   - **NGSI-LD kind:** Choose `Property`, `Relationship`, or `GeoProperty`.
+   - **Unit:** Select a UN/CEFACT unit code (such as `CEL` for Celsius or `MTS` for meters per second).
+   - **Required:** Check if payloads must include this attribute.
+5. Switch to the **Source** view to read and edit the model's own YAML, with its problems marked as you type.
+6. Switch to the **Preview** view and select tabs to inspect generated JSON Schema, `@context`, documentation, and sample normalized entities.
+7. Click **Check**, then click **Save model**. An approver merges the change.
 
-Publishing a model updates `projects/{project}/spaces/{space}/datamodels/` in Git, recompiling runtime schemas automatically.
+#### By asking the assistant
 
-## 6. Mappings between models
+Type into the assistant composer:
+`Add an optional float slot called airQualityIndex to the WeatherObserved class`
 
-When data arrives in one model and must be stored in another (a Smart Data Model into your own model, an old version into a new one, a partner's vocabulary into yours), create a **Mapping** instead of writing transformation code.
+The assistant applies the operation to the model draft and refreshes the editor view. You click **Check** and **Save model** to propose the change.
 
-1. Open the data model → **Mappings** → **New mapping**, choose the source model and the target model.
-2. The editor pre-fills every target field that has an obvious counterpart (same name, or a recorded alignment). Fill the rest: pick a source field, rename, convert a unit, map enum values, or write a short formula such as `{stationName} + ' (' + {areaServed} + ')'`.
-3. Watch the **Preview**: the example entity on the left becomes the target entity on the right, and any field the target requires but you have not filled is marked.
-4. Add at least one **Test** (an input example and the expected result). Save. The mapping is validated and compiled; you never see the generated code unless you open the *Advanced* tab.
-5. Use it in a pipeline (**Pipeline → Output → Mapping**) or, for migrating existing data to a new model version, **Data model → Versions → Migrate with mapping**, which shows how many entities will change before anything runs.
+## 4. Configuring Model Projections for Endpoints
 
-Formulas are deliberately simple. If you need sums over lists, grouping or business rules, the pipeline editor's *Advanced transformation* is the place, and the review will show that this part is not schema-checked.
+### Expose a Model Subset on an Endpoint
 
-## 7. Sharing what the data contains (schema, SHACL, OWL, RDF)
+#### By hand
 
-Every context space and every endpoint publishes its model under **Schema** in the formats other people expect: LinkML (the source), JSON Schema, JSON-LD context, SHACL shapes, OWL ontology, RDF and a readable documentation page. A partner who receives your endpoint link can open `…/schema/` and see exactly the types and fields they are allowed to read, in the format their tools need. Nothing you keep private appears there: the schema is filtered the same way as the data. Agents get the same files through the endpoint's MCP (`describe_schema` with a format, or as resources). Rendering happens when you publish a model version, so the files never change afterwards.
+1. Navigate to `/projects/helsinki/endpoints` and click **New endpoint** (or open an existing endpoint).
+2. Under **Model projection**, choose **Draw a new one** or select an existing projection.
+3. Under classes, check the entity type to expose (such as `BikeHireDockingStation`).
+4. Tick the individual slots to expose (such as `availableBikeNumber`). The identity slots `id` and `type` remain locked.
+5. If the endpoint accepts data writes, check **Writable** and enter query constraints.
+6. Click **Check**, then click **Propose change**.
+7. In `/projects/helsinki/approvals`, an approver approves the proposal.
+
+#### By asking the assistant
+
+Type into the assistant composer:
+`Create a projection for endpoint helsinki-bikes exposing only id, type, and availableBikeNumber`
+
+The assistant selects the requested classes and slots, generates the projection manifest, and fills the form ready for your check and proposal.
+
+## 5. Mappings Between Models
+
+### Create a Schema Transformation Mapping
+
+#### By hand
+
+1. In `/projects/helsinki/models`, select the **Mappings** tab.
+2. Under **Models**, select the source model in **Source model** and target in **Target model**.
+3. Review the slot alignment table. For unmapped slots, choose an attribute from **Source slot** or configure a unit conversion in **Unit conversion**.
+4. In **Golden test**, paste a sample JSON object into **Input example (JSON)**.
+5. You should see **Transformed output** render the resulting transformed entity according to your rules.
+6. Click **Propose the mapping**.
+7. In `/projects/helsinki/approvals`, an approver reviews the diff and golden test files, then approves the change.
+
+#### By asking the assistant
+
+The assistant cannot automatically verify and propose schema mappings without operator review. Configure and verify mapping transformations manually in the **Mappings** tab.
 
 ## Related
 
-- [CC-12](../Requirements/city-as-code.md) — referenced above.
-- [ADR-N-007](../Decisions/adr-n-007-apisix-standalone-no-etcd.md) — referenced above.
-- [00-intro](00-intro.md) — user guide overview.
-- [01-getting-started](01-getting-started.md) — first steps in the Portal.
+- [Organizations, Projects & Context Spaces](./02-organizations-projects-spaces.md): managing data partitions.
+- [Pipelines & Ingestion](./04-pipelines.md): using mappings in data transformation streams.
+- [Endpoints & Sharing](./05-endpoints-and-sharing.md): publishing projected model schemas.
+- [Users, Roles & Approvals](./07-users-roles-approvals.md): reviewing model change proposals.
