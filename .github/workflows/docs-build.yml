@@ -2,9 +2,10 @@ name: docs-build
 # Build validation and preview bundle for the documentation (T-0092, TS-10, TS-18).
 #
 # Deviation from the task text: this repository holds the markdown corpus only — there is no
-# Docusaurus site here (no package.json, no docusaurus.config.js), so `pnpm install` and
-# `pnpm build --no-minify` have nothing to build. The site is assembled elsewhere from these
-# pages, so this workflow validates what a site build would reject — broken links and anchors,
+# Docusaurus site here (no docusaurus.config.js; package.json holds the markdown lint and
+# nothing else), so `pnpm install` and `pnpm build --no-minify` have nothing to build. The
+# site is assembled elsewhere from these pages, so this workflow validates what a site build
+# would reject — broken links and anchors,
 # missing images, invalid front matter, untraceable requirements, a drifted ADR register — and
 # uploads the corpus as the preview artifact. Replace the validate job with the real
 # `pnpm build` on the day a site lands in this repository.
