@@ -5,7 +5,7 @@ title: "Defining Manifest Kinds"
 
 # Defining Manifest Kinds
 
-The platform configuration plane treats all resources as versioned declarative manifests. Manifests are Kubernetes-style resources (`apiVersion`, `kind`, `metadata`, `spec`, server-side `status`) governed by CC-09 and [MF-01…MF-15](../Requirements/manifests.md). The resource API at `/api/v1/projects/{project}/{plural}` and `jcctl get|apply|diff|export|import` follow kubectl conventions; the one difference is that writes become merge requests (MF-12).
+The platform configuration plane treats all resources as versioned declarative manifests. Manifests are Kubernetes-style resources (`apiVersion`, `kind`, `metadata`, `spec`, server-side `status`) governed by CC-09 and [MF-01…MF-15](../Requirements/manifests.md). The resource API at `/api/v1/projects/{project}/{plural}` and `jcctl validate|plan|apply|export|import|drift` follow kubectl conventions; the one difference is that writes become merge requests (MF-12). (`jcctl` with no arguments prints its whole subcommand list; there is no bare `get` and no bare `diff`, only `workspace diff` and `model diff`.)
 
 ## 1. Manifest Envelope Schema
 
@@ -46,7 +46,7 @@ Typed references (`{kind, name, namespace?}`) instead of paths or ids keep bundl
 | `Pipeline` | `projects/{p}/pipelines/` | Bento Runner | Bento ingestion/transformation stream configuration |
 | `DataSource` | `projects/{p}/datasources/` | `jcctl` / Bento Runner | Connection of one external feed (MQTT, HTTP, WebSocket, GTFS-RT) with `secretRef` credentials, referenced by pipelines (MF-35) |
 | `Dashboard` | `projects/{p}/dashboards/` | Portal UI | Visual map and chart layout definition |
-| `SyncSource` | `projects/{p}/sync/`, `sync/` | `jcctl serve` | Continuous import from an external Git repo, bundle URL or other instance (MF-27) |
+| `SyncSource` | `projects/{p}/sync/`, `sync/` | the sync loop, in the Portal or `jcctl sync` | Continuous import from an external Git repo, bundle URL or other instance (MF-27) |
 | `Mapping` | `.../spaces/{s}/datamodels/mappings/` | Model Tools / Gateway | LinkML-Map model-to-model transformation compiled to Bloblang and gateway IR (DM-35) |
 | `Subscription` | `.../spaces/{s}/subscriptions/` | Antares Broker | NGSI-LD subscription reconciled in wave 4 |
 | `Layer` | `projects/{p}/dashboards/` | Portal UI | One map, table or chart layer bound to an Endpoint |
@@ -75,13 +75,12 @@ The list is checked as strictly as the manifests are: once the pinned tag carrie
 
 ## 3. Adding a New Kind
 
-1. **Implement the Rust Serde Model**: Add typed definitions to `crates/jc-core/src/kinds/{kind}.rs` and register the kind. The schema is derived from the type, not written beside it.
-2. **Export the Schema**: `jcctl schema export` writes `schemas/kinds/{Kind}.json` in **draft-07** JSON Schema; the committed file is checked against a fresh export in CI.
-3. **Register `jcctl` Reconciler**: Implement the `Reconcile` trait in `crates/jcctl/src/reconcilers/{kind}.rs`.
-4. **Define Conftest Validation**: Add Rego validation rules in `crates/jcctl/policies/{kind}.rego`.
-5. **Publish UI Schema**: Add form presentation hints in `portal/forms/{kind}.uischema.yaml`.
-6. **Register the resource API**: add the plural name and `utoipa` paths so the kind appears under `/api/v1/projects/{project}/{plural}` and in `jcctl get` (MF-11, MF-14); download/import support comes for free from the envelope.
-7. **Tests**: schema golden files, one proptest that `import(export(x)) == x` for the kind (MF-17), and a Conftest test case per gate.
+1. **Implement the Rust Serde Model**: add the typed definition to `crates/jc-core/src/kinds/{kind}.rs`, with `#[serde(deny_unknown_fields)]`, and register it in `crates/jc-core/src/registry.rs`. The JSON Schema is derived from the type, never written beside it, so the two cannot drift.
+2. **Export the Schema**: `jcctl schema export` writes `schema/kinds/{Kind}.json` in **draft-07**; the committed file is checked against a fresh export in CI.
+3. **Give it a sync wave**: the order a plan converges in comes from the kind alone, in `crates/jcctl/src/waves.rs` (research verdict P4 rejects a free-form dependency DAG). A kind with no wave is a kind the reconciler does not know when to apply. Kinds that drive a live system get their converger beside the others in `crates/jcctl/src` (`pipelines.rs`, `service_accounts.rs`, `roles.rs`, `apisix.rs`, …); there is no `reconcilers/` directory and no `Reconcile` trait.
+4. **Publish UI Schema**: add the form arrangement to `portal/forms/{kind}.uischema.yaml` in the configuration repository, whose `metadata.name` is `spec.for` lowercased (UI-02). Without it the Portal renders the raw JSON Schema.
+5. **Register the resource API**: add the plural and the `utoipa` paths so the kind answers under `/api/v1/projects/{project}/{plural}` **and appears in `ui/openapi.json`** (MF-11, MF-14). A route with no `#[utoipa::path]`, or one missing from the ApiDoc's `paths(...)`, is served but undescribed, so no generated client can call it. Download and import come free from the envelope.
+6. **Tests**: schema golden files, one proptest that `import(export(x)) == x` for the kind (MF-17), and a loader case for each way two files can claim one identity.
 
 ## Related
 

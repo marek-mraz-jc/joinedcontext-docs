@@ -15,14 +15,20 @@ A pipeline lives in `projects/{project}/pipelines/{name}/` and holds two files (
 ```text
 projects/helsinki/
 ├── datasources/
-│   └── hsl-hfp.yaml            # DataSource: where the data comes from (MF-35)
-├── endpoints/
-│   └── ep-vehicles.yaml        # Endpoint: where the entities are written to (EP-01)
+│   └── hsl-hfp.yaml                    # DataSource: where the data comes from (MF-35)
+├── spaces/
+│   └── mobility/
+│       └── endpoints/
+│           └── ep-vehicles.yaml        # Endpoint: where the entities are written to (EP-01)
 └── pipelines/
     └── hsl-hfp-vehicles/
-        ├── pipeline.yaml       # envelope: class, cadence, target endpoint, references
-        └── bento.yaml          # native Bento: processors and output (PL-03)
+        ├── pipeline.yaml               # envelope: class, cadence, target endpoint, references
+        └── bento.yaml                  # native Bento: processors and output (PL-03)
 ```
+
+The directory layout is the convention of [Architecture/06 §2](../Architecture/06-configuration-as-code.md), and it is worth following, but it is not what the loader reads: a resource is identified by its `kind`, `metadata.namespace` and `metadata.name`, wherever in the repository the file sits. A manifest in the wrong folder loads and then confuses the next person, which is why the layout is reviewed rather than parsed.
+
+Each of the four recipes below is a working folder in `joinedcontext-platform/examples/ingestion/` — `hsl-hfp-mqtt`, `http-json-poll`, `csv-fetch` and `gtfs-rt` — each with its `datasource.yaml`, `pipeline.yaml`, `bento.yaml` and the `bento_bento_test.yaml` golden test CI runs.
 
 The part that surprises people: **`bento.yaml` has no `input`**. A pipeline that names `spec.source.dataSourceRef` gets its input rendered by the reconciler from the referenced connection, and the author's processors and output are left exactly as written (PL-39). Each connection type becomes one Bento input, listed in [Architecture/08 §6](../Architecture/08-pipelines.md#6-external-feeds-the-datasource-kind-mf-35-pl-39).
 

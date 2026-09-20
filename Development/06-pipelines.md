@@ -80,7 +80,7 @@ pipeline:
     # the reconciler appends: - mapping: <generated/vendorx-parking-to-parkingspot.blobl>
 ```
 
-`jcctl model compile-mapping vendorx-parking-to-parkingspot` regenerates the Bloblang locally; `bento test` runs the Mapping's golden tests against the compiled output.
+The compiler is Model Tools, not `jcctl`: `src/compile_bloblang.py` and `src/compile_mapping_ir.py` in `joinedcontext-platform/tools/model-tools` turn a `kind: Mapping` into Bloblang and the gateway IR, and the reconciler runs them. (`jcctl model` has three verbs, `generate`, `diff` and `validate`, plus `import` and `infer`; there is no `compile-mapping`.) `bento test` runs the Mapping's golden tests against the compiled output.
 
 ## 2a. Derived pipelines (entities in, entities out)
 

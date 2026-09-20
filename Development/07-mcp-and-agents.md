@@ -23,42 +23,43 @@ flowchart LR
 
 ## 2. Standard Context Data MCP Toolset
 
+The tools of an endpoint's façade are declared in one table, `TOOLS` in `crates/context-gateway/src/mcp/endpoint_facade.rs`, and each names the NGSI-LD operations it needs. `tools/list` returns only those the caller's grants would let through, so the tool list is itself an access decision and a tool a caller may not use is never offered.
+
+The read side is `query_entities`, `get_entity`, `list_types`, `list_attributes`, `describe_schema`, `list_subscriptions` and `batch_query_temporal`; the write side is `upsert_entity` and `create_subscription`.
+
 ```json
 [
   {
     "name": "query_entities",
-    "description": "Queries NGSI-LD context entities with optional filtering",
+    "description": "Query the entities of this context space by type and NGSI-LD filter.",
     "annotations": { "readOnlyHint": true },
     "inputSchema": {
       "type": "object",
-      "properties": {
-        "type": { "type": "string" },
-        "q": { "type": "string" },
-        "limit": { "type": "integer", "default": 20 }
-      }
+      "properties": { "type": {}, "id": {}, "idPattern": {}, "q": {}, "limit": {} },
+      "anyOf": [{ "required": ["type"] }, { "required": ["id"] }]
     }
   },
   {
-    "name": "update_entity",
-    "description": "Applies partial attribute updates to an existing entity",
+    "name": "upsert_entity",
+    "description": "Create or update one entity of this context space.",
     "annotations": { "destructiveHint": true },
     "inputSchema": {
       "type": "object",
-      "required": ["entityId", "attributes"],
-      "properties": {
-        "entityId": { "type": "string" },
-        "attributes": { "type": "object" }
-      }
+      "required": ["entity"],
+      "properties": { "entity": { "type": "object" } },
+      "additionalProperties": false
     }
   }
 ]
 ```
 
-## 3. Configuration Plane MCP Tools (`jcctl`)
+The argument names are the REST surface's own, taken from the same parameter table the query string is built from, so the two cannot drift (AG-84). CIM 009 5.7.2.4 wants at least one selector and does not accept `idPattern` alone, which is why the schema asks for one of five rather than for `type`.
 
-- `plan(repo, changes)`: Dry-runs a proposed manifest change, returning a structural diff.
-- `list_blueprints()`: Lists blueprints available for the agent's assigned role.
-- `propose_change(blueprint, params)`: Synthesizes a manifest change, branches the repository, and opens a merge request.
+## 3. Configuration Plane MCP Tools
+
+The Portal's MCP surface is an adapter over the operation registry, so every tool is an operation with a `jc_` name and the same lane, permission check and dry run as the button a person presses: `jc_catalog_search`, `jc_endpoint_propose`, `jc_pipeline_propose` with its `jc_pipeline_test` check, `jc_datasource_propose` with `jc_datasource_check`, `jc_manifest_dry_run`, `jc_project_create`, `jc_project_import`, `jc_workspace_propose`, `jc_workspace_discard` and the rest. `GET /api/v1/projects/{project}/ops` lists exactly what the caller would be let through; the registry is `joinedcontext-portal/src/ops/mod.rs`.
+
+A propose operation does not write to a live system. It synthesises the manifest, runs the kind's check, branches the configuration repository and opens a merge request, and the lane decides who approves it.
 
 ## 4. Prompt Injection Defense & Sandboxing
 

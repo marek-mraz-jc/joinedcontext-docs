@@ -5,7 +5,7 @@ title: "Backend Development Guidelines (Rust)"
 
 # Backend Development Guidelines (Rust)
 
-Backend services (**Context Gateway**, **Portal API**, **`jcctl`**, **`antares-ql`**) are implemented in idiomatic Rust. Code must be safe, performant, clean, and strictly avoid unhandled errors.
+The backend is Rust everywhere: the **Context Gateway**, the **Portal**, **`jcctl`** and the **credential proxy**. (`antares-ql` belongs to the Antares broker upstream, not to this platform.) Code must be safe, clean, and must never leave an error unhandled on a request path.
 
 ## 1. Core Rules
 
@@ -15,51 +15,56 @@ Backend services (**Context Gateway**, **Portal API**, **`jcctl`**, **`antares-q
    - API boundaries: Convert internal errors into RFC 7807 `ProblemDetails` responses.
 3. **Strict Linting**: Every commit must pass `cargo clippy --all-targets -- -D warnings`.
 4. **Supply Chain Audit**: Dependencies must pass `cargo deny check` (licenses, bans, security advisories).
+5. **Refuse What You Did Not Declare**: every type deserialized from a manifest, a request body or a configuration file carries `#[serde(deny_unknown_fields)]`. A field the platform does not know is a typo the caller wants to hear about, or a field the caller believes is being honoured; silently dropping it is both.
+6. **A Credential Is Never Printable**: a secret is held in a `jc_core::Secret`, whose `Debug` writes `<redacted>` and which has no `Display` and no `Serialize`. A derived `Debug` over a configuration struct is how a client secret reaches the cluster's log.
 
 ## 2. API Design & OpenAPI Generation
 
-The Portal API uses **`axum`** with **`utoipa`** for code-first OpenAPI documentation:
+The Portal uses **`axum`** with **`utoipa`** for code-first OpenAPI documentation. Two rules bind every route:
+
+- The URL scheme is `/api/v1/projects/{project}/{plural}` and `/api/v1/projects/{project}/{plural}/{name}`. Never `/api/v1/spaces/{id}`, and never `/apis/joinedcontext.com/...`: a resource is reached inside the project that holds it, by the plural of its kind. `apiVersion` and `kind` live inside the manifest, not in the path.
+- A route without a `#[utoipa::path]` and without an entry in the ApiDoc's `paths(...)` is a route the generated client cannot call, and the API documentation will describe a platform that is not the one running.
 
 ```rust
-use axum::{extract::{State, Path}, Json};
-use utoipa::ToSchema;
-use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize, ToSchema)]
-pub struct ContextSpaceDto {
-    pub id: String,
-    pub name: String,
-    pub project_id: String,
-}
+use axum::extract::{Path, State};
+use axum::Json;
 
 #[utoipa::path(
     get,
-    path = "/api/v1/spaces/{id}",
+    path = "/api/v1/projects/{project}/{plural}/{name}",
+    tag = "resources",
+    params(
+        ("project" = String, Path, description = "Project name"),
+        ("plural" = String, Path, description = "Resource kind plural"),
+        ("name" = String, Path, description = "Resource name"),
+    ),
     responses(
-        (status = 200, description = "Space retrieved successfully", body = ContextSpaceDto),
-        (status = 404, description = "Space not found", body = ProblemDetails)
+        (status = 200, description = "Resource envelope", body = ResourceEnvelope),
+        (status = 401, description = "Unauthorized", body = ProblemDetails),
+        (status = 404, description = "Resource not found", body = ProblemDetails)
     )
 )]
-pub async fn get_space(
-    State(pool): State<sqlx::PgPool>,
-    Path(id): Path<String>,
-) -> Result<Json<ContextSpaceDto>, AppError> {
-    let space = sqlx::query_as!(
-        ContextSpaceRecord,
-        "SELECT id, name, project_id FROM context_spaces WHERE id = $1",
-        id
-    )
-    .fetch_optional(&pool)
-    .await?
-    .ok_or(AppError::NotFound("Space not found".into()))?;
-
-    Ok(Json(space.into()))
+pub async fn get_resource(
+    State(state): State<AppState>,
+    Path((project, plural, name)): Path<(String, String, String)>,
+) -> Result<Json<ResourceEnvelope>, ApiError> {
+    // Configuration kinds are read from the reconciler's mirror of the Git repository, never
+    // with SQL: Git is the source of truth and the database holds preferences and state.
+    state
+        .resources()
+        .get(&project, &plural, &name)
+        .ok_or_else(|| ApiError::NotFound(format!("{plural}/{name} is not in project {project}")))
+        .map(Json)
 }
 ```
 
+The shape above is the real one; `src/api/resources.rs` is the handler it is taken from.
+
 ## 3. Database Migrations (sqlx)
 
-Database queries must be checked at compile time using `sqlx`. Migrations live in `crates/portal-api/migrations/` as standard SQL files:
+Database queries are checked at compile time with `sqlx`. Migrations are numbered SQL files in `joinedcontext-portal/migrations/` (`0001_user_preferences.sql`, `0002_service_account_keys.sql`, …).
+
+What belongs in the database is the short list: user preferences, ServiceAccount key records, sync-source state. Everything declarative, a Context Space, an Endpoint, a Policy, a Pipeline, is a manifest in Git that the reconciler mirrors, so a handler that reaches for SQL to answer a question about configuration is answering from the wrong place.
 
 ```bash
 # Create a new migration

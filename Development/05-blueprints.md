@@ -76,7 +76,16 @@ spec:
 ```
 
 A parameter never carries a secret. Take the *name* of a secret instead and let the manifest
-reference it (`secretRef`); values live in the secret store (CC-06).
+reference it (`secretRef`); values live in the secret store (CC-06). The Portal has a widget for
+exactly that shape, so name it and the form asks for a name, a key and an environment variable
+instead of offering a box somebody types a password into:
+
+```yaml excerpt title="a parameter that points at a secret"
+      apiToken:
+        type: object
+        title: "API token"
+        x-jc-widget: secretRef
+```
 
 ### 2.1 Choices the platform already knows (CC-24)
 
@@ -108,14 +117,17 @@ spec:
           entityType: AirQualityObserved
 ```
 
-Two pickers exist. `resourcePicker` lists the project's manifests of one kind, by the plural
-segment of `/api/v1/projects/{project}/{plural}`, and submits the chosen name.
-`entityPicker` searches a space through the gateway and submits the chosen entity's id; it
-needs `space` and `entityType`, and either may itself be another parameter's value only if the
-blueprint's author writes it as a literal — the form resolves no hint from another field.
+Four widgets are registered, in `ui/src/components/forms/widgets/index.ts`. Two of them are
+pickers: `resourcePicker` lists the project's manifests of one kind, by the plural segment of
+`/api/v1/projects/{project}/{plural}`, and submits the chosen name; `entityPicker` searches a
+space through the gateway and submits the chosen entity's id, and needs `space` and
+`entityType`, which the blueprint's author writes as literals, because the form resolves no
+hint from another field. The other two shape a value the platform has a form for: `secretRef`
+asks for the name, key and environment variable of a secret, and `operations` offers the NGSI-LD
+operation groups as checkboxes instead of a free-text list.
 
-The widget name has to be one the Portal registers; an unknown one leaves the parameter with
-its default input rather than breaking the form. A picker is a convenience, not a control:
+The widget name has to be one of those four; an unknown one leaves the parameter with its
+default input rather than breaking the form. A picker is a convenience, not a control:
 both lists come back narrowed to what the caller may read, and the value is validated against
 the same schema on the server, where the decision is made (CC-60).
 
