@@ -94,7 +94,7 @@ PUT    …/{plural}/{name}                                                      
 PATCH  …/{plural}/{name}   (application/apply-patch+yaml | merge-patch+json)   → 202 + Change
 DELETE …/{plural}/{name}                                                       → 202 + Change (explicit deletion lane)
 POST   …/{plural}?dryRun=All                                                   validate + plan, no change created
-GET    /api/v1/{plural}                                 organization-level kinds (Organization, Blueprint, SyncSource)
+GET    /api/v1/blueprints                               the Blueprint catalogue of the organization
 GET    /api/v1/endpoints                                every Endpoint of every project the caller may read, each with its project (PF-60, PF-61)
 POST   /api/v1/projects                                 open a project → 202 + Change: project.yaml and the creator's steward binding in one merge request (PF-65, PF-66)
 GET    /api/v1/projects/{project}                       the project and `status.usage`: what it holds of each quota (PF-73, PF-75)
@@ -141,13 +141,15 @@ Portability operations:
 GET  /api/v1/projects/{project}/export?format=yaml|json|zip&revision={commit}&kinds=…&names=…   section 10
 GET  /api/v1/projects/{project}/revisions?limit=20                                            section 10
 POST /api/v1/projects/{project}/import        multipart (file) or JSON manifests; fields: targetNamespace, conflictPolicy, dryRun; {"url": …} is 501
-GET  /api/v1/organizations/{org}/export?format=zip&revision=…
-POST /api/v1/organizations/{org}/import
 GET  /api/v1/projects/{project}/syncsources/{name}/status   what the loop reports (section 10)
 POST /api/v1/projects/{project}/syncsources/{name}/sync     trigger a run now
 POST /api/v1/projects/{project}/syncsources/{name}/pause    switch the loop off or back on
 POST /api/v1/projects/{project}/syncsources/{name}/detach   stop syncing: a merge request removing the source
 ```
+
+Export and import are per project. There is no organization-wide pair: moving a whole
+organization is every project exported in turn, and a route that took one archive for all of
+them would also take one conflict policy for all of them, which is a decision per project.
 
 `GET /api/v1/projects/{project}` carries the count and the limit of every countable quota
 dimension, so a person sees the limit before the verdict does (PF-75). The limit is the one in

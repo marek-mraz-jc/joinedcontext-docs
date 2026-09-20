@@ -131,11 +131,24 @@ def check(root: Path) -> list[str]:
         paths = spec.get("paths")
         if not isinstance(paths, dict) or not paths:
             return problems + [f"OPENAPI_JSON={spec_path} declares no paths"]
-        # a documented `/api/v1/projects/{project}/{plural}` matches a spec path with the same
-        # shape whatever the parameters are named, so a rename shows up as a parameter mismatch
-        shapes: dict[str, list[str]] = {}
-        for spec_route in paths:
-            shapes.setdefault(PARAM.sub("{}", spec_route), []).append(spec_route)
+        # A documented route is served by a specification path when the two have the same
+        # number of segments and every segment either matches or is a parameter on the
+        # specification's side. The direction matters: `/branding/logo` is served by
+        # `/branding/{asset}` and `/projects/{p}/csrs` by `/projects/{project}/{plural}`,
+        # because a page is free to show the value a parameter takes. The reverse is not
+        # true — a page that writes `{plural}` where the specification has a fixed segment
+        # is describing a surface wider than the one that exists.
+        spec_segments = {route: route.strip("/").split("/") for route in paths}
+
+        def serves(spec_route: str, documented_segments: list[str]) -> bool:
+            published = spec_segments[spec_route]
+            if len(published) != len(documented_segments):
+                return False
+            return all(
+                PARAM.fullmatch(part) is not None or part == mine
+                for part, mine in zip(published, documented_segments)
+            )
+
         for (method, path), where in sorted(found.items(), key=lambda item: item[1]):
             # A documented route often shows the query it takes (`?limit=20`,
             # `?format=yaml|json|zip`). A specification path never carries one, so the
@@ -143,18 +156,33 @@ def check(root: Path) -> list[str]:
             bare = path.split("?", 1)[0]
             if not bare.startswith(SPEC_SCOPE):
                 continue
-            shape = PARAM.sub("{}", bare)
-            if shape not in shapes:
+            documented_segments = bare.strip("/").split("/")
+            # The most specific match first, so `/branding/{asset}` is preferred over a
+            # wildcard that would also accept it and the parameter names are compared
+            # against the path a client would really call.
+            candidates = sorted(
+                (route for route in paths if serves(route, documented_segments)),
+                key=lambda route: len(PARAM.findall(route)),
+            )
+            if not candidates:
                 problems.append(f"{where}: {method} {path} is in no path of the published specification")
                 continue
-            spec_route = shapes[shape][0]
+            spec_route = candidates[0]
             if method.lower() not in {k.lower() for k in paths[spec_route]}:
                 problems.append(f"{where}: the specification serves {spec_route} without {method}")
-            documented, published = PARAM.findall(path), PARAM.findall(spec_route)
-            if documented != published:
+            # Only the positions where both sides wrote a parameter are compared: a page
+            # showing a value is not a rename, and a rename is still caught.
+            published = spec_segments[spec_route]
+            renamed = [
+                (mine, theirs)
+                for theirs, mine in zip(published, documented_segments)
+                if PARAM.fullmatch(theirs) and PARAM.fullmatch(mine) and theirs != mine
+            ]
+            if renamed:
                 problems.append(
-                    f"{where}: {path} names its parameters {documented} and the specification "
-                    f"names them {published}"
+                    f"{where}: {path} names its parameters "
+                    f"{[mine.strip('{}') for mine, _ in renamed]} and the specification "
+                    f"names them {[theirs.strip('{}') for _, theirs in renamed]}"
                 )
     return problems
 
@@ -199,7 +227,7 @@ GET    /api/endpoint/{endpointSlug}/ngsi-ld/v1/entities   entities
         ("method missing from the specification", page, "without POST",
          {"paths": {"/api/v1/projects/{project}/{plural}": {"get": {}},
                     "/api/endpoint/{endpointSlug}/ngsi-ld/v1/entities": {"get": {}}}}),
-        ("parameter renamed in the specification", page, "names them ['project', 'kind']",
+        ("parameter renamed in the specification", page, "names them ['kind']",
          {"paths": {"/api/v1/projects/{project}/{kind}": {"get": {}, "post": {}},
                     "/api/endpoint/{endpointSlug}/ngsi-ld/v1/entities": {"get": {}}}}),
     ]

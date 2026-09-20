@@ -8,7 +8,7 @@ description: Comprehensive API map, authentication specifications, rate limits, 
 
 joinedcontext exposes standard-first, versioned programmatic interfaces. The platform eliminates custom proprietary APIs in favor of internationally ratified specifications:
 
-- **ETSI GS CIM 009 (NGSI-LD v1.6.1):** Core context data operations.
+- **ETSI GS CIM 009 (NGSI-LD V1.9.1):** Core context data operations. That is the version the default broker implements and the version the conformance suite runs (1822 cases); a page citing an older one is citing a specification this platform does not serve.
 - **OGC API - Features Part 1:** Geospatial feature queries.
 - **OGC SensorThings API (STA) v1.1:** Time-series sensor streams.
 - **Model Context Protocol (MCP 2026-07-28):** Autonomous AI agent tool integration.

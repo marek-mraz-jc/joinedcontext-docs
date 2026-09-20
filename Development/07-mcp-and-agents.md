@@ -10,15 +10,15 @@ The platform implements the open Model Context Protocol (MCP) using the official
 ## 1. Architectural Split: Two MCP Facades
 
 1. **Context Data MCP** (Part of Context Gateway, SP-14…SP-20): Exposes spaces and endpoints as MCP Streamable HTTP servers. Tools are projected dynamically from the caller's active permissions.
-2. **Configuration Plane MCP** (`jcctl serve --mcp`, CC-45…CC-48): Exposes blueprint instantiation, plan evaluation, and merge request proposals to autonomous agents.
+2. **Configuration Plane MCP** (`POST /api/v1/mcp` on the Portal, CC-45…CC-48): Exposes blueprint instantiation, plan evaluation, and merge request proposals to autonomous agents. It is one adapter over the operation registry, so a tool call and the button a person presses run the same function ([ADR-N-021](../Decisions/adr-n-021-one-operation-registry-behind-ui-api-assistant-and-mcp.md)). It was specified as `jcctl serve --mcp` and built in the Portal instead: `jcctl` has no MCP code, and the configuration API — changes, dry runs, git, permissions — lives where the sessions and the forge credentials already are.
 
 ```mermaid
 flowchart LR
     Agent[AI Agent / LLM Client] -->|Streamable HTTP OAuth 2.1| GatewayMCP[Context Gateway MCP]
-    Agent -->|Streamable HTTP OAuth 2.1| CityctlMCP[jcctl Config MCP]
+    Agent -->|Streamable HTTP OAuth 2.1| PortalMCP[Portal Config MCP]
 
     GatewayMCP -->|Filtered by Grants| Data[Query / Write Entities]
-    CityctlMCP -->|Git Merge Request| Forge[Gitea / CI Gate]
+    PortalMCP -->|Git Merge Request| Forge[Gitea / CI Gate]
 ```
 
 ## 2. Standard Context Data MCP Toolset
