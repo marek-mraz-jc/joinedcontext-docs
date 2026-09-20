@@ -18,7 +18,12 @@ to it:
   tree. `USER_SIDE` lists the ones a user's own workload receives instead, each with the
   reason;
 * **an operation name** — a `jc_*` name must exist in the tree. This is the operation
-  registry and the metrics beside it (ADR-N-021).
+  registry and the metrics beside it (ADR-N-021);
+* **a problem type** — a printed `https://joinedcontext.com/errors/{slug}` must have its slug
+  as a string in the tree, and a `…/problems/{slug}` must be there whole. A client branches on
+  `type`, so a slug nothing produces sends it down a branch that never runs; this is how
+  `https://joinedcontext.com/problems/forbidden` stood on an API page while every refusal of
+  that kind says `…/errors/forbidden` (TS-19, T-2148).
 
 `Decisions/` and `Research/` are read differently: a decision records what was decided and a
 research page records what was looked at, both at a moment that has passed. Neither is a
@@ -125,6 +130,9 @@ ENVIRONMENT = re.compile(r"\b((?:JC|PORTAL)_[A-Z0-9_]{2,})\b")
 # The trailing guard keeps a hyphenated name out: `jc_edge_app_air-quality-today` is a cookie
 # name, and its head is not an operation that has to exist.
 OPERATION = re.compile(r"\b(jc_[a-z][a-z0-9_]{2,})(?![-\w])")
+# The `type` of a problem document. `{slug}` itself is a page explaining the form, not a claim
+# about one refusal, and the pattern does not match it.
+PROBLEM_TYPE = re.compile(r"https://joinedcontext\.com/(errors|problems)/([a-z0-9][a-z0-9-]*)")
 
 
 def walk(root: pathlib.Path):
@@ -206,6 +214,21 @@ def problems_of(
             if name in code_text:
                 continue
             bad.append(f"{relative}:{lineno}: no such operation or metric: {name}")
+
+        for family, slug in PROBLEM_TYPE.findall(line):
+            # The `errors` family is built as `format!(".../errors/{slug}")`, so the slug is
+            # what a tree can be searched for; the `problems` family is written whole where it
+            # is produced, and is looked up whole.
+            found = (
+                f"https://joinedcontext.com/{family}/{slug}" in code_text
+                if family == "problems"
+                else f'"{slug}"' in code_text
+            )
+            if not found:
+                bad.append(
+                    f"{relative}:{lineno}: nothing answers this problem type: "
+                    f"https://joinedcontext.com/{family}/{slug}"
+                )
     return bad
 
 
@@ -243,6 +266,8 @@ The router lives in `crates/context-gateway/src/app.rs` and the Portal form in
 `ui/src/pages/endpoints/Form.tsx`. The gateway reads `JC_BROKER_URL` at start-up.
 The assistant calls `jc_catalog_search`; a user's compute container receives `JC_SOURCE_URL`.
 A pipeline of somebody else's lives in `compute/src/lib.rs`, which is their repository.
+A refusal is `https://joinedcontext.com/errors/forbidden`, and a draft that moved under the
+request is `https://joinedcontext.com/problems/draft-conflict`.
 """
 
 STALE_PAGE = """---
@@ -253,6 +278,7 @@ title: A page that has gone stale
 
 The command is `crates/jcctl/src/mcp.rs` and it reads `JC_MCP_SOCKET`.
 Ask the assistant for `jc_model_validate`.
+A refusal is `https://joinedcontext.com/problems/forbidden`.
 """
 
 HISTORY_PAGE = """---
@@ -277,7 +303,9 @@ def selftest() -> int:
         gateway = code / "joinedcontext-platform" / "crates" / "context-gateway" / "src"
         gateway.mkdir(parents=True)
         (gateway / "app.rs").write_text(
-            'let url = std::env::var("JC_BROKER_URL")?;\nconst TOOL: &str = "jc_catalog_search";\n',
+            'let url = std::env::var("JC_BROKER_URL")?;\nconst TOOL: &str = "jc_catalog_search";\n'
+            'let slug = "forbidden";\n'
+            'let conflict = "https://joinedcontext.com/problems/draft-conflict";\n',
             encoding="utf-8",
         )
         form = code / "joinedcontext-portal" / "ui" / "src" / "pages" / "endpoints"
@@ -293,7 +321,12 @@ def selftest() -> int:
         (docs / "Architecture" / "true.md").unlink()
         (docs / "Architecture" / "stale.md").write_text(STALE_PAGE, encoding="utf-8")
         found = check(docs, code)
-        wanted = ["no such file", "nothing reads this variable", "no such operation"]
+        wanted = [
+            "no such file",
+            "nothing reads this variable",
+            "no such operation",
+            "nothing answers this problem type",
+        ]
         missing = [want for want in wanted if not any(want in problem for problem in found)]
         if missing:
             print(
