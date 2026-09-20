@@ -108,8 +108,13 @@ jobs:
       - name: an unlabelled code fence fails that lint (T-0099)
         run: |
           set -eu
-          printf '# Bad page\n\nA fence with no language tag:\n\n```\nno language\n```\n' > "${RUNNER_TEMP}/bad-fence.md"
-          npx --yes markdownlint-cli@0.45.0 --config .markdownlint.json "${RUNNER_TEMP}/bad-fence.md" 2>&1 | tee "${RUNNER_TEMP}/bad-fence.log" || true
+          # Inside the checkout, not in RUNNER_TEMP: since `.markdownlintignore` arrived (T-2144)
+          # markdownlint-cli runs every argument through `ignore`, which throws on a path outside
+          # the working directory — the lint then crashed, printed no rule and failed this check
+          # while the rule it asks about was working perfectly (T-2442).
+          trap 'rm -f bad-fence.md' EXIT
+          printf '# Bad page\n\nA fence with no language tag:\n\n```\nno language\n```\n' > bad-fence.md
+          npx --yes markdownlint-cli@0.45.0 --config .markdownlint.json bad-fence.md 2>&1 | tee "${RUNNER_TEMP}/bad-fence.log" || true
           grep -q "MD040/fenced-code-language" "${RUNNER_TEMP}/bad-fence.log" || {
             echo "the markdown lint accepted an unlabelled code fence" >&2
             exit 1
