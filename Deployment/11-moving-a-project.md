@@ -8,7 +8,7 @@ description: Export a project from one instance, import it under another's overl
 
 A project moves as a bundle: you export it at the source, import it at the target, read the
 per-file verification the import answers, and delete the source only when every file is equal.
-Nothing about the move is automatic — each step is a change somebody approves — and the order
+Nothing about the move is automatic. Each step is a change somebody approves, and the order
 below is the one that never loses a manifest (MF-42, PF-77, PF-78).
 
 ## 1. Before you start
@@ -32,8 +32,13 @@ curl -fsS -b "$SESSION" \
 ```
 
 The archive holds `projects/$PROJECT/`, a `README.md`, `schemas/` and `bundle.yaml`. The index
-carries `spec.sourceRevision` — the commit the export was taken at — and `spec.files`, the
+carries `spec.sourceRevision`, the commit the export was taken at, and `spec.files`, the
 SHA-256 of every file as exported. That list is what the target verifies against.
+
+`format` is `yaml`, `json` or `zip`, and `yaml` is the default; only `zip` carries the whole
+bundle with its index, so a move uses `zip`. Three more parameters narrow the export:
+`revision` takes it at a commit other than the tip, and `kinds` and `names` take comma-separated
+lists when you are moving part of a project rather than all of it.
 
 Check it is the revision you meant:
 
@@ -50,9 +55,21 @@ curl -fsS -b "$SESSION" -X POST \
   "https://portal.target.example/api/v1/projects/$PROJECT/import?dryRun=All"
 ```
 
-Read the dry run first: `created`, `replaced`, `skipped`, `renamed`, and any refusal. Then run it
-again without `dryRun`; the answer is `202` and a `Change`, one merge request for the whole
-bundle, in the riskiest lane of the resources it holds (CC-63).
+Read the dry run first. The report carries `created`, `replaced`, `skipped`, `renamed`,
+`nativeFiles`, the `lane` the bundle lands in, and any refusal. Then run it again without
+`dryRun`; the answer is `202` and a `Change`, one merge request for the whole bundle, in the
+riskiest lane of the resources it holds (CC-63).
+
+The report also carries `needs`: what a copy cannot bring with it (CC-84). Each entry has a
+`kind` of `secret`, `person`, `host` or `credential` and a `location` of the form
+`Kind/name spec.path`. It never carries a secret value, only where one has to be set. Work
+through that list at the target before the project is expected to run: a `secretRef` resolves
+against the target's own store, a person is a target account, a host is the target's domain,
+and a feed credential is issued again by whoever owns the feed. An empty `needs` means nothing
+has to be provided.
+
+`dryRun` is spelled in camel case and nothing else. The handler renames the field, so `dry_run`
+is not read and the import commits (T-1226).
 
 ## 4. Verify before you delete anything
 
@@ -83,13 +100,15 @@ curl -fsS -b "$SESSION" -X DELETE \
 That is one red-lane `Change` removing the project's whole tree and every binding and project
 role written for it (PF-77). Approving it drops each space's broker tenant, so export the data
 first if it is to be kept. The name then stays reserved at the source for
-`Organization.spec.projects.nameCooldownDays`, 30 days by default (PF-78).
+`Organization.spec.projects.nameCooldownDays`, 30 days by default, and `0` frees it at once
+(PF-78). The commit that removed `projects/{name}/project.yaml` starts the period, so the
+reservation survives a restart of the Portal.
 
 ## 6. If the move has to be undone
 
 Before the source is deleted, there is nothing to undo: reject the target's merge request and the
 target is as it was. After the source is deleted, the project is recreated by importing the same
-bundle back — the archive you downloaded in step 2 is the record, so keep it until the move is
+bundle back. The archive you downloaded in step 2 is the record, so keep it until the move is
 settled.
 
 ## Related
