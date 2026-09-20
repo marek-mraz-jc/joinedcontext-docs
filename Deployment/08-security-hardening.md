@@ -204,12 +204,22 @@ the network — Cilium is the candidate already raised for enforcing egress at a
 cluster rebuild, not a manifest change, and it is the same decision as the plugin choice above
 rather than a second one.
 
-What holds it in the meantime: `just dev-smoke` measures the window on every run and prints
-its length beside the pass line (`settled after 8s`), so a regression is visible to whoever
-reads the run. It is a measurement and not yet a bound — the probe gives the controller up to
-72 seconds and reports whatever it took, and no length fails the run. Turning the number into
-a ceiling is [T-2360](https://github.com/marek-mraz/joinedcontext-deployment); until it lands,
-"bounded" means "watched", which is less than this page used to claim.
+What holds it in the meantime: `just dev-smoke` measures the window on every run and holds it
+to a ceiling. The pass line carries both numbers (`settled after 8s, ceiling 30s`), and a
+window over the ceiling is a failed run naming the measured seconds and the allowed seconds,
+so a controller that has got slower stops the smoke suite instead of printing a larger number
+on a green line.
+
+The ceiling is `JC_NETPOL_SETTLE`, in whole seconds, default 30, read by
+`scripts/smoke.sh` in the deployment repository. Two values it refuses rather than accepts:
+anything that is not a whole number of seconds, because a typo that read as zero or as
+infinity would invert the check; and anything at or above 72 seconds, which is the probe's own
+upper bound on how long it waits, so a larger ceiling could never be exceeded and would switch
+the bound off while still printing one.
+
+Raising it on a cluster is a decision, not a fix: the gap is accepted at 30 seconds, and a
+cluster that needs more gets a line in `AI_shared_folder.md` saying what was seen and for how
+long the larger number stands. Lowering it is free.
 
 ### Layer 7: Admission and Runtime Policy Enforcement
 
