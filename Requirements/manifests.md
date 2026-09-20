@@ -6,7 +6,7 @@ description: Kubernetes-style resource envelope, resource API, and download, imp
 
 # Manifest Model, Import, Sync & Download
 
-Family **MF** (MF-01…MF-43). Owning chapter: [Architecture/06-configuration-as-code.md](../Architecture/06-configuration-as-code.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
+Family **MF** (MF-01…MF-44). Owning chapter: [Architecture/06-configuration-as-code.md](../Architecture/06-configuration-as-code.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
 
 ## 1. Resource Envelope
 
@@ -61,6 +61,7 @@ Family **MF** (MF-01…MF-43). Owning chapter: [Architecture/06-configuration-as
 - **MF-30** — `SyncSource` status MUST report current synchronization state, observed revisions, and active merge requests with options to trigger manual runs or pause syncing.
 - **MF-31** — Remote sync connections MUST authenticate using scoped secret references and execute with permissions restricted to the sync source owner's grants.
 - **MF-32** — Cross-instance synchronization MUST interact exclusively through the target instance's public resource API and Endpoint surfaces.
+- **MF-44** [S] — A `SyncSource` that runs on a webhook MUST carry its own inbound credential as `spec.webhook.secretRef` (with `spec.webhook.previousSecretRef` for a rotation window) and MUST be refused at admission when `spec.schedule.webhook` is `true` and no such reference is given; the webhook route MUST authorise a run against that source's own resolved secret and against no shared or platform-wide secret, MUST answer one and the same `401` for an unknown source, a source with no `spec.webhook` and a signature that does not verify, and MUST never carry the secret in an answer, a log line or the source's `status` (MF-24, MF-31, PF-51, PF-59).
 
 ## 6. UI and Parity
 
@@ -110,6 +111,7 @@ Family **MF** (MF-01…MF-43). Owning chapter: [Architecture/06-configuration-as
 | MF-42 | [Architecture/06-configuration-as-code.md#6-download-import-and-sync-defined-by-the-user-in-the-ui-cc-49cc-53-mf-16mf-34](../Architecture/06-configuration-as-code.md#6-download-import-and-sync-defined-by-the-user-in-the-ui-cc-49cc-53-mf-16mf-34) | [Testing/04-configuration-and-pipeline-tests.md#2-conftest-policy-guardrails-opa--rego](../Testing/04-configuration-and-pipeline-tests.md#2-conftest-policy-guardrails-opa--rego) |
 | MF-40 | [Architecture/07-agents-and-mcp.md#8-what-an-agent-may-reach](../Architecture/07-agents-and-mcp.md#8-what-an-agent-may-reach) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-schema-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-schema-validation) |
 | MF-43 | [Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes](../Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-schema-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-schema-validation) |
+| MF-44 | [Architecture/06-configuration-as-code.md#6-download-import-and-sync--defined-by-the-user-in-the-ui-cc-49cc-53-mf-16mf-34](../Architecture/06-configuration-as-code.md#6-download-import-and-sync-defined-by-the-user-in-the-ui-cc-49cc-53-mf-16mf-34) | [Testing/01-backend-tests.md#3-reconciler-jcctl-testing](../Testing/01-backend-tests.md#3-reconciler-jcctl-testing) |
 
 ## Related
 
