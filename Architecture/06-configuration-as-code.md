@@ -539,7 +539,9 @@ metadata: { name: staging, namespace: org }
 spec:
   orgDomain: staging.banskabystrica.sk
   hosts: { portal: portal.staging.bb.example, gateway: api.staging.bb.example }
-  images: { context-gateway: "sha256:…", portal: "sha256:…" }
+  images:
+    context-gateway: "sha256:3f786850e387550fdab836ed7e6dc881de23001b6c2a1e2d48d37fca4b2f1e39"
+    portal: "sha256:89e6c98d92887913cadf06b2adb97f26cde4849b1f1a58e18e2a1c2a7b8d1d0f"
   secrets: { backend: openbao, mount: jc/staging }
   features: { publicEndpoints: false }
 ```
