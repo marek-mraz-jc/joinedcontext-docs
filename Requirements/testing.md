@@ -11,7 +11,8 @@ This chapter specifies the normative verification pyramid, automated quality gat
 
 ## 1. Rust Core and Property-Based Testing
 
-- **TS-01** — All Rust crates (Context Gateway, Portal API, `jcctl`, `antares-ql`) MUST maintain unit test coverage verified in CI.
+- **TS-01** — All Rust crates MUST maintain unit test coverage verified in CI.
+  > Note: Five in `joinedcontext-platform` (`context-gateway`, `jc-core`, `jcctl`, `agent-proxy`, `functions`), one in `joinedcontext-portal`, and `antares-ql` in the broker's own repository, which has its own lane. They are not one workspace, so "all Rust crates" is three CI lanes and not one.
 - **TS-02** — Query Rewriting Soundness (R57): The Context Gateway MUST be tested using property-based testing (`proptest`) generating arbitrary permutations of user queries, entity schemas, and policy grant combinations, asserting:
   - **Read Soundness**: No returned entity or attribute falls outside the mathematical union of applicable grants.
   - **Write Soundness**: No accepted create or update payload violates any constraint in the governing policy.
@@ -29,7 +30,8 @@ This chapter specifies the normative verification pyramid, automated quality gat
 ## 3. Contract and Client Integrity Testing
 
 - **TS-09** — The Portal API and Context Gateway management endpoints MUST be fuzzed in CI against their published OpenAPI specifications using `schemathesis`. Any unhandled panic, 500 Internal Server Error, or schema divergence MUST fail the pipeline.
-- **TS-10** — The Portal UI build pipeline MUST recompile the TypeScript API client from the fresh OpenAPI specification and verify zero TypeScript compiler errors (`tsc --noEmit`).
+- **TS-10** — The Portal UI build pipeline MUST recompile the TypeScript API client from the fresh OpenAPI specification and verify zero TypeScript compiler errors (`tsc -b`).
+  > Note: `tsc -b` and not `tsc -p` or a bare `tsc --noEmit`: the UI is a project-references build, and only the build mode type-checks `ui/tests` as well as `ui/src`. `ui/package.json` runs `tsc -b` in `build` and `tsc -b --noEmit` in `typecheck`.
 
 ## 4. Frontend, E2E, and Accessibility Testing
 
@@ -46,6 +48,7 @@ This chapter specifies the normative verification pyramid, automated quality gat
 ## 5. Pipeline and Blueprint Verification
 
 - **TS-15** — Pipeline Linting: CI pipelines MUST execute `bento lint` over every pipeline manifest in the repository.
+  > Note: Which repository, and what lints a project's own manifest, is PL-21's note: the platform lane lints the recipes it ships, and the runner lints a project's `bento.yaml` through the pipeline test (PL-43).
 - **TS-16** — Pipeline Golden Testing: Every data transformation pipeline MUST maintain a corresponding `test_definition.yaml` containing mock input events and expected outputs. CI MUST execute `bento test` and verify exact payload matches.
 - **TS-17** — Blueprint Determinism: CI MUST re-render all committed blueprint instances against their declared templates and parameters, asserting that the output is byte-identical to the committed manifests (CC-25).
 
@@ -54,6 +57,7 @@ This chapter specifies the normative verification pyramid, automated quality gat
 - **TS-18** — Manifest Schema Validation: CI MUST validate every YAML manifest in the repository against its published JSON Schema draft-07 specification (CC-12).
 - **TS-19** — Policy Guardrails: Conftest (OPA/Rego) gates in CI MUST assert that all proposed manifests adhere to organization quotas, permitted entity types, assigned roles, and scope boundaries (CC-59, CC-60).
 - **TS-20** — Reconciler Plan Gate: CI MUST execute `jcctl plan` for every merge request and automatically post the human-readable plan diff as an MR comment (CC-20).
+  > Note: Not built, and it has no lane to live in yet: no workflow runs `jcctl plan`, and the platform's own repositories are trunk-based for the MVP with no pull requests. The plan a person reads today is the one the Portal shows on the Change (CC-20, UI-24).
 - **TS-21** — Reconciler Idempotency: Integration test suites MUST execute `jcctl apply` twice consecutively against a test instance and assert that the second run generates a completely empty diff (CC-18).
 
 ## 7. Performance and Latency Budgets
@@ -70,6 +74,7 @@ This chapter specifies the normative verification pyramid, automated quality gat
 
 - **TS-23** — Container Image Security: All built container images MUST be scanned using Trivy; any unpatched vulnerability with severity `CRITICAL` or `HIGH` MUST block image release.
 - **TS-24** — Dependency Scanning: CI MUST run `cargo audit` (Rust) and `npm audit` (JavaScript), blocking dependencies with published security advisories.
+  > Note: `cargo audit` and `cargo deny check advisories bans licenses sources` run in the `ci-full` lane of both Rust repositories. The JavaScript half is not run: no workflow executes `npm audit` or `pnpm audit`.
 - **TS-25** — Agent Red-Teaming: The test suite MUST include an adversarial prompt-injection corpus passed through mock sensor observations and entity attributes, asserting that the Agent Runner never escalates privileges, escapes sandboxes, or triggers unapproved destructive tool calls.
 
 ## Traceability

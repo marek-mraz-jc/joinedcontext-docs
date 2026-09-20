@@ -14,10 +14,10 @@ This document provides end-to-end traceability cross-referencing requirement fam
 | **R1–R43** | Access Control & Federation | `access-control.md` | Context Gateway (PEP + in-process PDP), Context Broker (Antares) | TTF Robot Conformance Suite, Gateway Rewriter Property Tests, Integration Tests |
 | **MIM0–MIM10** | OASC Interoperability | `access-control.md` (Part II) | Context Gateway, Data Models, DCAT-AP Catalog, OGC Features Translator | MIM0 API checks, Schema validation, Conformance ATS |
 | **GW1–GW34** | Gateway Firewall Rules | `gateway-firewall.md` | Context Gateway (PEP), APISIX Data Plane, Antares RLS | Gateway Property Tests (`proptest`), Adversarial Bleed Corpus |
-| **R44–R60** | Policy Firewall Extensions | `policy-firewall.md` | Context Gateway, ETag Validator, Bitstring Verifier | ETag Conditional Write Tests, Revocation Reaper Tests |
-| **I1–I4** | Identity & Credentials | `policy-firewall.md` | Keycloak, VCVerifier, Trusted Issuers Registry | Keycloak OIDC Integration Tests, OID4VP Verification Tests |
+| **R44–R60** | Policy Firewall Extensions | `policy-firewall.md` | Context Gateway (the conditional-write flow); the ETag validator and the status-list verifier are designed, not built | Conditional-write tests; the revocation reaper has none yet |
+| **I1–I4** | Identity & Credentials | `policy-firewall.md` | Keycloak (I1, I4); VCVerifier and the Trusted Issuers Registry (I2, I3) are designed and deployed nowhere | Keycloak OIDC and token-verification tests; no OID4VP test exists |
 | **CC-01–CC-84** | Configuration-as-Code & Reconciler | `city-as-code.md` | Gitea (Org Repo), `jcctl` Reconciler, Minijinja Engine | `jcctl plan`/`apply` Idempotency Tests, Conftest Rego Gates |
-| **SP-01–SP-22** | Context-Space Surface | `space-surface.md` | Context Gateway, APISIX Routing, Space MCP Instance | Space Path Unit Tests, URL-to-URN Mapper Tests |
+| **SP-01–SP-22** | Context-Space Surface | `space-surface.md` | Context Gateway (`/cs/{space}` and `/cs/{space}/mcp`; the other children of SP-04 are not routed, T-2379), APISIX Routing, Space MCP Instance | Space Path Unit Tests, URL-to-URN Mapper Tests |
 | **PF-01–PF-84** | Platform Invariants | `platform.md` | Portal API (Rust), Gitea, Reconciler, Artifact store (RustFS) | Conftest Quota Checks, URN Format Linters, DB Cascade Tests |
 | **MF-01–MF-44** | Manifest Model, Import/Sync/Download | `manifests.md` | Portal API resource API, `jcctl export/import/sync`, Gitea | `import(export(x))==x` proptests, dry-run plan tests, SyncSource loop tests, conflict-policy tests |
 | **EP-01–EP-77** | Endpoints & Parity | `endpoints.md` | Context Gateway, Format Translators, ArcSwap Cache | Representation Parity Tests, OGC ATS, STA Sensing Profile Suite |
@@ -41,7 +41,7 @@ flowchart TD
         G2["JSON Schema draft-07 Validation"]
         G3["Conftest Quota & Scope Policies"]
         G4["bento lint & golden tests"]
-        G5["jcctl plan output diff"]
+        G5["Portal plan on the Change (TS-20 has no CI lane)"]
     end
 
     subgraph IntegrationGate["2. Merge & Integration Gate"]
@@ -63,3 +63,9 @@ flowchart TD
     CommitGate --> IntegrationGate
     IntegrationGate --> ReleaseGate
 ```
+
+## Related
+
+- [00-index](00-index.md) — every requirement family and what it covers.
+- [compliance-matrix](compliance-matrix.md) — the per-requirement state and the tests that prove it.
+- [Testing/00-strategy.md](../Testing/00-strategy.md) — how the gates below are run.

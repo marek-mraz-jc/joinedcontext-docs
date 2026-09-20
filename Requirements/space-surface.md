@@ -18,7 +18,7 @@ ADR 011 (MQTT), `access-control.md` (R1–R43), `gateway-firewall.md`
 `../specs/websocket-binding.md` (WS-01, WS-05).
 
 Keywords MUST / SHOULD / MAY per RFC 2119. This document is canonical
-for the **SP-01…SP-21** family.
+for the **SP-01…SP-22** family.
 
 ## 1. URL scheme
 
