@@ -50,7 +50,7 @@ A colour the Portal UI cannot read is named in the browser console and skipped; 
 | Consumer | Reads | Effect |
 |---|---|---|
 | Portal API | the whole block, from `JC_BRANDING_FILE` | answers `GET /api/v1/branding` with `Cache-Control: public, max-age=300` |
-| Portal UI | that endpoint at runtime | page title, sidebar and login logo, colour tokens (`--portal-color-primary`, `--portal-color-primary-fg`, `--portal-color-secondary`, `--portal-color-accent`, `--portal-color-surface`, `--portal-color-surface-fg`), font stacks (`--portal-font-heading`, `--portal-font-sans`), language switcher, footer organisation and contact |
+| Portal UI | that endpoint at runtime | page title, sidebar and login logo, colour tokens (`--portal-color-primary`, `--portal-color-primary-fg`, `--portal-color-primary-dark`, `--portal-color-primary-fg-dark`, `--portal-color-secondary`, `--portal-color-accent`, `--portal-color-surface`, `--portal-color-surface-fg`), font stacks (`--portal-font-heading`, `--portal-font-sans`), language switcher, footer organisation and contact |
 | CKAN | `instanceName`, `organisation`, `logo`, `favicon`, `colours`, `languages` | site title, site logo, theme tokens, `locale_default` and `locales_offered`, and the organization the publisher creates for a project |
 | DCAT-AP records | `organisation`, `contactEmail`, `licenseDefault`, `domain` | `dcterms:publisher`, `dcat:contactPoint`, the default `dcterms:license` of a distribution |
 | Keycloak | `instanceName`, `orgDomain`, `colours`, `logo` | realm display name and login theme |

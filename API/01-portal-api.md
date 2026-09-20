@@ -1182,7 +1182,9 @@ GET /api/v1/branding/favicon     the favicon file, from the same mount
   "colours": { "primary": "#0000bf", "secondary": "#0072c6", "accent": "#ffe977", "background": "#ffffff", "text": "#1a1a1a" },
   "fonts": { "heading": "HelsinkiGrotesk, system-ui, sans-serif", "body": "system-ui, sans-serif" },
   "languages": { "default": "sk", "offered": ["sk", "en"] },
-  "primaryForeground": "#ffffff"
+  "primaryForeground": "#ffffff",
+  "primaryDark": "#3666d7",
+  "primaryForegroundDark": "#ffffff"
 }
 ```
 
@@ -1193,6 +1195,13 @@ GET /api/v1/branding/favicon     the favicon file, from the same mount
   default before it is served, because the UI writes these values into CSS custom properties
   (OPS-46). `primaryForeground` is computed from the primary colour rather than authored, so text
   on a light brand colour stays readable.
+- `primaryDark` and `primaryForegroundDark` are the same pair for the dark theme, and are computed
+  too. A dark page cannot paint a button in the brand colour as it was configured — a navy button
+  on a navy page is not a button — so the theme lightens it, and the readable text is then the
+  readable text on *that* colour, not on the configured one. Both are computed in one place, here,
+  because the choice needs the contrast ratio of the lightened colour: the UI wrote a near-black
+  label on it by rule instead, which left an installation branded `#111827` at 2.31:1 and one
+  branded `#0000bf` at 3.43:1 (T-2324, UI-30). A value for either in the file is overwritten.
 - The logo and the favicon are file names, never URLs. A value carrying a scheme, a host or `..`
   is dropped, and the file is read from the branding file's own directory: the two assets the
   ConfigMap carries are the only files those routes can reach.
