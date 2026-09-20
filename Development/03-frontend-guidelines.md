@@ -124,7 +124,9 @@ are held:
   for the pointer, and the two say the same thing.
 - **The hit area is at least 24 × 24 CSS px** (WCAG 2.5.8), which is what the `xs` and `sm` sizes
   are measured against.
-- **In a dialog, Cancel comes before the action**, in that order, in every dialog on every page.
+- **In a dialog, Cancel comes before the action**, in that order, in every dialog on every page,
+  and nothing in the footer takes the focus: a confirmation is a decision a person makes, not one
+  that `Enter` makes for them on a dialog that has just appeared.
 
 A control that is not one of these is not a hand-made `<button>`: it is a missing prop on the
 shared component, and that is where it is added.
