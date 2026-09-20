@@ -59,8 +59,11 @@ Deployment hardening must execute in the twelve sequential layers defined below.
 - **Verification Command:**
 
   ```bash
-  kubectl get namespaces -L linkerd.io/inject,config.linkerd.io/default-inbound-policy
+  kubectl get namespaces -o custom-columns='NAME:.metadata.name,INJECT:.metadata.annotations.linkerd\.io/inject,INBOUND:.metadata.annotations.config\.linkerd\.io/default-inbound-policy'
   ```
+
+  Both are annotations, not labels, so `-L` prints empty columns for them. CHK-06 reads the same
+  two the same way.
 
 - **Gaps Closed:** Preconditions for Linkerd mutual TLS authorization across all workloads.
 
@@ -326,25 +329,30 @@ In-cluster runtime security policies are deployed by the `runtime-policies` Helm
 
 ### Runtime Policy Inventory
 
-| Policy Name | Target Resource | Validation Invariant | Failure Action |
-|---|---|---|---|
-| `require-linkerd-sidecar` | Pod | Verifies `linkerd-proxy` container exists in meshed namespaces. | `Enforce` |
-| `require-meshed-namespace-inbound-policy` | Namespace | Verifies `config.linkerd.io/default-inbound-policy` is non-empty. | `Enforce` |
-| `justify-linkerd-inject-opt-out` | Pod | Requires `mesh.joinedcontext.com/opt-out-reason` when injection is disabled. | `Enforce` |
-| `restrict-cnpg-operator-pod-labels` | Pod | Limits CloudNativePG operator to `cloudnative-pg` and `postgresql` labels. | `Enforce` |
-| `restrict-strimzi-operator-pod-labels` | Pod | Limits Strimzi operator to approved Kafka component labels. | `Enforce` |
-| `protect-operator-owned-labels` | Pod | Restricts operator labels from being claimed by unauthorized ServiceAccounts. | `Enforce` |
-| `require-run-as-nonroot` | Pod | Requires `runAsNonRoot: true` on the pod or on every container. | `Enforce` |
-| `require-run-as-non-root-user` | Pod | Rejects `runAsUser: 0` on the pod or on any container. | `Enforce` |
-| `drop-all-capabilities` | Pod | Requires every container to drop all Linux capabilities. | `Enforce` |
-| `require-ro-rootfs` | Pod | Requires `readOnlyRootFilesystem: true` on every container. | `Enforce` |
+Eleven `ClusterPolicy` objects, one per file in `components/runtime-policies/charts/runtime-policies/files/`. The failure action of every one of them is `global.runtimePolicies.failureAction`, `Enforce` by default and `Audit` for a rollout that should log before it blocks, so the column below says where it comes from rather than repeating one word eleven times.
+
+| Policy name | Target | Invariant |
+|---|---|---|
+| `require-linkerd-sidecar` | Pod | A `linkerd-proxy` container exists, in the namespaces this deployment owns |
+| `require-meshed-namespace-inbound-policy` | Namespace | `config.linkerd.io/default-inbound-policy` is non-empty, so a meshed namespace cannot be left on the opportunistic default |
+| `justify-linkerd-inject-opt-out` | Pod | A Pod that disables injection declares `mesh.joinedcontext.com/opt-out-reason` |
+| `exclude-acme-solver-from-mesh` | Pod | cert-manager's short-lived HTTP-01 solver Pod stays out of the mesh, so a challenge is answerable without weakening the namespace's inbound policy |
+| `justify-api-token-access` | Pod | No service account token is mounted unless the Pod declares why in `security.joinedcontext.com/api-access-reason`. A mounted token turns one compromised container into a Kubernetes API client (TR-03187 AUT-3) |
+| `restrict-cnpg-operator-pod-labels` | Pod | Only the CloudNativePG operator may carry its own `cloudnative-pg` and `postgresql` labels |
+| `protect-operator-owned-labels` | Pod | An operator's labels cannot be claimed by another ServiceAccount |
+| `require-run-as-nonroot` | Pod | `runAsNonRoot: true` on the pod or on every container |
+| `require-run-as-non-root-user` | Pod | No `runAsUser: 0`, on the pod or on any container |
+| `drop-all-capabilities` | Pod | Every container drops all Linux capabilities |
+| `require-ro-rootfs` | Pod | `readOnlyRootFilesystem: true` on every container |
+
+There is no Strimzi policy: the platform deploys no Kafka, so there is no Strimzi operator whose labels would need restricting.
 
 The last four are the Pod Security Standards controls, vendored verbatim from
 `github.com/kyverno/policies` at the ref pinned in `.ci/policies/vendor-upstream-policies.sh`
 and deployed by the same chart, so the manifests CI evaluates and the manifests admission
 evaluates are the same file. Two consequences worth stating.
 
-They are scoped to the namespaces the platform owns — the instance namespace and the shared
+They are scoped to the namespaces the platform owns, the instance namespace and the shared
 operators namespace, passed to the chart as `podSecurity.namespaces`. Pod Security Standards
 for the workloads this platform deploys is a control it can honour; enforcing them on the
 namespaces the cluster distribution owns (`linkerd`, `traefik`, `cert-manager`,
@@ -355,7 +363,7 @@ namespaces the cluster distribution owns (`linkerd`, `traefik`, `cert-manager`,
 `drop-all-capabilities` (upstream `best-practices/require-drop-all`) is the capabilities control rather than the stricter
 `disallow-capabilities-strict` that CI applies to rendered manifests. The strict policy also
 forbids adding capabilities, and Linkerd's `linkerd-init` container legitimately adds
-`NET_ADMIN` and `NET_RAW` to program the pod's iptables — enforcing it at admission would
+`NET_ADMIN` and `NET_RAW` to program the pod's iptables, so enforcing it at admission would
 reject every meshed pod on the cluster. Rendered manifests carry no init container of that
 kind, which is why CI can hold the stricter line.
 
@@ -364,7 +372,13 @@ kind, which is why CI can hold the stricter line.
 When validating policies or auditing warnings, inspect the generated `ClusterPolicyReport`:
 
 ```bash
-kubectl get clusterpolicyreport -o yaml | grep -A 5 -B 2 "fail"
+# Every policy and its current action, which is the first thing to check when a
+# deploy is refused or, worse, is not:
+kubectl get clusterpolicy -o custom-columns=NAME:.metadata.name,ACTION:.spec.rules[0].validate.failureAction
+
+# What is failing, with the resource that failed it:
+kubectl get clusterpolicyreport -o json \
+  | jq -r '.items[].results[] | select(.result=="fail") | "\(.policy) \(.resources[0].namespace)/\(.resources[0].name)"'
 ```
 
 ## 5. Phase-1 Security Acceptance Checklist
@@ -382,8 +396,8 @@ Before promoting a platform deployment to production, execute the verification c
 | **CHK-07** | Runtime Policies | `kubectl get clusterpolicyreport -o jsonpath='{.items[*].summary.fail}'` | Returns `0`. | BSI TR-03187 AR-14 |
 | **CHK-08** | APISIX Admin Port | `kubectl get pods -n prod -l app.kubernetes.io/name=apisix -o jsonpath='{range .items[*].spec.containers[*].ports[*]}{.containerPort}{"\n"}{end}'` | The list is not empty and never contains `9180`. The APISIX image carries no `nc`, so the declared ports are the probe. | ADR-N-007, SEC-GAP-07 |
 | **CHK-09** | APISIX Config Marker | `kubectl exec -n prod deploy/apisix -c apisix -- tail -n 1 /usr/local/apisix/conf/apisix.yaml` | Output is exactly `#END`. | ADR-N-007, Seam S7 |
-| **CHK-10** | Header Stripping | `curl -s -I -H "NGSILD-Tenant: malicious" https://api.city.example.com/api/endpoint/test/ngsi-ld/v1/entities` | Inbound tenant header is stripped; response includes `x-request-id`. | GW20, SP-05 |
-| **CHK-11** | Response Headers | `curl -s -I https://api.city.example.com/api/endpoint/test/ngsi-ld/v1/entities` | Headers contain `strict-transport-security` and `x-content-type-options: nosniff`. | SEC-GAP-01, W-23 |
+| **CHK-10** | Header Stripping | `curl -s -I -H "NGSILD-Tenant: malicious" https://city.example.com/api/endpoint/test/ngsi-ld/v1/entities` | Inbound tenant header is stripped; response includes `x-request-id`. | GW20, SP-05 |
+| **CHK-11** | Response Headers | `curl -s -I https://city.example.com/api/endpoint/test/ngsi-ld/v1/entities` | Headers contain `strict-transport-security` and `x-content-type-options: nosniff`. | SEC-GAP-01, W-23 |
 | **CHK-12** | Database Encryption | `kubectl exec -n prod postgres-cluster-1 -c postgres -- psql -U postgres -c "SHOW ssl;"` | Output displays `on`. | BSI TR-03187 CT-9 |
 | **CHK-13** | Keycloak Password | `kubectl get secret -n prod keycloak-admin-user -o jsonpath='{.data.password}' \| base64 -d \| wc -c` | Output is ≥ 32 characters. | BSI TR-03187 AUT-7 |
 | **CHK-14** | Image Pinning | `kubectl get pods -n prod -o jsonpath='{range .items[*].spec.containers[*]}{.image}{"\n"}{end}' \| grep -v '@sha256:'` | Returns empty (all images pinned by digest). | BSI TR-03187 AR-4 |
