@@ -472,7 +472,7 @@ Age is `metadata.creationTimestamp` and nothing else, because that is the one ti
 
 A namespace without the label is never a candidate. Sandboxes are labelled at creation by the green lane, so an unlabelled namespace is a permanent one, and the reaper has to be wrong in the direction that keeps data.
 
-The `sandbox-reaper` CronJob is what enforces this on a cluster ([Components](../Deployment/04-components-and-addons.md#1-the-components)).
+The `sandbox-reaper` CronJob is what enforces this on a cluster ([Components](../Deployment/04-components-and-addons.md#1-core-components-vs-add-ons-matrix)).
 
 ---
 
