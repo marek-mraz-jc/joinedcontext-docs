@@ -6,7 +6,7 @@ description: Normative requirements catalog map, conformance conventions, and co
 
 # Requirements Architecture & Taxonomy
 
-The joinedcontext platform defines normative requirements across sixteen specialized families. This chapter establishes the requirement catalog map, conformance keyword semantics, consumer class tagging, and terminology bindings.
+The joinedcontext platform states its normative requirements in nineteen families, one file each. This page is the map: which family covers what, which IDs it holds, which architecture chapter owns it and which test family proves it. It also fixes the conformance keywords, the consumer-class tags and the terminology this specification uses in place of the legacy platform's.
 
 ## 1. Conformance and Keyword Semantics
 
@@ -25,27 +25,29 @@ Every platform capability MUST serve three distinct consumer classes without int
 
 ## 3. Requirement Families & Catalog Map
 
+The ID range of each family is its lowest and highest live ID, not a count: a retired ID leaves a gap and is never reused. Whether a requirement is proven by a test is not in this table, because it changes with every commit; [compliance-matrix.md](compliance-matrix.md) carries it, generated from the tests that name each ID.
+
 | Family Prefix | Family Name | Requirement Range | Specification File | Owning Architecture Chapter | Test Family |
 |---|---|---|---|---|---|
 | **PF** | Platform & Domain Invariants | PF-01…PF-84 | [platform.md](platform.md) | [Architecture/03-domain-model.md](../Architecture/03-domain-model.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | **MF** | Manifest Model, Import/Sync/Download | MF-01…MF-43 | [manifests.md](manifests.md) | [Architecture/06-configuration-as-code.md](../Architecture/06-configuration-as-code.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | **EP** | Endpoints & Representations | EP-01…EP-77 | [endpoints.md](endpoints.md) | [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | **PL** | Pipeline Execution | PL-01…PL-57 | [pipelines.md](pipelines.md) | [Architecture/08-pipelines.md](../Architecture/08-pipelines.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
-| **AG** | Agent & MCP Governance | AG-01…AG-77 | [agents.md](agents.md) | [Architecture/07-agents-and-mcp.md](../Architecture/07-agents-and-mcp.md) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
-| **UI** | Portal & User Interface | UI-01…UI-56 | [portal-and-ui.md](portal-and-ui.md) | [Architecture/09-portal.md](../Architecture/09-portal.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| **AG** | Agent & MCP Governance | AG-01…AG-85 | [agents.md](agents.md) | [Architecture/07-agents-and-mcp.md](../Architecture/07-agents-and-mcp.md) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
+| **UI** | Portal & User Interface | UI-01…UI-74 | [portal-and-ui.md](portal-and-ui.md) | [Architecture/09-portal.md](../Architecture/09-portal.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | **TS** | Testing & Quality Assurance | TS-01…TS-25 | [testing.md](testing.md) | [Architecture/01-overview.md](../Architecture/01-overview.md) | [Testing/00-strategy.md](../Testing/00-strategy.md) |
-| **DM** | Data Models & LinkML Editor | DM-01…DM-53 | [data-models.md](data-models.md) | [Architecture/11-data-models.md](../Architecture/11-data-models.md) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
+| **DM** | Data Models & LinkML Editor | DM-01…DM-60 | [data-models.md](data-models.md) | [Architecture/11-data-models.md](../Architecture/11-data-models.md) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | **MP** | Model Projections | MP-01…MP-03 | [model-projections.md](model-projections.md) | [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md) | [Testing/01-backend-tests.md](../Testing/01-backend-tests.md) |
-| **SDK** | App SDK | SDK-01…SDK-28 | [app-sdk.md](app-sdk.md) | [Architecture/20-app-sdk.md](../Architecture/20-app-sdk.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| **SDK** | App SDK | SDK-01…SDK-30 | [app-sdk.md](app-sdk.md) | [Architecture/20-app-sdk.md](../Architecture/20-app-sdk.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | **OPS** | Operations & Reliability | OPS-01…OPS-51 | [operations.md](operations.md) | [Architecture/13-security.md](../Architecture/13-security.md) | [Testing/05-deployment-and-performance-tests.md](../Testing/05-deployment-and-performance-tests.md) |
 | **AP** | Apps on Demand | AP-01…AP-74 | [apps.md](apps.md) | [Architecture/16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | **DS** | Data Space Connector | DS-01…DS-20 | [data-space.md](data-space.md) | [Architecture/18-data-space-connector.md](../Architecture/18-data-space-connector.md) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | **R** | Access Control Core | R1–R43 | [access-control.md](access-control.md) | [Architecture/05-context-gateway.md](../Architecture/05-context-gateway.md) | [Testing/01-backend-tests.md](../Testing/01-backend-tests.md) |
 | **MIM** | Minimal Interoperability Mechanisms | MIM0–MIM10 | [access-control.md](access-control.md) | [Architecture/01-overview.md](../Architecture/01-overview.md) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
-| **GW** | Gateway Firewall | GW1–GW31 | [gateway-firewall.md](gateway-firewall.md) | [Architecture/05-context-gateway.md](../Architecture/05-context-gateway.md) | [Testing/01-backend-tests.md](../Testing/01-backend-tests.md) |
+| **GW** | Gateway Firewall | GW1–GW34 | [gateway-firewall.md](gateway-firewall.md) | [Architecture/05-context-gateway.md](../Architecture/05-context-gateway.md) | [Testing/01-backend-tests.md](../Testing/01-backend-tests.md) |
 | **PW / I** | Policy Firewall Extensions & Identity | R44–R60, I1–I4 | [policy-firewall.md](policy-firewall.md) | [Architecture/05-context-gateway.md](../Architecture/05-context-gateway.md) | [Testing/01-backend-tests.md](../Testing/01-backend-tests.md) |
 | **CC** | Configuration as Code | CC-01…CC-84 | [city-as-code.md](city-as-code.md) | [Architecture/06-configuration-as-code.md](../Architecture/06-configuration-as-code.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
-| **SP** | Space Surface | SP-01…SP-21 | [space-surface.md](space-surface.md) | [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
+| **SP** | Space Surface | SP-01…SP-22 | [space-surface.md](space-surface.md) | [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 
 ## 4. Terminology Delta & Vocabulary Mapping
 

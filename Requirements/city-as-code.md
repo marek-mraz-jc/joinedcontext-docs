@@ -10,11 +10,13 @@ Date: 2026-08-16
 Scope: The declarative configuration plane of a federated digital twin: the
 versioned city repository, the reconciler, blueprints, the end-user
 application, roles, and the MCP/automation surface. This layer configures
-the platform that R1–R43 (access control), GW1–GW31 (gateway rules) and
+the platform that R1–R43 (access control), GW1–GW34 (gateway rules) and
 I1–I4 (identity) secure; it does not redefine any of them.
 Related: `access-control.md` (Part I R1–R43, Part II MIM0–MIM10),
 `gateway-firewall.md`, `policy-firewall.md`,
 ADR 001 (URN), ADR 004 (Scopes).
+
+Family **CC** (CC-01…CC-84). Owning chapter: [Architecture/06-configuration-as-code.md](../Architecture/06-configuration-as-code.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
 
 Keywords MUST / SHOULD / MAY per RFC 2119.
 
@@ -358,7 +360,8 @@ one or more manifests; *flow*, a blueprint instance as shown to [H] users.
 - **CC-63** — The plane MUST implement risk-classed lanes bound to
   `riskClass` (CC-59): *green*, merge request auto-approved by a
   policy bot; *yellow*, one domain approver (CC-34); *red*
-  (cross-domain, public exposure, federation edges, any deletion) —
+  (cross-domain, public exposure, federation edges, a standing egress
+  of context data to an address the manifest names, any deletion) —
   the full approval chain. Lane assignment MUST be enforced in CI and
   the forge, not only rendered in the portal.
 - **CC-64** — The green lane MUST remain a full repository path:
@@ -459,7 +462,7 @@ Several related edits are held together, tried somewhere safe and brought back a
 |---|---|---|
 | CC-01–CC-07 | [Architecture/02-principles.md#12-configuration-as-code-first](../Architecture/02-principles.md#12-configuration-as-code-first) | [Testing/04-configuration-and-pipeline-tests.md#3-pull-request-plan--reconciler-idempotency](../Testing/04-configuration-and-pipeline-tests.md#3-pull-request-plan--reconciler-idempotency) |
 | CC-08–CC-14 | [Architecture/06-configuration-as-code.md#2-manifest-envelope--kinds-catalogue-cc-09-cc-12](../Architecture/06-configuration-as-code.md#2-manifest-envelope--kinds-catalogue-cc-09-cc-12) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-schema-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-schema-validation) |
-| CC-15–CC-22 | [Architecture/06-configuration-as-code.md#3-the-jcctl-reconciler-engine](../Architecture/06-configuration-as-code.md#3-the-jcctl-reconciler-engine) | [Testing/01-backend-tests.md#3-reconciler-jcctl-testing](../Testing/01-backend-tests.md#3-reconciler-jcctl-testing) |
+| CC-15–CC-22 | [Architecture/06-configuration-as-code.md#3-the-reconciler-engine](../Architecture/06-configuration-as-code.md#3-the-reconciler-engine) | [Testing/01-backend-tests.md#3-reconciler-jcctl-testing](../Testing/01-backend-tests.md#3-reconciler-jcctl-testing) |
 | CC-23–CC-28 | [Architecture/06-configuration-as-code.md#2-manifest-envelope--kinds-catalogue-cc-09-cc-12](../Architecture/06-configuration-as-code.md#2-manifest-envelope--kinds-catalogue-cc-09-cc-12) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-schema-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-schema-validation) |
 | CC-29–CC-39 | [Architecture/09-portal.md#2-portal-ui-architecture](../Architecture/09-portal.md#2-portal-ui-architecture) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-end-to-end-user-journeys](../Testing/03-frontend-and-e2e-tests.md#2-playwright-end-to-end-user-journeys) |
 | CC-40–CC-44 | [Architecture/12-identity-and-access.md#2-organization-group--role-model](../Architecture/12-identity-and-access.md#2-organization-group--role-model) | [Testing/06-security-tests.md#2-policy-bypass--privilege-escalation-regression-suite](../Testing/06-security-tests.md#2-policy-bypass--privilege-escalation-regression-suite) |
@@ -469,7 +472,7 @@ Several related edits are held together, tried somewhere safe and brought back a
 | CC-59–CC-62 | [Architecture/06-configuration-as-code.md#4-risk-classified-interaction-lanes-cc-63cc-66](../Architecture/06-configuration-as-code.md#4-risk-classified-interaction-lanes-cc-63cc-66) | [Testing/04-configuration-and-pipeline-tests.md#2-conftest-policy-guardrails-opa--rego](../Testing/04-configuration-and-pipeline-tests.md#2-conftest-policy-guardrails-opa--rego) |
 | CC-63–CC-70 | [Architecture/06-configuration-as-code.md#4-risk-classified-interaction-lanes-cc-63cc-66](../Architecture/06-configuration-as-code.md#4-risk-classified-interaction-lanes-cc-63cc-66) | [Testing/04-configuration-and-pipeline-tests.md#3-pull-request-plan--reconciler-idempotency](../Testing/04-configuration-and-pipeline-tests.md#3-pull-request-plan--reconciler-idempotency) |
 | CC-71 | [Architecture/11-data-models.md#67-a-model-from-a-sample-dm-54-dm-55](../Architecture/11-data-models.md#67-a-model-from-a-sample-dm-54-dm-55) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-end-to-end-user-journeys](../Testing/03-frontend-and-e2e-tests.md#2-playwright-end-to-end-user-journeys) |
-| CC-72 | [Architecture/06-configuration-as-code.md#3-the-jcctl-reconciler-engine](../Architecture/06-configuration-as-code.md#3-the-jcctl-reconciler-engine) | [Testing/01-backend-tests.md#3-reconciler-jcctl-testing](../Testing/01-backend-tests.md#3-reconciler-jcctl-testing) |
+| CC-72 | [Architecture/06-configuration-as-code.md#3-the-reconciler-engine](../Architecture/06-configuration-as-code.md#3-the-reconciler-engine) | [Testing/01-backend-tests.md#3-reconciler-jcctl-testing](../Testing/01-backend-tests.md#3-reconciler-jcctl-testing) |
 | CC-73…CC-75 | [Architecture/06-configuration-as-code.md#1-organization-repository-layout-cc-08](../Architecture/06-configuration-as-code.md#1-organization-repository-layout-cc-08) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-schema-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-schema-validation) |
 | CC-76…CC-81 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/04-configuration-and-pipeline-tests.md#3-pull-request-plan--reconciler-idempotency](../Testing/04-configuration-and-pipeline-tests.md#3-pull-request-plan--reconciler-idempotency) |
 | CC-82…CC-84 | [Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes](../Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-schema-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-schema-validation) |

@@ -712,10 +712,19 @@ POST /api/v1/webhooks/sync/{project}/{name}                  signed, no session
   request is closed rather than merged. The resources the source brought into the project stay
   where they are — detaching a source is not deleting what it published.
 - The webhook route is what a `schedule: { webhook: true }` source runs on. It carries no session
-  and is authenticated exactly like the forge callback: an HMAC-SHA256 of the request body in
-  `x-gitea-signature`, against the Portal's webhook secret. Without that signature it is `401`, and
-  without a configured secret it is `503` — an unauthenticated trigger would let anybody on the
-  internet make the Portal fetch a remote repository as often as they liked.
+  and is authenticated by an HMAC-SHA256 of the request body in `x-gitea-signature`, against **that
+  source's own** secret — `spec.webhook.secretRef`, resolved like every other credential, and
+  `spec.webhook.previousSecretRef` while one is being rotated (MF-44). The signature covers the
+  body and not the path, so a shared secret would make every path reachable by whoever holds it:
+  the origin of one project's source could force a run of another project's. Each source therefore
+  carries its own, and the secret a department is given opens their door and nothing else.
+- One `401`, with one body, for every refusal at that door: a signature that does not verify, a
+  source that is not there, a source with no `spec.webhook`, and a source whose reference this
+  instance cannot resolve. The route answers the same to all four on purpose — it is unauthenticated
+  until the signature verifies, so a `404` would make it an existence oracle over the sources of
+  every project (PF-59, R20), and a `503` would say which instances have no secret backend. The
+  source's own `/status` is where an operator reads that its webhook secret does not resolve; the
+  value itself never appears in an answer, a log line or the status.
 - Every run reaches its origin over `https` and nothing else, follows a redirect only to another
   `https` address, and refuses an origin whose `source.*.secretRef` this instance cannot resolve
   rather than fetching it anonymously (MF-31). A `platformApi` origin is read through the partner's
