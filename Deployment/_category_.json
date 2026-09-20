@@ -1,0 +1,8 @@
+{
+  "label": "Deployment",
+  "position": 9,
+  "link": {
+    "type": "generated-index",
+    "description": "Production and development deployment guide for the next-generation joinedcontext platform."
+  }
+}

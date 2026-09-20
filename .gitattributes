@@ -1,0 +1,8 @@
+# STYLE.md pages are read by the site build, by the checkers and by agents: one line ending,
+# everywhere, whoever commits them.
+*.md text eol=lf
+*.mdx text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.py text eol=lf

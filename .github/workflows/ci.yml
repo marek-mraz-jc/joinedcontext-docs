@@ -1,0 +1,77 @@
+name: ci
+# fast merge gate: the documentation checkers and their self-tests (T-0091…T-0094).
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions: { contents: read }
+concurrency: { group: "ci-${{ github.ref }}", cancel-in-progress: true }
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: python3 scripts/check-links.py
+      - run: python3 scripts/check-urns.py
+      - run: python3 scripts/check-front-matter.py
+      - run: python3 scripts/verify-traceability.py
+      - run: python3 scripts/check-adr-register.py
+      - run: python3 scripts/check-glossary.py
+      - run: python3 scripts/check-shipped-terms.py
+      - run: python3 scripts/check-chapter-map.py
+      - run: python3 scripts/lint-mermaid.py
+      - run: python3 scripts/audit-component-matrix.py
+      - run: python3 scripts/verify-runbooks.py
+      - name: the manifest and API checkers need a yaml and a schema library
+        run: pip install --quiet --disable-pip-version-check pyyaml==6.0.3 jsonschema==4.26.0
+      - run: python3 scripts/audit-i18n-docs.py
+      - run: python3 scripts/verify-openapi-snippets.py
+      - name: the draft-07 schemas the platform publishes
+        # Pinned, not `main`: an unrelated platform push must not turn this lane red at a
+        # random hour. Bump the tag when a new kind lands, which is the same moment the
+        # "Schema not published yet" list on Development/04-manifest-kinds.md shortens.
+        env: { JC_SCHEMAS_TAG: jc-core-v0.7.44 }
+        run: |
+          set -eu
+          curl -sSL "https://github.com/marek-mraz/joinedcontext-platform/archive/refs/tags/${JC_SCHEMAS_TAG}.tar.gz" \
+            | tar -xz -C "${RUNNER_TEMP}" --strip-components=2 --wildcards '*/schemas/kinds/*'
+          # An empty directory would make every manifest "check" against nothing.
+          test -n "$(ls -A "${RUNNER_TEMP}/kinds")"
+          echo "JC_SCHEMAS_DIR=${RUNNER_TEMP}/kinds" >> "$GITHUB_ENV"
+      - run: python3 scripts/validate-doc-manifests.py
+      - run: python3 scripts/test-curl-snippets.py
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: markdown style follows STYLE.md (T-0099)
+        run: npx --yes markdownlint-cli@0.45.0 '**/*.md'
+      - name: an unlabelled code fence fails that lint (T-0099)
+        run: |
+          set -eu
+          printf '# Bad page\n\nA fence with no language tag:\n\n```\nno language\n```\n' > "${RUNNER_TEMP}/bad-fence.md"
+          npx --yes markdownlint-cli@0.45.0 --config .markdownlint.json "${RUNNER_TEMP}/bad-fence.md" 2>&1 | tee "${RUNNER_TEMP}/bad-fence.log" || true
+          grep -q "MD040/fenced-code-language" "${RUNNER_TEMP}/bad-fence.log" || {
+            echo "the markdown lint accepted an unlabelled code fence" >&2
+            exit 1
+          }
+      - name: each checker fails the corpus it is meant to reject
+        run: |
+          set -eu
+          python3 scripts/check-links.py --selftest
+          python3 scripts/check-urns.py --selftest
+          python3 scripts/check-front-matter.py --selftest
+          python3 scripts/verify-traceability.py --selftest
+          python3 scripts/check-adr-register.py --selftest
+          python3 scripts/check-glossary.py --selftest
+          python3 scripts/check-chapter-map.py --selftest
+          python3 scripts/lint-mermaid.py --selftest
+          python3 scripts/audit-component-matrix.py --selftest
+          python3 scripts/verify-runbooks.py --selftest
+          python3 scripts/audit-i18n-docs.py --selftest
+          python3 scripts/verify-openapi-snippets.py --selftest
+          python3 scripts/validate-doc-manifests.py --selftest
+          python3 scripts/test-curl-snippets.py --selftest
+          python3 scripts/report-pr-impact.py --selftest
+          bash scripts/audit-security-checklist.sh --selftest

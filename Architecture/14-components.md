@@ -1,0 +1,124 @@
+---
+sidebar_position: 14
+title: Component Reference & Technology Matrix
+description: Architectural specifications, responsibilities, interfaces, and failure behaviors for all core services and addons.
+---
+
+# Component Reference & Technology Matrix
+
+This reference documents every software component comprising the joinedcontext platform, detailing its implementation language, scaling properties, interfaces, and failure modes. For container resource allocations and profile sizing tables, see [Deployment/04-components-and-addons.md](../Deployment/04-components-and-addons.md).
+
+## 1. Component Architecture & Matrix Reference
+
+Platform components are cleanly partitioned between core services and pluggable addons. The authoritative component matrix specifying technology languages, profile allocations, and licensing is defined in [Deployment/04-components-and-addons.md](../Deployment/04-components-and-addons.md).
+
+## 2. Core Platform Components
+
+### Context Gateway (`context-gateway`)
+
+- **Primary Role:** Policy Enforcement Point (PEP), query AST rewriter via `antares-ql`, representation translation engine, and MCP façade.
+- **Interfaces:** Inbound HTTPS from APISIX; outbound HTTP/2 to Context Broker; outbound HTTPS to Keycloak JWKS; policy space subscription for in-process PDP updates.
+- **State & Failure Behavior:** Completely stateless. Horizontally scalable via Kubernetes HPA. If the in-process PDP grant cache is stale or uninitialized, the gateway fails closed, returning HTTP 503 (GW5, R48).
+
+### Antares Context Broker (`context-broker`)
+
+- **Primary Role:** Spec-native ETSI GS CIM 009 context broker managing current entity state, temporal records, and context subscriptions.
+- **Interfaces:** HTTP/2 CIM 009 REST endpoints; TCP PostgreSQL protocol with CNPG.
+- **State & Failure Behavior:** Stateless broker workers backed by PostgreSQL. Scale-out read replicas supported via streaming replication. Unreachable database triggers HTTP 503 on incoming broker requests.
+
+### `jcctl` Reconciler (`jcctl`)
+
+- **Primary Role:** Configuration plane reconciler executing GitOps plan, apply, export, and drift detection routines.
+- **Interfaces:** Git over SSH/HTTPS to Gitea; CIM 009 management calls to Context Gateway and Broker; Kubernetes API for ConfigMap updates.
+- **State & Failure Behavior:** Runs as a CLI tool and single-replica leader-elected controller. Reconciles state in strict waves; transient failures pause reconciliation without rolling back converged preceding waves (CC-18).
+
+### Portal (one application) (`portal`)
+
+- **Primary Role:** One Rust binary (`joinedcontext-portal`) serving the embedded React UI (schema forms, flow galleries, map dashboards, approval reviews), the administrative REST and resource APIs, and the in-process reconciler loop.
+- **Interfaces:** HTTPS from APISIX on port 8080 (UI, `/api/v1` incl. the resource collections, `/apps/{name}/` static apps); PostgreSQL pool (`portal` database); Gitea API; Context Gateway Endpoints from the browser.
+- **State & Failure Behavior:** Stateless except the preferences database; horizontally scalable, reconciler leader-elected. Database failures reject preference mutations while live context browsing continues through the gateway.
+
+### Edge login (APISIX `openid-connect`)
+
+- **Primary Role:** Login front of the Portal (`portal.{domain}`) and of every App on Demand route (`/apps/*`): one confidential OIDC client `edge` per realm, Keycloak code flow and session in APISIX, `X-Userinfo` and `X-Access-Token` to the upstream (ADR-N-019).
+- **Interfaces:** the APISIX routes themselves; OIDC to Keycloak; HTTP 8080 to the Portal and to every app container.
+- **State & Failure Behavior:** Stateless (encrypted cookie session). Keycloak outage blocks new logins; existing sessions live until cookie expiry. See [Architecture/16 §5](16-apps-on-demand.md#5-login-in-front-of-the-portal-and-every-app-apisix-openid-connect).
+
+### Bento Pipeline Runner (`pipeline-runner`)
+
+- **Primary Role:** Resident telemetry stream processor operating in Bento Streams Mode.
+- **Interfaces:** Inbound MQTT, WebSockets, Kafka, HTTP; outbound HTTPS to Context Gateway Endpoints.
+- **State & Failure Behavior:** Pod-per-project deployment scaled horizontally via HPA or KEDA. Individual stream failures route to dead-letter storage without crashing adjacent streams (PL-08).
+
+### APISIX Edge Gateway (`apisix`)
+
+- **Primary Role:** Perimeter edge ingress, TLS termination, rate limiting, header sanitization and route mapping; bearer tokens pass through to the verifying service (Portal, Context Gateway).
+- **Interfaces:** Inbound HTTPS ports 80/443; outbound HTTP to internal cluster Services over Linkerd mTLS.
+- **State & Failure Behavior:** Fully stateless data plane mounting `/usr/local/apisix/conf/apisix.yaml`. Polls configuration file every 1 second; missing `#END` marker causes reload rejection while retaining previous active routes.
+
+### Keycloak IAM (`keycloak`)
+
+- **Primary Role:** Central Identity Provider managing users, groups, OIDC tokens, and Verifiable Credentials.
+- **Interfaces:** HTTPS browser console, OIDC endpoints, JWKS discovery endpoint.
+- **State & Failure Behavior:** Clustered Quarkus deployment backed by CloudNativePG PostgreSQL. Pod outages fail over to active replicas.
+
+### Gitea Forge & Actions Runner (`gitea`)
+
+- **Primary Role:** In-cluster Git repository, pull request review, protected branches, and CI automation runner.
+- **Interfaces:** Web UI, Git over SSH/HTTPS, webhook dispatches to `jcctl`.
+- **State & Failure Behavior:** A single-replica Deployment holding one ReadWriteOnce volume for the bare repositories, with metadata in PostgreSQL. One replica is the ceiling: the volume cannot be shared, so the forge fails over rather than scaling out, which is why OPS-06's two-replica floor covers the stateless core and not this. Outages freeze configuration changes while data serving continues unaffected (CC-55).
+
+### Artifact Store (RustFS) (`artifact-store`)
+
+- **Primary Role:** S3-compatible object store persisting rendered schema artifacts, compiled Bloblang mappings, RDF dumps, export bundles, and app builds.
+- **Interfaces:** S3 REST API over in-mesh Linkerd mTLS.
+- **State & Failure Behavior:** Deployed with persistent volume storage and object locking. All artifacts are fully rebuildable from Git via `jcctl artifacts rebuild` (PF-29…PF-33, ADR-N-015).
+
+### Model Tools (`model-tools`)
+
+- **Primary Role:** Stateless OCI image executing LinkML generators, schema-automator, and mapping compilers.
+- **Interfaces:** Short-lived HTTP RPC from Portal API; container command-line execution in CI pipelines.
+- **State & Failure Behavior:** Completely stateless and credential-free. Replicas restart instantly upon node eviction without data loss (DM-18).
+
+### PostgreSQL (`postgres`)
+
+- **Primary Role:** Clustered relational store behind the broker, the Portal and Gitea, operated by the CloudNativePG operator.
+- **Interfaces:** TCP PostgreSQL protocol inside the mesh; WAL archiving to the artifact store; the operator's Kubernetes API calls.
+- **State & Failure Behavior:** The only stateful core component. Primary failure promotes a replica; a lost primary without a replica needs a restore from the WAL archive (OPS-20, [Deployment/07-backup-restore.md](../Deployment/07-backup-restore.md)).
+
+### Audit Log Collector (`audit-logging`)
+
+- **Primary Role:** A collector on every node, splitting the structured JSON of every pod into an operational stream and an audit stream, and shipping the audit stream to object-locked storage for 90 calendar days (OPS-42, R42, AG-19).
+- **Interfaces:** Reads the container log files of its own node; writes S3 `PutObject` and nothing else.
+- **State & Failure Behavior:** Stateless apart from its read positions on disk. A collector that cannot reach the sink buffers on the node and retries; records are never dropped to make room, so a long outage backs the buffer up rather than losing evidence. See [Deployment/05 §3](../Deployment/05-monitoring-logging.md#3-centralized-logging).
+
+### Sandbox Reaper (`sandbox-reaper`)
+
+- **Primary Role:** Scheduled job deleting sandbox namespaces whose age has passed their Time-To-Live, ceiling 14 calendar days (OPS-44, PF-19, CC-67).
+- **Interfaces:** Kubernetes API, restricted to listing namespaces and deleting the labelled ones.
+- **State & Failure Behavior:** Stateless; age comes from `metadata.creationTimestamp` on each run, so a missed run reaps late and never reaps twice. An unlabelled namespace is never a candidate, which is the direction the failure has to go. See [Architecture/06 §4](06-configuration-as-code.md#4-risk-classified-interaction-lanes-cc-63cc-66).
+
+## 3. Pluggable Addon Ecosystem
+
+Specialized workloads connect to the platform strictly through standard Endpoints:
+
+- **Apache Superset** (`superset`): Advanced business intelligence consuming data via Endpoint SQL or CSV representations.
+- **Grafana** (`grafana`): Operational metrics and timeseries visualizations querying Endpoint STA representations.
+- **Masterportal** (`masterportal`): Specialized 2D/3D geoportal consuming Endpoint OGC Features representations.
+- **OpenHands Agent Runner** (`agent-runner`): Autonomous agent execution runtime communicating via the platform's Data MCP and Configuration MCP surfaces; the `builder` profile adds coding tools in an ephemeral workspace mediated by `jc-agent-proxy` to build Apps on Demand autonomously (AG-26…AG-28, AG-33…AG-52, ADR-N-020, Architecture/19).
+- **Agent Proxy** (part of `agent-runner`): Internal Rust proxy holding the platform credentials and injecting them into workspace requests, so a runner pod never holds a token, and enforcing the per-run rate, byte and model-token limits (ADR-N-020, Architecture/19).
+- **FROST-Server** (`frost`): dedicated SensorThings API broker for high-volume IoT series, fed through Endpoint STA representations.
+- **GeoServer** (`geoserver`): legacy WFS and WMS services for clients that cannot speak OGC API Features.
+- **Data Space Connector** (`dataspace-connector`): Dataspace Protocol catalog, contract negotiation and transfer; agreed ODRL policies become Endpoint grants ([18-data-space-connector.md](18-data-space-connector.md)).
+- **OpenBao** (`openbao`): Enterprise Vault-compatible secret storage for regional deployments.
+- **Application Functions Runtime** (`functions`): `jc-functions`, a Rust service embedding QuickJS that runs one generated application function per invocation in a fresh context (64 MiB, 5 s, 16 concurrent per replica). It holds no credential and no code of its own. Only the Portal calls it, with a token of audience `jc-functions`, and it reaches only the Context Gateway, so a function reads and writes through the application's endpoint and that endpoint's Policy ([20-app-sdk.md §3](20-app-sdk.md#3-functions-and-their-runtime), SDK-21…SDK-23).
+
+For detailed addon integration patterns and deployment configurations, see [Deployment/04-components-and-addons.md](../Deployment/04-components-and-addons.md).
+
+## Related
+
+- [01-overview.md](01-overview.md) — high-level platform architecture and operational areas.
+- [05-context-gateway.md](05-context-gateway.md) — Context Gateway internals and query rewriting.
+- [17-artifact-store.md](17-artifact-store.md) — S3-compatible artifact store architecture.
+- [../Deployment/04-components-and-addons.md](../Deployment/04-components-and-addons.md) — component packaging, language matrix, and resource sizing.
+- [../Deployment/10-edge-routing-apisix.md](../Deployment/10-edge-routing-apisix.md) — edge routing and APISIX standalone configuration.

@@ -1,0 +1,31 @@
+name: requirement-impact
+# A pull request that edits Requirements/ gets the chapters and test suites it lands on
+# posted as a comment (T-0107).
+on:
+  pull_request:
+    paths: ["Requirements/**"]
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  impact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: the reporter still resolves and still reports untraced ids
+        run: python3 scripts/report-pr-impact.py --selftest
+      - name: resolve the requirements this pull request touches
+        run: |
+          set -eu
+          git fetch --no-tags origin "$GITHUB_BASE_REF"
+          git diff "origin/$GITHUB_BASE_REF...HEAD" -- Requirements/ > "${RUNNER_TEMP}/req.diff"
+          python3 scripts/report-pr-impact.py --diff-file "${RUNNER_TEMP}/req.diff" . > "${RUNNER_TEMP}/impact.md" || true
+          cat "${RUNNER_TEMP}/impact.md"
+      - name: post the impact table
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr comment "${{ github.event.number }}" --body-file "${RUNNER_TEMP}/impact.md" --repo "${{ github.repository }}"

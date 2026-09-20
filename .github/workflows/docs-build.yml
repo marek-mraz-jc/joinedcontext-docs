@@ -1,0 +1,77 @@
+name: docs-build
+# Build validation and preview bundle for the documentation (T-0092, TS-10, TS-18).
+#
+# Deviation from the task text: this repository holds the markdown corpus only — there is no
+# Docusaurus site here (no package.json, no docusaurus.config.js), so `pnpm install` and
+# `pnpm build --no-minify` have nothing to build. The site is assembled elsewhere from these
+# pages, so this workflow validates what a site build would reject — broken links and anchors,
+# missing images, invalid front matter, untraceable requirements, a drifted ADR register — and
+# uploads the corpus as the preview artifact. Replace the validate job with the real
+# `pnpm build` on the day a site lands in this repository.
+# On demand only for now: this repository is private, its Actions minutes are metered (T-0402,
+# T-0521), and ci.yml already runs every checker below on each push. Put `pull_request:` and
+# `push: { branches: [main] }` back under `on:` when the minutes are back.
+on:
+  workflow_dispatch:
+permissions: { contents: read }
+concurrency: { group: "docs-build-${{ github.ref }}", cancel-in-progress: true }
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: links, anchors and referenced images resolve
+        run: python3 scripts/check-links.py
+      - name: entity URNs follow PF-42
+        run: python3 scripts/check-urns.py
+      - name: front matter parses and every page has exactly one H1
+        run: python3 scripts/check-front-matter.py
+      - name: every requirement is traceable to a chapter and a test
+        run: python3 scripts/verify-traceability.py
+      - name: the ADR register matches the decision files
+        run: python3 scripts/check-adr-register.py
+      - name: no legacy term is used as current vocabulary
+        run: python3 scripts/check-glossary.py
+      - name: the chapter map, the files and the navigation agree
+        run: python3 scripts/check-chapter-map.py
+      - name: every Mermaid diagram parses
+        run: python3 scripts/lint-mermaid.py
+      - name: the component matrix agrees with the architecture chapter
+        run: python3 scripts/audit-component-matrix.py
+      - name: no runbook hands out an unwarned destructive command
+        run: python3 scripts/verify-runbooks.py
+      - name: localized examples follow the locale policy
+        run: python3 scripts/audit-i18n-docs.py
+      - name: the documented routes follow the URL scheme
+        run: |
+          pip install --quiet --disable-pip-version-check pyyaml==6.0.3 jsonschema==4.26.0
+          python3 scripts/verify-openapi-snippets.py
+      - name: the draft-07 schemas the platform publishes
+        # Pinned, not `main`: an unrelated platform push must not turn this lane red at a
+        # random hour. Bump the tag when a new kind lands, which is the same moment the
+        # "Schema not published yet" list on Development/04-manifest-kinds.md shortens.
+        env: { JC_SCHEMAS_TAG: jc-core-v0.7.20 }
+        run: |
+          set -eu
+          curl -sSL "https://github.com/marek-mraz/joinedcontext-platform/archive/refs/tags/${JC_SCHEMAS_TAG}.tar.gz" \
+            | tar -xz -C "${RUNNER_TEMP}" --strip-components=2 --wildcards '*/schemas/kinds/*'
+          # An empty directory would make every manifest "check" against nothing.
+          test -n "$(ls -A "${RUNNER_TEMP}/kinds")"
+          echo "JC_SCHEMAS_DIR=${RUNNER_TEMP}/kinds" >> "$GITHUB_ENV"
+      - name: every documented manifest would apply
+        run: python3 scripts/validate-doc-manifests.py
+      - name: every HTTP example is a request that would work
+        run: python3 scripts/test-curl-snippets.py
+      - name: bundle the corpus as the preview artifact
+        run: |
+          set -eu
+          mkdir -p "${RUNNER_TEMP}/docs"
+          git ls-files '*.md' '*.mdx' '*.png' '*.svg' '*.json' | tar -cf - -T - | tar -xf - -C "${RUNNER_TEMP}/docs"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docs-preview
+          path: ${{ runner.temp }}/docs
+          retention-days: 14

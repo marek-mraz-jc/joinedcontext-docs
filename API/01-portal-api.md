@@ -1,0 +1,1573 @@
+---
+sidebar_position: 2
+title: "Portal REST API"
+---
+
+# Portal REST API
+
+The Portal REST API provides administrative and platform management capabilities. OpenAPI 3.1 definitions are available at `https://portal.<domain>/api/v1/openapi.json`.
+
+## 1. Standard Headers
+
+- `Authorization: Bearer <jwt>` (Required for all non-public endpoints)
+- `Accept-Language: sk, en;q=0.8` (Requests translated titles and descriptions)
+- `Content-Type: application/json`
+
+## 2. Error Response Format (RFC 7807)
+
+All errors return `application/problem+json`:
+
+```json
+{
+  "type": "https://joinedcontext.com/errors/resource-not-found",
+  "title": "Resource Not Found",
+  "status": 404,
+  "detail": "ContextSpace 'mobility-traffic' does not exist in project 'city-center'",
+  "instance": "/api/v1/projects/city-center/spaces/mobility-traffic"
+}
+```
+
+One optional member is added to RFC 7807's own: `errors`, a list of strings, present when a single
+request violated more than one rule and the caller can act on all of them at once. A form marks
+every bad field from it in one pass instead of sending the user round the loop once per mistake
+(CC-24). `detail` stays the one-sentence summary, so a client that ignores `errors` still has
+something to show.
+
+```json
+{
+  "type": "https://joinedcontext.com/errors/invalid-request",
+  "title": "Invalid Request",
+  "status": 400,
+  "detail": "the parameters do not match blueprint 'threshold-alert': \"title\" is a required property; \"webhookUrl\" is a required property",
+  "errors": [
+    "\"title\" is a required property",
+    "\"webhookUrl\" is a required property"
+  ]
+}
+```
+
+## 3. Session and Identity (CC-40, CC-42)
+
+Humans reach the portal through the browser, never with a bearer token of their own. The
+authorization code flow with PKCE runs server-side and the result is an encrypted session cookie
+(`jc_session`, `Secure`, `HttpOnly`, `SameSite=Lax`); a second, deliberately readable cookie
+(`jc_csrf`) carries the double-submit token the SPA echoes in `x-csrf-token` on every mutation.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/v1/auth/login?redirect_to=<in-app path>` | starts the code flow; `redirect_to` is honoured only when it is a same-origin path |
+| `GET` | `/api/v1/auth/callback` | consumes the code, verifies the ID token against the stored nonce, issues the session |
+| `GET` | `/api/v1/auth/me` | the signed-in identity, or `401` `application/problem+json` when there is no live session |
+| `POST` | `/api/v1/auth/logout` | clears the session and answers `{ "endSessionUrl": "…" }`; the SPA navigates there itself, because a cross-origin 302 to Keycloak is unreadable to `fetch` |
+| `POST` | `/api/v1/auth/backchannel-logout` | Keycloak-initiated logout; revokes every session issued at or before the token's mark |
+
+`GET /api/v1/auth/me` answers with the identity:
+
+```json
+{
+  "subject": "b7c1e0f4-2c17-4b7c-9a2f-8f0b0f6b3d21",
+  "username": "jana.kovacova",
+  "email": "aino.virtanen@hel.fi",
+  "name": "Aino Virtanen",
+  "roles": ["portal-viewer", "space-editor"]
+}
+```
+
+- **CC-42** [portal, identity] — `roles` carries the realm roles Keycloak asserts in the ID token
+  (`realm_access.roles`), in the order the token lists them, and is `[]` when the token asserts
+  none. The UI MUST use it to decide what it renders and enables; it is defence in depth only, and
+  the forge and the resource API enforce the same boundaries independently, so a bypassed UI can
+  never exceed a user's Git rights.
+- **CC-40** [portal, identity] — `subject` is the Keycloak `sub` and is the only durable user key;
+  `username`, `email` and `name` are display data and MUST NOT be used for authorization.
+- No token is ever returned to the browser and none is written to a log line.
+
+## 4. Resource API (MF-11…MF-15)
+
+Every configuration kind is also served as a resource collection under the same `/api/v1` prefix as the rest of the Portal API (no Kubernetes-style group path in URLs; `apiVersion`/`kind` live only inside the manifest body):
+
+```text
+GET    /api/v1/projects/{project}/{plural}            list (labelSelector, fieldSelector, limit, continue, revision)
+GET    /api/v1/projects/{project}/{plural}/{name}     one manifest incl. status
+POST   /api/v1/projects/{project}/{plural}            create  → 202 + Change (merge request)
+PUT    …/{plural}/{name}                                                       replace → 202 + Change
+PATCH  …/{plural}/{name}   (application/apply-patch+yaml | merge-patch+json)   → 202 + Change
+DELETE …/{plural}/{name}                                                       → 202 + Change (explicit deletion lane)
+POST   …/{plural}?dryRun=All                                                   validate + plan, no change created
+GET    /api/v1/{plural}                                 organization-level kinds (Organization, Blueprint, SyncSource)
+GET    /api/v1/endpoints                                every Endpoint of every project the caller may read, each with its project (PF-60, PF-61)
+POST   /api/v1/projects                                 open a project → 202 + Change: project.yaml and the creator's steward binding in one merge request (PF-65, PF-66)
+GET    /api/v1/projects/{project}                       the project and `status.usage`: what it holds of each quota (PF-73, PF-75)
+DELETE /api/v1/projects/{project}                       delete a project → 202 + red-lane Change over everything it holds (PF-77, PF-78)
+GET    /api/v1/projects/{project}/permissions/me        the caller's effective rules here (PF-51, PF-61)
+```
+
+`DELETE /api/v1/projects/{project}` proposes one red-lane `Change` whose merge request removes
+`projects/{project}/` entirely and, with it, every `RoleBinding` and project `Role` under
+`users/` whose scope is the project or one of its spaces: no grant outlives the project it was
+written for (PF-77). The `Change` body lists every file, so the approver reads the cascade before
+approving it, and the approval is held to `approve` and `delete` on every kind in that list. A
+`SharedSpaceReference` in another project pointing at one of this project's Endpoints refuses the
+deletion with `409` and names the referencing manifests; removing the reference is that project's
+own change. On merge the reconciler drops each space's broker tenant last, after the export the
+`Change` body offers (CC-07), retires the endpoint slugs and removes the app builds.
+
+The name is then reserved for `Organization.spec.projects.nameCooldownDays` (30 days by default,
+`0` for none) counted from the commit that removed it, and `POST /api/v1/projects` answers `409`
+with the date it becomes free (PF-78).
+
+`GET /api/v1/endpoints` is the organization-level Endpoints page (PF-61): an `org-admin` bound at
+organization scope reads every project's, a project's steward their own projects', a binding
+scoped to one context space that space's alone, and a caller no binding names an empty list,
+never a `403` — nothing the caller may not `read` is in it, and a project they may not read is
+not disclosed by refusing it (R20).
+
+Every list and get answers under `read` of a binding whose scope covers the project (PF-59, PF-60):
+a project the caller may not read is `404` on every route of this section, on `export`,
+`/revisions`, `permissions/me` and the MCP resources alike, the one answer for "missing" and
+"not yours". A write answers `403` with the missing verb (PF-50).
+
+`{plural}` is the kind's plural from the catalogue in
+[Development/04-manifest-kinds.md §2](../Development/04-manifest-kinds.md#2-standard-kind-catalog),
+so a new kind is served the moment it is registered and needs no route of its own. `datasources`
+is the newest of them: the connection of one external feed, described in
+[Architecture/08-pipelines.md §6](../Architecture/08-pipelines.md#6-external-feeds-the-datasource-kind-mf-35-pl-39).
+A write carrying a credential as a literal string rather than a `secretRef` is refused with `400`
+before any merge request exists (MF-24, CC-06), whatever the kind.
+
+Portability operations:
+
+```text
+GET  /api/v1/projects/{project}/export?format=yaml|json|zip&revision={commit}&kinds=…&names=…   section 10
+GET  /api/v1/projects/{project}/revisions?limit=20                                            section 10
+POST /api/v1/projects/{project}/import        multipart (file) or JSON manifests; fields: targetNamespace, conflictPolicy, dryRun; {"url": …} is 501
+GET  /api/v1/organizations/{org}/export?format=zip&revision=…
+POST /api/v1/organizations/{org}/import
+GET  /api/v1/projects/{project}/syncsources/{name}/status   what the loop reports (section 10)
+POST /api/v1/projects/{project}/syncsources/{name}/sync     trigger a run now
+POST /api/v1/projects/{project}/syncsources/{name}/pause    switch the loop off or back on
+POST /api/v1/projects/{project}/syncsources/{name}/detach   stop syncing: a merge request removing the source
+```
+
+`GET /api/v1/projects/{project}` carries the count and the limit of every countable quota
+dimension, so a person sees the limit before the verdict does (PF-75). The limit is the one in
+force: the project's own `spec.quotas` when it has one, else `Organization.spec.projects.quota`
+(PF-73). A dimension no quota limits carries its count and no `limit`.
+
+The answer is the `Project` manifest as the resource API serves it, with one `status` the stored
+manifest does not carry:
+
+```json
+{
+  "status": {
+    "usage": {
+      "apps": { "used": 0 },
+      "contextSpaces": { "used": 2, "limit": 3 },
+      "publicEndpoints": { "used": 1, "limit": 4 },
+      "residentPipelines": { "used": 3, "limit": 3 }
+    }
+  }
+}
+```
+
+A write that would put the project over one of them is refused before a `Change` exists, on every
+door, naming the count and the limit — `quota: residentPipelines 4 of 3 in project ovzdusie` —
+and the dry run of the same manifest answers the same refusal (PF-74).
+
+`permissions/me` answers the rules in force for the caller in one project, each grant naming the
+scope it was inherited from, and what the organization's own settings let them do that no rule
+expresses (PF-61, PF-65, UI-44):
+
+```json
+{
+  "project": "helsinki",
+  "bootstrap": false,
+  "grants": [
+    {
+      "role": "steward",
+      "binding": "hel-stewards",
+      "scope": "organization",
+      "rule": { "kinds": ["Endpoint", "Pipeline"], "verbs": ["read", "propose"] }
+    }
+  ],
+  "projects": { "creation": { "allowed": false, "reason": "opening a project here needs propose on Project, which org-admin holds (PF-65)" } }
+}
+```
+
+`scope` is `organization`, `project:{name}` or `contextSpace:{name}`, so a page can say "steward,
+inherited from the organization" rather than making an inherited grant look local. `projects.creation`
+is the answer `POST /api/v1/projects` would give this caller, with the refusal in the API's own
+words: the "New project" control is rendered disabled with that reason, never hidden (UI-44).
+
+### Files beside the manifest (DM-39)
+
+Some kinds are incomplete as one file. A `Mapping` names golden tests it cannot be accepted
+without (DM-39), and the examples that satisfy them are two more files in the repository. A
+`POST`, `PUT` or `PATCH` body may therefore carry a `files` member beside the manifest, taken
+out of the body the way `draft` is, and the Change commits them to the same branch and the same
+merge request as the manifest (a request body, so the manifest is shown in excerpt):
+
+```json excerpt
+{ "apiVersion": "joinedcontext.com/v1alpha1", "kind": "Mapping", "metadata": { "name": "sdm-airquality-to-bb" },
+  "spec": { "tests": [{ "input": "./tests/sdm-airquality-to-bb.input.json",
+                        "expect": "./tests/sdm-airquality-to-bb.expect.json" }], "…": "…" },
+  "files": { "./tests/sdm-airquality-to-bb.input.json": "{ \"id\": \"urn:ngsi-ld:AirQualityObserved:…\" }",
+             "./tests/sdm-airquality-to-bb.expect.json": "{ \"id\": \"urn:ngsi-ld:BBAirQuality:…\" }" } }
+```
+
+Every path is relative to the manifest's own folder and stays under it: an absolute path, a
+`..` segment, a path outside the kind's folder, an empty path and a duplicate are `400`, naming
+the path. A body may carry at most 16 files and 256 KiB of them together; more is an import
+(`POST …/import`), which is the route for a repository's worth of files. The files are written
+before the manifest, so a reviewer opening the merge request never reads a manifest that points
+at a file the change does not carry, and one refusal leaves nothing behind. A file the manifest
+does not name is written as sent and reviewed like any other: the plan lists it.
+
+Example dry-run result (`?dryRun=All`; `probe` only for an `http` DataSource, MF-39). The
+`verdict` is recorded under the manifest's own kind and name, and it is what the proposal of the
+same manifest needs under `strict` (PF-57):
+
+```json
+{
+  "valid": true,
+  "lane": "yellow",
+  "plan": { "summary": "create hsl-citybikes-free", "fields": [ { "path": "spec.http.url", "to": "https://…/free_bike_status.json" } ] },
+  "probe": { "records": 1, "bytes": 512034, "sample": { "last_updated": 1789314850, "data": { "bikes": [] } } },
+  "verdict": { "ok": true, "findings": [], "checkedAt": "2026-09-18T12:00:00Z", "inputDigest": "sha256:…" }
+}
+```
+
+Under `strict`, a `POST`, `PUT` or `PATCH` that carries no `draft` and whose manifest has no
+fresh green verdict is refused after the manifest's own checks and before anything reaches the
+forge, with the gate's own document (`reason` is `verdict_absent`, `verdict_failed` or `stale`;
+`check` names the check of the kind):
+
+```json
+409 { "error": "verdict_required", "check": "jc_manifest_dry_run", "reason": "verdict_absent",
+      "detail": "The manifest has not been checked; check it, then propose it." }
+```
+
+The check is the same request with `?dryRun=All`, so a client sends the manifest twice: first to
+check it, then, unchanged, to propose it. A proposal that became a Change forgets the draft its
+check created; a person's draft of the same resource with other content stays.
+
+A DataSource with an `authorization` answers `"probe": { "skipped": "the source declares a credential; a dry run resolves none (MF-38)" }`.
+
+Example write result:
+
+```json
+{
+  "apiVersion": "joinedcontext.com/v1alpha1",
+  "kind": "Change",
+  "metadata": { "name": "chg-7f3a", "namespace": "helsinki" },
+  "status": {
+    "lane": "yellow",
+    "mergeRequest": "https://git.example.fi/hel/org/pulls/412",
+    "plan": { "create": 1, "update": 0, "delete": 0 },
+    "phase": "PendingApproval"
+  }
+}
+```
+
+## 5. Change Proposals and Approvals (CC-34, CC-41, CC-63, UI-23…UI-25)
+
+A write answers with a `Change` and leaves a merge request open. These endpoints are the Portal's
+view of those merge requests, so that an approver never has to open the forge to do their job:
+
+```text
+GET  /api/v1/projects/{project}/changes                  open proposals, newest first
+GET  /api/v1/projects/{project}/changes/{id}             one proposal with its plan diff
+POST /api/v1/projects/{project}/changes/{id}/approve     review + merge
+POST /api/v1/projects/{project}/changes/{id}/reject      review "request changes" + close
+```
+
+`{id}` is the `metadata.name` a write returned: `chg-` plus the merge request number in eight
+lowercase hex digits.
+
+A listed proposal carries what a reviewer decides on, not what the forge stores:
+
+```json
+{
+  "apiVersion": "joinedcontext.com/v1alpha1",
+  "kind": "ChangeList",
+  "items": [
+    {
+      "apiVersion": "joinedcontext.com/v1alpha1",
+      "kind": "Change",
+      "metadata": { "name": "chg-0000019c", "namespace": "helsinki" },
+      "status": {
+        "lane": "red",
+        "mergeRequest": "https://git.example.fi/hel/org/pulls/412",
+        "plan": { "create": 0, "update": 1, "delete": 0 },
+        "phase": "PendingApproval"
+      },
+      "summary": { "key": "change.summary.update", "params": { "kind": "Endpoint", "name": "public-air", "fields": 1 } },
+      "author": { "name": "Aino Virtanen", "email": "aino.virtanen@hel.fi" },
+      "createdAt": "2026-09-06T09:14:22Z"
+    }
+  ]
+}
+```
+
+`summary` is a message key and its parameters, derived from the plan and never from the raw diff
+(CC-34). The sentence is composed in the UI, which already carries the sk/en/de/cs catalogues; the
+API stays language-free so a second set of translations never has to be kept in step with the
+first. `author` is read from the commit, so a proposal always names the human who made it and never
+a shared bot identity (CC-44). `GET …/changes/{id}` adds `plan.fields`, the field-level
+diff of `PlanDiff`, with any value under a `password`, `token`, `secret`, `clientSecret` or
+`apiKey` key replaced by `"[REDACTED]"` (CC-06).
+It also lists `files`, every file of the merge request (`path`, `kind`, `operation`, `lane`), and
+each manifest among them carries `fields`: its own field-level diff, base against head, redacted the
+same way, so an approver reads what each file of a bundle changes and not only the headline
+manifest's. A native file (a LinkML source, a `bento.yaml`) carries no `fields`.
+
+Approval rules, enforced by the API and not only by the UI:
+
+- the caller needs the `portal-approver` realm role; anyone else gets `403` (CC-41);
+- the author of a proposal may not approve it — `403` with `type: ".../self-approval"` —
+  unless they approve it with a session and a binding covering the project grants them both
+  `approve` and `delete` on its kind (an administrator, PF-58); the merge commit then records
+  that the author approved it as an administrator. The operations registry and MCP never take
+  this exception (AG-11);
+- a proposal in the `red` lane needs the `portal-approver` role **and** an explicit
+  `{"confirm": "<resource name>"}` body, so a destructive merge is never one click (CC-19, CC-39);
+- approving answers `202` with the `Change`, its `phase` moved to `Deploying`; the reconciler
+  moves it to `Live` when the merge lands on the default branch and the mirror sync observes it.
+
+## 6. Core Endpoint Examples
+
+### List Context Spaces
+
+```http
+GET /api/v1/projects/{project}/spaces?limit=20 HTTP/1.1
+Host: portal.example.joinedcontext.com
+Authorization: Bearer eyJhbGciOiJSUzI1Ni...
+```
+
+A collection answers with a `List` envelope whose `items` are whole manifests; paging is a
+`continue` token, not a page number, so a page stays stable while the collection changes.
+
+```json
+{
+  "apiVersion": "joinedcontext.com/v1alpha1",
+  "kind": "List",
+  "metadata": {
+    "continue": "eyJhZnRlciI6Im1vYmlsaXR5LWxpdmUifQ",
+    "remainingItemCount": 3
+  },
+  "items": [
+    {
+      "apiVersion": "joinedcontext.com/v1alpha1",
+      "kind": "ContextSpace",
+      "metadata": {
+        "name": "mobility-live",
+        "namespace": "helsinki",
+        "title": { "sk": "Živá mobilita", "en": "Live Mobility Feed" }
+      },
+      "spec": { "orgDomain": "hel.fi" },
+      "status": {
+        "phase": "Live",
+        "observedRevision": "9c1f0ab",
+        "sourceUrl": "https://git.example.fi/hel/org/src/branch/main/projects/helsinki/spaces/mobility-live/space.yaml"
+      }
+    }
+  ]
+}
+```
+
+`metadata.continue` and `metadata.remainingItemCount` appear only while more items follow.
+
+`status.sourceUrl` is the forge page of the very file the manifest was read from, computed by the
+Portal during the mirror sync and never read from Git (MF-04). It lets every view link "Source"
+without teaching the browser where a kind lives in the repository; it is absent when the manifest
+has not been mirrored yet or no forge is configured.
+
+## 7. Pipeline Runtime Metrics (PL-24, CC-35)
+
+A pipeline manifest says what should run; the numbers come from the Bento runner, which serves
+Prometheus text on port 4195 (PL-24). The Portal reads that port on the browser's behalf, so the
+UI never talks to a workload and the runner never needs an ingress:
+
+```text
+GET /api/v1/projects/{project}/pipelines/{name}/metrics    counters of one running stream
+```
+
+```json
+{
+  "pipeline": "aq-mqtt-ingest",
+  "scrapedAt": "2026-09-06T16:20:11Z",
+  "received": 128401,
+  "sent": 128390,
+  "errors": 3,
+  "bufferDepth": 11,
+  "latencyP99Ms": 42.5
+}
+```
+
+- Counters are cumulative since the runner started, exactly as the runner reports them. The view
+  samples them to show a rate; the Portal keeps no history, that is Prometheus' job (OPS-16).
+- A field is absent when the runner does not export it. Absent is not zero.
+- Only series carrying `stream="{name}"` are read, so one pipeline's view never discloses the
+  traffic of its neighbours in the same runner.
+- `503` with `problem+json` when the project has no runner configured or its metrics port does not
+  answer within the scrape timeout. The view then shows the pipeline without numbers, not as
+  failed: a runner that is down is an operational fact, not a manifest error.
+- The body carries counters only. Runner logs, stream configuration and secret values are never
+  part of it (PL-17).
+
+### 7a. Testing a candidate pipeline (PL-43, MF-38)
+
+```text
+POST /api/v1/projects/{project}/pipelines/test
+```
+
+```json
+{
+  "pipeline": { "apiVersion": "joinedcontext.com/v1alpha1", "kind": "Pipeline", "metadata": { "name": "shmu-air-quality" }, "spec": { "class": "resident", "source": { "dataSourceRef": { "kind": "DataSource", "name": "shmu-csv" } }, "compute": { "kind": "bloblang", "bloblang": "root.id = `urn:ngsi-ld:AirQualityObserved:hel.fi:air-quality:%v`.format(this.station_id)" }, "targetEndpoint": "urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all" } },
+  "sample": { "text": "station_id,pm10,timestamp\n01,18.2,2026-09-13T07:00:00Z\n", "format": "csv" }
+}
+```
+
+- `sample.text` is at most 5 MiB and never leaves memory; `sample.url` instead makes the runner fetch it under its own egress policy. `format` is `csv`, `json` or `text` (the default, one message as it is).
+- The answer is the trace of Architecture/08 §7: `input`, `mapping`, `validation`, `errors`. A manifest the kind refuses is `400` (MF-37); no runner, or a runner that does not answer within three seconds, is `503`; a second test while one runs in the project is `409`.
+- A mapping that yields an array is one entity per element in `mapping` and `validation`, at most 20 (PL-48).
+- A derived pipeline (`spec.source.endpointRef`, the studio's `kpi` preset, PL-45) is tested on a page of its source endpoint: `sample.url` is that endpoint's `…/ngsi-ld/v1/entities?type=…&attrs=…` URL (the runner fetches it with the pipeline's read grant) or `sample.text` is such a page, `format: json`; the page reaches the mapping as one message, so a fold yields one entity in `mapping` and `validation` checks it as an indicator (PF-43): `calculationFormula`, `derivedFrom` and `computedBy` missing are `problems`, not a `200` that admission would later refuse.
+- Nothing is written, no `secretRef` is resolved, the stream is deleted whatever happened.
+
+## 8. User Preferences (UI-09, UI-10)
+
+Preferences are the one thing the Portal stores for itself: how a person likes the UI, never how the
+platform is configured. They live in the Portal's PostgreSQL preferences tier, keyed by the Keycloak
+`sub` of the session (CC-40), and a change takes effect on the answer, with no commit, no merge
+request and no approval (UI-10):
+
+```text
+GET /api/v1/preferences      the caller's preferences; an empty object before the first save
+PUT /api/v1/preferences      replaces them whole; answers 200 with what is now stored
+```
+
+```json
+{
+  "theme": "system",
+  "locale": "sk",
+  "defaultProject": "air-quality",
+  "dashboardLayouts": { "air-quality-overview": { "collapsedLegend": true } },
+  "advancedMode": false
+}
+```
+
+- `theme` is `light`, `dark` or `system`; `locale` an ISO 639-1 code; `defaultProject` a DNS-1123
+  name. `dashboardLayouts` is free JSON per dashboard name, capped at 64 KiB in total: it is the
+  browser's saved state, the Portal does not interpret it.
+- Every field is optional; a `PUT` with a field absent clears it. Unknown fields are a `400`.
+- A caller only ever reads or writes their own row: there is no path parameter and no admin view
+  over other people's preferences.
+- `advancedMode` shows the form fields a `UiSchema` marks `advanced` (CC-29): the commit message,
+  the branch, the target revision. Absent means off. It changes what a form shows, never what a
+  write may do.
+- `503` with `problem+json` when the Portal runs without a preferences database. The UI then works
+  from browser defaults; nothing else depends on this tier (UI-09).
+
+### 8a. Form arrangements (UI-02, CC-29)
+
+```text
+GET /api/v1/forms            every UiSchema manifest of portal/forms/, as a List
+```
+
+- One unpaged `List` of the organization's `UiSchema` manifests, read from the same mirror as every
+  other resource; a form dialog indexes it by `spec.for`. An instance with no manifests answers an
+  empty `List`, never `404`.
+- The session is the only gate, as for every resource read; there is no path parameter.
+- A dialog for a kind with a manifest renders the manifest's order, groups, widgets and help; a
+  kind without one renders its built-in form. What a manifest asks for and the form cannot do (a
+  field the schema lacks, a widget the Portal does not register, two manifests for one kind) is
+  listed in the dialog itself, and the dialog's footer carries the `advancedMode` switch.
+
+## 9. ServiceAccounts and API keys (PF-34…PF-40)
+
+A `ServiceAccount` manifest declares that a credential exists; the secret itself never enters Git
+(PF-36). The manifest is read and written through the resource API like every other kind
+(`/api/v1/projects/{project}/serviceaccounts`). The keys behind an `api-key` credential live in the
+Portal's PostgreSQL tier, and these routes are the only way to mint, rotate and revoke them:
+
+```text
+GET    /api/v1/projects/{project}/serviceaccounts/{name}/keys                  the account's keys, metadata only
+POST   /api/v1/projects/{project}/serviceaccounts/{name}/keys                  mint a key → 201, the token once
+POST   /api/v1/projects/{project}/serviceaccounts/{name}/keys/{keyId}/rotate   mint a successor, the old key keeps working for the overlap window → 201
+DELETE /api/v1/projects/{project}/serviceaccounts/{name}/keys/{keyId}          revoke now → 204
+```
+
+Minting takes the credential name from the manifest and, optionally, an expiry:
+
+```json
+{ "credential": "legacy-push", "expiresAt": "2027-03-01T00:00:00Z" }
+```
+
+The `201` answer is the only place the secret ever appears:
+
+```json
+{
+  "keyId": "3f9c2a7b1d4e8f06",
+  "token": "jc_3f9c2a7b1d4e8f06_Zm9vYmFyYmF6cXV4MTIzNDU2Nzg5MGFiY2RlZg",
+  "credential": "legacy-push",
+  "expiresAt": "2027-03-01T00:00:00Z"
+}
+```
+
+A listed key carries what an operator decides on and nothing that opens a door:
+
+```json
+{
+  "items": [
+    {
+      "keyId": "3f9c2a7b1d4e8f06",
+      "credential": "legacy-push",
+      "createdAt": "2026-09-06T18:20:11Z",
+      "createdBy": "jana.kovacova",
+      "expiresAt": "2027-03-01T00:00:00Z",
+      "lastUsedAt": null,
+      "revokedAt": null
+    }
+  ]
+}
+```
+
+- `token` is `jc_{keyId}_{secret}` (PF-37): `keyId` is 16 lowercase hex characters, the secret 32
+  random bytes in URL-safe base64 without padding. The Portal stores the Argon2id PHC string of the
+  secret, the key id, the expiry and the audit timestamps, never the secret (PF-36); a listed key
+  therefore has no `token`, and a lost token means a new key.
+- `credential` MUST name an `api-key` credential of the manifest; an `oauth-client` credential is
+  provisioned in Keycloak by the reconciler and has no key here (`400`).
+- `expiresAt` defaults to the credential's `expiresAt` in the manifest; without either the key does
+  not expire. It MUST NOT be in the past (`400`).
+- Rotation (PF-38) mints a successor with the same credential and expiry and moves the old key's
+  expiry to `now + overlap`, `{ "overlapHours": 24 }` in the body, default 24, at most 168; an old key
+  that already expires sooner keeps its earlier expiry. Both keys are listed while both work.
+- Revocation is immediate: the key row is kept with `revokedAt` set for the audit trail and the
+  gateway refuses it on the next request (PF-38).
+- The caller MUST be the account's `spec.owner.user` or hold the `portal-approver` realm role
+  (CC-60); anyone else is `403`. An account the caller may not see is `404`, whether it exists or
+  not (R20).
+- `503` with `problem+json` when the Portal runs without its PostgreSQL tier, as for section 8.
+
+## 10. Export, import, revisions and sync (MF-16…MF-32, CC-49)
+
+The repository at any revision is the complete configuration export (CC-49). These routes hand it
+out without Git knowledge, always read from the forge and never from the live mirror, so what is
+downloaded is byte-for-byte what a `git archive` of that path would hold:
+
+```text
+GET /api/v1/projects/{project}/export?format=yaml|json|zip&revision={commit}&kinds={plurals}&names={names}
+GET /api/v1/projects/{project}/revisions?limit=20
+```
+
+- `format=yaml` (default) is one multi-document YAML stream, one manifest per document; with
+  `kinds=endpoints&names=public-air` it is a single manifest file. `format=json` is a `kind: List`
+  with the same items. `format=zip` is the archive of `projects/{project}/` at the revision: the
+  manifests, the native files next to them (`bento.yaml`, LinkML, committed schema artifacts) and a
+  `bundle.yaml` index at the archive root. The index is the platform's own `kind: Bundle`
+  (namespace `org`, name the project), so `jcctl validate` accepts what the Portal wrote: `spec`
+  carries `exportedAt`, `exportedBy`, `sourceRevision` (the commit the export was taken at, never
+  a branch name), `items` (`kind`, `namespace`, `name`, `path` per manifest), `nativeFiles`,
+  `files` (`path` and `sha256` of every file the bundle holds, over the bytes as exported, so a
+  transfer can be verified before the source is deleted, MF-42) and `omitted`. An export whose filters select no manifest carries no index, because a Bundle lists
+  at least one resource. Media types: `application/yaml`, `application/json`, `application/zip`,
+  with a `Content-Disposition: attachment` filename that names the project and the short revision.
+- A whole-project export (no `names` filter) is complete and self-describing (MF-41). The archive
+  adds, at its root, `README.md` (what each kind it holds is, how many resources, where the schema
+  is, the revision and the exporter) and `schemas/`: `schemas/kinds/{Kind}.schema.json`, the JSON
+  Schema (draft-07) of every kind in the archive with its field descriptions, and
+  `schemas/models/{name}/{name}.linkml.yaml` and `{name}.schema.json` for every `DataModel`, read
+  from the repository or generated by Model Tools when the repository has no JSON Schema; a model
+  whose files cannot be had is listed under "Missing" in the README. `format=yaml` ends the stream
+  with the same `kind: Bundle` index as its last document, whose `spec` carries `readme` (the README
+  text) and `schemas` (`kinds`: kind → schema, `models`: name → `{linkml, jsonSchema}`) beside the
+  members above; `format=json` carries `readme` and `schemas` beside `items`. A `kinds` filter keeps
+  the schemas of the kinds it selects. With `names`, the answer is the manifests alone. Import skips
+  `README.md`, `schemas/` and the index, so none of them is written into a project.
+- `revision` is a commit sha or branch name; absent means the default branch head. A revision the
+  forge does not know is `404`.
+- `kinds` and `names` are comma-separated filters on the manifests; the archive format keeps native
+  files regardless. Filters that match nothing answer an empty stream, list or archive, not `404`.
+- `status` is stripped from every manifest and string values under the secret keys of section 5
+  (`password`, `token`, `secret`, `clientSecret`, `apiKey`) are removed, so a bundle is re-importable
+  and carries no credential (MF-17). Native files are copied as they are; MF-24 keeps literal
+  secrets out of them at write time.
+- Grants apply as on the resource API: the bundle holds the kinds the caller may `read` in the
+  project (PF-59), a project they may not read is `404`, and `omitted` in the index counts what
+  was withheld without naming it (MF-18). Live entities and histories are
+  never part of a bundle (MF-19); they are the endpoint's `file.{json|csv|geojson}` representation.
+- `/revisions` is the history of `projects/{project}/` on the default branch, newest first, for the
+  revision picker (Architecture/06 section 6): `sha`, `message`, `author`, `date`. `limit` is 1…100,
+  default 20.
+
+```json
+{
+  "items": [
+    { "sha": "8c56954a1f0e2b3c4d5e6f708192a3b4c5d6e7f8", "message": "Endpoint public-air: add csv", "author": "Aino Virtanen", "date": "2026-09-06T16:30:00Z" }
+  ]
+}
+```
+
+- `503` with `problem+json` when no forge is configured (CC-03): a Portal that cannot read the
+  repository has nothing to export.
+
+Import is the same bundle read back, into a project that is not the one it left (MF-20…MF-26):
+
+```text
+POST /api/v1/projects/{project}/import?dryRun=All
+```
+
+- The body is either `multipart/form-data` with the archive or manifest as the `file` part and the
+  options beside it as fields, or `application/json` with the options and `manifests` holding one
+  manifest, a `kind: List`, or an array of them. Options are the same in both: `targetNamespace`,
+  `orgDomain`, `conflictPolicy`, `dryRun`. `?dryRun=All` is the query form of the last one.
+  `orgDomain` is the organisation every imported id is rewritten to; absent, it is the domain of
+  the instance's own `Organization`. The `{orgDomain}` segment of an id, and of an anchored
+  `idPattern`, is rewritten for the spaces the bundle carries, so a moved project stops claiming
+  the ids of the city it came from and a federated registration that named another city keeps
+  naming it (MF-22, PF-43). The `{space}` segment moves only when the conflict policy renames that
+  ContextSpace. An organization-scoped kind is written in namespace `org` whatever project imported
+  it, and a `Project` manifest inside the bundle is dropped: the destination project is the one in
+  the path.
+- An upload is at most 32 MiB and 2 000 archive entries, and an entry whose path leaves the archive
+  root is refused before it is read.
+- `bundle.yaml` describes the bundle and is never imported as a resource. Its `project` and
+  `revision` become `joinedcontext.com/imported-from` on every manifest that lands, so an imported
+  object says where it came from (MF-20); an upload with no index is annotated `upload`.
+- Every manifest is remapped into the project: the namespace, the typed and string references
+  between the manifests, and the `{space}` segment of every `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}`
+  in the spec (MF-22). `targetNamespace` may only name the project itself, because the repository
+  path of every kind starts `projects/{project}/`.
+- `conflictPolicy` is `fail` (the default: `409` naming the first collision, and nothing is
+  written), `skip`, `replace` or `rename`. A rename is `{name}-{origin}`, the origin being the
+  project the manifest came from, then `-2`, `-3` while the name is taken; every reference to the
+  renamed resource inside the bundle follows it, so a duplicated project does not import and then
+  dangle (MF-26).
+- The gates run over the whole bundle before anything is written, and any one of them refuses all
+  of it with `400` (MF-24): a kind this platform does not serve, an unsupported `apiVersion`, a
+  `status` block (MF-04), a literal secret under one of the secret keys of section 5, or a
+  reference that neither the bundle nor the project resolves.
+- The answer is `202` and a `Change`: one branch, one merge request for the whole bundle, and the
+  lane is the riskiest of the resources in it (CC-63). Native files travel with their manifests and
+  keep their path under the new project.
+- `dryRun` answers `200` with the report instead: `created`, `replaced`, `skipped`, `renamed`
+  (old name → new), `nativeFiles`, `lane` and `source`. Nothing is written and no branch is made.
+- The dry run is the bundle's check (PF-57, every door): it records a verdict over the bundle as
+  sent (its SHA-256) and the options that decide what it writes (`conflictPolicy`, `orgDomain`,
+  `targetNamespace`), for the caller and the project. Under `strict` an import without `dryRun`
+  needs that verdict, green and fresh. Nothing reaches the forge otherwise, and the answer is the
+  gate's own `409` with `"check": "jc_project_import"` (run it with `dryRun`) and `reason`
+  `verdict_absent`, or `stale` when the bundle or an option differs from the checked one. An
+  import that became a `Change` forgets its verdict; `lax` lets an unchecked bundle through.
+- A bundle carrying `spec.files` is verified as it is written (MF-42): the report gains
+  `verified` (`path`, `equal` per file), the SHA-256 of what the import wrote compared with the
+  index after the namespace mapping is undone, and the `Change` body says "n of m files equal".
+  A bundle from an older exporter carries no `spec.files`, and the report then carries no
+  `verified`: an unverifiable transfer says so rather than claiming every file is equal.
+- Both answers, the dry run's report and the `Change`, carry `needs`: what the bundle cannot carry
+  and must be provided where it lands (CC-84). Each item is `{kind, where, why, link}` with `kind`
+  one of `secret` (a `secretRef` whose value is set in the target), `person` (a user named in a
+  RoleBinding or a Policy), `host` (an Environment host or certificate) and `credential` (a feed's
+  authorization); `where` is the manifest path, and `link` the Portal page that sets it. An empty
+  list means nothing is to be provided. No item ever holds a secret value, and a caller who may
+  not read the target project gets no list. Nothing in it blocks the import; each item keeps the
+  resource it belongs to from going Live with a plain reason. Save as across projects and a
+  workspace's answers carry the same list. Values the loader renders stay in their placeholder or
+  local form on both sides (`{orgDomain}`, `endpointRef`, no `{space}` literal, MF-43).
+- The `{"url": …}` source of MF-20 answers `501`. Fetching a host the caller names is an egress
+  decision the Portal has no policy behind, and the upload form carries the same bundle; see
+  `OPEN-QUESTIONS.md`.
+
+### Sync sources (MF-27…MF-32)
+
+A `SyncSource` is a manifest like any other, written and read through the resource API of section
+4. What these four routes address is the loop around it: the run, the switch, and the way out.
+
+```text
+GET  /api/v1/projects/{project}/syncsources/{name}/status
+POST /api/v1/projects/{project}/syncsources/{name}/sync
+POST /api/v1/projects/{project}/syncsources/{name}/pause     {"paused": true|false}
+POST /api/v1/projects/{project}/syncsources/{name}/detach
+POST /api/v1/webhooks/sync/{project}/{name}                  signed, no session
+```
+
+- `/status` is what the project page shows (MF-30): `phase`
+  (`Synced | OutOfSync | PendingApproval | Error | Paused`), `observedRevision` — the source
+  revision this repository carries — `lastRunAt`, `mergeRequest` for the proposal a run opened and
+  nobody has answered, `lastError` when the last run did not finish, `paused`, and `durable`, which
+  is `false` on a Portal with no database, where a restart forgets where each source stood.
+- `/sync` runs the loop once whatever the schedule says and answers `200` with `proposed` (the
+  `kind: Change` envelope of each merge request the run opened, carrying its URL), `unchanged`,
+  `flags` — what the run could not do, in sentences — and the `status` that follows it. A paused
+  source answers with its status and runs nothing: the switch is not overridden by the button.
+- `/pause` records an operator's decision about a running loop. It writes nothing to the repository
+  and opens no merge request, because nothing about the configuration changed.
+- `/detach` stops syncing for good, and that *is* a change to the repository: it answers `202` with
+  the merge request that removes the `SyncSource` manifest. Syncing pauses at once, so a source
+  cannot keep proposing while its own removal waits for review, and stays paused if the merge
+  request is closed rather than merged. The resources the source brought into the project stay
+  where they are — detaching a source is not deleting what it published.
+- The webhook route is what a `schedule: { webhook: true }` source runs on. It carries no session
+  and is authenticated exactly like the forge callback: an HMAC-SHA256 of the request body in
+  `x-gitea-signature`, against the Portal's webhook secret. Without that signature it is `401`, and
+  without a configured secret it is `503` — an unauthenticated trigger would let anybody on the
+  internet make the Portal fetch a remote repository as often as they liked.
+- Every run reaches its origin over `https` and nothing else, follows a redirect only to another
+  `https` address, and refuses an origin whose `source.*.secretRef` this instance cannot resolve
+  rather than fetching it anonymously (MF-31). A `platformApi` origin is read through the partner's
+  own `/revisions` and `/export` of this section and through nothing else (MF-32).
+
+## 11. Model Tools preview (DM-10, DM-17, DM-18, DM-19)
+
+The LinkML editor needs a compiled preview on every keystroke, and the compilation runs in Model
+Tools: a stateless, versioned image holding `linkml`, `schema-automator`, `pysmartdatamodels` and
+the `ngsi_ld_kind` post-processor (DM-18). The Portal calls it for the browser, so the editor never
+reaches a third-party host itself and Model Tools needs no ingress:
+
+```text
+GET  /api/v1/tools/sdm-catalog   the Smart Data Models catalogue index, by subject and model
+                                 (?subject= fills that subject's attribute names)
+POST /api/v1/tools/generate      LinkML source  → JSON Schema, @context, SHACL, OWL, example
+POST /api/v1/tools/import-sdm    a Smart Data Models model id → the same artifacts as LinkML
+POST /api/v1/tools/infer-schema  a sample file (multipart, ≤ 10 MiB: CSV, XLSX, JSON, PDF)
+                                 → a draft LinkML model and the editor operations that build it
+```
+
+The source of a model is a file of the repository, read and saved through one route scoped to it
+(DM-56, Architecture/11 §6.8): `GET` answers the text at the manifest's `spec.linkml`, `PUT` with
+the new text answers `202` and a `Change` whose commit carries the source, the manifest and the
+generated artifacts, in the lane DM-24 assigns.
+
+A name the project does not hold yet is created by the same `PUT` when it names the space the
+model belongs to (DM-57): the Change then carries the new manifest as well, and without `space`
+the answer is `400`.
+
+```text
+GET /api/v1/projects/{project}/datamodels/{name}/source          → 200 text/yaml, the LinkML document
+PUT /api/v1/projects/{project}/datamodels/{name}/source           text/yaml body → 202 Change (MF-12)
+PUT /api/v1/projects/{project}/datamodels/{name}/source?space=s   text/yaml body → 202 Change, the model created (DM-57)
+```
+
+```json
+{
+  "refreshedAt": "2026-09-06T04:00:00Z",
+  "stale": false,
+  "subjects": [
+    {
+      "name": "dataModel.Environment",
+      "title": "Environment",
+      "models": [
+        {
+          "id": "dataModel.Environment/AirQualityObserved",
+          "name": "AirQualityObserved",
+          "description": "An observation of air quality conditions.",
+          "attributes": ["pm10", "pm25", "dateObserved"]
+        }
+      ]
+    }
+  ]
+}
+```
+
+```json
+{ "source": "id: https://example.org/aq\nname: aq\nclasses:\n  AirQualityObserved:\n    slots: [temperature]\n" }
+```
+
+```json
+{
+  "linkml": "id: https://github.com/smart-data-models/dataModel.Environment/AirQualityObserved\nname: AirQualityObserved\n",
+  "jsonSchema": { "$schema": "http://json-schema.org/draft-07/schema#", "title": "AirQualityObserved" },
+  "context": { "@context": { "temperature": "https://example.org/aq/temperature" } },
+  "docs": "# AirQualityObserved\n\n| Attribute | NGSI-LD kind | Range |\n",
+  "shacl": "@prefix sh: <http://www.w3.org/ns/shacl#> .",
+  "owl": "@prefix owl: <http://www.w3.org/2002/07/owl#> .",
+  "example": { "id": "urn:ngsi-ld:AirQualityObserved:hel.fi:air-quality:sensor-01", "type": "AirQualityObserved" },
+  "generatorVersion": "linkml-1.8.0",
+  "errors": []
+}
+```
+
+The inference answer (DM-54): the model as source and as the operations the visual editor applies, the slots it typed and the ones it could not.
+
+```json
+{
+  "linkml": "id: https://hel.fi/models/air-quality\nname: air_quality\nclasses:\n  AirQuality:\n    slots: [station_id, pm10, timestamp]\n",
+  "operations": [
+    { "op": "addClass", "name": "AirQuality" },
+    { "op": "addSlot", "name": "station_id", "class": "AirQuality", "range": "string" },
+    { "op": "addSlot", "name": "pm10", "class": "AirQuality", "range": "float", "slot_uri": "https://smartdatamodels.org/dataModel.Environment/pm10" },
+    { "op": "setSlot", "name": "pm10", "field": "unit", "value": "GQ" },
+    { "op": "setSlot", "name": "pm10", "field": "minimum_value", "value": 0 },
+    { "op": "addSlot", "name": "timestamp", "class": "AirQuality", "range": "datetime" }
+  ],
+  "detectedTypes": { "station_id": "string", "pm10": "float", "timestamp": "datetime" },
+  "matches": { "pm10": "dataModel.Environment/AirQualityObserved" },
+  "untyped": [],
+  "rows": 240
+}
+```
+
+The editor's operations (DM-13) are `addClass`, `removeClass`, `renameClass`, `setClass`, `addSlot`, `removeSlot`, `renameSlot`, `attachSlot`, `detachSlot`, `setSlot`, `setTitle`, `addEnum` and `addEnumValue`, applied in order and all or nothing. A rename carries `to` and follows the element through the model: a renamed class is renamed in every `is_a` and every slot `range` that names it, a renamed slot in every class's slot list. An operation naming an element the model does not have, or a new name it already has, is refused with its index and the reason.
+
+- `sdm-catalog` is the index the import wizard browses (DM-07): the subjects and their models, with
+  the attribute names and descriptions the wizard searches. Model Tools caches it and refreshes it
+  daily; `?refresh=true` asks for a refresh now, and an index Model Tools could not refresh is
+  answered from the cache with `stale: true` rather than withheld (DM-12). The index carries no
+  URLs: a model is named by its catalogue identifier, and fetching it is `import-sdm`.
+- `attributes` is present only on the models of the subject named by `?subject=`. The catalogue
+  publishes no aggregate carrying the attributes of all 1118 models, so a subject is filled from
+  the models' own schemas when the wizard opens it and cached from then on; without the parameter
+  the index costs one fetch and answers no attribute names. `?subject=` accepts a subject the
+  index already lists and nothing else, so a browser cannot steer a fetch with it either.
+- `linkml` is the LinkML source itself. `import-sdm` answers with it, because an import produces
+  the document the editor then edits, and its `annotations` carry `spec.source.repository`,
+  `spec.source.path` and `spec.source.commit` so the import is reproducible and its provenance
+  reaches the manifest (DM-08). `generate` is given a source and does not echo one back.
+- `import-sdm` takes a model **identifier** (`dataModel.Environment/AirQualityObserved`), never a
+  URL. The allowlist that limits fetching to the Smart Data Models organisation lives in Model
+  Tools (DM-10); the Portal refuses `400` for anything that is not an identifier so no caller can
+  steer the fetch at all.
+- Every artifact field is optional and absent when this Model Tools version does not render it. A
+  compilation that fails is `200` with the messages in `errors[]`: a half-written model is the
+  normal state of an editor, not a server error.
+- `jsonSchema`, `context`, `docs` and `example` are the four artifacts DM-02 commits beside the
+  source, and `jcctl model generate` writes exactly these (see [API/03 §4](03-jcctl.md)); `shacl`
+  and `owl` are rendered in the same run for the artifact store (DM-44). `docs` is one Markdown
+  page for the whole model, not a directory, and `example` is one entity in the key-value form the
+  JSON Schema describes, validated against that schema and against the `@context` before it is
+  answered (DM-21). An import answers with the catalogue's own example instead of a generated one:
+  real data beats a value derived from a range.
+- `generatorVersion` is the version that produced the artifacts. CI invokes the same image version
+  as the preview (DM-19), so a preview and a committed artifact set can be compared.
+- The request body is capped; a larger source is `413`. The routes are session routes and carry the
+  CSRF token like every other mutating Portal call.
+- `503` with `problem+json` when no Model Tools URL is configured or the container does not answer
+  within the compile timeout. The editor then shows the source without a preview, not an error.
+
+## 12. Static apps host (AP-12, AP-14, AP-17)
+
+A `static` app is served by the Portal under the platform host, without a hostname of its own
+(AP-14):
+
+```text
+GET /apps/{name}/               the app's index.html
+GET /apps/{name}/{path}         any asset of the built bundle
+```
+
+- Only an app whose manifest is `lifecycle: published` is reachable. A draft, a preview or a
+  retired app is `404` — the same answer as a name that does not exist, so the host never
+  discloses which apps are being worked on.
+- Every response carries the app's own Content Security Policy, built from `spec.csp`:
+  `default-src 'self'; connect-src 'self'; frame-ancestors 'none'` by default, with `connect-src`
+  extended by `spec.csp.connectSrc` and `frame-ancestors` relaxed only when
+  `spec.embeddable: true` (AP-12). It replaces the Portal's own CSP for these paths, and
+  `X-Frame-Options` follows it: `DENY` unless the app is embeddable.
+- The bundle is served from the app artifact root, one directory per app, and each directory
+  carries an `integrity.json` written by the build lane: a map of bundle-relative path to the
+  `sha384-…` Subresource Integrity digest of that file. The host verifies the digest of every
+  file it serves and refuses `502` on a mismatch, so a modified artifact is never served under a
+  published app's name. An app directory without `integrity.json` serves nothing (`404`): the
+  integrity manifest is what makes the bundle publishable, not an optional extra.
+- Paths are resolved inside the app's own directory. A traversal attempt (`..`, an absolute path,
+  a symlink leaving the root) is `404`, never a read outside the root.
+- Unknown paths inside a published app answer `404` rather than the app's `index.html`: a static
+  app that wants client-side routing declares it in its build, and the host does not invent a
+  fallback that would mask a missing asset.
+
+## 13. Flows: running a blueprint (CC-24, CC-30, CC-31, CC-32, CC-59)
+
+A flow is one instantiation of a Blueprint. The gallery lists the blueprints an organisation
+publishes and the wizard turns the chosen one's parameter schema into a form; saving the form is
+what produces the repository change, so the user never sees YAML or a merge request (CC-29).
+
+```text
+GET  /api/v1/blueprints                          the gallery (organization-level kind, section 4)
+POST /api/v1/projects/{project}/flows            parameters in → 202 + Change
+```
+
+The gallery list is the ordinary organization-level collection, so it carries no new response
+shape. What it does carry is a filter: the Portal returns only the blueprints whose
+`spec.allowedRoles` intersect the caller's roles (CC-59). A blueprint a role may not run is
+absent, not greyed out, and the same check runs again on `POST /flows`, because a list that
+merely hides a card is not an authorisation.
+
+```json
+{
+  "blueprint": "threshold-alert",
+  "version": "1.2.0",
+  "parameters": { "entityType": "AirQualityObserved", "thresholdValue": 50 }
+}
+```
+
+- `blueprint` names an organization-level Blueprint; `version` is the version the form was
+  generated from. A mismatch with the blueprint's current `spec.version` is `409`: the parameters
+  were filled against a schema that has since changed, and silently expanding them against the new
+  one is how a form produces a manifest nobody reviewed (CC-26).
+- `parameters` is validated against `spec.parameterSchema` before anything is rendered. A
+  violation is `400` with every failure listed at once in `problem.errors[]`, each naming its
+  instance path, so the form can mark all its fields in one pass rather than one per round trip
+  (CC-24). The wizard validates the same schema in the browser; the server check is the one that
+  counts.
+- On success the response is the usual `202` with a `Change` (section 4). All the manifests of one
+  flow go into a single merge request, so they are reviewed and merged together or not at all
+  (CC-32).
+- The lane is the stricter of what the blueprint's `spec.riskClass` declares and what the rendered
+  kinds are on their own terms (CC-59, CC-63). A Green blueprint whose template renders a `Policy`
+  therefore lands in the Red lane; declaring a lane can narrow nothing that section 4 already
+  calls Red.
+- Every rendered manifest passes the same checks a hand-written one does. A template that renders
+  a namespace other than the project the flow runs in is `400`, and so is a literal secret
+  (MF-04, MF-24): a blueprint is authored once and run in many projects, so a namespace in a
+  template is a way out of the project the caller chose.
+- Expansion is `jcctl`'s, the same code the reconciler runs, never a second engine in the Portal
+  (CC-25). Every rendered manifest carries `joinedcontext.com/blueprint`,
+  `joinedcontext.com/blueprint-version` and `joinedcontext.com/blueprint-parameters`, which is
+  what lets the Portal re-open a flow as the form that created it (CC-27, CC-32).
+- `503` with `problem+json` when the Git forge is not configured. Everything the Portal can check
+  on its own has passed by then, so a deployment without a forge fails loudly rather than
+  reporting a change it never opened.
+
+## 14. Activity (UI-31, OPS-48, OPS-49)
+
+What is happening in a project, as one paged list and one live tail of the same query. The shape
+of an event and where it comes from are
+[Architecture/09 §6](../Architecture/09-portal.md#6-activity-what-is-happening).
+
+```text
+GET /api/v1/projects/{project}/activity            the list, newest first, paged
+GET /api/v1/projects/{project}/activity/stream     the same filter, as Server-Sent Events
+```
+
+Both take the same query parameters, so a view switches between them without rewriting anything:
+
+| Parameter | Meaning |
+|---|---|
+| `space` | one Context Space |
+| `kind` | one or more event kinds, repeated or comma-separated |
+| `source` | `reconciler`, `pipeline`, `gateway`, `broker`, `ckan`, `portal` |
+| `severity` | `info`, `warning`, `error`; a value includes everything above it |
+| `since` | RFC 3339 instant, the oldest event to return |
+| `object` | one object the events belong to, as `{plural}/{name}`, for an object page |
+| `limit`, `cursor` | page size and the opaque cursor of the previous answer |
+
+```json
+{
+  "apiVersion": "joinedcontext.com/v1alpha1",
+  "kind": "List",
+  "items": [
+    {
+      "time": "2026-09-06T16:21:03Z",
+      "project": "helsinki",
+      "space": "air-quality",
+      "kind": "access.denied",
+      "source": "gateway",
+      "summary": "An anonymous caller was refused a write to AirQualityObserved.",
+      "severity": "warning",
+      "correlationId": "4bf92f3577b34da6a3ce929d0e0e4736",
+      "details": { "endpoint": "public-air", "operation": "updateAttrs", "rule": "public-read" }
+    }
+  ],
+  "next": "b3RoZXItcGFnZQ"
+}
+```
+
+The stream sends the same objects as `data:` lines of named events, one per activity kind, so a
+browser subscribes to the kinds it draws:
+
+```text
+event: access.denied
+data: {"time":"2026-09-06T16:21:03Z","project":"helsinki", … }
+
+: keep-alive
+```
+
+- A viewer of the project reads it and nobody else; there is no cross-project activity route.
+- `summary` is localised to the request's `Accept-Language`, the rest of the record is not: an
+  event kind and an endpoint slug are identifiers, not prose.
+- `details` never carries a request body, a header, a token or an entity attribute value
+  (OPS-48). A field that would have carried one is absent, not empty.
+- Events live seven days and their per-minute counters ninety (OPS-49), so `since` older than the
+  retention window returns what is left rather than an error.
+- The stream sends a comment line as a keep-alive every twenty seconds and closes on the
+  Portal's shutdown; a client reconnects with `since` set to the last event it saw, which is why
+  `time` is part of every record.
+- `404` with `problem+json` when the project does not exist or the caller is not a member of it,
+  never `403`: an activity route that distinguishes the two says which projects exist (R20).
+
+### Ingest, for the collector only
+
+```text
+POST /api/v1/activity        OTLP log records, application/json
+```
+
+The OpenTelemetry Collector ([Deployment/05 §5](../Deployment/05-monitoring-logging.md#5-the-activity-pipeline))
+posts here, one batch a request, as an OTLP `ExportLogsServiceRequest` whose every log record
+carries the event's fields as its attributes. The route sits outside the project API on purpose:
+a record names its own project in its attributes, and the collector is a member of no project and
+must not be given one.
+
+- The caller is a Keycloak ServiceAccount client whose token is bound to this audience; a human
+  token is refused. A caller that is neither gets `401`, a caller with the wrong audience `403`.
+- No APISIX route publishes it, so it is reachable only from inside the cluster (OPS-48).
+- A record whose `project` is unknown, whose `kind` is outside the vocabulary of
+  [Architecture/09 §6](../Architecture/09-portal.md#6-activity-what-is-happening), or whose
+  attributes fail validation is rejected on its own. The batch still succeeds: one malformed
+  record must not cost the other four hundred.
+- The answer is the OTLP `ExportLogsServiceResponse`, so the collector reads rejections with the
+  code it already has rather than a shape invented here:
+
+  ```json
+  { "partialSuccess": { "rejectedLogRecords": 2, "errorMessage": "kind not in the vocabulary" } }
+  ```
+
+- The Portal validates what it is handed. The collector strips attributes, which is a redaction
+  step and not a trust boundary; the boundary is this route.
+
+## 15. Branding (UI-30, OPS-46)
+
+One image serves every installation. The deployment renders `global.branding`
+([Deployment/12](../Deployment/12-branding-and-naming.md)) into a ConfigMap, mounts it and names
+it in `JC_BRANDING_FILE`; the Portal reads that file and answers:
+
+```text
+GET /api/v1/branding             the block, public and cacheable
+GET /api/v1/branding/logo        the logo file, from the same mount
+GET /api/v1/branding/favicon     the favicon file, from the same mount
+```
+
+```json
+{
+  "instanceName": "Banská Bystrica Context",
+  "shortName": "BB Context",
+  "organisation": "Mesto Banská Bystrica",
+  "contactEmail": "opendata@banskabystrica.sk",
+  "logo": "logo.svg",
+  "colours": { "primary": "#0000bf", "secondary": "#0072c6", "accent": "#ffe977", "background": "#ffffff", "text": "#1a1a1a" },
+  "fonts": { "heading": "HelsinkiGrotesk, system-ui, sans-serif", "body": "system-ui, sans-serif" },
+  "languages": { "default": "sk", "offered": ["sk", "en"] },
+  "primaryForeground": "#ffffff"
+}
+```
+
+- Both routes are unauthenticated on purpose: the login page needs the name and the logo before
+  anyone has signed in, and the block holds no secret. They answer `Cache-Control: public,
+  max-age=300`, the only API answers a browser may keep.
+- Every colour is validated as a hex triplet or sextet; anything else is replaced by the neutral
+  default before it is served, because the UI writes these values into CSS custom properties
+  (OPS-46). `primaryForeground` is computed from the primary colour rather than authored, so text
+  on a light brand colour stays readable.
+- The logo and the favicon are file names, never URLs. A value carrying a scheme, a host or `..`
+  is dropped, and the file is read from the branding file's own directory: the two assets the
+  ConfigMap carries are the only files those routes can reach.
+- A missing, unreadable or invalid file is not an error. The Portal answers the neutral defaults
+  and logs the reason, so an installation whose ConfigMap has not been rendered looks plain rather
+  than failing to load.
+
+## 16. Open-data catalogue status (EP-62…EP-67)
+
+A `CkanInstance` is a manifest, so a catalogue is configured through the resource API like
+everything else (`POST /api/v1/projects/{project}/ckaninstances`), which makes it a change
+proposal a steward approves rather than a setting somebody flips. What needs a route of its own is
+the picture across both kinds:
+
+```text
+GET /api/v1/projects/{project}/ckan/status    catalogues, and what each endpoint publishes
+```
+
+```json
+{
+  "instances": [
+    {
+      "name": "open-data",
+      "url": "https://data.banskabystrica.sk",
+      "organizationDefault": "mesto-banska-bystrica",
+      "apiTokenRef": "ckan-open-data"
+    }
+  ],
+  "publications": [
+    {
+      "endpoint": "ovzdusie-public",
+      "phase": "Live",
+      "instance": "open-data",
+      "instanceMissing": false,
+      "organization": "mesto-banska-bystrica",
+      "dataset": "kvalita-ovzdusia",
+      "datasetUrl": "https://data.banskabystrica.sk/dataset/kvalita-ovzdusia",
+      "resources": [
+        { "name": "NGSI-LD API", "url": "https://{host}/api/endpoint/{endpointSlug}/ngsi-ld/v1/", "format": "NGSI-LD" },
+        { "name": "CSV", "url": "https://{host}/api/endpoint/{endpointSlug}/file.csv", "format": "CSV" }
+      ],
+      "datastore": { "representation": "csv", "refresh": "onChange" }
+    }
+  ]
+}
+```
+
+- The dataset shown is the dataset the reconciler would write: both are rendered by the same code,
+  so the monitor cannot drift from the publisher (EP-63, EP-64).
+- `apiTokenRef` is the name of the secret, never its value. No CKAN call is made to build this
+  answer and no credential is read (EP-67).
+- An endpoint whose `instanceRef` names a catalogue this project does not have is reported with
+  `instanceMissing: true` and no dataset URL, because a dangling reference is the misconfiguration
+  a steward has to see.
+- The route needs a session, like every other project route.
+
+## 17. Federation registrations and the graph (MF-36, UI-27, UI-28, EP-71, PF-48)
+
+A `ContextSourceRegistration` is a manifest, so it is listed, created and removed through the
+resource routes every kind shares. Its plural is `csrs`:
+
+```text
+GET    /api/v1/projects/{project}/csrs            every registration in the project
+GET    /api/v1/projects/{project}/csrs/{name}     one registration
+POST   /api/v1/projects/{project}/csrs            propose a new one
+PUT    /api/v1/projects/{project}/csrs/{name}     propose a change to one
+DELETE /api/v1/projects/{project}/csrs/{name}     propose its removal
+```
+
+A write answers `202` with a `Change` like any other manifest, and a federation edge always
+takes the Red lane: it makes one tenant's data answerable in another, which is a decision a
+steward signs (CC-63). The manifest lands at `projects/{project}/spaces/{space}/registrations/{name}.yaml`.
+
+What needs a route of its own is the picture across five kinds at once:
+
+```text
+GET /api/v1/projects/{project}/federation-graph   who reads whose data, as nodes and edges
+```
+
+```json
+{
+  "nodes": [
+    { "id": "ContextSpace/hub", "kind": "ContextSpace", "name": "hub", "health": "ok", "phase": "Live" },
+    {
+      "id": "ContextSourceRegistration/zvolen-ovzdusie",
+      "kind": "ContextSourceRegistration",
+      "name": "zvolen-ovzdusie",
+      "health": "degraded",
+      "phase": "Error",
+      "registration": {
+        "mode": "inclusive",
+        "identity": "caller",
+        "types": ["AirQualityObserved", "WeatherObserved"],
+        "external": true
+      }
+    },
+    {
+      "id": "ExternalSource/zvolen-ovzdusie",
+      "kind": "ExternalSource",
+      "name": "zvolen-ovzdusie",
+      "health": "unknown"
+    }
+  ],
+  "edges": [
+    {
+      "from": "ContextSourceRegistration/zvolen-ovzdusie",
+      "to": "ContextSpace/hub",
+      "kind": "registers",
+      "manifest": "ContextSourceRegistration/zvolen-ovzdusie"
+    }
+  ]
+}
+```
+
+- A node id is `kind/name`, so a selection survives a refetch and two manifests naming the same
+  object produce one node.
+- `kind` is a manifest kind, or `ExternalSource` for a source outside this platform. A `CkanInstance`
+  is a node when an Endpoint of the project publishes to it (Architecture/04 §7); its card carries no
+  URL and no token. An external
+  node is named after the registration that reaches it and never after its address, which is the
+  rule provenance already follows (EP-71).
+- `health` is `ok`, `degraded` or `unknown`, read off the phase the object last reported. Anything
+  still converging is `unknown` rather than `ok` (UI-27).
+- `phase` is the lifecycle phase the object last reported (`Draft`, `Pending`, `Deploying`, `Live`,
+  `Error`), what the card's status chip shows (UI-25). It is absent for an external source and for
+  an object that has reported nothing.
+- `kind` on an edge is `registers`, `serves`, `feeds`, `consumes` or `publishes`, and `manifest`
+  names the file the edge was read from so a reader can open it. `publishes` leaves an Endpoint for
+  the `CkanInstance` its `spec.publish.ckan.instanceRef` names.
+- A registration whose target has left the repository still draws its edge, with no node at the
+  other end: a dangling reference is what this view exists to make visible.
+- Nothing secret is in the answer by construction rather than by filtering. A card says that a
+  registration authenticates and how, never with what: no token, no resolved `secretRef` and no
+  `serviceAccountRef` name (PF-48).
+- The graph is a projection of the manifests plus reported health. It holds no state and is not a
+  second opinion about who talks to whom.
+- Both routes need a session, like every other project route.
+
+## 18. Assistant catalog search (AG-58, UI-46)
+
+The question a person asks the assistant, answered from the mirror (Architecture/09 §9). The same
+call is the assistant's `search_catalog` tool, so a run and a person get the same answer:
+
+```text
+GET /api/v1/projects/{project}/assistant/catalog?q=bike%20availability&scope=Endpoint
+```
+
+```json
+{
+  "q": "bike availability",
+  "items": [
+    {
+      "kind": "Endpoint",
+      "name": "helsinki-bikes",
+      "space": "helsinki",
+      "owner": "helsinki",
+      "title": "Helsinki city bikes",
+      "endpointSlug": "si6epqkx364lprho5uaigutk274r5grb",
+      "matchReason": ["title", "description"],
+      "access": { "verdict": "allowed", "reason": "audience public" },
+      "freshness": { "pipeline": "hsl-bikes", "scrapedAt": "2026-09-13T07:41:02Z", "received": 1200, "errors": 0 }
+    },
+    {
+      "kind": "ContextSpace",
+      "name": "helsinki",
+      "space": "helsinki",
+      "owner": "helsinki",
+      "matchReason": ["endpoint helsinki-bikes"],
+      "access": { "verdict": "allowed", "reason": "endpoint helsinki-bikes admits you" },
+      "freshness": null
+    }
+  ]
+}
+```
+
+- `q` is required and is split into words of two characters or more, less the function words of a
+  request (`the`, `a`, `to`, `and`, `new`, …); an empty `q` is `400`. A word matches a field when one
+  of the field's own words begins with it: `bike` matches "city bikes", `the` does not match
+  "weather". `scope` narrows to one kind. At most twenty items are returned, the best matches first.
+- `matchReason` names the fields that matched (`name`, `title`, `description`, `labels`, `slug`,
+  `classes`) or the endpoint through which a space or a model matched.
+- `access.verdict` is `allowed` or `restricted` with the reason beside it; a restricted item carries
+  its `kind`, `name`, `space` and `owner` only. The verdict comes from the endpoint's audience; the
+  data's own grants are `GET …/access` on the endpoint (EP-55).
+- `freshness` is the runner's counters for the pipeline that feeds the endpoint (§7), read when the
+  search runs, or `null` when nothing feeds it or the runner does not answer within the scrape
+  timeout. It is never a guess.
+- A run publishes the same body as the `output` of a `tool` event named `search_catalog`
+  (04-agent-runs §4), which the conversation renders as cards (UI-46).
+
+## 19. Assistant endpoint proposal (EP-72)
+
+The share request, rendered but not written: the same call the assistant's `propose_endpoint`
+tool makes (Architecture/04 §5). The caller must be allowed to propose an Endpoint in the project
+(PF-50), or the answer is `403`.
+
+```text
+POST /api/v1/projects/{project}/assistant/propose-endpoint
+```
+
+```json
+{
+  "contextSpace": "helsinki",
+  "name": "bikes-regional-transport",
+  "audience": "project-list",
+  "allowedProjects": ["regional-transport"],
+  "representations": ["ngsi-ld", "geojson"],
+  "hiddenAttributes": ["maintenanceNote"],
+  "entityTypes": ["BikeHireDockingStation"]
+}
+```
+
+```json
+{
+  "lane": "yellow",
+  "slug": "k7m2p9q4r6s8t3v5w7x2y4z6a8b3",
+  "endpoint": { "apiVersion": "joinedcontext.com/v1alpha1", "kind": "Endpoint", "metadata": { "name": "bikes-regional-transport", "namespace": "helsinki" }, "spec": { "contextSpaceRef": "helsinki", "slug": "k7m2p9q4r6s8t3v5w7x2y4z6a8b3", "audience": "project-list", "allowedProjects": ["regional-transport"], "enabledRepresentations": ["ngsi-ld", "geojson"], "projection": { "hiddenAttributes": ["maintenanceNote"] } } },
+  "policies": [ { "apiVersion": "joinedcontext.com/v1alpha1", "kind": "Policy", "metadata": { "name": "bikes-regional-transport-regional-transport", "namespace": "helsinki" }, "spec": { "contextSpaceRef": { "kind": "ContextSpace", "name": "helsinki" }, "assigner": "did:web:hel.fi", "assignee": { "kind": "group", "id": "regional-transport" }, "operations": ["retrieveOps"], "information": [ { "entities": [ { "type": "BikeHireDockingStation" } ] } ] } } ],
+  "prefill": { "name": "bikes-regional-transport", "contextSpaceRef": "helsinki", "slug": "k7m2p9q4r6s8t3v5w7x2y4z6a8b3", "audience": "project-list", "allowedProjects": ["regional-transport"], "enabledRepresentations": ["ngsi-ld", "geojson"], "hiddenAttributes": ["maintenanceNote"] }
+}
+```
+
+- `audience` defaults to `project-list`; `project-list` needs at least one project in
+  `allowedProjects`; `representations` defaults to `ngsi-ld` and `geojson`; every name is a
+  DNS-1123 label and every attribute an identifier, or the answer is `400`.
+- The slug is minted here and is read-only in the form; a slug in the request is ignored.
+- `lane` is what the Endpoint's Change would be classified as (§5): `red` for `public`.
+- Nothing is written. A run publishes this body as the `output` of a `tool` event named
+  `propose_endpoint` and follows it with a `navigate` to `/projects/{project}/endpoints`
+  carrying `prefill` (04-agent-runs §4); the person's submission is the Change.
+
+## 20. Drift: what the platform holds and Git does not declare (CC-21, CC-38, UI-25, UI-26)
+
+Configuration cannot drift: every component reads it from the repository, so the repository is
+what it is running (CC-72). What can drift is the one live state Git describes and nothing
+reloads by itself — a space's seed entities. The Portal compares them on its own tick, the same
+comparison `jcctl drift` makes, and serves the result per project.
+
+```text
+GET  /api/v1/projects/{project}/drift                         what drifted, with the two resolutions
+POST /api/v1/projects/{project}/drift/{space}/{id}/revert     write Git's entity back into the broker
+POST /api/v1/projects/{project}/drift/{space}/{id}/adopt      propose the live entity as the declared one
+```
+
+`{id}` is the entity's URN, percent-encoded. The list answers what the last tick found, with the
+instant it ran at, so a page renders without waiting on the broker:
+
+```json
+{
+  "apiVersion": "joinedcontext.com/v1alpha1",
+  "kind": "List",
+  "metadata": { "observedAt": "2026-09-17T09:12:03Z" },
+  "items": [
+    {
+      "space": "ovzdusie",
+      "id": "urn:ngsi-ld:AirQualityObserved:banskabystrica.sk:ovzdusie:stanica-1",
+      "drift": "MODIFIED",
+      "diff": [{ "path": "airQualityIndex.value", "declared": 42, "live": 7 }],
+      "resolutions": ["revert", "adopt"],
+      "source": "projects/mesto/spaces/ovzdusie/entities/seed/stanice.json"
+    }
+  ]
+}
+```
+
+`drift` is `MODIFIED` when the broker holds the entity and an attribute the file declares
+differs, and `MISSING` when the broker does not hold it at all. There is no `UNEXPECTED`: a space
+holds what its pipelines and its devices write, and an entity nobody seeded is data, not drift
+(CC-07, CC-69). Which attributes Git owns is the same answer: the ones the seed file declares,
+and no others — live telemetry beside a seeded entity never drifts.
+
+**Revert** upserts the declared entity through the space surface under the Portal's own
+ServiceAccount and answers `204`; it writes only the attributes the file declares and never
+deletes an entity or an attribute (CC-19).
+
+**Revert** and **adopt** are the two resolutions UI-26 puts on the screen, and **adopt** is the
+only way an out-of-band value becomes durable: it answers `202` and an ordinary `Change`
+proposing the live entity as the seed file's content, reviewed in the lane its content earns like
+any other change (CC-38). An entity the broker no longer holds cannot be adopted, and the answer
+says so rather than proposing an empty file.
+
+Both refuse with `403` unless the caller may `propose` `Entity` in that project; revert is a
+write to the live space and adopt is a write to the repository, so neither is a read.
+
+## 21. Operations and the Portal MCP (AG-59, AG-60, AG-61, AG-62, AG-77)
+
+One registry behind every door (ADR-N-021). An operation lets through whom the REST route of the same action lets through (PF-50, AG-77): `jc_resource_list` and `jc_resource_get` any signed-in person, `jc_resource_propose` and `jc_resource_delete` a binding with `propose` or `delete` on the kind, `jc_change_approve` and `jc_change_reject` a binding with `approve`, on the change's kind once the change is read; any other operation its verb on its kind, or a grant in the project when it names no verb. A refusal is `403` naming the verb and the kind, the same words as the route's; input is validated against the operation's schema with unknown fields refused (`422`, the schema path). `GET …/ops` lists exactly the operations the caller would be let through. A `verdict_required` refusal names the check to run and why in `reason` (`verdict_absent`, `verdict_failed` or `stale`) and says it in `detail`, one sentence a page shows as it is; a form writes the draft it shows before it proposes that draft, so a proposal never takes an older manifest than the one on screen.
+
+```text
+GET  /api/v1/projects/{project}/ops
+  → 200 [{ "name": "jc_datasource_check", "title": "…", "description": "…",
+           "inputSchema": {…}, "outputSchema": {…},
+           "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true },
+           "lane": "green" }, …]          # only what this caller may run
+
+POST /api/v1/projects/{project}/ops/{name}
+  body: the operation's input; a draft may be named instead of a manifest:
+        { "draft": { "kind": "DataSource", "name": "hsl-citybikes-free" } }
+  → 200 the operation's output (a check answers a Verdict)
+  → 202 a proposal: { "changeId": "…", "lane": "yellow", "url": "…" }
+  → 409 { "error": "verdict_required", "check": "jc_datasource_check", "reason": "stale",
+          "detail": "The draft changed since its check; check it again, then propose it." }
+  → 403 { "error": "forbidden", "role": "steward" }
+  → 422 { "error": "invalid_input", "path": "/spec/http/url", "message": "…" }
+
+Verdict:
+  { "ok": false, "findings": [{ "level": "error", "path": "/spec/http/url", "message": "…" }],
+    "trace": {…}, "checkedAt": "2026-09-13T10:00:00Z", "inputDigest": "sha256:…" }
+
+Drafts (also operations: jc_draft_put, jc_draft_get, jc_draft_drop):
+  { "project": "helsinki", "kind": "DataSource", "name": "hsl-citybikes-free",
+    "manifest": {…}, "verdict": {…} | null, "version": 7,
+    "touchedBy": { "kind": "run" | "person" | "mcp" | "apiKey", "id": "…" }, "updatedAt": "…" }
+  Draft changes are `draft` events on the activity stream (§7 of Architecture/09).
+  jc_draft_list (GET /projects/{project}/drafts) answers one line per draft and never the
+  manifest or the verdict's trace, the way jc_resource_list answers a line per resource:
+  { "items": [{ "kind": "DataSource", "name": "hsl-citybikes-free", "version": 7,
+                "touchedBy": …, "touchedKind": "person", "updatedAt": "…",
+                "verdict": { "ok": true, "findings": 0 } | null }] }
+  A caller that needs a draft reads it with jc_draft_get. A project holding 44 drafts answered
+  2.3 MB of manifests and verdict traces, which is more than one model call can carry, so the
+  assistant could answer nothing at all while those drafts existed (T-2248).
+
+Resources (AG-77): one operation per action for every kind the resource API serves, the
+function behind the REST route of that action. A proposal, a deletion and a rejection answer
+the Change the route answers, wrapped with its id, lane and merge request; a refusal is the
+route's problem document.
+  jc_resource_list     { "kind": "Pipeline", "space": "helsinki" }            # space optional
+    → 200 { "items": [{ "kind": "Pipeline", "name": "bikes-hsl", "space": "helsinki",
+                        "title": "…", "phase": "Ready", "sourceUrl": "…" }] }
+    → 422 { "error": "invalid_input", "path": "/kind", "message": "'Bikes' is not a kind …; the kinds are …" }
+  jc_resource_get      { "kind": "Endpoint", "name": "helsinki-bikes" }
+    → 200 the manifest with its status; secret values never, `secretRef` names only
+    → 404 problem: "Endpoint 'helsinki-bike' not found in project 'helsinki'; it has helsinki-bikes, …"
+  jc_resource_propose  { "manifest": { "apiVersion": "…", "kind": "Pipeline",
+                                       "metadata": { "name": "bikes-hsl" }, "spec": { … } } }
+                                                             # or { "draft": { "kind", "name" } }
+                       { "manifest": {…}, "files": { "./tests/x.input.json": "…" } }   # §4 rules
+    → 202 { "changeId": "chg-00000081", "lane": "yellow", "url": "…/pulls/81",
+            "change": { "kind": "Change", "status": { "plan": { "create": 0, "update": 1, "delete": 0 }, … } } }
+    → 409 { "error": "verdict_required", "check": "jc_manifest_dry_run", "reason": "stale",
+            "detail": "The draft changed since its check; check it again, then propose it." }   # a named draft, strict
+    → 409 { "error": "verdict_required", "check": "jc_manifest_dry_run", "reason": "verdict_absent",
+            "detail": "The manifest has not been checked; check it, then propose it." }   # a bare manifest never checked, strict
+    → 400 problem: "literal secret in field 'token' is forbidden; use secretRef instead (MF-24)"
+    → 403 problem naming the kind and the verb the caller lacks (PF-50)
+  jc_resource_delete   { "kind": "Endpoint", "name": "helsinki-bikes-ops", "confirm": "helsinki-bikes-ops" }
+    → 202 { "changeId": "chg-00000082", "lane": "red", "url": "…", "change": { … "plan": { "delete": 1 } } }
+    → 409 { "error": "referenced", "detail": "2 dependent resources block deletion: Pipeline bikes-hsl and 1 in other projects",
+            "by": [{ "kind": "Pipeline", "name": "bikes-hsl" }], "elsewhere": 1 }
+    → 400 problem: "confirm must be the resource's name, 'helsinki-bikes-ops' (CC-39)"
+  jc_change_reject     { "id": "chg-00000081", "reason": "The schedule stays hourly." }
+    → 202 { "changeId": "chg-00000081", "lane": "yellow", "url": "…", "change": { … "phase": "Rejected" } }
+  An assistant or application run calling jc_change_approve or jc_change_reject is refused
+  (AG-11): 403 problem "an agent never approves or rejects a change; a person does (AG-11)".
+  The rejection's reason is written on the merge request beside who rejected it; the REST route
+  takes it as `{ "reason": "…" }` too.
+  A run reaches this registry through the proxy's `/v1/mcp`, which the Portal serves on its
+  internal listener as `POST /internal/agent-runs/{run}/mcp`: the call runs as the person who
+  started the run and is narrowed again by the run's `AgentProfile` (AG-70), so `tools/list`
+  answers only what both halves allow and a `tools/call` outside the profile is refused naming
+  it. A profile never widens: an operation the person may not run stays refused whether the
+  profile names it or not.
+
+Example, an MCP client removing an endpoint:
+  POST /api/v1/mcp
+  { "jsonrpc": "2.0", "id": 7, "method": "tools/call",
+    "params": { "name": "jc_resource_delete",
+                "arguments": { "project": "helsinki", "kind": "Endpoint",
+                               "name": "helsinki-bikes-ops", "confirm": "helsinki-bikes-ops" } } }
+  → { "jsonrpc": "2.0", "id": 7, "result": { "isError": false, "structuredContent": {
+      "changeId": "chg-00000082", "lane": "red", "url": "…", "change": { … } } } }
+
+MCP (Streamable HTTP, protocol 2026-07-28):
+  POST /api/v1/mcp                         # server/discover, tools/*, resources/*, prompts/*, tasks/*
+  GET  /.well-known/oauth-protected-resource/api/v1/mcp   # RFC 9728
+  Bearer only, aud = the Portal; 401 + WWW-Authenticate: Bearer resource_metadata="…" otherwise.
+  The revisions this server speaks are `2026-07-28`, `2025-11-25`, `2025-06-18` and `2025-03-26`.
+  `initialize` and `server/discover` answer the client's own revision when it names one of them
+  and `2026-07-28` otherwise — never the client's string for a revision the server does not
+  implement, which would move the disagreement from the handshake to the first unknown method.
+  tools/list = the registry as GET …/ops shows it to this caller.
+  resources/list and resources/read serve, for the caller's own bindings (AG-60):
+    jc://schemas/{Kind}                       the kind's JSON Schema
+    jc://{project}/{plural}/{name}            one manifest
+    jc://{project}/drafts/{Kind}/{name}       one draft
+    jc://{project}/changes/{changeId}         one change with its plan, redacted as the route
+                                              redacts it (CC-06)
+    jc://{project}/datamodels/{name}/linkml   the model's LinkML source. The JSON Schema and the
+                                              `@context` are the endpoint façade's renderings of
+                                              it and are read there (EP-47).
+  A URI the caller may not read answers `-32002 resource not found`, the same as one that names
+  nothing.
+  Elicitation (AG-63): a call whose operation takes the Yellow or Red lane, or carries
+  `destructiveHint`, never runs on the agent's word. The first `tools/call` runs nothing and
+  answers
+    { "isError": false, "status": "input_required",
+      "structuredContent": { "elicitation": {
+        "elicitationId": "eli-…", "mode": "url", "url": "https://portal…/projects/{project}/…",
+        "message": "<what this call would do, in one sentence>",
+        "expiresIn": 600 } } }
+  A proposal whose check has not run carries the route's own refusal beside the question
+  (PF-57, ADR-N-021): `structuredContent` gains `"error": "verdict_required"`, `"check": "<the
+  operation to run>"`, `"reason": "verdict_absent" | "verdict_failed" | "stale"` and the same
+  one-sentence `detail`, at its top level where the REST route puts them, with `elicitation`
+  beside them. A client that reads `verdict_required` on the route reads it here too and knows
+  which check to run, and the person still has the URL to run it at. The door refuses either
+  way: nothing is proposed without a fresh Verdict.
+  The host shows it to the person, who opens the URL and decides; the client then repeats the
+  same `tools/call` with `params.elicitation = { "elicitationId": "eli-…", "action": "accept" }`
+  and the operation runs. `"action": "decline"` (or `"cancel"`) answers a refusal and nothing
+  runs. An id is one-shot, belongs to the token's subject, expires in ten minutes and is bound to
+  the operation and the arguments it was asked for: different arguments need a new answer. Every
+  answer is written to the project's activity as `mcp.tool` from `portal`, naming the operation,
+  the person and what they decided.
+  Tasks (AG-60): `jc_pipeline_test`, `jc_model_infer`, `jc_space_complete` and
+  `jc_datasource_check` wait on the runner, on Model Tools or on somebody's feed, so `tools/call`
+  answers `{ "task": { "taskId", "status": "working", "pollInterval", "ttl" } }` at once and the
+  client follows it with `tasks/get`, `tasks/result` (the tool's own result), `tasks/list` and
+  `tasks/cancel`; `tools/list` marks them `execution.taskSupport: "required"` and every other tool
+  `"forbidden"`. A task belongs to the token's subject: another caller's `tasks/get` answers
+  `unknown task`, the same as one that never existed. A finished task is kept ten minutes.
+  Limits (AG-60), counted by the token's subject in the Portal itself, so an in-cluster caller
+  is bounded too: 120 requests a minute → 429 with `Retry-After`, a request body over 1 MiB and
+  an answer over 4 MiB → 413 naming what to narrow. The edge's own bucket stays on top of them.
+```
+
+## 22. Workspaces (CC-76…CC-81, PF-82, PF-83, AG-82, UI-61…UI-63)
+
+A workspace is a branch of the Organization repository with a record beside the drafts ([ADR-N-024](../Decisions/adr-n-024-workspaces-branch-and-preview.md), Architecture/06 §7). The same actions are operations of the registry (§21), so the Portal, REST, MCP and the assistant reach one implementation: `jc_workspace_open`, `jc_workspace_list`, `jc_workspace_get`, `jc_workspace_compare`, `jc_workspace_update_from_main`, `jc_workspace_propose`, `jc_workspace_discard`, and in the second phase `jc_workspace_preview_start`, `jc_workspace_preview_get` and `jc_workspace_preview_stop`. Opening, writing into and proposing a workspace need `propose` in the project; reading one needs `read`, and only its owner writes into it or brings it back. An agent may open, write, compare and update, and is refused `jc_workspace_propose` and every approval (AG-82, AG-11); an MCP client is not offered it. A comparison lists a file both sides changed under `conflicts` even when its fields do not collide (`fields` empty): bringing back waits until the workspace is updated from main.
+
+```text
+POST   /api/v1/projects/{project}/workspaces
+  body: { "name": "bikes-cleanup", "title": "Bike stations cleanup",
+          "scope": { "kind": "project" },              # or { "kind": "space", "name": "helsinki" }
+                                                       # or { "kind": "resources", "items": [{ "kind": "Pipeline", "name": "bikes-ingest" }] }
+          "ttlDays": 7 }
+  → 201 the workspace
+  → 409 a workspace of that name exists in the project
+
+GET    /api/v1/projects/{project}/workspaces            → 200 { "items": [ workspace, … ] }
+GET    /api/v1/projects/{project}/workspaces/{name}     → 200 the workspace, or 404
+
+POST|PUT|PATCH|DELETE /api/v1/projects/{project}/{plural}[/{name}]?workspace={name}
+  the ordinary resource routes (§4), committed to the workspace's branch instead of a Change
+  of their own: the same checks (PF-82), and a 200 with the workspace in place of a 202 Change
+
+GET    /api/v1/projects/{project}/workspaces/{name}/compare
+  → 200 { "files": [ ChangeFile, … ],                  # §5, each with its fields, lane and operation
+          "conflicts": [ { "path": "…", "fields": [ { "path": "spec.period", "ours": "30s",
+                                                      "theirs": "60s", "base": "10s" } ] } ] }
+
+POST   /api/v1/projects/{project}/workspaces/{name}/update
+  body: { "resolutions": [ { "path": "…", "field": "spec.period", "keep": "ours" } ] }   # "theirs"; field "" is the whole file
+  → 200 { "taken": [ "…" ], "merged": [ "…" ], "baseRevision": "…", "comparison": { … } }
+       main merged into the branch: a file only main changed is taken, a file both changed is
+       merged field by field and checked again before it is written; the base moves to main (CC-80)
+  → 409 a conflicting field without a resolution; nothing is written
+
+POST   /api/v1/projects/{project}/workspaces/{name}/propose
+  → 202 the Change: the pull request of the branch, lane the riskiest file's (CC-79)
+  → 409 a conflict not resolved, or a touched file without a fresh green Verdict (CC-80, PF-57)
+
+DELETE /api/v1/projects/{project}/workspaces/{name}     → 204; the branch and any preview go (CC-81)
+
+POST   /api/v1/projects/{project}/workspaces/{name}/preview   → 202 the preview (CC-78)
+  → 200 { "state": "running", "prefix": "ws-bikes-cleanup-",
+          "endpoints": [ { "name": "bikes-ops", "slug": "q3v7…",         # minted, Architecture/06 §7.2
+                           "url": "https://…/api/endpoint/q3v7…",
+                           "originSlug": "zt4q…" } ],                  # main's, absent for a new Endpoint
+          "pausedPipelines": [ "bikes-ingest" ] }                  # the same body as the 202
+  → 409 a preview of this workspace runs already, or two run on the node (ADR-N-024 §10),
+        or the loader refuses the render: the preview is then `error` with that reason (CC-78)
+GET    /api/v1/projects/{project}/workspaces/{name}/preview   → 200 the preview, as above
+DELETE /api/v1/projects/{project}/workspaces/{name}/preview   → 204; stopping a stopped one is a no-op
+```
+
+The gateway reads the running previews from the Portal's internal listener, which the edge does not route and a NetworkPolicy opens to the gateway alone: the path `/internal/previews` answers `{ "items": [ { "prefix": "ws-bikes-cleanup-", "files": { "<path>": "<manifest>" } } ] }`, without the repository's encrypted secrets and without another project's files. The gateway presents its own Keycloak ServiceAccount token on that call — `client_credentials`, audience `portal-internal`, `azp` its own client — and the route refuses a call without one: the NetworkPolicy is the second control and never the only one (PF-46, [Architecture 13 §6](../Architecture/13-security.md)). A page of manifests is what the route answers, so a pod that reached the port through a policy mistake would otherwise read every project's configuration.
+
+Only the owner starts or stops a preview; an agent may, as it may open and write the workspace. Real data reaches a preview only when the person copies it from the Try it panel (PF-83): the browser reads at most 1 000 entities per type through the origin's Endpoint and writes them through the preview's, both on the person's own session at the edge, with every id moved to the preview's space segment. The Portal holds no token of the person's for the gateway, so no operation of the registry copies data, and an agent never does. The operations are `jc_workspace_preview_start`, `jc_workspace_preview_get` and `jc_workspace_preview_stop`.
+
+A workspace:
+
+```json
+{
+  "name": "bikes-cleanup",
+  "title": "Bike stations cleanup",
+  "project": "helsinki",
+  "owner": "jana@hel.fi",
+  "branch": "workspace/bikes-cleanup",
+  "baseRevision": "9c1f0ab",
+  "scope": { "kind": "project" },
+  "createdAt": "2026-09-18T09:00:00Z",
+  "expiresAt": "2026-09-25T09:00:00Z",
+  "changes": 3,
+  "preview": { "state": "stopped" }
+}
+```
+
+A write the owner's rights do not cover is refused as it is outside a workspace:
+
+```json
+{
+  "type": "https://joinedcontext.com/problems/forbidden",
+  "title": "Forbidden",
+  "status": 403,
+  "detail": "Proposing a Pipeline needs a role with propose on Pipeline in helsinki."
+}
+```
+
+## Related
+
+- [00-intro](00-intro.md) — all API surfaces.
+- [04-context-spaces-and-endpoints](../Architecture/04-context-spaces-and-endpoints.md) — the model behind the endpoints.

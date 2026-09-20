@@ -1,0 +1,36 @@
+{
+  "default": true,
+  "MD013": false,
+  "MD024": false,
+  "MD033": false,
+  "MD036": false,
+  "MD041": false,
+  "MD046": false,
+  "MD052": false,
+  "MD053": false,
+  "MD059": false,
+  "MD003": {
+    "style": "atx"
+  },
+  "MD004": {
+    "style": "dash"
+  },
+  "MD025": {
+    "front_matter_title": ""
+  },
+  "MD029": {
+    "style": "ordered"
+  },
+  "MD035": {
+    "style": "---"
+  },
+  "MD048": {
+    "style": "backtick"
+  },
+  "MD049": {
+    "style": "asterisk"
+  },
+  "MD050": {
+    "style": "asterisk"
+  }
+}

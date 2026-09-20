@@ -1,0 +1,178 @@
+---
+sidebar_position: 7
+title: Portal & User Interface
+description: Normative requirements for the Portal API and React 19 single-page application.
+---
+
+# Portal & User Interface
+
+Family **UI** (UI-01…UI-74; UI-43 and UI-61…UI-72 are unassigned). Owning chapters: [Architecture/09-portal.md](../Architecture/09-portal.md) and [Architecture/19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
+
+## 1. Schema-Driven Forms and UI Schemas
+
+- **UI-01** [H] — The Portal UI MUST dynamically render configuration and data entry forms from JSON Schema draft-07 definitions using `react-jsonschema-form` (CC-31).
+- **UI-02** [H] — Form field ordering, custom widget selection, help text, and visual grouping MUST be configured via declarative `kind: UiSchema` manifests stored under `portal/forms/*.uischema.yaml`.
+- **UI-03** [H] — Forms requiring reference selection MUST use dynamic autocomplete pickers populated via live Context Gateway queries executing under the authenticated user's own token (CC-43).
+- **UI-04** [H] — Form validation MUST execute client-side on change and server-side upon submission, displaying structured validation errors adjacent to invalid input fields.
+
+## 2. Generated API Clients and Contract Integrity
+
+- **UI-05** [P] — The Portal API MUST automatically generate and publish an OpenAPI v3.1 specification derived from Rust code annotations using `utoipa`.
+- **UI-06** [P] — The Portal UI MUST generate its TypeScript data client directly from the Portal API's OpenAPI specification using `openapi-typescript`.
+- **UI-07** [P] — The Portal API and UI MUST NOT maintain divergent DTO models or bypass OpenAPI contract validation.
+
+## 3. Database Mirror and Preferences Tiering
+
+- **UI-08** [P] — The Portal API MUST maintain a read-optimized PostgreSQL relational mirror of applied configuration state, synchronized by `jcctl apply` upon merge.
+- **UI-09** [P] — The Portal API MUST strictly partition state across the Configuration Tier in Git, Preferences Tier in PostgreSQL, and Live Data Tier queried from the broker.
+- **UI-10** [H] — Modifying user preferences MUST take effect immediately without generating Git commits or requiring merge approvals.
+
+## 4. Internationalization and Localization
+
+- **UI-11** [H] — The Portal UI MUST provide complete language translations for Slovak (`sk`), English (`en`), German (`de`), and Czech (`cs`).
+- **UI-12** [H] — Translations MUST be managed using ICU MessageFormat syntax via `react-i18next` and stored as versioned JSON manifests under `portal/locales/{locale}.json`.
+- **UI-13** [H] — The UI MUST dynamically resolve user locale from user preferences, browser `Accept-Language` headers, or the organization fallback locale (PF-25).
+- **UI-14** [H] — Multi-language manifest metadata MUST be rendered using the active user locale, gracefully falling back to the organization default if a key is missing (PF-24).
+- **UI-50** [H] — A resource `title` (and any human label or description authored by a user) MUST be a single plain-text string in the author's language, and the Portal UI MUST NOT prompt for or generate per-language variants in creation forms; the Portal's own interface chrome and system messages MUST remain localized via locale bundles (UI-11, UI-12). Reading the legacy multi-language map form is supported through release `v0.9` and rejected from `v1.0`, resolving to a single string (author locale if present, then `en`, then the first non-empty value) and rewritten by `jcctl` to a string on the next change; an optional `translations` map beside `title` MAY be provided for deliberate external translations and MUST NOT appear in creation forms. All titles MUST be rendered strictly as text and never as markup.
+
+## 5. Accessibility and Usability
+
+- **UI-15** [H] — The Portal UI MUST conform to W3C Web Content Accessibility Guidelines (WCAG) 2.1 at Level AA.
+- **UI-16** [H] — All interactive components MUST provide proper ARIA attributes, support complete keyboard navigation, and maintain visual contrast ratios of at least 4.5:1 for normal text.
+- **UI-44** [H][S] — Disabled with a reason: a control whose action the caller's effective permissions (`GET /api/v1/projects/{project}/permissions/me`, PF-51) deny MUST stay visible and rendered disabled (`disabled`, `aria-disabled="true"`), with the reason reachable by pointer and by keyboard (a tooltip or an `aria-describedby` description) that names the verb and the kind the role lacks, in the form "Disabled: your role does not permit 'propose' on 'Endpoint' in this project"; a control MUST NOT disappear silently. The disabled state is a guide and never the point of enforcement: the same request sent directly is answered `403` by the Portal (PF-50). A control renders enabled while the permissions document has not arrived and while the caller is a bootstrap administrator.
+
+## 6. Dashboards, Layers, and Visualizations
+
+- **UI-17** [H] — The Portal UI MUST provide a declarative dashboard engine driven by `kind: Dashboard` and `kind: Layer` manifests.
+- **UI-18** [H] — A `kind: Layer` manifest MUST define data source reference, target entity type, visual style, visual encodings, and static NGSI-LD filter expressions.
+- **UI-19** [H] — Public dashboards MUST strictly bind to Endpoints configured with `audience: public`, blocking layers bound to private spaces.
+
+## 7. Spatial Rendering Rules
+
+- **UI-20** [H] — Map-based dashboard layers MUST utilize MapLibre GL JS integrated with deck.gl overlays.
+- **UI-21** [H] — Layers with fewer than 50,000 spatial features MUST render via native MapLibre GL vector styling, while larger datasets or aggregations MUST render via deck.gl WebGL layers.
+- **UI-22** [H] — Feature queries for map layers MUST request the GeoJSON representation from the target Endpoint with spatial bounding box constraints (`geoQ`).
+
+## 8. In-App Approvals and Lifecycle Visibility
+
+- **UI-23** [H] — The Portal UI MUST provide a dedicated Approvals view displaying open change proposals in clear, non-technical summaries (CC-34).
+- **UI-24** [H] — Approvers MUST be presented with human-readable change summaries, visual `jcctl plan` diffs, Conftest policy validation results, and approval lane indicators.
+- **UI-25** [H] — Every managed flow and blueprint instance MUST display its real-time lifecycle status chip (`Draft`, `Pending Approval`, `Deploying`, `Live`, `Error`, or `Drifted`) per CC-33.
+- **UI-26** [H] — When a resource status reflects `Drifted`, the UI MUST present the user with exactly two action buttons: **Revert** to re-apply Git truth or **Adopt** to export live state into a change proposal (CC-38).
+
+## 7a. Federation graph
+
+- **UI-27** [H] — A project's federation graph (Context Spaces, Endpoints, `ContextSourceRegistration`s, Pipelines, Apps, the `CkanInstance`s an Endpoint publishes to, and external sources, with directed edges naming the manifest each comes from and a health of `ok`, `degraded` or `unknown` per node) MUST be derived from the manifests and reported health only and served by `GET /api/v1/projects/{project}/federation-graph`; no node MUST carry a token, a resolved `secretRef` or an external source's address (PF-48, EP-71).
+- **UI-28** [H] — The Portal MUST NOT show a Federation page or a federation playground: registrations are manifests proposed through the change flow like any other (CC-34), and the graph of UI-27 stays an API answer for a tool that draws it, so the navigation carries no page every project would show empty.
+
+## 8. Branding at runtime
+
+- **UI-30** [H] — The Portal MUST read its instance name, logo, colour tokens, fonts, languages and footer contact from `GET /api/v1/branding` at runtime and MUST fall back to neutral defaults when no branding is configured, so one image serves every installation (OPS-46). The Portal MUST serve its own typeface from its origin and put it before the system families of every branding font stack, and the apps it builds MUST carry the same face inside their preview document, so a page reads the same on a machine without the brand font.
+- **UI-31** [H] — Every Portal page for a Context Space, Endpoint, Pipeline or ContextSourceRegistration MUST show that object's own activity, filtered to it, from the same route the project stream reads (OPS-49).
+
+## 9. Pipeline studio and data explorer
+
+- **UI-32** [H] — The Portal's pipeline editor MUST guide the author through the source (a `DataSource` of the project, or a Context Space read through one of its Endpoints), the entities (type from the space's DataModel, attributes, `q`/`scopeQ`, and a live sample read through the endpoint whose ticked rows become `source.query.ids`), the processing (`compute.kind`, with Bloblang snippets for sum, average and count of an attribute filling `compute.bloblang`) and the output, MUST keep every choice in the same manifest the form and the YAML view edit, and MUST propose it through the change flow (PL-31, PL-41, PL-42, CC-35).
+- **UI-33** [H] — The Portal MUST offer a data explorer per project that reads the entities of a Context Space through one of its Endpoints with the signed-in user's session (type, attributes, `q`, `scopeQ`, page size and paging, the live count from `NGSILD-Results-Count`, a table of the page and the full entity on demand), and its filters MUST be generated from the space's DataModel: the types from the model's classes, one filter row per slot of the chosen class with the operators and the input its LinkML range allows (comparisons for numbers and dates, pattern match for strings, a choice for booleans and enums, a URN for relationships), composed into and parsed back from the NGSI-LD `q` the manifest carries. The same filter component MUST serve the pipeline studio's entities step (UI-32), so what an author previews in the explorer is the query the pipeline reads (DM-20, PL-42).
+
+## 10. Applications Section and Autonomous Builder Workflows
+
+- **UI-34** [H] — The Portal UI MUST provide a dedicated Applications view allowing users to browse generated and published applications, inspect their access grants, review preview instances, and launch new generation runs (AP-18, AP-51).
+- **UI-35** [H] — The application generation wizard MUST guide the user through a three-step workflow: selecting a Context Space Endpoint, describing desired functionality, and confirming least-privilege data needs derived from the endpoint's schema surface (AP-22, AP-44).
+- **UI-36** [H] — The Endpoint selection step MUST display an endpoint preview showing published entity types, attribute counts, LinkML data model terms, AuthZEN access rules, and a live sample of five entity records retrieved through the endpoint (EP-46, EP-55, AP-22).
+- **UI-37** [H] — The application generation form MUST enforce project or organization visibility, preventing the selection of public exposure for agent-generated applications (AP-42).
+- **UI-38** [H] — The Agent Run view MUST render a live timeline of lifecycle phases, an ordered streaming conversation panel of thoughts, tool calls, file deltas, and commits, and interactive question forms generated dynamically from JSON Schema draft-07 definitions (AG-44, AG-45, AP-51).
+- **UI-39** [H] — Streaming conversation events MUST be rendered in an accessible log container with polite ARIA live announcements, keyboard navigation, and strict text sanitization preventing script injection or unvalidated link execution (AG-46, UI-15, UI-16).
+- **UI-40** [H] — All labels, instructions, status chips, question prompts, and error notices within the Applications section MUST be fully localized across Slovak, English, German, and Czech (UI-11, UI-12).
+
+## 11. The Run View as Preview and Chat
+
+- **UI-41** [H] — The Agent Run view MUST show the preview and the conversation side by side on a viewport of 1024 px and wider, the preview in the wider column and the conversation as a chat column with its composer at the bottom; below that width the two MUST stack with the conversation first (UI-38).
+- **UI-42** [H] — Until the first preview arrives, the preview column MUST show the run's phases as they happen and the time elapsed, and the frame MUST reload on every `preview` event without reloading the page (AG-45, AP-60).
+
+## 12. The Assistant Drives the Portal
+
+- **UI-45** [H][S] — A run's `navigate` event MUST move the Portal to the named route without a page reload, open the page's form with the event's `prefill` as untrusted input, and show a visible notice that the assistant navigated; the Portal MUST accept only a path inside itself (one leading `/`, no scheme, no `//`, no `#`, no control character, at most 512 characters) and MUST refuse any other route with `400` before it reaches a browser (AG-45, AG-46, API/04 §4).
+
+## 13. The Assistant Shows What It Found
+
+- **UI-46** [H][S] — A `tool` event named `search_catalog` MUST be rendered in the conversation as one card per item: the name, a kind badge (`ContextSpace`, `Endpoint`, `DataModel`), the owning project, a freshness chip (the pipeline's last reading as a relative time, or "no live feed" when `freshness` is `null`), an access badge (`allowed` or `restricted`, with the reason on the badge), and two actions, "Explore" opening the data explorer with the item's space and endpoint chosen (`/projects/{project}/explore?space=…&endpoint=…`, UI-33) and "Open" opening the item's own page; every text of a card is untrusted data rendered as text, never as markup (AG-46, AG-58).
+
+## 20. Drafts Every Window Shares
+
+- **UI-47** [H][S] — A form for a manifest MUST edit a Portal draft (AG-61): what one window types, another window, another Portal instance and the assistant see within the activity stream's latency, with who touched it last; reloading loses nothing, and the draft's verdict (AG-62) and its age are shown beside the Check and Propose controls.
+- **UI-48** [H][S] — Propose MUST be disabled with the reason (UI-44) while the draft's verdict is absent, red or stale, and MUST open the check's findings in place; in a strict installation the reason says so and no override is offered.
+- **UI-49** [H] — The pipeline studio MUST show the manifest as a flow on a canvas: a source node, one compute node when `compute` is set, and an output node, joined left to right. A node is selected by click and edited in place (the source's DataSource or Endpoint and query, the compute's Bloblang, mapping or module, the output's type and mode); the compute node is added from a palette of the compute kinds PL-31 allows (`bloblang`, `mapping`, `wasm`, `container`), by click or by dragging the kind onto the canvas, and removed with the Delete key or its control, which makes the pipeline pass-through. The canvas and the YAML are two views of one manifest: an edit in either shows in the other at once, and no position is stored. The studio's Test (PL-43) paints the flow with its trace: events in and out on each node, the first error on the node whose stage failed, that node red and the nodes after it grey; clicking a painted node opens its input and output samples side by side.
+
+## 21. The Assistant Workbench
+
+- **UI-51** [H] — The Portal shell MUST render a round button labelled "Assistant" fixed at the bottom right of every page for a signed-in user, reachable by keyboard navigation and positioned above page content, which opens an assistant panel docked to the right edge measuring 24 rem wide on viewports 1024 px and wider with page content reflow, and full width below 1024 px, applying `navigate` events on whatever page is currently open and never rendering as a left column (UI-45).
+- **UI-52** [H] — The assistant panel header MUST provide accessible icon controls with tooltips for stopping the run ("Stop the assistant", calling `POST /api/v1/projects/{project}/agent-runs/{id}/cancel` while active to transition the run to `cancelled`), toggling full-screen mode ("Full screen" or "Back to the side", with Escape returning to side dock), hiding the panel ("Hide the assistant": the conversation stays, a reload of the browser tab keeps it, and the bottom-right bubble shows an activity dot while the assistant works), and closing it ("Close the assistant": the panel lets go of the conversation without stopping its run, which stays listed on the Assistant page, and the bubble then opens the empty panel) (UI-15, UI-16, AG-52).
+- **UI-53** [H] — When no active conversation exists, the assistant panel MUST render an empty state stating in one sentence what the assistant can do, offering three clickable example prompts (find data, share an endpoint, build a dashboard), a file drop zone below the composer accepting CSV, Excel, JSON, and PDF files to produce a draft DataModel, clear actionable guidance upon every refusal or error, a list of up to three most recent live conversations in the project to resume, and an input composer calling `POST /api/v1/projects/{project}/assistant/conversations` upon initial submission (UI-04, AG-67).
+- **UI-54** [H] — The Portal MUST provide an Assistant view at `/projects/{project}/assistant` accessible via a primary navigation entry named "Assistant", listing visible runs newest first with kind, title truncated to 80 characters, lifecycle state, start timestamp, last activity, `firstFrameMs` and `firstVersionMs` metrics when present, and continuation links, supporting filters by kind, state, and "mine", updating dynamically over the activity stream, and allowing any run to be opened in the panel or full screen with ended conversations offering a continue action and finished work runs displayed read-only (UI-31, AG-68, AG-71).
+- **UI-55** [H] — The Assistant page MUST support launching unattended work runs of kind `application`, `dashboard`, or `analysis` via `POST /api/v1/projects/{project}/agent-runs` with `unattended: true`, which execute without questionnaire interruptions and record assumptions as thought events, terminating in `awaitingApproval` to propose manifests or generate exportable analytical reports (AP-20, AP-66, AG-69).
+- **UI-57** [H] — A `question` event whose schema is a single enum, or a `oneOf` of consts, MUST render as one button per option with the option's title as its label, answered by one click, plus a "Something else…" control that opens the free-text box; a question of any other schema MUST keep the form (AG-44). Every question MUST carry the answer the assistant takes when the person closes it without choosing, shown on the panel as the default.
+- **UI-58** [H] — While the assistant edits the draft the open form is editing, the form MUST show each change as it lands on the draft (UI-47), mark the fields the assistant last wrote with "edited by the assistant", and keep the person's own typing: a field the person is editing is never overwritten, and the assistant's value for it is offered beside it instead.
+- **UI-60** [H][S] — The data explorer MUST offer the removal of one entity it shows, through the same Endpoint and with the signed-in person's session: the detail pane carries a delete that names the entity's id in its confirmation, the Portal issues `DELETE /ngsi-ld/v1/entities/{id}` to that Endpoint and never through a service identity, and the Endpoint's Policy decides — a person without the grant is refused with the gateway's own reason, shown as text. What a pipeline wrote is removed the same way as what a person wrote, so the residue of a trial or a recording does not outlive it (UI-33, PF-54, EP-30).
+- **UI-73** [H] — A question MAY allow several answers (`multiple`, with an optional `min` and `max`); the panel MUST draw each option as a toggle, show how many are chosen, state the `min` and `max` in words, and answer on one "Use these" press; the default is the set the assistant takes when the person closes the question.
+- **UI-74** [H] — An option MUST show its title and its description. More than six options MUST render as a list with a search box over title and description in place of the button row, never cut off. A question MUST be answerable by keyboard alone (arrows, Space, Enter) and announce itself to a screen reader as a group labelled by its question. An answered question MUST stay in the conversation showing what was chosen and MUST NOT be answerable twice. A `pick` question (AG-83) MUST NOT offer "Something else…".
+- **UI-59** [H] — The assistant's navigation MUST come from the operation's schema, never from free text: `jc_ui_navigate` takes a page kind out of an enum with the names that page needs, and the Portal MUST refuse a route outside it before the `navigate` event exists. Every route a person reaches by clicking MUST be a page the enum names, `entities` among them — a grid opened on one endpoint's type, narrowed by `q`, so "show me the stations with no bikes" lands on the answer instead of the list to search by hand. The enum's members live in one place, the operations registry ([Architecture 07 §8](../Architecture/07-agents-and-mcp.md)). The panel MUST keep the last three routes the assistant opened as breadcrumbs, so the person walks back without losing the conversation (UI-45, UI-51).
+- **UI-56** [H][S] — The Assistant page MUST include an agent access view displaying each `AgentProfile`'s configured `access` operations, kinds, endpoint grants, and `egress.allow` hosts alongside the viewer's effective permissions resulting from the intersection rule, and MUST route profile edits strictly through the change proposal and approval workflow without direct manifest writes (CC-03, AG-70, MF-40).
+
+## 22. Workspaces in the Portal
+
+- **UI-61** [H] — Every project, space and resource MUST offer *Work on a copy* and *Save as*; inside a workspace a bar MUST say whose copy it is, since when, how many changes it holds and that nothing in it is live, and offer Try it, Compare, Bring back and Leave; no Git word appears on screen ([ADR-N-024](../Decisions/adr-n-024-workspaces-branch-and-preview.md)).
+- **UI-62** [H] — *Bring back* MUST list every changed, added and removed resource with its lane and approvers, and open a per-field choice for each conflict (CC-80).
+- **UI-63** [H] — The approver's page MUST say the Change comes from a workspace, whose, and what was tried in it (CC-79).
+
+## 23. The Entity Grid
+
+One spreadsheet-like component reads, filters, compares and edits NGSI-LD entities wherever the Portal lists them (Architecture/09 §13).
+
+- **UI-64** [H] — One entity grid component MUST serve every place the Portal lists entities: rows are entities of one type, columns are attributes, and a cell shows the value with its unit; the grid MUST read the normalized representation with `options=sysAttrs`, never `keyValues`.
+- **UI-65** [H] — Per attribute the person MUST be able to show `observedAt`, `unitCode`, `datasetId`, `createdAt` and `modifiedAt` as columns beside the value, and per row the entity's own `createdAt` and `modifiedAt`; Relationships show their `object` as a link, GeoProperties their geometry type and a "show on map" action, LanguageProperties the value in the person's language.
+- **UI-66** [H] — A filter row under the header MUST build the NGSI-LD query (`q`, `attrs`, `idPattern`, `scopeQ`, `georel` from a drawn box) on the server side of the endpoint, never filter the loaded page in the browser; the query it built MUST be shown and copyable. Sorting applies to the loaded page and says so.
+- **UI-67** [H][S] — In edit mode a cell is edited in place; changes collect as pending, a review lists every change (entity, attribute, old, new), and Apply sends each as a partial attribute update through the same Endpoint with the signed-in person's session, so the Endpoint's Policy decides (EP-55, AG-78). A refused cell keeps the person's value, shows the gateway's sentence and stays pending. No batch bypasses the Policy; the grid never writes with the Portal's rights.
+- **UI-68** [H] — Where the Endpoint serves the temporal API, a cell MUST offer its history: the values over a chosen window as a table and a small chart, read with `timerel`, `timeAt`, `endTimeAt` and `lastN`; where it does not, the action is absent, with no error.
+- **UI-69** [H] — The grid MUST be offered read-only on an Endpoint ("what this endpoint answers"), over a whole Context Space for a person who may read it, and as a comparison: the space on the left, the Endpoint on the right, same type, rows aligned by id, with what the right side hides (rows filtered out, attributes projected away) marked on the left.
+- **UI-70** [H] — The grid MUST work by keyboard like a spreadsheet (arrows, Enter to edit, Escape to cancel, Tab to move), announce cell coordinates and edits to a screen reader (`role="grid"`), and stay usable at 400 px by pinning the id column and scrolling the rest.
+- **UI-71** [H] — The entity grid MUST be one reusable component of the App SDK (`@joinedcontext/sdk`), used unchanged by the Portal, by Dashboards and by generated applications: everything a place needs is configuration, never a fork. It MUST be configurable by a serializable object (data source, type, columns and their order, which metadata columns show, filters allowed and preset, page size, mode view or edit, which attributes are editable, history on or off, comparison source, density, row actions) validated against a published JSON Schema, and extensible by code where configuration ends (cell renderers and editors per attribute or kind, row actions, toolbar slots). State (filters, sort, selection, column layout, pending edits) MUST be usable controlled or uncontrolled, and a headless hook MUST give the same behaviour without the default markup. Strings come from the host's i18n, colours and spacing from the design tokens; the component fetches through an injected data source and holds no credential and no URL of its own.
+- **UI-72** [H] — A GeoProperty cell MUST open on a map: the geometry of the row, and on request of every row of the page, drawn on the Portal's base map with the row and the shape selecting each other. In edit mode the map MUST be a geometry editor: create, move, reshape and delete Points, LineStrings, Polygons (with holes) and their Multi- forms, with undo, vertex snapping, a coordinate field for exact values, paste and upload of GeoJSON, and a validity check (closed rings, no self-intersection, WGS 84 longitude/latitude order and range) before the geometry joins the pending changes of UI-67. The editor is part of the same SDK component set (UI-71).
+
+## Traceability
+
+| Requirement Range | Architecture Section | Test Family |
+|---|---|---|
+| UI-01…UI-04 | [Architecture/09-portal.md#2-portal-ui-architecture](../Architecture/09-portal.md#2-portal-ui-architecture) | [Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest) |
+| UI-05…UI-07 | [Architecture/09-portal.md#1-portal-api-specification](../Architecture/09-portal.md#1-portal-api-specification) | [Testing/01-backend-tests.md#4-portal-api-integration--database-testing](../Testing/01-backend-tests.md#4-portal-api-integration--database-testing) |
+| UI-08…UI-10 | [Architecture/09-portal.md#1-portal-api-specification](../Architecture/09-portal.md#1-portal-api-specification) | [Testing/01-backend-tests.md#4-portal-api-integration--database-testing](../Testing/01-backend-tests.md#4-portal-api-integration--database-testing) |
+| UI-11…UI-14 | [Architecture/09-portal.md#3-localization-i18n](../Architecture/09-portal.md#3-localization-i18n) | [Testing/03-frontend-and-e2e-tests.md#4-internationalization-i18n-completeness-tests](../Testing/03-frontend-and-e2e-tests.md#4-internationalization-i18n-completeness-tests) |
+| UI-15…UI-16 | [Architecture/09-portal.md#4-accessibility--ui-quality-standards](../Architecture/09-portal.md#4-accessibility--ui-quality-standards) | [Testing/03-frontend-and-e2e-tests.md#3-automated-accessibility-testing-a11y](../Testing/03-frontend-and-e2e-tests.md#3-automated-accessibility-testing-a11y) |
+| UI-44 | [Architecture/09-portal.md#4-accessibility--ui-quality-standards](../Architecture/09-portal.md#4-accessibility--ui-quality-standards) | [Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest) |
+| UI-17…UI-19 | [Architecture/10-dashboards-and-visualization.md#1-manifest-specifications-dashboard--layer](../Architecture/10-dashboards-and-visualization.md#1-manifest-specifications-dashboard--layer) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-end-to-end-user-journeys](../Testing/03-frontend-and-e2e-tests.md#2-playwright-end-to-end-user-journeys) |
+| UI-20…UI-22 | [Architecture/10-dashboards-and-visualization.md#2-maplibre-gl-js-vs-deckgl-selection-rule](../Architecture/10-dashboards-and-visualization.md#2-maplibre-gl-js-vs-deckgl-selection-rule) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-end-to-end-user-journeys](../Testing/03-frontend-and-e2e-tests.md#2-playwright-end-to-end-user-journeys) |
+| UI-23…UI-26 | [Architecture/06-configuration-as-code.md#4-risk-classified-interaction-lanes-cc-63cc-66](../Architecture/06-configuration-as-code.md#4-risk-classified-interaction-lanes-cc-63cc-66) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-end-to-end-user-journeys](../Testing/03-frontend-and-e2e-tests.md#2-playwright-end-to-end-user-journeys) |
+| UI-27…UI-28 | [Architecture/04 §5a](../Architecture/04-context-spaces-and-endpoints.md#5a-federation-registrations-and-the-hub-endpoint) | [Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest) |
+| UI-30 | [Architecture/09-portal.md#5-branding-at-runtime](../Architecture/09-portal.md#5-branding-at-runtime) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-end-to-end-user-journeys](../Testing/03-frontend-and-e2e-tests.md#2-playwright-end-to-end-user-journeys) |
+| UI-32 | [Architecture/09-portal.md#7-pipeline-studio](../Architecture/09-portal.md#7-pipeline-studio) | [Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest) |
+| UI-33 | [Architecture/09-portal.md#8-data-explorer](../Architecture/09-portal.md#8-data-explorer) | [Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest) |
+| UI-31 | [Architecture/09-portal.md#6-activity-what-is-happening](../Architecture/09-portal.md#6-activity-what-is-happening) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-end-to-end-user-journeys](../Testing/03-frontend-and-e2e-tests.md#2-playwright-end-to-end-user-journeys) |
+| UI-34…UI-37 | [Architecture/16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-end-to-end-user-journeys](../Testing/03-frontend-and-e2e-tests.md#2-playwright-end-to-end-user-journeys) |
+| UI-38…UI-40 | [Architecture/19-agent-runner.md](../Architecture/19-agent-runner.md) | [Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest) |
+| UI-41…UI-42 | [Architecture/19-agent-runner.md §1.2](../Architecture/19-agent-runner.md#12-the-kit-pass-a-static-application-in-one-model-call) | [Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest) |
+| UI-45 | [Architecture/19-agent-runner.md §1.1](../Architecture/19-agent-runner.md#11-how-the-portal-drives-the-runtime) | [Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest) |
+| UI-46 | [Architecture/09-portal.md#9-the-assistant-finds-data](../Architecture/09-portal.md#9-the-assistant-finds-data) | [Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest) |
+| UI-47…UI-48 | [Architecture/09-portal.md#10-operations-drafts-and-verdicts](../Architecture/09-portal.md#10-operations-drafts-and-verdicts) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| UI-49 | [Architecture/09-portal.md#7-pipeline-studio](../Architecture/09-portal.md#7-pipeline-studio) | [Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest) |
+| UI-50 | [Architecture/09-portal.md#3-localization-i18n](../Architecture/09-portal.md#3-localization-i18n) | [Testing/03-frontend-and-e2e-tests.md#4-internationalization-i18n-completeness-tests](../Testing/03-frontend-and-e2e-tests.md#4-internationalization-i18n-completeness-tests) |
+| UI-51…UI-60 | [Architecture/09-portal.md#11-the-assistant-workbench](../Architecture/09-portal.md#11-the-assistant-workbench) | [Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest) |
+| UI-73…UI-74 | [Architecture/09-portal.md#11-the-assistant-workbench](../Architecture/09-portal.md#11-the-assistant-workbench) | [Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-unit--component-testing-with-vitest) |
+| UI-61…UI-63 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| UI-64…UI-72 | [Architecture/09-portal.md#13-the-entity-grid](../Architecture/09-portal.md#13-the-entity-grid) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+
+## Related
+
+- [Architecture/09-portal.md](../Architecture/09-portal.md) — Portal UI and API architecture.
+- [Architecture/10-dashboards-and-visualization.md](../Architecture/10-dashboards-and-visualization.md) — dashboard and layer rendering engine.
+- [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) — frontend testing, Playwright journeys, and accessibility scans.
+- [User-Guide/06-dashboards.md](../User-Guide/06-dashboards.md) — user guide for building dashboards and maps in the portal.

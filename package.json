@@ -1,0 +1,11 @@
+{
+  "name": "joinedcontext-docs",
+  "private": true,
+  "description": "Markdown corpus of the joinedcontext platform documentation.",
+  "scripts": {
+    "lint:md": "markdownlint '**/*.md'"
+  },
+  "devDependencies": {
+    "markdownlint-cli": "0.45.0"
+  }
+}
