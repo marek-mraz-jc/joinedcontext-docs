@@ -11,13 +11,17 @@ Platform components are versioned independently and deployed immutably. Upgrades
 
 When upgrading the platform version, apply updates in strict sequence:
 
-1. **Cluster Operators**: Upgrade CNPG, Strimzi, and Kyverno via `deployment/helmfile-operators.yaml`.
-2. **PostgreSQL Database**: Apply minor database patches via CNPG rolling instance restarts.
-3. **IAM & Forge**: Update Keycloak and Gitea.
-4. **Context Gateway & Reconciler**: Deploy updated `context-gateway` and `jcctl` containers.
-5. **Context Broker**: Update Antares (or alternate broker) using the procedure below.
-6. **Portal UI & API**: Update user-facing web services.
-7. **Pipeline Runners**: Update Bento runner images.
+1. **Cluster operators**: CloudNativePG and the Kyverno policies, through
+   `deployment/helmfile-operators.yaml`. There is no Strimzi in this platform: the legacy Kafka bus
+   was replaced by Bento pipelines.
+2. **PostgreSQL**: a minor patch is a CNPG rolling instance restart, driven by the image digest in
+   `components/postgres/images.yaml`.
+3. **Identity and forge**: Keycloak, then Gitea.
+4. **Context Gateway**: the gateway image. The reconciler is not a workload of its own, so nothing is
+   deployed for it here ([00-intro.md](00-intro.md) §1).
+5. **Context Broker**: Antares, through the procedure in section 2.
+6. **Portal**: one image carrying the API, the UI and the reconciler.
+7. **Pipeline runners**: the Bento image, which the resident runner and the CronJobs share.
 
 ## 2. Blue/Green Zero-Downtime Broker Upgrade (CC-51)
 
@@ -81,7 +85,7 @@ asserts that value before it writes anything.
 
 Anything that goes wrong before step 7 leaves blue serving: a plan with a diff in it, a green
 gateway that does not answer, a replay that fails. The blue broker and its database are never
-written to and never removed — they are the rollback, and taking them away is a later decision.
+written to and never removed. They are the rollback, and taking them away is a later decision.
 
 ### After the cut-over
 
@@ -100,7 +104,9 @@ database, the gateway dials it by its ordinary name again, and the ephemeral
 
 ## 3. Automated Dependency Maintenance
 
-The repository includes a standard `renovate.json` configuration to track container image tags, Helm charts, Rust crates, and npm dependencies. Container images must always be pinned to explicit tags or SHA256 digests; mutable tags (`latest`, `master`) are rejected by CI admission policies.
+`renovate.json` tracks container images, Helm charts, Rust crates and npm dependencies and opens the update as a change proposal.
+
+Every image is pinned by digest, not by tag. A tag may be present and is decoration: `components/*/images.yaml` carries `repository`, `tag` and `digest`, and the workload chart addresses the image by its digest, so a moving tag like `main` still resolves to fixed bytes. Two checks hold that: `scripts/ci/check-image-digests.py` refuses an image in this repository without one, and the Kyverno policy `require-image-checksum` refuses a pod whose image carries no checksum, with "Images must use checksums rather than tags." Re-pin a digest with `docker buildx imagetools inspect <repository>:<tag>` and copy the digest of the image index.
 
 ## 4. Manifest Title Migration: Multi-Language Maps to Plain Strings
 
@@ -115,6 +121,9 @@ Starting with version `v0.9`, manifest `metadata.title` (as well as user-authore
 
 ## Related
 
-- [00-intro](00-intro.md) — deployment chapter order.
+- [00-intro](00-intro.md) — which component is which before upgrading them in order.
+- [07-backup-restore](07-backup-restore.md) — the backup to take before step 2.
+- [03-configuration](03-configuration.md) — the values an upgrade may change.
+- [09-troubleshooting](09-troubleshooting.md) — what to read when a rollout does not become Ready.
 - [01-runbooks](../Operations/01-runbooks.md) — what to do when it breaks.
 - [13-security](../Architecture/13-security.md) — the security model being deployed.

@@ -31,7 +31,7 @@ Three things about that table are load-bearing:
   without it answers 404 on a path that is otherwise correct.
 - **Every `_duration_seconds` above is a Prometheus histogram, not a summary.** A summary
   exports a quantile that is already computed inside one replica, and quantiles from several
-  replicas cannot be combined — the p95 of a Gateway that the HPA has scaled to three pods is
+  replicas cannot be combined: the p95 of a Gateway that the HPA has scaled to three pods is
   not the average of three p95s. Buckets can be summed, so a dashboard reads latency as
   `histogram_quantile(0.95, sum(rate(<series>_bucket[5m])) by (le, route))` and stays correct
   however many replicas are running.
@@ -40,14 +40,14 @@ Three things about that table are load-bearing:
 
 Production environments must be monitored against the following performance budgets:
 
-- **Context Gateway Overhead**: p95 ≤ 3ms, p99 ≤ 8ms (excluding underlying broker execution time).
+- **Context Gateway overhead**: p95 ≤ 3ms, p99 ≤ 8ms, excluding the broker's own execution time. `jc_gateway_broker_request_duration_seconds` is what to subtract.
 - **Broker Entity Retrieval**: p95 ≤ 15ms, p99 ≤ 50ms for point queries (`GET /entities/{id}`).
-- **CaC Sync Latency (Green Lane)**: Form save to active broker state ≤ 5 seconds.
+- **Configuration sync latency, green lane**: form save to live broker state ≤ 5 seconds.
 - **Pipeline Processing**: Ingestion to context availability ≤ 100ms for resident streams.
 
 ## 3. Centralized Logging
 
-All custom components (Context Gateway, Portal API, `jcctl`, Bento) emit structured JSON to `stdout`.
+Every component written for this platform emits structured JSON to `stdout`: the Context Gateway, the Portal (its reconciler included), and the Bento runners.
 
 ### JSON Log Schema Example
 
@@ -87,44 +87,63 @@ The audit bucket carries S3 Object Lock in compliance mode with a 90 day default
 
 Timestamps are parsed as RFC 3339 and stored in UTC. A record whose `timestamp` does not parse keeps its ingest time and is tagged rather than dropped, because a malformed audit record is still evidence.
 
-## 4. Recommended Alert Rules
+## 4. Alert Rules
 
-Deploy these rules via `PrometheusRule` in your monitoring stack:
+Two rules ship already. The `monitoring` component renders a `PrometheusRule` from
+`alertGroups` in `components/monitoring/values/monitoring/base-values.yaml.gotmpl`, and when
+`apisix` is in the `components` list it carries `APISIXConfigReloadFailed` and
+`APISIXHigh5xxRate`. Do not add those two again: a second copy alerts twice on one failure.
+
+What the shipped group covers is the edge, because that is where a failure hides. A standalone
+APISIX keeps serving its last good configuration when the new `apisix.yaml` is invalid, so no pod
+goes unready and nothing else reports it:
 
 ```yaml
-apiVersion: monitoring.coreos.com/v1
-kind: PrometheusRule
-metadata:
-  name: joinedcontext-platform-alerts
-  namespace: prod
-spec:
-  groups:
-    - name: platform-health
-      rules:
-        - alert: GatewayHighLatency
-          expr: histogram_quantile(0.99, sum(rate(gateway_request_duration_seconds_bucket[5m])) by (le)) > 0.05
-          for: 2m
-          labels:
-            severity: warning
-          annotations:
-            summary: "Context Gateway p99 latency exceeded 50ms"
-
-        - alert: CityctlReconciliationFailure
-          expr: increase(jcctl_reconcile_errors_total[15m]) > 0
-          for: 1m
-          labels:
-            severity: critical
-          annotations:
-            summary: "jcctl failed to converge Git state to cluster"
-
-        - alert: APISIXConfigReloadFailed
-          expr: apisix_yaml_configuration_load_status == 0
-          for: 1m
-          labels:
-            severity: critical
-          annotations:
-            summary: "APISIX standalone failed to reload apisix.yaml (check #END marker)"
+- alert: APISIXConfigReloadFailed
+  expr: apisix_yaml_configuration_load_status == 0
+  for: 1m
+  labels: { severity: critical }
+  annotations:
+    summary: 'APISIX standalone failed to reload apisix.yaml (check the #END marker)'
+- alert: APISIXHigh5xxRate
+  expr: sum(rate(apisix_http_status{status=~"5.."}[5m])) / sum(rate(apisix_http_status[5m])) > 0.01
+  for: 2m
+  labels: { severity: warning }
 ```
+
+The SLOs of section 2 have no shipped rules. Add them to `alertGroups` in the same file, using the
+metric names of section 1 exactly:
+
+```yaml
+alertGroups:
+  - name: platform-health
+    rules:
+      - alert: GatewayHighLatency
+        expr: >
+          histogram_quantile(0.99,
+            sum(rate(jc_gateway_request_duration_seconds_bucket[5m])) by (le)) > 0.008
+        for: 2m
+        labels: { severity: warning }
+        annotations:
+          summary: 'Context Gateway p99 latency above the 8ms budget'
+      - alert: PortalErrorRate
+        expr: >
+          sum(rate(jc_portal_requests_total{status=~"5.."}[5m]))
+            / sum(rate(jc_portal_requests_total[5m])) > 0.01
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: 'Portal 5xx rate above 1%'
+```
+
+The prefix is what to get right: every metric this platform exports carries `jc_`, and a rule
+written against `gateway_request_duration_seconds_bucket` matches no series and fires never, which
+looks exactly like a healthy gateway.
+
+There is no reconciler error counter to alert on. The Portal exports `jc_portal_requests_total`,
+`jc_portal_request_duration_seconds` and `jc_portal_changes_total`, and the reconciler runs inside
+that process, so a failure to converge shows up as a Change that stays unapplied rather than as a
+metric. Watch it in the Portal's own drift surface, not in Prometheus.
 
 ## 5. The activity pipeline
 
@@ -163,7 +182,7 @@ anything. The component that knows what happened is the one it happened to: a br
 forward was cut off by the loop guard, and a collector rule reconstructing that from a span's
 status code is a guess with a configuration file around it. The second is arithmetic about a
 released image. The contrib distribution has no connector that turns a span into a log and no
-exporter that writes to SQL — its whole SQL surface is the `sqlquery` receiver, which reads — so
+exporter that writes to SQL (its whole SQL surface is the `sqlquery` receiver, which reads), so
 a pipeline built on either could not be pinned to a digest, and an unpinnable image is not a
 deployment (OPS-28).
 
@@ -224,6 +243,8 @@ whole platform and writes nothing a browser sees without the Portal having valid
 
 ## Related
 
-- [00-intro](00-intro.md) — deployment chapter order.
+- [09-troubleshooting](09-troubleshooting.md) — what to do with what these metrics and logs say.
+- [03-configuration](03-configuration.md) — `global.metrics.enabled` and the `monitoring` component's values.
+- [09-portal §6](../Architecture/09-portal.md#6-activity-what-is-happening) — the Activity stream section 5 fills.
+- [10-edge-routing-apisix](10-edge-routing-apisix.md) — why `/metrics` is not published at the edge.
 - [01-runbooks](../Operations/01-runbooks.md) — what to do when it breaks.
-- [13-security](../Architecture/13-security.md) — the security model being deployed.

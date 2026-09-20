@@ -5,14 +5,14 @@ title: "Backup, Disaster Recovery & Restore"
 
 # Backup, Disaster Recovery & Restore
 
-Disaster recovery is based on the separation of **declarative configuration** (persisted in Git), **secrets** (managed in OpenBao or SOPS), and **transactional state** (persisted in PostgreSQL).
+Disaster recovery rests on three stores that fail independently: the **declarative configuration**, which is a Git repository in the forge; the **secrets**, which are SOPS-encrypted in a repository and decrypted at render time; and the **transactional state**, which is PostgreSQL. Restore them in that order.
 
 ## 1. Data Classification & Storage Matrix
 
 | Data Class | Component | Persistent Store | Criticality | Recovery Objective |
 |---|---|---|---|---|
-| **Platform Configuration** | City Repo (`jcctl`) | Gitea Git Storage (PVC / Remote Git Mirror) | Critical | RPO = 0 (every commit is permanent)<br/>RTO ≤ 5 min |
-| **Secrets & Keys** | Secrets Component | OpenBao / Encrypted SOPS in Git | Critical | RPO = 0<br/>RTO ≤ 10 min |
+| **Platform configuration** | The configuration repository in Gitea | Gitea's PVC, plus a Git mirror wherever you keep one | Critical | RPO = 0 (every commit is permanent)<br/>RTO ≤ 5 min |
+| **Secrets & keys** | `secrets` component | SOPS-encrypted in a repository, with the age key outside it. OpenBao is named as an add-on and has no component to deploy today ([04-components-and-addons.md](04-components-and-addons.md) §1) | Critical | RPO = 0<br/>RTO ≤ 10 min |
 | **Context History & Entities** | Antares Broker / Portal | PostgreSQL (CNPG) | Critical | RPO ≤ 5 min (PITR)<br/>RTO ≤ 15 min |
 | **Git Repositories & PRs** | Gitea | PostgreSQL (Metadata) + PV (Git bare repos) | High | RPO ≤ 1 hour<br/>RTO ≤ 30 min |
 | **Pipelines & Streams** | Bento Runners | Stateless (Config mounted from ConfigMap) | Low | RPO = 0 (Instant re-creation from Git) |
@@ -60,7 +60,7 @@ To restore an entire organisational instance from scratch on a blank Kubernetes 
 
 ### Step 1: Provision Base Infrastructure & Restore Secrets
 
-Deploy cluster operators (Linkerd, CNPG, cert-manager) and inject the root SOPS/OpenBao decryption key into the namespace.
+Deploy the cluster operators (Linkerd, CloudNativePG, cert-manager) and put the age key that decrypts the SOPS files where whoever runs `helmfile` can read it (`SOPS_AGE_KEY_FILE`). Without it the render fails before anything is installed, which is the intended order: no cluster comes up half-configured with generated stand-ins for real secrets.
 
 ### Step 2: Bootstrap PostgreSQL via Point-in-Time Recovery (PITR)
 
@@ -99,8 +99,8 @@ git clone --mirror https://gitea.<host>/<org>/city-config.git city-config.git
 git -C city-config.git push --mirror https://gitea.<new-host>/<org>/city-config.git
 ```
 
-A mirror carries every branch, tag and commit, so the organization-scoped manifests — `org.yaml`,
-`users/roles/`, `users/groups/`, `users/assignments/`, the blueprints — come back with the
+A mirror carries every branch, tag and commit, so the organization-scoped manifests (`org.yaml`,
+`users/roles/`, `users/groups/`, `users/assignments/`, the blueprints) come back with the
 projects, and each is reviewed again by the same lanes on its next change (PF-49, PF-52). Gitea's
 own metadata (merge requests, issues, comments) is not in the mirror; it comes back with the
 PostgreSQL cluster of Step 2, and losing it loses history, not configuration.
@@ -118,7 +118,7 @@ The one state that the repository cannot project into the broker on its own is s
 jcctl apply \
   --repo-dir ./city-config-repo \
   --token-file /var/run/secrets/joinedcontext/token \
-  --gateway-url http://context-gateway.prod.svc.cluster.local:9090
+  --gateway-url http://context-gateway.prod.svc.cluster.local:8080
 ```
 
 The gateway is the only address the reconciler takes. `jcctl` reads seed entities from `projects/{p}/spaces/{s}/entities/seed/*.json` (NGSI-LD normalized entities, one file per entity or an array) and upserts them via `POST /cs/{space}/ngsi-ld/v1/entityOperations/upsert` using the ServiceAccount's audience-bound token (CC-04, CC-72). The restore runs through the same policy layer as every other client rather than around it.
@@ -129,17 +129,19 @@ Verifying parity:
 jcctl plan \
   --repo-dir ./city-config-repo \
   --token-file /var/run/secrets/joinedcontext/token \
-  --gateway-url http://context-gateway.prod.svc.cluster.local:9090
+  --gateway-url http://context-gateway.prod.svc.cluster.local:8080
 ```
 
 `jcctl plan` compares declared seed entities in Git with the live entities returned by the broker for those identifiers. An unchanged repository reports zero changes and issues no write calls.
 
 ## 4. Artifact store
 
-The artifact store (RustFS, ADR-N-015) holds only rendered objects. Back it up last: after a loss, `jcctl artifacts rebuild --repo-dir {checkout} --out-dir {dir} [--space {s}] --revision {sha}` writes every object the repository declares — each model's LinkML source and generated artifacts under `schemas/{org}/{project}/{space}/{model}/v{major}/`, each mapping's compiled Bloblang under `mappings/…`, with an `index.json` naming the bytes, the SHA-256 and the commit — and the store's own client mirrors that directory into the bucket with the scoped credential (PF-32); the CLI never holds a store key. An artifact the repository does not hold is named on stderr, not invented: run `jcctl model generate` first. RDF dumps under `dumps/` are the one prefix worth mirroring to the CNPG backup bucket when their retention matters (`artifactStore.mirrorDumpsTo`).
+The artifact store (RustFS, ADR-N-015) holds only rendered objects. Back it up last: after a loss, `jcctl artifacts rebuild --repo-dir {checkout} --out-dir {dir} [--space {s}] --revision {sha}` writes every object the repository declares (each model's LinkML source and generated artifacts under `schemas/{org}/{project}/{space}/{model}/v{major}/`, each mapping's compiled Bloblang under `mappings/…`, with an `index.json` naming the bytes, the SHA-256 and the commit), and the store's own client mirrors that directory into the bucket with the scoped credential (PF-32); the CLI never holds a store key. An artifact the repository does not hold is named on stderr, not invented: run `jcctl model generate` first. RDF dumps under `dumps/` are the one prefix worth mirroring to the CNPG backup bucket when their retention matters, and no values key does it for you: mirror that prefix with the object store's own tooling on the schedule its retention needs.
 
 ## Related
 
-- [00-intro](00-intro.md) — deployment chapter order.
-- [01-runbooks](../Operations/01-runbooks.md) — what to do when it breaks.
-- [13-security](../Architecture/13-security.md) — the security model being deployed.
+- [01-runbooks](../Operations/01-runbooks.md) — Runbook 6 is the step-by-step PITR this page summarises.
+- [03-configuration](03-configuration.md) — where the `postgres.cluster.backups` values live.
+- [06-updating](06-updating.md) — take a backup before the upgrade sequence, not after.
+- [11-moving-a-project](11-moving-a-project.md) — project export and import, which is not disaster recovery.
+- [13-security](../Architecture/13-security.md) — why the restore goes through the gateway and not around it.

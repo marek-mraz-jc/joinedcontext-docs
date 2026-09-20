@@ -49,7 +49,7 @@ The reconciler runs inside the Portal process; there is no separate reconciler w
 | Symptom | Cause | Command that confirms it | Fix |
 |---|---|---|---|
 | The database refuses writes and reports read-only | The volume is nearly full | `kubectl get pvc` | Raise `cluster.storage.size` in `components/postgres/values/cluster/<profile>-values.yaml.gotmpl` and let CNPG expand the volume ([Operations Runbook 9](../Operations/01-runbooks.md#9-runbook-9-disk-full-on-cloudnativepg-cluster)). The shipped sizes are 1Gi for `development` and 50Gi for `production`. |
-| A standby lags | Write volume, or the network between the instances | `kubectl cnpg status <cluster name>`, the release name the `postgres` component gives the cluster, `kubectl get cluster` lists it | Read the replication lag in Prometheus before resizing anything. |
+| A standby lags | Write volume, or the network between the instances | `kubectl cnpg status postgres-cluster`, the name every component dials as `postgres-cluster-rw` | Read the replication lag in Prometheus before resizing anything. |
 
 ## Related
 
