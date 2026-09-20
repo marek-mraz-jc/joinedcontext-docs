@@ -42,6 +42,13 @@ for the **SP-01…SP-21** family.
   `.well-known/oauth-protected-resource`. No other invented segments;
   in particular there is no `endpoint/` intermediary and no
   per-representation ad-hoc naming.
+  > Note: the gateway routes `ngsi-ld/v1/` and `mcp` today
+  > (`context-gateway` `src/app.rs`). `schema/`, `dump/` and the protected-resource
+  > document are the permitted set this requirement fixes, not a set that answers:
+  > the schema artifacts are served on the Endpoint (EP-46…EP-52) and the dated dumps
+  > (SP-13) are not built. The space record advertises what is routed and grows with it
+  > (`handlers/space_surface.rs::children`, T-2379), so a discovery document never names
+  > a path that answers 404.
 
 ## 2. Tenancy without a client-facing tenant header
 
