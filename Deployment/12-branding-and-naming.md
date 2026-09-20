@@ -35,11 +35,15 @@ global:
     languages:
       default: "sk"
       offered: ["sk", "en"]
+    documentationBaseUrl: "https://docs.bb.example.com"   # where this installation serves the
+                                                          # User Guide; omit it and no form links
 ```
 
 Every value is a string or a list of strings. Colours are hex triplets or sextets and are validated as such before anything renders them, because a colour token reaches a browser as a CSS custom property and a value that is not a colour is a way into the page (OPS-46). The logo and the favicon are file names, never URLs: they sit beside the branding file in the same ConfigMap and the Portal serves them from its own origin at `/api/v1/branding/logo` and `/api/v1/branding/favicon`. Those two names are the whole of the route: `GET /api/v1/branding/{asset}` accepts `logo` and `favicon` and answers `404` to anything else, so the path can reach no file the ConfigMap does not carry. The content type comes from the file's own extension (`.svg`, `.png`, `.jpg`, `.webp`, `.ico`).
 
 A colour the Portal UI cannot read is named in the browser console and skipped; the token keeps the default it already had rather than taking a value that is not a colour.
+
+`documentationBaseUrl` is optional and empty by default. It is the root of the installation's copy of this documentation, and a create form joins it with the page its kind's arrangement names (`guide:`, [Architecture/09](../Architecture/09-portal.md) section 2) to offer one link beside the form's `about`. An installation that serves no guide leaves it out and no form shows a link, because a dead link is worse than none. It is validated as an absolute `http` or `https` URL before it is served, for the reason the colours are validated: it reaches the page as an attribute a browser acts on, and a value carrying another scheme is dropped and logged. Nothing follows it — the Portal never makes a request to it.
 
 ## 2. Who reads what
 
@@ -60,6 +64,7 @@ A colour the Portal UI cannot read is named in the browser console and skipped; 
 - The CKAN theme renders any branding block; it holds templates and one stylesheet of custom properties, and no value of its own (OPS-47).
 - A missing or unreadable branding file is not an error. The Portal falls back to neutral joinedcontext defaults and keeps serving; an installation without branding looks plain, it does not break.
 - Fonts are self-hosted or system fallbacks. Nothing on a page fetches from a third-party origin at runtime.
+- A link the Portal offers to a place outside itself is built from configuration and a path the platform ships, never from a field somebody writes into a manifest (`documentationBaseUrl` plus a `UiSchema`'s `guide`).
 
 ## 4. Changing the branding of a running instance
 

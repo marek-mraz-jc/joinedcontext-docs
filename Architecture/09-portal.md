@@ -162,10 +162,31 @@ spec:
     sk: …
 ```
 
-A link to the kind's page in the User Guide belongs beside `about` and is **not** in the contract
-yet: nothing serves the User Guide to a browser that can reach the Portal, so the link would be dead
-(measured 2026-09-19 — the Portal has no documentation URL anywhere, and the private `docs-build`
-workflow publishes nowhere). It arrives with the guide it would point at.
+**`guide` is where to read more, and it appears only when there is somewhere to read it.** An
+arrangement names the kind's page inside the User Guide as a path, never as an address:
+
+```yaml
+spec:
+  for: Endpoint
+  guide: User-Guide/05-endpoints-and-sharing
+```
+
+The address is the installation's, not the manifest's: `documentationBaseUrl` in the branding block
+([Deployment/12](../Deployment/12-branding-and-naming.md)) says where that installation serves the
+guide, and the form builds the link by joining the two. Both halves are needed. An installation that
+serves no guide leaves `documentationBaseUrl` empty and every form shows `about` and no link, which
+is the state of `dev` today: nothing serves the User Guide to a browser that can reach the Portal
+(measured 2026-09-19, and again 2026-09-20 — the private `docs-build` workflow publishes nowhere),
+and a dead link is worse than none.
+
+Splitting it this way is what keeps a manifest from becoming an address the Portal sends a person
+to. `guide` is a relative path: a value with a scheme, an authority, a leading slash or a `..`
+segment is dropped with the arrangement's other problems, so an organization that commits a
+`portal/forms/*.uischema.yaml` cannot point the link at a site of its own. `documentationBaseUrl`
+is validated as an absolute `http` or `https` URL the same way a branding colour is validated as
+hex, and for the same reason: it reaches the page as an attribute a browser acts on. The link opens
+in a new tab with `rel="noreferrer"` and names the page it opens, so a screen reader announces the
+destination rather than "link".
 
 **The Portal ships a default arrangement for every kind that has a form.** They are
 `kind: UiSchema` manifests like any other, bundled with the UI, so a fresh install has help and an
@@ -248,6 +269,11 @@ The Portal UI provides complete internationalization support:
 The Portal image is the same everywhere. What differs between installations is one file: the deployment renders `global.branding` ([Deployment/12](../Deployment/12-branding-and-naming.md)) into a ConfigMap, mounts it, and names it in `JC_BRANDING_FILE`. The API reads that file and answers `GET /api/v1/branding`, which is public and cached: a branding block holds no secret, and the login page needs it before anyone has signed in.
 
 The React shell applies the answer as it boots. The instance name becomes the document title and the login heading, the logo goes into the sidebar and the login page from `/api/v1/branding/logo`, each colour becomes a CSS custom property on the root element (`--portal-color-primary` and its siblings, the same tokens the theme already reads, so no component has to know about branding at all), the font stacks become `--portal-font-heading` and `--portal-font-sans`, the offered languages fill the language switcher and the default one is the initial locale unless the visitor has already chosen a language, and the organisation and contact fill the footer.
+
+`documentationBaseUrl` is the one field that is not about how the Portal looks: it is the root of
+the installation's copy of this documentation, and it is empty on an installation that serves none.
+A form's link to the User Guide is built from it (section 2); nothing else reads it, and nothing
+follows it — it becomes an `href` a person may click and never a request the Portal makes.
 
 Two rules keep this safe and dull. Colours are validated as hex before they are written into a style, because a custom property is a value a browser evaluates and an unvalidated one is an injection point; the readable foreground for the brand colour is computed from it rather than authored, so a light primary does not end up with white text on it. And a missing, unreadable or invalid file is not an error: the Portal serves neutral joinedcontext defaults and logs the reason, because an instance whose ConfigMap has not been rendered yet should look plain rather than fail to load (UI-30, OPS-46).
 
