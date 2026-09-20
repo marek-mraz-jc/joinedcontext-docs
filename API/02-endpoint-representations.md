@@ -185,7 +185,13 @@ Converts spatial NGSI-LD entities into standard RFC 7946 GeoJSON.
 
 ## 4. Tabular CSV Representation
 
-Path: `/api/endpoint/{endpointSlug}/file.csv` (also `file.geojson`, `file.xlsx`, `file.zip`; EP-41…EP-45)
+Path: `/api/endpoint/{endpointSlug}/file.csv` (also `file.geojson`, `file.json`, `file.xlsx`,
+`file.zip`; EP-41…EP-45)
+
+Which of them an Endpoint answers is `spec.enabledRepresentations`, and the set a manifest may name
+is the `Representation` enum of the Endpoint kind (`crates/jc-core/src/kinds/endpoint.rs`), which is
+what the published `schemas/kinds/Endpoint.json` validates a manifest against. `json` is one of
+them, so an administrator can enable it, and §4a says what it answers.
 
 All `file.*` children accept the NGSI-LD `GET /entities` query parameters and stream the result as an attachment:
 
@@ -241,6 +247,17 @@ urn:ngsi-ld:WeatherObserved:hel.fi:air-quality:station-01,WeatherObserved,22.4,2
 The gateway pages through the broker with `limit` and `offset` and appends each page to the answer as it arrives, so the response size is bounded by the endpoint's limits and not by one broker page. `spec.fileLimits.maxFileRows` and `spec.fileLimits.maxFileBytes` are checked while the rows are being written: the first row that would cross either limit ends the download with `413 Payload Too Large` rather than a truncated file that looks complete. An endpoint that declares neither falls back to the gateway's own ceiling.
 
 ---
+
+## 4a. The `file.json` download
+
+`file.json` is the same download as one array of entities: the NGSI-LD documents
+`/ngsi-ld/v1/entities` would answer, over the whole dataset rather than one broker page, projected
+to the caller's grants and served as `application/json` (T-2382). A script that already reads
+NGSI-LD asks for this one; the CSV of §4 is what a spreadsheet wants.
+
+The limits, the filename and the missing `ETag` of §4 hold here too: the array is one query answered
+afresh, so a body past `spec.fileLimits.maxFileBytes` is refused whole with `413` rather than cut
+short, because half a JSON array is not a smaller answer.
 
 ## 5. Excel Spreadsheet (XLSX)
 
@@ -373,7 +390,6 @@ costs a second query on every page, so the `next` link is offered on the only ev
 carries — a full page may have another behind it — and the last page is simply empty
 (`translators/ogc.rs`, EP-36). A feature carries no `rel="describedby"` link either; **T-2381**
 tracks EP-50.
-```
 
 ### Property flattening (EP-37)
 

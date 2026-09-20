@@ -100,8 +100,11 @@ Neither is optional and neither is a later pass:
 ## 5. Buttons
 
 One shared `Button` carries four variants and three sizes, and which one a page reaches for used
-to be the author's taste. These are the rules, and `ui/tests/button_rules.test.tsx` is where they
-are held:
+to be the author's taste. These are the rules. No single file holds them all:
+`ui/tests/contract_alert_badge_button.test.tsx` holds the Button's own contract,
+`ui/tests/ui_rules.test.ts` holds the size scale and the ban on a hand-made control
+(`a_size_is_on_the_scale`, `a_page_does_not_hand_make_a_button_input_select_textarea_or_table`),
+and "one primary per view" is asserted by each page's own test where that view is rendered:
 
 - **One `primary` per view.** A page, and each dialog on it, offers at most one primary *action*:
   the one thing a person came to do. The same action offered twice — in the page header and again

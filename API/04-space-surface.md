@@ -17,12 +17,17 @@ Served today (`crates/context-gateway/src/app.rs`):
 /cs/{space}                             DCAT-AP dataset record of one space (SP-10)
 /cs/{space}/ngsi-ld/v1/…                the CIM 009 resource tree, byte for byte (SP-03)
 /cs/{space}/mcp                         MCP Streamable HTTP instance of the space (SP-14)
+/cs/{space}/schema/index.json           the catalogue of what the space publishes (SP-04, EP-46)
+/cs/{space}/schema/v{major}/{artifact}  one schema document, projected to the grant (EP-49)
 ```
 
-Specified and not built yet: `/cs/{space}/schema/…` (SP-04), `/cs/{space}/dump/…` (SP-04) and
-`/cs/{space}/access` (EP-55). The record and the HTML page of §3 still link the first and the
-third, so those links answer `404` today; T-2373 tracks it. The endpoint surface serves the same
-three under a slug: `/api/endpoint/{slug}/schema/index.json` and `/api/endpoint/{slug}/access`.
+The two schema routes are the endpoint surface's own handlers under the space prefix, so the
+document a caller reads is the same one either way (SP-03).
+
+Not built: `/cs/{space}/dump/…` (SP-04), which **T-2391** files. The record no longer names it,
+because a DCAT-AP distribution pointing at a `404` is a promise to every harvester that follows
+it. `access` was never a child of a space — SP-04 does not list it, and the access document is
+served per endpoint at `/api/endpoint/{slug}/access` (EP-55).
 
 No other child exists. Anything else under `/cs/{space}/` answers `404`, the same answer a space the caller may not discover gives, so a probe learns nothing either way (SP-06, R20).
 
@@ -56,7 +61,7 @@ A catalog entry carries the identity of a space and nothing else: the title, the
 
 ## 3. The space record: `GET /cs/{space}`
 
-Returns the DCAT-AP dataset record of one space. Its `dcat:service` list is what the space actually offers: the NGSI-LD tree always, the MCP instance when the space's endpoint enables the `mcp` representation, and the schema artifacts (SP-10). There is no dump `dcat:Distribution` and no MQTT access service in the record today; `dct:accrualPeriodicity` marks a sandbox space as irregular so a catalogue that copies the record does not treat it as a lasting dataset (PF-19). One URL hands a human, a program and an agent the same entry point.
+Returns the DCAT-AP dataset record of one space. Its `dcat:service` list is what the space actually offers: the NGSI-LD tree always, the MCP instance when the space's endpoint enables the `mcp` representation, and the schema artifacts at `schema/index.json` (SP-10). All three serializations name the same children, and none of them names a child the router does not serve (T-2373). There is no dump `dcat:Distribution` and no MQTT access service in the record today; `dct:accrualPeriodicity` marks a sandbox space as irregular so a catalogue that copies the record does not treat it as a lasting dataset (PF-19). One URL hands a human, a program and an agent the same entry point.
 
 Content negotiation on `Accept`, with `application/ld+json` as the default:
 
