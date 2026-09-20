@@ -10,14 +10,16 @@ Scope: everything the platform must satisfy and build to have a WORKING
 policy firewall (PEP + PDP + policy store + identity) in front of NGSI-LD
 context brokers, standardized on NGSI-LD wherever the spec offers a hook.
 Sources: `access-control.md` (R1–R43 + MIM Part II),
-`gateway-firewall.md` (GW1–GW31), `../research/firewall-results.md`
-(L1–L16, U1–U8, grant-as-registration §6–§9), ADR 001/002/003/006, the
-2026-08-14 design doc (gap list 1–14),
-`../specs/websocket-binding.md` (WS-45/WS-47).
+`gateway-firewall.md` (GW1–GW31), ADR 001/002/003/006, the 2026-08-14 design
+doc (gap list 1–14), and two research notes that were never committed to this
+repository: the firewall results (L1–L16, U1–U8, grant-as-registration §6–§9)
+and the WebSocket binding (WS-45/WS-47). Citations to
+`../research/firewall-results.md`, `../specs/websocket-binding.md` and
+`../registers/requirements-atlas.md` below name files that do not exist here;
+resolve a cited ID through [00-index](00-index.md) instead.
 This document is canonical for **R44–R60** (extending the R-numbering of
 `access-control.md`) and for **I1–I4** (identity stack). All other IDs
-are cited, never restated, resolve them via
-`../registers/requirements-atlas.md`.
+are cited, never restated, resolve them via [00-index](00-index.md).
 
 Keywords MUST / SHOULD / MAY per RFC 2119.
 
@@ -49,11 +51,21 @@ justified in an ADR:
    Every rung-4 mechanism MUST be written up as a candidate ETSI ISG CIM
    change request so it can migrate down the ladder.
 
-Component roles (unchanged from the design doc): APISIX = PEP,
-OPA = PDP (Compile API, UCAST target), Keycloak 26.x = OIDC IdP + VC
-issuer, FIWARE VCVerifier = VP verification, FIWARE Trusted Issuers
-Registry = trust anchor, the broker (dedicated policy tenant) = policy
-store, Antares = policy-free data plane (RLS second layer).
+Component roles **as built**: the Context Gateway is the PEP and carries
+the PDP in its own process (`crates/context-gateway/src/pdp/`, `PolicyPdp`),
+APISIX routes, rate-limits and strips forgeable inbound headers but decides
+nothing (OPS-33, PF-46), Keycloak is the only identity provider (PF-45), the
+configuration repository is the policy store (`kind: Policy` manifests, CC-72),
+and Antares is the policy-free data plane.
+
+> The design doc this page consolidates named APISIX as the PEP and an external
+> OPA as the PDP over its Compile API. [ADR-N-003](../Decisions/adr-n-003-context-gateway-in-rust.md)
+> refused that arrangement: the `APISIX → OPA → AuthZ Adapter → PostgreSQL` hop
+> cost 30 to 80 ms per request and could not rewrite an NGSI-LD query AST, which
+> is what rung 2 of the ladder above requires. No OPA runs in any environment
+> (`joinedcontext-deployment/components/` has no such component), and neither
+> FIWARE VCVerifier nor the Trusted Issuers Registry is deployed. Read every
+> "OPA" below as the in-process PDP, and I2 and I3 as designed and not built.
 
 ---
 
@@ -110,7 +122,7 @@ subscriptions are registration-narrowed by clause 5.8.1.4 and severed by
 CSR deletion (spec-native, preferred); (b) gateway-rewritten grants, the
 gateway SHALL rewrite `notification.endpoint.uri` at subscription
 creation to route delivery through an egress path of the same PEP, which
-applies the same OPA `maskRule` projection and `q` re-check before
+applies the same masking projection and `q` re-check before
 forwarding to the original endpoint. MQTT (ADR 011) and WS (`../specs/websocket-binding.md`
 WS-45) deliveries SHALL pass the same egress path. The broker stays
 policy-free.
@@ -241,15 +253,15 @@ Build order per the design doc's order of attack; ✅ = exists today.
 |---|---|---|---|
 | 1 | Property-test harness + bleed corpus (R57) | makes everything else safe to change | missing |
 | 2 | antares-ql Wasm plugin: parse + AST merge + UCAST→QL (R56, R10–R13) | the security-critical piece | missing |
-| 3 | APISIX PEP wiring: authn, tenant pin, verdicts, POST-query forwarding, response projection, restricted header | R1–R15, GW1–GW22 | partial (stock plugins only) |
+| 3 | PEP wiring: authn, tenant pin, verdicts, POST-query forwarding, response projection, restricted header | R1–R15, GW1–GW22 | built in the Context Gateway, not in APISIX (ADR-N-003); APISIX carries the header strip and the rate-limit classes only |
 | 4 | OPA data-push consumer + Compile-API integration (`maskRule`, decision logs) | §5 of design doc, R40, R42 | missing |
 | 5 | Policy tenant + bootstrap meta-policy + assigner-authority rule (R49) | gap 5 | missing |
 | 6 | Policy-change notification consumer → cache invalidation + revocation reaper (R48) | gaps 4 | missing |
 | 7 | Notification egress path, all three bindings (R46) | gap 1 | HTTP binding built (gateway rewrite + egress projection, geo and scope grants narrowed, TLS delivery); MQTT and WS missing |
 | 8 | Grant-as-registration tooling: role→view-tenant CSR compiler, seed scripts in git, `observationInterval` cron | firewall-results §9 (the 80 %) | missing |
 | 9 | ETag/If-Match in Antares + gateway conditional-write flow (R45) | gap 3 | gateway flow built; Antares emits no `ETag` yet, so every `If-Match` answers 412 |
-| 10 | ODRL profile document + round-trip mapper with tests (R52, R26) | gap 10 | missing |
-| 11 | AuthZEN-shaped `/access/*` endpoints (R51, R16–R17) | discovery | missing |
+| 10 | ODRL profile document + round-trip mapper with tests (R52, R26) | gap 10 | mapper built (`crates/context-gateway/src/federation/odrl_compiler.rs`, `handlers/access_odrl.rs`, tested by `access_odrl_tests.rs` and the conformance suite `tests/security/test_odrl_mapping.py`); the published profile document is missing |
+| 11 | AuthZEN-shaped `/access/*` endpoints (R51, R16–R17) | discovery | built: `GET /api/endpoint/{slug}/access` and `POST …/access/check` (`crates/context-gateway/src/app.rs:247`), with `handlers/access.rs`, `access_ucast.rs`, and `tests/security/test_authzen_access.py` |
 | 12 | VC status lists: Keycloak issuance + VCVerifier `requireStatus` (R50) | gap 11 | verifier ready, issuer + config missing |
 | 13 | @context expansion + hardened context cache at the PEP (R58) | L1 | missing |
 | 14 | Benchmark suite + recorded numbers (R60) | gaps 6–8, R41 | missing (5-broker Scorpio compose can host it today) |
