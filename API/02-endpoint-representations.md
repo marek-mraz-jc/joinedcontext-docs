@@ -390,7 +390,6 @@ costs a second query on every page, so the `next` link is offered on the only ev
 carries — a full page may have another behind it — and the last page is simply empty
 (`translators/ogc.rs`, EP-36). A feature carries no `rel="describedby"` link either; **T-2381**
 tracks EP-50.
-```
 
 ### Property flattening (EP-37)
 
