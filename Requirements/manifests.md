@@ -13,7 +13,7 @@ Family **MF** (MF-01…MF-44). Owning chapter: [Architecture/06-configuration-as
 - **MF-01** — Every configuration resource MUST be a Kubernetes-style object consisting of `apiVersion`, `kind`, `metadata`, `spec`, and server-computed `status`.
   > Note: Native artifacts (`bento.yaml`, `*.linkml.yaml`) are referenced from resources rather than wrapped.
 - **MF-02** — Manifest `metadata` MUST contain a DNS-1123 `name` and target `namespace` matching the project slug or `org`.
-  > Note: Labels, annotations, single-string title and description (UI-50), and optional translations maps are optional. `metadata.title` is a plain string in the author's language; legacy language maps remain readable through v0.9 and are rewritten by `jcctl` to a single string, and rejected from v1.0.
+  > Note: `labels`, `annotations`, `title` and `description` are optional; `metadata` carries no other field, because the envelope refuses unknown ones. `title` and `description` are one string in the author's language (UI-50) or the legacy `{locale: text}` map, which still parses and resolves per PF-28. Nothing rewrites the legacy form today and no version rejects it.
 - **MF-03** — Manifest `spec` MUST declare the complete desired resource state and serve as a valid payload for its underlying service API (CC-09).
 - **MF-04** — Resource `status` MUST NOT be stored in Git and is served strictly by the Portal API.
   > Note: Status reflects observed revision, phase, and transition conditions; download and import operations strip status.
@@ -23,15 +23,18 @@ Family **MF** (MF-01…MF-44). Owning chapter: [Architecture/06-configuration-as
 - **MF-07** — Cross-resource references MUST use typed reference objects `{kind, name, namespace?}` rather than hard-coded file paths or database keys.
 - **MF-08** — Well-known annotations for attribute ownership, blueprint provenance, sync sources, and import origins MUST be supported and preserved verbatim.
 - **MF-09** — Every resource kind MUST publish a JSON Schema draft-07 specification and corresponding OpenAPI resource endpoints (MF-12).
+  > Note: `jcctl schema export --out <dir>` writes one draft-07 document per catalogued kind, and the KPI entity type beside them; a whole-project export writes the same documents at `schemas/kinds/{Kind}.schema.json` (MF-41).
 - **MF-10** — Manifest labels MUST support standard Kubernetes set-based and equality-based selector filtering in API and UI views.
 
 ## 2. Resource API
 
 - **MF-11** [P][A] — The Portal API MUST expose all resource kinds under `/api/v1/projects/{project}/{plural}` with support for selectors and historical revision queries.
+  > Note: Today `labelSelector` and `fieldSelector` filter, and `revision` is accepted and answered `501 Not Implemented` because the route does not read Git (T-2375).
 - **MF-12** — Write operations against the resource API MUST NOT mutate live state directly, creating a Git merge request and returning HTTP 202 Accepted with a `Change` resource (CC-03).
   > Note: This preserves declarative GitOps review invariants across all administrative mutations.
 - **MF-13** [P][A] — Dry-run validation via `POST …?dryRun=All` MUST evaluate schema and Conftest constraints and return the plan diff without committing changes.
 - **MF-14** — The `jcctl` CLI MUST provide kubectl-shaped subcommands (`get`, `describe`, `apply -f`, `diff -f`, `delete -f`, `export`, `import`) with support for standard output formatting.
+  > Note: Today `jcctl` reads a repository checkout and ships `validate`, `plan`, `apply`, `drift`, `export`, `import`, `schema export`, `workspace render|diff`, `roles`, `model`, `pipeline test`, `artifacts rebuild`, `sync` and `publish ckan`, each taking `--repo-dir`. `get`, `describe`, `delete` and the `-f` forms are not built, and what they should mean when there is no configuration API to ask (CC-72) is an open decision (T-2374).
 - **MF-15** — Server-side field ownership for NGSI-LD attributes MUST be enforced using `joinedcontext.com/managed-attributes` (CC-69).
 
 ## 3. Download
