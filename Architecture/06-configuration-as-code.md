@@ -185,7 +185,7 @@ Rules that make bundles portable: identity is `(group, kind, namespace, name)` a
 | `DataOffer` | `projects/{p}/spaces/{s}/dataspace/offers/` | `schema/kinds/DataOffer.json` | Connector catalog Dataset + ODRL offer for referenced Endpoints (DS-07, DS-08) |
 | `DataAgreement` | `projects/{p}/dataspace/agreements/` | `schema/kinds/DataAgreement.json` | Status written by the connector; compiled `Policy` entities (provider) or token `secretRef` in OpenBao (consumer) (DS-09…DS-15) |
 | `App` | `projects/{p}/apps/{n}/app.yaml` | `schema/kinds/App.json` | Portal static host / Deployment; renders `Endpoint` + `Policy` from `dataNeeds` (AP-05) |
-| `SyncSource` | `projects/{p}/sync/` or `sync/` (org) | `schema/kinds/SyncSource.json` | `jcctl serve` sync loop (MF-27) |
+| `SyncSource` | `projects/{p}/sync/` or `sync/` (org) | `schema/kinds/SyncSource.json` | the sync loop, in the Portal beside the reconciler (`src/server.rs`, MF-27) or `jcctl sync` on the command line |
 | `UiSchema` | `portal/forms/{Kind lowercased}.uischema.yaml` | `schema/kinds/UiSchema.json` | Portal UI form arrangement, read straight from the repository (UI-02) |
 | `Bundle` (download index) | not stored; generated on download | `schema/kinds/Bundle.json` | Import wizard / `jcctl import` |
 | `Change` (server-side) | not stored; returned by resource-API writes | `schema/kinds/Change.json` | Portal API (merge request, lane, plan) |
@@ -345,12 +345,12 @@ a blueprint that needs a credential takes a `secretRef` name as a parameter.
 
 ---
 
-## 3. The `jcctl` Reconciler Engine
+## 3. The Reconciler Engine
 
-The reconciler binary (`jcctl`) is implemented in Rust. It operates in two modes:
+The reconciler is Rust, and it is one body of code with two front ends. There is no reconciler daemon of its own: the Portal is the daemon.
 
-1. **CLI Mode:** Used by engineers and CI pipelines (`jcctl plan`, `jcctl apply`, `jcctl export`).
-2. **Daemon Mode (`jcctl serve`):** Runs inside the cluster, listening for Git push webhooks, providing the read-only status API for the Portal UI, and executing scheduled drift checks.
+1. **Command line (`jcctl`):** engineers and CI pipelines run `jcctl validate`, `jcctl plan`, `jcctl apply`, `jcctl drift`, `jcctl export`, `jcctl import` and `jcctl sync`. Running `jcctl` with no arguments prints the full list; there is no `jcctl serve`.
+2. **In the cluster (the Portal):** the Portal links `jcctl` as a library rather than shelling out to it, so the same loader decides what a manifest is in both places and the Portal cannot disagree with CI about a repository (`joinedcontext-portal/src/reconciler`). A periodic loop re-reads the manifests from Gitea at the default branch HEAD, compiles their live status and swaps them into an in-memory mirror atomically; a run that cannot load the repository keeps the last revision that did, because serving half a repository reads as deletion. Only one replica reconciles, elected with a PostgreSQL advisory lock, and it is that replica that syncs streams, apps, roles and the Keycloak realm and runs the drift scan; every other replica keeps its own read-only mirror, so a new pod of a rolling update serves while the old one still holds the lock (OPS-51). The `SyncSource` loop runs beside it on the same replica (MF-28, CC-03).
 
 ### Reconciler Commands
 
