@@ -29,7 +29,8 @@ jobs:
       - name: the manifest and API checkers need a yaml and a schema library
         run: pip install --quiet --disable-pip-version-check pyyaml==6.0.3 jsonschema==4.26.0
       - run: python3 scripts/audit-i18n-docs.py
-      - run: python3 scripts/verify-openapi-snippets.py
+      - name: the API pages hold to the URL scheme, with no specification to look up
+        run: python3 scripts/verify-openapi-snippets.py
       - name: the draft-07 schemas the platform publishes
         # Pinned, not `main`: an unrelated platform push must not turn this lane red at a
         # random hour. Bump the tag when a new kind lands, which is the same moment the
@@ -45,6 +46,49 @@ jobs:
       - run: python3 scripts/validate-doc-manifests.py
       - run: python3 scripts/check-kpi-entities.py
       - run: python3 scripts/test-curl-snippets.py
+      - name: the two public repositories, at the tags whose code these pages describe
+        # The truth gate (T-2139) needs the code, not only its schemas: a page that names a
+        # file, an environment variable or an operation is checked against the tree that has
+        # them. Pinned for the same reason the schemas are — an unrelated platform push must
+        # not turn this lane red at a random hour. Bump both tags together with a commit that
+        # says which claim moved.
+        env:
+          JC_PLATFORM_TAG: jc-core-v0.7.46
+          JC_PORTAL_TAG: main
+        run: |
+          set -eu
+          mkdir -p "${RUNNER_TEMP}/code"
+          fetch() {
+            name="$1"; ref="$2"
+            case "$ref" in
+              main) url="https://github.com/marek-mraz-jc/${name}/archive/refs/heads/main.tar.gz" ;;
+              *)    url="https://github.com/marek-mraz-jc/${name}/archive/refs/tags/${ref}.tar.gz" ;;
+            esac
+            mkdir -p "${RUNNER_TEMP}/code/${name}"
+            curl -sSL "$url" | tar -xz -C "${RUNNER_TEMP}/code/${name}" --strip-components=1
+            # An empty checkout would make every claim "agree" with nothing.
+            test -n "$(ls -A "${RUNNER_TEMP}/code/${name}")"
+          }
+          fetch joinedcontext-platform "${JC_PLATFORM_TAG}"
+          fetch joinedcontext-portal "${JC_PORTAL_TAG}"
+          echo "JC_CODE_DIR=${RUNNER_TEMP}/code" >> "$GITHUB_ENV"
+          echo "OPENAPI_JSON=${RUNNER_TEMP}/code/joinedcontext-portal/ui/openapi.json" >> "$GITHUB_ENV"
+      - name: what the docs assert about the code is true of the code (T-2139)
+        run: python3 scripts/check-docs-against-code.py
+      - name: and the routes the API pages print are in the Portal's OpenAPI
+        # The leg has been in verify-openapi-snippets.py since T-0096 and named what would
+        # enable it; OPENAPI_JSON is now set, so this run is the one that uses it. Reported
+        # and not yet blocking: it finds 19 routes on API/01 and API/04 that the Portal's own
+        # specification has no path for, and each of them is either a stale page (T-2141) or
+        # a route the router serves without a utoipa annotation (T-2361). It becomes a gate
+        # in the commit that closes the second of those — the step above is already a gate,
+        # so a new stale route cannot arrive unnoticed in the meantime.
+        continue-on-error: true
+        run: python3 scripts/verify-openapi-snippets.py
+      - name: the labels the User Guide quotes are labels the Portal shows (UI-05)
+        # Advisory by design: names of things and plain emphasis are bolded in the guide too,
+        # so the list is read by a person. It runs here so that it is read at all.
+        run: python3 scripts/check-guide-labels.py "${JC_CODE_DIR}/joinedcontext-portal/ui/src/locales/en.json"
       - uses: actions/setup-node@v4
         with: { node-version: "22" }
       - name: markdown style follows STYLE.md (T-0099)
@@ -72,6 +116,7 @@ jobs:
           python3 scripts/audit-component-matrix.py --selftest
           python3 scripts/verify-runbooks.py --selftest
           python3 scripts/check-examples-are-safe.py --selftest
+          python3 scripts/check-docs-against-code.py --selftest
           python3 scripts/audit-i18n-docs.py --selftest
           python3 scripts/verify-openapi-snippets.py --selftest
           python3 scripts/validate-doc-manifests.py --selftest
