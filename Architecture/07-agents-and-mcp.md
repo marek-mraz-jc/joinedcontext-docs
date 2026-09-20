@@ -157,7 +157,7 @@ formalism to load (`recommended: "linkml"`) and lists every artifact with its `f
 `bytes`, `sha256` and resource URI, LinkML first: LinkML is the source the others are rendered from
 (ADR-N-010), so it is the one document that cannot disagree with the model. SHACL is for validating
 what an agent is about to write, RDF and OWL for a reasoner, JSON Schema for building a form, and
-`markdown` for a person to read. `entityType` narrows the answer to that one type; a type the caller may not read is refused exactly as an unknown one is (EP-47, SP-15).
+`markdown` for a person to read. `entityType` narrows the answer to one type, or to the list of classes an agent needs (`["User", "Vehicle"]`, at most 64); a type the caller may not read is refused exactly as an unknown one is, by name, whether it stands alone or in a list, so the argument is no way to ask which types exist (EP-47, SP-15, SP-20). A rendered document over 1 MiB is refused with the words that name `entityType` and `version` as the way to narrow it, and is never truncated: half a SHACL file is not SHACL, and a model that silently lost its last classes is the one thing a schema surface must not serve (AG-29).
 
 Three properties hold across the whole catalogue:
 
@@ -172,7 +172,7 @@ The same server lists resources (`resources/list`, `resources/read`):
 |---|---|
 | `ngsi-ld://{space}/types/{type}` | the type's current entity set, as the caller may read it |
 | `ngsi-ld://{space}/entities/{id}` | one entity, projected to the grant |
-| `schema://{endpointSlug}/v{n}/{artifact}` | a rendered schema artifact, for example `model.shacl.ttl` (EP-52) |
+| `schema://{endpointSlug}/v{n}/{artifact}` | a rendered schema artifact; `{artifact}` is the `format` name the summary publishes (`linkml`, `json-schema`, `context`, `shacl`, `owl`, `rdf`, `markdown`), and the REST file name (`model.shacl.ttl`) names the same document (EP-52) |
 | `access://{endpointSlug}` | the caller's effective grant document (EP-60) |
 
 The Portal's own server addresses its resources under `jc://` (AG-81):

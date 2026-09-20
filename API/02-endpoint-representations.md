@@ -534,7 +534,11 @@ being kept back: a caller who reads `internalNote` in a list of what they may no
 attribute exists, on which type, and that it was worth hiding. A caller for whom nothing was left out
 gets no `redacted` key at all, so its absence is the whole answer and its presence tells them to ask
 for wider access rather than to guess. The same rule holds for the MCP `describe_schema` summary,
-which is the same document.
+which is the same document with the reading order added: `recommended: "linkml"` and one entry per
+artifact carrying its `format`, `mediaType`, `bytes`, `sha256` and `schema://` URI, LinkML first.
+Those entries are listed per model major rather than per model, because a major is what a fetch
+addresses — two models of one major render into one document — and the digest is of the bytes that
+fetch returns, the same digest the REST index publishes and the same one the `ETag` carries.
 
 ## 7b. Access surface (`access`)
 
