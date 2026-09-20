@@ -97,7 +97,7 @@ anything reads them, whatever the client sent ([GW20](../Requirements/gateway-fi
 | `NGSILD-Warning` | response | what the caller has to know to read the answer they got: which entity types this request was not allowed to select on, because it filters or orders on an attribute they do not serve on this endpoint. Sent to every caller, and it names only types the caller may read ([MP-02](../Requirements/model-projections.md), [R9](../Requirements/access-control.md)) |
 | `NGSILD-Results-Count` | response | the broker's count of the matching entities, forwarded only when the gateway dropped none of them; an answer the gateway narrowed carries no count, because the difference is the number of entities withheld ([R22](../Requirements/access-control.md)) |
 | `Cache-Control: private, no-store` | response | every answer is one caller's, because it is the intersection of the URL with that caller's grants; a shared cache may not store it. A document the gateway wants revalidated instead of re-read carries `private, no-cache` with a strong `ETag` ([EP-51](../Requirements/endpoints.md), [R9](../Requirements/access-control.md)) |
-| `Vary: Authorization, Accept, NGSILD-Results-Restricted` | response | what the answer differs by, so a cache keyed on the URL alone cannot mix two callers ([R9](../Requirements/access-control.md)) |
+| `Vary: Authorization, Accept, Accept-Language, NGSILD-Results-Restricted` | response | what the answer differs by, so a cache keyed on the URL alone cannot mix two callers ([R9](../Requirements/access-control.md)). `Accept-Language` is among them because a `LanguageProperty` is flattened to the caller's own language in a GeoJSON feature (§6) and in the OGC landing page ([EP-37](../Requirements/endpoints.md), [EP-32](../Requirements/endpoints.md)) |
 | `X-Userinfo`, `X-Access-Token`, `X-Allowed-Scope-Ids`, `X-Endpoint-Slug`, `X-Consumer-Identity` | request | identity, established from the verified token only |
 
 The signal is asked for rather than volunteered because it tells a caller that something was
@@ -148,7 +148,7 @@ Converts spatial NGSI-LD entities into standard RFC 7946 GeoJSON.
 
 - **Feature `id`:** Bound to the entity URN.
 - **`geometry`:** Extracted from the primary `location` or `GeoProperty`.
-- **`properties`:** Normalized attributes flattened to simple key-value pairs.
+- **`properties`:** Normalized attributes flattened to simple key-value pairs, by the table of §6: the value under the attribute's own name, and the `unitCode` and `observedAt` it carries under `{name}_unitCode` and `{name}_observedAt`. An attribute that carries neither gains no keys, and a `LanguageProperty` is the one text of the caller's `Accept-Language`, which the answer names in `Vary` ([EP-37](../Requirements/endpoints.md)).
 
 ```json
 {
@@ -164,7 +164,8 @@ Converts spatial NGSI-LD entities into standard RFC 7946 GeoJSON.
       "properties": {
         "type": "WeatherObserved",
         "temperature": 22.4,
-        "observedAt": "2026-08-15T12:00:00Z"
+        "temperature_unitCode": "CEL",
+        "temperature_observedAt": "2026-08-15T12:00:00Z"
       }
     }
   ]
