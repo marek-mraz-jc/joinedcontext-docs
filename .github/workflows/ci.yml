@@ -113,6 +113,7 @@ jobs:
           set -eu
           python3 scripts/check-readme-commands.py --selftest
           python3 scripts/check-readme-commands.py
+      - run: python3 scripts/validate-doc-manifests-with-jcctl.py --selftest
       - name: each checker fails the corpus it is meant to reject
         run: |
           set -eu
@@ -136,3 +137,38 @@ jobs:
           python3 scripts/test-curl-snippets.py --selftest
           python3 scripts/report-pr-impact.py --selftest
           bash scripts/audit-security-checklist.sh --selftest
+
+  manifests:
+    # The documented manifests through the real `jcctl validate` (T-2143). It is its own job
+    # because it needs a Rust toolchain: the schema leg in `checks` above is what a manifest
+    # looks like, this is what the reconciler would accept — the typed parse that refuses an
+    # unknown field beside a `secretRef`, the metadata rules (MF-02) and the path a kind
+    # belongs at (MF-06). Same pinned tag as the truth gate, and the cache keeps it near a
+    # minute after the first run.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env: { JC_PLATFORM_TAG: jc-core-v0.7.46 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with: { python-version: "3.12" }
+      - run: pip install --quiet --disable-pip-version-check pyyaml==6.0.3
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+      - name: the platform at the tag whose reconciler these manifests are held to
+        run: |
+          set -eu
+          mkdir -p "${RUNNER_TEMP}/platform"
+          curl -sSL "https://github.com/marek-mraz-jc/joinedcontext-platform/archive/refs/tags/${JC_PLATFORM_TAG}.tar.gz" \
+            | tar -xz -C "${RUNNER_TEMP}/platform" --strip-components=1
+          test -f "${RUNNER_TEMP}/platform/Cargo.toml"
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with: { workspaces: "${{ runner.temp }}/platform" }
+      - name: build the reconciler the examples are validated by
+        working-directory: ${{ runner.temp }}/platform
+        run: cargo build -p jcctl --locked
+      - name: the extractor and the verdicts
+        env: { JC_JCCTL: "${{ runner.temp }}/platform/target/debug/jcctl" }
+        run: |
+          set -eu
+          python3 scripts/validate-doc-manifests-with-jcctl.py --selftest
+          python3 scripts/validate-doc-manifests-with-jcctl.py

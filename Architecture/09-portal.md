@@ -85,6 +85,7 @@ apiVersion: joinedcontext.com/v1alpha1
 kind: UiSchema
 metadata:
   name: endpoint
+  namespace: org
 spec:
   for: Endpoint                      # the kind whose form this arranges
   order: [name, slug, audience, enabledRepresentations, caching]

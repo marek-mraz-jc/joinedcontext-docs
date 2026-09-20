@@ -4,10 +4,12 @@
 Every ```http and ```bash block under `API/`, `User-Guide/` and `Architecture/` is parsed: a
 request line and its headers must be well formed, a documented response must carry a real status
 line, no example may print a whole bearer token, and no `curl` may reach for `--insecure` or plain
-http. With `JC_BASE_URL` set, the safe requests are executed against that deployment and their
-status compared with the documented response. Only GET, HEAD and OPTIONS ever run: a documented
-write is reported as not executed, because a documentation test must not create entities on a
-shared cluster.
+http. With `JC_BASE_URL` set, the safe requests are executed against that deployment, their
+status compared with the documented response, and every top-level member the documented answer
+shows is looked for in the live one (T-2143): a page that promises a field the platform no
+longer returns is a page a reader writes broken code against. Only GET, HEAD and OPTIONS ever
+run: a documented write is reported as not executed, because a documentation test must not
+create entities on a shared cluster.
 
     JC_BASE_URL=https://host [JC_TOKEN=…] [JC_VAR_project=bb] test-curl-snippets.py [docs-root]
     test-curl-snippets.py --selftest
@@ -15,7 +17,11 @@ shared cluster.
 
 from __future__ import annotations
 
+import contextlib
+import http.server
+import json
 import os
+import threading
 import re
 import sys
 import tempfile
@@ -73,7 +79,7 @@ def _lint_request(where: str, lines: list[str]) -> tuple[list[str], dict[str, st
 
 def check(root: Path) -> list[str]:
     problems: list[str] = []
-    requests: list[tuple[str, str, str, dict[str, str], int | None]] = []
+    requests: list[tuple[str, str, str, dict[str, str], int | None, list[str]]] = []
 
     for folder in FOLDERS:
         directory = root / folder
@@ -107,11 +113,16 @@ def check(root: Path) -> list[str]:
                     header_problems, headers = _lint_request(where, [line for line in lines])
                     problems += header_problems
                     expected: int | None = None
+                    members: list[str] = []
                     if index + 1 < len(found):
-                        next_body = [line for line in found[index + 1][2] if line.strip()]
+                        next_lines = found[index + 1][2]
+                        next_body = [line for line in next_lines if line.strip()]
                         if next_body and STATUS.match(next_body[0]):
                             expected = int(STATUS.match(next_body[0]).group(1))
-                    requests.append((where, request.group(1), request.group(2), headers, expected))
+                            members = documented_members(next_lines)
+                    requests.append(
+                        (where, request.group(1), request.group(2), headers, expected, members)
+                    )
                 elif info.startswith(("bash", "sh", "shell", "console")):
                     for offset, line in enumerate(lines):
                         if "curl" not in line:
@@ -133,7 +144,7 @@ def check(root: Path) -> list[str]:
         return problems
 
     token = os.getenv("JC_TOKEN")
-    for where, method, target, headers, expected in requests:
+    for where, method, target, headers, expected, members in requests:
         if method not in SAFE:
             print(f"{where}: {method} is a write, not executed", file=sys.stderr)
             continue
@@ -149,9 +160,11 @@ def check(root: Path) -> list[str]:
             request.add_header(name, value)
         if token:
             request.add_header("Authorization", f"Bearer {token}")
+        answer = b""
         try:
             with urllib.request.urlopen(request, timeout=20) as response:
                 status = response.status
+                answer = response.read(1_000_000)
         except urllib.error.HTTPError as err:
             status = err.code
         except Exception as err:  # a connection failure is a finding, not a crash
@@ -159,9 +172,79 @@ def check(root: Path) -> list[str]:
             continue
         if expected is not None and status != expected:
             problems.append(f"{where}: {method} {url} answered {status}, the page documents {expected}")
-        elif expected is None and status >= 500:
+            continue
+        if expected is None and status >= 500:
             problems.append(f"{where}: {method} {url} answered {status}")
+            continue
+        for member in missing_members(members, answer):
+            problems.append(
+                f"{where}: the page shows `{member}` in the answer and {url} does not return it"
+            )
     return problems
+
+
+def documented_members(lines: list[str]) -> list[str]:
+    """The top-level members of the JSON body a documented response shows.
+
+    The body is what follows the blank line after the status line and its headers. A body that
+    is elided (`…`), is not JSON, or is not an object has no members to look for — an example
+    that shows nothing promises nothing.
+    """
+    try:
+        blank = lines.index("")
+    except ValueError:
+        return []
+    body = "\n".join(lines[blank + 1 :]).strip()
+    if not body or "…" in body or "..." in body:
+        return []
+    try:
+        document = json.loads(body)
+    except json.JSONDecodeError:
+        return []
+    return sorted(document) if isinstance(document, dict) else []
+
+
+def missing_members(members: list[str], answer: bytes) -> list[str]:
+    """The documented members the live answer does not carry.
+
+    A live answer may hold more than the page shows — a page prints what a reader needs — so
+    only the other direction is a finding: a member the documentation promises and the platform
+    no longer returns.
+    """
+    if not members or not answer:
+        return []
+    try:
+        document = json.loads(answer.decode("utf-8", errors="replace"))
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(document, dict):
+        return []
+    return [member for member in members if member not in document]
+
+
+@contextlib.contextmanager
+def serving(body: bytes):
+    """A deployment that answers, for the leg of the self-test that needs one."""
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):  # noqa: N802 - the name http.server requires
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, *_args):
+            """Quiet: the self-test prints its own verdict."""
+
+    server = http.server.HTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield f"http://127.0.0.1:{server.server_port}"
+    finally:
+        server.shutdown()
+        server.server_close()
 
 
 def selftest() -> int:
@@ -230,6 +313,29 @@ curl -s https://portal.example.com/api/v1/auth/me
         found = check(root)
         if not any("could not be reached" in problem for problem in found):
             failures.append(f"an unreachable deployment was not reported: {found}")
+
+        # T-2143: the answer's shape, against a deployment that really answers. The page
+        # promises `items` and `total`; the stub returns `items` alone.
+        with serving(b'{"items": [], "cursor": null}') as base:
+            os.environ["JC_BASE_URL"] = base
+            documented = page.replace("{project}", "bb").replace(
+                "Content-Type: application/json\n```",
+                'Content-Type: application/json\n\n{"items": [], "total": 0}\n```',
+            )
+            (root / "API" / "01-portal-api.md").write_text(documented, encoding="utf-8")
+            found = check(root)
+            if not any("shows `total` in the answer" in problem for problem in found):
+                failures.append(f"a member the page promises and the answer lacks: {found}")
+            if any("shows `items`" in problem for problem in found):
+                failures.append(f"a member the answer does carry was reported: {found}")
+            # A live answer holding more than the page shows is not a finding.
+            shown = page.replace("{project}", "bb").replace(
+                "Content-Type: application/json\n```",
+                'Content-Type: application/json\n\n{"items": []}\n```',
+            )
+            (root / "API" / "01-portal-api.md").write_text(shown, encoding="utf-8")
+            if check(root):
+                failures.append("an answer richer than the example was reported")
         os.environ.pop("JC_BASE_URL")
 
     for failure in failures:
@@ -237,8 +343,9 @@ curl -s https://portal.example.com/api/v1/auth/me
     if failures:
         return 1
     print("ok: a printed token, a duplicate or garbled header, a block that is neither request nor "
-          "response, an insecure or plain-http curl, an empty chapter and an unreachable deployment "
-          "all go red, and a documented write is never executed")
+          "response, an insecure or plain-http curl, an empty chapter, an unreachable deployment "
+          "and a member the page promises but the answer lacks all go red; a documented write is "
+          "never executed and a richer answer is not a finding")
     return 0
 
 

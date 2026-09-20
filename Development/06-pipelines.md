@@ -16,6 +16,7 @@ kind: Pipeline
 apiVersion: joinedcontext.com/v1alpha1
 metadata:
   name: parking-mqtt-ingest
+  namespace: banskabystrica
   title:
     en: "Parking MQTT Telemetry Feed"
 spec:
