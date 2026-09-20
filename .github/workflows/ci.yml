@@ -42,6 +42,7 @@ jobs:
           test -n "$(ls -A "${RUNNER_TEMP}/kinds")"
           echo "JC_SCHEMAS_DIR=${RUNNER_TEMP}/kinds" >> "$GITHUB_ENV"
       - run: python3 scripts/validate-doc-manifests.py
+      - run: python3 scripts/check-kpi-entities.py
       - run: python3 scripts/test-curl-snippets.py
       - uses: actions/setup-node@v4
         with: { node-version: "22" }
@@ -72,6 +73,7 @@ jobs:
           python3 scripts/audit-i18n-docs.py --selftest
           python3 scripts/verify-openapi-snippets.py --selftest
           python3 scripts/validate-doc-manifests.py --selftest
+          python3 scripts/check-kpi-entities.py --selftest
           python3 scripts/test-curl-snippets.py --selftest
           python3 scripts/report-pr-impact.py --selftest
           bash scripts/audit-security-checklist.sh --selftest
