@@ -34,6 +34,7 @@ Family **PL** (PL-01…PL-57). Owning chapter: [Architecture/08-pipelines.md](..
 - **PL-11** [P] — The default resource allocation for a project Pipeline Runner Deployment SHALL be memory request `256Mi`, limit `1024Mi`, and CPU request `100m`, limit `1000m`.
 - **PL-12** [P] — An individual Pipeline Runner Deployment MUST NOT host more than 50 concurrent resident streams, partitioning across multiple runner pools when exceeded.
 - **PL-13** [P] — Idle resident streams MUST maintain a memory footprint not exceeding 30 MiB per stream.
+  > Note: Not measured yet. [Architecture/08 §2](../Architecture/08-pipelines.md#2-bento-streams-mode-architecture) gives 15–30 MiB as the range observed, and no benchmark holds a runner to it. The check is a runner benchmark in the performance lane ([Testing/05 §5](../Testing/05-deployment-and-performance-tests.md#5-the-k6-budgets)): idle streams added one by one, the runner's resident memory read after each. Phase `next`.
 
 ## 5. Secret Handling and Reference Resolution
 
@@ -56,6 +57,7 @@ Family **PL** (PL-01…PL-57). Owning chapter: [Architecture/08-pipelines.md](..
 - **PL-23** [S] — NetworkPolicies applied to Pipeline Runner pods MUST enforce default-deny egress, permitting connections only to the Context Gateway port, explicitly declared external targets, and in-cluster DNS.
 - **PL-24** [P] — Resident Pipeline Runners MUST expose Prometheus metrics on a dedicated port (`/metrics`), exporting per-stream throughput, error counts, latency histograms, and buffer depths.
 - **PL-25** [P] — Unrecoverable processing failures MUST be routed to an explicit dead-letter mechanism, transitioning consecutive failures exceeding thresholds to `Error` status (CC-33).
+  > Note: Not built. Today a write the gateway answers with 400, 413 or 422 drops its batch and counts it under the output's label (the Portal's `reconciler/streams.rs` `gateway_output`), and a stream the runner refuses sets the Pipeline to `Error` with the runner's reason. No dead-letter store and no failure threshold exist. Phase `next`.
 
 ## 8. Class Selection Rules
 

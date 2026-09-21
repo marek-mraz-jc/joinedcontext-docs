@@ -545,7 +545,7 @@ output:
    - An environment variable is read once, when the pod starts, so the reconciler stamps the Secret's content hash on the runner's pod template. A changed credential rolls the runner; an unchanged one rolls nothing.
    - The value is in the Secret and nowhere else: not in the stream the Portal posts to the runner, not in a ConfigMap, not in a plan, a log line or an activity entry (PL-17).
 3. **Network Isolation:** Every Project Pipeline Runner deployment runs within its own network policy boundary. Outbound internet egress is restricted to explicitly configured source endpoints declared in the pipeline envelope.
-4. **CI Linter Validation:** The Gitea Actions pipeline runs `bento lint` and input/output unit tests against mock payloads for every pipeline manifest before merging.
+4. **Lint before merge (PL-21, PL-22):** the platform's own lane runs `bento lint` and `bento test` over every `bento.yaml` it ships. A project's `bento.yaml` never passes through that lane: the runner lints it in the pipeline test (PL-43), which returns the lint errors with their line numbers before the pipeline is proposed. The organization repository's CI checks manifests (`jcctl validate`) and the author's role bindings, not Bento.
 5. **Ids that cannot claim another organization:** the runner's environment carries `JC_ORG_DOMAIN`, resolved by the reconciler from the project's Organization, and a mapping mints `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}` from that variable rather than from a literal (PF-42, PF-44, [Architecture/03 §3](03-domain-model.md#3-identity-and-urn-specification)). A pipeline that writes a domain of its own is refused at admission by the gateway, not silently accepted.
 
 ## 6. External Feeds: the `DataSource` Kind (MF-35, PL-39)
