@@ -27,6 +27,8 @@ The enforcement point in front of every broker surface (`context-gateway`).
 | `JC_ENVIRONMENT` | — | no | The overlay `JC_ENVIRONMENT` names, as `validate` and `plan` read it (CC-73). |
 | `JC_GATEWAY_BIND` | `0.0.0.0:8080` | no | The address to listen on (`JC_GATEWAY_BIND`, default `0.0.0.0:8080`). |
 | `JC_GATEWAY_BROKER_URL` | — | no | The broker to forward to, scheme and authority only (`JC_GATEWAY_BROKER_URL`). |
+| `JC_GATEWAY_DOMAIN_VERIFICATION` | `report` | no | `report` or `enforce` (`JC_GATEWAY_DOMAIN_VERIFICATION`, default `report`): whether a write waits for the Organization's verified domain (PF-41, Architecture/03 §3). |
+| `JC_GATEWAY_DOMAIN_VERIFICATIONS_URL` | — | no | The Portal's list of domain states (`JC_GATEWAY_DOMAIN_VERIFICATIONS_URL`, its internal listener's `/internal/domain-verifications`); required under `enforce`. |
 | `JC_GATEWAY_EGRESS_CA_BUNDLE` | — | no | A PEM file of extra trust anchors the notification egress trusts on top of the public roots (`JC_GATEWAY_EGRESS_CA_BUNDLE`), for subscribers behind the installation's own CA (R46). |
 | `JC_GATEWAY_EGRESS_PRIVATE_HOSTS` | — | no | Hosts inside the platform's own networks a notification may still be delivered to (`JC_GATEWAY_EGRESS_PRIVATE_HOSTS`, comma-separated); empty refuses them all (T-1302). |
 | `JC_GATEWAY_EGRESS_URL` | — | no | The base a rewritten `notification.endpoint.uri` carries (`JC_GATEWAY_EGRESS_URL`), which is the address the broker dials to deliver; the public URL when the deployment names none. |
