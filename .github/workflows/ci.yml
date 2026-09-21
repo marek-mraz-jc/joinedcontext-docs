@@ -133,6 +133,7 @@ jobs:
           python3 scripts/check-links.py --selftest
           python3 scripts/check-urns.py --selftest
           python3 scripts/check-front-matter.py --selftest
+          python3 scripts/check-architecture-map.py --selftest
           python3 scripts/verify-traceability.py --selftest
           python3 scripts/check-adr-register.py --selftest
           python3 scripts/check-glossary.py --selftest
