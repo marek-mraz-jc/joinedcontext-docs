@@ -18,25 +18,31 @@ ADR 011 (MQTT), `access-control.md` (R1–R43), `gateway-firewall.md`
 `../specs/websocket-binding.md` (WS-01, WS-05).
 
 Keywords MUST / SHOULD / MAY per RFC 2119. This document is canonical
-for the **SP-01…SP-21** family.
+for the **SP-01…SP-22** family.
 
 ## 1. URL scheme
 
 - **SP-01** — Every context space MUST be exposed under one stable base
   URL on the platform host: `https://{host}/cs/{space}`. `{space}` MUST
-  be the evidencia code from the organisation's data dictionary
-  (ADR 001); no second identifier scheme for spaces may be minted.
+  be the Context Space name of PF-09 (`^[a-z0-9-]+$`, unique in the
+  Organization); no second identifier scheme for spaces may be minted.
 - **SP-02** — URL ↔ URN MUST be a pure function: the entity
-  `urn:ngsi-ld:{Typ}:{Razidlo}:{Evidencia}:{Meno}` resolves at
-  `/cs/{Evidencia}/ngsi-ld/v1/entities/{urn}`, and the ADR 001 resolver
+  `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}` (PF-42) resolves at
+  `/cs/{space}/ngsi-ld/v1/entities/{urn}`, and the ADR 001 resolver
   (`https://id.…/{urn}`) is a string rewrite onto this scheme, no
   lookup table.
+  > Note: SP-01 and SP-02 were written with the legacy Slovak segment names
+  > (`{Typ}:{Razidlo}:{Evidencia}:{Meno}`) and an "evidencia code from the
+  > organisation's data dictionary". PF-09, PF-10 and PF-42 are the rule, and
+  > `{Razidlo}` is the organization's verified domain.
 - **SP-03** — Standard trees MUST appear intact under the space prefix:
   `/cs/{space}/ngsi-ld/v1/…` is byte-for-byte the CIM 009 resource tree
   (a stock NGSI-LD client pointed at the space base works unmodified,
   R15); `/cs/{space}/mcp` is a standard MCP Streamable HTTP endpoint;
   the WebSocket binding lives at `/cs/{space}/ngsi-ld/v1/ws` (the WS-01
   path under the prefix; `/cs/{space}/ws` MAY exist as a redirect).
+  > Note: The WebSocket binding is not built. The gateway upgrades no connection,
+  > and the specification it cites was never committed to this repository.
 - **SP-04** — The only child paths of a space are: `ngsi-ld/v1/`,
   `mcp`, `schema/`, `dump/`, and (private spaces)
   `.well-known/oauth-protected-resource`. No other invented segments;
