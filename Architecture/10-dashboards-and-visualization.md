@@ -14,10 +14,10 @@ The platform provides a declarative dashboarding and geospatial presentation eng
 |  Dashboard Manifest (kind: Dashboard)                                                             |
 |  ├── Page 1: Map View (MapLibre GL JS + deck.gl Overlay)                                          |
 |  │   ├── Layer 1: Air Quality Sensors (Style: circle, colorBy: pm10, native MapLibre)             |
-|  │   └── Layer 2: Organisational Traffic Flow (Style: line, sizeBy: intensity, deck.gl PathLayer)      |
+|  │   └── Layer 2: Organisational Traffic Flow (Style: line, sizeBy: intensity, native MapLibre)          |
 |  └── Page 2: Analytics View                                                                       |
 |      ├── Widget 1: Historical Temperature Chart (STA / Temporal API)                              |
-|      └── Widget 2: Asset Inventory Grid (AG Grid Table)                                           |
+|      └── Widget 2: Asset Inventory Grid (entity grid widget)                                      |
 +---------------------------------------------------------------------------------------------------+
 ```
 
@@ -120,8 +120,8 @@ flowchart TD
 
 ### 1. MapLibre GL JS Native Layers (< 50,000 features)
 
-- Used for discrete points, simple lines, and boundary polygons.
-- Utilizes native GPU-accelerated vector tile and GeoJSON source renderers.
+- Used for discrete points, lines, and boundary polygons (`ui/src/components/dashboards/rendering.ts`).
+- Draws GeoJSON sources over the raster basemap of §5.
 - Supports crisp vector styling, label collisions, and smooth zoom transitions.
 
 ### 2. deck.gl Layers (≥ 50,000 features or complex aggregations)
@@ -129,26 +129,21 @@ flowchart TD
 - Integrated over MapLibre using `@deck.gl/mapbox` `MapboxOverlay`.
 - Used for high-density spatial datasets (e.g. city-wide parking telemetry, GPS tracks, lidar point clouds).
 - Supported Layer Types:
-  - `HexagonLayer` & `GridLayer` for 3D dynamic density aggregation.
-  - `HeatmapLayer` for real-time spatial heatmaps.
-  - `TripsLayer` for temporal vehicle movement trajectories.
+  - `HexagonLayer` for density aggregation.
+  - `HeatmapLayer` for spatial heatmaps.
+  - `ScatterplotLayer` for large point sets and `GeoJsonLayer` for large line and polygon sets (`DeckGlOverlay.tsx`).
 
 ---
 
-## 3. DataModel-Driven Filter Generation
+## 3. Layer Queries
 
-The dashboard layer connects directly to the Context Space's compiled LinkML DataModel:
+A layer's query is its manifest's, not a control the viewer sets: the Portal takes the Layer's static `filter` (`q`, `scopeQ`, `geoQ`), adds the bounding box of the current viewport, and requests the Endpoint's GeoJSON projection (`ui/src/routes/DashboardsPage.tsx`):
 
-1. **Attribute Discovery:** The LinkML schema exposes all properties, numeric ranges, and enumerated values for an entity type.
-2. **Filter Controls:** Filter selection panels are auto-generated from schema definitions:
-   - Numerical attributes (`type: number`) generate slider and range controls.
-   - Categorical attributes (`type: string`, `enum`) generate multi-select checkbox lists.
-   - Geometry attributes generate spatial bounding-box tools.
-3. **Query Compilation:** When an operator adjusts a UI filter, the Portal UI compiles settings directly into standard NGSI-LD `q`, `scopeQ`, and `geoQ` query strings, which are submitted to the Endpoint's GeoJSON projection:
+```text
+GET /api/endpoint/{endpointSlug}/file.geojson?type=AirQualityObserved&q=pm10>=25&scopeQ=/geo/FI/HKI/#
+```
 
-   ```text
-   GET /api/endpoint/{endpointSlug}/file.geojson?type=AirQualityObserved&q=pm10>=25&scopeQ=/geo/FI/HKI/#
-   ```
+The dashboard view has no filter panel. Changing what a layer shows is a change to its manifest.
 
 ---
 
@@ -157,13 +152,13 @@ The dashboard layer connects directly to the Context Space's compiled LinkML Dat
 To prevent data leaks and broken references:
 
 - **Audience Enforcement:** A Dashboard marked `visibility: public` MUST bind exclusively to Layers whose `sourceEndpointRef` points to an Endpoint configured with `audience: public`.
-- **CI Verification:** Gitea Actions CI validates this constraint on every pull request. If a public dashboard references an internal or project-restricted endpoint, the CI check fails with a fatal validation error.
+- **Write-time check:** The Portal refuses a write that leaves a public dashboard reading through an Endpoint that is not public, with `400` naming UI-19 (`src/dashboards.rs`, called from `src/api/mutate.rs`), and the dashboard view refuses to fetch such a layer. No CI workflow checks it.
 
 ### Dashboards and Applications (AP-64)
 
 Dashboards and Applications on Demand serve complementary visualization needs but adhere to strict architectural separation:
 
-- A **Dashboard** is a declarative configuration manifest (`kind: Dashboard` and `kind: Layer`) organizing map and analytics pages bound to Endpoints, rendered natively in the Portal UI or routed to an addon (such as Grafana for SensorThings API temporal charts). Dashboards are authored via form or YAML, declare layers over existing Endpoints, and involve zero generated code.
+- A **Dashboard** is a declarative configuration manifest (`kind: Dashboard` and `kind: Layer`) organizing map and analytics pages bound to Endpoints, rendered natively in the Portal UI. Dashboards are authored via form or YAML, declare layers over existing Endpoints, and involve zero generated code.
 - An **Application** is a purpose-built web tool generated by an AI agent from a prompt and confirmed `dataNeeds` (Architecture/16). It consists of a kit specification (`spec.json`) or full-stack application code, deployed behind the APISIX edge login.
 
 The Portal's dashboard surface never generates application code, and the Applications generator never creates Dashboard manifests (AP-64). Both may query the same Endpoint simultaneously.
@@ -172,16 +167,16 @@ The Portal's dashboard surface never generates application code, and the Applica
 
 ### Basemap Platform Route (AP-67)
 
-To prevent location data leakage to third-party services and adhere to sandboxed preview frame isolation, MapLibre GL JS layers MUST NOT load basemap tiles or styles directly from external tile providers. All basemap assets route through authenticated Portal API endpoints:
+To prevent location data leakage to third-party services and adhere to sandboxed preview frame isolation, MapLibre GL JS layers MUST NOT load basemap tiles or styles directly from external tile providers. All basemap assets route through two Portal routes (`src/api/basemap.rs`):
 
-- `GET /api/v1/projects/{project}/basemap/{style}/{z}/{x}/{y}.{ext}`
+- `GET /api/v1/projects/{project}/basemap/{style}/{z}/{x}/{tile}`, where `{tile}` is `{y}` with an optional `.png`, `.jpg` or `.jpeg` (none means PNG). AP-67 writes it `{y}.{ext}`; the URL on the wire is the same.
 - `GET /api/v1/projects/{project}/basemap/{style}/style.json`
 
-The route authenticates callers using platform session cookies or bearer tokens. Coordinate parameters (`z`, `x`, `y`) are validated against integer bounds before querying upstream sources. Upstream providers are configured in deployment environment settings (URL template, attribution text, zoom range, and optional API keys stored in `secretRef`, never disclosed to clients). The Portal caches tiles on disk up to a configured storage ceiling with TTL eviction. Mandatory attribution is displayed on the map canvas. If no basemap upstream is configured, the route returns HTTP 404 (`application/problem+json`); vector layers render against a neutral background with a clear notice (AP-67).
+The routes take no session, because a sandboxed preview holds none and a basemap carries none of the platform's data (AP-67). They answer any origin (`Access-Control-Allow-Origin: *`), only for a project that exists, and at most 600 requests a minute per client IP, so they are not a general proxy. `z` must be a whole number up to the configured maximum zoom, and `x` and `y` must each be below 2^z; anything else answers `400` before the upstream is asked. Operators configure the upstream with `JC_BASEMAP_URL` (an `https` template), `JC_BASEMAP_ATTRIBUTION` (required when the URL is set), `JC_BASEMAP_MAX_ZOOM`, and `JC_BASEMAP_KEY_FILE`, the path of a mounted file holding the provider's key, which the Portal substitutes upstream and never sends to a browser. The Portal caches tiles on disk (`JC_BASEMAP_CACHE_DIR`, bounded by `JC_BASEMAP_CACHE_MAX_BYTES` and `JC_BASEMAP_CACHE_TTL_SECS`). If no upstream is configured, both routes answer `404` problem details: an application map built on the SDK draws its data over a plain background with a notice, and the Portal's dashboard map falls back to the plain background without one.
 
 ### In-Browser Artifact Generation (AP-66)
 
-Visualizations support exporting on-screen data as artifacts (PDF, PNG, CSV, GeoJSON). Artifacts are synthesized in the client browser using Web APIs, requiring no separate backend export jobs or external network connections. Every artifact is stamped with the Endpoint identifier, active filter parameters, and creation timestamp. PDF exports include basemap attribution (AP-66).
+Generated Applications export on-screen data as PDF, PNG, CSV or GeoJSON through the app SDK (`sdk/src/artifact.ts`), built in the browser from what the view already holds, with no backend job and no new network host. The Portal's own dashboards have no export. Today only the PDF carries a stamp (the Endpoint name, the filters and the export time), and it carries the basemap attribution only when the caller passes one; the template's export button passes neither the filters nor the attribution. AP-66 asks for a stamp on every format and the attribution on every PDF, so the SDK falls short of it there.
 
 ## Related
 

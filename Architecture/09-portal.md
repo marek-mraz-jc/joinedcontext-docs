@@ -21,8 +21,8 @@ The joinedcontext Portal is **one application** (repository `joinedcontext-porta
 |         |                                      |                                  |               |
 |         v (Mirror Read)                        v (Git Operations)                 v (Preferences) |
 |    +------------------------+             +---------------+                  +------------------+ |
-|    | Read-Only Live DB      |             | Gitea Git API |                  | PostgreSQL       | |
-|    | Mirror (from jcctl)  |             | (PRs, Commits)|                  | (User Prefs DB)  | |
+|    | In-memory mirror of    |             | Gitea Git API |                  | PostgreSQL       | |
+|    | the repository         |             | (PRs, Commits)|                  | (Portal state)   | |
 |    +------------------------+             +---------------+                  +------------------+ |
 +---------------------------------------------------------------------------------------------------+
 ```
@@ -33,19 +33,18 @@ The Portal API operates as a thin, stateless coordinator. It exposes administrat
 
 ### Technical Stack
 
-- **Framework:** `axum` with `tower` middleware (compression, tracing, CORS, security headers).
-- **Database Layer:** `sqlx` connecting to PostgreSQL using connection pooling and compile-time SQL query verification.
+- **Framework:** `axum` with `tower-http` middleware for tracing and security headers, and CORS on the MCP route alone.
+- **Database Layer:** `sqlx` connecting to PostgreSQL through a connection pool, with the schema in `migrations/`. Queries are checked by the integration suites against a real database, not at compile time.
 - **API Documentation:** `utoipa` generates OpenAPI 3.1 specifications directly from Rust structs and controller handlers.
 - **Typing Integrity:** The `openapi.json` contract is exported to the frontend build pipeline, which compiles TypeScript definitions using `openapi-typescript`.
 
 ### Database Architecture
 
-The Portal API connects to four database schemas:
+The Portal reads the repository into an in-memory mirror (`src/store.rs`, a `RwLock<BTreeMap>` of every manifest and its reported status), filled by its own sync from the default branch and refreshed on each Gitea webhook. Every read of organizations, projects, spaces, endpoints and pipeline states answers from it without asking Git. PostgreSQL holds the Portal's own state (`migrations/`), among it:
 
-1. **Live State Mirror (Read-Only):** Maintained by `jcctl apply` and context broker change notifications. Allows rapid querying of organizations, projects, context spaces, active endpoints, and pipeline execution states without querying Git.
-2. **User Preferences (Read-Write):** Stores non-configuration Tier 2 user state (UI themes, language selections, favorite projects, table layout settings, saved map views).
-3. **Logout marks (Read-Write):** One row per subject whose sessions a back-channel logout ended, and the moment it ended them: every session of that subject issued at or before it is refused. They live in the process for the request path and in the database so a restart does not re-accept a session somebody logged out (T-0980). A mark is kept 48 hours, which is longer than any session can live, and is read back when the process starts. A Portal deployed without a database keeps the marks of its own run only, and says so in its log.
-4. **Reconciler Memory (Read-Write):** What a scheduled loop has to remember between two runs and across a restart — for a `SyncSource` (MF-30): the source revision the repository carries, when the last run happened, the proposal a run opened and nobody has answered, why the last run failed, and whether an operator paused it. No credential and no copy of a source is here; the manifests stay in Git. A Portal deployed without a database still runs the loops and keeps this in memory, at the cost of one duplicate proposal per source with a run in flight when it restarts.
+1. **User Preferences (Read-Write):** Stores non-configuration Tier 2 user state (UI themes, language selections, favorite projects, table layout settings, saved map views).
+2. **Logout marks (Read-Write):** One row per subject whose sessions a back-channel logout ended, and the moment it ended them: every session of that subject issued at or before it is refused. They live in the process for the request path and in the database so a restart does not re-accept a session somebody logged out (T-0980). A mark is kept 48 hours, which is longer than any session can live, and is read back when the process starts. A Portal deployed without a database keeps the marks of its own run only, and says so in its log.
+3. **Reconciler Memory (Read-Write):** What a scheduled loop has to remember between two runs and across a restart — for a `SyncSource` (MF-30): the source revision the repository carries, when the last run happened, the proposal a run opened and nobody has answered, why the last run failed, and whether an operator paused it. No credential and no copy of a source is here; the manifests stay in Git. A Portal deployed without a database still runs the loops and keeps this in memory, at the cost of one duplicate proposal per source with a run in flight when it restarts.
 
 ### Liveness and readiness
 
@@ -62,7 +61,6 @@ The Portal UI delivers an enterprise-grade experience for domain stewards, platf
 - **Application Shell:** Vite + React 19 + TypeScript (strict mode enabled).
 - **Routing & State:** TanStack Router (type-safe routing) and TanStack Query (server-state synchronization, caching, and optimistic updates).
 - **Component Primitives:** Radix UI headless primitives styled with Tailwind CSS.
-- **Tabular Data:** AG Grid Community for high-performance sorting, filtering, and row virtualization on large datasets.
 - **Geospatial Presentation:** MapLibre GL JS combined with deck.gl (`@deck.gl/mapbox`).
 
 ### Schema-Driven Form Generation (CC-31)
@@ -70,12 +68,12 @@ The Portal UI delivers an enterprise-grade experience for domain stewards, platf
 Administrative forms are never hard-coded. They are dynamically generated from LinkML-compiled **JSON Schema draft-07** definitions using `react-jsonschema-form` (RJSF):
 
 - **Parameter Forms:** Instantiating a Blueprint loads the blueprint's `params.schema.json` and renders corresponding fields (text, number, enums, dates).
-- **UI Schemas:** Layout properties (widget types, grid columns, order, field grouping) are loaded from declarative `*.uischema.yaml` files committed in the `portal/forms/` directory (UI-02).
+- **UI Schemas:** Layout properties (widget types, grid columns, order, field grouping) come from declarative `*.uischema.yaml` manifests: the Portal ships a default per kind in `ui/src/schemas/forms/`, and an organization overrides it with a manifest in `portal/forms/` of its configuration repository, which `GET /api/v1/forms` serves (UI-02).
 - **Asynchronous Pickers:** Custom RJSF widgets query live Endpoints via the Context Gateway to populate entity selection dropdowns (e.g. selecting an existing sensor).
 
 #### The `kind: UiSchema` manifest (UI-02)
 
-One manifest per kind, at `portal/forms/{name}.uischema.yaml`. It arranges a form; it never
+One manifest per kind, at `portal/forms/{name}.uischema.yaml` in the configuration repository. It arranges a form; it never
 declares a field. Everything renderable comes from the JSON Schema, so a manifest naming a
 field the schema does not have arranges nothing, and a field the manifest does not mention is
 still rendered in schema order after the ones that are.
@@ -140,7 +138,6 @@ one-line description as the handle a person clicks or tabs to. Every field of a 
 page, so nothing is hidden from a search, from the keyboard or from a screen reader — it is shut, not
 removed. A group that holds a **required** field is never folded, whatever the manifest says: a form
 that insists on a field it does not show is a dead end, and the Portal unfolds it instead of arguing.
-The first group is never folded either.
 
 Beside the form's buttons the Portal says how much of what it insists on is in: *"2 of 3 required
 fields filled"*, counted from the schema's `required` — the object's own and every required object
@@ -193,9 +190,10 @@ destination rather than "link".
 example on every field before anything is committed to `portal/forms/`. A manifest in the
 configuration repository then overrides the default **field by field**: an organization that writes
 `help` for one field keeps the shipped help on the others, and `order` or `groups` it writes replace
-the shipped ones whole, because a half-replaced order is not an order. The forms with a shipped
-default are ContextSpace, Endpoint, DataSource, SyncSource, Pipeline, Dashboard and Layer — the seven
-the Portal renders `ResourceFormDialog` for.
+the shipped ones whole, because a half-replaced order is not an order. The Portal ships a default
+(`ui/src/schemas/forms/`) for sixteen kinds: App, ContextSourceRegistration, ContextSpace, Dashboard,
+DataModel, DataSource, Endpoint, Group, Layer, Mapping, Pipeline, Policy, Role, ServiceAccount,
+Subscription and SyncSource.
 
 **`metadata.name` is `spec.for` lowercased**, which is why the example above is `endpoint` and
 not `Endpoint`. Every `metadata.name` on this platform is a DNS-1123 label (MF-02) and a label
@@ -205,8 +203,8 @@ is refused, because the path a reader predicts from the kind has to be the path 
 
 **The widget vocabulary is the Portal's, not the manifest's.** `widget` names a widget the
 Portal has registered: an RJSF built-in (`text`, `textarea`, `select`, `checkboxes`, `radio`,
-`range`, `color`, `date`, `date-time`, `password`, `updown`, `hidden`) or one of the Portal's
-own (`entityPicker` today). A name outside that set is dropped with the reason rather than
+`range`, `color`, `date`, `date-time`, `password`, `updown`, `hidden`, `checkbox`, `email`,
+`uri`) or one of the Portal's own (`entityPicker`, `operations`, `resourcePicker`, `secretRef`). A name outside that set is dropped with the reason rather than
 passed through, because RJSF throws on an unknown widget and a form that does not render is a
 worse answer than a form with a default input.
 
@@ -243,18 +241,8 @@ switched from the dialog's footer.
 The Portal UI provides complete internationalization support:
 
 - **Shipped Locales:** Slovak (`sk`, default), English (`en`), German (`de`), and Czech (`cs`).
-- **Message Format:** Bundles are stored in standard **ICU MessageFormat** JSON files in `portal/locales/`.
-- **Manifest Multi-Language Support:** Entity metadata titles and descriptions in repository manifests are defined as language maps:
-
-  ```yaml
-  metadata:
-    title:
-      fi: "Ilmanlaadun mittaus"
-      en: "Air Quality Monitoring"
-      de: "Luftqualitätsüberwachung"
-  ```
-
-  The UI dynamically displays the string matching the active user locale with fallback to Slovak.
+- **Message Format:** Bundles are **ICU MessageFormat** JSON files in `ui/src/locales/{sk,en,de,cs}.json`, read through `i18next-icu`.
+- **Titles in manifests:** A resource's `title` is one plain string in the language its author wrote it in (UI-50); the UI shows it as written. A language map written before UI-50 is still read.
 
 ---
 
@@ -306,18 +294,20 @@ The vocabulary is closed because a filter over free text is not a filter:
 
 | `kind` | Emitted by | When |
 |---|---|---|
-| `config.planned`, `config.applied`, `config.drifted` | reconciler | a plan, an apply, a difference between Git and the cluster |
-| `change.merged` | reconciler | a merge request became the desired state |
+| `config.applied`, `config.drifted` | reconciler | an apply, a difference between Git and the cluster |
+| `config.planned`, `change.merged` | reconciler | a plan; a merge request became the desired state. Accepted, not emitted yet |
 | `pipeline.throughput` | pipeline | one minute of messages, as a count |
 | `pipeline.error` | pipeline | a mapping or output failure, with the failing sample redacted |
 | `pipeline.restarted` | pipeline | the runner restarted a stream |
 | `endpoint.traffic` | gateway | one minute of requests for one endpoint and representation |
 | `access.denied` | gateway | the PDP refused, naming the rule that refused |
-| `mcp.tool` | gateway, portal | an MCP tool call (AG-19); from the Portal, the person's answer to an elicitation before a Yellow or Red call proceeds (AG-63) |
+| `mcp.tool` | portal | an MCP tool call (AG-19); from the Portal, the person's answer to an elicitation before a Yellow or Red call proceeds (AG-63) |
 | `agent.answer` | portal | a person answered a question an assistant run asked with `jc_ask` (AG-80): the run, the question and who answered, never the words they typed (OPS-48) |
 | `federation.forward` | broker | a query forwarded to a Context Source, with latency |
 | `federation.error` | broker | a forward that failed or was cut off by the loop guard |
 | `catalogue.published` | CKAN publisher | a dataset created or updated, with the row count |
+
+The `pipeline.*`, `endpoint.traffic`, `access.denied` and `federation.*` kinds are part of the vocabulary and the collector's ingest route accepts them, but no pipeline runner, gateway or broker emits them yet; `mcp.tool` arrives from the Portal's own MCP only.
 
 ### Where it comes from, and what it is not
 
@@ -331,8 +321,7 @@ of the traces, built for reading, and a disagreement between it and them is sett
 favour (OPS-49).
 
 Two consequences are worth stating. Losing activity loses nothing that is not still in its
-sources, so retention is short: seven days of events, ninety days of the per-minute counters they
-aggregate into. And an event carries no payload: the `details` of a `pipeline.error` name the
+sources, so retention is short: seven days of events (`RETENTION_DAYS` in `src/activity.rs`). And an event carries no payload: the `details` of a `pipeline.error` name the
 stream, the processor and the reason, and the offending sample only after the data model's own
 masking rules have run over it (OPS-48). A stream of "what is happening" that quotes a citizen's
 record is a data leak with a friendly name.
@@ -392,7 +381,7 @@ The assistant workbench provides an interactive copilot available on every page 
 
 A round button labelled "Assistant" is fixed at the bottom right of every Portal page for a signed-in user (UI-51). It sits above page content and is accessible by keyboard navigation. Activating the bubble toggles the assistant panel docked to the right edge of the viewport.
 
-On viewports of 1024 px and wider, the panel occupies a width of 24 rem, and the main page content reflows so that no controls or data tables are obscured. On viewports narrower than 1024 px, the panel expands to full width. The panel drives UI navigation by processing `navigate` events (UI-45) across any active route without triggering a full page reload. The assistant operates exclusively from this right-docked panel or in full-screen mode; it never renders as a left column.
+On viewports of 768 px and wider, the panel occupies a width of 24 rem (40 rem while it builds an app), and the main page content reflows so that no controls or data tables are obscured. On narrower viewports the panel takes the full width. The panel drives UI navigation by processing `navigate` events (UI-45) across any active route without triggering a full page reload. The assistant operates exclusively from this right-docked panel or in full-screen mode; it never renders as a left column.
 
 The panel header contains accessible icon buttons with explicit tooltips and ARIA labels (UI-52):
 

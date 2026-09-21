@@ -23,16 +23,24 @@ joinedcontext platform adopts **Bento** (`warpstreamlabs/bento`, MIT license) as
 +---------------------------------------------------------------------------------------------------+
 ```
 
+**What runs today.**
+
+The Portal reconciler deploys one kind of pipeline: a **resident Bento stream** whose steps are runner processors or `bloblang` compute, reading a `DataSource` or an endpoint query (`eligible` in `joinedcontext-portal/src/reconciler/streams.rs`). Everything else on this page is specified and partly written, not running:
+
+- A pipeline with `mapping`, `wasm` or `container` compute is never deployed; it stays `Pending`.
+- The class rules of §1 and the derived-pipeline renderer of §3 (`runtime_of`, `cron_job` in `crates/jcctl/src/pipelines.rs`, `crates/jcctl/src/pipelines_derived.rs`) exist in jcctl and are called by its tests alone.
+- Scheduled CronJobs come from the `pipeline-runner` component's `scheduled` release, one per entry of its Helm values `pipelines:` (`components/pipeline-runner/charts/cronjob/templates/pipelines.yaml`), not from `Pipeline` manifests.
+- No `compute/` crate, no `analysis-runner` image and no build lane for either exists in any repository.
+
 ## 1. Resident vs. Scheduled Execution Matrix
 
 Pipelines declare their operational profile via `spec.class` in the manifest envelope. If set to `auto`, the platform determines execution topology automatically:
 
 | Ingestion Trigger / Cadence | Pipeline Class | Execution Target | Scaling & Resource Behavior |
 |---|---|---|---|
-| **Real-time Push:** MQTT, WebSockets, AMQP, Kafka, Webhook listeners (`http_server`) | `resident` | Project `pipeline-runner` Deployment (**Bento Streams Mode**). | Continuous execution; streams hot-reloaded via ConfigMap; scaled via HPA (CPU/Memory). |
+| **Real-time Push:** MQTT, WebSockets, AMQP, Kafka, Webhook listeners (`http_server`) | `resident` | Project `pipeline-runner` Deployment (**Bento Streams Mode**). | Continuous execution; streams created and replaced over the runner's API. One runner pod per project; the deployment configures no autoscaling (PL-12). |
 | **High-Frequency Polling:** API/database polling more often than every 30 seconds (period < 30 s). | `resident` | Project `pipeline-runner` Deployment (stream using Bento `generate` input with `interval`). | Stays in memory; at this cadence the per-run pod start (10–30 s) would exceed the period. |
 | **Scheduled Polling and Batch:** period ≥ 30 s, hourly/daily/weekly sync, bulk exports. | `scheduled` | Native Kubernetes **CronJob** running `bento -c bento.yaml`. | Ephemeral; scale-to-zero when idle; strict concurrency control (`Forbid`). |
-| **Business-Hours Only:** Active during specific operational hours. | `resident` | Project `pipeline-runner` scaled via **KEDA Cron Scaler** (0 ↔ N). | Scaled down to zero outside operating hours. Note: MQTT streams remain resident due to lack of MQTT KEDA scaler. |
 
 ---
 
@@ -51,7 +59,7 @@ subscription input that is driven by its source rather than by a clock.
 | period ≥ 60 s, expressible as cron | CronJob with `spec.schedule`, the cron expression; `count: 1` |
 | period ≥ 60 s, not expressible as cron (e.g. every 90 s) | CronJob at the largest divisor (every minute) with `interval`/`count` as above |
 
-Trade-off named for operators: a sub-minute scheduled pipeline pays a pod start (image cached: 3–10 s) every minute; its only advantage over resident is releasing memory between minutes. `class: resident` MAY be set explicitly on any pipeline when latency matters more than memory; `class: scheduled` MAY be forced on a slow poll that happens to be declared as a stream. The reconciler records the chosen class and the rendered schedule in `status`.
+Trade-off named for operators: a sub-minute scheduled pipeline pays a pod start (image cached: 3–10 s) every minute; its only advantage over resident is releasing memory between minutes. `class: resident` MAY be set explicitly on any pipeline when latency matters more than memory; `class: scheduled` MAY be forced on a slow poll that happens to be declared as a stream. Today the reconciler records the stream's phase and the runner's answer in `status` (`StreamDeployed`, `StreamWriting`); it records no class or schedule, because it renders none.
 
 ## 2. Bento Streams Mode Architecture
 
@@ -60,7 +68,7 @@ In resident mode, all streaming pipelines for a given Project execute inside a d
 ```mermaid
 flowchart TD
     subgraph K8s["Project Pod: pipeline-runner (transport)"]
-        CM["ConfigMap Directory (/etc/bento/streams/*.yaml)"]
+        CM["ConfigMap (/streams/{name}, the deployment's seed)"]
         
         subgraph Process["Single Bento Process (Streams Mode)"]
             SP1["Stream: mqtt-traffic-loop-01"]
@@ -68,7 +76,8 @@ flowchart TD
             SP3["Stream: parking-sensor-feed"]
         end
         
-        CM -.->|Hot Reload Directory Watch| Process
+        CM -.->|-w reload of a changed file| Process
+        PR["Portal reconciler"] -->|PUT / POST / DELETE /streams/{name}| Process
     end
 
     MQTT["City MQTT Broker"] --> SP1
@@ -81,7 +90,7 @@ flowchart TD
 ### Streams Mode Properties
 
 - **Memory Footprint:** Each idle Bento stream consumes between 15 MiB and 30 MiB of RAM. A single 1 GiB pod easily hosts 30–50 concurrent streaming pipelines.
-- **Dynamic Stream Reloading:** Bento runs with `-r "/etc/bento/streams/*.yaml"`. When `jcctl` updates the project's ConfigMap it also calls the runner's streams REST API (`POST/PUT/DELETE /streams/{id}`) so the affected stream starts, restarts, or stops without a pod restart and without disrupting sibling streams; the mounted directory is the restart-safe source, the API call is the hot path.
+- **Dynamic Stream Reloading:** Bento runs `-w -r /streams/resources.yaml streams /streams/{name}…`, one argument per seeded stream file (`values/runner/base-values.yaml.gotmpl`); `-r` loads the shared resources, `-w` reloads a changed file. The Portal reconciler creates, replaces or deletes each approved stream over the runner's REST API (`PUT`, then `POST` on a `404`, and `DELETE` on `/streams/{name}`), so a stream starts, restarts or stops without a pod restart and without disturbing its siblings.
 - **Approved pipelines become streams (PL-47):** the Portal reconciler renders every approved `Pipeline` that reads a `DataSource` into one stream file: the input of §6, the inline mapping (PL-41), an `unarchive` of the mapping's array so one poll writes many entities, and an upsert through `spec.targetEndpoint` with the project pipelines client interpolated from the runner's environment (PL-16). It creates or replaces the stream over the runner's REST API on every sync (a restarted runner is whole again within one interval; the static ConfigMap stays the deployment's seed), then sets `status.phase` from the runner's answer. `Live` is the runner's word, never Git's: a manifest the runner refuses is `Error` with the runner's reason.
 - **Failure Isolation:** An unhandled error in one stream terminates only that stream. Bento isolates memory heaps across streams, preventing cascading crashes.
 
@@ -104,7 +113,7 @@ metadata:
   namespace: helsinki
 spec:
   class: resident             # resident | scheduled | auto
-  enabled: true               # false pauses it: no stream in the runner, CronJob suspended (PL-40)
+  enabled: true               # false pauses it: the stream leaves the runner (PL-40)
   targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:energy:ep-smart-meters
   secretRefs:
     - name: mqtt-credentials
@@ -115,7 +124,7 @@ spec:
     cpuMillicores: 250
 ```
 
-`spec.enabled: false` is how the Portal's Pause button and an author in Git stop a pipeline without deleting it: the change goes through the same review as any other edit (CC-35), the reconciler drops the stream from the runner's ConfigMap or suspends the CronJob, and `status` says `paused`; flipping it back starts the pipeline again (PL-40).
+`spec.enabled: false` is how the Portal's Pause button and an author in Git stop a pipeline without deleting it: the change goes through the same review as any other edit (CC-35), the reconciler deletes the stream from the runner, and `status` says phase `Pending` with the reason `Paused`; flipping it back starts the pipeline again (PL-40).
 
 ### `bento.yaml` (Stream Logic: MQTT to NGSI-LD Upsert)
 
@@ -226,12 +235,14 @@ The studio draws the same list: a lane with the sources on the left, the steps i
 
 ### Model-to-model mappings in a pipeline
 
-A pipeline's own Bloblang handles the last mile (unpacking the source frame, splitting batches, timestamps). The step that produces the target entity SHOULD be a `kind: Mapping` (LinkML-Map, [Architecture/11 §7](11-data-models.md#7-mappings-with-linkml-map)) referenced from the envelope; the reconciler injects the compiled Bloblang so the target entity is schema-checked by construction:
+A pipeline's own Bloblang handles the last mile (unpacking the source frame, splitting batches, timestamps). The step that produces the target entity SHOULD be a `kind: Mapping` (LinkML-Map, [Architecture/11 §7](11-data-models.md#7-mappings-with-linkml-map)) referenced from the compute step (`spec.compute.mappingRef`), so the target entity is schema-checked by construction. The reconciler does not deploy a `mapping` pipeline yet (see *What runs today*); the excerpt shows the manifest and what the rendering is meant to produce:
 
 ```yaml
 # pipeline.yaml (excerpt)
 spec:
-  mappingRef: { kind: Mapping, name: sdm-airquality-to-bb }
+  compute:
+    kind: mapping
+    mappingRef: { kind: Mapping, name: sdm-airquality-to-bb }
   # rendered bento.yaml gets:  processors: [ <pipeline's own bloblang>, { mapping: <generated/sdm-airquality-to-hki.blobl> } ]
 ```
 
@@ -264,7 +275,9 @@ spec:
     mode: upsert                           # upsert | update-attrs (same entity, new attributes)
 ```
 
-The reconciler renders the Bento config from this: a `scheduled` source becomes an `http_client` input that queries the endpoint (paging, `temporalQ` as given); a `subscription` trigger becomes an NGSI-LD subscription on the space whose notifications the gateway delivers to the runner's `http_server` input; the `compute` step becomes the processor below; the output is the ordinary endpoint writer.
+**Not deployed today.** The Portal reconciler deploys only `bloblang` compute. It renders an endpoint query as a `generate` clock followed by an `http` processor that fetches `…/entities` with `limit=1000`, ignores `temporalQ`, and renders a `trigger.subscription` as a change gate on the polled page, not as a subscription (`src/reconciler/streams.rs`). The rest of this subsection is the renderer in `crates/jcctl/src/pipelines_derived.rs`, which nothing outside its tests calls yet.
+
+The design renders the Bento config from this: a `scheduled` source becomes an `http_client` input that queries the endpoint (paging, `temporalQ` as given); a `subscription` trigger becomes an NGSI-LD subscription on the space whose notifications the gateway delivers to the runner's `http_server` input; the `compute` step becomes the processor below; the output is the ordinary endpoint writer.
 
 **What each half renders.** A `query` source becomes an `http_client` input on the source
 endpoint's own NGSI-LD tree, `GET .../entities` or `GET .../temporal/entities` when `temporalQ`
@@ -314,8 +327,8 @@ image (AP-13a) and it exists for the same reason: the thing that runs is the thi
 |---|---|---|---|
 | `bloblang` | Bento `mapping` processor | arithmetic, reshaping, thresholds | inline as `spec.compute.bloblang` in `pipeline.yaml`, rendered as the last `mapping` processor (PL-41), so the Portal's editor edits it in place; or in the author's own `bento.yaml` when the field is absent |
 | `mapping` | compiled LinkML-Map (PL-29) | schema-to-schema derivation | output type is schema-checked by construction |
-| `wasm` | Bento `wasm` processor, module `wasm32-wasip1` | real computation in Rust (indices, interpolation, statistics, geometry) | crate in `compute/` next to the pipeline, built and tested in CI (`cargo test`, then golden tests through `bento test`), module pinned by digest in the artifact store (ADR-N-015); no network, no filesystem, no clock beyond the message; memory limit per invocation |
-| `container` | Kubernetes Job from the CronJob (scheduled only) | heavy or library-bound compute (raster, GDAL, ML inference) | image built in CI, signed and pinned by digest (AP-13 rules); reads the source endpoint and writes the target endpoint with the pipeline's ServiceAccount token; same NetworkPolicy as runners (PL-23) |
+| `wasm` | Bento `wasm` processor, module `wasm32-wasip1` | real computation in Rust (indices, interpolation, statistics, geometry) | not deployed yet, and no build lane exists; the design: a crate in `compute/` next to the pipeline, built and tested in CI (`cargo test`, then golden tests through `bento test`), module pinned by digest in the artifact store (ADR-N-015); no network, no filesystem, no clock beyond the message; memory limit per invocation |
+| `container` | Kubernetes Job from the CronJob (scheduled only) | heavy or library-bound compute (raster, GDAL, ML inference) | not deployed yet; the design: image built in CI, signed and pinned by digest (AP-13 rules); reads the source endpoint and writes the target endpoint with the pipeline's ServiceAccount token; same NetworkPolicy as runners (PL-23) |
 
 **Provenance and loop guard.** Every derived entity or attribute carries `derivedFrom` (Relationship to the source entities, or to the source type when aggregated) and `computedBy` (Property, the pipeline URN and the module digest). A resident derived pipeline must not trigger itself: the reconciler rejects a pipeline whose `output.type`/attributes intersect its own `trigger.subscription` unless `spec.allowFeedback: true` is set and the change is yellow lane.
 
@@ -327,7 +340,7 @@ says which attributes the compute writes and the reconciler will not guess that 
 watched ones. `allowFeedback: true` states that the author knows and accepts the loop, which is
 why PL-37 puts that change in the yellow lane rather than letting it merge on a green one.
 
-**Example WASM module** (`compute/src/lib.rs`, the whole contract is one function over one JSON message):
+**Example WASM module**, as the design has it: a `compute/src/lib.rs` in the configuration repository beside the pipeline, whose whole contract is one function over one JSON message. No repository holds one yet:
 
 ```rust
 #[no_mangle]
@@ -339,13 +352,13 @@ pub extern "C" fn process(ptr: *const u8, len: usize) -> *const u8 {
 }
 ```
 
-Golden tests live beside the module (`compute/tests/` for the Rust logic, `tests/*.yaml` for `bento test` end to end), so the same input page always yields the same entities.
+In the design, golden tests live beside the module (`compute/tests/` for the Rust logic, `tests/*.yaml` for `bento test` end to end), so the same input page always yields the same entities.
 
 ### KPI pipelines: one indicator per run (PL-45, PL-46)
 
 An indicator is the smallest derived pipeline: read one page of one type, fold it into one number, write one `KeyPerformanceIndicator` entity into the project's `{project}-kpi` space ([Architecture/03 §2](03-domain-model.md#key-performance-indicator), PF-54). The studio offers it as the `kpi` preset: a `scheduled` pipeline whose source is an endpoint query and whose compute is whatever the author writes, Bloblang for arithmetic, a script when a library is needed. Both variants below compute the same indicator, the average number of available bikes over every `BikeHireDockingStation` of the `helsinki` space, and write the same entity; the runner does not care which one produced it.
 
-**Bloblang.** The reconciler renders the query into an `http_client` input that fetches the page as one message (an array), so the mapping sees every station at once and folds it; no `unarchive` is rendered for a mapping that yields one object (PL-47 splits arrays only).
+**Bloblang.** The reconciler renders the query into a `generate` clock and an `http` processor that fetches the page as one message (an array), so the mapping sees every station at once and folds it; no `unarchive` is rendered for a mapping that yields one object (PL-47 splits arrays only).
 
 ```yaml
 # pipeline.yaml
@@ -388,7 +401,7 @@ spec:
 
 `C62` is the UN/CEFACT code for "one" (a count); an empty page writes `0` rather than dividing by it. The studio tests this mapping on a page of `helsinki-all` before Propose is enabled (PL-43, PL-49): `sample.url` is the endpoint's own entities URL with the query, `format: json`, and the trace shows the one entity the fold produced and the validation `jc-core` applies to an indicator (PF-43).
 
-**Container.** The same indicator as a script, for the case where pandas or a model is wanted. The manifest changes only in `compute`:
+**Container (design, not built).** The same indicator as a script, for the case where pandas or a model is wanted. No `analysis-runner` image exists yet, the reconciler deploys no `container` compute, and the `Pipeline` kind does not accept `compute.runtime` or `compute.script` today (its `compute` holds `kind`, `module`, `function`, `mappingRef` and `bloblang`), so the manifest below is refused until the kind grows them. The manifest changes only in `compute`:
 
 ```yaml
   compute:
@@ -422,7 +435,7 @@ print(json.dumps([{
 }]))
 ```
 
-The reconciler renders a `container` compute into one CronJob in the project namespace (PL-35, PL-46). The Job has one container from the `analysis-runner` image the deployment pins for `runtime` (`ghcr.io/marek-mraz-jc/joinedcontext-analysis-runner-python@sha256:…`), the script mounted from a ConfigMap the reconciler fills from the merged commit, and an entrypoint that does the three steps the script must not: fetch the page (`GET {sourceEndpoint}/ngsi-ld/v1/entities?type=…&attrs=…` with the pipeline's ServiceAccount token, one page, PL-42 `ids` when set), pipe it to the script's stdin, and POST the array the script printed to `{targetEndpoint}/ngsi-ld/v1/entityOperations/upsert?options=update`. Stderr is captured as the run's error; a non-zero exit writes nothing.
+In the design, the reconciler renders a `container` compute into one CronJob in the project namespace (PL-35, PL-46). The Job has one container from the `analysis-runner` image the deployment pins for `runtime` (`ghcr.io/marek-mraz-jc/joinedcontext-analysis-runner-python@sha256:…`), the script mounted from a ConfigMap the reconciler fills from the merged commit, and an entrypoint that does the three steps the script must not: fetch the page (`GET {sourceEndpoint}/ngsi-ld/v1/entities?type=…&attrs=…` with the pipeline's ServiceAccount token, one page, PL-42 `ids` when set), pipe it to the script's stdin, and POST the array the script printed to `{targetEndpoint}/ngsi-ld/v1/entityOperations/upsert?options=update`. Stderr is captured as the run's error; a non-zero exit writes nothing.
 
 ```yaml
 apiVersion: batch/v1
@@ -459,7 +472,7 @@ spec:
               configMap: { name: pipeline-bikes-available-avg-compute }
 ```
 
-The Job's NetworkPolicy is the runner's (PL-23): egress to the gateway and Keycloak, nothing else; a script that opens a socket elsewhere times out. `rust` differs in one place: CI builds `compute/src/main.rs` into a binary published beside the module store, and the image runs that binary with the same stdin and stdout contract. The `analysis-runner` images carry only the interpreter and its standard data libraries, so a script cannot pull a dependency at run time; a library it needs is a change to the image family, proposed like any other image (AP-13).
+The Job's NetworkPolicy is meant to be the scheduled pods' (PL-23): today `pipeline-scheduled` in `components/pipeline-runner/networkpolicies.yaml` lets them reach the gateway on 8080 and DNS, nothing else; a script that opens a socket elsewhere times out. `rust` differs in one place: in the design, CI builds `compute/src/main.rs` into a binary published beside the module store, and the image runs that binary with the same stdin and stdout contract. The `analysis-runner` images carry only the interpreter and its standard data libraries, so a script cannot pull a dependency at run time; a library it needs is a change to the image family, proposed like any other image (AP-13).
 
 Whichever kind computed it, the indicator lands as the same entity with the same provenance, so a dashboard, the assistant and `jcctl` read it without knowing how it was made.
 
@@ -501,19 +514,17 @@ Streams mode renders it as a change gate in front of the compute: the clock read
 
 ## 4. Scheduled Ingestion Example: CronJob CSV Fetch
 
-For periodic batch loads, the reconciler provisions an ephemeral Kubernetes CronJob:
+Periodic batch loads run today as the `pipeline-runner` component's `scheduled` release: one CronJob per entry of its Helm values `pipelines:`, running `/bento -c /config/bento.yaml` (`components/pipeline-runner/charts/cronjob/templates/pipelines.yaml`). The chart renders `input.generate` as the trigger of each run, so the configuration carries no `input` of its own and the fetch is the first processor; a configuration with an `input` is refused when the chart renders (PL-27). The reconciler does not create these CronJobs from `Pipeline` manifests yet.
 
 ```yaml
-# bento.yaml inside projects/{p}/pipelines/air-quality-batch/
-input:
-  http_client:
-    url: "https://shmu.sk/data/air_quality_daily.csv"
-    verb: "GET"
-
+# the `config` of one entry under `pipelines:` in the scheduled release's values
 pipeline:
   processors:
-    - csv:
-        parse_header_row: true
+    - http:
+        url: "https://shmu.sk/data/air_quality_daily.csv"
+        verb: "GET"
+    - unarchive:
+        format: csv
     - mapping: |
         let domain = env("JC_ORG_DOMAIN")
         root.id = "urn:ngsi-ld:%v:%v:%v:%v".format("AirQualityObserved", $domain, "air-quality", this.StationID)
@@ -544,8 +555,8 @@ output:
    - A runner serves the projects a deployment gives it, so two pipelines naming one `envVar` with **different** references collide. The second is refused with the clash named, rather than served a value belonging to the other pipeline.
    - An environment variable is read once, when the pod starts, so the reconciler stamps the Secret's content hash on the runner's pod template. A changed credential rolls the runner; an unchanged one rolls nothing.
    - The value is in the Secret and nowhere else: not in the stream the Portal posts to the runner, not in a ConfigMap, not in a plan, a log line or an activity entry (PL-17).
-3. **Network Isolation:** Every Project Pipeline Runner deployment runs within its own network policy boundary. Outbound internet egress is restricted to explicitly configured source endpoints declared in the pipeline envelope.
-4. **CI Linter Validation:** The Gitea Actions pipeline runs `bento lint` and input/output unit tests against mock payloads for every pipeline manifest before merging.
+3. **Network Isolation:** Every Project Pipeline Runner deployment runs within its own network policy boundary (`components/pipeline-runner/networkpolicies.yaml`): the runner reaches the gateway on 8080, the Portal's internal listener on 9090, the ingress controller, DNS, and any public address on 443 with every private range excepted. Its NetworkPolicy opens no application port; the Portal reaches the streams API on 4195 through the Linkerd proxy's inbound port 4143, which `pipeline-runner-allow-linkerd` admits and the mesh's inbound policy governs. Egress is not narrowed to the hosts a pipeline declares.
+4. **Lint and test:** The platform repository's CI runs `bento lint` and `bento test` over the example pipelines in `examples/ingestion`. A configuration repository gets no lint step yet; a mapping is tested on the runner before it is proposed (§7).
 5. **Ids that cannot claim another organization:** the runner's environment carries `JC_ORG_DOMAIN`, resolved by the reconciler from the project's Organization, and a mapping mints `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}` from that variable rather than from a literal (PF-42, PF-44, [Architecture/03 §3](03-domain-model.md#3-identity-and-urn-specification)). A pipeline that writes a domain of its own is refused at admission by the gateway, not silently accepted.
 
 ## 6. External Feeds: the `DataSource` Kind (MF-35, PL-39)
@@ -652,7 +663,7 @@ The four typed connections above are the well-trodden path: a form with a handfu
 a scheme fence, a credential slot. They are not the limit. The runner is Bento, and Bento ships
 sixty-odd inputs (`bento list inputs` in the pinned image: `amqp_0_9`, `aws_s3`, `csv`, `file`,
 `kafka`, `nats`, `redis_streams`, `sftp`, `sql_select`, … the list jc-core holds as
-`BENTO_INPUTS`, read from the image and not from a manual). A `DataSource` may name any of
+`jc_core::kinds::bento_inputs::INPUTS`, read from the image and not from a manual). A `DataSource` may name any of
 them as `spec.type` and then carries that input's own configuration, verbatim, as
 `spec.input`:
 
@@ -736,14 +747,15 @@ failed plan and never a crash loop:
 4. The author's `bento.yaml` MUST NOT declare an `input` of its own when `dataSourceRef` is set.
    Two inputs in one config is a merge nobody can review; the reconciler refuses it instead of
    choosing.
-5. Everything below the input is the author's: `pipeline.processors` and `output` are copied
-   through untouched (PL-03), except for the decoder the `gtfs-rt` type prepends.
+5. The author's `pipeline.processors` are copied through untouched (PL-03), except for the decoder
+   the `gtfs-rt` type prepends. The output is always the rendered upsert through
+   `spec.targetEndpoint` with the runner's OAuth client, whatever the author wrote.
 6. Editing a `DataSource` re-renders every pipeline that references it, in the same change. The
    plan lists them, so a host change is reviewed together with everything it moves.
 
 ## 7. Testing a pipeline before proposing it
 
-A mapping is tested where it will run, on the project's pipeline runner, and never on the Portal (PL-43, MF-38): the Portal's image carries no Bento, and a test that ran elsewhere would prove something else. `POST /api/v1/projects/{project}/pipelines/test` takes the candidate Pipeline manifest and a sample, and the Portal renders a harness with the renderer of §3 and §6: the `DataSource` input becomes a `generate` input that emits the sample once (or an `http_client` input for a sample URL, so a fetch obeys the runner's own egress policy, PL-23), the processors stay byte for byte, a `catch` at the end turns a failed message into an error record with the message it failed on, and the output becomes an `http_client` POST to the Portal's capture route for this test. The harness is created as an ephemeral stream through the runner's streams API (`POST /streams/pipeline-test-{id}`, §2), the Portal waits at most three seconds for the captured messages, deletes the stream, and answers the trace:
+A mapping is tested where it will run, on the project's pipeline runner, and never on the Portal (PL-43, MF-38): the Portal's image carries no Bento, and a test that ran elsewhere would prove something else. `POST /api/v1/projects/{project}/pipelines/test` takes the candidate Pipeline manifest and a sample, and the Portal renders a harness with the renderer of §3 and §6: the `DataSource` input becomes a `generate` input that emits the sample once (for a sample URL, one `generate` tick drives an `http` processor, so a fetch obeys the runner's own egress policy, PL-23), the processors stay byte for byte, a `catch` at the end turns a failed message into an error record with the message it failed on, and the output becomes an `http_client` POST to the Portal's capture route for this test. The harness is created as an ephemeral stream through the runner's streams API (`POST /streams/pipeline-test-{id}`, §2), the Portal waits at most three seconds for the captured messages, deletes the stream, and answers the trace:
 
 ```json
 {
