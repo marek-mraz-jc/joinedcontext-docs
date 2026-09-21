@@ -213,8 +213,9 @@ one or more manifests; *flow*, a blueprint instance as shown to [H] users.
   be a repository change (e.g. `isActive` on the subscription).
 - **CC-36** [H] — The application MUST answer the live federation and
   data topology (spaces, registrations, pipeline routes) read-only for
-  all roles, from live state via the gateway, as the federation graph of
-  the API (UI-27); the Portal draws no page of it (UI-28).
+  every role that may read the project, from the manifests and the
+  health each object reported, as the federation graph of the API
+  (UI-27); the Portal draws no page of it (UI-28).
 - **CC-37** [H] — The application MUST be localized (Slovak first,
   English second), meet WCAG 2.1 AA basics, and use human names and
   descriptions from manifest metadata, never raw URNs, in default
