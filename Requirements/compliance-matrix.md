@@ -23,7 +23,7 @@ Generated 2026-09-20 from: `docs` 5d17ffe, `conformance` ae9190d, `deployment` b
 | Family | Requirements | Tested | Built | Open | Untested and security-tagged |
 |---|---|---|---|---|---|
 | **AG** — Agents and MCP | 84 | 65 | 4 | 15 | 8 |
-| **AP** — Apps on demand | 74 | 54 | 7 | 13 | 1 |
+| **AP** — Apps on demand | 78 | 54 | 7 | 17 | 3 |
 | **CC** — Configuration as code | 84 | 61 | 9 | 14 | 0 |
 | **DM** — Data models | 60 | 45 | 8 | 7 | 0 |
 | **DS** — Data space connector | 20 | 9 | 7 | 4 | 1 |
@@ -41,7 +41,7 @@ Generated 2026-09-20 from: `docs` 5d17ffe, `conformance` ae9190d, `deployment` b
 | **SP** — Context-space surface | 22 | 18 | 1 | 3 | 0 |
 | **TS** — Testing and quality | 25 | 15 | 4 | 6 | 0 |
 | **UI** — Portal and user interface | 72 | 48 | 13 | 11 | 1 |
-| **Total** | 959 | 624 | 109 | 226 | 34 |
+| **Total** | 963 | 624 | 109 | 230 | 36 |
 
 ## 3. Requirement to test
 
@@ -212,6 +212,10 @@ Generated 2026-09-20 from: `docs` 5d17ffe, `conformance` ae9190d, `deployment` b
 | **AP-72** | [S] | tested | ci-full | portal `tests/static_host_tests.rs::the_host_serves_the_build_the_manifest_names`, portal `tests/static_host_tests.rs::a_build_the_host_does_not_hold_keeps_the_previous_one_serving_and_is_reported` |
 | **AP-73** | [S] | tested | ci-full | portal `tests/app_build_lane_tests.rs::only_the_build_lane_writes_the_build_and_the_refusal_says_whose_field_it_is`, portal `tests/app_build_lane_tests.rs::every_other_part_of_status_is_refused_even_from_the_build_lane`, portal `tests/app_build_lane_tests.rs::an_image_annotation_is_refused_from_the_build_lane_too`, and 2 more |
 | **AP-74** |  | tested | ci-full | portal `tests/static_host_tests.rs::the_host_serves_the_build_the_manifest_names` |
+| **AP-75** | [S] | open |  |  |
+| **AP-76** |  | open |  |  |
+| **AP-77** | [S] | open |  |  |
+| **AP-78** | [H] | open |  |  |
 
 ### CC — Configuration as code
 

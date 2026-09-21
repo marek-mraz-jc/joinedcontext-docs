@@ -238,6 +238,14 @@ Publishing commits `app.yaml` and goes through the lanes of AP-20. CI installs t
 
 What names the artifact is `App.status.build`, `{ digest, commit, sdkVersion, builtAt }`, and the build lane is its only writer (AP-13a, AP-73): CI builds from the merged source, stores the bundle under its digest and commits the field back; the host serves that digest and no other (AP-72). Source in git, one build by digest: the repository stays small and every served bundle is reproducible from a commit, which is also what moving an application to another instance means, the source moves with the project and the target's CI builds it again (Architecture/06 §6).
 
+### 6.1 One repository per application
+
+A `static` application lives in a repository of its own on the organization's forge, `{project}_{app}` beside the configuration repository, private (AP-75). The Portal creates it on the application's first commit and never touches an existing one except through a run branch. Each run commits to `agent/app-{app}/{runId}` in that repository: the first commit makes the branch hold exactly the run's files plus a `README.md` the Portal writes, and every later pass is one more commit (AP-76). The whole application sits at the root, template included, so a clone is a project `pnpm install` and `pnpm build` understand once the SDK package it pins is reachable.
+
+Publish opens a merge request from the run branch into the repository's default branch and proposes the `App` manifest with `spec.source.git` naming the repository and the exact commit of the branch head (AP-77). The reviewer approves that Change in the configuration repository as for every other kind; the approval then merges the application's merge request with a merge commit, refusing if its head has moved, so the default branch of an application's repository is the history of what was published. The configuration repository holds the manifest and nothing of the source.
+
+Runs of the `fullstack` and `service` classes still commit under `projects/{project}/apps/{name}/` of the configuration repository: their workspace reaches the forge only through the proxy's `/v1/forge` route, whose branch and path rules name that folder (Architecture/19).
+
 ## 7. What is deliberately not offered
 
 - No npm package beyond the import names of SDK-12: what they do not cover, the application writes in its own files.
