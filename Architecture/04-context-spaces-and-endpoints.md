@@ -15,9 +15,8 @@ This specification establishes the public URL structure, tenancy abstraction, re
 |     https://{host}/cs/{space}/                                                                    |
 |     ├── ngsi-ld/v1/          (Standard ETSI CIM 009 Tree: entities, subscriptions, types)        |
 |     ├── mcp                  (Direct Data-Plane Model Context Protocol Streamable HTTP)           |
-|     ├── schema/              (Versioned LinkML, JSON Schema draft-07, and context.jsonld)         |
-|     ├── access               (Caller's effective grants: AuthZEN JSON, ODRL 2.2, UCAST AST)      |
-|     └── dump/                (Versioned, Immutable RDF Dataset Dumps: TriG / N-Quads)             |
+|     ├── schema/              (index.json, then v{major}/: LinkML, JSON Schema, @context, SHACL…)  |
+|     └── dump/                (N-Quads dumps: specified by SP-04, not built, T-2391)               |
 |                                                                                                   |
 |  2. Shared & Public Endpoint Surface (Addons, Public APIs, External Consumers, Agents):          |
 |     https://{host}/api/endpoint/{endpointSlug}/            (GET → DCAT-AP record of the endpoint)  |
@@ -44,17 +43,14 @@ Where `{space}` is the Context Space name, identical to the `{space}` segment of
 
 ### Permitted Child Paths
 
-No arbitrary path extensions are permitted. The path hierarchy is strictly restricted to (SP-04):
+No arbitrary path extensions are permitted. The gateway routes exactly these (SP-04, `crates/context-gateway/src/app.rs`); any other path under a space answers `404`:
 
+- `/cs/{space}`: the space's record, the list of its children in JSON-LD, Turtle or HTML (`handlers/space_surface.rs`). `GET /cs` lists the spaces.
 - `/cs/{space}/ngsi-ld/v1/`: Byte-for-byte implementation of the ETSI GS CIM 009 REST specification (SP-03).
 - `/cs/{space}/mcp`: Data-plane Model Context Protocol Streamable HTTP endpoint (SP-03, SP-14).
-- `/cs/{space}/schema/`: Canonical schema definitions:
-  - `schema/v{n}/context.jsonld`: Immutable JSON-LD context documents (SP-13).
-  - `schema/v{n}/model.json`: Compiled JSON Schema draft-07 documents.
-  - `schema/model.linkml.yaml`: Authoritative LinkML model source.
-- `/cs/{space}/dump/`: Compressed immutable context snapshots:
-  - `dump/{YYYY-MM-DD}.nq.gz`: N-Quads dump.
-  - `dump/latest.nq.gz`: Symlink/pointer to latest snapshot.
+- `/cs/{space}/schema/index.json` and `/cs/{space}/schema/v{major}/{artifact}`: the same schema surface an Endpoint serves (§1a), named by its space. `{major}` is `v` and a whole number; anything else answers `404`.
+
+A space has no `access` child: the caller's grants are an Endpoint's (`/api/endpoint/{slug}/access`). SP-04 also names `dump/` with dated and latest N-Quads snapshots; the gateway does not serve it yet (T-2391), and the space record does not advertise it.
 
 ---
 
@@ -64,21 +60,20 @@ Consumers of a shared endpoint (partner organisations, open-data users, agents) 
 
 ```text
 /api/endpoint/{endpointSlug}/schema/
-├── index.json                       catalogue: types, versions, formats, sha256, links (JSON, also served as the DCAT-AP conformsTo list)
+├── index.json                       catalogue: the models, their versions, formats, sha256 and links (JSON)
 ├── v{major}/
 │   ├── model.linkml.yaml            LinkML source (granted projection)        text/yaml
 │   ├── model.schema.json            JSON Schema draft-07                       application/schema+json
 │   ├── context.jsonld               JSON-LD @context (SP-13)                   application/ld+json
 │   ├── model.shacl.ttl              SHACL shapes (gen-shacl)                   text/turtle
 │   ├── model.owl.ttl                OWL ontology (gen-owl)                     text/turtle
-│   ├── model.rdf.ttl                RDF rendering of the schema (gen-rdf)      text/turtle (also .jsonld / .nt by suffix)
-│   ├── model.md                     human documentation (gen-doc)              text/markdown
-│   ├── example.jsonld               validated example entity                   application/ld+json
-│   └── {Type}.schema.json … {Type}.shacl.ttl   per-type slices of the same artifacts
-└── latest → v{max}                  302 redirect
+│   ├── model.rdf.ttl                RDF rendering of the schema (gen-rdf)      text/turtle
+│   └── model.md                     human documentation (gen-doc)              text/markdown
 ```
 
-Rules: `Accept` negotiation is honoured on `v{n}/model` (`text/turtle`, `application/ld+json`, `application/schema+json`, `text/yaml`); the suffix form is canonical and cacheable. Every artifact carries a strong `ETag` (sha256 of the bytes) and revalidates, and `Link: rel="describedby"` pointers come from every NGSI-LD, OGC and file representation (EP-46…EP-52). The same artifacts are reachable through the endpoint's MCP as tools (`describe_schema(format=…)`) and as MCP *resources* (`schema://{slug}/v{n}/model.shacl.ttl`), so an agent can pull the SHACL or the LinkML directly (DM-46).
+Each artifact also answers to a short name (`linkml`, `json-schema`, `context`, `shacl`, `owl`, `rdf`, `docs`; `handlers/schema.rs::artifact_of`). EP-46 to EP-49 also name an `example.jsonld`, per-type slices, a `latest` redirect and `.jsonld`/`.nt` suffixes for the RDF; the gateway serves none of them, and a request for one answers `404`.
+
+Rules: `Accept` negotiation is honoured on `v{major}/model`: `text/turtle` returns the SHACL, `text/turtle` with an `owl` or `rdf` profile the OWL or the RDF rendering, `text/yaml` the LinkML, `text/markdown` the documentation, `application/ld+json` the `@context`, and anything else the JSON Schema. The suffix form is canonical and cacheable. Every artifact carries a strong `ETag` (sha256 of the bytes) and revalidates, and `Link: rel="describedby"` pointers come from every NGSI-LD, OGC and file representation (EP-46…EP-52). The same artifacts are reachable through the endpoint's MCP as tools (`describe_schema(format=…)`) and as MCP *resources* (`schema://{slug}/v{n}/model.shacl.ttl`), so an agent can pull the SHACL or the LinkML directly (DM-46).
 
 ### Who projects, and why the gateway renders the RDF family
 
@@ -229,10 +224,10 @@ spec:
 
 Endpoints are addressed by random, unguessable slugs (`/api/endpoint/{endpointSlug}`). The slug is a base32 string derived from at least 128 bits of cryptographic entropy.
 
-The Context Gateway maintains an in-memory hash map (`ArcSwap<HashMap<String, Arc<ResolvedEndpoint>>>`):
+The Context Gateway keeps the endpoints in an in-memory map (`ArcSwap<HashMap<String, Arc<Endpoint>>>`, `crates/context-gateway/src/resolver.rs`):
 
-- Slug lookup executes in O(1) time (< 500 nanoseconds).
-- When `jcctl apply` updates an Endpoint manifest, an invalidation signal pushes the new endpoint configuration to the gateway over an internal channel, maintaining bounded propagation latency (R48).
+- A slug lookup is one hash lookup; nothing on the request path reads the repository.
+- A reaper re-reads the repository checkout every second and swaps the whole table when it changed (`pdp/reaper.rs`), so an Endpoint manifest `jcctl apply` changed is served within EP-19's two seconds (R48).
 
 ### Audience Control
 
@@ -428,7 +423,9 @@ The MCP façade is an encoder like the others: a tool call is turned into the NG
 
 `hiddenAttributes` is a publication decision, not an authorization one: the Policy set stays the single place where access is granted, and the Endpoint can subtract from it when the same space is published twice with different amounts of detail. Because the subtraction happens in the projection every representation shares, a hidden attribute is missing from the CSV, the GeoJSON, the MCP tool result and the schema surface alike (EP-47).
 
-### The demo endpoints
+### Two endpoints, as an example
+
+The two endpoints below illustrate the fields above; they are not manifests the deployment ships. The seeded ones live in `joinedcontext-deployment/components/context-gateway/seed/helsinki/` (`helsinki-endpoint-*.yaml`).
 
 | | `air-quality` | `transport` |
 |---|---|---|
@@ -699,7 +696,7 @@ spec:
 | One resource for the schema | the schema surface (§1a) | `schema/index.json`, which lists `model.schema.json`, the SHACL and the rest per model version, so a consumer can validate what it downloaded without the publisher knowing which versions exist |
 | One resource per schema artifact | the record's schema distributions (§3a) | every formalism the endpoint serves — LinkML, JSON Schema, `@context`, SHACL, OWL, RDF, the generated documentation — becomes a resource of its own, carrying the sha256 the record declares in CKAN's `hash` field so a download can be checked without asking the endpoint again (EP-68) |
 | The dataset's visibility | `spec.audience` | a `public` endpoint becomes a public dataset, anything narrower a private dataset of the organization; the mapping is closed by default, so an audience the publisher does not recognise is private (EP-69, PF-45) |
-| Optional DataStore table | the tabular representation | filled through the endpoint, refreshed by its subscription rather than reloaded (EP-65) |
+| Optional DataStore table | the tabular representation | filled through the endpoint's `file.csv`, every row upserted on each `jcctl publish ckan` run (EP-65) |
 | The organization | `spec.publish.ckan.organization` | created, when it does not exist, with the `CkanInstance`'s `metadata.title`, else the branding `organisation` name ([Deployment/12](../Deployment/12-branding-and-naming.md)) |
 
 ### Why the publisher is an ordinary consumer
@@ -716,7 +713,7 @@ The record itself says the same thing to a harvester that never logs in: `dcterm
 
 ### DataStore, when rows are wanted
 
-A CKAN DataStore table gives the catalogue a preview, a filtered API and a SQL surface over the rows. It is optional because it is a copy: the endpoint stays the source. When `datastore` is declared, the first publication loads the tabular representation in pages and the endpoint's own subscription drives every later refresh, so a space that changes one entity costs one upsert rather than a full reload (EP-65, EP-44). Rows that leave the endpoint's projection leave the table with them.
+A CKAN DataStore table gives the catalogue a preview, a filtered API and a SQL surface over the rows. It is optional because it is a copy: the endpoint stays the source. When `datastore` is declared, each `jcctl publish ckan` run reads the endpoint's `file.csv` as the publisher's ServiceAccount and upserts every row, and rows the endpoint no longer returns leave the table (EP-65, EP-44; `crates/jcctl/src/commands/publish_ckan.rs`). The DataStore takes only the `csv` representation; declaring another is refused with the fix named. `publish.ckan.datastore.refresh: onChange`, a refresh driven by the endpoint's subscription, is accepted in the manifest but not wired: today every refresh is a full reload on the next run.
 
 ## Related
 
