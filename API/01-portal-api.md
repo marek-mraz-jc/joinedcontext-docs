@@ -60,7 +60,7 @@ something to show.
 | `resource-not-found` | 404 | not there, or not readable by this caller: one answer for both (R20) |
 | `conflict` | 409 | the state moved under the request, or a name is taken |
 | `unsupported-media-type` | 415 | a `PATCH` whose content type is neither patch type of section 4 |
-| `not-implemented` | 501 | the route exists and this form of it does not, such as `?revision=` on a list |
+| `not-implemented` | 501 | the route exists and this form of it does not, such as an import from a URL |
 | `service-unavailable` | 503 | a tier the route needs did not answer: the forge, the database, Model Tools, a runner |
 | `internal-error` | 500 | anything else; `detail` says nothing about the cause |
 | `rate-limit-exceeded` | 429 | the basemap proxy's own bucket, with the limit in `detail` |
@@ -160,10 +160,14 @@ a project the caller may not read is `404` on every route of this section, on `e
 `/revisions`, `permissions/me` and the MCP resources alike, the one answer for "missing" and
 "not yours". A write answers `403` with the missing verb (PF-50).
 
-A list takes `labelSelector`, `fieldSelector`, `limit` and `continue`. It does not take
-`revision`: a list of a past revision is `501` naming where that answer lives, because the
-repository at a revision is `GET …/export?revision={commit}` of section 10 and the mirror holds
-the default branch alone (`joinedcontext-portal/src/api/resources.rs`).
+A list takes `labelSelector`, `fieldSelector`, `limit` and `continue`. A list and a get both take
+`revision={commit}` (MF-11, MF-16): the project's subtree of the repository at that commit id, read
+from the forge the way `GET …/export?revision={commit}` of section 10 reads it, with no `status`,
+because status is what the Portal computes now. Only a commit id (7 to 40 lowercase hex digits) is
+a revision; a branch name is `400`, because it would read a workspace's unmerged edits past the
+workspace's own door (CC-76), and so is `revision` beside `workspace`. A commit the repository does
+not know is the caller's own `404`, the same as a resource the commit did not hold (R20). The read
+grants are the caller's current ones.
 
 `GET /api/v1/projects` answers a `kind: List` whose items carry `name` and nothing else, the
 projects the caller may read (PF-59). A project no binding covers is not in it, which is the same
