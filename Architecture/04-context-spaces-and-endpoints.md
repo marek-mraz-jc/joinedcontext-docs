@@ -673,6 +673,13 @@ spec:
       datastore: { representation: csv, refresh: onChange }  # optional row mirror
 ```
 
+The licence the organization chose is named in the same block, as a CKAN licence id; it is used when the endpoint's record names none, which today it never does:
+
+```yaml excerpt
+    ckan:
+      license: cc-by                                   # CC-BY 4.0; optional
+```
+
 The instance itself is a manifest like everything else, so a second catalogue is a second file and never a Portal setting nobody can review:
 
 ```yaml
@@ -691,13 +698,13 @@ spec:
 
 | In CKAN | From | Rule |
 |---|---|---|
-| One dataset (`package`) | the endpoint's DCAT-AP record (EP-27) | title, description, keywords, spatial and temporal coverage, publisher, contact and licence come from there; the reconciler writes no metadata of its own (EP-63) |
+| One dataset (`package`) | the endpoint's DCAT-AP record (EP-27) | title, description, keywords, spatial and temporal coverage, publisher, contact and licence come from there, title and description in the language of the endpoint's space; the reconciler writes no metadata of its own, except the licence `publish.ckan.license` names when the record carries none (EP-63) |
 | One resource per representation | `spec.enabledRepresentations` | the resource URL is that representation's own URL under the endpoint, so a download always passes the gateway and its policy set (EP-64) |
 | One resource for the schema | the schema surface (§1a) | `schema/index.json`, which lists `model.schema.json`, the SHACL and the rest per model version, so a consumer can validate what it downloaded without the publisher knowing which versions exist |
 | One resource per schema artifact | the record's schema distributions (§3a) | every formalism the endpoint serves — LinkML, JSON Schema, `@context`, SHACL, OWL, RDF, the generated documentation — becomes a resource of its own, carrying the sha256 the record declares in CKAN's `hash` field so a download can be checked without asking the endpoint again (EP-68) |
 | The dataset's visibility | `spec.audience` | a `public` endpoint becomes a public dataset, anything narrower a private dataset of the organization; the mapping is closed by default, so an audience the publisher does not recognise is private (EP-69, PF-45) |
 | Optional DataStore table | the tabular representation | filled through the endpoint, refreshed by its subscription rather than reloaded (EP-65) |
-| The organization | `spec.publish.ckan.organization` | created with the branding `organisation` name when it does not exist ([Deployment/12](../Deployment/12-branding-and-naming.md)) |
+| The organization | `spec.publish.ckan.organization` | created, when it does not exist, with the `CkanInstance`'s `metadata.title`, else the branding `organisation` name ([Deployment/12](../Deployment/12-branding-and-naming.md)) |
 
 ### Why the publisher is an ordinary consumer
 
