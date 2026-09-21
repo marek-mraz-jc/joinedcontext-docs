@@ -82,11 +82,20 @@ The Helsinki project publishes four datasets into the `hel-fi` organization of t
 
 All four Endpoints are `audience: public`, so all four datasets are public, and the catalogue is not empty on a fresh installation. The instance itself is `helsinki-ckan-hel-fi.yaml`, whose `apiTokenRef` is resolved at run time and never held in the manifest.
 
-The Banská Bystrica projects publish nothing yet. Their KPI spaces are the second half of the demo story, and which indicators belong in a public catalogue is a decision for the city rather than a default: the follow-up tasks of this group carry it, together with the Slovak titles and licences each dataset needs.
+The two Banská Bystrica bodies publish one dataset each, each into its own organization of the same catalogue, declared by `components/context-gateway/seed/banskabystrica/` and `components/context-gateway/seed/bbsk/`:
 
-### What runs the publication today
+| Dataset | Organization | Endpoint | Slovak title in the manifest | Representations | Sheet |
+|---|---|---|---|---|---|
+| `public-air` | `banskabystrica` (Mesto Banská Bystrica) | `banskabystrica/public-air` | Kvalita ovzdušia v Banskej Bystrici | NGSI-LD, GeoJSON, CSV, XLSX, MCP | CSV, on reconcile |
+| `bbsk-kpi` | `bbsk` (Banskobystrický samosprávny kraj) | `bbsk/bbsk-kpi` | Ukazovatele kraja | NGSI-LD, CSV, JSON | CSV, on reconcile |
 
-The publisher is a library and a command: `jcctl publish ckan` publishes one Endpoint or a whole repository from a shell, and the Portal holds the same code. Nothing schedules it yet, so on the reference cluster a dataset appears when somebody runs the command, and `refresh: onReconcile` describes the cadence the reconciler will use rather than one it already keeps. EP-62 states the target, the reconciler driving it is the open work, and until it lands a catalogue that looks stale is a publication nobody ran.
+Each project carries its own `CkanInstance` (`ckan-banskabystrica.yaml`, `bbsk-ckan.yaml`) whose `organizationDefault` is the project's name, so a body's dataset can only land under that body. The dataset name is the Endpoint's name, because neither publication sets `publish.ckan.name`. The owner cleared these two on 2026-09-21 with the licence CC-BY 4.0; no manifest field can state that licence yet, so both datasets carry none until T-2465 gives the record one. The same task makes the space's locale choose the title: the publisher takes the English text of a language map today, so the two datasets show "Air quality in Banská Bystrica" and "Region indicators" until it lands.
+
+The three other Endpoints of the two bodies stay out of the catalogue: `banskabystrica/banskabystrica-kpi` (`project-list`), `banskabystrica/banskabystrica-mesto` and `bbsk/bbsk-kraj` (both `organization`). EP-69 would publish each of them as a private dataset that a person browsing the catalogue cannot open, and none of the three has been reviewed by its body for publication, so they declare no `publish` block.
+
+### What runs the publication
+
+The publisher is a library and a command. The Portal's reconciler holds the library and runs it on every sync (`src/reconciler/ckan.rs`, T-2405): each Endpoint that declares `spec.publish.ckan` is published, and an Endpoint that stopped declaring one has its dataset withdrawn, which is the cadence `refresh: onReconcile` names. `jcctl publish ckan` publishes one Endpoint or a whole repository from a shell with the same code, which is how a catalogue is filled before a Portal runs against it.
 
 ## Related
 
