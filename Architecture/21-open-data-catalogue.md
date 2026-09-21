@@ -82,14 +82,15 @@ The Helsinki project publishes four datasets into the `hel-fi` organization of t
 
 All four Endpoints are `audience: public`, so all four datasets are public, and the catalogue is not empty on a fresh installation. The instance itself is `helsinki-ckan-hel-fi.yaml`, whose `apiTokenRef` is resolved at run time and never held in the manifest.
 
-The two Banská Bystrica bodies publish one dataset each, each into its own organization of the same catalogue, declared by `components/context-gateway/seed/banskabystrica/` and `components/context-gateway/seed/bbsk/`:
+The region publishes one dataset into its own organization of the same catalogue, declared by `components/context-gateway/seed/bbsk/`:
 
 | Dataset | Organization | Endpoint | Slovak title in the manifest | Representations | Sheet |
 |---|---|---|---|---|---|
-| `public-air` | `banskabystrica` (Mesto Banská Bystrica) | `banskabystrica/public-air` | Kvalita ovzdušia v Banskej Bystrici | NGSI-LD, GeoJSON, CSV, XLSX, MCP | CSV, on reconcile |
 | `bbsk-kpi` | `bbsk` (Banskobystrický samosprávny kraj) | `bbsk/bbsk-kpi` | Ukazovatele kraja | NGSI-LD, CSV, JSON | CSV, on reconcile |
 
-Each project carries its own `CkanInstance` (`ckan-banskabystrica.yaml`, `bbsk-ckan.yaml`) whose `organizationDefault` is the project's name, so a body's dataset can only land under that body. The dataset name is the Endpoint's name, because neither publication sets `publish.ckan.name`. The owner cleared these two on 2026-09-21 with the licence CC-BY 4.0; no manifest field can state that licence yet, so both datasets carry none until T-2465 gives the record one. The same task makes the space's locale choose the title: the publisher takes the English text of a language map today, so the two datasets show "Air quality in Banská Bystrica" and "Region indicators" until it lands.
+Each body carries its own `CkanInstance` (`bbsk-ckan.yaml`, `ckan-banskabystrica.yaml`) whose `organizationDefault` is the project's name, so a body's dataset can only land under that body. The dataset name is the Endpoint's name, because the publication sets no `publish.ckan.name`. The owner cleared the region's indicators and the city's air quality on 2026-09-21 with the licence CC-BY 4.0, which the publication states as `publish.ckan.license: cc-by` ([04 §7](04-context-spaces-and-endpoints.md#7-publication-to-an-open-data-portal)). The dataset takes its title and notes in its space's language, so the region's dataset reads "Ukazovatele kraja", and a new organization takes the instance's own title (T-2465).
+
+The city's air quality, `banskabystrica/public-air`, is cleared and held: its space `ovzdusie` holds the thirteen seeded test stations, which sit in Helsinki and carry no PM10 or PM2.5 reading, and publishing them under the city's name and an open licence would put test data in a harvested catalogue as the city's air. Its `publish` block is written in the seed and commented out; it is restored when the space holds the city's own measurements or the owner decides otherwise.
 
 The three other Endpoints of the two bodies stay out of the catalogue: `banskabystrica/banskabystrica-kpi` (`project-list`), `banskabystrica/banskabystrica-mesto` and `bbsk/bbsk-kraj` (both `organization`). EP-69 would publish each of them as a private dataset that a person browsing the catalogue cannot open, and none of the three has been reviewed by its body for publication, so they declare no `publish` block.
 
