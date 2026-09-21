@@ -216,6 +216,7 @@ Generated 2026-09-20 from: `docs` 5d17ffe, `conformance` ae9190d, `deployment` b
 | **AP-76** |  | open |  |  |
 | **AP-77** | [S] | open |  |  |
 | **AP-78** | [H] | open |  |  |
+| **AP-79** | [S] | open |  |  |
 
 ### CC — Configuration as code
 
