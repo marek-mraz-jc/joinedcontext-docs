@@ -573,21 +573,18 @@ metadata:
 spec:
   source:
     git: { url: https://git.region.sk/udp/datamodels.git, ref: main, path: models/transport, secretRef: { name: region-git-ro } }
-  schedule: { interval: 30m }        # or { webhook: true }, which needs the webhook block below
+  schedule: { webhook: true }        # pushed by its origin; or { interval: 30m } and no webhook block
   mode: mirror                       # source wins inside the synced subtree; local edits show as drift
   selector: { joinedcontext.com/tier: standard }
   conflictPolicy: replace
   prune: false                       # deletions are never implied (CC-19)
   autoMerge: false                   # true = green lane for this subtree; enabling it is a red-lane change (CC-70)
-```
-
-A webhook-driven source is pushed by its origin rather than polled, and the credential for that is the source's own:
-
-```yaml excerpt
-  webhook:                                        # required by schedule: { webhook: true }
+  webhook:                           # required by schedule: { webhook: true }, refused beside an interval
     secretRef: { name: region-hook }              # what the origin signs the request body with
     previousSecretRef: { name: region-hook-old }  # optional: accepted while the origin's hook is moved
 ```
+
+A webhook-driven source is pushed by its origin rather than polled, and the credential for that is the source's own.
 
 `spec.webhook.secretRef` is an HMAC secret the reconciler resolves like every other `secretRef` and hands to nobody (MF-44, MF-24). One per source, because the signature covers the body and not the path — a secret shared between sources would let the origin of one force a run of every other, in projects it has no binding in. A `schedule: { webhook: true }` with no `webhook` block is refused when it is written, and every refusal at the webhook route is the same `401`, so the door tells an unauthenticated caller nothing about which sources exist ([API/01 section 10](../API/01-portal-api.md), PF-59).
 
