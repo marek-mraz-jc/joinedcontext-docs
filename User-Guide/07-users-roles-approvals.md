@@ -43,6 +43,17 @@ Type into the assistant composer: `Give jana.kovacova the steward role on the he
 
 Non-human callers such as ingestion scripts, automated ETL jobs, or GIS tools connect through dedicated service accounts.
 
+### Create a Service Account with the Form
+
+#### By hand
+
+1. Open `/projects/banskabystrica/access`, go to **Service accounts** and click **New service account**.
+2. Under **Who and why**, give the account a **Name** such as `bb-senzory-import`, write its **Purpose** in one sentence an auditor can check (*Uploads the city gateway's air-quality readings every 10 minutes.*), and enter the person who answers for it in **Owner's sign-in**, such as `jana.novakova@banskabystrica.sk`.
+3. Under **What it may do**, add one row to **Grants** for each thing the program needs: a **Role** such as `data-writer`, the **Scope level** (a project, one context space, or the whole organization) and the **Scope name**, such as `ovzdusie`. Narrow the grant further with **Operations** and **Entity types**, such as `AirQualityObserved`. Left empty, those two keep what the role itself allows.
+4. Under **How it signs in**, add a row to **Credentials**. Choose `oauth-client` for any program that can sign in with OAuth, and `api-key` only for an older one that cannot. Give it a **Credential name** such as `brana-mesta`, and, when you can, an **Expires at** date and the **Allowed address blocks** it calls from, such as `185.14.232.0/24`. You never type a secret here; the key or client secret is issued after the approval.
+5. Under **Limits and workload**, set **Requests per minute** if the program should be held below the endpoint's own limit. When the program runs inside the cluster, name its **Namespace** and **Kubernetes service account**, so that it signs in with its workload identity and holds no key at all.
+6. Click **Propose change**. The account and its client exist once an approver accepts the proposal; then issue its key as below.
+
 ### Issuing an API Key
 
 #### By hand

@@ -139,6 +139,37 @@ The example below is the policy that lets anyone read the air quality measuremen
 
 To change an existing policy, open its row menu and choose **Edit**. The same form opens with the stored values. The **YAML** view shows the same manifest, and a change in either view appears in the other.
 
+## 7. Being Told When Data Changes: Subscriptions
+
+A subscription asks the broker of one space to post a notification to a receiver of yours whenever the entities it watches change: a dispatch desk that wants to hear about every PM10 reading over the limit, for example.
+
+### Create a Subscription with the Form
+
+#### By hand
+
+1. Open `/projects/banskabystrica/subscriptions` and click **New Subscription**.
+2. Under **Space and receiver**, give it a **Name** such as `ovzdusie-prekrocenia` and pick the **Context Space** whose data it watches, such as `ovzdusie`. **Display name** is what people see in the Portal, for example *Prekročenia PM10 v Banskej Bystrici*.
+3. Under **Receiver**, enter the **Address** the broker posts to, such as `https://dispecing.banskabystrica.sk/hooks/ovzdusie`. Outside the cluster it has to be `https`, and it never carries a password or a token. If the receiver checks a credential, name the **Secret name** and the **Key in the secret** that hold it, such as `dispecing-hook` and `token`. The form stores only that reference, never the value. **Headers** are for plain values the receiver needs, such as `X-Dispecing-Zdroj: jc-ovzdusie`; an `Authorization` or `Cookie` header belongs in the credential instead.
+4. Under **What is watched**, add rows to **Watched entities**: an **Entity type** such as `AirQualityObserved` watches every entity of that type, an **Entity identifier** watches one, and an **Identifier pattern** watches every entity whose identifier matches it. In **Watched attributes**, list the attributes whose change should fire it, such as `pm10` and `pm25`; left empty, any change fires it. Write a **Description** saying why the subscription exists.
+5. Under **Filters, pace and lifetime**, narrow what fires it with **q**, for example `pm10>50`, or an area with **geoQ**. **Minimum interval (seconds)**, such as `60`, keeps a busy station from flooding the receiver. **Expires at** ends it on a date; left empty, it runs until you remove it. Switching **Deliver notifications** off parks the subscription without deleting it.
+6. Click **Check**, then **Propose change**. The subscription starts once an approver accepts the proposal, and its row shows **Paused** while notifications are switched off.
+
+## 8. Answering from Another Source: Context Source Registrations
+
+A registration tells a space's broker that another source holds some of its data, so a query to your space is answered from both. The other source can be an endpoint of this platform or an NGSI-LD broker elsewhere. Its own policies still decide what it returns.
+
+### Register a Source with the Form
+
+#### By hand
+
+1. Open `/projects/banskabystrica/csrs` and click **New registration**.
+2. Under **Where the data is**, choose **An endpoint of this platform** or **An NGSI-LD API elsewhere**. Give the registration a **Name** such as `zvolen-ovzdusie` and pick the **Context Space** whose broker should answer with the source's data, such as `ovzdusie`.
+3. For an endpoint of this platform, pick the **Endpoint**; the data is read through it and its policies. For a broker elsewhere, enter its **NGSI-LD base URL** without `/ngsi-ld/v1`, such as `https://ngsi.zvolen.sk`, and under **Forwarding identity** choose whether the platform asks as one of its **Service accounts**, such as `ovzdusie-hub`, or passes on the caller's own sign-in.
+4. Under **What the source holds**, add a row per claim: an **Entity type** such as `AirQualityObserved`, or one **Entity identifier**, or an **Identifier pattern** that narrows the type. List the **Properties** and **Relationships** the source holds, such as `pm10`, `pm25` and `location`; left empty, the claim covers all of them.
+5. Choose which **Operations** go to the source, and the **Mode**. Inclusive merges the source's answer with the space's own data; exclusive makes the source the only answer for what the registration covers.
+6. Under **Schema mirror and expiry**, **Schema mirror interval** says how often the source's schemas are copied here, such as `24h`; left empty, once a day. **Expires at** makes the broker stop asking the source on that date.
+7. Click **Check**, then **Propose change**. Once an approver accepts it, a query to the space is also answered from the source.
+
 ## Related
 
 - [Getting Started](./01-getting-started.md): first steps in the Portal.

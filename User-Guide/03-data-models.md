@@ -128,6 +128,33 @@ The assistant selects the requested classes and slots, generates the projection 
 
 The assistant cannot automatically verify and propose schema mappings without operator review. Configure and verify mapping transformations manually in the **Mappings** tab.
 
+### Edit a Mapping with the Form
+
+The slot-by-slot rules stay on the **Mappings** tab. The form holds everything around them: which models the mapping connects, its golden tests and any code you write by hand. Every field says what it is for beside it, in your language.
+
+#### By hand
+
+1. Open `/projects/banskabystrica/mappings`, open the row menu of the mapping, for example `ovzdusie-to-airqualityobserved`, and click **Edit**.
+2. Under **Between which models**, **Name** and **Context space** are fixed: a different name would be a new mapping. Under **Source model** and **Target model**, set **Data model** to the published name, such as `ovzdusie-senzory` and `airqualityobserved`, and **Major version** to a whole number such as `1`. The target cannot be the source at the same version.
+3. Under **Golden tests**, each row pairs an **Input example** with the **Expected output** it must produce, as paths beside the mapping, for example `./tests/ovzdusie-to-airqualityobserved.input.json`. The check compares each pair, so a rule change that breaks one shows up before anyone approves it.
+4. Under **Native blocks**, add code only when a rule cannot say what you need. Pick the **Target slot** it fills, such as `pm10`, the **Language**, and write the **Code**, for example `root = this.pm10_raw.number() / 10`. Hand-written code always goes to a stricter review, because no check can read it.
+5. Leave **Compiled artifacts** as they are: the compiler writes those files for you.
+6. Click **Propose change**. You should see a notice with a link to the proposal; an approver decides it in `/projects/banskabystrica/approvals`.
+
+## 6. Deciding a Model Version's Lifecycle
+
+A model's classes and attributes come from the LinkML editor. Two things about a version come from you: where it is in its life, and whether its entities may carry attributes the model does not declare.
+
+### Change a Version's Lifecycle with the Form
+
+#### By hand
+
+1. Open `/projects/banskabystrica/datamodels`, open the row menu of the model, for example `ovzdusie-senzory`, and click **Edit**.
+2. Under **The model version**, read **Name**, **Context space**, **Version** (such as `1.2.0`) and **LinkML source** (such as `ovzdusie-senzory.linkml.yaml`). You change these in the LinkML editor on the **Models** page, not here.
+3. Under **Your decisions**, choose the **Lifecycle**. A draft may still change. A published version is fixed, so its readers can rely on it. A deprecated version still answers but warns every reader, and a retired one answers no one.
+4. Switch **Accept undeclared attributes** on only when the space has to accept attributes the model does not name yet. Switched off, an entity carrying such an attribute is refused.
+5. Click **Propose change**. The approver sees exactly these two decisions in the proposal.
+
 ## Related
 
 - [Organizations, Projects & Context Spaces](./02-organizations-projects-spaces.md): managing data partitions.
