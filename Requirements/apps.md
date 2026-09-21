@@ -35,6 +35,7 @@ Requirement family **AP-01…AP-71** for AI-generated, purpose-built application
 ## 4. Runtime and isolation
 
 - **AP-14** — Static apps MUST be served under `https://{host}/apps/{name}/` by the Portal static host through APISIX; no separate hostname is required.
+- **AP-14a** [S] — An App name MUST be unique across the organization, not only inside its project: `/apps/{name}/` and the pod `app-{name}` are one address each. `jcctl validate` and every write door (propose, import) MUST refuse a second project's App of a name another project already declares, naming both projects, so the edge never has to choose whose route or visibility wins (AP-14, AP-26, PF-50).
 - **AP-15** — Service apps MUST run in the instance namespace with default-deny NetworkPolicies allowing egress only to APISIX and the OIDC issuer, with resource requests/limits from `spec.limits` and the platform's restricted Pod Security Standard.
 - **AP-16** — Apps MUST NOT receive long-lived secrets; `secretRef` is not permitted in `kind: App`. Apps needing external data MUST declare a Pipeline that brings it into a space.
 - **AP-17** — The gateway MUST label app traffic with the app name; per-app rate limits (`spec.limits.requestsPerMinute`, `maxFileRows`) MUST be enforced on the app endpoint independently of the user's other endpoints.
