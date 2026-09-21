@@ -105,6 +105,40 @@ Type into the assistant composer:
 
 The assistant checks the cross-project directory and lists accessible endpoints, their source projects, and their published entity types.
 
+## 6. Deciding Who May Read and Write: Policies
+
+An endpoint says where the data is served; a Policy says who may do what with it. Each policy covers one Context Space and grants (or refuses) a set of operations to one grantee. Like every other change, a new policy takes effect only once its proposal is approved.
+
+### Write a Policy with the Form
+
+The example below is the policy that lets anyone read the air quality measurements of Banská Bystrica, `public-read` in project `banskabystrica`.
+
+1. Open **Policies** in the sidebar, at `/projects/banskabystrica/policies`. Each row says what the policy grants, to whom, on which space, and how many operations that covers. A refusal carries a red **Refusal** badge.
+2. Click **New Policy**. The form opens in three groups; the first one is open.
+3. **Who and what:**
+   - **Name**: the short name the policy is filed under, for example `public-read`. Two policies of one project cannot share a name.
+   - **Context Space**: the space whose data the policy decides about, here `ovzdusie`. A policy covers exactly one space.
+   - **Effect**: **Grant** gives what the policy lists. **Refusal** takes it away, and the platform reads every refusal before any grant, so choose it only to close something another policy opens.
+   - **Kind of grantee**: a role, a group, one person, a service account or a DID. For anonymous callers choose `role`.
+   - **Grantee**: the name of that role, group, person or account as the identity provider spells it, here `public`.
+   - **Operations**: tick one of the five named groups. Beside each group the form lists the operations it covers, and the two groups that change data carry a **changes data** mark. For read access tick `retrieveOps`. The single operations sit under **Individual operations**; a grant normally names a group instead. Nothing is granted until at least one box is ticked.
+4. **Entities and attributes** (open the group):
+   - Under **Entity selectors**, add one and enter **Entity type** `AirQualityObserved`. A selector with no type covers nothing, and the form refuses it at the field.
+   - **Identifier pattern** is optional and narrows the grant to identifiers that match it, for example `^urn:ngsi-ld:AirQualityObserved:banskabystrica\.sk:ovzdusie:.*$`.
+   - **Properties**: list the properties the grantee may reach, here `dateObserved`, `location`, `observedAt`, `pm10`, `pm25`. An attribute you leave out is not served, so the station's `reliability` and `refDevice` stay private. An empty list reaches every property.
+   - **Relationships**: the same for relationships, for example `refDistrict`. An empty list reaches all of them.
+5. **Residual filters and validity** (optional, open the group):
+   - **q**: a condition on the attributes, for example `pm10>=0`. An entity that fails it is outside the grant.
+   - **scopeQ**: the branch of the scope tree the grant covers, for example `/geo/SK/BB`, and everything under it.
+   - **geoQ**: the area the grant covers; an entity outside it is neither read nor written.
+   - **temporalQ**: the window of history the grant covers, for example `timerel=after&timeAt=2026-01-01T00:00:00Z`.
+   - **Valid from** and **Valid to**: the instants the grant starts and stops applying. Leave both empty for a grant with no end.
+6. Click **Check**. The verdict chip shows `Checked` when the policy is complete.
+7. Click **Propose change**. The form will not propose a grant wider than you may propose yourself; when it is refused, the reason stands next to the button.
+8. In `/projects/banskabystrica/approvals`, an approver reviews the grant and approves it. From then on the endpoints on `ovzdusie` answer anonymous readers with the five listed properties.
+
+To change an existing policy, open its row menu and choose **Edit**. The same form opens with the stored values. The **YAML** view shows the same manifest, and a change in either view appears in the other.
+
 ## Related
 
 - [Getting Started](./01-getting-started.md): first steps in the Portal.
