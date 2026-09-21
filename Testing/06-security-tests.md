@@ -181,7 +181,7 @@ State of the register on 2026-09-20: 50 vectors, 5 proven, 45 open.
 | operate | Data loss: a database, a volume, the forge, the cluster | T-1717 | OPS-44 |  | open |
 | operate | Nobody notices an attack | T-1718 | CC-44, CC-58 |  | open |
 | operate | A credential is leaked and must be rotated today | T-1719 | OPS-45 |  | open |
-| operate | Production is dev with another name | T-1720 | CC-73, CC-75 |  | open |
+| operate | Production is dev with another name | T-1720 | CC-73, CC-75 | `joinedcontext-deployment/tests/test_production_is_not_dev.py::test_production_renders_nothing_of_dev`, `joinedcontext-deployment/tests/test_production_is_not_dev.py::test_the_detector_finds_the_defect_it_is_named_for`, `joinedcontext-deployment/tests/test_production_is_not_dev.py::test_the_dev_render_is_what_the_detector_is_for` | proven |
 | operate | An outside tester has not looked at it | T-1721 | OPS-27 |  | open |
 | pipelines | A pipeline as a way out: Bloblang, processors, URLs and secrets | T-1701 | PL-18, PL-23, MF-39 |  | open |
 | pipelines | Pipelines of two projects share a process | T-1702 | PL-07 |  | open |
