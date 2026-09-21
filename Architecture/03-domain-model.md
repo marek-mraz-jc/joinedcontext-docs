@@ -278,7 +278,11 @@ The scheme is enforced, not recommended:
 4. **Resolution.** `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}` resolves to `/cs/{space}/ngsi-ld/v1/entities/{urn}` on the instance that serves `{orgDomain}` (SP-02); another instance finds it through the organisation's `did:web` document, which lists its platform host.
 5. **Registrations.** Context Source Registrations anchor their `idPattern` to the full prefix `^urn:ngsi-ld:AirQualityObserved:hel\.fi:air-quality:.*$`, so federation queries route to the one authoritative space (R33, R34).
 
-Organizations declare the domain once (`Organization.spec.domain`); the reconciler verifies ownership by DNS TXT record or by the served `did:web` document before any space of that organisation can accept writes (PF-41).
+Organizations declare the domain once (`Organization.spec.domain`); the reconciler verifies ownership by DNS TXT record or by the served `did:web` document before any space of that organisation can accept writes (PF-41). The verification is designed and not built (T-2377); what it builds to:
+
+- **State.** `Organization.status.domainVerification` holds `state` (`pending`, `verified`, `failed`), `method` (`dns-txt` or `did-web`), `checkedAt`, `reason` (on `failed`, in words a person acts on, never the resolver's raw answer) and `challenge`: 32 random bytes, base64url, minted once per Organization and shown in the Portal with the record to publish, `_joinedcontext.{domain} TXT "jc-verify={challenge}"`.
+- **Check.** The reconciler resolves the TXT record, or fetches `https://{domain}/.well-known/did.json` with no redirect off `{domain}` and looks for the instance host among its services, over its own egress rule and with a timeout. A failure is a recorded state, never a crash. A `verified` state is checked again once `checkedAt` is 30 days old.
+- **Gate.** The platform setting `domainVerification` is `report` (the default: the state is recorded and shown, writes are not refused) or `enforce` (a write to a space of an Organization whose state is not `verified` answers `403` naming the Organization). Every existing installation starts unverified, so `enforce` is the owner's switch once the seeds verify.
 
 ---
 
