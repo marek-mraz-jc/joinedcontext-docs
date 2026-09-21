@@ -163,7 +163,7 @@ GET /api/v1/projects/{project}/agent-runs/{id} HTTP/1.1
 
 Response: `200 OK` with full run representation including `kind`, `unattended`, `continues`, `previewUrl` (when available), `firstFrameMs` (the milliseconds from the run's creation to its first preview, set once and never moved by a later pass; the number AP-57 is measured on) and `mergeRequest` number. Two more fields link the application's source and its publication (AP-71):
 
-- `sourceUrl` — the forge's public web address of the run's `pathPrefix` on its branch, present once the run has committed and the Portal knows the forge;
+- `sourceUrl` — the forge's public web address of the run's `pathPrefix` on its branch, present once the run has committed and the Portal knows the forge; for a `static` run the source is the application's own repository `{project}_{app}` and `pathPrefix` is empty (AP-75, AP-78);
 - `changeId` — the `chg-…` id of the Change `POST …/publish` opened, present after Publish; its state is read from `GET /api/v1/projects/{project}/changes/{changeId}`.
 
 ### Preview Document
@@ -409,7 +409,7 @@ Response: `202 Accepted`
 }
 ```
 
-Transitions the App manifest to `lifecycle: published` via standard Gitea pull request. Approval rules follow AP-10.
+Transitions the App manifest to `lifecycle: published` via standard Gitea pull request. Approval rules follow AP-10. For a `static` run it also opens (or reuses) the merge request from the run's branch into the default branch of the application's repository, and the manifest's `spec.source.git` names that repository and the branch's head commit; approving the Change merges that merge request (AP-77).
 
 ## 7. Internal Proxy Endpoints
 
