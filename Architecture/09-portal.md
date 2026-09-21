@@ -21,8 +21,8 @@ The joinedcontext Portal is **one application** (repository `joinedcontext-porta
 |         |                                      |                                  |               |
 |         v (Mirror Read)                        v (Git Operations)                 v (Preferences) |
 |    +------------------------+             +---------------+                  +------------------+ |
-|    | Read-Only Live DB      |             | Gitea Git API |                  | PostgreSQL       | |
-|    | Mirror (from jcctl)  |             | (PRs, Commits)|                  | (User Prefs DB)  | |
+|    | In-process mirror of   |             | Gitea Git API |                  | PostgreSQL       | |
+|    | the default branch     |             | (PRs, Commits)|                  | (User Prefs DB)  | |
 |    +------------------------+             +---------------+                  +------------------+ |
 +---------------------------------------------------------------------------------------------------+
 ```
@@ -40,12 +40,13 @@ The Portal API operates as a thin, stateless coordinator. It exposes administrat
 
 ### Database Architecture
 
-The Portal API connects to four database schemas:
+Configuration state is read from a mirror, not from a database. The Portal's own sync loads the configuration repository's default branch into memory (`src/store.rs`), on start and whenever the branch moves (forge webhook or poll), and replaces the mirror whole; every list and read the API serves comes from it, so no request reads Git (UI-08). A sync that cannot read the repository keeps the last mirror and records why in the sync status. The mirror carries the live status the reconciler observed beside each manifest.
 
-1. **Live State Mirror (Read-Only):** Maintained by `jcctl apply` and context broker change notifications. Allows rapid querying of organizations, projects, context spaces, active endpoints, and pipeline execution states without querying Git.
-2. **User Preferences (Read-Write):** Stores non-configuration Tier 2 user state (UI themes, language selections, favorite projects, table layout settings, saved map views).
-3. **Logout marks (Read-Write):** One row per subject whose sessions a back-channel logout ended, and the moment it ended them: every session of that subject issued at or before it is refused. They live in the process for the request path and in the database so a restart does not re-accept a session somebody logged out (T-0980). A mark is kept 48 hours, which is longer than any session can live, and is read back when the process starts. A Portal deployed without a database keeps the marks of its own run only, and says so in its log.
-4. **Reconciler Memory (Read-Write):** What a scheduled loop has to remember between two runs and across a restart — for a `SyncSource` (MF-30): the source revision the repository carries, when the last run happened, the proposal a run opened and nobody has answered, why the last run failed, and whether an operator paused it. No credential and no copy of a source is here; the manifests stay in Git. A Portal deployed without a database still runs the loops and keeps this in memory, at the cost of one duplicate proposal per source with a run in flight when it restarts.
+The Portal API connects to three database schemas:
+
+1. **User Preferences (Read-Write):** Stores non-configuration Tier 2 user state (UI themes, language selections, favorite projects, table layout settings, saved map views).
+2. **Logout marks (Read-Write):** One row per subject whose sessions a back-channel logout ended, and the moment it ended them: every session of that subject issued at or before it is refused. They live in the process for the request path and in the database so a restart does not re-accept a session somebody logged out (T-0980). A mark is kept 48 hours, which is longer than any session can live, and is read back when the process starts. A Portal deployed without a database keeps the marks of its own run only, and says so in its log.
+3. **Reconciler Memory (Read-Write):** What a scheduled loop has to remember between two runs and across a restart — for a `SyncSource` (MF-30): the source revision the repository carries, when the last run happened, the proposal a run opened and nobody has answered, why the last run failed, and whether an operator paused it. No credential and no copy of a source is here; the manifests stay in Git. A Portal deployed without a database still runs the loops and keeps this in memory, at the cost of one duplicate proposal per source with a run in flight when it restarts.
 
 ### Liveness and readiness
 
