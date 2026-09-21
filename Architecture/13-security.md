@@ -103,6 +103,7 @@ refused by the route.
 | `POST /internal/agent-runs/…` (the run callbacks) | the credential proxy | a bearer the Portal and the proxy share, from the proxy's own secret. The one credential between cluster services that is not an identity; it is to become one. |
 | `POST /internal/pipeline-tests/{id}` | the pipeline test harness | the `{id}` itself: 130 random bits minted for one test, held by the harness the Portal started and by nobody else. A message naming a test that is not running is dropped. |
 | `GET /internal/previews` | the Context Gateway | a Keycloak ServiceAccount token: issuer, audience `portal-internal`, and `azp` naming the gateway's own client. |
+| `GET /internal/domain-verifications` | the Context Gateway | the same token as `/internal/previews`. |
 
 A workload's token comes from `client_credentials` on its own confidential client, with an audience
 mapper that binds the token to `portal-internal` — the pattern the endpoint surface already uses to
