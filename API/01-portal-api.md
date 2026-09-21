@@ -1607,6 +1607,17 @@ MCP (Streamable HTTP, protocol 2026-07-28):
                                               it and are read there (EP-47).
   A URI the caller may not read answers `-32002 resource not found`, the same as one that names
   nothing.
+  Grounding (AG-12, CC-47): every `tools/call` result — an answer, a conflict, a refusal, an
+  elicitation and a task's `tasks/result` — carries in `_meta` the state of the configuration it
+  was evaluated against, so an agent can tell a fresh answer from a stale one without asking again:
+    "_meta": { "joinedcontext.com/grounding": {
+      "revision": "<the commit the Portal's mirror holds, null before the first sync>",
+      "syncedAt": "<UTC RFC 3339 of that sync, null before the first>",
+      "evaluatedAt": "<UTC RFC 3339 of this answer>",
+      "drift": "none" | "sync-failed" | "unsynced" } }
+  `drift` is the mirror against the repository: `unsynced` before the first sync, `sync-failed`
+  when the last sync did not complete (the answer is from `revision`, which may be behind the
+  repository), `none` otherwise. It never carries the repository's URL, a branch or a token.
   Elicitation (AG-63): a call whose operation takes the Yellow or Red lane, or carries
   `destructiveHint`, never runs on the agent's word. The first `tools/call` runs nothing and
   answers
