@@ -1735,6 +1735,28 @@ A write the owner's rights do not cover is refused as it is outside a workspace:
 }
 ```
 
+## 23. Routes outside the resource API
+
+The OpenAPI document describes `/api/v1` and nothing else, so these routes are in it only where
+noted. An integrator meets the first three before any resource: the login, the MCP discovery and
+the MCP endpoint itself.
+
+| Method | Path | Who calls it | What it answers | Authentication |
+|---|---|---|---|---|
+| `GET` | `/api/v1/auth/login` | a browser | a redirect into the realm's code flow (§3) | none: it is how a session starts |
+| `GET` | `/api/v1/auth/callback` | the realm, through the browser | the session cookie and a redirect to the page asked for (§3) | the code and the stored nonce |
+| `POST` | `/api/v1/auth/backchannel-logout` | Keycloak | revokes the sessions the logout token names (§3) | the logout token, verified against the realm's keys |
+| `GET` | `/.well-known/oauth-protected-resource` | an MCP client | the RFC 9728 metadata naming the Portal's MCP resource and its realm | none: RFC 9728 makes it public, and it names no secret |
+| `GET` | `/.well-known/oauth-protected-resource/api/v1/mcp` | an MCP client | the same document, at the path RFC 9728 derives from the resource | none, as above |
+| `POST` | `/api/v1/mcp` | an MCP client, the assistant | JSON-RPC over Streamable HTTP (§21); in the OpenAPI document | a Bearer token whose audience is the Portal; `401` with `WWW-Authenticate` otherwise |
+| `GET` | `/api/v1/mcp` | an MCP client probing for a stream | `405`: the server opens no server-initiated stream | none needed to learn that |
+| `GET` | `/api/v1/openapi.json` | a client generator, the docs lane | this API's OpenAPI 3.1 document | none: it describes the API, not a project |
+| `GET` | `/apps/{name}/`, `/apps/{name}/{path}` | a browser | a published static app's `index.html` and assets (§12) | a `public` app is served to anyone; any other visibility needs a session, and what the app then reads is its endpoints' authorization |
+| `GET` | `/metrics` | the cluster's Prometheus | the Portal's counters in the Prometheus text format | none, and the edge refuses the path, so only a caller inside the cluster reaches it (OPS-16) |
+
+A route here that needs no authentication says so because of what it carries, never for
+convenience: none of them answers anything of a project.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
