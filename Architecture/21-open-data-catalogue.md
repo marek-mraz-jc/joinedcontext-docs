@@ -20,7 +20,7 @@ The slug comes from `spec.publish.ckan.organization`, and from the instance's `o
 
 | Object | Name | Rule |
 |---|---|---|
-| Organization | `spec.publish.ckan.organization`, else `organizationDefault` | a DNS label, one per project |
+| Organization | `spec.publish.ckan.organization`, else `organizationDefault` | a DNS label, one per project; created, when CKAN has none, with the `CkanInstance`'s own `metadata.title`, else the branding `organisation` name, else the slug |
 | Dataset | `spec.publish.ckan.name`, else the Endpoint's own name | one dataset per Endpoint; the name is what the dataset URL shows, so a rename is a new URL |
 | Resource | the representation's own title | one resource per enabled representation, plus the schema index and one resource per schema artifact |
 | DataStore table | the dataset's resource id | one table per dataset, keyed by `entity_id` |
@@ -33,9 +33,9 @@ The dataset's metadata is the DCAT-AP record the Endpoint already answers with (
 
 | CKAN field | DCAT-AP term | Note |
 |---|---|---|
-| `title` | `dct:title` | the dataset name when the record carries no title |
-| `notes` | `dct:description` | |
-| `license_id` | `dct:license` | a register id such as `cc-by`; an IRI goes to the `license_url` extra instead, because CKAN's register holds ids |
+| `title` | `dct:title` | in the language of the Endpoint's space (`ContextSpace.spec.defaultLocale`), else English, else the first the record carries; the dataset name when it carries none |
+| `notes` | `dct:description` | in the same language as the title |
+| `license_id` | `dct:license`, else `spec.publish.ckan.license` | a register id such as `cc-by` (CC-BY 4.0); an IRI goes to the `license_url` extra instead, because CKAN's register holds ids |
 | `private` | `spec.audience` | private unless the Endpoint is `public`, closed by default |
 | `url` | the Endpoint's public URL | the dataset points back at the surface it describes |
 | `tags` | `dcat:keyword` | |
@@ -51,7 +51,7 @@ The dataset's metadata is the DCAT-AP record the Endpoint already answers with (
 | extra `endpoint` | the Endpoint URL | so an edit made by hand in CKAN is visible as drift |
 | extra `generated_by` | the publisher | `jcctl/ckan-publisher` |
 
-The mapping lives in `crates/jcctl/src/publish/ckan.rs` and is asserted against the official DCAT-AP shapes by the conformance suite, which is what makes the catalogue harvestable: a national portal reads `catalog.rdf` from CKAN's DCAT extension, and every field it needs is one of the rows above. A record that carries no publisher or no licence produces a dataset without them rather than with invented ones, so a harvester's own validation says what is missing instead of accepting a guess.
+The mapping lives in `crates/jcctl/src/publish/ckan.rs` and is asserted against the official DCAT-AP shapes by the conformance suite, which is what makes the catalogue harvestable: a national portal reads `catalog.rdf` from CKAN's DCAT extension, and every field it needs is one of the rows above. A record that carries no publisher produces a dataset without one rather than with an invented one, so a harvester's own validation says what is missing instead of accepting a guess. The licence is the one term the gateway's record does not carry, and the only one the publication block may state: `spec.publish.ckan.license` is the licence the organization chose for the dataset, used when the record names none. Without either, the dataset has no licence, and a licence set by hand in CKAN does not survive the next run, because every run writes the whole dataset (CC-18).
 
 ## 3. Rows, links and dumps
 
