@@ -138,7 +138,7 @@ Check flow status in Portal UI: status must transition from *Error* to *Live*.
 
 ### Verification
 
-The endpoint answers `429` with `RateLimit-Limit`, `RateLimit-Remaining` and `Retry-After` while the flood lasts, and the broker's load falls. With metrics on, `apisix_http_status{status="429"}` counts it.
+The endpoint answers `429` with `RateLimit-Limit`, `RateLimit-Remaining` and `Retry-After` while the flood lasts, and the broker's load falls. With metrics on, `apisix_http_status{code="429"}` counts it.
 
 ---
 

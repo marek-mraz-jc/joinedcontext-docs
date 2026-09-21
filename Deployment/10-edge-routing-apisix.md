@@ -343,7 +343,7 @@ Access logs are emitted to `stdout` in structured JSON format, scrubbed of sensi
 
 APISIX exports Prometheus metrics on port 9091 (`/apisix/prometheus/metrics`). Key metrics include:
 
-- `apisix_http_status`: Counter of HTTP status codes partitioned by route and service.
+- `apisix_http_status`: Counter of HTTP status codes; the status is the `code` label, beside `route` and `service`.
 - `apisix_http_latency_bucket`: Histogram of gateway latency percentiles.
 - `apisix_yaml_configuration_load_status`: Gauge indicating standalone configuration reload success (`1` = valid, `0` = failed reload).
 
@@ -368,7 +368,7 @@ spec:
             summary: "APISIX standalone failed to reload apisix.yaml (check #END marker)"
 
         - alert: APISIXHigh5xxRate
-          expr: sum(rate(apisix_http_status{status=~"5.."}[5m])) / sum(rate(apisix_http_status[5m])) > 0.01
+          expr: sum(rate(apisix_http_status{code=~"5.."}[5m])) / sum(rate(apisix_http_status[5m])) > 0.01
           for: 2m
           labels:
             severity: warning
