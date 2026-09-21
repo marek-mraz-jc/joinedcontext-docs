@@ -670,15 +670,11 @@ spec:
       instanceRef: { kind: CkanInstance, name: open-data }   # where to publish
       organization: helsingin-kaupunki                    # the CKAN organization slug
       name: ilmanlaatu                                 # optional; the endpoint name by default
+      license: cc-by                                   # optional; a CKAN licence id (CC-BY 4.0)
       datastore: { representation: csv, refresh: onChange }  # optional row mirror
 ```
 
-The licence the organization chose is named in the same block, as a CKAN licence id; it is used when the endpoint's record names none, which today it never does:
-
-```yaml excerpt
-    ckan:
-      license: cc-by                                   # CC-BY 4.0; optional
-```
+The licence is the one member that says something the endpoint's record does not: the CKAN licence id the organization chose, used when the record names none, which today it never does.
 
 The instance itself is a manifest like everything else, so a second catalogue is a second file and never a Portal setting nobody can review:
 
