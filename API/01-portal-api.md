@@ -740,6 +740,12 @@ POST /api/v1/projects/{project}/import?dryRun=All
   between the manifests, and the `{space}` segment of every `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}`
   in the spec (MF-22). `targetNamespace` may only name the project itself, because the repository
   path of every kind starts `projects/{project}/`.
+- A Policy's `spec.assigner` lands as `did:web:{orgDomain}`, the placeholder the loader renders
+  for the organisation that owns the file (CC-82): a Policy grants over a space of this project,
+  so the organisation that may give that data away is this one, whatever DID the bundle carried.
+  Every assigner the import rewrote is listed in the report's `reassigned` (`Policy/{name}`, the
+  DID the bundle carried, the placeholder it became), so the person who approves the Change sees
+  that the grant is now signed by this organisation (R6).
 - `conflictPolicy` is `fail` (the default: `409` naming the first collision, and nothing is
   written), `skip`, `replace` or `rename`. A rename is `{name}-{origin}`, the origin being the
   project the manifest came from, then `-2`, `-3` while the name is taken; every reference to the
@@ -753,7 +759,8 @@ POST /api/v1/projects/{project}/import?dryRun=All
   lane is the riskiest of the resources in it (CC-63). Native files travel with their manifests and
   keep their path under the new project.
 - `dryRun` answers `200` with the report instead: `created`, `replaced`, `skipped`, `renamed`
-  (old name → new), `nativeFiles`, `lane` and `source`. Nothing is written and no branch is made.
+  (old name → new), `reassigned` (Policy → the assigner it carried, when one was rewritten),
+  `nativeFiles`, `lane` and `source`. The `Change` body lists the same reassignments. Nothing is written and no branch is made.
 - The dry run is the bundle's check (PF-57, every door): it records a verdict over the bundle as
   sent (its SHA-256) and the options that decide what it writes (`conflictPolicy`, `orgDomain`,
   `targetNamespace`), for the caller and the project. Under `strict` an import without `dryRun`
