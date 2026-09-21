@@ -65,6 +65,9 @@ assert() {  # assert <id> <output>
     CHK-12) printf '%s' "$out" | grep -qE '^\s*on\s*$' ;;
     CHK-13) local len; len=$(printf '%s' "$out" | tr -dc '0-9'); [ "${len:-0}" -ge 32 ] ;;
     CHK-14) [ -z "$(printf '%s' "$out" | tr -d ' \n')" ] ;;
+    # a render check, not a cluster probe: pytest's summary, with no failure, error or empty run
+    CHK-15) printf '%s' "$out" | grep -qE '[0-9]+ passed' \
+              && ! printf '%s' "$out" | grep -qE '[0-9]+ (failed|errors?)|no tests ran' ;;
     *) return 2 ;;
   esac
 }
@@ -144,19 +147,23 @@ STUB
 #!/usr/bin/env bash
 /usr/bin/base64 "$@"
 STUB
+    cat > "$bin/python3" <<STUB
+#!/usr/bin/env bash
+[ "$mode" = conforming ] && echo "9 passed in 1.20s" || echo "1 failed, 8 passed in 1.20s"
+STUB
     chmod +x "$bin"/*
   }
 
   local failures=0
   make_stubs conforming
-  if PATH="$bin:$PATH" JC_NS=stub "$0" > "$tmp/out.txt" 2>&1; then
-    echo "case 1 ok: a conforming cluster passes all fourteen checks"
+  if PATH="$bin:$PATH" JC_NS=stub JC_DEPLOYMENT_DIR="$tmp" "$0" > "$tmp/out.txt" 2>&1; then
+    echo "case 1 ok: a conforming cluster passes all fifteen checks"
   else
     echo "FAIL case 1: a conforming cluster did not pass:" >&2; cat "$tmp/out.txt" >&2; failures=1
   fi
 
   make_stubs violating
-  if PATH="$bin:$PATH" JC_NS=stub "$0" > "$tmp/bad.txt" 2>&1; then
+  if PATH="$bin:$PATH" JC_NS=stub JC_DEPLOYMENT_DIR="$tmp" "$0" > "$tmp/bad.txt" 2>&1; then
     echo "FAIL case 2: a violating cluster passed" >&2; cat "$tmp/bad.txt" >&2; failures=1
   else
     local red; red=$(grep -c 'FAIL' "$tmp/bad.txt")
@@ -173,7 +180,7 @@ STUB
   # shellcheck disable=SC2016  # the backticks are markdown, not a substitution
   echo '| **CHK-99** | Invented | `true` | nothing | none |' >> "$page"
   make_stubs conforming
-  PATH="$bin:$PATH" JC_NS=stub JC_SECURITY_PAGE="$page" "$0" > "$tmp/nocase.txt" 2>&1
+  PATH="$bin:$PATH" JC_NS=stub JC_DEPLOYMENT_DIR="$tmp" JC_SECURITY_PAGE="$page" "$0" > "$tmp/nocase.txt" 2>&1
   if grep -q 'NOCASE' "$tmp/nocase.txt"; then
     echo "case 3 ok: a checklist row with no assertion is reported"
   else
