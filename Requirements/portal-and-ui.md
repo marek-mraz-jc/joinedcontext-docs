@@ -11,7 +11,7 @@ Family **UI** (UI-01…UI-74; UI-43 and UI-61…UI-72 are unassigned). Owning ch
 ## 1. Schema-Driven Forms and UI Schemas
 
 - **UI-01** [H] — The Portal UI MUST dynamically render configuration and data entry forms from JSON Schema draft-07 definitions using `react-jsonschema-form` (CC-31).
-- **UI-02** [H] — Form field ordering, custom widget selection, help text, and visual grouping MUST be configured via declarative `kind: UiSchema` manifests stored under `portal/forms/*.uischema.yaml`.
+- **UI-02** [H] — Form field ordering, custom widget selection, help text, and visual grouping MUST be configured via declarative `kind: UiSchema` manifests stored under `ui/src/schemas/forms/*.uischema.yaml`, one file per form, each a `joinedcontext.com/v1alpha1` `UiSchema` naming its kind in `spec.for`.
 - **UI-03** [H] — Forms requiring reference selection MUST use dynamic autocomplete pickers populated via live Context Gateway queries executing under the authenticated user's own token (CC-43).
 - **UI-04** [H] — Form validation MUST execute client-side on change and server-side upon submission, displaying structured validation errors adjacent to invalid input fields.
 
@@ -30,10 +30,11 @@ Family **UI** (UI-01…UI-74; UI-43 and UI-61…UI-72 are unassigned). Owning ch
 ## 4. Internationalization and Localization
 
 - **UI-11** [H] — The Portal UI MUST provide complete language translations for Slovak (`sk`), English (`en`), German (`de`), and Czech (`cs`).
-- **UI-12** [H] — Translations MUST be managed using ICU MessageFormat syntax via `react-i18next` and stored as versioned JSON manifests under `portal/locales/{locale}.json`.
+- **UI-12** [H] — Translations MUST be managed using ICU MessageFormat syntax via `react-i18next` and stored as versioned JSON manifests under `ui/src/locales/{locale}.json`.
 - **UI-13** [H] — The UI MUST dynamically resolve user locale from user preferences, browser `Accept-Language` headers, or the organization fallback locale (PF-25).
 - **UI-14** [H] — Multi-language manifest metadata MUST be rendered using the active user locale, gracefully falling back to the organization default if a key is missing (PF-24).
-- **UI-50** [H] — A resource `title` (and any human label or description authored by a user) MUST be a single plain-text string in the author's language, and the Portal UI MUST NOT prompt for or generate per-language variants in creation forms; the Portal's own interface chrome and system messages MUST remain localized via locale bundles (UI-11, UI-12). Reading the legacy multi-language map form is supported through release `v0.9` and rejected from `v1.0`, resolving to a single string (author locale if present, then `en`, then the first non-empty value) and rewritten by `jcctl` to a string on the next change; an optional `translations` map beside `title` MAY be provided for deliberate external translations and MUST NOT appear in creation forms. All titles MUST be rendered strictly as text and never as markup.
+- **UI-50** [H] — A resource `title` (and any human label or description authored by a user) MUST be a single plain-text string in the author's language, and the Portal UI MUST NOT prompt for or generate per-language variants in creation forms; the Portal's own interface chrome and system messages MUST remain localized via locale bundles (UI-11, UI-12). Reading the legacy multi-language map form is supported, resolving to a single string (author locale if present, then `en`, then the first non-empty value). All titles MUST be rendered strictly as text and never as markup.
+  > Note: The resolution order is `Text::resolve` (`crates/jc-core/src/i18n.rs`), and both forms read (`store.rs::a_plain_title_and_the_legacy_map_both_read`). Three things this requirement used to promise are not built and were removed rather than left standing: `jcctl` rewrites nothing, no release rejects the legacy form, and a `translations` map beside `title` cannot be written at all, because `ObjectMeta` has no such field and refuses unknown ones. A deliberate external translation has nowhere to live today (T-2378).
 
 ## 5. Accessibility and Usability
 
