@@ -11,7 +11,7 @@ One LinkML model per Context Space is the truth (DM-01). An Endpoint exposes a s
 
 ## 1. The manifest
 
-- **MP-01** [P][S] — `kind: ModelProjection` MUST be a manifest under configuration as code (CC family) that names one space's DataModel and version (`spec.dataModelRef`), lists the exposed classes (`spec.classes[]`, each with `name` and `slots[]`) and MAY carry a residual filter (`spec.filter` with `q`, `scopeQ`, `geoQ`, `temporalQ` in NGSI-LD query syntax); `jcctl validate` MUST refuse a projection naming a class or slot the referenced model version does not have, listing every offending name.
+- **MP-01** [P][S] — `kind: ModelProjection` MUST be a manifest under configuration as code (CC family) that names one space's DataModel and version (`spec.dataModelRef`), lists the exposed classes (`spec.classes[]`, each with `name` and `slots[]`) and MAY carry a residual filter (`spec.filter` with `q`, `scopeQ`, `geoQ`, `temporalQ` in NGSI-LD query syntax); `jcctl validate` and the Portal's write path (before a Change exists, MF-37) MUST refuse a projection naming a class or slot the referenced model version does not have, listing every offending name, and one whose model is absent from the project or at another major.
   > Note: A class absent from `spec.classes` is not exposed at all; a class listed with an empty `slots` is exposed with identity only, `id` and `type`. The check reads the model's LinkML source beside its manifest, so a typo fails at validation rather than as an Endpoint that serves nothing. Today it runs in `jcctl validate` alone: a write through the Portal API parses the manifest but does not yet cross-check it against the model (T-2376).
 
 ## 2. Endpoints and policies reference it
