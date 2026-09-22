@@ -401,7 +401,7 @@ A `Policy` names a context space, not an endpoint, so a grant made to a person d
 
 | The reconciler renders | Held by | Policies that name it |
 |---|---|---|
-| `Endpoint app-{name}` with `callerRole` | every caller the endpoint admits, as `endpoint:{project}/app-{name}` | one per `dataNeeds` item without `roles` |
+| `Endpoint app-{name}` with `callerRole: true` | every caller the endpoint admits, as `endpoint:{project}/app-{name}` | one per `dataNeeds` item without `roles` |
 | the same Endpoint's `roles[]`, copied from `spec.access` | a caller matching a subject of role `r`, as `endpoint:{project}/app-{name}/r` | one per role `r` of an item with `roles` |
 
 The gateway matches a `user` subject against `preferred_username`, which is the e-mail because the realm sets `registrationEmailAsUsername`, and a `group` against the `groups` claim; the roles exist for the one request through that endpoint. A token that asserts a role starting with `endpoint:` has it dropped, so no realm role can impersonate one. Before this section the base grant named the role `app-{name}`, which no token carries, so a `project` or `organization` application read nothing (ADR-N-027 §1).
