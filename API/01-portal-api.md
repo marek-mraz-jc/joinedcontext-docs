@@ -735,7 +735,9 @@ GET /api/v1/projects/{project}/revisions?limit=20
   the import sets the tags again; `projects/{project}.yaml`, the registry entry with no
   parameter values, so the target sets its own (CC-88); and the `kind: Bundle` index
   `bundle.yaml`, whose `spec.repositories` lists each bundle with its `role` and the `head`
-  commit it ends at and whose `spec.files` carries every file's SHA-256 (MF-42). Other branches
+  commit it ends at and whose `spec.files` carries every file's SHA-256 (MF-42). `project.yaml`
+  at the archive root is the project's own file at that head, the one an import reads the
+  parameter declarations from without unpacking a bundle. Other branches
   and the annotation of an annotated tag do not travel; `git bundle create --all` of a mirror
   clone (Deployment/11 §7) carries them. A bundle that ends elsewhere than the head read in the
   same export is `409` (export again), and so is an App whose repository is outside the forge's
@@ -839,6 +841,33 @@ POST /api/v1/projects/{project}/import?dryRun=All
   resource it belongs to from going Live with a plain reason. Save as across projects and a
   workspace's answers carry the same list. Values the loader renders stay in their placeholder or
   local form on both sides (`{orgDomain}`, `endpointRef`, no `{space}` literal, MF-43).
+- `?format=git` imports the archive of a `format=git` export as a new project, the `{project}`
+  of the path, in an organization of layout 2 (MF-45, MF-46). The body is `multipart/form-data`
+  with the archive as `file`, `parameters` (a JSON object of values for what `project.yaml`
+  declares, CC-88; a `secret` parameter takes a `secretRef` name, never a value) and an optional
+  `displayName`. Who may open a project may import one (PF-65), and the name passes the checks of
+  `POST /api/v1/projects`. Before anything is created the archive is checked: the index is a
+  valid `kind: Bundle` with one `project` repository and no `organization` one, every file's
+  SHA-256 equals the index (MF-42), `project.yaml` loads at this release's `apiVersion` (an older
+  one is migrated with `jcctl migrate` first and a newer one is refused, MF-47), and the
+  parameters resolve against its declarations; each failure is `400` naming it. Every repository
+  it would create (`{project}`, and `{project}_{app}` per application, AP-75) must not exist yet
+  (`409`). Then each repository is created empty and private, its bundle is pushed as its default
+  branch `main` with the tags of `{name}.tags` (the Portal speaks git's receive-pack; it holds no
+  git), and its head is read back: a head that is not the index's removes every repository the
+  import created and answers `502`. When the slug differs from the one the bundle left, one
+  commit on `main` of the project repository remounts it (every manifest that names the old slug
+  names the new one; an Endpoint slug another project of this organization serves is drawn
+  anew; `CODEOWNERS` names the new writers; an App's `source.git.url` names its new
+  repository), so the head after the import is that commit and the answer names both. `main` is
+  then protected, and the answer is `202` and the organization's `Change`: the registry entry
+  with the given values and the caller's steward binding, as opening a project proposes it. A
+  `Change` that cannot be opened removes the repositories again (CC-85). The report in the
+  `Change` body carries `verified`, one `{path, equal}` per bundle with its head. `dryRun` answers
+  `200` with the checks alone and the parameters `project.yaml` declares, which the Portal's
+  import form is drawn from; nothing is created. As for every import, that dry run is the check
+  PF-57 holds the import to under `strict`, over the archive's SHA-256, the slug and the
+  parameters.
 - The `{"url": …}` source of MF-20 answers `501`. Fetching a host the caller names is an egress
   decision the Portal has no policy behind, and the upload form carries the same bundle; see
   `OPEN-QUESTIONS.md`.
