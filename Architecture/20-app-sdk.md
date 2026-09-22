@@ -253,9 +253,23 @@ The build lane is a Kubernetes `Job` the Portal reconciler starts in the apps na
 
 1. The reconciler sees a `published` App whose `spec.source.git.ref` names a commit the store holds no build of, and starts the Job (one per App at a time; a newer `ref` waits).
 2. The Job, from the `joinedcontext-app-builder` image of the Portal's own release, clones the repository at `ref` with a read-only token for that one repository.
-3. It installs offline: the image bakes the release's SDK tarball and the template's pnpm store, and SDK-12 already allows no other package, so `pnpm install --offline --frozen-lockfile` needs no registry (AP-82).
-4. It runs the interface and function tests, builds, bundles `functions/*.ts` into `functions.js`, computes `integrity.json` (AP-12) and uploads the bundle to the artifact store under `apps/{org}/{project}/{app}/{digest}/` ([17-artifact-store §2](17-artifact-store.md#2-layout-and-ownership)).
+3. It installs nothing: the image carries the template's dependencies installed once, against the release's own packed SDK, and links them into the clone. SDK-12 already allows no other package, so a `package.json` naming one fails the build, and no install script an application ships ever runs (AP-82).
+4. It runs the interface and function tests, builds, bundles `functions/*.ts` into `functions.js`, computes `integrity.json` (AP-12) and uploads the bundle to the artifact store under `apps/{org}/{project}/{app}/{digest}/` ([17-artifact-store §2](17-artifact-store.md#2-layout-and-ownership)). `functions.js` is one ES module that exports each function under its name (`functions/bike-stats.ts` as `"bike-stats"`) and imports `@joinedcontext/sdk/server`, which the runtime supplies. The digest is the SHA-256 of `integrity.json`, which names every file of the bundle, and `integrity.json` is uploaded last, so a prefix without it is an upload that did not finish.
 5. It proposes `status.build` as the lane's `ServiceAccount` (AP-73). A failing step leaves its log tail on the App's `Ready` condition and the previous build serving (AP-72).
+
+The Job's contract with the reconciler is its environment and its termination message. The image is `joinedcontext-app-builder`, published by the Portal repository's `image.yml` from `builder/Dockerfile`, and its entrypoint takes no arguments:
+
+| Variable | What it is |
+|---|---|
+| `JC_APP_REPO` | the application repository's `http(s)` clone URL on the forge |
+| `JC_APP_COMMIT` | the commit to build, 40 lowercase hexadecimal characters |
+| `JC_APP_BUILD` | `node` for a Vite project, `none` for a tree that is its own bundle (AP-83) |
+| `JC_STORE_URL`, `JC_STORE_BUCKET`, `JC_STORE_REGION` | the artifact store; the region defaults to `us-east-1` |
+| `JC_STORE_PREFIX` | `apps/{org}/{project}/{app}`; the lane adds `/{digest}/` |
+| `JC_FORGE_TOKEN` | secret: read-only, the one repository |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | secret: the store's write key for this prefix only |
+
+On success the Job writes `{"digest":"sha256:…","commit":"…","sdkVersion":"…","builtAt":"…"}` to `/dev/termination-log`, the `status.build` the reconciler proposes. On failure it exits non-zero with `build failed: <reason>` as its last log line. The application's own code runs with neither secret in its environment. The Job is admitted only as `app-builder` pods with no token and a deadline of at most 900 seconds (the `restrict-app-build-jobs` policy of the deployment), and its NetworkPolicy reaches the forge, the store and DNS.
 
 The Job runs untrusted code, so it runs with no Kubernetes token, under the restricted Pod Security Standard, with egress to the forge and the store only, and with a wall clock and a memory limit (AP-81). The catalog shows `building`, `build failed` with the log tail, or `served <commit>`, and offers **Open** only while a build is served (AP-86).
 
