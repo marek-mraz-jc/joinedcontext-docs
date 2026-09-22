@@ -62,11 +62,17 @@ Platform components are cleanly partitioned between core services and pluggable 
 - **Interfaces:** HTTPS browser console, OIDC endpoints, JWKS discovery endpoint.
 - **State & Failure Behavior:** Clustered Quarkus deployment backed by CloudNativePG PostgreSQL. Pod outages fail over to active replicas.
 
-### Gitea Forge & Actions Runner (`gitea`)
+### Gitea Forge (`gitea`)
 
-- **Primary Role:** In-cluster Git repository, pull request review, protected branches, and CI automation runner.
+- **Primary Role:** In-cluster Git repository, pull request review, protected branches, and the Actions and package registry the application repositories build and publish through (ADR-N-028).
 - **Interfaces:** Web UI, Git over SSH/HTTPS, webhook dispatches to the Portal (`/api/v1/.../sync-sources` webhook routes, signed with the shared HMAC secret).
 - **State & Failure Behavior:** A single-replica Deployment holding one ReadWriteOnce volume for the bare repositories, with metadata in PostgreSQL. One replica is the ceiling: the volume cannot be shared, so the forge fails over rather than scaling out, which is why OPS-06's two-replica floor covers the stateless core and not this. Outages freeze configuration changes while data serving continues unaffected (CC-55).
+
+### Forge Actions Runner (`gitea-runner`)
+
+- **Primary Role:** Runs the Portal-owned `.gitea/workflows/build.yml` of every application repository: tests, build, `integrity.json`, the package `app-{name}@{commit}` and the proposal of `status.build` (AP-80, [ADR-N-028](../Decisions/adr-n-028-applications-build-on-the-forge.md)).
+- **Interfaces:** Registers with the forge using the organization's registration token and takes jobs from it; reaches the forge and the Portal API and nothing else (AP-81).
+- **State & Failure Behavior:** Stateless: `act_runner` in host mode on the signed builder image (AP-82), with no container runtime socket and no Kubernetes token, a work directory wiped after every job, and a wall-clock and memory limit per job. While it is down, builds wait in the forge's queue and every application keeps serving its last build.
 
 ### Artifact Store (RustFS) (`artifact-store`)
 
