@@ -202,7 +202,7 @@ before any merge request exists (MF-24, CC-06), whatever the kind.
 Portability operations:
 
 ```text
-GET  /api/v1/projects/{project}/export?format=yaml|json|zip&revision={commit}&kinds=…&names=…   section 10
+GET  /api/v1/projects/{project}/export?format=yaml|json|zip|git&revision={commit}&kinds=…&names=…   section 10
 GET  /api/v1/projects/{project}/revisions?limit=20                                            section 10
 POST /api/v1/projects/{project}/import        multipart (file) or JSON manifests; fields: targetNamespace, conflictPolicy, dryRun; {"url": …} is 501
 GET  /api/v1/projects/{project}/syncsources/{name}/status   what the loop reports (section 10)
@@ -698,7 +698,7 @@ out without Git knowledge, always read from the forge and never from the live mi
 downloaded is byte-for-byte what a `git archive` of that path would hold:
 
 ```text
-GET /api/v1/projects/{project}/export?format=yaml|json|zip&revision={commit}&kinds={plurals}&names={names}
+GET /api/v1/projects/{project}/export?format=yaml|json|zip|git&revision={commit}&kinds={plurals}&names={names}
 GET /api/v1/projects/{project}/revisions?limit=20
 ```
 
@@ -726,6 +726,22 @@ GET /api/v1/projects/{project}/revisions?limit=20
   members above; `format=json` carries `readme` and `schemas` beside `items`. A `kinds` filter keeps
   the schemas of the kinds it selects. With `names`, the answer is the manifests alone. Import skips
   `README.md`, `schemas/` and the index, so none of them is written into a project.
+- `format=git` exports a project of layout 2, which lives in a repository of its own (MF-45).
+  The archive (`application/zip`, `{project}-git-{short}.zip`) holds `{project}.bundle`, the
+  forge's `git bundle` of the project repository's default branch with that branch's whole
+  history; `{app}.bundle` for every App of the project whose `source.git` names a repository of
+  the forge's organization, under the App's name; `{name}.tags` beside a bundle whose repository
+  has tags, one `{commit} refs/tags/{tag}` line per tag, because the forge bundles one ref and
+  the import sets the tags again; `projects/{project}.yaml`, the registry entry with no
+  parameter values, so the target sets its own (CC-88); and the `kind: Bundle` index
+  `bundle.yaml`, whose `spec.repositories` lists each bundle with its `role` and the `head`
+  commit it ends at and whose `spec.files` carries every file's SHA-256 (MF-42). Other branches
+  and the annotation of an annotated tag do not travel; `git bundle create --all` of a mirror
+  clone (Deployment/11 §7) carries them. A bundle that ends elsewhere than the head read in the
+  same export is `409` (export again), and so is an App whose repository is outside the forge's
+  organization, named. A git export is the whole repository, so it answers `403` to a caller
+  who may not read every manifest of the project (MF-18), where `format=zip` leaves those out;
+  it takes no `revision`, `kinds` or `names` (`400`), and a project of layout 1 answers `409`.
 - `revision` is a commit sha or branch name; absent means the default branch head. A revision the
   forge does not know is `404`.
 - `kinds` and `names` are comma-separated filters on the manifests; the archive format keeps native

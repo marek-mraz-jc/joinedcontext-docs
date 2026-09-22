@@ -131,8 +131,10 @@ archived until every head at the target is equal.
    git -C "$PROJECT.git" rev-parse HEAD > "$PROJECT.head"
    ```
 
-   The Portal's export writes the same bundles, the registry entry with its values reset to the
-   parameter defaults, and a `kind: Bundle` index listing each bundle with its head commit.
+   The Portal's export (`GET …/export?format=git`, API/01 §10) writes one bundle per repository
+   of the default branch with its whole history, the tags beside it, the registry entry with its
+   values reset to the parameter defaults, and a `kind: Bundle` index listing each bundle with its
+   head commit. Other branches travel only in the `--all` bundle above.
 2. **Import at the target.** The import creates each repository from its bundle, shows the
    parameter form generated from `project.yaml`'s `spec.parameters`, and writes the registry
    entry with the values you set: the target's hosts, counts and the names of its secrets. A
