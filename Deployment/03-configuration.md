@@ -140,6 +140,8 @@ values; the binary refuses to start rather than run half-configured.
 | `JC_GATEWAY_EGRESS_CA_BUNDLE` | unset | a PEM file of extra roots the notification egress dispatcher trusts on top of the public ones, for subscribers behind the installation's own CA ([R46](../Requirements/policy-firewall.md)); unreadable or empty stops the gateway |
 | `SSL_CERT_FILE` | `/etc/ssl/certs/ca-certificates.crt` | the public trust anchors the egress dispatcher reads at start-up ([R46](../Requirements/policy-firewall.md)). The image ships them; set this only when the roots live somewhere else. Unreadable or holding no certificate stops the gateway |
 | `JC_GATEWAY_REPO_DIR` | a checkout of the configuration repository | the tree the endpoint table is projected from ([CC-08](../Requirements/city-as-code.md)); without it the table is empty and every slug is a 404 |
+| `JC_GATEWAY_PROJECTS_DIR` | the project checkouts the deployment mounts | one directory per registry slug, each the project repository at its entry's `spec.ref`; a layout 2 organization is assembled from them ([CC-86](../Requirements/city-as-code.md)) and refused without them, a layout 1 repository needs none. The gateway reads checkouts and never the forge, so it holds no forge credential ([CC-89](../Requirements/city-as-code.md)) |
+| `JC_GATEWAY_ASSEMBLY_DIR` | `/tmp/jc-assembly` | the scratch directory a layout 2 organization is assembled into, outside the checkouts; a project whose checkout is missing keeps the render it had there |
 
 `global.orgDomain` is the organization's own DNS name (`hel.fi` on `dev`), not the
 platform's `global.domain`. The development profile seeds `JC_GATEWAY_REPO_DIR` from a ConfigMap
