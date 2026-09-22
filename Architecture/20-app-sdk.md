@@ -249,27 +249,27 @@ What names the artifact is `App.status.build`, `{ digest, commit, sdkVersion, bu
 
 ### 6.0 Where the build runs
 
-The build lane is a Kubernetes `Job` the Portal reconciler starts in the apps namespace, not a CI service ([ADR-N-026](../Decisions/adr-n-026-the-build-lane-runs-in-the-cluster.md), AP-80). The application repositories are private on the installation's own forge (§6.1), so no outside CI can clone them, and a runner daemon would run whatever workflow a repository wrote. The Job runs one fixed command:
+The build runs on the forge, where the source is: each application repository's Gitea Actions workflow builds it, the organization's Gitea package registry keeps the result, and the Portal only reads both ([ADR-N-028](../Decisions/adr-n-028-applications-build-on-the-forge.md), which replaced the Portal-started `Job` of [ADR-N-026](../Decisions/adr-n-026-the-build-lane-runs-in-the-cluster.md)). One build, step by step:
 
-1. The reconciler sees a `published` App whose `spec.source.git.ref` names a commit the store holds no build of, and starts the Job (one per App at a time; a newer `ref` waits).
-2. The Job, from the `joinedcontext-app-builder` image of the Portal's own release, clones the repository at `ref` with a read-only token for that one repository.
-3. It installs offline: the image bakes the release's SDK tarball and the template's pnpm store, and SDK-12 already allows no other package, so `pnpm install --offline --frozen-lockfile` needs no registry (AP-82).
-4. It runs the interface and function tests, builds, bundles `functions/*.ts` into `functions.js`, computes `integrity.json` (AP-12) and uploads the bundle to the artifact store under `apps/{org}/{project}/{app}/{digest}/` ([17-artifact-store §2](17-artifact-store.md#2-layout-and-ownership)).
-5. It proposes `status.build` as the lane's `ServiceAccount` (AP-73). A failing step leaves its log tail on the App's `Ready` condition and the previous build serving (AP-72).
+1. The approval of a publication merges the run's branch into the repository's default branch (AP-85). That push starts `.gitea/workflows/build.yml`, which the template carries and the Portal writes in every run's first commit (AP-100). **Rebuild** on the App page dispatches the same workflow on the default branch (AP-103).
+2. The installation's `gitea-runner` picks the job up: `act_runner` in host mode on the `joinedcontext-app-builder` image of the Portal's own release, which bakes the release's SDK tarball and the template's pnpm store, so `pnpm install --offline --frozen-lockfile` needs no registry (AP-81, AP-82).
+3. The workflow runs the interface and function tests, builds, bundles `functions/*.ts` into `functions.js`, computes `integrity.json` (AP-12) and the SBOM (AP-11), and publishes `bundle.tar.gz` and `sbom.cdx.json` as the generic package `app-{name}`, version `{commit}`, with the repository's own job token (AP-101).
+4. It proposes `status.build {digest, commit, sdkVersion, builtAt}` through the Portal API with the lane's token, an Actions organization secret whose only right is that one field (AP-73). The Portal refuses a commit that is not on the default branch or a package that does not match (AP-104).
+5. The static host fetches `app-{name}@{commit}` read-only, checks the digest before it serves a byte, and keeps it under `{apps_dir}/{name}/{digest}/` (AP-102). A failed run, or a package that does not match, leaves the previous build serving (AP-72).
 
-The Job runs untrusted code, so it runs with no Kubernetes token, under the restricted Pod Security Standard, with egress to the forge and the store only, and with a wall clock and a memory limit (AP-81). The catalog shows `building`, `build failed` with the log tail, or `served <commit>`, and offers **Open** only while a build is served (AP-86).
+The workflow file is the Portal's: a run commit that touches `.gitea/` is refused, so what runs is only what a reviewer merged (AP-100). The runner executes untrusted application code, so it holds no Kubernetes token and no container socket, runs under the restricted Pod Security Standard with egress to the forge and the Portal API only, and wipes its work directory after every job (AP-81); one application's job still shares the runner process with the next one's, and a runner per job is the upgrade path (ADR-N-028 §5). The catalog reads the repository's workflow runs: `building`, `build failed` with a link to the run's log, or `served <commit>`, and offers **Open** only while a build is served (AP-86). The App page links the repository, the latest run and the package (AP-103).
 
 A `static` application has one of three shapes, told apart by `spec.build`:
 
 | `spec.build` | Shape | What the lane does |
 |---|---|---|
 | `{ node: "22" }` | a Vite project: React on the SDK, what the generator writes | `pnpm install --offline`, the tests, `pnpm build` |
-| `{}` | plain HTML with no build step: `index.html` at the repository root, data read with `fetch` on the same origin from the endpoint slug in `#jc-config` | the tree at `ref` is the bundle; the lane computes `integrity.json` and uploads it as it is (AP-83) |
+| `{}` | plain HTML with no build step: `index.html` at the repository root, data read with `fetch` on the same origin from the endpoint slug in `#jc-config` | the tree at the commit is the bundle; the workflow computes `integrity.json` and publishes it as it is (AP-83) |
 | either of the above, with `functions/*.ts` | an interface plus functions | also bundles `functions.js`, which the host hands to `jc-functions` on `POST /apps/{name}/api/functions/{fn}` (AP-84) |
 
 Functions stay on `jc-functions` (QuickJS, §3). A function is plain TypeScript `(request, ctx) => response` with no Node or Deno API, so the same file runs in vitest, in Deno and in the platform; no Deno runtime is added.
 
-None of this is built yet: the reconciler skips every `static` App, the store has no uploader (AP-74), and the one application `dev` serves is baked into the Portal image. T-2590, T-2592, T-2593 and T-2594 build it. Source in git, one build by digest: the repository stays small and every served bundle is reproducible from a commit, which is also what moving an application to another instance means, the source moves with the project and the target's CI builds it again (Architecture/06 §6).
+None of this runs on `dev` yet: Gitea Actions and the package registry are switched off there, and the one application `dev` serves is baked into the Portal image. T-2608 (the runner and the registry), T-2593 and T-2609 (the Portal half) build it. Source in git, one build by digest: the repository stays small and every served bundle is reproducible from a commit, which is also what moving an application to another instance means, the source moves with the project and the target's forge builds it again (Architecture/06 §6).
 
 ### 6.1 One repository per application
 
@@ -301,7 +301,7 @@ An application `spec.json` and a Dashboard place it as a view, `kind: "grid"`, w
 
 - [Requirements/app-sdk](../Requirements/app-sdk.md) — the normative contract, SDK-01…SDK-26.
 - [ADR-N-022](../Decisions/adr-n-022-generated-applications-are-code-on-the-app-sdk.md) — why applications are code, and why functions run in QuickJS.
-- [ADR-N-026](../Decisions/adr-n-026-the-build-lane-runs-in-the-cluster.md) — why the build lane is a Job in the cluster, and the three shapes of a static application.
+- [ADR-N-028](../Decisions/adr-n-028-applications-build-on-the-forge.md) — why applications build on the forge, and ADR-N-026 for the three shapes of a static application.
 - [11-data-models](11-data-models.md) — Model Tools, which renders `jc-types.ts` from LinkML.
 - [16-apps-on-demand §8](16-apps-on-demand.md#8-forms-that-write-through-the-endpoint) — the write rules `EntityForm` follows.
 - [19-agent-runner](19-agent-runner.md) — the run lifecycle and the proxy both phases use.

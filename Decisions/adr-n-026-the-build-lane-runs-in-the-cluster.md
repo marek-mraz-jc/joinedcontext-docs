@@ -6,7 +6,8 @@ title: "ADR-N-026: The Build Lane Runs in the Cluster, and a Static Application 
 # ADR-N-026: The Build Lane Runs in the Cluster, and a Static Application May Have No Build Step
 
 Date: 2026-09-22  
-Status: Accepted  
+Status: Superseded  
+Superseded by: ADR-N-028, for decisions 1, 2, 4 and 8 (where the build runs, where the bundle is stored, the Job's walls and where the catalog reads the state); decisions 3, 5, 6 and 7 stand  
 Decision Makers: product owner
 
 ## 1. Context
