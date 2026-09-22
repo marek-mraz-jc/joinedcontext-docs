@@ -392,7 +392,12 @@ POST /api/v1/projects/{project}/changes/{id}/reject      review "request changes
 ```
 
 `{id}` is the `metadata.name` a write returned: `chg-` plus the merge request number in eight
-lowercase hex digits.
+lowercase hex digits. A Change targets one repository (CC-87), which `status.repository` names. In
+layout 2 ([ADR-N-029](../Decisions/adr-n-029-one-repository-per-project.md)) a project's own
+kinds land in the project repository and the organization kinds in the organization repository, so
+under `/projects/{project}/changes` `chg-{hex}` is a merge request of the project repository and
+`chg-org-{hex}` one of the organization repository; the two number their merge requests apart. A
+layout 1 organization has one repository and only the first form.
 
 A listed proposal carries what a reviewer decides on, not what the forge stores:
 
@@ -407,7 +412,8 @@ A listed proposal carries what a reviewer decides on, not what the forge stores:
       "metadata": { "name": "chg-0000019c", "namespace": "helsinki" },
       "status": {
         "lane": "red",
-        "mergeRequest": "https://git.example.fi/hel/org/pulls/412",
+        "repository": "helsinki",
+        "mergeRequest": "https://git.example.fi/hel/helsinki/pulls/412",
         "plan": { "create": 0, "update": 1, "delete": 0 },
         "phase": "PendingApproval"
       },
