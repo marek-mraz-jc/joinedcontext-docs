@@ -80,15 +80,11 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_OIDC_ISSUER` | — | no | The realm humans sign in against: `JC_OIDC_ISSUER`, `JC_OIDC_CLIENT_ID` and `JC_OIDC_CLIENT_SECRET` (a secret), all three together or none, plus the optional `JC_OIDC_CA_FILE` for a realm behind a private CA. |
 | `JC_PORTAL_AGENT_PROXY_CLIENT_ID` | — | no | The Keycloak client `jc-agent-proxy` holds (`JC_PORTAL_AGENT_PROXY_CLIENT_ID`), which is the only caller the run callbacks on the internal listener answer (AG-52, T-2271). |
 | `JC_PORTAL_APISIX_NAMESPACE` | `apisix` | no | `JC_PORTAL_APISIX_NAMESPACE` — the namespace the installation runs APISIX in, the only one whose pods reach an app pod; default `apisix`. |
-| `JC_PORTAL_APPS_DIR` | — | no | Root of the built app bundles, one directory per app (`JC_PORTAL_APPS_DIR`). |
-<<<<<<< HEAD
 | `JC_PORTAL_APPS_CACHE_DIR` | — | no | Where this replica keeps the builds it fetched from the package registry, one `{name}/{hex}` directory per build (`JC_PORTAL_APPS_CACHE_DIR`, AP-102); it must be writable, and `{apps_dir}` need not be. |
-| `JC_PORTAL_APPS_NAMESPACE` | — | no | Where an App's objects are applied: `JC_PORTAL_APPS_NAMESPACE` and `JC_PORTAL_ORG_DOMAIN`, both or neither, with the host taken from the public URL rather than configured twice (AP-13). |
-=======
+| `JC_PORTAL_APPS_DIR` | — | no | Root of the built app bundles, one directory per app (`JC_PORTAL_APPS_DIR`). |
 | `JC_PORTAL_APPS_NAMESPACE` | — | no | Where an App's four Kubernetes objects are applied (`JC_PORTAL_APPS_NAMESPACE` with `JC_PORTAL_ORG_DOMAIN`; AP-13, AP-18, T-0411). |
 | `JC_PORTAL_APPS_PULL_SECRET_NAME` | — | no | `JC_PORTAL_APPS_PULL_SECRET_NAME` — the name of the `dockerconfigjson` Secret in the apps namespace a node pulls app images with (a forge token that reads packages only). |
 | `JC_PORTAL_APPS_REGISTRY` | — | no | `JC_PORTAL_APPS_REGISTRY` — the host, and port if any, of the forge's container registry; an App's image is composed as `{registry}/{forge organization}/app-{name}@{digest}`. |
->>>>>>> origin/agent/worker-1/T-2616
 | `JC_PORTAL_APPS_URL` | — | no | `JC_PORTAL_APPS_URL`: an absolute `http(s)` origin with nothing after it. |
 | `JC_PORTAL_ARTIFACT_STORE_ACCESS_KEY` | — | yes | `JC_PORTAL_ARTIFACT_STORE_ENDPOINT`, `JC_PORTAL_ARTIFACT_STORE_ACCESS_KEY` and `JC_PORTAL_ARTIFACT_STORE_SECRET_KEY` (the last two secrets) name the store and the root credential; `JC_PORTAL_ARTIFACT_STORE_BUCKET` (default `jc-artifacts`) and `JC_PORTAL_ARTIFACT_STORE_REGION` (default `us-east-1`) are the same in every installation this platform deploys, so they have defaults. |
 | `JC_PORTAL_ARTIFACT_STORE_BUCKET` | `jc-artifacts` | no | `JC_PORTAL_ARTIFACT_STORE_ENDPOINT`, `JC_PORTAL_ARTIFACT_STORE_ACCESS_KEY` and `JC_PORTAL_ARTIFACT_STORE_SECRET_KEY` (the last two secrets) name the store and the root credential; `JC_PORTAL_ARTIFACT_STORE_BUCKET` (default `jc-artifacts`) and `JC_PORTAL_ARTIFACT_STORE_REGION` (default `us-east-1`) are the same in every installation this platform deploys, so they have defaults. |
