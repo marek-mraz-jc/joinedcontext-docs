@@ -5,9 +5,9 @@ title: "Apps on Demand"
 
 # Apps on Demand
 
-Family **AP** (AP-01…AP-86, AP-90…AP-99). Owning chapters: [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) and [19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
+Family **AP** (AP-01…AP-87, AP-90…AP-99). Owning chapters: [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) and [19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
 
-Requirement family **AP-01…AP-86** for AI-generated, purpose-built applications that consume context data through a dedicated, least-privilege Endpoint. Architecture in [Architecture/16-apps-on-demand](../Architecture/16-apps-on-demand.md) and [Architecture/19-agent-runner](../Architecture/19-agent-runner.md).
+Requirement family **AP-01…AP-87, AP-90…AP-99** for AI-generated, purpose-built applications that consume context data through a dedicated, least-privilege Endpoint. Architecture in [Architecture/16-apps-on-demand](../Architecture/16-apps-on-demand.md) and [Architecture/19-agent-runner](../Architecture/19-agent-runner.md).
 
 ## 1. Manifest and source
 
@@ -150,6 +150,7 @@ Decided in [ADR-N-026](../Decisions/adr-n-026-the-build-lane-runs-in-the-cluster
 - **AP-84** [S] — The static host MUST serve `POST /apps/{name}/api/functions/{fn}` for a published App whose served build holds `functions.js`, invoking `jc-functions` with the functions of that build, the request and the person's `X-Access-Token` from the edge (SDK-23); a function the served build does not hold MUST answer `404`, and no file of the repository that was not built MUST ever run.
 - **AP-85** — Approving the Change that publishes a `static` run MUST merge the run's branch into the application repository's default branch before the lane builds, and the lane MUST build that default branch at the merge commit (AP-77); an App whose repository's default branch holds only `README.md` MUST be shown as never published.
 - **AP-86** [H] — The application catalog and the App page MUST show the build state: `building`, `build failed` with the log tail, or `served <commit>`; **Open** MUST be offered only while a build is served (AP-70, AP-72).
+- **AP-87** [S] — A `static` App whose `lifecycle` is `published` MUST name its source with `spec.source.git`: a proposal or an import of one that names `spec.source.path` MUST be refused with `400`, and `jcctl validate` MUST refuse it the same way, with a message naming the field and the two ways out (retire the App, or publish it again from its own repository, AP-75, AP-77), because the build lane builds a repository at a commit and nothing else (AP-73, AP-74), and a published App it cannot build answers `404` to its audience. The one exception is an application whose bundle the Portal image ships, the reference applications under `apps/{name}/` of the `joinedcontext-portal` repository: its manifest carries the annotation `joinedcontext.com/shipped-with: portal`, and the Portal MUST refuse that annotation with `400` on an App whose bundle its static host does not hold (`{JC_PORTAL_APPS_DIR}/{name}/index.html`), so the annotation never publishes an application nothing serves. A published App that already names `source.path` stays readable, and retiring it is the Change the rule still accepts. For AP-86, such a shipped bundle counts as a served build, and a published App with neither a build nor that annotation offers no `Open`.
 
 ## 18. Application roles
 
@@ -186,6 +187,7 @@ Decided in [ADR-N-026](../Decisions/adr-n-026-the-build-lane-runs-in-the-cluster
 | AP-68…AP-71 | Durability, Resumption & Draft Governance | [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | AP-72…AP-79 | Source in git, one build by digest, one repository per application and its GitHub copy | [20-app-sdk.md#6-publication](../Architecture/20-app-sdk.md#6-publication) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | AP-80…AP-86 | The build lane in the cluster and the three shapes of a static application | [20-app-sdk.md#6-publication](../Architecture/20-app-sdk.md#6-publication), [ADR-N-026](../Decisions/adr-n-026-the-build-lane-runs-in-the-cluster.md) | [06-security-tests.md](../Testing/06-security-tests.md) |
+| AP-87 | No published App the lane cannot build | [20-app-sdk.md#6-publication](../Architecture/20-app-sdk.md#6-publication) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | AP-90…AP-99 | Application roles | [16-apps-on-demand.md §12](../Architecture/16-apps-on-demand.md#12-roles-of-an-application) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 
 ## Related

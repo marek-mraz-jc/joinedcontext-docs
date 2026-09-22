@@ -365,7 +365,7 @@ The Portal executes an internal background reaper loop on a periodic schedule. R
 - No server-side code of a generated `static` app outside its functions, which run in the isolated `jc-functions` runtime with the caller's grants ([20-app-sdk §3](20-app-sdk.md#3-functions-and-their-runtime)), and no arbitrary egress for any app; an app that needs an external API declares it as a pipeline instead, so the data enters a space and the app reads it through its endpoint.
 - No bespoke permission language for apps: `dataNeeds` compiles to the existing `Endpoint` + `Policy` model; if it cannot be expressed there, the app does not get it.
 
-Normative requirements: [AP-01…AP-86, AP-90…AP-99](../Requirements/apps.md). User steps: [User-Guide/11-apps](../User-Guide/11-apps.md).
+Normative requirements: [AP-01…AP-87, AP-90…AP-99](../Requirements/apps.md). User steps: [User-Guide/11-apps](../User-Guide/11-apps.md).
 
 ## 12. Roles of an application
 
