@@ -855,7 +855,7 @@ POST /api/v1/projects/{project}/import?dryRun=All
   (`409`). Then each repository is created empty and private, its bundle is pushed as its default
   branch `main` with the tags of `{name}.tags` (the Portal speaks git's receive-pack; it holds no
   git), and its head is read back: a head that is not the index's removes every repository the
-  import created and answers `502`. When the slug differs from the one the bundle left, one
+  import created and answers `409`. When the slug differs from the one the bundle left, one
   commit on `main` of the project repository remounts it (every manifest that names the old slug
   names the new one; an Endpoint slug another project of this organization serves is drawn
   anew; `CODEOWNERS` names the new writers; an App's `source.git.url` names its new
