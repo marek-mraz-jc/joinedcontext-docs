@@ -22,7 +22,7 @@ A **Core** component makes up a working installation and is in the shipped `comp
 | **keycloak** | Core | Java | yes | The realm, its clients and its client scopes, including `mcp:portal` |
 | **apisix** | Core | Lua / NGINX | yes | The standalone edge: the rendered route table, TLS, rate limiting |
 | **openid-connect** | Core | APISIX plugin | yes | Part of `apisix`: the `openid-connect` plugin in session mode on the Portal host and every App on Demand route, through one confidential `edge` client per realm ([ADR-N-019](../Decisions/adr-n-019-login-at-the-edge-apisix-openid-connect.md)) |
-| **gitea** | Core | Go | yes | The in-cluster forge, plus a bootstrap Job that creates the configuration repository, the teams and the tokens the Portal and the gateway read. Gitea Actions is off: the component deploys no runner |
+| **gitea** | Core | Go | yes | The in-cluster forge, plus a bootstrap Job that creates the configuration repository, the teams and the tokens the Portal and the gateway read. Gitea Actions and the package registry are on for the application repositories, whose workflows run on `gitea-runner` (ADR-N-028) |
 | **context-broker** | Core | Rust (Antares) | yes | The NGSI-LD broker over the shared schema with row-level security |
 | **pipeline-runner** | Core | Bento | yes | The resident streams runner and the CronJobs for scheduled pipelines |
 | **context-gateway** | Core | Rust (Axum) | yes | The Policy Enforcement Point, the query rewriter, the representation translators and the Data MCP server |
