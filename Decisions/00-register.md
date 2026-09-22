@@ -5,7 +5,7 @@ title: "Architecture Decision Register"
 
 # Architecture Decision Register
 
-This register records all foundational Architecture Decision Records (ADRs) governing the next-generation federated digital twin platform (`ADR-N-001` through `ADR-N-022`), along with explicit status mapping of legacy decision records from preceding platform generations.
+This register records all foundational Architecture Decision Records (ADRs) governing the next-generation federated digital twin platform (`ADR-N-001` through `ADR-N-026`), along with explicit status mapping of legacy decision records from preceding platform generations.
 
 ## 1. Target Architecture Decisions (`ADR-N` Series)
 
@@ -35,6 +35,7 @@ This register records all foundational Architecture Decision Records (ADRs) gove
 | [ADR-N-022](adr-n-022-generated-applications-are-code-on-the-app-sdk.md) | Generated Applications Are Code on the App SDK, Not a Specification for a Renderer | **Accepted** | 2026-09-14 | A `static` application is React code and serverless JavaScript functions on `@joinedcontext/sdk`, starting from a complete tested template app (pages, forms, filters, ECharts and Recharts charts, MapLibre and deck.gl maps, functions) with types rendered from LinkML by `gen-typescript`; functions run in a QuickJS runtime with the caller's grants; one shot with every file writes the first version, an editing agent with file tools handles every later instruction; the Portal previews it in the sandboxed frame with reads and writes through the host page; the `spec.json` kit pass retires. |
 | [ADR-N-023](adr-n-023-pipeline-sources-steps-outputs.md) | A Pipeline Is Bento's Own Shape: Sources, Steps, Outputs | **Accepted** | 2026-09-18 | A `Pipeline` at `v1alpha2` carries `sources[]`, an ordered `steps[]` and `outputs[]`, rendered as Bento `broker` inputs, `pipeline.processors` and `broker` outputs; branching stays inside a step (`branch`, `switch`, `workflow`), no edges are stored; a `v1alpha1` Pipeline reads as the `v1alpha2` one with the same rendered stream and migrates when edited; the write guard applies per source and per output. |
 | [ADR-N-024](adr-n-024-workspaces-branch-and-preview.md) | Workspaces: Copy, Change, Test and Bring Back, Renamed at Render and Never at Rest | **Accepted** | 2026-09-18 | A workspace is a branch of the Organization repository recorded beside the drafts; manifests keep their names; a preview is the branch rendered with a `ws-{name}-` prefix on the organization-unique identities, limited and paused on `dev`; bringing it back is the branch's pull request, one Change approved as any other; Save as and the import door cover plain copies. |
+| [ADR-N-026](adr-n-026-the-build-lane-runs-in-the-cluster.md) | The Build Lane Runs in the Cluster, and a Static Application May Have No Build Step | **Accepted** | 2026-09-22 | A published `static` App is built by a Kubernetes Job the Portal reconciler starts in the apps namespace: the Portal release's builder image clones the app's repository at the approved commit, installs the baked SDK offline, tests, builds, uploads to the artifact store and proposes `status.build`; the Job holds no platform credential; `build: {}` is plain HTML with no build step; functions stay on QuickJS and are served on `POST /apps/{name}/api/functions/{fn}`. |
 
 ## 2. Status of Preceding Decision Records
 
@@ -118,4 +119,5 @@ The following table explicitly categorizes the disposition of all historical dec
 - [ADR-N-022](adr-n-022-generated-applications-are-code-on-the-app-sdk.md) — referenced above.
 - [ADR-N-023](adr-n-023-pipeline-sources-steps-outputs.md) — referenced above.
 - [ADR-N-024](adr-n-024-workspaces-branch-and-preview.md) — referenced above.
+- [ADR-N-026](adr-n-026-the-build-lane-runs-in-the-cluster.md) — referenced above.
 - [01-overview](../Architecture/01-overview.md) — the architecture these decisions shape.
