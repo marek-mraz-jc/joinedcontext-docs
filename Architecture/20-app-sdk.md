@@ -175,7 +175,7 @@ The module loader resolves an import only to a key of `files`; the runtime impor
 **Who calls it.** The runtime is reachable from the Portal only (NetworkPolicy), and the Portal is the only party that knows the code (SDK-23):
 
 - *Preview.* The SDK in the frame sends `jc-request` with path `/functions/{fn}`; the host page posts it to `POST /api/v1/projects/{project}/agent-runs/{id}/functions/{fn}` with the reviewer's session; the Portal sends the run's current transpiled functions, the request and the reviewer's access token to the runtime.
-- *Published.* The edge route `/apps/{name}/api/functions/{fn}` reaches the Portal's static host with `X-Access-Token` (§5 of [16-apps-on-demand](16-apps-on-demand.md#5-login-in-front-of-the-portal-and-every-app-apisix-openid-connect)); the host sends the functions of the published build, the request and that token to the runtime.
+- *Published.* The edge route `POST /apps/{name}/api/functions/{fn}` reaches the Portal's static host with `X-Access-Token` (§5 of [16-apps-on-demand](16-apps-on-demand.md#5-login-in-front-of-the-portal-and-every-app-apisix-openid-connect)); the host sends the functions of the build it is serving (the `functions.js` the lane bundled, §6), the request and that token to the runtime, and answers `404` for a function that build does not hold (AP-84). The route is designed and not built yet (T-2594): `src/apps/static_host.rs` serves only `GET`.
 
 ## 4. The first run and the editing agent
 
@@ -241,15 +241,39 @@ A `POST /functions/{fn}` with `fn` matching `[a-z][a-z0-9-]{0,39}` goes to the r
 
 ## 6. Publication
 
-Publishing commits `app.yaml` and goes through the lanes of AP-20. CI installs the project with the SDK version pinned in `package.json`, runs its tests (interface and functions) and builds it (AP-11); a failing test blocks the publication (SDK-24). The build is the static interface and one `functions.js` bundle; the static host serves the interface with the same-origin transport and hands `functions.js` to the runtime on each call. The preview transpiler is a fast path to a preview, never the artifact that is published.
+Publishing commits `app.yaml` and goes through the lanes of AP-20. The build lane installs the project with the SDK version pinned in `package.json`, runs its tests (interface and functions) and builds it (AP-11); a failing test blocks the publication (SDK-24). The build is the static interface and one `functions.js` bundle; the static host serves the interface with the same-origin transport and hands `functions.js` to the runtime on each call. The preview transpiler is a fast path to a preview, never the artifact that is published.
 
-What names the artifact is `App.status.build`, `{ digest, commit, sdkVersion, builtAt }`, and the build lane is its only writer (AP-13a, AP-73): CI builds from the merged source, stores the bundle under its digest and commits the field back; the host serves that digest and no other (AP-72). Source in git, one build by digest: the repository stays small and every served bundle is reproducible from a commit, which is also what moving an application to another instance means, the source moves with the project and the target's CI builds it again (Architecture/06 §6).
+What names the artifact is `App.status.build`, `{ digest, commit, sdkVersion, builtAt }`, and the build lane is its only writer (AP-13a, AP-73): the lane builds from the merged source, stores the bundle under its digest and proposes the field back; the host serves that digest and no other (AP-72).
+
+### 6.0 Where the build runs
+
+The build lane is a Kubernetes `Job` the Portal reconciler starts in the apps namespace, not a CI service ([ADR-N-026](../Decisions/adr-n-026-the-build-lane-runs-in-the-cluster.md), AP-80). The application repositories are private on the installation's own forge (§6.1), so no outside CI can clone them, and a runner daemon would run whatever workflow a repository wrote. The Job runs one fixed command:
+
+1. The reconciler sees a `published` App whose `spec.source.git.ref` names a commit the store holds no build of, and starts the Job (one per App at a time; a newer `ref` waits).
+2. The Job, from the `joinedcontext-app-builder` image of the Portal's own release, clones the repository at `ref` with a read-only token for that one repository.
+3. It installs offline: the image bakes the release's SDK tarball and the template's pnpm store, and SDK-12 already allows no other package, so `pnpm install --offline --frozen-lockfile` needs no registry (AP-82).
+4. It runs the interface and function tests, builds, bundles `functions/*.ts` into `functions.js`, computes `integrity.json` (AP-12) and uploads the bundle to the artifact store under `apps/{org}/{project}/{app}/{digest}/` ([17-artifact-store §2](17-artifact-store.md#2-layout-and-ownership)).
+5. It proposes `status.build` as the lane's `ServiceAccount` (AP-73). A failing step leaves its log tail on the App's `Ready` condition and the previous build serving (AP-72).
+
+The Job runs untrusted code, so it runs with no Kubernetes token, under the restricted Pod Security Standard, with egress to the forge and the store only, and with a wall clock and a memory limit (AP-81). The catalog shows `building`, `build failed` with the log tail, or `served <commit>`, and offers **Open** only while a build is served (AP-86).
+
+A `static` application has one of three shapes, told apart by `spec.build`:
+
+| `spec.build` | Shape | What the lane does |
+|---|---|---|
+| `{ node: "22" }` | a Vite project: React on the SDK, what the generator writes | `pnpm install --offline`, the tests, `pnpm build` |
+| `{}` | plain HTML with no build step: `index.html` at the repository root, data read with `fetch` on the same origin from the endpoint slug in `#jc-config` | the tree at `ref` is the bundle; the lane computes `integrity.json` and uploads it as it is (AP-83) |
+| either of the above, with `functions/*.ts` | an interface plus functions | also bundles `functions.js`, which the host hands to `jc-functions` on `POST /apps/{name}/api/functions/{fn}` (AP-84) |
+
+Functions stay on `jc-functions` (QuickJS, §3). A function is plain TypeScript `(request, ctx) => response` with no Node or Deno API, so the same file runs in vitest, in Deno and in the platform; no Deno runtime is added.
+
+None of this is built yet: the reconciler skips every `static` App, the store has no uploader (AP-74), and the one application `dev` serves is baked into the Portal image. T-2590, T-2592, T-2593 and T-2594 build it. Source in git, one build by digest: the repository stays small and every served bundle is reproducible from a commit, which is also what moving an application to another instance means, the source moves with the project and the target's CI builds it again (Architecture/06 §6).
 
 ### 6.1 One repository per application
 
 A `static` application lives in a repository of its own on the organization's forge, `{project}_{app}` beside the configuration repository, private (AP-75). The Portal creates it on the application's first commit and never touches an existing one except through a run branch. Each run commits to `agent/app-{app}/{runId}` in that repository: the first commit makes the branch hold exactly the run's files plus a `README.md` the Portal writes, and every later pass is one more commit (AP-76). The whole application sits at the root, template included, so a clone is a project `pnpm install` and `pnpm build` understand once the SDK package it pins is reachable.
 
-Publish opens a merge request from the run branch into the repository's default branch and proposes the `App` manifest with `spec.source.git` naming the repository and the exact commit of the branch head (AP-77). The reviewer approves that Change in the configuration repository as for every other kind; the approval then merges the application's merge request with a merge commit, refusing if its head has moved, so the default branch of an application's repository is the history of what was published. The configuration repository holds the manifest and nothing of the source.
+Publish opens a merge request from the run branch into the repository's default branch and proposes the `App` manifest with `spec.source.git` naming the repository and the exact commit of the branch head (AP-77). The reviewer approves that Change in the configuration repository as for every other kind; the approval then merges the application's merge request with a merge commit, refusing if its head has moved, so the default branch of an application's repository is the history of what was published. The lane builds that default branch at the merge commit (AP-85). A repository whose default branch holds only the `README.md` is an application that was never published, and the catalog says so instead of offering to open it. The configuration repository holds the manifest and nothing of the source.
 
 An installation may also keep every application repository on GitHub (AP-79). With a GitHub owner and a token configured, the Portal creates a private `{owner}/{project}_{app}` on GitHub beside the forge repository and gives the forge repository a push mirror to it that syncs on every commit, which Gitea does natively. The forge stays the repository of record: runs commit there, the merge request is opened and merged there, and `spec.source.git` names it. The GitHub copy is a regular repository a person can clone, fork or wire into their own tooling, and the run links it beside the forge's. The token reaches the Portal from a Secret and is handed to the forge once, as the mirror's credential. A mirror that cannot be set up is a sentence on the run, not a failed pass.
 
@@ -273,6 +297,7 @@ An application `spec.json` and a Dashboard place it as a view, `kind: "grid"`, w
 
 - [Requirements/app-sdk](../Requirements/app-sdk.md) — the normative contract, SDK-01…SDK-26.
 - [ADR-N-022](../Decisions/adr-n-022-generated-applications-are-code-on-the-app-sdk.md) — why applications are code, and why functions run in QuickJS.
+- [ADR-N-026](../Decisions/adr-n-026-the-build-lane-runs-in-the-cluster.md) — why the build lane is a Job in the cluster, and the three shapes of a static application.
 - [11-data-models](11-data-models.md) — Model Tools, which renders `jc-types.ts` from LinkML.
 - [16-apps-on-demand §8](16-apps-on-demand.md#8-forms-that-write-through-the-endpoint) — the write rules `EntityForm` follows.
 - [19-agent-runner](19-agent-runner.md) — the run lifecycle and the proxy both phases use.
