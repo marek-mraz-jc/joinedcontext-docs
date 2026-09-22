@@ -61,7 +61,7 @@ Roles as code (`Role`, `RoleBinding`, `Group`, Architecture/12 §2a) govern who 
 ## Related
 
 - [Architecture/16-apps-on-demand §12](../Architecture/16-apps-on-demand.md#12-roles-of-an-application) — how roles are declared, rendered and enforced.
-- [Requirements/apps §17](../Requirements/apps.md#17-application-roles) — AP-90…AP-99.
+- [Requirements/apps §18](../Requirements/apps.md#18-application-roles) — AP-90…AP-99.
 - [Requirements/app-sdk §6](../Requirements/app-sdk.md#6-the-person-and-their-roles) — SDK-35…SDK-37.
 - [ADR-N-019](adr-n-019-login-at-the-edge-apisix-openid-connect.md) — the edge login the roles build on.
 - [Architecture/12-identity-and-access](../Architecture/12-identity-and-access.md) — roles as code, which govern configuration and not applications.
