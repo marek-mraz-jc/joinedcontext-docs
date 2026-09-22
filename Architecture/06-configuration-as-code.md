@@ -21,7 +21,7 @@ joinedcontext platform eliminates runtime configuration mutation in favor of **C
 
 ## 1. Repository Layout (CC-08, CC-85)
 
-An Organization's configuration lives in Git, in one of two layouts. **Layout 1** is one repository holding the organization and every project. **Layout 2** is one *organization repository* plus one *project repository* per project, assembled through the project registry ([ADR-N-029](../Decisions/adr-n-029-one-repository-per-project.md), PF-85). Each repository says which layout it follows in `.jc/layout`, one integer; a repository without the file is layout 1, the only layout there was before the file existed. A loader refuses a number it does not know, and `jcctl migrate` is the only writer of a layout change (CC-85).
+An Organization's configuration lives in Git, in one of two layouts. **Layout 1** is one repository holding the organization and every project. **Layout 2** is one *organization repository* plus one *project repository* per project, assembled through the project registry ([ADR-N-029](../Decisions/adr-n-029-one-repository-per-project.md), PF-85). Each repository says which layout it follows in `.jc/layout`, one integer. An organization repository without the file is layout 1, the only layout there was before the file existed; a project repository exists in layout 2 only and always carries the file. A loader refuses a number it does not know, and `jcctl migrate` is the only writer of a layout change (CC-85).
 
 ### 1.1 Layout 1: one repository
 
@@ -137,7 +137,7 @@ spec:
     ingestToken: air-ingest-token      # a parameter of type secret is a secretRef name, never a value
 ```
 
-The registry entry and the project repository's own `project.yaml` are one `Project`: the entry says where the project comes from and what this deployment sets (`repository`, `ref`, `parameters`), `project.yaml` says what the project is (its title, quotas, bindings, `version` and the parameter schema), and the assembly reads the two as one resource under the registry slug. A field present in both is refused at assembly rather than merged.
+The registry entry and the project repository's own `project.yaml` are one `Project`: the entry says where the project comes from and what this deployment sets (`repository`, `ref`, `parameters`), `project.yaml` says what the project is (its title, quotas, bindings, `version` and the parameter schema), and the assembly reads the two as one resource under the registry slug. The two carry disjoint fields: `spec.parameters` holds values on the entry and declarations in `project.yaml`, a `version` or `quotas` on the entry is refused, and so is a `ref` in `project.yaml`.
 
 A registry entry that names a git repository outside the forge is mirrored read-only at the pinned ref, and every edit through the Portal is refused with "this project is authored at {url}" (CC-89).
 

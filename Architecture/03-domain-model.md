@@ -145,7 +145,7 @@ A project also ends, and self-service means it ends often. Deleting one is a red
 
 **A project is a registry entry and a repository** ([ADR-N-029](../Decisions/adr-n-029-one-repository-per-project.md)). In layout 2 the project's configuration is a Git repository of its own, and the organization repository holds one registry entry per project, `projects/{slug}.yaml`, naming that repository, the ref this deployment runs and this deployment's parameter values (PF-85, PF-86). The two are one `Project`: the entry says where the project comes from and what this deployment sets, the repository's `project.yaml` says what the project is. The registry slug is the project's name everywhere else, the `{project}` of the resource API, of a namespace and of every rendered id, so one repository may run under two slugs as two projects ([06 §1.3](06-configuration-as-code.md#13-the-project-registry)).
 
-- **Version and parameters.** `project.yaml` carries `spec.version` (semver) and `spec.parameters`, a JSON Schema of the knobs a deployment sets with their defaults; a manifest writes `{param:name}` and a mapping `env("JC_PARAM_<NAME>")`. A release is the tag `v{version}` of the project repository, and the registry entry pins one, so staging and production run two versions with two sets of values (CC-88).
+- **Version and parameters.** `project.yaml` carries `spec.version` (semver) and `spec.parameters`, one declaration per knob a deployment sets (`type` of `string`, `integer`, `number`, `boolean` or `secret`, and optionally `default`, `description` and `enum`); a manifest writes `{param:name}` and a mapping `env("JC_PARAM_<NAME>")`. A release is the tag `v{version}` of the project repository, and the registry entry pins one, so staging and production run two versions with two sets of values (CC-88).
 - **Creation** creates the repository from the template and its registry entry in one operation, both or neither, and the creator's binding with them (PF-88, PF-66). Because a Change targets one repository (CC-87), the Portal opens the organization Change for the entry and the binding and seeds the repository once that Change is approved.
 - **Membership** is forge membership: the project's readers and writers are the forge teams `{slug}-readers` and `{slug}-writers`, and a person without a binding on the project cannot clone its repository (PF-87, [12 §2a](12-identity-and-access.md#reading-the-repository-in-the-forge)).
 - **Deletion** archives the repository instead of removing a subtree, keeps the name for the cooling period and removes the registry entry (PF-77, PF-78, PF-88).
@@ -391,11 +391,10 @@ In layout 2 the project repository's `project.yaml` also carries the project's v
 ```yaml excerpt
 spec:
   version: 1.4.0                    # semver; the release is the tag v1.4.0 of the project repository
-  parameters:                       # JSON Schema of this project's deployment knobs, with defaults
-    type: object
-    properties:
-      stationCount: { type: integer, default: 8 }
-      ingestToken: { type: string, format: secret }   # a secretRef name, its value set per deployment
+  parameters:                       # one declaration per deployment knob, a subset of JSON Schema
+    stationCount: { type: integer, default: 8, description: "Stations the feed reads" }
+    region: { type: string, default: uusimaa, enum: [uusimaa, pirkanmaa] }
+    ingestToken: { type: secret }   # a secretRef name, set per deployment
 ```
 
 ### Policy
