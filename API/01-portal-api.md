@@ -441,16 +441,18 @@ Approval rules, enforced by the API and not only by the UI:
 
 - the caller needs the `portal-approver` realm role; anyone else gets `403` (CC-41);
 - the author of a proposal may not approve it — `403` with `type: ".../self-approval"`;
-- a proposal a person sends with a session, when a binding covering the project grants them both
-  `approve` and `delete` on every kind it touches (an administrator, PF-58), is approved as it is
-  proposed: the propose route answers `202` with the `Change` already `Deploying`, its approval
-  the proposer's own with the reason "proposer holds approve and delete", and the merge commit
-  says `Approved in the Portal by {email}, its author, as an administrator of {kind}`. A red-lane
-  proposal of such a person carries the `confirm` in the propose body, or is refused `400` as the
-  approval refuses it. Anyone else's proposal answers `202` still `Proposed`, with a `waiting`
-  sentence naming what the proposer lacks ("you hold approve but not delete on {kind}", "you do
-  not administer {kind}"). The operations registry and MCP never approve on propose, whoever
-  runs them (AG-11, AG-82), and the bootstrap administrators' group does not count;
+- a proposal a person sends with a Portal session (the cookie or the edge's), when a binding
+  covering the project grants them both `approve` and `delete` on every kind of every file it
+  touches (an administrator, PF-58), is approved as it is proposed: the propose route answers
+  `202` with the `Change` already `Deploying`, and the merge commit says `Approved in the Portal
+  by {email}, its author, as an administrator of {kind}`. The same holds for `jc_resource_propose`
+  and the other propose operations when the form calls them with that session. A red-lane
+  proposal is approved so only with `?confirm=<resource name>` on the propose or `DELETE` route
+  (the `confirm` of `jc_resource_delete`); without it the `Change` stays `PendingApproval` and
+  its author approves it on the approval page with the name typed. Anyone else's proposal
+  answers `202` `PendingApproval`. A bearer caller, MCP and an agent run never approve on
+  propose, whoever runs them (AG-11, AG-82), and the bootstrap administrators' group does not
+  count;
 - a proposal in the `red` lane needs the `portal-approver` role **and** an explicit
   `{"confirm": "<resource name>"}` body, so a destructive merge is never one click (CC-19, CC-39);
 - approving answers `202` with the `Change`, its `phase` moved to `Deploying`; the reconciler
