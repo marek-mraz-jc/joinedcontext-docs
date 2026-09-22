@@ -152,6 +152,8 @@ spec:
   scope: { project: ovzdusie }
 ```
 
+Where each of these is edited is one rule: by its scope ([09 §14](09-portal.md#14-organization-and-project-management), UI-75…UI-81). The organization's roles, groups, organization-scope bindings and the `Organization` manifest are on the **Organization** page. A project's own roles and its project and space bindings are on that project's **Settings**. A role of an application is on the App's page. Keycloak holds identity and nothing else, so neither page sends anyone to its console.
+
 What a denied verb looks like in the Portal is one rule (UI-44): the control stays where it is, disabled, and says why, "Disabled: your role does not permit 'propose' on 'Endpoint' in this project", by pointer and by keyboard. A control that vanishes teaches nobody which role to ask for; a disabled one with the reason is the request form. The Portal's check is still the only enforcement: the same request sent directly is `403` (PF-50).
 
 ### Reading the repository in the forge
@@ -232,9 +234,9 @@ A human token carries `preferred_username` and no `azp` of a service account; it
 - **PF-45** [S] — every non-human caller is a `ServiceAccount` with an audience-bound `client_credentials` token.
 - **PF-46** [S] — the PEP serving the request verifies issuer, signature, expiry and audience, and maps `azp` itself; the edge is not the verifier ([ADR-N-018](../Decisions/adr-n-018-token-verification-in-the-peps.md)).
 
-### Portal page: Project → Access → Service accounts & keys
+### Portal page: Project settings, Service accounts
 
-One table per project (organization administrators see all projects): account, owner, roles and scope, credentials with type, expiry, last used, requests in the last 24 h, status. Actions: create (a blueprint writes the manifest and opens the change), edit roles (lane by widening: yellow; write to a public-facing space: red), rotate, revoke, download a client configuration snippet (curl, Python, Node, Bento input, QGIS) pre-filled with the endpoint or space URL. The same data is available to agents on the configuration MCP (`list_service_accounts`, `rotate_credential` with elicitation) and through `jcctl get serviceaccounts`.
+The **Service accounts** tab of Project settings, and of the Organization page for namespace `org` ([09 §14](09-portal.md#14-organization-and-project-management), UI-80). One table per project (organization administrators see all projects): account, owner, roles and scope, credentials with type, expiry, last used, requests in the last 24 h, status. Actions: create (a blueprint writes the manifest and opens the change), edit roles (lane by widening: yellow; write to a public-facing space: red), rotate, revoke, download a client configuration snippet (curl, Python, Node, Bento input, QGIS) pre-filled with the endpoint or space URL. The same data is available to agents on the configuration MCP (`list_service_accounts`, `rotate_credential` with elicitation) and through `jcctl get serviceaccounts`.
 
 ---
 
