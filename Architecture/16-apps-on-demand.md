@@ -39,7 +39,7 @@ An Application is not a Dashboard (AP-64). A Dashboard is a declarative manifest
 
 ## 2. `dataNeeds`, least privilege by declaration
 
-The agent does not write policies. It declares what the app reads and writes; the reconciler turns that into an Endpoint and the `Policy` entities behind it, in the same commit as the app (CC-61). Reviewers see the grant, not generated Rego.
+The agent does not write policies. It declares what the app reads and writes; the reconciler turns that into an Endpoint and the `Policy` entities behind it, in the same commit as the app (CC-61). Reviewers see the grant, not generated Rego: the change's plan lists one line per Policy, "role steward of bikes can updateAttrs BikeHireDockingStation" (AP-98). The Portal's App door compiles them on every proposal and commits them beside the manifest, because the gateway reads endpoints and policies from the configuration repository and nowhere else; a grant it compiled and never committed is a grant nobody enforces. A proposal that takes a role or a need away, or retires the app, removes the grants that no longer apply in the same commit, and a deletion of the App removes all of them. An `Endpoint` or `Policy` of the generated name that the reconciler did not write (no `joinedcontext.com/generated-by: portal/app-reconciler`) is refused with `409`, never overwritten.
 
 ```yaml
 apiVersion: joinedcontext.com/v1alpha1
@@ -141,8 +141,8 @@ The reconciler names its objects from the app, so a second run of an unchanged a
 |---|---|---|
 | Deployment, Service, NetworkPolicy | `app-{name}` | the Service listens on 8080, the app container's port, the one the APISIX upstream points at |
 | Secret | `app-{name}-endpoint` | key `endpoint-slug`, reconciler-owned (EP-02) |
-| Endpoint | `app-{name}` | one per app, slug generated once and kept (EP-02) |
-| Policy | `app-{name}-{n}` | `n` is the 1-based position of the `dataNeeds` item it compiles |
+| Endpoint | `app-{name}` | one per app, committed with the App; the slug is generated on the first proposal and every later one keeps the committed slug, which the reconciler deploys the pod on (EP-02) |
+| Policy | `app-{name}-{n}`, `app-{name}-{n}-{role}` | committed with the App; `n` is the 1-based position of the `dataNeeds` item it compiles, `role` the role of an item that names `roles` (§12) |
 
 The four Kubernetes objects are server-side applied under the field manager `portal-app-reconciler`, one namespace, four kinds and no others: the Portal's Role grants nothing else, and the reconciler refuses to build a request for another kind before RBAC is asked. A `retired` app has the same four deleted, and deleting what is not there succeeds, so a retirement that failed halfway is re-run without a special case (AP-21, CC-18). No OIDC client is written per app: the `edge` client is an installation object of the `apisix` component, and the Portal needs no `manage-clients` grant on the realm for apps.
 
