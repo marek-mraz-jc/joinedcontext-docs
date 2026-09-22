@@ -86,6 +86,8 @@ SECRET = re.compile(r"(SECRET|TOKEN|_KEY$|_KEY_|PASSWORD|DATABASE_URL)")
 # never the secret, whatever word its name contains — `JC_PORTAL_DATABASE_URL` excepted,
 # because that one carries the password inside it.
 ADDRESS = re.compile(r"_URL$")
+# `JC_PORTAL_APPS_PULL_SECRET_NAME` names a Kubernetes Secret; the name is not the credential.
+NAME_OF = re.compile(r"_NAME$")
 # A line that logs, and a read of a variable on that same line. A secret is named in a log
 # ("JC_PORTAL_COOKIE_KEY is unset") often and rightly; what must never happen is its value
 # being read into one.
@@ -124,6 +126,8 @@ class Variable:
         if self.default != "—":
             return "no"
         if ADDRESS.search(self.name) and self.name != "JC_PORTAL_DATABASE_URL":
+            return "no"
+        if NAME_OF.search(self.name):
             return "no"
         if PATH_TO_SECRET.search(self.name) and SECRET.search(self.name):
             return "a path to one"
@@ -560,6 +564,8 @@ def selftest() -> int:
             problems.append("the default was not read out of the rustdoc")
         if "JC_DEMO_TOKEN" in names and variables["JC_DEMO_TOKEN"].secret != "yes":
             problems.append("a token was not called a secret")
+        if Variable("JC_DEMO_PULL_SECRET_NAME").secret != "no":
+            problems.append("the name of a Secret was called a secret")
         if (
             "JC_DEMO_TOKEN_FILE" in names
             and variables["JC_DEMO_TOKEN_FILE"].secret != "a path to one"
