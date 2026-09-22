@@ -182,6 +182,7 @@ PAGE_OWNERS: dict[str, tuple[str, ...]] = {
         "joinedcontext-deployment",
     ),
     "Testing/06-security-tests.md": ("joinedcontext-conformance", "joinedcontext-platform"),
+    "Deployment/04-components-and-addons.md": ("joinedcontext-deployment",),
     "Deployment/08-security-hardening.md": ("joinedcontext-deployment",),
 }
 
