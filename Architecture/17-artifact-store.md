@@ -36,7 +36,7 @@ flowchart LR
 | `mappings/{org}/{project}/{name}/{rev}/` | CI (Model Tools compile) | reconciler injects into Bento | write-once | follows the Mapping |
 | `dumps/{org}/{project}/{space}/{date}.nq.gz` | scheduled dump job | `/cs/{space}/dump/` | object lock | retention from space manifest |
 | `exports/{org}/{project}/{rev}.zip` | jcctl export | Portal download, `import` of another instance | write-once | 30 days default |
-| `apps/{org}/{project}/{app}/{sha}/` | CI (build); the digest is written to `App.status.build` (AP-13a) | Portal static host `/apps/{name}/`, the digest `status.build` names only (AP-72) | write-once | last N releases |
+| `apps/{org}/{project}/{app}/{sha}/` | the build lane, a Job in the apps namespace holding the write key for this prefix only (AP-80, AP-81); the digest is written to `App.status.build` (AP-13a) | Portal static host `/apps/{name}/`, the digest `status.build` names only (AP-72) | write-once | last N releases |
 | `filecache/{slug}/{sha256(query)}/` | gateway (only cache writer) | `file.*` on `If-None-Match` miss | none | 24 h lifecycle rule; purgeable |
 
 Every key starts with the owning organization (or endpoint slug, which resolves to one), so quota, audit and cascade deletion work by prefix (PF-31).

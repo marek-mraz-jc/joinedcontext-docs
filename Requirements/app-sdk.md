@@ -5,7 +5,7 @@ title: "App SDK (SDK)"
 
 # App SDK
 
-Family **SDK** (SDK-01…SDK-30). Owning chapter: [Architecture/20-app-sdk.md](../Architecture/20-app-sdk.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
+Family **SDK** (SDK-01…SDK-30, SDK-35…SDK-37). Owning chapter: [Architecture/20-app-sdk.md](../Architecture/20-app-sdk.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
 
 Generated `static` applications are code written against one platform package, `@joinedcontext/sdk` ([ADR-N-022](../Decisions/adr-n-022-generated-applications-are-code-on-the-app-sdk.md)). This family defines the package, the template application a generation run starts from (interface, serverless functions and tests), the runtime that executes functions, the one-shot first run, the editing agent that follows and the preview that shows the result. The application rules of [apps.md](apps.md) still hold; this family says how a generated application meets them.
 
@@ -43,7 +43,7 @@ path in this platform's own tree.
 - **SDK-20** [A][S] — Every instruction after the first run MUST be handled by an editing agent in the Portal process whose only tools are `list_files`, `read_file`, `edit_file`, `write_file`, `delete_file`, `check`, `call_function`, `preview_errors` and `finish` over the run's files, which MUST stop at `finish`, at the profile's step limit (AG-25) or at the instruction's ceiling of 12 model calls and 500,000 input tokens, saying on the conversation what it spent and what is on screen, which MUST NOT resend a tool result whole once two later model calls have been made, whose every model call MUST be a `usage` event with its input and output tokens, whose every tool call MUST be a run event, and whose writes outside SDK-11 or imports outside SDK-12 MUST be refused as tool errors (AP-60).
 - **SDK-15** [P] — The building state MUST be on screen within 5 seconds of the request, the first run's generated preview within 40 seconds on the reference installation, and transpiling 80 files MUST take less than one second (AP-57).
 - **SDK-16** [S] — The preview MUST be one document in the sandboxed frame (AP-50) whose modules are the transpiled files and the SDK runtime embedded in the Portal, loaded through an inline import map, under a policy that allows scripts only by hash and the `data:` modules the Portal wrote and `connect-src` only for the basemap route (AP-67).
-- **SDK-17** — The first run and each finished agent turn MUST commit the files they changed to the run branch (AP-24, AP-46), and publication MUST build the committed project in CI with the SDK version pinned in its `package.json`, never publish the preview's transpiled modules (AP-11).
+- **SDK-17** — The first run and each finished agent turn MUST commit the files they changed to the run branch (AP-24, AP-46), and publication MUST build the committed project in the build lane (AP-80) with the SDK version pinned in its `package.json`, never publish the preview's transpiled modules (AP-11).
 - **SDK-18** [S] — The host page MUST accept a `jc-request` only from the frame it created: reads under `/api/endpoint/{slug}/` of any endpoint of the run always, writes there only for operations the run's confirmed data needs name, and `/functions/{fn}` only for a function the run's files hold; it MUST perform the request with the reviewer's session, and MUST drop and count every other message without forwarding it (AP-63).
 
 ## 4. Functions
@@ -51,12 +51,19 @@ path in this platform's own tree.
 - **SDK-21** [A] — A function MUST be one file `functions/{name}.ts`, `name` matching `[a-z][a-z0-9-]{0,39}`, whose default export takes an `FnRequest` (`method`, `query`, JSON `body`, `user`) and an `FnContext` (`jc`, `log`) and returns an `FnResponse` (`status`, JSON `body`), with no runtime-specific API, so the same file runs in vitest against `fakeContext` and in the platform runtime.
 - **SDK-22** [S] — The `jc-functions` runtime MUST execute every invocation in a fresh QuickJS context holding only the function's transpiled files, with 64 MiB of memory, 5 seconds of execution, a 256 KiB request and a 1 MiB response, no `fetch`, file system, environment, timer beyond the call or state between calls, and `ctx.jc` as its one host capability, which MUST call the application's endpoint through the Context Gateway with the caller's token (anonymously for a public application) so a function never reads or writes more than its caller may (GW10, AP-16).
 - **SDK-23** [S] — The runtime MUST hold no credential, database connection or application code of its own and MUST be reachable from the Portal only; the Portal MUST invoke it for the preview from `POST /api/v1/projects/{project}/agent-runs/{id}/functions/{fn}` with the run's current functions and the reviewer's token, and for a published application from the edge route `/apps/{name}/api/functions/{fn}` with the published build's functions and the `X-Access-Token` the edge set (AP-28).
-- **SDK-24** — Publication MUST run the application's interface and function tests in CI and MUST refuse to publish when one fails (AP-11).
+  > Note: The published half is AP-84, `POST /apps/{name}/api/functions/{fn}` on the static host; it is not built yet (T-2594), and `src/apps/static_host.rs` serves no functions route today.
+- **SDK-24** — Publication MUST run the application's interface and function tests in the build lane (AP-80) and MUST refuse to publish when one fails (AP-11).
 
 ## 5. The Entity Grid in the SDK
 
 - **SDK-29** — The App SDK MUST export the entity grid, its configuration type and JSON Schema, its data-source interface with the two built-in sources (an Endpoint by slug, a Context Space surface), and its headless hook, documented in `sdk/API.md` with a runnable example, under the same versioning as the rest of the SDK.
 - **SDK-30** — An application `spec.json` and a Dashboard MUST be able to place the grid as a view (`kind: "grid"`) with that configuration object.
+
+## 6. The person and their roles
+
+- **SDK-35** [S] — `me()` and `useMe()` MUST return the `user` of the served configuration, `{id, name, email, roles}` or `null` for an anonymous visitor, and MUST NOT fetch, decode or store a token (AP-95).
+- **SDK-36** [H] — When `useAccess().can()` answers no to a person who holds roles in the application, its reason MUST name them, "your role viewer does not permit updateAttrs on Alert", so a generated control is disabled with that sentence (SDK-07, UI-44).
+- **SDK-37** [S] — A function MUST receive in `request.user` the same `{id, name, email, roles}` the page was served, set by the static host from AP-92 and never from the caller's body or headers (SDK-21, AP-95).
 
 ## Traceability
 
@@ -72,6 +79,7 @@ path in this platform's own tree.
 | SDK-19…SDK-20 | [Architecture/20-app-sdk.md#4-the-first-run-and-the-editing-agent](../Architecture/20-app-sdk.md#4-the-first-run-and-the-editing-agent) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | SDK-21…SDK-24 | [Architecture/20-app-sdk.md#3-functions-and-their-runtime](../Architecture/20-app-sdk.md#3-functions-and-their-runtime) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
 | SDK-29…SDK-30 | [Architecture/20-app-sdk.md#8-the-entity-grid](../Architecture/20-app-sdk.md#8-the-entity-grid) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| SDK-35…SDK-37 | [Architecture/20-app-sdk.md#11-the-data-client](../Architecture/20-app-sdk.md#11-the-data-client) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
 
 ## Related
 
