@@ -133,6 +133,7 @@ POST   /api/v1/projects                                 open a project → 202 +
 GET    /api/v1/projects/{project}                       the project and `status.usage`: what it holds of each quota (PF-73, PF-75)
 DELETE /api/v1/projects/{project}                       delete a project → 202 + red-lane Change over everything it holds (PF-77, PF-78)
 GET    /api/v1/projects/{project}/permissions/me        the caller's effective rules here (PF-51, PF-61)
+GET    /api/v1/projects/{project}/apps/{name}/me        the caller's roles in one published App, for a fullstack backend (AP-109)
 ```
 
 `DELETE /api/v1/projects/{project}` proposes one red-lane `Change` whose merge request removes
@@ -222,6 +223,15 @@ manifest does not carry:
 A write that would put the project over one of them is refused before a `Change` exists, on every
 door, naming the count and the limit — `quota: residentPipelines 4 of 3 in project ovzdusie` —
 and the dry run of the same manifest answers the same refusal (PF-74).
+
+`apps/{name}/me` answers `{id, name, email, roles}` for the caller, the same object the static
+host writes into `#jc-config` (AP-95), with `roles` computed from the published App's
+`spec.access` as AP-92 computes them. A `fullstack` backend calls it with the edge's
+`X-Access-Token` as `Authorization: Bearer` (Architecture/16 §13). It is the one
+route of this section answered without `read` on the project: an `organization` App admits
+people who hold no rule in its project, the answer is only about the caller, and it names no
+other resource. An App that
+is not published, or does not exist, is `404`; no valid token is `401`.
 
 `permissions/me` answers the rules in force for the caller in one project, each grant naming the
 scope it was inherited from, and what the organization's own settings let them do that no rule

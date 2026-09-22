@@ -23,7 +23,7 @@ Generated 2026-09-22 from: `docs` 279981a, `conformance` 167a505, `deployment` a
 | Family | Requirements | Tested | Built | Open | Untested and security-tagged |
 |---|---|---|---|---|---|
 | **AG** — Agents and MCP | 84 | 67 | 4 | 13 | 8 |
-| **AP** — Apps on demand | 102 | 61 | 7 | 34 | 18 |
+| **AP** — Apps on demand | 108 | 61 | 7 | 40 | 23 |
 | **CC** — Configuration as code | 84 | 65 | 8 | 11 | 0 |
 | **DM** — Data models | 60 | 47 | 7 | 6 | 0 |
 | **DS** — Data space connector | 20 | 11 | 5 | 4 | 1 |
@@ -41,7 +41,7 @@ Generated 2026-09-22 from: `docs` 279981a, `conformance` 167a505, `deployment` a
 | **SP** — Context-space surface | 22 | 18 | 1 | 3 | 0 |
 | **TS** — Testing and quality | 25 | 15 | 4 | 6 | 0 |
 | **UI** — Portal and user interface | 79 | 51 | 13 | 15 | 7 |
-| **Total** | 997 | 662 | 101 | 234 | 50 |
+| **Total** | 1003 | 662 | 101 | 240 | 55 |
 
 ## 3. Requirement to test
 
@@ -240,6 +240,12 @@ Generated 2026-09-22 from: `docs` 279981a, `conformance` 167a505, `deployment` a
 | **AP-102** | [S] | open |  |  |
 | **AP-103** | [H] | open |  |  |
 | **AP-104** | [S] | open |  |  |
+| **AP-105** | [S] | open |  |  |
+| **AP-106** | [S] | open |  |  |
+| **AP-107** | [S] | open |  |  |
+| **AP-108** | [S] | open |  |  |
+| **AP-109** | [S] | open |  |  |
+| **AP-110** |  | open |  |  |
 
 ### CC — Configuration as code
 

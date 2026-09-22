@@ -111,7 +111,7 @@ A `static` application does not start a workspace at all. The Portal is the buil
 
 **The preview document.** `GET /api/v1/projects/{project}/agent-runs/{id}/preview` answers one HTML document: the kit's script and stylesheet inlined, the run's `spec.json` inlined as data, served with the application CSP whose `connect-src` is the platform origin and the basemap tiles. It is framed with `sandbox="allow-scripts"` and no `allow-same-origin` (AP-50), which is why it is one document with no further assets to fetch: a sandboxed frame has no session to fetch them with.
 
-**What a `fullstack` run does instead.** It schedules the workspace Job of §1.1 and the OpenHands runtime builds the application there. The kit pass is the fast path for the dashboards a `static` application is; a backend needs the workspace.
+**What a `fullstack` run does instead.** It schedules the workspace Job of §1.1 and the OpenHands runtime builds the application there. Where the finished application is built for serving is the forge's workflow ([16-apps-on-demand §13](16-apps-on-demand.md#13-fullstack-applications-on-the-forge)). The kit pass is the fast path for the dashboards a `static` application is; a backend needs the workspace.
 
 ## 2. The Run Lifecycle
 
