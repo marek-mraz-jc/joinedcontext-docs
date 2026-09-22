@@ -132,6 +132,7 @@ GET    /api/v1/endpoints                                every Endpoint of every 
 POST   /api/v1/projects                                 open a project → 202 + Change: project.yaml and the creator's steward binding in one merge request (PF-65, PF-66)
 GET    /api/v1/projects/{project}                       the project and `status.usage`: what it holds of each quota (PF-73, PF-75)
 DELETE /api/v1/projects/{project}                       delete a project → 202 + red-lane Change over everything it holds (PF-77, PF-78)
+POST   /api/v1/projects/{project}/duplicate             duplicate a project into a new slug → 202 + Change: its registry entry and the caller's steward binding (PF-89)
 GET    /api/v1/projects/{project}/permissions/me        the caller's effective rules here (PF-51, PF-61)
 GET    /api/v1/projects/{project}/apps/{name}/me        the caller's roles in one published App, for a fullstack backend (AP-109)
 ```
@@ -149,6 +150,21 @@ own change. On merge the reconciler drops each space's broker tenant last, after
 The name is then reserved for `Organization.spec.projects.nameCooldownDays` (30 days by default,
 `0` for none) counted from the commit that removed it, and `POST /api/v1/projects` answers `409`
 with the date it becomes free (PF-78).
+
+`POST /api/v1/projects/{project}/duplicate` takes `{name, displayName?, parameters?}` and answers
+what `POST /api/v1/projects` answers for `name`: the same checks on the new slug (a DNS-1123 label,
+not taken, not proposed, past its cooldown) and the same `202` with the organization's `Change`,
+which carries the registry entry `projects/{name}.yaml` (`spec.repository.name` the new slug, `ref`
+`main`, the `parameters` given) and the caller's steward binding for the new project. It is held to
+`read` on the origin and to what opening a project needs (`Organization.spec.projects.creation`).
+Before the `Change`, the Portal copies the origin's repository with its whole history into a new
+private repository named after the slug, with `main` protected; that copy is PF-89's fork, made
+through the forge's migration from its own address because the forge refuses a fork into the
+owner that already holds the origin. A repository of that name already there is `409`, never
+adopted, and a failed `Change` removes the copy again, as opening does (CC-85). The origin is only
+read: the copy's teams and bindings are its own and grant nothing in the origin (PF-83), and its
+ids render from the new slug (PF-79). Layout 1 answers `409`, because a project there has no
+repository to copy; its duplicate is an import of its export under the new name (MF-45).
 
 `GET /api/v1/endpoints` is the organization-level Endpoints page (PF-61): an `org-admin` bound at
 organization scope reads every project's, a project's steward their own projects', a binding
