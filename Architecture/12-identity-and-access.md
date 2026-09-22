@@ -111,6 +111,8 @@ spec:
   validity: { notAfter: "2026-12-31T23:59:59Z" }
 ```
 
+What a person may do inside one application is not a `RoleBinding`: an App declares its own roles and members, and the gateway holds them on the app's endpoint only ([16 §12](16-apps-on-demand.md#12-roles-of-an-application), ADR-N-027).
+
 PF-56. The roles every organization starts from, seeded into `users/roles/` by the forge bootstrap and extended by proposing further `Role` manifests (red lane, PF-52):
 
 | Role | Kinds | Verbs | Who |

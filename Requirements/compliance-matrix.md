@@ -23,7 +23,7 @@ Generated 2026-09-20 from: `docs` 5d17ffe, `conformance` ae9190d, `deployment` b
 | Family | Requirements | Tested | Built | Open | Untested and security-tagged |
 |---|---|---|---|---|---|
 | **AG** — Agents and MCP | 84 | 65 | 4 | 15 | 8 |
-| **AP** — Apps on demand | 78 | 54 | 7 | 17 | 3 |
+| **AP** — Apps on demand | 88 | 54 | 7 | 27 | 13 |
 | **CC** — Configuration as code | 84 | 61 | 9 | 14 | 0 |
 | **DM** — Data models | 60 | 45 | 8 | 7 | 0 |
 | **DS** — Data space connector | 20 | 9 | 7 | 4 | 1 |
@@ -37,11 +37,11 @@ Generated 2026-09-20 from: `docs` 5d17ffe, `conformance` ae9190d, `deployment` b
 | **PF** — Platform invariants | 84 | 61 | 11 | 12 | 6 |
 | **PL** — Pipelines | 57 | 35 | 12 | 10 | 5 |
 | **R** — Access control and federation | 60 | 22 | 11 | 27 | 0 |
-| **SDK** — App SDK | 30 | 20 | 3 | 7 | 1 |
+| **SDK** — App SDK | 33 | 20 | 3 | 10 | 3 |
 | **SP** — Context-space surface | 22 | 18 | 1 | 3 | 0 |
 | **TS** — Testing and quality | 25 | 15 | 4 | 6 | 0 |
 | **UI** — Portal and user interface | 72 | 48 | 13 | 11 | 1 |
-| **Total** | 963 | 624 | 109 | 230 | 36 |
+| **Total** | 976 | 624 | 109 | 243 | 48 |
 
 ## 3. Requirement to test
 
@@ -217,6 +217,16 @@ Generated 2026-09-20 from: `docs` 5d17ffe, `conformance` ae9190d, `deployment` b
 | **AP-77** | [S] | open |  |  |
 | **AP-78** | [H] | open |  |  |
 | **AP-79** | [S] | open |  |  |
+| **AP-90** | [S] | open |  |  |
+| **AP-91** | [S] | open |  |  |
+| **AP-92** | [S] | open |  |  |
+| **AP-93** | [H] [S] | open |  |  |
+| **AP-94** | [S] | open |  |  |
+| **AP-95** | [S] | open |  |  |
+| **AP-96** | [S] | open |  |  |
+| **AP-97** | [S] | open |  |  |
+| **AP-98** | [S] | open |  |  |
+| **AP-99** | [H] [S] | open |  |  |
 
 ### CC — Configuration as code
 
@@ -969,6 +979,9 @@ Generated 2026-09-20 from: `docs` 5d17ffe, `conformance` ae9190d, `deployment` b
 | **SDK-24** |  | open |  |  |
 | **SDK-29** |  | tested | fast ci | portal `sdk/tests/geo_editor.test.tsx::refuses a paste larger than a megabyte before parsing it (SDK-29)` |
 | **SDK-30** |  | tested | ci-full, fast ci | platform `crates/jc-core/tests/dashboard_tests.rs::a_grid_widget_names_its_endpoint_its_type_and_a_configuration_that_holds`, portal `src/agents/kit.rs::a_grid_view_is_checked_against_its_source_and_its_own_rules` |
+| **SDK-35** | [S] | open |  |  |
+| **SDK-36** | [H] | open |  |  |
+| **SDK-37** | [S] | open |  |  |
 
 ### SP — Context-space surface
 

@@ -44,6 +44,8 @@ A write is `create`, `update` (a patch of attributes, each sent as an NGSI-LD Pr
 
 `useAccess()` reads the endpoint's effective grant document (EP-55) once and answers `can(operation, type, attr)` with a reason, so a generated button is disabled with that reason instead of failing on click (SDK-07).
 
+`me()` and `useMe()` return the person the host served, `{id, name, email, roles}`, or `null` for an anonymous visitor (SDK-35). The roles are the application's own (Architecture/16 §12), computed by the host per request, so an application shows or hides by `useMe().roles` and still asks `can()` before a write: the gateway is what refuses. When `can()` says no to a person with roles, the reason names them, "your role viewer does not permit updateAttrs on Alert" (SDK-36).
+
 ### 1.2 Transports
 
 The application never picks how its requests travel; the document the Portal serves says so (SDK-06).
