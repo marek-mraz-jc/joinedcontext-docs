@@ -71,7 +71,9 @@ one or more manifests; *flow*, a blueprint instance as shown to [H] users.
   one directory per resource family: `spaces/`, `registrations/`,
   `subscriptions/`, `pipelines/`, `datamodels/`, `entities/seed/`,
   `blueprints/`, plus one platform settings file. Domain subdirectories
-  (e.g. `subscriptions/parking/`) carry ownership (CC-41).
+  (e.g. `subscriptions/parking/`) carry ownership (CC-41). Superseded by
+  CC-85, layout 2: the organization repository and one repository per
+  project (PF-85).
 - **CC-09** — Every NGSI-LD manifest MUST use a thin envelope
   (`kind`, `metadata`, `spec`) where `spec` is the literal NGSI-LD
   payload rendered as YAML, no proprietary DSL, no renamed members. A
@@ -444,7 +446,7 @@ one or more manifests; *flow*, a blueprint instance as shown to [H] users.
 
 Several related edits are held together, tried somewhere safe and brought back as one reviewed Change ([ADR-N-024](../Decisions/adr-n-024-workspaces-branch-and-preview.md)).
 
-- **CC-76** [H][P][A] — The plane MUST offer a *workspace*: a named branch of the Organization repository with a recorded owner, base revision, scope (a project, a space subtree or a list of resources) and TTL, into which every proposing operation can commit instead of opening a Change of its own; the registry of workspaces MUST be a database table beside the drafts, not a manifest on `main`.
+- **CC-76** [H][P][A] — The plane MUST offer a *workspace*: a named branch of the Organization repository with a recorded owner, base revision, scope (a project, a space subtree or a list of resources) and TTL, into which every proposing operation can commit instead of opening a Change of its own; the registry of workspaces MUST be a database table beside the drafts, not a manifest on `main`. Amended by CC-87: a project workspace is a branch of the project repository.
 - **CC-77** [P] — A manifest in a workspace MUST keep the name it has in the main project; a workspace MUST NOT rename anything at rest.
 - **CC-78** [P] — A workspace MUST be rendered as a *preview* by the same loader, with a render prefix applied to every organization-unique identity (project namespace, Context Space name, the `{space}` segment of URNs) and slugs minted for the preview; a preview render that contains an unprefixed organization-unique name MUST fail. At most one preview runs per workspace and two on a node, with every pipeline paused until a person starts it.
 - **CC-79** [H][A] — Bringing a workspace back MUST be one Change: the pull request of its branch, classified by the riskiest file, approved as any Change (CC-34, PF-50, PF-58, AG-11).
@@ -454,8 +456,17 @@ Several related edits are held together, tried somewhere safe and brought back a
 ## 14. Identity: local names, rendered prefixes
 
 - **CC-82** [P] — A manifest MUST name itself and refer to other resources of its project by local name only; the project, the organization and the environment MUST NOT appear in a name, a reference or a mapping as a literal. What must be unique beyond the project MUST be rendered by the loader from where the manifest lives, the way `{orgDomain}` and slugs already are (CC-73, CC-74).
-- **CC-83** [P] — The loader MUST refuse (strict) or report (lax) a manifest or a mapping file that carries its own project name, its space's rendered segment or the organization's domain as a literal where a rendered value exists, naming the file, the path and the replacement.
+- **CC-83** [P] — The loader MUST refuse (strict) or report (lax) a manifest or a mapping file that carries its own project name, its space's rendered segment or the organization's domain as a literal where a rendered value exists, naming the file, the path and the replacement. Extended by CC-88 to a literal where a project parameter exists.
 - **CC-84** [H][A] — A copy (Save as, a workspace, an import, a whole project or organization) MUST end with a report of what cannot be copied and must be provided where it lands: secret values behind each `secretRef`, people named in RoleBindings and Policies, hosts and certificates of the Environment, credentials of feeds; each item links to where it is set.
+
+## 15. Repositories per project
+
+- **CC-85** — Repository layout 2 MUST hold: in the organization repository `org.yaml`, `environments/`, `users/`, `blueprints/`, `agentprofiles/`, `portal/`, `policies/` and `projects/{slug}.yaml` (PF-86); in a project repository, at its root, what `projects/{slug}/` holds in layout 1 (`project.yaml`, `spaces/`, `pipelines/`, `datasources/`, `dashboards/`, `apps/`, `access/`, `shared/`, `ckan/`). Both MUST carry `.jc/layout`, one integer. The loader MUST refuse a layout it does not know, and `jcctl migrate` MUST be the only writer of a layout change (CC-53 covers the envelope, this rule the tree; supersedes CC-08).
+- **CC-86** — The reconciler, the gateway and the Portal MUST assemble one render from the organization checkout plus every registered project checkout at its `spec.ref`, into the virtual tree `projects/{slug}/…` the kinds address in layout 1. Uniqueness across the organization (PF-44, endpoint slugs) MUST be checked at assembly. A project whose ref cannot be fetched MUST render at its last fetched ref and report that ref and the error on its registry entry's `status`.
+- **CC-87** — A `Change` MUST target exactly one repository. A project workspace MUST be a branch of the project repository, and an organization workspace a branch of the organization repository (amends CC-76). An operation that has to touch both MUST produce two linked Changes, the organization one in the red lane, and the project one MUST NOT be applied before the organization one.
+- **CC-88** — `project.yaml` MUST carry `spec.version` (semver) and `spec.parameters`, a JSON Schema of the project's deployment knobs with their defaults; a parameter of type `secret` MUST be a `secretRef` name whose value the deployment sets. A manifest MUST reference a parameter as `{param:name}` and a mapping as `env("JC_PARAM_<NAME>")`, beside `{orgDomain}` and `env("JC_ORG_DOMAIN")`. Values MUST come from the registry entry over the defaults, and the loader MUST refuse a project file carrying a literal where a parameter exists (extends CC-83). A release is the tag `v{version}` on the project repository; the registry entry pins one.
+- **CC-89** [S] — A registry entry MAY name an external git repository: the platform MUST mirror it read-only at the pinned ref and MUST refuse every edit through the Portal with "this project is authored at {url}". This replaces a `SyncSource` for a whole project; a `SyncSource` stays for subtrees (model libraries, blueprint sets).
+- **CC-90** — Every project repository MUST run the same CI on every merge request: schema validation, Conftest and `jcctl validate --project`. The organization render (CC-86) MUST be the gate before an apply and MUST run when a pinned ref moves or a tracked branch receives a push (webhook).
 
 ## Traceability
 
@@ -474,8 +485,9 @@ Several related edits are held together, tried somewhere safe and brought back a
 | CC-63–CC-70 | [Architecture/06-configuration-as-code.md#4-risk-classified-interaction-lanes-cc-63cc-66](../Architecture/06-configuration-as-code.md#4-risk-classified-interaction-lanes-cc-63cc-66) | [Testing/04-configuration-and-pipeline-tests.md#4-plan-and-idempotency](../Testing/04-configuration-and-pipeline-tests.md#4-plan-and-idempotency) |
 | CC-71 | [Architecture/11-data-models.md#67-a-model-from-a-sample-dm-54-dm-55](../Architecture/11-data-models.md#67-a-model-from-a-sample-dm-54-dm-55) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-twice](../Testing/03-frontend-and-e2e-tests.md#2-playwright-twice) |
 | CC-72 | [Architecture/06-configuration-as-code.md#3-the-reconciler-engine](../Architecture/06-configuration-as-code.md#3-the-reconciler-engine) | [Testing/01-backend-tests.md#3-jcctl](../Testing/01-backend-tests.md#3-jcctl) |
-| CC-73…CC-75 | [Architecture/06-configuration-as-code.md#1-organization-repository-layout-cc-08](../Architecture/06-configuration-as-code.md#1-organization-repository-layout-cc-08) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
+| CC-73…CC-75 | [Architecture/06-configuration-as-code.md#1-repository-layout-cc-08-cc-85](../Architecture/06-configuration-as-code.md#1-repository-layout-cc-08-cc-85) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
 | CC-76…CC-81 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/04-configuration-and-pipeline-tests.md#4-plan-and-idempotency](../Testing/04-configuration-and-pipeline-tests.md#4-plan-and-idempotency) |
+| CC-85…CC-90 | [Architecture/06-configuration-as-code.md#1-repository-layout-cc-08-cc-85](../Architecture/06-configuration-as-code.md#1-repository-layout-cc-08-cc-85) | [Testing/04-configuration-and-pipeline-tests.md#2-the-gate-on-an-organization-repository](../Testing/04-configuration-and-pipeline-tests.md#2-the-gate-on-an-organization-repository) |
 | CC-82…CC-84 | [Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes](../Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
 
 ## Related

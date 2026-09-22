@@ -107,6 +107,8 @@ USER_SIDE: dict[str, str] = {
     "JC_TARGET_URL": "the same, for where the compute step writes back",
     "JC_ME_URL": "handed to a fullstack application's backend by the reconciler beside "
     "JC_ENDPOINT_URL (Architecture/16 §13, AP-109); the application reads it, not a service of ours",
+    "JC_PARAM_": "the prefix of a project parameter a mapping reads as env(\"JC_PARAM_<NAME>\") "
+    "(CC-88); the project's own Bloblang reads it, not a service of ours",
 }
 
 SOURCE_SUFFIXES = (

@@ -363,6 +363,8 @@ Setting it up:
 
 An autonomous agent or assistant conversation operates under strict least-privilege scoping governed by the `AgentProfile` manifest (AG-70, MF-40, UI-56). An agent holds no ambient authority; its capabilities are constrained by its assigned profile and bounded dynamically by the permissions of the human operator who initiated the run.
 
+In Git the same bound is a repository (AG-86): an agent workspace clones the repository of its run's project and nothing else, with a forge credential the proxy issues for that repository alone, and reaches the organization repository only through an organization-level operation of the registry with a Change of its own (CC-87, [19 §4](19-agent-runner.md#4-the-proxy-surface)).
+
 ### The profile access block
 
 The `kind: AgentProfile` manifest carries an optional `spec.access` block defining permitted registry operations, resource kinds, and context space endpoints:

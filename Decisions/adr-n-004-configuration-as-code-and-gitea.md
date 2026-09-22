@@ -7,6 +7,7 @@ title: "ADR-N-004: Configuration-as-Code Configuration Plane with Gitea"
 
 Date: 2026-09-05  
 Status: Accepted  
+Amended by: ADR-N-029, for the one repository per Organization: an organization repository and one repository per project; the configuration plane stands  
 Decision Makers: Architecture Board
 
 ## 1. Context

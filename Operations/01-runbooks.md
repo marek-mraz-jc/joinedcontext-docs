@@ -453,6 +453,93 @@ kubectl get pvc -n dev -l cnpg.io/cluster=postgres-cluster
 `kubectl get pvc -n dev` shows the new capacity bound, the cluster leaves read-only mode,
 and a write through an Endpoint succeeds.
 
+## 10. Runbook 10: Migrating an Organization from Layout 1 to Layout 2
+
+Layout 2 moves every project of the organization's one repository into a repository of its own,
+with its history, and leaves the organization repository with the project registry in its place
+([ADR-N-029](../Decisions/adr-n-029-one-repository-per-project.md), CC-85, PF-85). `jcctl migrate`
+is the only writer of the change; this runbook is the order around it.
+
+### Symptoms
+
+- The organization repository has no `.jc/layout`, or it says `1`, and a project has to be cloned,
+  versioned or moved on its own (PF-87, CC-88, MF-45).
+
+### Diagnosis
+
+Read what will move, without writing anything:
+
+```bash
+git clone "https://gitea.<host>/<org>/city-config.git" city-config
+cat city-config/.jc/layout 2>/dev/null || echo "no .jc/layout: layout 1"
+ls city-config/projects/
+jcctl validate --repo-dir city-config
+```
+
+A repository that does not validate is fixed first: the migration moves files and never repairs
+them.
+
+### Remediation
+
+1. **Freeze the organization.** Announce the window and stop approving Changes until step 5, so
+   no merge lands in a subtree while it is split. Take the mirror backup of
+   [Deployment/07 Step 3](../Deployment/07-backup-restore.md#step-3-restore-the-configuration-repository-into-the-forge-cc-49-ops-11).
+2. **Split.** `jcctl migrate` writes the organization repository in layout 2 and one repository per
+   project, each the `git subtree split` of `projects/{slug}/`, so every commit that touched the
+   project is in its own history:
+
+   ```bash
+   jcctl migrate --repo-dir city-config --out-dir migrated
+   ls migrated/org migrated/projects
+   ```
+
+   Each `migrated/projects/{slug}` carries `.jc/layout` `2`, `project.yaml` at its root, the CI
+   workflow of CC-90 and `CODEOWNERS`. `migrated/org` carries `projects/{slug}.yaml`, each entry
+   pinned to the head of its split, and no `projects/{slug}/` directory.
+3. **Create and push the project repositories.** The forge bootstrap creates each repository with
+   its teams (PF-87, PF-88); push each split to its `main`:
+
+   ```bash
+   for dir in migrated/projects/*/; do
+     slug=$(basename "$dir")
+     git -C "$dir" push "https://gitea.<host>/<org>/$slug.git" HEAD:main
+   done
+   ```
+
+4. **Land the organization change.** `migrated/org` goes to the organization repository as one
+   red-lane Change that an `org-admin` approves: the registry entries in, the project subtrees
+   out, `.jc/layout` set to `2`.
+
+   **Warning:** the organization Change removes every `projects/{slug}/` subtree from the
+   organization repository's `main`. Push it only after step 3 answered for every project, and
+   keep the mirror of step 1 until the verification below is green; the removed files stay in the
+   organization repository's history, and the mirror restores the whole repository if the
+   migration has to be abandoned.
+
+   ```bash
+   git -C migrated/org push "https://gitea.<host>/<org>/city-config.git" HEAD:migrate/layout-2
+   ```
+
+5. **Unfreeze.** Approve the Change; the reconciler assembles the organization from the
+   registry (CC-86) and Changes open against the project repositories from now on (CC-87).
+
+### Verification
+
+Every project's head at the forge is the head its registry entry pins, and the assembled render
+declares the same resources as before, so nothing is created or deleted:
+
+```bash
+for dir in migrated/projects/*/; do
+  slug=$(basename "$dir")
+  test "$(git ls-remote "https://gitea.<host>/<org>/$slug.git" main | cut -f1)" \
+       = "$(git -C "$dir" rev-parse HEAD)" && echo "$slug equal"
+done
+jcctl plan --repo-dir migrated/org
+```
+
+`jcctl plan` reports no change, every Endpoint keeps its slug and every space its `{space}`
+segment (PF-84), and each project's registry entry shows `status` at its pinned ref.
+
 ## Related
 
 - [CC-69](../Requirements/city-as-code.md) — referenced above.
