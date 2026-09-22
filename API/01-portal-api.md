@@ -1008,8 +1008,9 @@ A `static` app is served by the Portal under the platform host, without a hostna
 (AP-14):
 
 ```text
-GET /apps/{name}/               the app's index.html
-GET /apps/{name}/{path}         any asset of the built bundle
+GET  /apps/{name}/                      the app's index.html
+GET  /apps/{name}/{path}                any asset of the built bundle
+POST /apps/{name}/api/functions/{fn}    one function of the served build, run in jc-functions (AP-84)
 ```
 
 - Only an app whose manifest is `lifecycle: published` is reachable. A draft, a preview or a
@@ -1031,6 +1032,16 @@ GET /apps/{name}/{path}         any asset of the built bundle
 - Unknown paths inside a published app answer `404` rather than the app's `index.html`: a static
   app that wants client-side routing declares it in its build, and the host does not invent a
   fallback that would mask a missing asset.
+- `POST /apps/{name}/api/functions/{fn}` runs the function `fn` of the served build's
+  `functions.js`, integrity-checked like every other file, in `jc-functions`, with the caller's
+  `X-Access-Token` as the one credential its data calls carry; an anonymous caller of a `public`
+  app sends none (AP-84, SDK-23). The answer is the function's own status and JSON body, `500`
+  with `{error: {message, file, line}}` when it throws. A name outside `[a-z][a-z0-9-]{0,39}`, an
+  app that is not published or not the caller's to read, and a build with no such function are
+  `404`; a body that is not JSON is `400`, one over 256 KiB `413`, a full runtime `429` with
+  `Retry-After`. A call that carries the edge's token also carries `X-CSRF-Token` matching the
+  `jc_csrf` cookie, or it is `403`: the edge sets the token from a cookie a cross-site form would
+  send too. The host sets that cookie on the apps origin with a signed-in person's first index.
 
 ### 12a. The build of an application (AP-100, AP-103, ADR-N-028)
 
@@ -1815,6 +1826,7 @@ the MCP endpoint itself.
 | `GET` | `/api/v1/mcp` | an MCP client probing for a stream | `405`: the server opens no server-initiated stream | none needed to learn that |
 | `GET` | `/api/v1/openapi.json` | a client generator, the docs lane | this API's OpenAPI 3.1 document | none: it describes the API, not a project |
 | `GET` | `/apps/{name}/`, `/apps/{name}/{path}` | a browser | a published static app's `index.html` and assets (§12) | a `public` app is served to anyone; any other visibility needs a session, and what the app then reads is its endpoints' authorization |
+| `POST` | `/apps/{name}/api/functions/{fn}` | a published app's SDK | the function's own answer from `jc-functions` (§12) | as the app's pages; with the edge's token, also the CSRF double-submit |
 | `GET` | `/metrics` | the cluster's Prometheus | the Portal's counters in the Prometheus text format | none, and the edge refuses the path, so only a caller inside the cluster reaches it (OPS-16) |
 
 A route here that needs no authentication says so because of what it carries, never for
