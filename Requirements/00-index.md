@@ -29,11 +29,11 @@ The ID range of each family is its lowest and highest live ID, not a count: a re
 
 | Family Prefix | Family Name | Requirement Range | Specification File | Owning Architecture Chapter | Test Family |
 |---|---|---|---|---|---|
-| **PF** | Platform & Domain Invariants | PF-01…PF-84 | [platform.md](platform.md) | [Architecture/03-domain-model.md](../Architecture/03-domain-model.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
-| **MF** | Manifest Model, Import/Sync/Download | MF-01…MF-43 | [manifests.md](manifests.md) | [Architecture/06-configuration-as-code.md](../Architecture/06-configuration-as-code.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
+| **PF** | Platform & Domain Invariants | PF-01…PF-89 | [platform.md](platform.md) | [Architecture/03-domain-model.md](../Architecture/03-domain-model.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
+| **MF** | Manifest Model, Import/Sync/Download | MF-01…MF-47 | [manifests.md](manifests.md) | [Architecture/06-configuration-as-code.md](../Architecture/06-configuration-as-code.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | **EP** | Endpoints & Representations | EP-01…EP-77 | [endpoints.md](endpoints.md) | [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | **PL** | Pipeline Execution | PL-01…PL-57 | [pipelines.md](pipelines.md) | [Architecture/08-pipelines.md](../Architecture/08-pipelines.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
-| **AG** | Agent & MCP Governance | AG-01…AG-85 | [agents.md](agents.md) | [Architecture/07-agents-and-mcp.md](../Architecture/07-agents-and-mcp.md) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
+| **AG** | Agent & MCP Governance | AG-01…AG-86 | [agents.md](agents.md) | [Architecture/07-agents-and-mcp.md](../Architecture/07-agents-and-mcp.md) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
 | **UI** | Portal & User Interface | UI-01…UI-74 | [portal-and-ui.md](portal-and-ui.md) | [Architecture/09-portal.md](../Architecture/09-portal.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | **TS** | Testing & Quality Assurance | TS-01…TS-25 | [testing.md](testing.md) | [Architecture/01-overview.md](../Architecture/01-overview.md) | [Testing/00-strategy.md](../Testing/00-strategy.md) |
 | **DM** | Data Models & LinkML Editor | DM-01…DM-60 | [data-models.md](data-models.md) | [Architecture/11-data-models.md](../Architecture/11-data-models.md) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
@@ -46,7 +46,7 @@ The ID range of each family is its lowest and highest live ID, not a count: a re
 | **MIM** | Minimal Interoperability Mechanisms | MIM0–MIM10 | [access-control.md](access-control.md) | [Architecture/01-overview.md](../Architecture/01-overview.md) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | **GW** | Gateway Firewall | GW1–GW34 | [gateway-firewall.md](gateway-firewall.md) | [Architecture/05-context-gateway.md](../Architecture/05-context-gateway.md) | [Testing/01-backend-tests.md](../Testing/01-backend-tests.md) |
 | **PW / I** | Policy Firewall Extensions & Identity | R44–R60, I1–I4 | [policy-firewall.md](policy-firewall.md) | [Architecture/05-context-gateway.md](../Architecture/05-context-gateway.md) | [Testing/01-backend-tests.md](../Testing/01-backend-tests.md) |
-| **CC** | Configuration as Code | CC-01…CC-84 | [city-as-code.md](city-as-code.md) | [Architecture/06-configuration-as-code.md](../Architecture/06-configuration-as-code.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
+| **CC** | Configuration as Code | CC-01…CC-90 | [city-as-code.md](city-as-code.md) | [Architecture/06-configuration-as-code.md](../Architecture/06-configuration-as-code.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | **SP** | Space Surface | SP-01…SP-22 | [space-surface.md](space-surface.md) | [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 
 ## 4. Terminology Delta & Vocabulary Mapping

@@ -155,6 +155,10 @@ Family **AG** (AG-01…AG-85; AG-82 is unassigned). Owning chapters: [Architectu
 
 - **AG-82** [A][S] — An agent MUST work in a workspace when it changes more than one resource (CC-76), MUST present the comparison before it offers to bring the work back, and MUST NOT bring it back or approve it itself; its workspace carries a TTL ([ADR-N-024](../Decisions/adr-n-024-workspaces-branch-and-preview.md)).
 
+## 22. Agents in Project Repositories
+
+- **AG-86** [A][S] — An agent workspace MUST clone the project repository only, with a credential scoped to that repository, and MUST touch the organization repository only through an organization-level operation with a Change of its own (CC-87, PF-87).
+
 ## Traceability
 
 | Requirement Range | Architecture Section | Test Family |
@@ -197,6 +201,7 @@ Family **AG** (AG-01…AG-85; AG-82 is unassigned). Owning chapters: [Architectu
 | AG-80 | [Architecture/07-agents-and-mcp.md#9-the-assistant-is-a-loop-over-the-registry](../Architecture/07-agents-and-mcp.md#9-the-assistant-is-a-loop-over-the-registry) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | AG-79 | [Architecture/09-portal.md#10-operations-drafts-and-verdicts](../Architecture/09-portal.md#10-operations-drafts-and-verdicts) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | AG-82 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
+| AG-86 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 
 ## Related
 

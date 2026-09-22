@@ -22,26 +22,26 @@ Generated 2026-09-22 from: `docs` 279981a, `conformance` 167a505, `deployment` a
 
 | Family | Requirements | Tested | Built | Open | Untested and security-tagged |
 |---|---|---|---|---|---|
-| **AG** — Agents and MCP | 84 | 67 | 4 | 13 | 8 |
+| **AG** — Agents and MCP | 85 | 67 | 4 | 14 | 9 |
 | **AP** — Apps on demand | 108 | 61 | 7 | 40 | 23 |
-| **CC** — Configuration as code | 84 | 65 | 8 | 11 | 0 |
+| **CC** — Configuration as code | 90 | 65 | 8 | 17 | 1 |
 | **DM** — Data models | 60 | 47 | 7 | 6 | 0 |
 | **DS** — Data space connector | 20 | 11 | 5 | 4 | 1 |
 | **EP** — Endpoints and parity | 77 | 69 | 4 | 4 | 1 |
 | **GW** — Gateway firewall | 34 | 26 | 2 | 6 | 1 |
 | **I** — Identity and credentials | 4 | 2 | 0 | 2 | 0 |
-| **MF** — Manifests | 44 | 39 | 4 | 1 | 0 |
+| **MF** — Manifests | 47 | 39 | 4 | 4 | 0 |
 | **MIM** — OASC interoperability | 76 | 1 | 5 | 70 | 0 |
 | **MP** — Model projections | 3 | 3 | 0 | 0 | 0 |
 | **OPS** — Operations and reliability | 49 | 42 | 2 | 5 | 2 |
-| **PF** — Platform invariants | 84 | 64 | 10 | 10 | 6 |
+| **PF** — Platform invariants | 89 | 64 | 10 | 15 | 8 |
 | **PL** — Pipelines | 57 | 37 | 12 | 8 | 4 |
 | **R** — Access control and federation | 60 | 23 | 10 | 27 | 0 |
 | **SDK** — App SDK | 33 | 21 | 3 | 9 | 2 |
 | **SP** — Context-space surface | 22 | 18 | 1 | 3 | 0 |
 | **TS** — Testing and quality | 25 | 15 | 4 | 6 | 0 |
 | **UI** — Portal and user interface | 79 | 51 | 13 | 15 | 7 |
-| **Total** | 1003 | 662 | 101 | 240 | 55 |
+| **Total** | 1018 | 662 | 101 | 255 | 59 |
 
 ## 3. Requirement to test
 
@@ -82,6 +82,7 @@ Generated 2026-09-22 from: `docs` 279981a, `conformance` 167a505, `deployment` a
 | **AG-31** | [S] | tested | ci-full, fast ci | platform `crates/context-gateway/src/mcp/endpoint_facade.rs::a_tool_that_both_reads_and_writes_is_not_read_only`, platform `crates/context-gateway/tests/mcp_read_security_tests.rs::an_oversized_or_catastrophic_id_pattern_never_reaches_the_broker`, platform `crates/context-gateway/tests/mcp_read_security_tests.rs::an_inlined_entity_of_a_granted_type_is_projected_like_any_other`, and 2 more |
 | **AG-84** | [A] | tested | ci-full, conformance | conformance `tests/mcp/test_mcp_read_parity.py::test_the_matrix_is_covered`, platform `crates/context-gateway/tests/geo_parameters_tests.rs::the_tool_refuses_a_geoproperty_beside_a_grants_area_in_the_same_words`, platform `crates/context-gateway/tests/geo_parameters_tests.rs::a_geoproperty_without_a_granted_area_reaches_the_broker_beside_the_geo_query`, and 7 more |
 | **AG-85** | [S] | tested | ci-full, conformance | conformance `tests/mcp/test_mcp_read_parity.py::test_a_narrowed_grant_narrows_both_doors_the_same`, platform `crates/context-gateway/tests/edge_app_ngsi_ld_pipeline_tests.rs::a_batch_query_selecting_on_an_unserved_type_narrows_to_empty_without_a_broker_call`, platform `crates/context-gateway/tests/edge_app_ngsi_ld_pipeline_tests.rs::a_geoproperty_or_geometryproperty_query_is_judged_before_the_broker_is_asked`, and 7 more |
+| **AG-86** | [A] [S] | open |  |  |
 | **AG-32** | [A] [S] | tested | ci-full | platform `crates/context-gateway/tests/edge_app_mcp_message_tests.rs::the_challenge_is_the_same_for_a_slug_that_exists_and_one_that_does_not`, platform `crates/context-gateway/tests/edge_app_mcp_message_tests.rs::a_public_instance_answers_without_a_token`, platform `crates/context-gateway/tests/edge_app_mcp_message_tests.rs::a_body_that_is_not_json_is_the_json_rpc_parse_error`, and 39 more |
 | **AG-33** | [A] | tested | ci-full | platform `crates/jc-core/tests/validator_boundaries_tests.rs::parse_iso_duration_reads_each_unit_and_their_sum`, platform `crates/jc-core/tests/validator_boundaries_tests.rs::parse_iso_duration_refuses_what_is_not_that_shape`, platform `crates/jc-core/tests/validator_boundaries_tests.rs::parse_iso_duration_refuses_a_total_past_the_largest_number`, and 7 more |
 | **AG-34** | [A] [S] | tested | ci-full, conformance | conformance `tests/security/test_proxy_refusal_matrix.py::test_the_matrix_is_whole`, conformance `tests/security/test_proxy_refusal_matrix.py::test_every_route_the_proxy_serves_has_a_case`, conformance `tests/security/test_proxy_refusal_matrix.py::test_authentication_is_checked_before_anything_else`, and 9 more |
@@ -335,6 +336,12 @@ Generated 2026-09-22 from: `docs` 279981a, `conformance` 167a505, `deployment` a
 | **CC-82** | [P] | tested | ci-full, fast ci | deployment `tests/test_seed_identity_contract.py::test_every_space_pins_the_segment_its_ids_carry_today`, deployment `tests/test_seed_identity_contract.py::test_no_mapping_types_its_space_or_project_in`, deployment `tests/test_seed_identity_contract.py::test_helsinki_policies_name_the_organization_by_placeholder`, and 2 more |
 | **CC-83** | [P] | tested | ci-full, fast ci | platform `crates/jcctl/tests/bento_env_tests.rs::a_rendered_stream_carries_the_target_space_segment`, platform `crates/jcctl/tests/bento_env_tests.rs::a_pipeline_with_two_outputs_gets_one_variable_per_output`, platform `crates/jcctl/tests/bento_env_tests.rs::a_variable_with_no_output_behind_it_is_left_alone`, and 14 more |
 | **CC-84** | [H] [A] | tested | ci-full, fast ci | portal `src/api/import.rs::what_a_copy_cannot_carry_is_listed_where_it_is_and_never_as_a_value`, portal `tests/api_import_needs_of_tests.rs::a_datasource_with_a_present_authorization_reports_one_need_naming_the_field_not_the_value`, portal `tests/api_import_needs_of_tests.rs::a_secret_ref_nested_three_levels_deep_is_found_with_its_full_path`, and 9 more |
+| **CC-85** |  | open |  |  |
+| **CC-86** |  | open |  |  |
+| **CC-87** |  | open |  |  |
+| **CC-88** |  | open |  |  |
+| **CC-89** | [S] | open |  |  |
+| **CC-90** |  | open |  |  |
 
 ### DM — Data models
 
@@ -595,6 +602,9 @@ Generated 2026-09-22 from: `docs` 279981a, `conformance` 167a505, `deployment` a
 | **MF-31** |  | tested | ci-full, fast ci | platform `crates/jc-core/src/kinds/subscription.rs::a_credential_in_the_endpoint_is_refused_and_not_repeated`, platform `crates/jc-core/src/kinds/subscription.rs::an_endpoint_that_is_not_a_callable_url_is_refused`, platform `crates/jc-core/tests/subscription_tests.rs::the_golden_manifest_parses_validates_and_round_trips`, and 27 more |
 | **MF-32** |  | tested | ci-full, fast ci | platform `crates/jc-core/tests/sync_tests.rs::golden_sync_source_parses_validates_and_roundtrips`, platform `crates/jc-core/tests/sync_tests.rs::golden_bundle_parses_validates_and_roundtrips`, platform `crates/jc-core/tests/sync_tests.rs::schedule_interval_table_and_webhook`, and 35 more |
 | **MF-44** | [S] | tested | ci-full, fast ci | platform `crates/jc-core/tests/sync_tests.rs::a_webhook_schedule_and_its_own_secret_come_together`, platform `crates/jc-core/tests/sync_tests.rs::a_webhook_driven_source_roundtrips_through_yaml`, portal `src/sync/webhook_secrets.rs::a_source_accepts_its_own_secret_and_the_one_it_is_retiring`, and 9 more |
+| **MF-45** |  | open |  |  |
+| **MF-46** | [H] | open |  |  |
+| **MF-47** |  | open |  |  |
 | **MF-33** | [H] | built |  | `joinedcontext-portal/ui/src/pages/import/ImportPage.tsx` |
 | **MF-34** | [P] [A] | tested | ci-full | platform `crates/jcctl/tests/sync_command_tests.rs::one_run_proposes_what_the_origin_carries_and_the_next_run_over_it_writes_nothing`, platform `crates/jcctl/tests/sync_command_tests.rs::a_source_the_repository_does_not_hold_is_named_not_guessed`, platform `crates/jcctl/tests/sync_command_tests.rs::the_command_prints_the_change_and_exits_two_when_a_proposal_is_open`, and 2 more |
 | **MF-35** | [S] | tested | ci-full, fast ci | platform `crates/jc-core/tests/data_source_serde_tests.rs::every_connection_type_round_trips`, platform `crates/jc-core/tests/data_source_serde_tests.rs::the_mqtt_connection_keeps_every_field_it_was_given`, platform `crates/jc-core/tests/data_source_serde_tests.rs::the_gtfs_feed_names_which_of_the_three_it_is`, and 41 more |
@@ -836,6 +846,11 @@ Generated 2026-09-22 from: `docs` 279981a, `conformance` 167a505, `deployment` a
 | **PF-82** | [S] | tested | ci-full | portal `tests/workspace_bypass_tests.rs::a_grant_written_in_a_copy_makes_the_whole_bring_back_red`, portal `tests/workspace_bypass_tests.rs::a_copy_whose_grant_is_above_the_owners_rights_opens_no_change`, portal `tests/workspace_bypass_tests.rs::a_grant_deleted_in_a_copy_comes_back_as_a_removal_and_stays_red`, and 8 more |
 | **PF-83** | [S] | tested | ci-full, fast ci | platform `crates/context-gateway/tests/edge_gateway_previews_tests.rs::the_bounds_of_a_prefix_are_the_bounds_and_not_one_character_more`, platform `crates/context-gateway/tests/edge_gateway_previews_tests.rs::a_preview_with_no_files_is_a_directory_and_not_a_missing_one`, platform `crates/context-gateway/tests/edge_gateway_previews_tests.rs::a_file_in_a_directory_that_does_not_exist_yet_brings_its_parents`, and 44 more |
 | **PF-84** | [P] | tested | ci-full, fast ci | deployment `tests/test_bystrica_seed.py::test_the_region_is_its_own_project_and_the_city_says_it_is_the_city`, deployment `tests/test_bystrica_seed.py::test_each_projects_quotas_hold_exactly_what_it_declares`, deployment `tests/test_bystrica_seed.py::test_every_new_space_pins_the_segment_its_ids_carry`, and 52 more |
+| **PF-85** |  | open |  |  |
+| **PF-86** |  | open |  |  |
+| **PF-87** | [S] | open |  |  |
+| **PF-88** |  | open |  |  |
+| **PF-89** | [S] | open |  |  |
 
 ### PL — Pipelines
 
