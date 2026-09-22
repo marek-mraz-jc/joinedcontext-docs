@@ -493,9 +493,11 @@ them.
    ls migrated/org migrated/projects
    ```
 
-   Each `migrated/projects/{slug}` carries `.jc/layout` `2`, `project.yaml` at its root, the CI
-   workflow of CC-90 and `CODEOWNERS`. `migrated/org` carries `projects/{slug}.yaml`, each entry
-   pinned to the head of its split, and no `projects/{slug}/` directory.
+   Each `migrated/projects/{slug}` carries `.jc/layout` `2` and `project.yaml` at its root; the
+   forge bootstrap adds the CI workflow of CC-90 and `CODEOWNERS` when it creates the repository.
+   `migrated/org` carries `projects/{slug}.yaml`, each entry tracking its project's `main`, and no
+   `projects/{slug}/` directory. `jcctl migrate` prints each repository and the commit it ends
+   at; keep that list for the verification.
 3. **Create and push the project repositories.** The forge bootstrap creates each repository with
    its teams (PF-87, PF-88); push each split to its `main`:
 
@@ -525,7 +527,7 @@ them.
 
 ### Verification
 
-Every project's head at the forge is the head its registry entry pins, and the assembled render
+Every project's `main` at the forge is the head `jcctl migrate` wrote, and the assembled render
 declares the same resources as before, so nothing is created or deleted:
 
 ```bash
