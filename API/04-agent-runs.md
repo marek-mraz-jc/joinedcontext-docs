@@ -451,6 +451,13 @@ Authorization: Bearer <proxy-jwt>
 
 Response: `200 OK` containing run parameters, `ticketHash`, and profile constraints.
 
+In layout 2 (CC-85) a workspace run's folder is in its project's own repository: the context
+then carries `repository`, that repository's name, and `pathPrefix` as that repository spells
+it (`apps/{app}/`, without `projects/{project}/`). The proxy's forge route forwards to that one
+repository and to no other, whatever the request names, so a run of one project reads and
+writes nothing of another project's repository nor of the organization's (AG-86, CC-87).
+Without `repository` the route reaches the configuration repository, as in layout 1.
+
 ### Read What the Person Said
 
 The inbox is the one place a workspace reads from: the answers and the instructions of section 5,
