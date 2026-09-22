@@ -23,7 +23,7 @@ Generated 2026-09-20 from: `docs` 5d17ffe, `conformance` ae9190d, `deployment` b
 | Family | Requirements | Tested | Built | Open | Untested and security-tagged |
 |---|---|---|---|---|---|
 | **AG** — Agents and MCP | 84 | 65 | 4 | 15 | 8 |
-| **AP** — Apps on demand | 78 | 54 | 7 | 17 | 3 |
+| **AP** — Apps on demand | 79 | 55 | 7 | 17 | 3 |
 | **CC** — Configuration as code | 84 | 61 | 9 | 14 | 0 |
 | **DM** — Data models | 60 | 45 | 8 | 7 | 0 |
 | **DS** — Data space connector | 20 | 9 | 7 | 4 | 1 |
@@ -217,6 +217,7 @@ Generated 2026-09-20 from: `docs` 5d17ffe, `conformance` ae9190d, `deployment` b
 | **AP-77** | [S] | open |  |  |
 | **AP-78** | [H] | open |  |  |
 | **AP-79** | [S] | open |  |  |
+| **AP-80** | [S] | tested | fast ci | platform `crates/jc-core/tests/app_tests.rs::a_published_static_app_without_a_repository_is_refused_unless_the_portal_ships_it` |
 
 ### CC — Configuration as code
 
