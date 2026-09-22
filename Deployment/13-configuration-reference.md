@@ -25,6 +25,7 @@ The enforcement point in front of every broker surface (`context-gateway`).
 | Variable | Default | Secret | What it is |
 |---|---|---|---|
 | `JC_ENVIRONMENT` | — | no | The overlay `JC_ENVIRONMENT` names, as `validate` and `plan` read it (CC-73). |
+| `JC_GATEWAY_ASSEMBLY_DIR` | `/tmp/jc-assembly` | no | Where a layout 2 organization is assembled (`JC_GATEWAY_ASSEMBLY_DIR`, default `/tmp/jc-assembly`), a scratch directory the pod owns. |
 | `JC_GATEWAY_BIND` | `0.0.0.0:8080` | no | The address to listen on (`JC_GATEWAY_BIND`, default `0.0.0.0:8080`). |
 | `JC_GATEWAY_BROKER_URL` | — | no | The broker to forward to, scheme and authority only (`JC_GATEWAY_BROKER_URL`). |
 | `JC_GATEWAY_DOMAIN_VERIFICATION` | `report` | no | `report` or `enforce` (`JC_GATEWAY_DOMAIN_VERIFICATION`, default `report`): whether a write waits for the Organization's verified domain (PF-41, Architecture/03 §3). |
@@ -35,6 +36,7 @@ The enforcement point in front of every broker surface (`context-gateway`).
 | `JC_GATEWAY_ORG_DOMAIN` | — | no | The organization's verified domain, the middle segment of every entity URN (`JC_GATEWAY_ORG_DOMAIN`). |
 | `JC_GATEWAY_PREVIEWS_DIR` | `/tmp/jc-previews` | no | Where the previews are written (`JC_GATEWAY_PREVIEWS_DIR`, default `/tmp/jc-previews`), a scratch directory the pod owns. |
 | `JC_GATEWAY_PREVIEWS_URL` | — | no | The Portal's list of running workspace previews (`JC_GATEWAY_PREVIEWS_URL`, its internal listener's `/internal/previews`); absent serves `main` alone (CC-78). |
+| `JC_GATEWAY_PROJECTS_DIR` | — | no | The project checkouts of a layout 2 organization, one directory per registry slug at its pinned ref (`JC_GATEWAY_PROJECTS_DIR`); a layout 1 repository needs none (CC-86). |
 | `JC_GATEWAY_PUBLIC_URL` | — | no | The gateway's own public base URL (`JC_GATEWAY_PUBLIC_URL`), which makes the full RFC 8707 resource URI an acceptable token audience alongside the endpoint slug. |
 | `JC_GATEWAY_REPO_DIR` | — | no | The manifest repository the endpoint table is built from (`JC_GATEWAY_REPO_DIR`); absent means an empty table until one is loaded. |
 | `JC_OIDC_CLIENT_ID` | — | no | The gateway's own Keycloak client and its secret (`JC_OIDC_CLIENT_ID`, `JC_OIDC_CLIENT_SECRET`): the identity it presents when it calls the Portal's internal listener (PF-46, AG-52). |
