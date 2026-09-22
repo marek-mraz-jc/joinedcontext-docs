@@ -435,8 +435,8 @@ sequenceDiagram
     participant P as Portal
     participant K as Reconciler
     F->>R: build.yml, job build
-    R->>R: UI build, cargo test/build --offline --locked (musl), crane append
-    R->>F: Actions artifact: image.tar, digest, SBOM (job token)
+    R->>R: UI build, cargo test/build --offline --locked (musl), lane.mjs image
+    R->>F: Actions artifacts image-{commit} (OCI layout), sbom-{commit} (job token)
     F->>R: job propose (no application code)
     R->>P: status.build {digest, commit, builtAt, run} (lane token)
     P->>F: download artifact, check digest, push app-{name}:{commit} (Portal token)
@@ -450,15 +450,17 @@ sequenceDiagram
 |---|---|---|
 | Interface | `build` job, `pnpm build` against the linked dependencies | installs nothing (AP-82) |
 | Backend | `cargo test` and `cargo build --release --target x86_64-unknown-linux-musl`, both `--offline --locked` | the `rust-1.90` runner image carries the crate store; a lock naming a crate outside it fails (AP-106) |
-| Image | `crane append --oci-empty-base`, one layer holding `/app` | no daemon, no privilege, no user namespace; no `RUN` step, so no system package (AP-105) |
-| Artifact | `image.tar`, its manifest digest, `sbom.cdx.json` as the run's Actions artifact | the job token writes Actions artifacts and nothing else |
+| Image | `lane.mjs image`: one gzip layer holding `/app`, its config and its OCI manifest, as an OCI image layout | no daemon, no privilege, no user namespace; no `RUN` step, so no system package (AP-105) |
+| Artifact | `image-{commit}` (the layout) and `sbom-{commit}` as the run's Actions artifacts; the digest is the SHA-256 of the manifest's bytes | the job token writes Actions artifacts and nothing else |
 | Publish | the Portal, on the proposal of `status.build` | the only writer of the image; digest checked before and after the push (AP-107) |
 
 The crate store is baked into the runner image rather than vendored into each repository: one image of a few hundred megabytes more, instead of the same third-party source committed into every application repository and every generated run.
 
 ### Run
 
-The reconciler composes `{registry}/joinedcontext/app-{name}@{status.build.digest}` from its own setting, so a manifest cannot point a pod at another registry. The Deployment runs `command: ["/app"]` as a numeric non-root user under the restricted Pod Security Standard on port 8080, and pulls with `imagePullSecrets` naming the Secret the deployment component creates in the apps namespace: a forge token that can read packages and nothing else. Ingress admits only the APISIX pods of the namespace the installation runs APISIX in, a setting; the rendered policy used to name the namespace `apisix` literally, which `dev`, where APISIX runs in `dev`, never matched (AP-108). The environment adds `JC_ME_URL` beside `JC_ENDPOINT_URL`. The configuration knobs (registry host, pull Secret name, APISIX namespace) are Portal settings, listed in [Deployment/13](../Deployment/13-configuration-reference.md) once the code reads them.
+The reconciler composes `{registry}/joinedcontext/app-{name}@{status.build.digest}` from its own setting, so a manifest cannot point a pod at another registry. The Deployment runs `command: ["/app"]` as a numeric non-root user under the restricted Pod Security Standard on port 8080, and pulls with `imagePullSecrets` naming the Secret the deployment component creates in the apps namespace: a forge token that can read packages and nothing else. Ingress admits only the APISIX pods of the namespace the installation runs APISIX in, a setting; the rendered policy used to name the namespace `apisix` literally, which `dev`, where APISIX runs in `dev`, never matched (AP-108). The environment adds `JC_ME_URL` beside `JC_ENDPOINT_URL`. The configuration knobs (registry host, pull Secret name, APISIX namespace) are Portal settings, listed in [Deployment/13](../Deployment/13-configuration-reference.md).
+
+A node pulls from the registry host at `https://{host}/v2/`, the path the distribution protocol fixes at the root. Where the forge is served under a path prefix (`/git` on `dev`), the edge routes `/v2/` of that host to the forge as well; the forge's token realm stays under its own prefix. The Portal pushes to the forge's in-cluster address, not through the edge.
 
 ### Roles and a record form
 
