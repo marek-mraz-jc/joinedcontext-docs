@@ -217,7 +217,7 @@ Generated 2026-09-20 from: `docs` 5d17ffe, `conformance` ae9190d, `deployment` b
 | **AP-77** | [S] | open |  |  |
 | **AP-78** | [H] | open |  |  |
 | **AP-79** | [S] | open |  |  |
-| **AP-80** | [S] | tested | fast ci | platform `crates/jc-core/tests/app_tests.rs::a_published_static_app_without_a_repository_is_refused_unless_the_portal_ships_it` |
+| **AP-87** | [S] | tested | fast ci | platform `crates/jc-core/tests/app_tests.rs::a_published_static_app_without_a_repository_is_refused_unless_the_portal_ships_it` |
 
 ### CC — Configuration as code
 
