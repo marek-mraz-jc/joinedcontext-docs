@@ -40,8 +40,8 @@ Generated 2026-09-22 from: `docs` 279981a, `conformance` 167a505, `deployment` a
 | **SDK** — App SDK | 33 | 21 | 3 | 9 | 2 |
 | **SP** — Context-space surface | 22 | 18 | 1 | 3 | 0 |
 | **TS** — Testing and quality | 25 | 15 | 4 | 6 | 0 |
-| **UI** — Portal and user interface | 72 | 51 | 13 | 8 | 1 |
-| **Total** | 985 | 662 | 101 | 222 | 40 |
+| **UI** — Portal and user interface | 79 | 51 | 13 | 15 | 7 |
+| **Total** | 992 | 662 | 101 | 229 | 46 |
 
 ## 3. Requirement to test
 
@@ -1124,6 +1124,13 @@ Generated 2026-09-22 from: `docs` 279981a, `conformance` 167a505, `deployment` a
 | **UI-70** | [H] | open |  |  |
 | **UI-71** | [H] | tested | ci-full, fast ci | platform `crates/jc-core/tests/dashboard_tests.rs::a_grid_widget_names_its_endpoint_its_type_and_a_configuration_that_holds`, portal `src/agents/kit.rs::a_grid_view_is_checked_against_its_source_and_its_own_rules` |
 | **UI-72** | [H] | tested | fast ci | portal `sdk/tests/entity_grid_edit.test.tsx::offers no text box over a geometry, because a text box would show and write [object Object]`, portal `sdk/tests/grid_config.test.ts::is off unless the manifest asks for it`, portal `sdk/tests/grid_config.test.ts::takes the attribute and the side the manifest names`, and 3 more |
+| **UI-75** | [H] [S] | open |  |  |
+| **UI-76** | [S] | open |  |  |
+| **UI-77** | [S] | open |  |  |
+| **UI-78** | [S] | open |  |  |
+| **UI-79** | [S] | open |  |  |
+| **UI-80** | [H] [S] | open |  |  |
+| **UI-81** | [H] | open |  |  |
 
 ## Related
 

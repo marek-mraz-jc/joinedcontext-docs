@@ -452,9 +452,80 @@ One component lists entities wherever the Portal shows them (UI-64…UI-72): the
 
 **Access.** The grid is a keyboard grid (`role="grid"`, arrows, Enter, Escape, Tab) that announces coordinates and edits, and at 400 px it pins the id column and scrolls the rest (UI-70).
 
+## 14. Organization and project management
+
+Two places hold everything about who may do what (UI-75…UI-81). The **Organization page** holds what is the same in every project: the Organization manifest, the organization's members, roles, groups and service accounts, and the list of projects. **Project settings** holds what belongs to one project: its title and quotas, who is bound in it, its own roles, its service accounts, and its deletion. Until now all of it sat under **Project → Access**, where a group or the organization's domain looked as if it belonged to the project whose menu the person had opened. Every write on both pages is a proposed `Change` in its lane, exactly as the manifest's own form would propose it. Neither page has a write path of its own.
+
+Organization-level manifests are read and proposed through the organization's namespace, `/api/v1/projects/org/{plural}` (`Organization`, `Role`, `RoleBinding`, `Group`, `ServiceAccount` of namespace `org`); a project's through its own, `/api/v1/projects/{project}/{plural}`. Neither page needs a new API.
+
+### 14.1 The Organization page
+
+`/organization`, in the top bar beside the project switcher, outside any project, open to every signed-in person of the organization. One tab per concern, each at its own URL (`/organization/{tab}`), so a link or a bookmark lands on the tab:
+
+| Tab | What it shows | What it proposes |
+|---|---|---|
+| **Settings** (`settings`) | the `Organization` manifest as a form: `domain` with its verification state (PF-41, the TXT record to publish while unverified), `locales` and `defaultLocale`, `contacts[]`, and the projects policy: `projects.creation`, `projects.visibility`, `projects.quota`, `projects.nameCooldownDays` (PF-65, PF-61, PF-78) | an update of `organization.yaml`, red lane |
+| **Members** (`members`) | every person and group bound at organization scope, with the role of each binding and its validity; each row links to the person's effective permissions | a `RoleBinding` at `scope: { organization }` to add, its removal to remove |
+| **Roles** (`roles`) | the roles of `users/roles/`, the PF-56 taxonomy marked *seeded*, each with its rules in words ("proposes Pipeline and DataSource") | a new `Role` or a change to one, red lane |
+| **Groups** (`groups`) | the `Group` manifests with their members, a member not yet in Keycloak marked as such (PF-62) | a `Group` or a change to its members, red lane |
+| **Service accounts** (`service-accounts`) | the service accounts of namespace `org`: owner, roles, credentials, last use | as in [12 §3](12-identity-and-access.md#3-service-identities) |
+| **Projects** (`projects`) | every project the person may read: title, visibility, the number of people bound in it | **New project** (the dialog of PF-65/PF-66); **Delete** of one project, which lists the cascade of PF-77 and asks for the name typed back |
+
+Members are the one sensitive list. The tab shows its rows only to a person who holds `read` on `RoleBinding` at organization scope. Anybody else sees "You cannot see who belongs to this organization; an organization administrator can", and the Portal fetches no binding for them at all.
+
+### 14.2 Project settings
+
+`/projects/{project}/settings/{tab}`, the last item of the project's menu. A project the person may not read answers `404`, never `403`, like every route of it (PF-59).
+
+| Tab | What it shows | What it proposes |
+|---|---|---|
+| **General** (`general`) | `metadata.title` and `metadata.description` of `project.yaml`, its `quotas` (PF-17) and, read-only, the organization's visibility and the organization it belongs to | an update of `project.yaml` |
+| **Members** (`members`) | the bindings at `scope: { project }` and at `scope: { contextSpace }` of this project's spaces, grouped by scope | a `RoleBinding` naming a person or a group and an organization role or a role of this project (PF-69); its removal |
+| **Roles** (`roles`) | the project's roles of `projects/{project}/roles/` (PF-68) | a new project role: the kind picker offers project kinds only, the verbs only those the proposer holds here |
+| **Service accounts** (`service-accounts`) | the project's service accounts and keys, the page of [12 §3](12-identity-and-access.md#portal-page-project-settings-service-accounts) | as before |
+| **Your access** (`access`) | what the signed-in person may read, propose, approve and delete here (`permissions/me`) | nothing |
+| **Delete project** (`danger`) | the cascade the deletion would carry (PF-77) and the name cooling period (PF-78) | the deletion `Change`, name typed back |
+
+### 14.3 What happens to Project → Access
+
+Access stops being a section. Its parts move where their scope says:
+
+| Was on Project → Access | Is now |
+|---|---|
+| Role bindings | Project settings → Members (project and space scope); Organization → Members (organization scope) |
+| Roles | Project settings → Roles (project roles); Organization → Roles (organization roles) |
+| Groups | Organization → Groups |
+| Organization domain | Organization → Settings |
+| Service accounts | Project settings → Service accounts; Organization → Service accounts (namespace `org`) |
+| Effective permissions | Project settings → Your access |
+
+`/projects/{project}/access` redirects to `/projects/{project}/settings/members` with the same query string, so a link somebody saved, a chat message or the assistant's older answers still land. The redirect is permanent and client-side; the route list keeps both paths.
+
+### 14.4 Three kinds of role, one word each
+
+| | Defined in | Bound at | Holds in | Edited on |
+|---|---|---|---|---|
+| **Organization role** | `users/roles/{name}.yaml`, namespace `org` (PF-49, PF-56) | organization, project or context-space scope | every project the binding's scope covers | Organization → Roles; bound on Organization → Members or Project settings → Members |
+| **Project role** | `projects/{project}/roles/{name}.yaml`, namespace the project (PF-68) | that project or one of its spaces, never the organization (PF-69) | that project only | Project settings → Roles and Members |
+| **Application role** | the App manifest (T-2589, [16 §12](16-apps-on-demand.md#12-roles-of-an-application)) | the App's own members | inside that application only | the App's page |
+
+Keycloak holds identity only: who a person is and how they sign in (I4). No role, binding or membership is edited in Keycloak, and no page offers to.
+
+### 14.5 Rules every tab keeps
+
+- Nobody grants above their own rights (PF-52): every role picker offers only roles whose every verb the proposer holds on the chosen scope, and the API refuses the rest with the sentence that names what is missing.
+- A control the person's bindings do not allow stays in place, disabled, with the reason by pointer and keyboard (UI-44).
+- Every change is a `Change`: the page shows its lane, and a red-lane change asks for the name typed back.
+
+### 14.6 Out of scope
+
+Replacing the Keycloak admin console, and provisioning people. A person arrives in the organization by signing in; a binding or a group may name them before their first login, which the Members and Groups tabs show as "not signed in yet".
+
 ## Related
 
 - [01-overview](../Architecture/01-overview.md) — where this chapter sits in the whole.
 - [00-index](../Requirements/00-index.md) — the normative requirements behind it.
 - [Deployment/05 §5](../Deployment/05-monitoring-logging.md#5-the-activity-pipeline) — the collector that fills the activity store.
 - [API/01 §14](../API/01-portal-api.md#14-activity-ui-31-ops-48-ops-49) — the two routes that read it.
+- [12-identity-and-access §2a](12-identity-and-access.md#2a-roles-as-code) — the roles, bindings and groups these pages edit.
+- [User-Guide/12](../User-Guide/12-managing-organization-and-projects.md) — the same pages from the person's side.
