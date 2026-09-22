@@ -105,6 +105,30 @@ projects, and each is reviewed again by the same lanes on its next change (PF-49
 own metadata (merge requests, issues, comments) is not in the mirror; it comes back with the
 PostgreSQL cluster of Step 2, and losing it loses history, not configuration.
 
+In layout 2 ([ADR-N-029](../Decisions/adr-n-029-one-repository-per-project.md)) the configuration is
+N+1 repositories: the organization repository and one repository per project its registry names
+(`projects/{slug}.yaml`, PF-86), plus each application's own repository (AP-72). Mirror every one of
+them on the same schedule, and restore the organization repository first, then each repository its
+registry entries name:
+
+```bash
+# Every repository of the forge organization, one mirror each:
+for repo in $(curl -fsS -H "Authorization: token $FORGE_TOKEN" \
+    "https://gitea.<host>/api/v1/orgs/<org>/repos?limit=50" | jq -r '.[].name'); do
+  git clone --mirror "https://gitea.<host>/<org>/$repo.git" "$repo.git"
+done
+# Restore: the organization repository, then every other mirror.
+git -C city-config.git push --mirror https://gitea.<new-host>/<org>/city-config.git
+for mirror in *.git; do git -C "$mirror" push --mirror "https://gitea.<new-host>/<org>/$mirror"; done
+```
+
+Each registry entry pins its ref, so once the mirrors are pushed the reconciler assembles the same
+render as before the loss (CC-86). A registry entry whose repository is missing at the new forge
+renders nothing for that project and says so on the entry's `status`; push the missing mirror and
+the next render picks it up. The forge's teams (`{slug}-readers`, `{slug}-writers`) are compiled
+from the bindings by the reconciler again, not restored from the mirror (PF-87). The forge API
+answers at most 50 repositories per page, so page with `&page=2` and on beyond that.
+
 Project-scoped export and import (`Download` and `Import` in the Portal) exist for moving or
 duplicating one project between instances (PF-22, MF-20…MF-26), not for disaster recovery.
 

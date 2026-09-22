@@ -5,7 +5,7 @@ title: "Architecture Decision Register"
 
 # Architecture Decision Register
 
-This register records all foundational Architecture Decision Records (ADRs) governing the next-generation federated digital twin platform (`ADR-N-001` through `ADR-N-027`), along with explicit status mapping of legacy decision records from preceding platform generations.
+This register records all foundational Architecture Decision Records (ADRs) governing the next-generation federated digital twin platform (`ADR-N-001` through `ADR-N-029`), along with explicit status mapping of legacy decision records from preceding platform generations.
 
 ## 1. Target Architecture Decisions (`ADR-N` Series)
 
@@ -38,6 +38,7 @@ This register records all foundational Architecture Decision Records (ADRs) gove
 | [ADR-N-026](adr-n-026-the-build-lane-runs-in-the-cluster.md) | The Build Lane Runs in the Cluster, and a Static Application May Have No Build Step | **Superseded** | 2026-09-22 | A published `static` App is built by a Kubernetes Job the Portal reconciler starts in the apps namespace: the Portal release's builder image clones the app's repository at the approved commit, installs the baked SDK offline, tests, builds, uploads to the artifact store and proposes `status.build`; the Job holds no platform credential; `build: {}` is plain HTML with no build step; functions stay on QuickJS and are served on `POST /apps/{name}/api/functions/{fn}`. |
 | [ADR-N-027](adr-n-027-application-roles.md) | Application Roles, Declared in the App and Held on Its Endpoint Only | **Accepted** | 2026-09-22 | An App declares `spec.roles` and `spec.access` (users by e-mail, `Group` manifests); the gateway gives a caller the app's roles only on the app's own Endpoint, so every grant stays inside the application; `visibility: roles` gates opening with a `403` page that names the roles; `#jc-config.user` and `request.user` carry the person's roles; `dataNeeds[].roles` compiles to one Policy per role; the App page lists and edits members through a Change. |
 | [ADR-N-028](adr-n-028-applications-build-on-the-forge.md) | Applications Build on the Forge: Gitea Actions, Its Package Registry and One Runner on the Builder Image | **Accepted** | 2026-09-22 | Every application repository carries a Portal-owned `.gitea/workflows/build.yml` that builds on a push to the default branch, publishes the bundle as the generic package `app-{name}@{commit}` of the organization's Gitea registry and proposes `status.build`; one `gitea-runner` (`act_runner` in host mode on the builder image, no Docker, no Kubernetes token) runs it; the static host fetches and verifies the package; the catalog reads the workflow runs; Rebuild is a dispatch. Replaces ADR-N-026 decisions 1, 2, 4 and 8. |
+| [ADR-N-029](adr-n-029-one-repository-per-project.md) | One Repository per Project, Assembled Through the Organization's Project Registry | **Accepted** | 2026-09-22 | An Organization has an organization repository and one repository per project; `projects/{slug}.yaml` is the registry every loader assembles from, each project has a version and parameters, and membership is forge-team membership per repository (PF-85…PF-89, CC-85…CC-90). Supersedes the one-repository half of ADR-N-004 and amends ADR-N-024. |
 
 ## 2. Status of Preceding Decision Records
 
@@ -122,4 +123,5 @@ The following table explicitly categorizes the disposition of all historical dec
 - [ADR-N-023](adr-n-023-pipeline-sources-steps-outputs.md) — referenced above.
 - [ADR-N-024](adr-n-024-workspaces-branch-and-preview.md) — referenced above.
 - [ADR-N-026](adr-n-026-the-build-lane-runs-in-the-cluster.md) — referenced above.
+- [ADR-N-029](adr-n-029-one-repository-per-project.md) — referenced above.
 - [01-overview](../Architecture/01-overview.md) — the architecture these decisions shape.

@@ -191,7 +191,7 @@ Family **PF** (PF-01…PF-84). Owning chapters: [Architecture/03-domain-model.md
 | PF-58 | [Architecture/12-identity-and-access.md#2a-roles-as-code](../Architecture/12-identity-and-access.md#2a-roles-as-code) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | PF-82…PF-83 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | PF-84 | [Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes](../Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
-| PF-85…PF-89 | [Architecture/06-configuration-as-code.md#1-organization-repository-layout-cc-08](../Architecture/06-configuration-as-code.md#1-organization-repository-layout-cc-08) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
+| PF-85…PF-89 | [Architecture/06-configuration-as-code.md#1-repository-layout-cc-08-cc-85](../Architecture/06-configuration-as-code.md#1-repository-layout-cc-08-cc-85) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 
 ## Related
 

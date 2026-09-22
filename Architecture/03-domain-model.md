@@ -143,6 +143,14 @@ Self-service has a ceiling, because one node fills up: every project opened unde
 
 A project also ends, and self-service means it ends often. Deleting one is a red-lane `Change` that an `org-admin` or the project's own administrator approves, and it cascades in the open: the merge request removes every space (the broker tenant is dropped after a data export was offered), every Endpoint (its slug retired), every binding and project role, every app with its builds and every service account, so no grant and no reference outlives the project; a `SharedSpaceReference` from another project to one of its Endpoints refuses the deletion until it is removed, and the Change names it (PF-77). The name stays reserved for a cooling period the organization sets, `Organization.spec.projects.nameCooldownDays`, 30 days by default and `0` for none, counted from the commit that removed the project: opening a project under that name again answers when it becomes free (PF-78). Moving a project to another instance is download, import under the target's overlay and a checksum comparison from the bundle index; only when the target reports every manifest equal is the source deleted (MF-42), which is what "easily transferred" means here.
 
+**A project is a registry entry and a repository** ([ADR-N-029](../Decisions/adr-n-029-one-repository-per-project.md)). In layout 2 the project's configuration is a Git repository of its own, and the organization repository holds one registry entry per project, `projects/{slug}.yaml`, naming that repository, the ref this deployment runs and this deployment's parameter values (PF-85, PF-86). The two are one `Project`: the entry says where the project comes from and what this deployment sets, the repository's `project.yaml` says what the project is. The registry slug is the project's name everywhere else, the `{project}` of the resource API, of a namespace and of every rendered id, so one repository may run under two slugs as two projects ([06 §1.3](06-configuration-as-code.md#13-the-project-registry)).
+
+- **Version and parameters.** `project.yaml` carries `spec.version` (semver) and `spec.parameters`, a JSON Schema of the knobs a deployment sets with their defaults; a manifest writes `{param:name}` and a mapping `env("JC_PARAM_<NAME>")`. A release is the tag `v{version}` of the project repository, and the registry entry pins one, so staging and production run two versions with two sets of values (CC-88).
+- **Creation** creates the repository from the template and its registry entry in one operation, both or neither, and the creator's binding with them (PF-88, PF-66). Because a Change targets one repository (CC-87), the Portal opens the organization Change for the entry and the binding and seeds the repository once that Change is approved.
+- **Membership** is forge membership: the project's readers and writers are the forge teams `{slug}-readers` and `{slug}-writers`, and a person without a binding on the project cannot clone its repository (PF-87, [12 §2a](12-identity-and-access.md#reading-the-repository-in-the-forge)).
+- **Deletion** archives the repository instead of removing a subtree, keeps the name for the cooling period and removes the registry entry (PF-77, PF-78, PF-88).
+- **Duplicate** is a fork, or an import of the project's git bundle, under a new slug with parameters of its own; the copy renders its ids from the new slug and cannot write into the origin (PF-89). **Move** is the git-native export and import, verified by head commit per repository (MF-45, MF-46, [06 §6](06-configuration-as-code.md#a-whole-project-as-git-export-import-duplicate-move-mf-45mf-47-pf-89)).
+
 ### Context Space
 
 Its name is the `{space}` segment of every URN it holds, unique in the organization (PF-44), so with many projects the Portal and the assistant propose `{project}-{name}` and accept a bare name only when it is free; a collision names the owning project to those who may read it and says "taken" to everyone else (PF-76).
@@ -376,6 +384,18 @@ spec:
     agentRunsPerDay: 20
     entitiesPerSpace: 200000
     requestsPerMinute: 600          # per Endpoint
+```
+
+In layout 2 the project repository's `project.yaml` also carries the project's version and its deployment knobs (CC-88); the schema of the pinned platform tag does not know the two fields yet:
+
+```yaml excerpt
+spec:
+  version: 1.4.0                    # semver; the release is the tag v1.4.0 of the project repository
+  parameters:                       # JSON Schema of this project's deployment knobs, with defaults
+    type: object
+    properties:
+      stationCount: { type: integer, default: 8 }
+      ingestToken: { type: string, format: secret }   # a secretRef name, its value set per deployment
 ```
 
 ### Policy
