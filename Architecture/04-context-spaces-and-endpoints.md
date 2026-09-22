@@ -235,6 +235,8 @@ The Context Gateway keeps the endpoints in an in-memory map (`ArcSwap<HashMap<St
 - `organization`: Access is permitted to any authenticated user or service account belonging to the parent Organization.
 - `public`: Access is permitted without authentication under the `public` anonymous role grant (GW22).
 
+An Endpoint MAY name a `callerRole` and `roles[]` with subjects; a caller it admits holds `endpoint:{project}/{endpoint}` and the matching `endpoint:{project}/{endpoint}/{role}` for that request only, which is how an application's grants stay inside the application (AP-96, AP-97, [16 §12](16-apps-on-demand.md#12-roles-of-an-application)).
+
 ---
 
 ## 3a. The Endpoint's own DCAT-AP record

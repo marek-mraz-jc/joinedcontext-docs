@@ -5,7 +5,7 @@ title: "Architecture Decision Register"
 
 # Architecture Decision Register
 
-This register records all foundational Architecture Decision Records (ADRs) governing the next-generation federated digital twin platform (`ADR-N-001` through `ADR-N-026`), along with explicit status mapping of legacy decision records from preceding platform generations.
+This register records all foundational Architecture Decision Records (ADRs) governing the next-generation federated digital twin platform (`ADR-N-001` through `ADR-N-027`), along with explicit status mapping of legacy decision records from preceding platform generations.
 
 ## 1. Target Architecture Decisions (`ADR-N` Series)
 
@@ -36,6 +36,7 @@ This register records all foundational Architecture Decision Records (ADRs) gove
 | [ADR-N-023](adr-n-023-pipeline-sources-steps-outputs.md) | A Pipeline Is Bento's Own Shape: Sources, Steps, Outputs | **Accepted** | 2026-09-18 | A `Pipeline` at `v1alpha2` carries `sources[]`, an ordered `steps[]` and `outputs[]`, rendered as Bento `broker` inputs, `pipeline.processors` and `broker` outputs; branching stays inside a step (`branch`, `switch`, `workflow`), no edges are stored; a `v1alpha1` Pipeline reads as the `v1alpha2` one with the same rendered stream and migrates when edited; the write guard applies per source and per output. |
 | [ADR-N-024](adr-n-024-workspaces-branch-and-preview.md) | Workspaces: Copy, Change, Test and Bring Back, Renamed at Render and Never at Rest | **Accepted** | 2026-09-18 | A workspace is a branch of the Organization repository recorded beside the drafts; manifests keep their names; a preview is the branch rendered with a `ws-{name}-` prefix on the organization-unique identities, limited and paused on `dev`; bringing it back is the branch's pull request, one Change approved as any other; Save as and the import door cover plain copies. |
 | [ADR-N-026](adr-n-026-the-build-lane-runs-in-the-cluster.md) | The Build Lane Runs in the Cluster, and a Static Application May Have No Build Step | **Accepted** | 2026-09-22 | A published `static` App is built by a Kubernetes Job the Portal reconciler starts in the apps namespace: the Portal release's builder image clones the app's repository at the approved commit, installs the baked SDK offline, tests, builds, uploads to the artifact store and proposes `status.build`; the Job holds no platform credential; `build: {}` is plain HTML with no build step; functions stay on QuickJS and are served on `POST /apps/{name}/api/functions/{fn}`. |
+| [ADR-N-027](adr-n-027-application-roles.md) | Application Roles, Declared in the App and Held on Its Endpoint Only | **Accepted** | 2026-09-22 | An App declares `spec.roles` and `spec.access` (users by e-mail, `Group` manifests); the gateway gives a caller the app's roles only on the app's own Endpoint, so every grant stays inside the application; `visibility: roles` gates opening with a `403` page that names the roles; `#jc-config.user` and `request.user` carry the person's roles; `dataNeeds[].roles` compiles to one Policy per role; the App page lists and edits members through a Change. |
 
 ## 2. Status of Preceding Decision Records
 

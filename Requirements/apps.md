@@ -5,7 +5,7 @@ title: "Apps on Demand"
 
 # Apps on Demand
 
-Family **AP** (AP-01…AP-86). Owning chapters: [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) and [19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
+Family **AP** (AP-01…AP-86, AP-90…AP-99). Owning chapters: [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) and [19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
 
 Requirement family **AP-01…AP-86** for AI-generated, purpose-built applications that consume context data through a dedicated, least-privilege Endpoint. Architecture in [Architecture/16-apps-on-demand](../Architecture/16-apps-on-demand.md) and [Architecture/19-agent-runner](../Architecture/19-agent-runner.md).
 
@@ -151,6 +151,19 @@ Decided in [ADR-N-026](../Decisions/adr-n-026-the-build-lane-runs-in-the-cluster
 - **AP-85** — Approving the Change that publishes a `static` run MUST merge the run's branch into the application repository's default branch before the lane builds, and the lane MUST build that default branch at the merge commit (AP-77); an App whose repository's default branch holds only `README.md` MUST be shown as never published.
 - **AP-86** [H] — The application catalog and the App page MUST show the build state: `building`, `build failed` with the log tail, or `served <commit>`; **Open** MUST be offered only while a build is served (AP-70, AP-72).
 
+## 18. Application roles
+
+- **AP-90** [S] — An App MAY declare `spec.roles[]` of `{name, title, description}`, at most 16, `title` a language map; validation MUST refuse a `name` outside `[a-z][a-z0-9-]{0,31}` and a name declared twice (ADR-N-027).
+- **AP-91** [S] — Every entry of `spec.access[]` MUST name a declared role and list `subjects` each of which is `{user: e-mail}` or `{group: name}`; validation MUST refuse an undeclared role, a `group` with no `Group` manifest of the organization, a wildcard, and an e-mail outside the organization's domain or its verified domains (AP-90, PF-41, PF-62, PF-64).
+- **AP-92** [S] — The Portal MUST compute a person's roles in an application on every request from the identity it verifies on the edge's `X-Access-Token` (`email`, `groups`) against `spec.access` of the published manifest, and MUST NOT take them from a token claim of their own, a cookie, the query or the bundle (I4, AP-91).
+- **AP-93** [H][S] — On an App with `visibility: roles` the static host MUST serve `/apps/{name}/` only to a signed-in person holding at least one of its roles and MUST answer anyone else with a `403` page, in the person's language, that names the application, lists its roles with their titles and says which project's stewards grant them, without naming any member (AP-92, UI-44).
+- **AP-94** [S] — Validation MUST refuse `visibility: roles` on an App that declares no role and on a `service` or `fullstack` App, whose requests do not pass the static host that enforces it (AP-90, AP-93).
+- **AP-95** [S] — The static host MUST write `user: {id, name, email, roles}` into `#jc-config` of the index it serves a signed-in person, `id` the Keycloak `sub` and `roles` the result of AP-92 (an empty list when none), and `user: null` for an anonymous visitor, never a token, and MUST serve an index that carries a person with `Cache-Control: private, no-store` (AP-23, SDK-02).
+- **AP-96** [S] — The reconciler MUST give the Endpoint it generates for an App a `callerRole` and the App's roles with their subjects, and MUST assign each `dataNeeds` item's `Policy` to that caller role, or, for an item with `roles`, render one `Policy` per listed role assigned to that role's endpoint role instead, each within the item (AP-04, AP-05, AP-06).
+- **AP-97** [S] — The Context Gateway MUST give a caller it admits on an Endpoint, for that request only, the role `endpoint:{project}/{endpoint}` when the Endpoint names a `callerRole`, and `endpoint:{project}/{endpoint}/{role}` for every role of the Endpoint whose subjects match the caller (`user` by `preferred_username`, `group` by the `groups` claim), and MUST drop every role starting with `endpoint:` that a token asserts, so an application's grant is never held on another surface (GW10, GW20, AP-96).
+- **AP-98** [S] — A Change that gives a `dataNeeds` item without `roles` a write operation MUST stay red lane, and its review MUST say "everyone who can open {app} can {operations} {types}" (AP-09, AP-96).
+- **AP-99** [H][S] — The App page MUST show a "Roles and members" section listing the App's roles with their descriptions and the users and groups of each, whose "Add member" and "Remove" propose the manifest change through the one propose function and MUST be disabled with the reason for a person without `propose` on `App` (PF-50, UI-44).
+
 ## Traceability
 
 | Requirements | Section | Architecture | Tests |
@@ -173,6 +186,7 @@ Decided in [ADR-N-026](../Decisions/adr-n-026-the-build-lane-runs-in-the-cluster
 | AP-68…AP-71 | Durability, Resumption & Draft Governance | [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | AP-72…AP-79 | Source in git, one build by digest, one repository per application and its GitHub copy | [20-app-sdk.md#6-publication](../Architecture/20-app-sdk.md#6-publication) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | AP-80…AP-86 | The build lane in the cluster and the three shapes of a static application | [20-app-sdk.md#6-publication](../Architecture/20-app-sdk.md#6-publication), [ADR-N-026](../Decisions/adr-n-026-the-build-lane-runs-in-the-cluster.md) | [06-security-tests.md](../Testing/06-security-tests.md) |
+| AP-90…AP-99 | Application roles | [16-apps-on-demand.md §12](../Architecture/16-apps-on-demand.md#12-roles-of-an-application) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 
 ## Related
 

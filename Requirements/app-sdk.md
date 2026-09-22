@@ -5,7 +5,7 @@ title: "App SDK (SDK)"
 
 # App SDK
 
-Family **SDK** (SDK-01…SDK-30). Owning chapter: [Architecture/20-app-sdk.md](../Architecture/20-app-sdk.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
+Family **SDK** (SDK-01…SDK-30, SDK-35…SDK-37). Owning chapter: [Architecture/20-app-sdk.md](../Architecture/20-app-sdk.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
 
 Generated `static` applications are code written against one platform package, `@joinedcontext/sdk` ([ADR-N-022](../Decisions/adr-n-022-generated-applications-are-code-on-the-app-sdk.md)). This family defines the package, the template application a generation run starts from (interface, serverless functions and tests), the runtime that executes functions, the one-shot first run, the editing agent that follows and the preview that shows the result. The application rules of [apps.md](apps.md) still hold; this family says how a generated application meets them.
 
@@ -59,6 +59,12 @@ path in this platform's own tree.
 - **SDK-29** — The App SDK MUST export the entity grid, its configuration type and JSON Schema, its data-source interface with the two built-in sources (an Endpoint by slug, a Context Space surface), and its headless hook, documented in `sdk/API.md` with a runnable example, under the same versioning as the rest of the SDK.
 - **SDK-30** — An application `spec.json` and a Dashboard MUST be able to place the grid as a view (`kind: "grid"`) with that configuration object.
 
+## 6. The person and their roles
+
+- **SDK-35** [S] — `me()` and `useMe()` MUST return the `user` of the served configuration, `{id, name, email, roles}` or `null` for an anonymous visitor, and MUST NOT fetch, decode or store a token (AP-95).
+- **SDK-36** [H] — When `useAccess().can()` answers no to a person who holds roles in the application, its reason MUST name them, "your role viewer does not permit updateAttrs on Alert", so a generated control is disabled with that sentence (SDK-07, UI-44).
+- **SDK-37** [S] — A function MUST receive in `request.user` the same `{id, name, email, roles}` the page was served, set by the static host from AP-92 and never from the caller's body or headers (SDK-21, AP-95).
+
 ## Traceability
 
 | Requirement Range | Architecture Section | Test Family |
@@ -73,6 +79,7 @@ path in this platform's own tree.
 | SDK-19…SDK-20 | [Architecture/20-app-sdk.md#4-the-first-run-and-the-editing-agent](../Architecture/20-app-sdk.md#4-the-first-run-and-the-editing-agent) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | SDK-21…SDK-24 | [Architecture/20-app-sdk.md#3-functions-and-their-runtime](../Architecture/20-app-sdk.md#3-functions-and-their-runtime) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
 | SDK-29…SDK-30 | [Architecture/20-app-sdk.md#8-the-entity-grid](../Architecture/20-app-sdk.md#8-the-entity-grid) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| SDK-35…SDK-37 | [Architecture/20-app-sdk.md#11-the-data-client](../Architecture/20-app-sdk.md#11-the-data-client) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
 
 ## Related
 
