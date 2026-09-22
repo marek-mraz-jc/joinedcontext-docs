@@ -1060,7 +1060,7 @@ POST /api/v1/projects/{project}/apps/{name}/rebuild    dispatches build.yml on t
 `POST …/rebuild` takes no body and answers `202` once the forge accepted the dispatch of
 `build.yml` on the repository's default branch; the run then appears in `GET …/build`. It is
 refused `403` without `propose` on `App`, `404` as above, `409` for an App that is not built on
-the forge, and `502` with the forge's reason when the forge refuses the dispatch.
+the forge, and `503` with the forge's reason when there is no forge or it refuses the dispatch.
 
 ## 13. Flows: running a blueprint (CC-24, CC-30, CC-31, CC-32, CC-59)
 
