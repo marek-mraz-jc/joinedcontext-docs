@@ -1022,6 +1022,46 @@ GET /apps/{name}/{path}         any asset of the built bundle
   app that wants client-side routing declares it in its build, and the host does not invent a
   fallback that would mask a missing asset.
 
+### 12a. The build of an application (AP-100, AP-103, ADR-N-028)
+
+A `static` App whose source is its own repository on the forge (`spec.source.git`, AP-75) is
+built there, by the repository's `.gitea/workflows/build.yml`. The App page reads where that
+build is and asks for another one through two routes:
+
+```text
+GET  /api/v1/projects/{project}/apps/{name}/build      the repository, the latest run, the package
+POST /api/v1/projects/{project}/apps/{name}/rebuild    dispatches build.yml on the default branch
+```
+
+`GET …/build` answers `200` for a person who may read the App:
+
+```json
+{
+  "repositoryUrl": "https://forge.example/user/login?redirect_to=%2Fjoinedcontext%2Fhelsinki_city-bikes",
+  "run": { "status": "completed", "conclusion": "success", "commit": "3f1c…", "url": "https://forge.example/user/login?redirect_to=…" },
+  "packageUrl": "https://forge.example/user/login?redirect_to=%2Fjoinedcontext%2F-%2Fpackages%2Fgeneric%2Fapp-city-bikes%2F3f1c…",
+  "rebuild": { "allowed": false, "reason": "Rebuild needs propose on App in project helsinki" }
+}
+```
+
+- Every link carries the forge's sign-in, so a person without a forge session is offered the
+  Keycloak button and lands on the page (PF-79, PF-81).
+- The repository is `{project}_{app}` of the organization of the configuration repository
+  (AP-75), derived from the names in the path and never read from the manifest's `url`.
+- `run` is the newest run of the repository's workflows, or `null` before the first one;
+  `packageUrl` names the package of `status.build.commit`, or is `null` while the App has no build.
+- An App without `spec.source.git` has no build here: `repositoryUrl`, `run` and `packageUrl`
+  are `null`, and `rebuild.reason` says the App is not built on the forge.
+- `rebuild.allowed` is `true` for a person holding `propose` on `App` in the project; otherwise
+  `reason` says what is missing (PF-50, UI-44).
+- `404` for an App the caller may not read, the same answer as a name that does not exist
+  (PF-59); `503` when no forge is configured.
+
+`POST …/rebuild` takes no body and answers `202` once the forge accepted the dispatch of
+`build.yml` on the repository's default branch; the run then appears in `GET …/build`. It is
+refused `403` without `propose` on `App`, `404` as above, `409` for an App that is not built on
+the forge, and `503` with the forge's reason when there is no forge or it refuses the dispatch.
+
 ## 13. Flows: running a blueprint (CC-24, CC-30, CC-31, CC-32, CC-59)
 
 A flow is one instantiation of a Blueprint. The gallery lists the blueprints an organisation
