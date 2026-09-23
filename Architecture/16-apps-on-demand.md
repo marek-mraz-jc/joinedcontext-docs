@@ -298,7 +298,7 @@ A save is one request through the app's endpoint and nothing else: `PATCH /api/e
 
 | Where the form runs | How the write carries the person | Who evaluates it |
 |---|---|---|
-| A published `static` app on the platform origin (`/apps/{name}/`) | the platform session cookie and the CSRF header, same origin | the gateway, through the app's endpoint |
+| A published `static` app on the platform origin (`/apps/{name}/`) | the apps session cookie and the CSRF header, same origin, under `/apps/{name}/api/endpoint/{slug}/`, where the edge sets the session as the bearer | the gateway, through the app's endpoint |
 | A `fullstack` app behind the edge login | `X-Access-Token` set by APISIX from the session (§5) | the gateway, through the app's endpoint |
 | The sandboxed preview of a run (AP-50) | a `postMessage` to the page that framed it; the Portal page performs the write with the reviewer's session against the app's sandbox space (AP-19) and posts the answer back | the gateway, through the sandbox endpoint |
 

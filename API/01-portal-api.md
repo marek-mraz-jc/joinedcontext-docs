@@ -1088,6 +1088,10 @@ GET  /apps/{name}/{path}                any asset of the built bundle
 POST /apps/{name}/api/functions/{fn}    one function of the served build, run in jc-functions (AP-84)
 ```
 
+The app's data calls go to `/apps/{name}/api/endpoint/{slug}/…` on the same origin. The Portal
+does not serve them: the edge route `context-endpoint-apps` sets the apps session as the bearer and
+proxies them to the Context Gateway's `/api/endpoint/{slug}/…` (Deployment/10, T-2670).
+
 - Only an app whose manifest is `lifecycle: published` is reachable. A draft, a preview or a
   retired app is `404` — the same answer as a name that does not exist, so the host never
   discloses which apps are being worked on.

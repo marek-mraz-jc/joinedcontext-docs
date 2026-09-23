@@ -52,7 +52,7 @@ The application never picks how its requests travel; the document the Portal ser
 
 | Where the application runs | Data requests | Function calls |
 |---|---|---|
-| Published, `/apps/{name}/` | `fetch` on the same origin with the platform session cookie and the CSRF header | `POST /apps/{name}/api/functions/{fn}` on the same origin |
+| Published, `/apps/{name}/` | `fetch` on the same origin under the app's own path, `/apps/{name}/api/endpoint/{slug}/…`, with the apps session cookie and the CSRF header; the edge turns the session into the bearer ([Deployment/10](../Deployment/10-edge-routing-apisix.md), `context-endpoint-apps`) | `POST /apps/{name}/api/functions/{fn}` on the same origin |
 | The sandboxed preview of a run | `postMessage` of `{kind: "jc-request", id, method, path, body}` to the framing page, answered by `{kind: "jc-response", id, status, body}` | the same message with `path: "/functions/{fn}"` |
 
 ## 2. The template application

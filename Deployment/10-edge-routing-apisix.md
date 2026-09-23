@@ -62,12 +62,15 @@ Every row below is one entry of `components/<component>/apisix-routes.yaml` with
 | `context-space` | `/cs/*` | `{host}` | 15 | `context-gateway:8080` | OIDC bearer, verified by the Context Gateway | Class 2 | `proxy-buffering` off, `limit-count` |
 | `context-endpoint` | `/api/endpoint/*` | `{host}` | 20 | `context-gateway:8080` | Bearer or anonymous, decided by the Context Gateway PEP | Class 3 and Class 4 | `cors`, `proxy-buffering` off, `limit-conn` |
 | `context-endpoint-portal` | `/api/endpoint/*` | `portal.{host}` | 20 | `context-gateway:8080` | Edge session becomes the bearer, or a bearer passes through | Class 3 and Class 4 | as above, plus `openid-connect` |
+| `context-endpoint-apps` | `/apps/:name/api/endpoint/*` | `{host}` | 35 | `context-gateway:8080`, the `/apps/{name}` prefix stripped | The apps session (`jc_edge_apps` on `/apps/`) becomes the bearer, or a bearer passes through; anonymous stays anonymous | Class 3 and Class 4 | as `context-endpoint-portal`, `proxy-rewrite` `regex_uri` |
 | `gitea-forge` | `/git/*` | `{host}` | 10 | `gitea-http:3000` | Basic or token, verified by Gitea | Class 2 | `proxy-rewrite` |
 | `grafana` | `/grafana*` | `{host}` | 5 | `grafana:3000` | Grafana's own OIDC login | Class 2 | `proxy-rewrite` |
 | `ckan` | `/*` | `data.{host}` | default | `ckan:5000` | CKAN's own login | Class 1 | `proxy-rewrite` |
 | `ckan-redirect` | `/ckan*` | `{host}` | 5 | terminates at the edge | none | none | `redirect` to `https://data.{host}/` |
 | `keycloak` | `/*` | `idm.{host}` | default | `keycloak-app-keycloakx-http:80` | Identity provider | none at the edge | `proxy-rewrite` |
 | `app-{name}` | `/apps/{name}/*` | `{host}` | 30 | `app-{name}:8080` (service and fullstack) or `portal:8080` (static) | Edge session; `unauth_action: pass` for `visibility: public` | Class 1 | `openid-connect`, cookie path `/apps/{name}/`, logout `/apps/{name}/logout` (AP-26…AP-29) |
+
+`context-endpoint-apps` is how a published `static` app reaches its endpoint as the person using it: the apps session cookie lives on `/apps/` (AP-29) and never reaches `/api/endpoint/*` at the root, so the SDK sends its endpoint calls under the app's own path, `/apps/{name}/api/endpoint/{slug}/…`, and this route turns the session into `Authorization: Bearer` and proxies `/api/endpoint/{slug}/…` to the gateway, which decides as for any caller (GW10). Its priority is above `app-{name}` so an app's own route never swallows its data calls; the egress path is refused here as on the other endpoint routes (T-2670).
 
 The `app-{name}` row is the one route this table describes that no chart renders: `jcctl` builds it from an `App` manifest (section 3). Every other row exists in the deployment repository today.
 
@@ -256,7 +259,7 @@ flowchart LR
    `X-Forwarded-For` is deliberately kept: nginx maintains it and the per-IP rate limit keys on it. The `openid-connect` plugin sets `X-Userinfo` and `X-Access-Token` afterwards, which is what makes them trustworthy upstream: the client's copies are already gone.
 3. **`limit-count` and `limit-conn` (tiered rate limiting):** counted per APISIX worker with `policy: local`, so a gateway with several replicas allows the ceiling per replica. Every limit answers `429` and sets the quota headers.
    - **Class 1 (standard web and UI):** 300 requests per minute, keyed on `remote_addr`. `portal-ui`, `apps-surface`, `ckan`.
-   - **Class 2 (authenticated APIs):** 1,200 requests per minute, keyed on the `Authorization` header. `portal-api`, `context-space`. The bearer is not verified at the edge, so the bucket is per token string rather than per subject, and it resets when a client renews its token.
+   - **Class 2 (authenticated APIs):** 1,200 requests per minute, keyed on the `Authorization` header. `portal-api`, `context-space`. The bearer is not verified at the edge, so the bucket is per token string rather than per subject, and it resets when a client renews its token. `portal-api` keys on the bearer, the `X-Access-Token` the edge sets from a browser session and `remote_addr` together, so every person behind one office address has a bucket of their own and a caller with neither is limited per address (T-2669).
    - **Class 3 (high-throughput streams):** 5,000 requests per minute, keyed on `Authorization` and `remote_addr` together. The `context-endpoint` routes, which are what pipeline runners write telemetry to.
    - **Class 4 (bulk file exports):** 10 concurrent requests, keyed the same way, on the `context-endpoint` routes beside Class 3. A GeoJSON or CSV export holds its connection for minutes, which a per-minute count does not bound.
    - `portal-well-known` carries its own limit of 600 per minute per IP; `keycloak`, `grafana` and the three routes that answer at the edge carry none.
