@@ -36,10 +36,15 @@ jcctl [COMMAND] [OPTIONS]
 | **`artifacts rebuild`** | `--repo-dir <path>`, `--out-dir <dir>`, `[--space <name>]`, `[--revision <sha>]` | Re-renders a space's committed artifacts into a directory |
 | **`sync`** | `--repo-dir <path>`, `--source <project>/<name>`, `--checkout <dir>`, `[--state <file>]`, `[--once]`, `[--json]` | Runs one `SyncSource` against a checkout, once or on its schedule |
 | **`publish ckan`** | `--repo-dir <path>`, `--project <slug>`, `--host <gateway host>`, `[--organization-title <t>]`, `[--api-token-env <VAR>]`, `[--age-key-file <path>]`, `[--withdraw]` | Publishes the project's open datasets to a CKAN portal, or withdraws them |
+| **`migrate`** | `--repo-dir <layout 1 clone>`, `--out-dir <empty dir>` | Splits each `projects/{slug}/` into a project repository of its own with its history, and writes the organization repository of layout 2 with the registry in their place (CC-85) |
+| **`export --format git`** | `--repo-dir <project checkout>`, `--project <slug>`, `--out-dir <dir>`, `[--app-dir <name>=<checkout>]` | One `git bundle` per repository of the project, its registry entry without values, and a `kind: Bundle` index of roles, SHA-256 and head commits (MF-45) |
+| **`import --format git`** | `<dir> --out-dir <empty dir>` | Clones each bundle, refuses the import unless every file and head is the one the index lists, and migrates a layout 1 organization on the way in (MF-46, MF-47) |
+| **`checkouts`** | `--org-dir <organization checkout>`, `--projects-dir <dir>`, `--forge <base>/<org>`, `[--token-file <path>]`, `[--secrets-dir <dir>]`, `[--once]`, `[--interval <seconds>]` | Keeps every registered project checked out at its `spec.ref` under `<dir>/{slug}`, a link swapped in one rename; a failed fetch keeps the last checkout, and `--once` fails only when the registry does not read (CC-86, CC-89) |
 
 `jcctl --help` prints the same list; `crates/jcctl/src/main.rs` holds it as one `USAGE` string, so a
-command that is not in that string does not exist. **There is no `jcctl serve`**: nothing runs
-`jcctl` as a daemon and there is no configuration MCP server behind it. The MCP servers the
+command that is not in that string does not exist. **There is no `jcctl serve`**: the one
+`jcctl` that runs as a daemon is `checkouts`, the gateway's sidecar in its own image with git, and
+there is no configuration MCP server behind it. The MCP servers the
 platform has are the Portal's at `/api/v1/mcp` and an endpoint's or space's own; see
 [00-intro](00-intro.md).
 

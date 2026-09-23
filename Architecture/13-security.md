@@ -103,11 +103,18 @@ refused by the route.
 | `POST /internal/agent-runs/…` (the run callbacks) | the credential proxy | a bearer the Portal and the proxy share, from the proxy's own secret. The one credential between cluster services that is not an identity; it is to become one. |
 | `POST /internal/pipeline-tests/{id}` | the pipeline test harness | the `{id}` itself: 130 random bits minted for one test, held by the harness the Portal started and by nobody else. A message naming a test that is not running is dropped. |
 | `GET /internal/previews` | the Context Gateway | a Keycloak ServiceAccount token: issuer, audience `portal-internal`, and `azp` naming the gateway's own client. |
+| `GET /internal/domain-verifications` | the Context Gateway | the same token as `/internal/previews`. |
 
 A workload's token comes from `client_credentials` on its own confidential client, with an audience
 mapper that binds the token to `portal-internal` — the pattern the endpoint surface already uses to
 bind a token to one endpoint slug. No static key is added for a new caller of this listener, and a
 caller that presents no token is refused before the handler reads the body.
+
+The pipeline runner's streams API (4195, `PUT` and `DELETE /streams/{name}`) holds the pipeline
+secrets in its environment (PL-07), so reaching it is decided by the mesh, not by the other side's
+egress: a Linkerd `Server` on that port, a `MeshTLSAuthentication` naming the Portal's
+ServiceAccount, and an `AuthorizationPolicy` binding the two. Any other meshed pod is refused by
+the runner's proxy, and the kubelet's probes stay authorized.
 
 - **PF-46** [portal][identity] — every route of the internal listener names the identity it accepts;
   a NetworkPolicy is the second control, never the only one.

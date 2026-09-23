@@ -15,10 +15,10 @@ joinedcontext platform natively supports autonomous AI agents as first-class ope
 |        |                                                   |                                      |
 |        v (OAuth 2.1 Bearer Token)                          v (OAuth 2.1 Bearer Token)             |
 |  +-------------------------------+                   +-------------------------------+            |
-|  | Context Space Data MCP        |                   | jcctl Configuration MCP     |            |
-|  | Endpoint: /api/endpoint/{endpointSlug}/mcp     |                   | Endpoint: /mcp/config         |            |
-|  | - Query Entities              |                   | - jcctl plan / drift        |            |
-|  | - Describe DataModels         |                   | - List & Inspect Blueprints   |            |
+|  | Context Space Data MCP        |                   | Portal Configuration MCP      |            |
+|  | /api/endpoint/{slug}/mcp      |                   | /api/v1/mcp                   |            |
+|  | - Query Entities              |                   | - Dry runs and drafts         |            |
+|  | - Describe DataModels         |                   | - Registry operations         |            |
 |  | - Subscribe to Context        |                   | - Propose Manifest Changes    |            |
 |  +-------------------------------+                   +-------------------------------+            |
 |                 |                                                   |                             |
@@ -93,9 +93,10 @@ own configuration. An agent that needs them reads the Configuration MCP instead.
 
 #### The shared read parameter table (AG-84)
 
-One table, two surfaces: the REST read surface forwards these unchanged
-(`crates/context-gateway/src/query.rs`, `PASSTHROUGH`) and every entity-selecting tool takes them as
-arguments under the same names. Where CIM 009 takes a comma-separated string, the tool takes a JSON
+One table, two surfaces: every entity-selecting tool takes these as arguments under the same names
+as the REST read surface. The REST surface forwards the shaping parameters unchanged
+(`crates/context-gateway/src/query.rs`, `PASSTHROUGH`) and rewrites the selectors (`type`, `attrs`,
+`q`, the geo compound) under the policy decision before the broker sees them. Where CIM 009 takes a comma-separated string, the tool takes a JSON
 list and the gateway joins it, because a list is what a schema can bound and a client can build
 without quoting rules. Every bound below is published in the tool's JSON Schema and refused before a
 broker request is built (AG-31).
@@ -115,7 +116,7 @@ broker request is built (AG-31).
 | `datasetId` | list of at most 50 URNs, `@none` allowed | dataset instances |
 | `join`, `joinLevel` | enum `inline`, `flat`, `@none`; integer 1…3 | linked entity retrieval |
 | `containedBy` | list of at most 50 URNs | loop protection for a hierarchical join |
-| `entityMap`, `entityMapRetrieve` | boolean; URN | federated paging; only on an Endpoint that federates |
+| `entityMap` | boolean | keeps a federated entity map for paging; only on an Endpoint that federates |
 | `local` | boolean | a local-only answer |
 | `limit`, `cursor`, `count` | integer 1…1000; integer ≥ 0; boolean | paging; the structured result carries `total` and `nextCursor` |
 | `details` | boolean | on `list_types` and `list_attributes`: each row's members |
@@ -168,8 +169,8 @@ Never an argument, on any tool: `space`, `tenant`, `NGSILD-Tenant`, `endpoint`, 
 
 What an answer must not lose, because a REST client does not lose it: the result count
 (`NGSILD-Results-Count`) as `total`; the next page (`Link rel="next"`) as `nextCursor`; every
-`NGSILD-Warning` as `warnings[]`; a partial federated answer as `partial: true` with the failing
-sources named and their URLs withheld; and a refusal as the tool error carrying the REST
+`NGSILD-Warning` as `warnings[]`, which is also where a partial federated answer shows (the tool
+result carries no `partial` flag of its own); and a refusal as the tool error carrying the REST
 ProblemDetails' `type`, `title` and `detail`, in the same words (AG-84).
 
 `describe_schema` answers the JSON formalisms as the document itself (`summary`, `json-schema`, `context`) and every text formalism (`linkml`, `shacl`, `owl`, `rdf`, `markdown`) as `{ "format", "mediaType", "document" }`, the same bytes the REST route `/api/endpoint/{slug}/schema/v{major}/{artifact}` serves for the same token. With no `format` it answers `summary`, which names LinkML as the
@@ -179,7 +180,7 @@ formalism to load (`recommended: "linkml"`) and lists every artifact with its `f
 what an agent is about to write, RDF and OWL for a reasoner, JSON Schema for building a form, and
 `markdown` for a person to read. `entityType` narrows the answer to one type, or to the list of classes an agent needs (`["User", "Vehicle"]`, at most 64); a type the caller may not read is refused exactly as an unknown one is, by name, whether it stands alone or in a list, so the argument is no way to ask which types exist (EP-47, SP-15, SP-20). A rendered document over 1 MiB is refused with the words that name `entityType` and `version` as the way to narrow it, and is never truncated: half a SHACL file is not SHACL, and a model that silently lost its last classes is the one thing a schema surface must not serve (AG-29).
 
-Three properties hold across the whole catalogue:
+Four properties hold across the whole catalogue:
 
 1. **The tool list is the grant list.** A tool whose operation the caller does not hold is not advertised, and calling it by name answers exactly as calling a tool nobody ever defined does (SP-15, SP-20).
 2. **Temporal is the same grammar.** `timerel`, `timeAt`, `endTimeAt`, `lastN`, `aggrMethods` and `aggrPeriodDuration` are forwarded to the broker's `/temporal/entities` unchanged, under the same policy decision that governs the REST path, so history is neither a second query language nor a second authorization path (AG-30).
@@ -215,13 +216,13 @@ The endpoint's DCAT-AP record (EP-27) is the server description an MCP client sh
 
 ### Configuration-Plane MCP Tools (the Portal, `/api/v1/mcp`; every row an operation of the registry, AG-59)
 
-One registry, every door (ADR-N-021): the table below is `GET /api/v1/projects/{project}/ops` written out, and the Portal's own pages, its REST routes, this MCP server and the assistant call the same functions. An operation the caller's role refuses is not listed to them and is refused when called by name (AG-64, SP-15).
+One registry, every door (ADR-N-021): the table below lists the configuration operations; `GET /api/v1/projects/{project}/ops` lists the whole registry a caller may run, among it the change, activity, workspace, run, project, service-account key and sync-source operations the table leaves out. The Portal's own pages, the Portal's own pages, its REST routes, this MCP server and the assistant call the same functions. An operation the caller's role refuses is not listed to them and is refused when called by name (AG-64, SP-15).
 
 | Operation | Kind | Lane | Annotations | What it does |
 |---|---|---|---|---|
 | `jc_catalog_search` | `*` | Green | `readOnlyHint: true` | Find spaces, endpoints, and data models matching search keywords |
 | `jc_change_approve` | `Change` | Red | `destructiveHint: true` | Approves and merges a change proposal |
-| `jc_change_list` | `Change` | Green | `readOnlyHint: true` | Lists open change proposals and merge requests for review |
+| `jc_change_list` | `*` | Green | `readOnlyHint: true` | Lists open change proposals and merge requests for review |
 | `jc_change_reject` | `Change` | Yellow | `destructiveHint: false` | Rejects a change proposal with a reason and closes its merge request |
 | `jc_datasource_check` | `DataSource` | Green | `readOnlyHint: true` | Dry-runs a DataSource manifest and probes the external feed |
 | `jc_datasource_propose` | `DataSource` | Yellow | `destructiveHint: false` | Proposes creation or update of a DataSource manifest, from a draft when one is named |
@@ -249,7 +250,7 @@ Three properties hold across this catalogue too. The lane is the operation's, no
 
 ## 3. Human-in-the-Loop Elicitation & Confirmation Flow
 
-When an agent initiates an operation classified as `destructiveHint: true` or targeting a Yellow/Red interaction lane, the MCP server invokes the **Elicitation Protocol** (MCP form-mode confirmation) before creating a pull request or executing changes:
+When an agent initiates an operation classified as `destructiveHint: true` or targeting a Yellow/Red interaction lane, the MCP server invokes the **Elicitation Protocol** before creating a pull request or executing changes:
 
 ### The shape both servers use (AG-08, AG-63)
 
@@ -276,24 +277,22 @@ sequenceDiagram
     participant MCP as Portal Configuration MCP
     participant Portal as Portal UI (Approvals)
     participant Gitea as Gitea Org Repository
-    participant CTL as jcctl Reconciler
+    participant CTL as Portal Reconciler
 
-    Agent->>MCP: call propose_change (Creates new public Endpoint)
-    Note over MCP: Detects Risk Class = RED<br/>Requires Human Confirmation
+    Agent->>MCP: tools/call jc_endpoint_propose (a new public Endpoint)
+    Note over MCP: Yellow lane<br/>Requires Human Confirmation
 
     MCP-->>Agent: return Elicitation Request (Prompt: Confirm public exposure)
     Agent->>User: Surface Confirmation Dialog via UI/CLI
     User-->>Agent: Operator Confirms Action
 
-    Agent->>MCP: confirm_change (With User Elicitation Token)
-    MCP->>Gitea: Create Branch & Submit Pull Request (Co-Proposed-By: Agent)
-    
-    Note over Gitea: Gitea Actions CI executes:<br/>1. JSON Schema Validation<br/>2. Conftest Policy Gates<br/>3. jcctl plan generation
+    Agent->>MCP: the same tools/call, with params.elicitation carrying the answer
+    MCP->>Gitea: Create Branch & Submit Pull Request (authored by the calling person)
 
     Portal->>User: Display Pending Approval (With Plan Diff & Risk Warning)
     User->>Portal: Click "Approve & Merge"
     Portal->>Gitea: Merge Pull Request to main
-    Gitea->>CTL: Webhook Trigger (commit hash)
+    Gitea->>CTL: Webhook to the Portal (commit hash)
     CTL->>CTL: Apply Wave Reconcile
     CTL-->>Portal: Live Status = LIVE
 ```
@@ -302,22 +301,19 @@ sequenceDiagram
 
 ## 4. Agent Identity, Attributability & Audit (CC-44)
 
-1. **Discrete Service Accounts:** Agents MUST NOT share credentials with human users or use generic "system-bot" accounts. Each agent runs under a dedicated Keycloak service account issuing scoped OAuth 2.1 tokens.
-2. **Audit Attribution:** When an agent commits a change to Git:
-   - **Git Author:** Set to the agent's service principal: `Agent-Optimizer <agent-optimizer@service.joinedcontext.local>`.
-   - **Git Trailer:** Carries the `Co-Proposed-By:` metadata containing the identity of the human operator who authorized the task:
+1. **No rights of its own:** An agent run acts for the person who started it, narrowed by its AgentProfile's `spec.access` (`src/agents/access.rs`, AG-03, AG-70). It holds no credential; `jc-agent-proxy` injects the ones a request needs.
+2. **Audit Attribution:** When the app builder commits to the forge through `jc-agent-proxy` (`crates/agent-proxy/src/routes/forge.rs`):
+   - **Git Author and Committer:** `agent:app-builder@{project} <agent-builder@{project}.local>`.
+   - **Git Trailer:** `Co-Proposed-By:` names the person who started the run:
 
      ```text
-     feat(transport): optimize streetlight dimming schedule
+     Add the air quality map
 
-     Co-Proposed-By: Mikko Laine <mikko.laine@example.org>
-     Signed-off-by: Agent-Optimizer <agent-optimizer@service.joinedcontext.local>
+     Co-Proposed-By: demo.steward@example.org
      ```
 
-3. **Grounded Tool Results (CC-47):** Every query result returned to an agent carries exact provenance metadata:
-   - Evaluated Git commit hash.
-   - Broker timestamp.
-   - `isRestricted: true/false` flag indicating whether results were policy-pruned.
+   A proposal made through the Portal, by a person or an assistant acting for one, is authored by that person.
+3. **Grounded Tool Results (CC-47):** A data-plane tool result carries `restricted: true` when the policy narrowed the answer, beside `total`, `nextCursor` and `warnings`.
 
 ---
 
@@ -328,7 +324,7 @@ Digital twin contexts process external telemetry from public sensors, citizen re
 ### Security Controls
 
 1. **Data Is Never Instruction:** Responses from the Data-Plane MCP are tagged strictly as structured data payloads (`role: tool_result`). Agent runtime environments MUST apply system prompts instructing models to treat context observations as untrusted string literals.
-2. **Read-Only by Default:** Agent tokens are denied write access by default. An agent cannot modify an entity or pipeline unless an explicit `Policy` entity exists granting that operation to the agent's service account.
+2. **Read-Only by Default:** An AgentProfile grants reads unless it names more. An agent writes an entity or proposes a pipeline only when the person who started it holds that grant and the profile names the operation.
 3. **No Dynamic Execution:** Tools execute fixed Rust and Go routines. Agents cannot submit arbitrary code, SQL queries, or shell scripts to the platform.
 4. **Sandboxed Workspaces:** For testing complex multi-action tasks, agents are provisioned ephemeral **Sandbox Context Spaces** (CC-67). Sandboxes are completely isolated, assigned a strict TTL, and automatically destroyed without affecting production data.
 
@@ -349,12 +345,12 @@ GET /api/endpoint/{endpointSlug}/.well-known/oauth-protected-resource
 {
   "resource": "https://{host}/api/endpoint/{endpointSlug}/mcp",
   "authorization_servers": ["https://idm.{host}/realms/{organization}"],
-  "scopes_supported": ["ngsi-ld:read", "ngsi-ld:subscribe"],
-  "bearer_methods_supported": ["header"]
+  "bearer_methods_supported": ["header"],
+  "resource_documentation": "https://{host}/api/endpoint/{endpointSlug}/"
 }
 ```
 
-The reconciler renders one Keycloak client per endpoint that enables `mcp`, named `mcp-{endpointSlug}`: public client, PKCE S256 mandatory, no client secret, the redirect URIs of the known mobile clients, and dynamic client registration off. A mobile app therefore never holds a secret, and a token minted for one endpoint is refused by every other (PF-45, PF-46, AG-32).
+The deployment defines one Keycloak client for the mobile apps, `mcp-mobile` (`components/context-gateway/keycloak-clients.yaml`): public client, PKCE S256 mandatory, no client secret, the redirect URIs of the known mobile clients, and dynamic client registration off. The client is the app and the endpoint is the resource: the `resource` audience (RFC 8707) binds each token to one endpoint, so a token minted for one endpoint is refused by every other, and a mobile app never holds a secret (PF-45, PF-46, AG-32).
 
 Setting it up:
 
@@ -366,6 +362,8 @@ Setting it up:
 ## 8. What an agent may reach
 
 An autonomous agent or assistant conversation operates under strict least-privilege scoping governed by the `AgentProfile` manifest (AG-70, MF-40, UI-56). An agent holds no ambient authority; its capabilities are constrained by its assigned profile and bounded dynamically by the permissions of the human operator who initiated the run.
+
+In Git the same bound is a repository (AG-86): an agent workspace clones the repository of its run's project and nothing else, with a forge credential the proxy issues for that repository alone, and reaches the organization repository only through an organization-level operation of the registry with a Change of its own (CC-87, [19 §4](19-agent-runner.md#4-the-proxy-surface)).
 
 ### The profile access block
 
@@ -385,7 +383,7 @@ access:
       verbs: [read]
 ```
 
-Internet hosts stay in `spec.egress.allow` (AG-65). The Assistant page access view displays the declared network egress hosts alongside the access rules.
+Internet hosts stay in `spec.egress.allowedHosts` (AG-65). The Assistant page access view displays the declared network egress hosts alongside the access rules.
 
 ### Dynamic intersection at call time
 
@@ -402,14 +400,14 @@ When an `AgentProfile` omits the `spec.access` block entirely, a safe default is
 
 The tool catalogue presented to an agent model (`tools/list` over the Portal MCP or the in-process assistant loop) is dynamically filtered to the effective intersection set (AG-60, AG-64). Tools exceeding the effective access are omitted from discovery.
 
-If an agent attempts to call a tool outside its effective access, the operation is blocked at the gateway before the backing function executes. The platform records the blocked invocation on the run timeline as a `tool` event with `status: "failed"` and an error describing the permission denial (AG-56).
+If an agent attempts to call a tool outside its effective access, the Portal refuses the call before the backing function executes. The platform records the blocked invocation on the run timeline as a `tool` event with `status: "failed"` and an error describing the permission denial (AG-56).
 
 ### Validation and governance
 
 The `access` block is validated strictly during manifest admission (MF-40):
 
 - Operation names must match `^jc_[a-z0-9_]+$` and correspond to registered operations in the platform registry.
-- Resource kinds must match known platform kinds (`ContextSpace`, `Endpoint`, `DataModel`, `Pipeline`, `App`, `Dashboard`).
+- Resource kinds must be kinds of the platform registry (`jc_core::registry::KINDS`), each named once.
 - Kinds verbs must only include `read` and `propose`.
 - Endpoints verbs must only include `read` and `write`.
 - Endpoint names must be valid DNS-1123 labels.

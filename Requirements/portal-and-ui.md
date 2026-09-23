@@ -6,7 +6,7 @@ description: Normative requirements for the Portal API and React 19 single-page 
 
 # Portal & User Interface
 
-Family **UI** (UI-01…UI-74; UI-43 and UI-61…UI-72 are unassigned). Owning chapters: [Architecture/09-portal.md](../Architecture/09-portal.md) and [Architecture/19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
+Family **UI** (UI-01…UI-81; UI-43 is unassigned). Owning chapters: [Architecture/09-portal.md](../Architecture/09-portal.md) and [Architecture/19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
 
 ## 1. Schema-Driven Forms and UI Schemas
 
@@ -140,6 +140,16 @@ One spreadsheet-like component reads, filters, compares and edits NGSI-LD entiti
 - **UI-71** [H] — The entity grid MUST be one reusable component of the App SDK (`@joinedcontext/sdk`), used unchanged by the Portal, by Dashboards and by generated applications: everything a place needs is configuration, never a fork. It MUST be configurable by a serializable object (data source, type, columns and their order, which metadata columns show, filters allowed and preset, page size, mode view or edit, which attributes are editable, history on or off, comparison source, density, row actions) validated against a published JSON Schema, and extensible by code where configuration ends (cell renderers and editors per attribute or kind, row actions, toolbar slots). State (filters, sort, selection, column layout, pending edits) MUST be usable controlled or uncontrolled, and a headless hook MUST give the same behaviour without the default markup. Strings come from the host's i18n, colours and spacing from the design tokens; the component fetches through an injected data source and holds no credential and no URL of its own.
 - **UI-72** [H] — A GeoProperty cell MUST open on a map: the geometry of the row, and on request of every row of the page, drawn on the Portal's base map with the row and the shape selecting each other. In edit mode the map MUST be a geometry editor: create, move, reshape and delete Points, LineStrings, Polygons (with holes) and their Multi- forms, with undo, vertex snapping, a coordinate field for exact values, paste and upload of GeoJSON, and a validity check (closed rings, no self-intersection, WGS 84 longitude/latitude order and range) before the geometry joins the pending changes of UI-67. The editor is part of the same SDK component set (UI-71).
 
+## 24. Organization and Project Management
+
+- **UI-75** [H][S] — The Portal MUST offer an **Organization** page at `/organization`, outside any project and open to every signed-in person of the organization, with the tabs Settings, Members, Roles, Groups, Service accounts and Projects, each at `/organization/{tab}`; every write on it MUST be a proposed `Change` in the lane the manifest's own form would take, and a control the person's bindings do not allow MUST stay in place, disabled, with the reason (UI-44).
+- **UI-76** [S] — The Organization page's Settings tab MUST edit the `Organization` manifest as a form (`domain` with its verification state, `locales`, `defaultLocale`, `contacts`, and `projects.creation`, `projects.visibility`, `projects.quota`, `projects.nameCooldownDays`) and MUST propose the update in the red lane (PF-41, PF-61, PF-65, PF-78).
+- **UI-77** [S] — The Organization page's Members tab MUST list the people and groups bound at organization scope with each binding's role and validity only to a person who holds `read` on `RoleBinding` at organization scope, and MUST fetch no binding for anybody else; adding a member MUST propose a `RoleBinding` whose role picker offers only roles within the proposer's own rights (PF-52), and removing one MUST propose that binding's removal.
+- **UI-78** [S] — The Organization page's Roles, Groups and Service accounts tabs MUST list and propose the manifests of namespace `org` (PF-49, PF-62), mark the roles of the PF-56 taxonomy as seeded, and name each role's rules in words.
+- **UI-79** [S] — The Organization page's Projects tab MUST list every project the person may read and none they may not (PF-59), offer **New project** by the rules of PF-65 and PF-66, and offer the deletion of a project as the red-lane `Change` of PF-77, listing its cascade and asking for the name typed back.
+- **UI-80** [H][S] — Every project MUST have **Project settings** at `/projects/{project}/settings/{tab}` with the tabs General (`project.yaml` title, description and quotas), Members (bindings at project and context-space scope, to an organization role or a role of this project, PF-69), Roles (the project's roles, project kinds only, verbs within the proposer's, PF-68), Service accounts, Your access (`permissions/me`) and Delete project (PF-77, PF-78); a project the person may not read MUST answer `404` there as everywhere (PF-59).
+- **UI-81** [H] — Project → Access MUST no longer be a section: its role bindings, roles and service accounts MUST move to Project settings or the Organization page by their scope, its groups and organization domain to the Organization page, its effective permissions to Project settings → Your access, and `/projects/{project}/access` MUST redirect to `/projects/{project}/settings/members` keeping its query string.
+
 ## Traceability
 
 | Requirement Range | Architecture Section | Test Family |
@@ -170,6 +180,7 @@ One spreadsheet-like component reads, filters, compares and edits NGSI-LD entiti
 | UI-73…UI-74 | [Architecture/09-portal.md#11-the-assistant-workbench](../Architecture/09-portal.md#11-the-assistant-workbench) | [Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest) |
 | UI-61…UI-63 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | UI-64…UI-72 | [Architecture/09-portal.md#13-the-entity-grid](../Architecture/09-portal.md#13-the-entity-grid) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| UI-75…UI-81 | [Architecture/09-portal.md#14-organization-and-project-management](../Architecture/09-portal.md#14-organization-and-project-management) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-twice](../Testing/03-frontend-and-e2e-tests.md#2-playwright-twice) |
 
 ## Related
 

@@ -60,7 +60,7 @@ something to show.
 | `resource-not-found` | 404 | not there, or not readable by this caller: one answer for both (R20) |
 | `conflict` | 409 | the state moved under the request, or a name is taken |
 | `unsupported-media-type` | 415 | a `PATCH` whose content type is neither patch type of section 4 |
-| `not-implemented` | 501 | the route exists and this form of it does not, such as `?revision=` on a list |
+| `not-implemented` | 501 | the route exists and this form of it does not, such as an import from a URL |
 | `service-unavailable` | 503 | a tier the route needs did not answer: the forge, the database, Model Tools, a runner |
 | `internal-error` | 500 | anything else; `detail` says nothing about the cause |
 | `rate-limit-exceeded` | 429 | the basemap proxy's own bucket, with the limit in `detail` |
@@ -132,7 +132,9 @@ GET    /api/v1/endpoints                                every Endpoint of every 
 POST   /api/v1/projects                                 open a project → 202 + Change: project.yaml and the creator's steward binding in one merge request (PF-65, PF-66)
 GET    /api/v1/projects/{project}                       the project and `status.usage`: what it holds of each quota (PF-73, PF-75)
 DELETE /api/v1/projects/{project}                       delete a project → 202 + red-lane Change over everything it holds (PF-77, PF-78)
+POST   /api/v1/projects/{project}/duplicate             duplicate a project into a new slug → 202 + Change: its registry entry and the caller's steward binding (PF-89)
 GET    /api/v1/projects/{project}/permissions/me        the caller's effective rules here (PF-51, PF-61)
+GET    /api/v1/projects/{project}/apps/{name}/me        the caller's roles in one published App, for a fullstack backend (AP-109)
 ```
 
 `DELETE /api/v1/projects/{project}` proposes one red-lane `Change` whose merge request removes
@@ -149,6 +151,21 @@ The name is then reserved for `Organization.spec.projects.nameCooldownDays` (30 
 `0` for none) counted from the commit that removed it, and `POST /api/v1/projects` answers `409`
 with the date it becomes free (PF-78).
 
+`POST /api/v1/projects/{project}/duplicate` takes `{name, displayName?, parameters?}` and answers
+what `POST /api/v1/projects` answers for `name`: the same checks on the new slug (a DNS-1123 label,
+not taken, not proposed, past its cooldown) and the same `202` with the organization's `Change`,
+which carries the registry entry `projects/{name}.yaml` (`spec.repository.name` the new slug, `ref`
+`main`, the `parameters` given) and the caller's steward binding for the new project. It is held to
+`read` on the origin and to what opening a project needs (`Organization.spec.projects.creation`).
+Before the `Change`, the Portal copies the origin's repository with its whole history into a new
+private repository named after the slug, with `main` protected; that copy is PF-89's fork, made
+through the forge's migration from its own address because the forge refuses a fork into the
+owner that already holds the origin. A repository of that name already there is `409`, never
+adopted, and a failed `Change` removes the copy again, as opening does (CC-85). The origin is only
+read: the copy's teams and bindings are its own and grant nothing in the origin (PF-83), and its
+ids render from the new slug (PF-79). Layout 1 answers `409`, because a project there has no
+repository to copy; its duplicate is an import of its export under the new name (MF-45).
+
 `GET /api/v1/endpoints` is the organization-level Endpoints page (PF-61): an `org-admin` bound at
 organization scope reads every project's, a project's steward their own projects', a binding
 scoped to one context space that space's alone, and a caller no binding names an empty list,
@@ -160,10 +177,14 @@ a project the caller may not read is `404` on every route of this section, on `e
 `/revisions`, `permissions/me` and the MCP resources alike, the one answer for "missing" and
 "not yours". A write answers `403` with the missing verb (PF-50).
 
-A list takes `labelSelector`, `fieldSelector`, `limit` and `continue`. It does not take
-`revision`: a list of a past revision is `501` naming where that answer lives, because the
-repository at a revision is `GET …/export?revision={commit}` of section 10 and the mirror holds
-the default branch alone (`joinedcontext-portal/src/api/resources.rs`).
+A list takes `labelSelector`, `fieldSelector`, `limit` and `continue`. A list and a get both take
+`revision={commit}` (MF-11, MF-16): the project's subtree of the repository at that commit id, read
+from the forge the way `GET …/export?revision={commit}` of section 10 reads it, with no `status`,
+because status is what the Portal computes now. Only a commit id (7 to 40 lowercase hex digits) is
+a revision; a branch name is `400`, because it would read a workspace's unmerged edits past the
+workspace's own door (CC-76), and so is `revision` beside `workspace`. A commit the repository does
+not know is the caller's own `404`, the same as a resource the commit did not hold (R20). The read
+grants are the caller's current ones.
 
 `GET /api/v1/projects` answers a `kind: List` whose items carry `name` and nothing else, the
 projects the caller may read (PF-59). A project no binding covers is not in it, which is the same
@@ -181,7 +202,7 @@ before any merge request exists (MF-24, CC-06), whatever the kind.
 Portability operations:
 
 ```text
-GET  /api/v1/projects/{project}/export?format=yaml|json|zip&revision={commit}&kinds=…&names=…   section 10
+GET  /api/v1/projects/{project}/export?format=yaml|json|zip|git&revision={commit}&kinds=…&names=…   section 10
 GET  /api/v1/projects/{project}/revisions?limit=20                                            section 10
 POST /api/v1/projects/{project}/import        multipart (file) or JSON manifests; fields: targetNamespace, conflictPolicy, dryRun; {"url": …} is 501
 GET  /api/v1/projects/{project}/syncsources/{name}/status   what the loop reports (section 10)
@@ -218,6 +239,15 @@ manifest does not carry:
 A write that would put the project over one of them is refused before a `Change` exists, on every
 door, naming the count and the limit — `quota: residentPipelines 4 of 3 in project ovzdusie` —
 and the dry run of the same manifest answers the same refusal (PF-74).
+
+`apps/{name}/me` answers `{id, name, email, roles}` for the caller, the same object the static
+host writes into `#jc-config` (AP-95), with `roles` computed from the published App's
+`spec.access` as AP-92 computes them. A `fullstack` backend calls it with the edge's
+`X-Access-Token` as `Authorization: Bearer` (Architecture/16 §13). It is the one
+route of this section answered without `read` on the project: an `organization` App admits
+people who hold no rule in its project, the answer is only about the caller, and it names no
+other resource. An App that
+is not published, or does not exist, is `404`; no valid token is `401`.
 
 `permissions/me` answers the rules in force for the caller in one project, each grant naming the
 scope it was inherited from, and what the organization's own settings let them do that no rule
@@ -378,7 +408,12 @@ POST /api/v1/projects/{project}/changes/{id}/reject      review "request changes
 ```
 
 `{id}` is the `metadata.name` a write returned: `chg-` plus the merge request number in eight
-lowercase hex digits.
+lowercase hex digits. A Change targets one repository (CC-87), which `status.repository` names. In
+layout 2 ([ADR-N-029](../Decisions/adr-n-029-one-repository-per-project.md)) a project's own
+kinds land in the project repository and the organization kinds in the organization repository, so
+under `/projects/{project}/changes` `chg-{hex}` is a merge request of the project repository and
+`chg-org-{hex}` one of the organization repository; the two number their merge requests apart. A
+layout 1 organization has one repository and only the first form.
 
 A listed proposal carries what a reviewer decides on, not what the forge stores:
 
@@ -393,7 +428,8 @@ A listed proposal carries what a reviewer decides on, not what the forge stores:
       "metadata": { "name": "chg-0000019c", "namespace": "helsinki" },
       "status": {
         "lane": "red",
-        "mergeRequest": "https://git.example.fi/hel/org/pulls/412",
+        "repository": "helsinki",
+        "mergeRequest": "https://git.example.fi/hel/helsinki/pulls/412",
         "plan": { "create": 0, "update": 1, "delete": 0 },
         "phase": "PendingApproval"
       },
@@ -420,11 +456,19 @@ manifest's. A native file (a LinkML source, a `bento.yaml`) carries no `fields`.
 Approval rules, enforced by the API and not only by the UI:
 
 - the caller needs the `portal-approver` realm role; anyone else gets `403` (CC-41);
-- the author of a proposal may not approve it — `403` with `type: ".../self-approval"` —
-  unless they approve it with a session and a binding covering the project grants them both
-  `approve` and `delete` on its kind (an administrator, PF-58); the merge commit then records
-  that the author approved it as an administrator. The operations registry and MCP never take
-  this exception (AG-11);
+- the author of a proposal may not approve it — `403` with `type: ".../self-approval"`;
+- a proposal a person sends with a Portal session (the cookie or the edge's), when a binding
+  covering the project grants them both `approve` and `delete` on every kind of every file it
+  touches (an administrator, PF-58), is approved as it is proposed: the propose route answers
+  `202` with the `Change` already `Deploying`, and the merge commit says `Approved in the Portal
+  by {email}, its author, as an administrator of {kind}`. The same holds for `jc_resource_propose`
+  and the other propose operations when the form calls them with that session. A red-lane
+  proposal is approved so only with `?confirm=<resource name>` on the propose or `DELETE` route
+  (the `confirm` of `jc_resource_delete`); without it the `Change` stays `PendingApproval` and
+  its author approves it on the approval page with the name typed. Anyone else's proposal
+  answers `202` `PendingApproval`. A bearer caller, MCP and an agent run never approve on
+  propose, whoever runs them (AG-11, AG-82), and the bootstrap administrators' group does not
+  count;
 - a proposal in the `red` lane needs the `portal-approver` role **and** an explicit
   `{"confirm": "<resource name>"}` body, so a destructive merge is never one click (CC-19, CC-39);
 - approving answers `202` with the `Change`, its `phase` moved to `Deploying`; the reconciler
@@ -654,7 +698,7 @@ out without Git knowledge, always read from the forge and never from the live mi
 downloaded is byte-for-byte what a `git archive` of that path would hold:
 
 ```text
-GET /api/v1/projects/{project}/export?format=yaml|json|zip&revision={commit}&kinds={plurals}&names={names}
+GET /api/v1/projects/{project}/export?format=yaml|json|zip|git&revision={commit}&kinds={plurals}&names={names}
 GET /api/v1/projects/{project}/revisions?limit=20
 ```
 
@@ -682,6 +726,24 @@ GET /api/v1/projects/{project}/revisions?limit=20
   members above; `format=json` carries `readme` and `schemas` beside `items`. A `kinds` filter keeps
   the schemas of the kinds it selects. With `names`, the answer is the manifests alone. Import skips
   `README.md`, `schemas/` and the index, so none of them is written into a project.
+- `format=git` exports a project of layout 2, which lives in a repository of its own (MF-45).
+  The archive (`application/zip`, `{project}-git-{short}.zip`) holds `{project}.bundle`, the
+  forge's `git bundle` of the project repository's default branch with that branch's whole
+  history; `{app}.bundle` for every App of the project whose `source.git` names a repository of
+  the forge's organization, under the App's name; `{name}.tags` beside a bundle whose repository
+  has tags, one `{commit} refs/tags/{tag}` line per tag, because the forge bundles one ref and
+  the import sets the tags again; `projects/{project}.yaml`, the registry entry with no
+  parameter values, so the target sets its own (CC-88); and the `kind: Bundle` index
+  `bundle.yaml`, whose `spec.repositories` lists each bundle with its `role` and the `head`
+  commit it ends at and whose `spec.files` carries every file's SHA-256 (MF-42). `project.yaml`
+  at the archive root is the project's own file at that head, the one an import reads the
+  parameter declarations from without unpacking a bundle. Other branches
+  and the annotation of an annotated tag do not travel; `git bundle create --all` of a mirror
+  clone (Deployment/11 §7) carries them. A bundle that ends elsewhere than the head read in the
+  same export is `409` (export again), and so is an App whose repository is outside the forge's
+  organization, named. A git export is the whole repository, so it answers `403` to a caller
+  who may not read every manifest of the project (MF-18), where `format=zip` leaves those out;
+  it takes no `revision`, `kinds` or `names` (`400`), and a project of layout 1 answers `409`.
 - `revision` is a commit sha or branch name; absent means the default branch head. A revision the
   forge does not know is `404`.
 - `kinds` and `names` are comma-separated filters on the manifests; the archive format keeps native
@@ -736,6 +798,12 @@ POST /api/v1/projects/{project}/import?dryRun=All
   between the manifests, and the `{space}` segment of every `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}`
   in the spec (MF-22). `targetNamespace` may only name the project itself, because the repository
   path of every kind starts `projects/{project}/`.
+- A Policy's `spec.assigner` lands as `did:web:{orgDomain}`, the placeholder the loader renders
+  for the organisation that owns the file (CC-82): a Policy grants over a space of this project,
+  so the organisation that may give that data away is this one, whatever DID the bundle carried.
+  Every assigner the import rewrote is listed in the report's `reassigned` (`Policy/{name}`, the
+  DID the bundle carried, the placeholder it became), so the person who approves the Change sees
+  that the grant is now signed by this organisation (R6).
 - `conflictPolicy` is `fail` (the default: `409` naming the first collision, and nothing is
   written), `skip`, `replace` or `rename`. A rename is `{name}-{origin}`, the origin being the
   project the manifest came from, then `-2`, `-3` while the name is taken; every reference to the
@@ -749,7 +817,8 @@ POST /api/v1/projects/{project}/import?dryRun=All
   lane is the riskiest of the resources in it (CC-63). Native files travel with their manifests and
   keep their path under the new project.
 - `dryRun` answers `200` with the report instead: `created`, `replaced`, `skipped`, `renamed`
-  (old name → new), `nativeFiles`, `lane` and `source`. Nothing is written and no branch is made.
+  (old name → new), `reassigned` (Policy → the assigner it carried, when one was rewritten),
+  `nativeFiles`, `lane` and `source`. The `Change` body lists the same reassignments. Nothing is written and no branch is made.
 - The dry run is the bundle's check (PF-57, every door): it records a verdict over the bundle as
   sent (its SHA-256) and the options that decide what it writes (`conflictPolicy`, `orgDomain`,
   `targetNamespace`), for the caller and the project. Under `strict` an import without `dryRun`
@@ -772,6 +841,33 @@ POST /api/v1/projects/{project}/import?dryRun=All
   resource it belongs to from going Live with a plain reason. Save as across projects and a
   workspace's answers carry the same list. Values the loader renders stay in their placeholder or
   local form on both sides (`{orgDomain}`, `endpointRef`, no `{space}` literal, MF-43).
+- `?format=git` imports the archive of a `format=git` export as a new project, the `{project}`
+  of the path, in an organization of layout 2 (MF-45, MF-46). The body is `multipart/form-data`
+  with the archive as `file`, `parameters` (a JSON object of values for what `project.yaml`
+  declares, CC-88; a `secret` parameter takes a `secretRef` name, never a value) and an optional
+  `displayName`. Who may open a project may import one (PF-65), and the name passes the checks of
+  `POST /api/v1/projects`. Before anything is created the archive is checked: the index is a
+  valid `kind: Bundle` with one `project` repository and no `organization` one, every file's
+  SHA-256 equals the index (MF-42), `project.yaml` loads at this release's `apiVersion` (an older
+  one is migrated with `jcctl migrate` first and a newer one is refused, MF-47), and the
+  parameters resolve against its declarations; each failure is `400` naming it. Every repository
+  it would create (`{project}`, and `{project}_{app}` per application, AP-75) must not exist yet
+  (`409`). Then each repository is created empty and private, its bundle is pushed as its default
+  branch `main` with the tags of `{name}.tags` (the Portal speaks git's receive-pack; it holds no
+  git), and its head is read back: a head that is not the index's removes every repository the
+  import created and answers `409`. When the slug differs from the one the bundle left, one
+  commit on `main` of the project repository remounts it (every manifest that names the old slug
+  names the new one; an Endpoint slug another project of this organization serves is drawn
+  anew; `CODEOWNERS` names the new writers; an App's `source.git.url` names its new
+  repository), so the head after the import is that commit and the answer names both. `main` is
+  then protected, and the answer is `202` and the organization's `Change`: the registry entry
+  with the given values and the caller's steward binding, as opening a project proposes it. A
+  `Change` that cannot be opened removes the repositories again (CC-85). The report in the
+  `Change` body carries `verified`, one `{path, equal}` per bundle with its head. `dryRun` answers
+  `200` with the checks alone and the parameters `project.yaml` declares, which the Portal's
+  import form is drawn from; nothing is created. As for every import, that dry run is the check
+  PF-57 holds the import to under `strict`, over the archive's SHA-256, the slug and the
+  parameters.
 - The `{"url": …}` source of MF-20 answers `501`. Fetching a host the caller names is an egress
   decision the Portal has no policy behind, and the upload form carries the same bundle; see
   `OPEN-QUESTIONS.md`.
@@ -987,8 +1083,9 @@ A `static` app is served by the Portal under the platform host, without a hostna
 (AP-14):
 
 ```text
-GET /apps/{name}/               the app's index.html
-GET /apps/{name}/{path}         any asset of the built bundle
+GET  /apps/{name}/                      the app's index.html
+GET  /apps/{name}/{path}                any asset of the built bundle
+POST /apps/{name}/api/functions/{fn}    one function of the served build, run in jc-functions (AP-84)
 ```
 
 - Only an app whose manifest is `lifecycle: published` is reachable. A draft, a preview or a
@@ -1010,6 +1107,56 @@ GET /apps/{name}/{path}         any asset of the built bundle
 - Unknown paths inside a published app answer `404` rather than the app's `index.html`: a static
   app that wants client-side routing declares it in its build, and the host does not invent a
   fallback that would mask a missing asset.
+- `POST /apps/{name}/api/functions/{fn}` runs the function `fn` of the served build's
+  `functions.js`, integrity-checked like every other file, in `jc-functions`, with the caller's
+  `X-Access-Token` as the one credential its data calls carry; an anonymous caller of a `public`
+  app sends none (AP-84, SDK-23). The answer is the function's own status and JSON body, `500`
+  with `{error: {message, file, line}}` when it throws. A name outside `[a-z][a-z0-9-]{0,39}`, an
+  app that is not published or not the caller's to read, and a build with no such function are
+  `404`; a body that is not JSON is `400`, one over 256 KiB `413`, a full runtime `429` with
+  `Retry-After`. A call that carries the edge's token also carries `X-CSRF-Token` matching the
+  `jc_csrf` cookie, or it is `403`: the edge sets the token from a cookie a cross-site form would
+  send too. The host sets that cookie on the apps origin with a signed-in person's first index.
+
+### 12a. The build of an application (AP-100, AP-103, ADR-N-028)
+
+A `static` App whose source is its own repository on the forge (`spec.source.git`, AP-75) is
+built there, by the repository's `.gitea/workflows/build.yml`. The App page reads where that
+build is and asks for another one through two routes:
+
+```text
+GET  /api/v1/projects/{project}/apps/{name}/build      the repository, the latest run, the package
+POST /api/v1/projects/{project}/apps/{name}/rebuild    dispatches build.yml on the default branch
+```
+
+`GET …/build` answers `200` for a person who may read the App:
+
+```json
+{
+  "repositoryUrl": "https://forge.example/user/login?redirect_to=%2Fjoinedcontext%2Fhelsinki_city-bikes",
+  "run": { "status": "completed", "conclusion": "success", "commit": "3f1c…", "url": "https://forge.example/user/login?redirect_to=…" },
+  "packageUrl": "https://forge.example/user/login?redirect_to=%2Fjoinedcontext%2F-%2Fpackages%2Fgeneric%2Fapp-city-bikes%2F3f1c…",
+  "rebuild": { "allowed": false, "reason": "Rebuild needs propose on App in project helsinki" }
+}
+```
+
+- Every link carries the forge's sign-in, so a person without a forge session is offered the
+  Keycloak button and lands on the page (PF-79, PF-81).
+- The repository is `{project}_{app}` of the organization of the configuration repository
+  (AP-75), derived from the names in the path and never read from the manifest's `url`.
+- `run` is the newest run of the repository's workflows, or `null` before the first one;
+  `packageUrl` names the package of `status.build.commit`, or is `null` while the App has no build.
+- An App without `spec.source.git` has no build here: `repositoryUrl`, `run` and `packageUrl`
+  are `null`, and `rebuild.reason` says the App is not built on the forge.
+- `rebuild.allowed` is `true` for a person holding `propose` on `App` in the project; otherwise
+  `reason` says what is missing (PF-50, UI-44).
+- `404` for an App the caller may not read, the same answer as a name that does not exist
+  (PF-59); `503` when no forge is configured.
+
+`POST …/rebuild` takes no body and answers `202` once the forge accepted the dispatch of
+`build.yml` on the repository's default branch; the run then appears in `GET …/build`. It is
+refused `403` without `propose` on `App`, `404` as above, `409` for an App that is not built on
+the forge, and `503` with the forge's reason when there is no forge or it refuses the dispatch.
 
 ## 13. Flows: running a blueprint (CC-24, CC-30, CC-31, CC-32, CC-59)
 
@@ -1491,7 +1638,7 @@ write to the live space and adopt is a write to the repository, so neither is a 
 
 ## 21. Operations and the Portal MCP (AG-59, AG-60, AG-61, AG-62, AG-77)
 
-One registry behind every door (ADR-N-021). An operation lets through whom the REST route of the same action lets through (PF-50, AG-77): `jc_resource_list` and `jc_resource_get` any signed-in person, `jc_resource_propose` and `jc_resource_delete` a binding with `propose` or `delete` on the kind, `jc_change_approve` and `jc_change_reject` a binding with `approve`, on the change's kind once the change is read; any other operation its verb on its kind, or a grant in the project when it names no verb. A refusal is `403` naming the verb and the kind, the same words as the route's; input is validated against the operation's schema with unknown fields refused (`422`, the schema path). `GET …/ops` lists exactly the operations the caller would be let through. A `verdict_required` refusal names the check to run and why in `reason` (`verdict_absent`, `verdict_failed` or `stale`) and says it in `detail`, one sentence a page shows as it is; a form writes the draft it shows before it proposes that draft, so a proposal never takes an older manifest than the one on screen.
+One registry behind every door (ADR-N-021). An operation lets through whom the REST route of the same action lets through (PF-50, AG-77): `jc_resource_list` and `jc_resource_get` any signed-in person, `jc_resource_propose` and `jc_resource_delete` a binding with `propose` or `delete` on the kind, `jc_change_approve` and `jc_change_reject` a binding with `approve`, on the change's kind once the change is read; any other operation its verb on its kind, or a grant in the project when it names no verb. A refusal is `403` naming the verb and the kind, the same words as the route's, except that a removal of a resource the caller may not read answers the `404` of a name that does not exist, so a removal never tells whether something is there (R20, PF-59); input is validated against the operation's schema with unknown fields refused (`422`, the schema path). `GET …/ops` lists exactly the operations the caller would be let through. A `verdict_required` refusal names the check to run and why in `reason` (`verdict_absent`, `verdict_failed` or `stale`) and says it in `detail`, one sentence a page shows as it is; a form writes the draft it shows before it proposes that draft, so a proposal never takes an older manifest than the one on screen.
 
 ```text
 GET  /api/v1/projects/{project}/ops
@@ -1702,7 +1849,9 @@ GET    /api/v1/projects/{project}/workspaces/{name}/preview   → 200 the previe
 DELETE /api/v1/projects/{project}/workspaces/{name}/preview   → 204; stopping a stopped one is a no-op
 ```
 
-The gateway reads the running previews from the Portal's internal listener, which the edge does not route and a NetworkPolicy opens to the gateway alone: the path `/internal/previews` answers `{ "items": [ { "prefix": "ws-bikes-cleanup-", "files": { "<path>": "<manifest>" } } ] }`, without the repository's encrypted secrets and without another project's files. The gateway presents its own Keycloak ServiceAccount token on that call — `client_credentials`, audience `portal-internal`, `azp` its own client — and the route refuses a call without one: the NetworkPolicy is the second control and never the only one (PF-46, [Architecture 13 §6](../Architecture/13-security.md)). A page of manifests is what the route answers, so a pod that reached the port through a policy mistake would otherwise read every project's configuration.
+The gateway reads the running previews from the Portal's internal listener, which the edge does not route and a NetworkPolicy opens to the gateway alone: the path `/internal/previews` answers `{ "items": [ { "prefix": "ws-bikes-cleanup-", "files": { "<path>": "<manifest>" } } ] }`, without the repository's encrypted secrets and without another project's files. The gateway presents its own Keycloak ServiceAccount token on that call — `client_credentials`, audience `portal-internal`, `azp` its own client — and the route refuses a call without one: the NetworkPolicy is the second control and never the only one (PF-46, [Architecture 13 §6](../Architecture/13-security.md)). A page of manifests is what the route answers, so a pod that reached the port through a policy mistake would otherwise read every project's configuration. The answer carries an `ETag`, a SHA-256 over the body: the gateway sends it back as `If-None-Match` on its next fetch, every ten seconds, and a list that did not change answers `304` with no body, so an idle instance moves no manifests (CC-78). Authentication comes first, so a call without the token learns nothing from a `304` either.
+
+The gateway reads the domain verification of every Organization from the same listener, with the same token, the same `ETag` and the same ten-second fetch: `GET /internal/domain-verifications` answers `{ "items": [ { "organization": "hel", "domain": "hel.fi", "state": "verified" } ] }`, one item per Organization manifest of the repository, `state` one of `pending`, `verified`, `failed` and `pending` for an Organization the Portal has not checked yet. The challenge, the record and the reason stay off this route: the gateway decides on the state alone ([Architecture/03 §3](../Architecture/03-domain-model.md#3-identity-and-urn-specification)). Under `JC_GATEWAY_DOMAIN_VERIFICATION=enforce` a write to a space of an Organization that is not `verified`, or whose state the gateway does not know, answers `403` with the problem type `https://joinedcontext.com/errors/domain-not-verified` and a detail naming the Organization and its domain.
 
 Only the owner starts or stops a preview; an agent may, as it may open and write the workspace. Real data reaches a preview only when the person copies it from the Try it panel (PF-83): the browser reads at most 1 000 entities per type through the origin's Endpoint and writes them through the preview's, both on the person's own session at the edge, with every id moved to the preview's space segment. The Portal holds no token of the person's for the gateway, so no operation of the registry copies data, and an agent never does. The operations are `jc_workspace_preview_start`, `jc_workspace_preview_get` and `jc_workspace_preview_stop`.
 
@@ -1734,6 +1883,29 @@ A write the owner's rights do not cover is refused as it is outside a workspace:
   "detail": "Proposing a Pipeline needs a role with propose on Pipeline in helsinki."
 }
 ```
+
+## 23. Routes outside the resource API
+
+The OpenAPI document describes `/api/v1` and nothing else, so these routes are in it only where
+noted. An integrator meets the first three before any resource: the login, the MCP discovery and
+the MCP endpoint itself.
+
+| Method | Path | Who calls it | What it answers | Authentication |
+|---|---|---|---|---|
+| `GET` | `/api/v1/auth/login` | a browser | a redirect into the realm's code flow (§3) | none: it is how a session starts |
+| `GET` | `/api/v1/auth/callback` | the realm, through the browser | the session cookie and a redirect to the page asked for (§3) | the code and the stored nonce |
+| `POST` | `/api/v1/auth/backchannel-logout` | Keycloak | revokes the sessions the logout token names (§3) | the logout token, verified against the realm's keys |
+| `GET` | `/.well-known/oauth-protected-resource` | an MCP client | the RFC 9728 metadata naming the Portal's MCP resource and its realm | none: RFC 9728 makes it public, and it names no secret |
+| `GET` | `/.well-known/oauth-protected-resource/api/v1/mcp` | an MCP client | the same document, at the path RFC 9728 derives from the resource | none, as above |
+| `POST` | `/api/v1/mcp` | an MCP client, the assistant | JSON-RPC over Streamable HTTP (§21); in the OpenAPI document | a Bearer token whose audience is the Portal; `401` with `WWW-Authenticate` otherwise |
+| `GET` | `/api/v1/mcp` | an MCP client probing for a stream | `405`: the server opens no server-initiated stream | none needed to learn that |
+| `GET` | `/api/v1/openapi.json` | a client generator, the docs lane | this API's OpenAPI 3.1 document | none: it describes the API, not a project |
+| `GET` | `/apps/{name}/`, `/apps/{name}/{path}` | a browser | a published static app's `index.html` and assets (§12) | a `public` app is served to anyone; any other visibility needs a session, and what the app then reads is its endpoints' authorization |
+| `POST` | `/apps/{name}/api/functions/{fn}` | a published app's SDK | the function's own answer from `jc-functions` (§12) | as the app's pages; with the edge's token, also the CSRF double-submit |
+| `GET` | `/metrics` | the cluster's Prometheus | the Portal's counters in the Prometheus text format | none, and the edge refuses the path, so only a caller inside the cluster reaches it (OPS-16) |
+
+A route here that needs no authentication says so because of what it carries, never for
+convenience: none of them answers anything of a project.
 
 ## Related
 

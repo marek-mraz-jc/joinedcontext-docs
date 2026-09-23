@@ -11,6 +11,11 @@ per-file verification the import answers, and delete the source only when every 
 Nothing about the move is automatic. Each step is a change somebody approves, and the order
 below is the one that never loses a manifest (MF-42, PF-77, PF-78).
 
+Sections 2 to 6 move a project of a layout 1 repository, where the project is a directory of the
+organization's one repository. A project in a repository of its own (layout 2,
+[ADR-N-029](../Decisions/adr-n-029-one-repository-per-project.md)) moves as Git, with its whole
+history, and section 7 is that procedure.
+
 ## 1. Before you start
 
 - You hold `read` on every kind of the project at the source and `propose` on every kind at the
@@ -110,6 +115,52 @@ Before the source is deleted, there is nothing to undo: reject the target's merg
 target is as it was. After the source is deleted, the project is recreated by importing the same
 bundle back. The archive you downloaded in step 2 is the record, so keep it until the move is
 settled.
+
+## 7. A project in its own repository (layout 2)
+
+The project is a repository and a registry entry, so it moves as `git bundle`s and is verified
+by head commit, not per file (MF-45, MF-46). The order is the same: nothing at the source is
+archived until every head at the target is equal.
+
+1. **Export at the source.** One bundle for the project repository and one per application
+   repository of the project, each with every branch and tag, and the head each one carries:
+
+   ```bash
+   git clone --mirror "https://gitea.source.example/$ORG/$PROJECT.git" "$PROJECT.git"
+   git -C "$PROJECT.git" bundle create "../$PROJECT.bundle" --all
+   git -C "$PROJECT.git" rev-parse HEAD > "$PROJECT.head"
+   ```
+
+   The Portal's export (`GET …/export?format=git`, API/01 §10) writes one bundle per repository
+   of the default branch with its whole history, the tags beside it, the registry entry with its
+   values reset to the parameter defaults, and a `kind: Bundle` index listing each bundle with its
+   head commit. Other branches travel only in the `--all` bundle above.
+2. **Import at the target.** The import creates each repository from its bundle, shows the
+   parameter form generated from `project.yaml`'s `spec.parameters`, and writes the registry
+   entry with the values you set: the target's hosts, counts and the names of its secrets. A
+   parameter of type `secret` takes a `secretRef` name, and the value is set in the target's
+   secret store, never in the form. A bundle of an older `.jc/layout` or `apiVersion` is migrated
+   by `jcctl migrate` on the way in and lands as the Change; a newer one is refused (MF-47).
+3. **Verify every head.** For each repository, the head at the target equals the head of its
+   bundle:
+
+   ```bash
+   test "$(git ls-remote "https://gitea.target.example/$ORG/$PROJECT.git" HEAD | cut -f1)"         = "$(cat "$PROJECT.head")" && echo "$PROJECT equal"
+   ```
+
+   A head that differs means the repository was written after the export or the bundle was cut
+   short. Export again; do not archive the source.
+4. **Go live at the target.** Approve the registry entry's Change at the target (red lane,
+   CC-87). The reconciler assembles the project at the pinned ref and its spaces, endpoints and
+   apps come up under the target's slug and values.
+5. **Archive the source.** Only now: the source's red-lane delete archives its repositories,
+   keeps the name for `nameCooldownDays` and removes the registry entry (PF-77, PF-78). An
+   archived repository is still readable to its owners, so until it is removed by hand both
+   sides hold the whole history.
+
+Undoing the move before step 5 is rejecting the target's Change and deleting the repositories
+the import created there. After step 5, unarchive the source repository and restore its registry
+entry from the organization repository's history.
 
 ## Related
 

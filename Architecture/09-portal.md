@@ -21,8 +21,8 @@ The joinedcontext Portal is **one application** (repository `joinedcontext-porta
 |         |                                      |                                  |               |
 |         v (Mirror Read)                        v (Git Operations)                 v (Preferences) |
 |    +------------------------+             +---------------+                  +------------------+ |
-|    | In-process mirror of   |             | Gitea Git API |                  | PostgreSQL       | |
-|    | the default branch     |             | (PRs, Commits)|                  | (User Prefs DB)  | |
+|    | In-memory mirror of    |             | Gitea Git API |                  | PostgreSQL       | |
+|    | the repository         |             | (PRs, Commits)|                  | (Portal state)   | |
 |    +------------------------+             +---------------+                  +------------------+ |
 +---------------------------------------------------------------------------------------------------+
 ```
@@ -33,16 +33,14 @@ The Portal API operates as a thin, stateless coordinator. It exposes administrat
 
 ### Technical Stack
 
-- **Framework:** `axum` with `tower` middleware (compression, tracing, CORS, security headers).
-- **Database Layer:** `sqlx` connecting to PostgreSQL using connection pooling and compile-time SQL query verification.
+- **Framework:** `axum` with `tower-http` middleware for tracing and security headers, and CORS on the MCP route alone.
+- **Database Layer:** `sqlx` connecting to PostgreSQL through a connection pool, with the schema in `migrations/`. Queries are checked by the integration suites against a real database, not at compile time.
 - **API Documentation:** `utoipa` generates OpenAPI 3.1 specifications directly from Rust structs and controller handlers.
 - **Typing Integrity:** The `openapi.json` contract is exported to the frontend build pipeline, which compiles TypeScript definitions using `openapi-typescript`.
 
 ### Database Architecture
 
-Configuration state is read from a mirror, not from a database. The Portal's own sync loads the configuration repository's default branch into memory (`src/store.rs`), on start and whenever the branch moves (forge webhook or poll), and replaces the mirror whole; every list and read the API serves comes from it, so no request reads Git (UI-08). A sync that cannot read the repository keeps the last mirror and records why in the sync status. The mirror carries the live status the reconciler observed beside each manifest.
-
-The Portal API connects to three database schemas:
+The Portal reads the repository into an in-memory mirror (`src/store.rs`, a `RwLock<BTreeMap>` of every manifest and its reported status), filled by its own sync from the default branch and refreshed on each Gitea webhook. Every read of organizations, projects, spaces, endpoints and pipeline states answers from it without asking Git (UI-08). PostgreSQL holds the Portal's own state (`migrations/`), among it:
 
 1. **User Preferences (Read-Write):** Stores non-configuration Tier 2 user state (UI themes, language selections, favorite projects, table layout settings, saved map views).
 2. **Logout marks (Read-Write):** One row per subject whose sessions a back-channel logout ended, and the moment it ended them: every session of that subject issued at or before it is refused. They live in the process for the request path and in the database so a restart does not re-accept a session somebody logged out (T-0980). A mark is kept 48 hours, which is longer than any session can live, and is read back when the process starts. A Portal deployed without a database keeps the marks of its own run only, and says so in its log.
@@ -63,7 +61,6 @@ The Portal UI delivers an enterprise-grade experience for domain stewards, platf
 - **Application Shell:** Vite + React 19 + TypeScript (strict mode enabled).
 - **Routing & State:** TanStack Router (type-safe routing) and TanStack Query (server-state synchronization, caching, and optimistic updates).
 - **Component Primitives:** Radix UI headless primitives styled with Tailwind CSS.
-- **Tabular Data:** AG Grid Community for high-performance sorting, filtering, and row virtualization on large datasets.
 - **Geospatial Presentation:** MapLibre GL JS combined with deck.gl (`@deck.gl/mapbox`).
 
 ### Schema-Driven Form Generation (CC-31)
@@ -71,12 +68,12 @@ The Portal UI delivers an enterprise-grade experience for domain stewards, platf
 Administrative forms are never hard-coded. They are dynamically generated from LinkML-compiled **JSON Schema draft-07** definitions using `react-jsonschema-form` (RJSF):
 
 - **Parameter Forms:** Instantiating a Blueprint loads the blueprint's `params.schema.json` and renders corresponding fields (text, number, enums, dates).
-- **UI Schemas:** Layout properties (widget types, grid columns, order, field grouping) are loaded from declarative `*.uischema.yaml` files committed in the `portal/forms/` directory (UI-02).
+- **UI Schemas:** Layout properties (widget types, grid columns, order, field grouping) come from declarative `*.uischema.yaml` manifests: the Portal ships a default per kind in `ui/src/schemas/forms/`, and an organization overrides it with a manifest in `portal/forms/` of its configuration repository, which `GET /api/v1/forms` serves (UI-02).
 - **Asynchronous Pickers:** Custom RJSF widgets query live Endpoints via the Context Gateway to populate entity selection dropdowns (e.g. selecting an existing sensor).
 
 #### The `kind: UiSchema` manifest (UI-02)
 
-One manifest per kind, at `portal/forms/{name}.uischema.yaml`. It arranges a form; it never
+One manifest per kind, at `portal/forms/{name}.uischema.yaml` in the configuration repository. It arranges a form; it never
 declares a field. Everything renderable comes from the JSON Schema, so a manifest naming a
 field the schema does not have arranges nothing, and a field the manifest does not mention is
 still rendered in schema order after the ones that are.
@@ -141,7 +138,6 @@ one-line description as the handle a person clicks or tabs to. Every field of a 
 page, so nothing is hidden from a search, from the keyboard or from a screen reader — it is shut, not
 removed. A group that holds a **required** field is never folded, whatever the manifest says: a form
 that insists on a field it does not show is a dead end, and the Portal unfolds it instead of arguing.
-The first group is never folded either.
 
 Beside the form's buttons the Portal says how much of what it insists on is in: *"2 of 3 required
 fields filled"*, counted from the schema's `required` — the object's own and every required object
@@ -194,9 +190,10 @@ destination rather than "link".
 example on every field before anything is committed to `portal/forms/`. A manifest in the
 configuration repository then overrides the default **field by field**: an organization that writes
 `help` for one field keeps the shipped help on the others, and `order` or `groups` it writes replace
-the shipped ones whole, because a half-replaced order is not an order. The forms with a shipped
-default are ContextSpace, Endpoint, DataSource, SyncSource, Pipeline, Dashboard and Layer — the seven
-the Portal renders `ResourceFormDialog` for.
+the shipped ones whole, because a half-replaced order is not an order. The Portal ships a default
+(`ui/src/schemas/forms/`) for sixteen kinds: App, ContextSourceRegistration, ContextSpace, Dashboard,
+DataModel, DataSource, Endpoint, Group, Layer, Mapping, Pipeline, Policy, Role, ServiceAccount,
+Subscription and SyncSource.
 
 **`metadata.name` is `spec.for` lowercased**, which is why the example above is `endpoint` and
 not `Endpoint`. Every `metadata.name` on this platform is a DNS-1123 label (MF-02) and a label
@@ -206,8 +203,8 @@ is refused, because the path a reader predicts from the kind has to be the path 
 
 **The widget vocabulary is the Portal's, not the manifest's.** `widget` names a widget the
 Portal has registered: an RJSF built-in (`text`, `textarea`, `select`, `checkboxes`, `radio`,
-`range`, `color`, `date`, `date-time`, `password`, `updown`, `hidden`) or one of the Portal's
-own (`entityPicker` today). A name outside that set is dropped with the reason rather than
+`range`, `color`, `date`, `date-time`, `password`, `updown`, `hidden`, `checkbox`, `email`,
+`uri`) or one of the Portal's own (`entityPicker`, `operations`, `resourcePicker`, `secretRef`). A name outside that set is dropped with the reason rather than
 passed through, because RJSF throws on an unknown widget and a form that does not render is a
 worse answer than a form with a default input.
 
@@ -244,18 +241,8 @@ switched from the dialog's footer.
 The Portal UI provides complete internationalization support:
 
 - **Shipped Locales:** Slovak (`sk`, default), English (`en`), German (`de`), and Czech (`cs`).
-- **Message Format:** Bundles are stored in standard **ICU MessageFormat** JSON files in `portal/locales/`.
-- **Manifest Multi-Language Support:** Entity metadata titles and descriptions in repository manifests are defined as language maps:
-
-  ```yaml
-  metadata:
-    title:
-      fi: "Ilmanlaadun mittaus"
-      en: "Air Quality Monitoring"
-      de: "Luftqualitätsüberwachung"
-  ```
-
-  The UI dynamically displays the string matching the active user locale with fallback to Slovak.
+- **Message Format:** Bundles are **ICU MessageFormat** JSON files in `ui/src/locales/{sk,en,de,cs}.json`, read through `i18next-icu`.
+- **Titles in manifests:** A resource's `title` is one plain string in the language its author wrote it in (UI-50); the UI shows it as written. A language map written before UI-50 is still read.
 
 ---
 
@@ -307,18 +294,20 @@ The vocabulary is closed because a filter over free text is not a filter:
 
 | `kind` | Emitted by | When |
 |---|---|---|
-| `config.planned`, `config.applied`, `config.drifted` | reconciler | a plan, an apply, a difference between Git and the cluster |
-| `change.merged` | reconciler | a merge request became the desired state |
+| `config.applied`, `config.drifted` | reconciler | an apply, a difference between Git and the cluster |
+| `config.planned`, `change.merged` | reconciler | a plan; a merge request became the desired state. Accepted, not emitted yet |
 | `pipeline.throughput` | pipeline | one minute of messages, as a count |
 | `pipeline.error` | pipeline | a mapping or output failure, with the failing sample redacted |
 | `pipeline.restarted` | pipeline | the runner restarted a stream |
 | `endpoint.traffic` | gateway | one minute of requests for one endpoint and representation |
 | `access.denied` | gateway | the PDP refused, naming the rule that refused |
-| `mcp.tool` | gateway, portal | an MCP tool call (AG-19); from the Portal, the person's answer to an elicitation before a Yellow or Red call proceeds (AG-63) |
+| `mcp.tool` | portal | an MCP tool call (AG-19); from the Portal, the person's answer to an elicitation before a Yellow or Red call proceeds (AG-63) |
 | `agent.answer` | portal | a person answered a question an assistant run asked with `jc_ask` (AG-80): the run, the question and who answered, never the words they typed (OPS-48) |
 | `federation.forward` | broker | a query forwarded to a Context Source, with latency |
 | `federation.error` | broker | a forward that failed or was cut off by the loop guard |
 | `catalogue.published` | CKAN publisher | a dataset created or updated, with the row count |
+
+The `pipeline.*`, `endpoint.traffic`, `access.denied` and `federation.*` kinds are part of the vocabulary and the collector's ingest route accepts them, but no pipeline runner, gateway or broker emits them yet; `mcp.tool` arrives from the Portal's own MCP only.
 
 ### Where it comes from, and what it is not
 
@@ -332,8 +321,7 @@ of the traces, built for reading, and a disagreement between it and them is sett
 favour (OPS-49).
 
 Two consequences are worth stating. Losing activity loses nothing that is not still in its
-sources, so retention is short: seven days of events, ninety days of the per-minute counters they
-aggregate into. And an event carries no payload: the `details` of a `pipeline.error` name the
+sources, so retention is short: seven days of events (`RETENTION_DAYS` in `src/activity.rs`). And an event carries no payload: the `details` of a `pipeline.error` name the
 stream, the processor and the reason, and the offending sample only after the data model's own
 masking rules have run over it (OPS-48). A stream of "what is happening" that quotes a citizen's
 record is a data leak with a friendly name.
@@ -379,9 +367,9 @@ The same search is the assistant's `search_catalog` tool (Architecture/07 §2). 
 
 Every action the Portal offers is an operation of one registry (AG-59, ADR-N-021): a `jc_`-prefixed name, a JSON Schema for its input and its output (the same `ToSchema` types the OpenAPI document publishes), MCP annotations, the roles it needs and the lane it takes. One function implements it; the REST route (`POST /api/v1/projects/{project}/ops/{name}`, and the kind routes that remain), the assistant's tool, the agent proxy's tool and the MCP tool (`/api/v1/mcp`, Architecture/07 §1.2) parse, resolve the caller, call that function and format its answer. A route that does not name its operation is a defect the tests catch.
 
-A form edits a draft, not the tab's memory (AG-61, UI-47): the Portal keeps, per project, kind and name, the manifest being worked on, its last verdict, who touched it last (a person, an assistant run, an MCP client, an API key) and a version. The draft's changes travel on the activity stream (§6), so a second window, a second Portal instance, the assistant that filled the form and the MCP client that checked it show the same state, and the person picks the work up wherever it is. An assistant's `navigate` opens a draft (UI-45). A draft ends when its change is proposed, or at the instance's idle ceiling.
+A form edits a draft, not the tab's memory (AG-61, UI-47): the Portal keeps, per project, kind and name, the manifest being worked on, its last verdict, who touched it last (a person, an assistant run, an MCP client, an API key) and a version. The draft's changes travel on the activity stream (§6), so a second window, a second Portal instance, the assistant that filled the form and the MCP client that checked it show the same state, and the person picks the work up wherever it is. Across replicas the event crosses PostgreSQL, where the drafts already are (OPS-51): every draft event is also a `NOTIFY jc_draft_events` whose payload is the event's key (project, kind, name, version, space) with who touched it and which replica sent it, never the manifest; each Portal `LISTEN`s on that channel and forwards another replica's event to its own streams, which filter it by the reader's binding as they filter their own, and the reader fetches the draft under its own permission check. Without a database there is one process and the in-process hub is the whole of it. An assistant's `navigate` opens a draft (UI-45). A draft ends when its change is proposed, or at the instance's idle ceiling.
 
-Every check answers one `Verdict` (AG-62): `ok`, `findings[{level, path, message}]`, an optional `trace` (the pipeline test's stages, the dry run's plan), `checkedAt` and the digest of the input it judged. A dry run, a pipeline test (PL-43), a LinkML validation (DM-55), a schema validation and an endpoint access check are the same shape, so the form, the assistant's card and the MCP client's structured result read the same. Propose refuses a draft whose verdict is absent, red or older than the draft (`409`, the check to run named); the button is disabled with that reason (UI-44, UI-48). An installation says `platform.validation: strict` or `lax` (PF-57): strict has no override and no author approves their own Yellow or Red change (CC-34); lax lets a Green-lane draft through with a warning.
+Every check answers one `Verdict` (AG-62): `ok`, `findings[{level, path, message}]`, an optional `trace` (the pipeline test's stages, the dry run's plan), `checkedAt` and the digest of the input it judged. A dry run, a pipeline test (PL-43), a LinkML validation (DM-55), a schema validation and an endpoint access check are the same shape, so the form, the assistant's card and the MCP client's structured result read the same. Propose refuses a draft whose verdict is absent, red or older than the draft (`409`, the check to run named); the button is disabled with that reason (UI-44, UI-48). An installation says `platform.validation: strict` or `lax` (PF-57): strict has no override and no author approves their own Yellow or Red change (CC-34), except that a person who administers every kind a change touches has it approved as they propose it (PF-58); lax lets a Green-lane draft through with a warning.
 
 An external feed is integrated from one message (AG-73). A person gives the assistant the feed's URL, and may add what the data is and a specification of it, pasted as text: a field list, a JSON Schema, a vendor's documentation. The assistant calls `jc_space_complete` with the URL, the context space, the entity type the description or the specification names (`typeName`, PascalCase) and the description in one paragraph (`description`). The operation probes the URL the way a data source Check does, infers the LinkML model from the sample under that type, carries the description onto the model, the space and the source, and drafts the `DataSource`, the `Pipeline` and its `Endpoint`, each with its verdict. The drafts follow the feed's records, not its envelope (AG-79): the operation finds the array of records in the sample (`data.stations` of a GBFS feed, a FeatureCollection's features, or the sample itself), infers the model from one page of them, and writes a mapping that turns each record into one entity, its id from the field that identifies a record, its `location` from the latitude and longitude, the other fields under the model's slot names. When the records carry a position, a `Layer` over the new endpoint and a `Dashboard` with one map page are drafted too, so one message ends in a map. The assistant then opens the Complete this space page on those drafts, where the person reads what was inferred and proposes the set as one change. Nothing is proposed without that click.
 
@@ -393,7 +381,7 @@ The assistant workbench provides an interactive copilot available on every page 
 
 A round button labelled "Assistant" is fixed at the bottom right of every Portal page for a signed-in user (UI-51). It sits above page content and is accessible by keyboard navigation. Activating the bubble toggles the assistant panel docked to the right edge of the viewport.
 
-On viewports of 1024 px and wider, the panel occupies a width of 24 rem, and the main page content reflows so that no controls or data tables are obscured. On viewports narrower than 1024 px, the panel expands to full width. The panel drives UI navigation by processing `navigate` events (UI-45) across any active route without triggering a full page reload. The assistant operates exclusively from this right-docked panel or in full-screen mode; it never renders as a left column.
+On viewports of 768 px and wider, the panel occupies a width of 24 rem (40 rem while it builds an app), and the main page content reflows so that no controls or data tables are obscured. On narrower viewports the panel takes the full width. The panel drives UI navigation by processing `navigate` events (UI-45) across any active route without triggering a full page reload. The assistant operates exclusively from this right-docked panel or in full-screen mode; it never renders as a left column.
 
 The panel header contains accessible icon buttons with explicit tooltips and ARIA labels (UI-52):
 
@@ -446,7 +434,7 @@ Whatever a person can read, change or remove in a project, they can do through a
 
 Deleting a resource is a Change in the Red lane (CC-19): the name is typed back before the proposal and again at approval (CC-39), and a resource another one still references (an Endpoint a Pipeline targets, a ContextSpace with endpoints) is refused with `409` and the names of those references. A proposal carries secrets as `secretRef` only; a literal secret is refused before a branch exists (MF-24). A grant is bounded by its proposer: a RoleBinding, Role or ServiceAccount asking for more than the proposer holds on that scope is refused with the verbs it lacks.
 
-The assistant never proposes (AG-73). `change_resource` names a kind and a resource and says what changes as a JSON merge patch of the manifest, or asks to remove it; a new resource is drafted by the kind's own tool (`propose_endpoint`, `draft_kpi_pipeline`, `space_complete`, and `grant_role` for a RoleBinding, which opens the Access page's grant form). The Portal reads the manifest from the mirror, applies the patch, runs the dry run (and, for a Pipeline or a DataSource, its test or its check) and hands a red verdict back to the model with the findings; a green one opens the kind's form prefilled through `navigate` (UI-45), or the deletion's confirmation, and the person proposes. An unknown name is answered with the names the project has. Approval stays with people: an operation called by an agent run never approves or rejects (AG-11); a person's own MCP session approves someone else's change, and an administrator approves their own change only at the Portal's button (PF-58), never through an operation.
+The assistant never proposes (AG-73). `change_resource` names a kind and a resource and says what changes as a JSON merge patch of the manifest, or asks to remove it; a new resource is drafted by the kind's own tool (`propose_endpoint`, `draft_kpi_pipeline`, `space_complete`, and `grant_role` for a RoleBinding, which opens the Access page's grant form). The Portal reads the manifest from the mirror, applies the patch, runs the dry run (and, for a Pipeline or a DataSource, its test or its check) and hands a red verdict back to the model with the findings; a green one opens the kind's form prefilled through `navigate` (UI-45), or the deletion's confirmation, and the person proposes. An unknown name is answered with the names the project has. Approval stays with people: an operation called by an agent run never approves or rejects (AG-11); a person's own MCP session approves someone else's change, and an administrator's own change is approved as they propose it in the Portal (PF-58), never through an operation. The propose dialog says so before the click, "Will be approved when you propose: you hold approve and delete on {kind}", the removal dialog sends the typed name with the removal, and the result says "Approved as you proposed it, applying"; the change never reaches the approvals list. A steward's dialog says why the change will wait, "Waits for an approver: you hold approve but not delete on {kind}", and their change is listed for another approver.
 
 Entities are not resources: writing them stays with the endpoint's own write tools and the person's grant (AG-49).
 
@@ -464,9 +452,80 @@ One component lists entities wherever the Portal shows them (UI-64…UI-72): the
 
 **Access.** The grid is a keyboard grid (`role="grid"`, arrows, Enter, Escape, Tab) that announces coordinates and edits, and at 400 px it pins the id column and scrolls the rest (UI-70).
 
+## 14. Organization and project management
+
+Two places hold everything about who may do what (UI-75…UI-81). The **Organization page** holds what is the same in every project: the Organization manifest, the organization's members, roles, groups and service accounts, and the list of projects. **Project settings** holds what belongs to one project: its title and quotas, who is bound in it, its own roles, its service accounts, and its deletion. Until now all of it sat under **Project → Access**, where a group or the organization's domain looked as if it belonged to the project whose menu the person had opened. Every write on both pages is a proposed `Change` in its lane, exactly as the manifest's own form would propose it. Neither page has a write path of its own.
+
+Organization-level manifests are read and proposed through the organization's namespace, `/api/v1/projects/org/{plural}` (`Organization`, `Role`, `RoleBinding`, `Group`, `ServiceAccount` of namespace `org`); a project's through its own, `/api/v1/projects/{project}/{plural}`. Neither page needs a new API.
+
+### 14.1 The Organization page
+
+`/organization`, in the top bar beside the project switcher, outside any project, open to every signed-in person of the organization. One tab per concern, each at its own URL (`/organization/{tab}`), so a link or a bookmark lands on the tab:
+
+| Tab | What it shows | What it proposes |
+|---|---|---|
+| **Settings** (`settings`) | the `Organization` manifest as a form: `domain` with its verification state (PF-41, the TXT record to publish while unverified), `locales` and `defaultLocale`, `contacts[]`, and the projects policy: `projects.creation`, `projects.visibility`, `projects.quota`, `projects.nameCooldownDays` (PF-65, PF-61, PF-78) | an update of `organization.yaml`, red lane |
+| **Members** (`members`) | every person and group bound at organization scope, with the role of each binding and its validity; each row links to the person's effective permissions | a `RoleBinding` at `scope: { organization }` to add, its removal to remove |
+| **Roles** (`roles`) | the roles of `users/roles/`, the PF-56 taxonomy marked *seeded*, each with its rules in words ("proposes Pipeline and DataSource") | a new `Role` or a change to one, red lane |
+| **Groups** (`groups`) | the `Group` manifests with their members, a member not yet in Keycloak marked as such (PF-62) | a `Group` or a change to its members, red lane |
+| **Service accounts** (`service-accounts`) | the service accounts of namespace `org`: owner, roles, credentials, last use | as in [12 §3](12-identity-and-access.md#3-service-identities) |
+| **Projects** (`projects`) | every project the person may read: title, visibility, the number of people bound in it | **New project** (the dialog of PF-65/PF-66); **Delete** of one project, which lists the cascade of PF-77 and asks for the name typed back |
+
+Members are the one sensitive list. The tab shows its rows only to a person who holds `read` on `RoleBinding` at organization scope. Anybody else sees "You cannot see who belongs to this organization; an organization administrator can", and the Portal fetches no binding for them at all.
+
+### 14.2 Project settings
+
+`/projects/{project}/settings/{tab}`, the last item of the project's menu. A project the person may not read answers `404`, never `403`, like every route of it (PF-59).
+
+| Tab | What it shows | What it proposes |
+|---|---|---|
+| **General** (`general`) | `metadata.title` and `metadata.description` of `project.yaml`, its `quotas` (PF-17) and, read-only, the organization's visibility and the organization it belongs to | an update of `project.yaml` |
+| **Members** (`members`) | the bindings at `scope: { project }` and at `scope: { contextSpace }` of this project's spaces, grouped by scope | a `RoleBinding` naming a person or a group and an organization role or a role of this project (PF-69); its removal |
+| **Roles** (`roles`) | the project's roles of `projects/{project}/roles/` (PF-68) | a new project role: the kind picker offers project kinds only, the verbs only those the proposer holds here |
+| **Service accounts** (`service-accounts`) | the project's service accounts and keys, the page of [12 §3](12-identity-and-access.md#portal-page-project-settings-service-accounts) | as before |
+| **Your access** (`access`) | what the signed-in person may read, propose, approve and delete here (`permissions/me`) | nothing |
+| **Delete project** (`danger`) | the cascade the deletion would carry (PF-77) and the name cooling period (PF-78) | the deletion `Change`, name typed back |
+
+### 14.3 What happens to Project → Access
+
+Access stops being a section. Its parts move where their scope says:
+
+| Was on Project → Access | Is now |
+|---|---|
+| Role bindings | Project settings → Members (project and space scope); Organization → Members (organization scope) |
+| Roles | Project settings → Roles (project roles); Organization → Roles (organization roles) |
+| Groups | Organization → Groups |
+| Organization domain | Organization → Settings |
+| Service accounts | Project settings → Service accounts; Organization → Service accounts (namespace `org`) |
+| Effective permissions | Project settings → Your access |
+
+`/projects/{project}/access` redirects to `/projects/{project}/settings/members` with the same query string, so a link somebody saved, a chat message or the assistant's older answers still land. The redirect is permanent and client-side; the route list keeps both paths.
+
+### 14.4 Three kinds of role, one word each
+
+| | Defined in | Bound at | Holds in | Edited on |
+|---|---|---|---|---|
+| **Organization role** | `users/roles/{name}.yaml`, namespace `org` (PF-49, PF-56) | organization, project or context-space scope | every project the binding's scope covers | Organization → Roles; bound on Organization → Members or Project settings → Members |
+| **Project role** | `projects/{project}/roles/{name}.yaml`, namespace the project (PF-68) | that project or one of its spaces, never the organization (PF-69) | that project only | Project settings → Roles and Members |
+| **Application role** | the App manifest (T-2589, [16 §12](16-apps-on-demand.md#12-roles-of-an-application)) | the App's own members | inside that application only | the App's page |
+
+Keycloak holds identity only: who a person is and how they sign in (I4). No role, binding or membership is edited in Keycloak, and no page offers to.
+
+### 14.5 Rules every tab keeps
+
+- Nobody grants above their own rights (PF-52): every role picker offers only roles whose every verb the proposer holds on the chosen scope, and the API refuses the rest with the sentence that names what is missing.
+- A control the person's bindings do not allow stays in place, disabled, with the reason by pointer and keyboard (UI-44).
+- Every change is a `Change`: the page shows its lane, and a red-lane change asks for the name typed back.
+
+### 14.6 Out of scope
+
+Replacing the Keycloak admin console, and provisioning people. A person arrives in the organization by signing in; a binding or a group may name them before their first login, which the Members and Groups tabs show as "not signed in yet".
+
 ## Related
 
 - [01-overview](../Architecture/01-overview.md) — where this chapter sits in the whole.
 - [00-index](../Requirements/00-index.md) — the normative requirements behind it.
 - [Deployment/05 §5](../Deployment/05-monitoring-logging.md#5-the-activity-pipeline) — the collector that fills the activity store.
 - [API/01 §14](../API/01-portal-api.md#14-activity-ui-31-ops-48-ops-49) — the two routes that read it.
+- [12-identity-and-access §2a](12-identity-and-access.md#2a-roles-as-code) — the roles, bindings and groups these pages edit.
+- [User-Guide/12](../User-Guide/12-managing-organization-and-projects.md) — the same pages from the person's side.

@@ -37,7 +37,7 @@ Typed references (`{kind, name, namespace?}`) instead of paths or ids keep bundl
 | Kind | Target Directory | Engine Consumer | Description |
 |---|---|---|---|
 | `Organization` | Root `org.yaml` | Portal / Keycloak | Organization root settings, branding, default locales |
-| `Project` | `projects/{p}/project.yaml` | Portal API | Project container and team governance boundary |
+| `Project` | `projects/{p}/project.yaml`; in layout 2 also the registry entry `projects/{p}.yaml` of the organization repository | Portal API | Project container and team governance boundary; the registry entry names its repository, ref and parameter values (PF-86) |
 | `ContextSpace` | `projects/{p}/spaces/{s}/` | Antares Broker | Context space tenant, storage, and persistence rules |
 | `DataModel` | `.../spaces/{s}/datamodels/` | Gateway / Broker | LinkML schema definition & compiled JSON-LD contexts |
 | `Policy` | `.../spaces/{s}/policies/` | Context Gateway | PEP access control policy (ADR 002) |
@@ -64,6 +64,23 @@ Typed references (`{kind, name, namespace?}`) instead of paths or ids keep bundl
 | `CkanInstance` | `projects/{p}/ckan/` | `jcctl` publisher / Portal API | One open-data portal an Endpoint may publish to: base URL, default organization and the API token `secretRef` (EP-62, EP-67) |
 | `UiSchema` | `portal/forms/{name}.uischema.yaml` | Portal UI | Form arrangement for one kind: order, widgets, help, grouping; `metadata.name` is `spec.for` lowercased (UI-02) |
 | `List`, `Bundle`, `Change`, `ChangeList` | not stored | all / import / resource API | Envelopes for download, import and write results (MF-05, MF-17, MF-12) |
+
+### Paths under layout 2
+
+In layout 2 ([ADR-N-029](../Decisions/adr-n-029-one-repository-per-project.md), CC-85) a project's kinds sit at the root of the project's own repository: the path of every `projects/{p}/…` row above loses its `projects/{p}/` prefix there, so a pipeline is `pipelines/{name}/pipeline.yaml` of the project repository. The organization-level rows stay in the organization repository, which gains the registry, `projects/{p}.yaml`, one `kind: Project` entry per project. Every loader assembles the two into the tree of the table (CC-86), which is why a kind's `PATH_TEMPLATE` in `jc-core` keeps the `projects/{project}/` prefix: it addresses the assembled tree, and a checkout of one project repository is mounted at that prefix.
+
+```yaml excerpt
+# projects/air.yaml, the registry entry in the organization repository (PF-86)
+kind: Project
+apiVersion: joinedcontext.com/v1alpha1
+metadata: { name: air, namespace: org }
+spec:
+  repository: { name: air }
+  ref: v1.4.0
+  parameters: { stationCount: 12 }
+```
+
+A new kind therefore needs no second path: it declares the `PATH_TEMPLATE` it would have in layout 1, organization-level or under `projects/{project}/`, and the assembly places it.
 
 ### Schema not published yet
 

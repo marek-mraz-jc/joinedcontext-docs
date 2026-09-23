@@ -19,64 +19,66 @@ joinedcontext platform eliminates runtime configuration mutation in favor of **C
 +---------------------------------------------------------------------------------------------------+
 ```
 
-## 1. Organization Repository Layout (CC-08)
+## 1. Repository Layout (CC-08, CC-85)
 
-Each Organization operates exactly one Git repository (the Org Repository) in Gitea with a strict directory structure:
+An Organization's configuration lives in Git, in one of two layouts. **Layout 1** is one repository holding the organization and every project. **Layout 2** is one *organization repository* plus one *project repository* per project, assembled through the project registry ([ADR-N-029](../Decisions/adr-n-029-one-repository-per-project.md), PF-85). Each repository says which layout it follows in `.jc/layout`, one integer. An organization repository without the file is layout 1, the only layout there was before the file existed; a project repository exists in layout 2 only and always carries the file. A loader refuses a number it does not know, and `jcctl migrate` is the only writer of a layout change (CC-85).
+
+### 1.1 Layout 1: one repository
+
+What a layout 1 repository holds, path by path. Each manifest path is the `PATH_TEMPLATE` of its kind in `jc-core` ([Development/04](../Development/04-manifest-kinds.md#2-standard-kind-catalog)):
 
 ```text
-org.yaml                                # Organization metadata, default locales, lane policy
+org.yaml                                # kind: Organization: metadata, default locales, lane policy
 platform-settings.yaml                  # Global quotas, retention rules, allowed entity types
 environments/
   {name}.yaml                           # kind: Environment, the overlay one environment renders with (CC-73)
-projects/
-  {project_slug}/
-    project.yaml                        # Project metadata and team bindings
-    spaces/
-      {space_slug}/
-        space.yaml                      # Context Space declaration (kind: ContextSpace)
-        datamodels/
-          *.linkml.yaml                 # Authoritative LinkML data models
-          json-schema/*.json            # Compiled JSON Schema draft-07 (Committed)
-          context.jsonld                # Compiled JSON-LD @context (Committed)
-        policies/
-          *.yaml                        # kind: Policy and kind: ScopeDefinition manifests
-        subscriptions/
-          *.yaml                        # kind: Subscription manifests
-        registrations/
-          *.yaml                        # kind: ContextSourceRegistration manifests
-        entities/
-          seed/*.json                   # plain NGSI-LD entities, never manifests (CC-72)
-        endpoints/
-          *.yaml                        # kind: Endpoint manifests (Public & shared views)
-    pipelines/
-      {pipeline_name}/
-        pipeline.yaml                   # kind: Pipeline manifest (Execution class, schedule, secrets)
-        bento.yaml                      # Native, unwrapped Bento stream configuration
-    dashboards/
-      *.yaml                            # kind: Dashboard and kind: Layer manifests
-    roles/
-      {name}.yaml                       # kind: Role scoped to this project, project kinds only (PF-68)
-    shared/
-      *.yaml                            # kind: SharedSpaceReference manifests
-users/
-  groups/
-    {name}.yaml                         # kind: Group, members by e-mail; synced into Keycloak (PF-62, PF-63)
-  roles/
-    {name}.yaml                         # kind: Role, verbs on kinds (PF-49)
-  assignments/
-    {name}.yaml                         # kind: RoleBinding, a Role to users or groups over a scope (PF-49)
-portal/
-  theme.yaml                            # Design Tokens Community Group (DTCG) theme tokens
-  navigation.yaml                       # Dynamic portal navigation tree
-  forms/
-    *.uischema.yaml                     # react-jsonschema-form UI schemas per kind
-  locales/
-    {sk,en,de,cs}.json                  # ICU MessageFormat localization bundles
-  features.yaml                         # Organization-level feature flags
+dataspace/
+  participant.yaml                      # kind: DataSpaceParticipant, the organization's DID
+agentprofiles/
+  {name}.yaml                           # kind: AgentProfile (AG-47)
 blueprints/
-  {blueprint_name}/
-    blueprint.yaml                      # The whole blueprint: version, riskClass,
-                                        # allowedRoles, parameter schema, templates
+  {name}/blueprint.yaml                 # kind: Blueprint: version, riskClass, allowedRoles,
+                                        # parameter schema, templates
+policies/
+  roles.json                            # compiled from Role and RoleBinding by jcctl (PF-51); generated
+users/
+  groups/{name}.yaml                    # kind: Group, members by e-mail; synced into Keycloak (PF-62, PF-63)
+  roles/{name}.yaml                     # kind: Role, verbs on kinds (PF-49)
+  assignments/{name}.yaml               # kind: RoleBinding, a Role to users or groups over a scope (PF-49)
+portal/
+  forms/{name}.uischema.yaml            # kind: UiSchema per kind (UI-02)
+  theme.yaml, navigation.yaml, features.yaml, locales/{sk,en,de,cs}.json
+projects/
+  {project}/
+    project.yaml                        # kind: Project: metadata, quotas, team bindings
+    access/serviceaccounts/{name}.yaml  # kind: ServiceAccount (PF-45)
+    apps/{name}/app.yaml                # kind: App (AP-01); the source is the App's own repository (AP-72)
+    ckan/{name}.yaml                    # kind: CkanInstance (EP-62)
+    dashboards/{name}.yaml              # kind: Dashboard and kind: Layer
+    datasources/{name}.yaml             # kind: DataSource (MF-35)
+    dataspace/agreements/{name}.yaml    # kind: DataAgreement
+    pipelines/{name}/
+      pipeline.yaml                     # kind: Pipeline
+      bento.yaml                        # native, unwrapped Bento stream configuration
+    policies/{name}.yaml                # kind: ScopeDefinition
+    roles/{name}.yaml                   # kind: Role scoped to this project, project kinds only (PF-68)
+    shared/{name}.yaml                  # kind: SharedSpaceReference
+    sync/{name}.yaml                    # kind: SyncSource
+    spaces/
+      {space}/
+        space.yaml                      # kind: ContextSpace
+        datamodels/
+          {name}.yaml                   # kind: DataModel
+          *.linkml.yaml                 # authoritative LinkML source
+          *.v{n}.schema.json, *.v{n}.context.jsonld   # generated artifacts, committed
+          mappings/{name}.yaml          # kind: Mapping
+        dataspace/offers/{name}.yaml    # kind: DataOffer
+        endpoints/{name}.yaml           # kind: Endpoint
+        policies/{name}.yaml            # kind: Policy
+        projections/{name}.yaml         # kind: ModelProjection
+        registrations/{name}.yaml       # kind: ContextSourceRegistration
+        subscriptions/{name}.yaml       # kind: Subscription
+        entities/seed/*.json            # plain NGSI-LD entities, never manifests (CC-72)
 .jc/
   seed-manifest.txt                     # the paths the installation's seed owns, one per line,
                                         # written by the forge bootstrap and read by its next
@@ -91,7 +93,55 @@ one identity, and the gateway refuses the whole repository. The record holds pat
 else, is generated from the mounted seed rather than read out of the repository's own manifests,
 and a path that is not in it is never the bootstrap's to remove.
 
-### Encrypted secret files (CC-06, ADR-N-012)
+### 1.2 Layout 2: the organization repository and one repository per project
+
+Layout 2 cuts the tree of §1.1 at `projects/`. What sits above it stays in the organization repository; what sits under `projects/{project}/` moves to the root of that project's own repository; and the organization repository gains the project registry in its place (CC-85, PF-86).
+
+```text
+# the organization repository
+org.yaml   platform-settings.yaml             # as in §1.1
+environments/  dataspace/  agentprofiles/  blueprints/  policies/  users/  portal/
+projects/
+  {slug}.yaml                                 # kind: Project, the registry entry (§1.3, PF-86)
+.jc/layout                                    # 2
+```
+
+```text
+# a project repository, one per project
+project.yaml                                  # kind: Project, with spec.version and spec.parameters (CC-88)
+access/  apps/  ckan/  dashboards/  datasources/  dataspace/  pipelines/  policies/  roles/  shared/  sync/
+spaces/{space}/…                              # everything under projects/{project}/ in §1.1
+.gitea/workflows/                             # the CI every project repository runs (CC-90)
+CODEOWNERS                                    # compiled from the project's roles (CC-41)
+.jc/layout                                    # 2
+```
+
+The kinds, their paths inside a project and every loader rule stay the same, because no loader reads the repositories one by one. The reconciler, the gateway and the Portal fetch the organization checkout and every registered project checkout at its `spec.ref` and assemble them into the virtual tree `projects/{slug}/…` of §1.1 (CC-86, §3). The registry slug, not the repository's name, is the `{project}` of that tree, so one repository may run under two slugs.
+
+A project repository's readers and writers are the forge teams `{slug}-readers` and `{slug}-writers`, and a project member's forge credential reaches that repository and no other; the organization repository is readable only with a binding at the organization (PF-87, [12 §2](12-identity-and-access.md#2-organization-group--role-model)). An application keeps a repository of its own (AP-72).
+
+### 1.3 The project registry
+
+One file per project in the organization repository, `projects/{slug}.yaml`, names where the project's configuration comes from and what this deployment sets. It is the fleet manifest of [Research/city-as-code-prior-art §9.1](../Research/city-as-code-prior-art.md#91-repo-access-only-their-own-part), and changing it is an organization change in the red lane (CC-87):
+
+```yaml excerpt
+# projects/air.yaml in the organization repository (PF-86)
+kind: Project
+apiVersion: joinedcontext.com/v1alpha1
+metadata: { name: air, namespace: org }
+spec:
+  repository: { name: air }            # a forge repository, or { url: https://…, secretRef: { name: … } } (CC-89)
+  ref: v1.4.0                          # the tag, branch or commit this deployment runs
+  parameters:                          # this deployment's values over the defaults of project.yaml (CC-88)
+    stationCount: 12
+    ingestToken: air-ingest-token      # a parameter of type secret is a secretRef name, never a value
+```
+
+The registry entry and the project repository's own `project.yaml` are one `Project`: the entry says where the project comes from and what this deployment sets (`repository`, `ref`, `parameters`), `project.yaml` says what the project is (its title, quotas, bindings, `version` and the parameter schema), and the assembly reads the two as one resource under the registry slug. The two carry disjoint fields: `spec.parameters` holds values on the entry and declarations in `project.yaml`, a `version` or `quotas` on the entry is refused, and so is a `ref` in `project.yaml`.
+
+A registry entry that names a git repository outside the forge is mirrored read-only at the pinned ref, and every edit through the Portal is refused with "this project is authored at {url}" (CC-89).
+
+### 1.4 Encrypted secret files (CC-06, ADR-N-012)
 
 A manifest never carries a credential, only a `secretRef` naming one. The values live in
 SOPS-encrypted files that end in `.enc.yaml`, or `.enc.yml`, and sit anywhere in the tree,
@@ -364,6 +414,16 @@ The reconciler is Rust, and it is one body of code with two front ends. There is
 1. **Command line (`jcctl`):** engineers and CI pipelines run `jcctl validate`, `jcctl plan`, `jcctl apply`, `jcctl drift`, `jcctl export`, `jcctl import` and `jcctl sync`. Running `jcctl` with no arguments prints the full list; there is no `jcctl serve`.
 2. **In the cluster (the Portal):** the Portal links `jcctl` as a library rather than shelling out to it, so the same loader decides what a manifest is in both places and the Portal cannot disagree with CI about a repository (`joinedcontext-portal/src/reconciler`). A periodic loop re-reads the manifests from Gitea at the default branch HEAD, compiles their live status and swaps them into an in-memory mirror atomically; a run that cannot load the repository keeps the last revision that did, because serving half a repository reads as deletion. Only one replica reconciles, elected with a PostgreSQL advisory lock, and it is that replica that syncs streams, apps, roles and the Keycloak realm and runs the drift scan; every other replica keeps its own read-only mirror, so a new pod of a rolling update serves while the old one still holds the lock (OPS-51). The `SyncSource` loop runs beside it on the same replica (MF-28, CC-03).
 
+### Assembling the render (CC-86)
+
+In layout 2 every loader starts by assembling. It reads the organization checkout at the default branch, lists `projects/*.yaml`, fetches each registered repository at its `spec.ref`, and mounts each checkout's root at `projects/{slug}/` of one virtual tree, the tree of §1.1. From there the loader is the one it always was. Uniqueness across the organization, one Endpoint slug and one `{space}` segment per organization (PF-44, PF-84), is checked over the assembled tree, so a project repository cannot claim another project's names.
+
+- **A ref that cannot be fetched** leaves that project at the last ref it was fetched at, and the registry entry's `status` names the ref it runs and the error. The rest of the organization renders; one unreachable repository never unloads every project.
+- **What triggers a render** is a push to the organization repository, a moved `spec.ref`, or a push to a branch a registry entry tracks (the forge webhook of CC-90). A tag or a commit pinned by the entry never moves by itself.
+- **The gateway** reads checkouts and never the forge: the sidecar `jcctl checkouts` keeps each registered project at its ref under `JC_GATEWAY_PROJECTS_DIR`, with the forge's read-only token for the forge's repositories and an entry's own `secretRef` for one outside it (CC-89), and the gateway assembles on every change it sees.
+- **`jcctl`** does the same over local checkouts: `jcctl validate` and `jcctl plan` take the organization checkout and find each project checkout by the registry, at its ref, and `jcctl validate --project` checks one project repository alone, which is what its CI runs (CC-90).
+- **`jcctl migrate`** is the only writer of a layout change (CC-85): from layout 1 it splits each `projects/{slug}/` into a repository of its own with its history (`git subtree split`), writes the registry entry tracking the project repository's `main`, removes the subtree from the organization repository and sets `.jc/layout` to `2` in both. An import of a bundle from an older layout runs the same migration and lands its result as the Change (MF-47); a newer layout is refused.
+
 ### Reconciler Commands
 
 - `jcctl plan`: Computes the delta between declared seed entities in Git and live entities in the broker. Outputs a colorized, field-level diff indicating entities to create, update, delete, or leave unchanged (CC-15, CC-72).
@@ -558,7 +618,16 @@ spec:
   features: { publicEndpoints: false }
 ```
 
-Duplicating a project is exactly download + import with a namespace mapping and `rename` (MF-26). Disaster recovery is not an import at all: the repository at a revision **is** the organization's export (CC-49), so a restore pushes a mirror of it into the fresh instance's forge, points the reconciler at it and runs `apply` ([Deployment/07 section 3](../Deployment/07-backup-restore.md), CC-50, OPS-11). There is no organization bundle to build, and nothing at organization scope has to be exported by hand. Moving a project to another instance is the same two steps with a check between them: the bundle index carries the SHA-256 of every file, the import at the target reports each file equal or not once the namespace mapping is undone (MF-42), and the source project is deleted, by its red-lane cascade (PF-77), only after every file reported equal (PF-78).
+In layout 1, duplicating a project is download + import with a namespace mapping and `rename` (MF-26); in layout 2 it is a fork (below). Disaster recovery is not an import at all: the repository at a revision **is** the organization's export (CC-49), so a restore pushes a mirror of it into the fresh instance's forge, points the reconciler at it and runs `apply` ([Deployment/07 section 3](../Deployment/07-backup-restore.md), CC-50, OPS-11). There is no organization bundle to build, and nothing at organization scope has to be exported by hand. Moving a project to another instance is the same two steps with a check between them: the bundle index carries the SHA-256 of every file, the import at the target reports each file equal or not once the namespace mapping is undone (MF-42), and the source project is deleted, by its red-lane cascade (PF-77), only after every file reported equal (PF-78). In layout 2 a whole project moves as Git instead (below).
+
+### A whole project as Git: export, import, duplicate, move (MF-45…MF-47, PF-89)
+
+In layout 2 a project is a repository, so a whole project travels as one. The YAML bundle stays for a part of a project: one endpoint, a set of pipelines, a space (MF-16).
+
+- **Export** writes a `git bundle` of the project repository with its whole history and tags, one more `git bundle` per application repository of the project, and the registry entry with its parameter schema and this deployment's values reset to their defaults. The `kind: Bundle` index lists each bundle in `spec.repositories`, one entry per repository with its `name`, its `role` (`organization`, `project` or `application`), the bundle's `file` and the `head` commit it ends at, and `spec.files` carries each bundle's SHA-256 (MF-45, MF-42). `jcctl export --format git --repo-dir <project checkout> --project <slug> --out-dir <dir> [--app-dir <name>=<checkout>]...` writes it, and `jcctl import --format git <dir> --out-dir <dir>` clones each bundle and checks each head against the index. Nothing in it is a secret value: a `secret` parameter is a `secretRef` name (CC-88).
+- **Import** creates the repositories at the target forge from the bundles and shows the parameter form, generated from the project's parameter schema with the defaults filled in, before it writes the registry entry. It verifies the transfer by head-commit equality, per repository (MF-46). An older `.jc/layout` or `apiVersion` is migrated by `jcctl migrate` and the migrated tree lands as the Change; a newer one is refused (MF-47).
+- **Duplicate** is a fork in the forge, or an import of the bundle, plus a registry entry under a new slug with parameters of its own. The copy renders its ids from the new slug, and its teams are its own, so it cannot write into the origin (PF-89, PF-83). Gitea refuses a fork into the owner that holds the origin, so the Portal makes the fork as a migration from the forge's own in-cluster address, history included (`POST /api/v1/projects/{project}/duplicate`).
+- **Move** is export, import and a check, in the order that never loses a repository: the target imports and reports every head equal, the target's registry entry goes live, and only then does the source's red-lane cascade archive the source repository (PF-77, PF-78). Until the last step both sides hold the whole history. [Deployment/11](../Deployment/11-moving-a-project.md) is the runbook.
 
 ### Sync (MF-27…MF-32)
 
@@ -600,7 +669,7 @@ A Change is one resource on one branch. A workspace holds several related edits 
 
 ### 7.1 A workspace is a branch
 
-`jc_workspace_open` creates the branch `workspace/{name}` of the Organization repository from `main` at revision R and records the workspace in the Portal's database, beside the drafts: name, owner, base revision, scope (a project, a space subtree or a list of resources), TTL, and the preview's state. The record describes a branch, so it does not live on one.
+`jc_workspace_open` creates the branch `workspace/{name}` from `main` at revision R: of the project repository for a workspace of one project, and of the organization repository for an organization workspace (CC-87, [ADR-N-029](../Decisions/adr-n-029-one-repository-per-project.md); in layout 1 both are the one repository), and records the workspace in the Portal's database, beside the drafts: name, owner, base revision, scope (a project, a space subtree or a list of resources), TTL, and the preview's state. The record describes a branch, so it does not live on one.
 
 Every proposing operation takes an optional workspace. With one, `propose_with_identity` runs the same validation, permission, own-rights, secret and quota checks (PF-82) and commits to the workspace's branch instead of opening a branch and a pull request of its own. Lists, reads, dry runs and the forms inside a workspace read the workspace's branch overlaid on `main`, so a person sees the state they are building. A draft belongs to one workspace or to none.
 
@@ -616,7 +685,7 @@ On `dev` a preview runs inside the shared services, and the prefix is its isolat
 
 ### 7.3 Bringing a workspace back
 
-Bringing a workspace back is the pull request of its branch (CC-79). Git computes base, ours and theirs, and the forge's three-way merge is the only merge engine. The Change is one, its lane is the riskiest over every file, and approval is unchanged: PF-50, PF-58, and an agent never approves (AG-11, AG-82).
+Bringing a workspace back is the pull request of its branch (CC-79). A Change targets exactly one repository (CC-87): an operation that has to touch both, such as a new project and its registry entry, is two linked Changes, the organization one in the red lane, and the project one is not applied before it. Git computes base, ours and theirs, and the forge's three-way merge is the only merge engine. The Change is one, its lane is the riskiest over every file, and approval is unchanged: PF-50, PF-58, and an agent never approves (AG-11, AG-82).
 
 A conflict with `main` is a Git conflict on one manifest file. The Portal shows it per field with the plan diff and the person resolves it inside the workspace; no side wins by default, and the merged manifest is checked again before it is proposed (CC-80). An expired workspace loses its preview namespaces and its branch, and nothing of it reaches `main` (CC-81).
 
@@ -634,8 +703,12 @@ A copied endpoint, project or organization works where it lands only if nothing 
 | `{space}` segment of an entity id | nothing, or `spec.urnSegment` on a space that predates the rule | `{project}-{name}` from the Context Space's namespace and local name (PF-84) |
 | Space inside a mapping | `env("JC_SPACE")` beside `env("JC_ORG_DOMAIN")` | the target space's rendered segment, one variable per output (PL-57) |
 | Endpoint of a SharedSpaceReference | `endpointRef: {project, name}` | the slug this environment minted (EP-77) |
+| `{project}` | nothing: the project is where the manifest lives | the registry slug of the project repository (PF-86), never the repository's name |
+| A project parameter | `{param:name}` in a manifest, `env("JC_PARAM_<NAME>")` in a mapping | the registry entry's value over the default in `project.yaml` (CC-88) |
 
-The loader refuses under `strict` and reports under `lax` a manifest or mapping file that carries its own project name, its space's rendered segment or the organization's domain as a literal where a rendered value exists, and names the file, the path and the replacement (CC-83). A word that merely contains the name, in a URL or a title, is not a finding.
+The loader refuses under `strict` and reports under `lax` a manifest or mapping file that carries its own project name, its space's rendered segment or the organization's domain as a literal where a rendered value exists, and names the file, the path and the replacement (CC-83). A word that merely contains the name, in a URL or a title, is not a finding. The same refusal covers a literal where a project parameter exists: a project file that writes the value a parameter declares, instead of `{param:name}`, is refused under `strict` (CC-88).
+
+A project's version is `spec.version` of its `project.yaml` (semver), and a release is the tag `v{version}` on the project repository. The registry entry pins one tag, so two deployments of the same project run two versions with two sets of values, and moving a deployment to a new release is an organization change that moves its `spec.ref` (CC-88).
 
 `spec.urnSegment` exists so that no entity id changes: every space created before this rule pins today's segment, and only then may the space take its local name. A space copied to another project gets a new segment by itself, so its data is loaded again under the new ids, and the copy cannot mint ids of, or write into, the space it came from (PF-83).
 

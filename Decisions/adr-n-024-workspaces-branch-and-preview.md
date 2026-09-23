@@ -7,6 +7,7 @@ title: "ADR-N-024: Workspaces: Copy, Change, Test and Bring Back, Renamed at Ren
 
 Date: 2026-09-18  
 Status: Accepted  
+Amended by: ADR-N-029: a project workspace is a branch of the project repository, an organization workspace a branch of the organization repository  
 Decision Makers: product owner
 
 ## 1. Context

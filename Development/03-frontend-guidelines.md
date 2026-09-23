@@ -123,6 +123,13 @@ and "one primary per view" is asserted by each page's own test where that view i
 - **A button a caller may not use stays, disabled, with the reason** (UI-44). `Button` renders the
   reason only when it is both `disabled` and given a `disabledReason`; `PermissionGuard` passes
   both. A reason alone leaves the button live, which is not a refusal.
+- **A row or a card shows one obvious action and one ⋯ menu for the rest** (`RowActions`). The
+  Applications catalog card is the example (T-2618): its footer is **Open** and ⋯, nothing else.
+  Open stays when the App is not served, disabled with the reason; the menu holds the lifecycle
+  (Preview, Publish, Rebuild, Retire), the forge links (source, latest run, package, each a new-tab
+  `<a rel="noreferrer noopener">` present only when its URL is) and the manifest's own four, in
+  blocks divided by a separator. A second ⋯ on one card is a bug: extra items join the one menu
+  through `ResourceRowActions`' `extra`.
 - **An icon-only button has a name and a tooltip.** `aria-label` for the screen reader, `title`
   for the pointer, and the two say the same thing.
 - **The hit area is at least 24 × 24 CSS px** (WCAG 2.5.8), which is what the `xs` and `sm` sizes

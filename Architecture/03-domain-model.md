@@ -143,6 +143,14 @@ Self-service has a ceiling, because one node fills up: every project opened unde
 
 A project also ends, and self-service means it ends often. Deleting one is a red-lane `Change` that an `org-admin` or the project's own administrator approves, and it cascades in the open: the merge request removes every space (the broker tenant is dropped after a data export was offered), every Endpoint (its slug retired), every binding and project role, every app with its builds and every service account, so no grant and no reference outlives the project; a `SharedSpaceReference` from another project to one of its Endpoints refuses the deletion until it is removed, and the Change names it (PF-77). The name stays reserved for a cooling period the organization sets, `Organization.spec.projects.nameCooldownDays`, 30 days by default and `0` for none, counted from the commit that removed the project: opening a project under that name again answers when it becomes free (PF-78). Moving a project to another instance is download, import under the target's overlay and a checksum comparison from the bundle index; only when the target reports every manifest equal is the source deleted (MF-42), which is what "easily transferred" means here.
 
+**A project is a registry entry and a repository** ([ADR-N-029](../Decisions/adr-n-029-one-repository-per-project.md)). In layout 2 the project's configuration is a Git repository of its own, and the organization repository holds one registry entry per project, `projects/{slug}.yaml`, naming that repository, the ref this deployment runs and this deployment's parameter values (PF-85, PF-86). The two are one `Project`: the entry says where the project comes from and what this deployment sets, the repository's `project.yaml` says what the project is. The registry slug is the project's name everywhere else, the `{project}` of the resource API, of a namespace and of every rendered id, so one repository may run under two slugs as two projects ([06 §1.3](06-configuration-as-code.md#13-the-project-registry)).
+
+- **Version and parameters.** `project.yaml` carries `spec.version` (semver) and `spec.parameters`, one declaration per knob a deployment sets (`type` of `string`, `integer`, `number`, `boolean` or `secret`, and optionally `default`, `description` and `enum`); a manifest writes `{param:name}` and a mapping `env("JC_PARAM_<NAME>")`. A release is the tag `v{version}` of the project repository, and the registry entry pins one, so staging and production run two versions with two sets of values (CC-88).
+- **Creation** creates the repository from the template and its registry entry in one operation, both or neither, and the creator's binding with them (PF-88, PF-66). Because a Change targets one repository (CC-87), the Portal opens the organization Change for the entry and the binding and seeds the repository once that Change is approved.
+- **Membership** is forge membership: the project's readers and writers are the forge teams `{slug}-readers` and `{slug}-writers`, and a person without a binding on the project cannot clone its repository (PF-87, [12 §2a](12-identity-and-access.md#reading-the-repository-in-the-forge)).
+- **Deletion** archives the repository instead of removing a subtree, keeps the name for the cooling period and removes the registry entry (PF-77, PF-78, PF-88).
+- **Duplicate** is a fork, or an import of the project's git bundle, under a new slug with parameters of its own; the copy renders its ids from the new slug and cannot write into the origin (PF-89). **Move** is the git-native export and import, verified by head commit per repository (MF-45, MF-46, [06 §6](06-configuration-as-code.md#a-whole-project-as-git-export-import-duplicate-move-mf-45mf-47-pf-89)).
+
 ### Context Space
 
 Its name is the `{space}` segment of every URN it holds, unique in the organization (PF-44), so with many projects the Portal and the assistant propose `{project}-{name}` and accept a bare name only when it is free; a collision names the owning project to those who may read it and says "taken" to everyone else (PF-76).
@@ -278,7 +286,11 @@ The scheme is enforced, not recommended:
 4. **Resolution.** `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}` resolves to `/cs/{space}/ngsi-ld/v1/entities/{urn}` on the instance that serves `{orgDomain}` (SP-02); another instance finds it through the organisation's `did:web` document, which lists its platform host.
 5. **Registrations.** Context Source Registrations anchor their `idPattern` to the full prefix `^urn:ngsi-ld:AirQualityObserved:hel\.fi:air-quality:.*$`, so federation queries route to the one authoritative space (R33, R34).
 
-Organizations declare the domain once (`Organization.spec.domain`); the reconciler verifies ownership by DNS TXT record or by the served `did:web` document before any space of that organisation can accept writes (PF-41).
+Organizations declare the domain once (`Organization.spec.domain`); the reconciler verifies ownership by DNS TXT record or by the served `did:web` document before any space of that organisation can accept writes (PF-41). The Portal's reconciler records and reports the verification (T-2377), and the Context Gateway refuses writes when the owner switches the gate on (T-2572):
+
+- **State.** `Organization.status.domainVerification` holds `state` (`pending`, `verified`, `failed`), `method` (`dns-txt` or `did-web`), `checkedAt`, `reason` (on `failed`, in words a person acts on, never the resolver's raw answer), `challenge`: 32 random bytes, base64url, minted once per Organization and kept in the Portal's database, so a restart does not invalidate a published record, and `record`: the record to publish, spelled out as `_joinedcontext.{domain} TXT "jc-verify={challenge}"`. A changed `spec.domain` keeps the challenge and starts the state over at `pending`.
+- **Check.** The reconciler resolves the TXT record, or fetches `https://{domain}/.well-known/did.json` with no redirect off `{domain}` and looks for the instance host among its services, over its own egress rule and with a timeout. A failure is a recorded state, never a crash. A `verified` state is checked again once `checkedAt` is 30 days old, a `pending` or `failed` one after ten minutes. The check runs only in a Portal with a database.
+- **Gate.** The platform setting `domainVerification` is `report` (the default: the state is recorded and shown, writes are not refused) or `enforce` (a write to a space of an Organization whose state is not `verified` answers `403` naming the Organization). Every existing installation starts unverified, so `enforce` is the owner's switch once the seeds verify. The Context Gateway enforces it, as `JC_GATEWAY_DOMAIN_VERIFICATION`; any other value stops the gateway at start. The state lives in the Portal's database, so the gateway reads it where it already reads the running previews: `GET /internal/domain-verifications` on the Portal's internal listener, with its own ServiceAccount token, every ten seconds ([API/01](../API/01-portal-api.md)). Every space the gateway serves belongs to the Organization of its repository, the one whose `spec.domain` is the gateway's `{orgDomain}`. Under `enforce` the gateway refuses a write on every NGSI-LD door (an endpoint's tree, a space's tree, and the write tools of both MCP façades, which pass through the same path) after the Policy decision, so a caller who may not write at all still learns only that. It fails closed: before the first answer, when the Portal has not confirmed the list for a minute (six missed fetches), or when the list does not name the Organization, the state is unknown and the write is refused; one failed fetch does not stop writes. Reads are never refused.
 
 ---
 
@@ -372,6 +384,17 @@ spec:
     agentRunsPerDay: 20
     entitiesPerSpace: 200000
     requestsPerMinute: 600          # per Endpoint
+```
+
+In layout 2 the project repository's `project.yaml` also carries the project's version and its deployment knobs (CC-88); the schema of the pinned platform tag does not know the two fields yet:
+
+```yaml excerpt
+spec:
+  version: 1.4.0                    # semver; the release is the tag v1.4.0 of the project repository
+  parameters:                       # one declaration per deployment knob, a subset of JSON Schema
+    stationCount: { type: integer, default: 8, description: "Stations the feed reads" }
+    region: { type: string, default: uusimaa, enum: [uusimaa, pirkanmaa] }
+    ingestToken: { type: secret }   # a secretRef name, set per deployment
 ```
 
 ### Policy

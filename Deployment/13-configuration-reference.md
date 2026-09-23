@@ -25,14 +25,18 @@ The enforcement point in front of every broker surface (`context-gateway`).
 | Variable | Default | Secret | What it is |
 |---|---|---|---|
 | `JC_ENVIRONMENT` | — | no | The overlay `JC_ENVIRONMENT` names, as `validate` and `plan` read it (CC-73). |
+| `JC_GATEWAY_ASSEMBLY_DIR` | `/tmp/jc-assembly` | no | Where a layout 2 organization is assembled (`JC_GATEWAY_ASSEMBLY_DIR`, default `/tmp/jc-assembly`), a scratch directory the pod owns. |
 | `JC_GATEWAY_BIND` | `0.0.0.0:8080` | no | The address to listen on (`JC_GATEWAY_BIND`, default `0.0.0.0:8080`). |
 | `JC_GATEWAY_BROKER_URL` | — | no | The broker to forward to, scheme and authority only (`JC_GATEWAY_BROKER_URL`). |
+| `JC_GATEWAY_DOMAIN_VERIFICATION` | `report` | no | `report` or `enforce` (`JC_GATEWAY_DOMAIN_VERIFICATION`, default `report`): whether a write waits for the Organization's verified domain (PF-41, Architecture/03 §3). |
+| `JC_GATEWAY_DOMAIN_VERIFICATIONS_URL` | — | no | The Portal's list of domain states (`JC_GATEWAY_DOMAIN_VERIFICATIONS_URL`, its internal listener's `/internal/domain-verifications`); required under `enforce`. |
 | `JC_GATEWAY_EGRESS_CA_BUNDLE` | — | no | A PEM file of extra trust anchors the notification egress trusts on top of the public roots (`JC_GATEWAY_EGRESS_CA_BUNDLE`), for subscribers behind the installation's own CA (R46). |
 | `JC_GATEWAY_EGRESS_PRIVATE_HOSTS` | — | no | Hosts inside the platform's own networks a notification may still be delivered to (`JC_GATEWAY_EGRESS_PRIVATE_HOSTS`, comma-separated); empty refuses them all (T-1302). |
 | `JC_GATEWAY_EGRESS_URL` | — | no | The base a rewritten `notification.endpoint.uri` carries (`JC_GATEWAY_EGRESS_URL`), which is the address the broker dials to deliver; the public URL when the deployment names none. |
 | `JC_GATEWAY_ORG_DOMAIN` | — | no | The organization's verified domain, the middle segment of every entity URN (`JC_GATEWAY_ORG_DOMAIN`). |
 | `JC_GATEWAY_PREVIEWS_DIR` | `/tmp/jc-previews` | no | Where the previews are written (`JC_GATEWAY_PREVIEWS_DIR`, default `/tmp/jc-previews`), a scratch directory the pod owns. |
 | `JC_GATEWAY_PREVIEWS_URL` | — | no | The Portal's list of running workspace previews (`JC_GATEWAY_PREVIEWS_URL`, its internal listener's `/internal/previews`); absent serves `main` alone (CC-78). |
+| `JC_GATEWAY_PROJECTS_DIR` | — | no | The project checkouts of a layout 2 organization, one directory per registry slug at its pinned ref (`JC_GATEWAY_PROJECTS_DIR`); a layout 1 repository needs none (CC-86). |
 | `JC_GATEWAY_PUBLIC_URL` | — | no | The gateway's own public base URL (`JC_GATEWAY_PUBLIC_URL`), which makes the full RFC 8707 resource URI an acceptable token audience alongside the endpoint slug. |
 | `JC_GATEWAY_REPO_DIR` | — | no | The manifest repository the endpoint table is built from (`JC_GATEWAY_REPO_DIR`); absent means an empty table until one is loaded. |
 | `JC_OIDC_CLIENT_ID` | — | no | The gateway's own Keycloak client and its secret (`JC_OIDC_CLIENT_ID`, `JC_OIDC_CLIENT_SECRET`): the identity it presents when it calls the Portal's internal listener (PF-46, AG-52). |
@@ -77,8 +81,12 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_OIDC_CLIENT_SECRET` | — | yes | The realm humans sign in against: `JC_OIDC_ISSUER`, `JC_OIDC_CLIENT_ID` and `JC_OIDC_CLIENT_SECRET` (a secret), all three together or none, plus the optional `JC_OIDC_CA_FILE` for a realm behind a private CA. |
 | `JC_OIDC_ISSUER` | — | no | The realm humans sign in against: `JC_OIDC_ISSUER`, `JC_OIDC_CLIENT_ID` and `JC_OIDC_CLIENT_SECRET` (a secret), all three together or none, plus the optional `JC_OIDC_CA_FILE` for a realm behind a private CA. |
 | `JC_PORTAL_AGENT_PROXY_CLIENT_ID` | — | no | The Keycloak client `jc-agent-proxy` holds (`JC_PORTAL_AGENT_PROXY_CLIENT_ID`), which is the only caller the run callbacks on the internal listener answer (AG-52, T-2271). |
+| `JC_PORTAL_APISIX_NAMESPACE` | `apisix` | no | `JC_PORTAL_APISIX_NAMESPACE` — the namespace the installation runs APISIX in, the only one whose pods reach an app pod; default `apisix`. |
+| `JC_PORTAL_APPS_CACHE_DIR` | — | no | Where this replica keeps the builds it fetched from the package registry, one `{name}/{hex}` directory per build (`JC_PORTAL_APPS_CACHE_DIR`, AP-102); it must be writable, and `{apps_dir}` need not be. |
 | `JC_PORTAL_APPS_DIR` | — | no | Root of the built app bundles, one directory per app (`JC_PORTAL_APPS_DIR`). |
-| `JC_PORTAL_APPS_NAMESPACE` | — | no | Where an App's objects are applied: `JC_PORTAL_APPS_NAMESPACE` and `JC_PORTAL_ORG_DOMAIN`, both or neither, with the host taken from the public URL rather than configured twice (AP-13). |
+| `JC_PORTAL_APPS_NAMESPACE` | — | no | Where an App's four Kubernetes objects are applied (`JC_PORTAL_APPS_NAMESPACE` with `JC_PORTAL_ORG_DOMAIN`; AP-13, AP-18, T-0411). |
+| `JC_PORTAL_APPS_PULL_SECRET_NAME` | — | no | `JC_PORTAL_APPS_PULL_SECRET_NAME` — the name of the `dockerconfigjson` Secret in the apps namespace a node pulls app images with (a forge token that reads packages only). |
+| `JC_PORTAL_APPS_REGISTRY` | — | no | `JC_PORTAL_APPS_REGISTRY` — the host, and port if any, of the forge's container registry; an App's image is composed as `{registry}/{forge organization}/app-{name}@{digest}`. |
 | `JC_PORTAL_APPS_URL` | — | no | `JC_PORTAL_APPS_URL`: an absolute `http(s)` origin with nothing after it. |
 | `JC_PORTAL_ARTIFACT_STORE_ACCESS_KEY` | — | yes | `JC_PORTAL_ARTIFACT_STORE_ENDPOINT`, `JC_PORTAL_ARTIFACT_STORE_ACCESS_KEY` and `JC_PORTAL_ARTIFACT_STORE_SECRET_KEY` (the last two secrets) name the store and the root credential; `JC_PORTAL_ARTIFACT_STORE_BUCKET` (default `jc-artifacts`) and `JC_PORTAL_ARTIFACT_STORE_REGION` (default `us-east-1`) are the same in every installation this platform deploys, so they have defaults. |
 | `JC_PORTAL_ARTIFACT_STORE_BUCKET` | `jc-artifacts` | no | `JC_PORTAL_ARTIFACT_STORE_ENDPOINT`, `JC_PORTAL_ARTIFACT_STORE_ACCESS_KEY` and `JC_PORTAL_ARTIFACT_STORE_SECRET_KEY` (the last two secrets) name the store and the root credential; `JC_PORTAL_ARTIFACT_STORE_BUCKET` (default `jc-artifacts`) and `JC_PORTAL_ARTIFACT_STORE_REGION` (default `us-east-1`) are the same in every installation this platform deploys, so they have defaults. |
@@ -173,6 +181,7 @@ carries a credential — a run's ticket is minted per run and is not a stored se
 | `JC_BIND_ADDRESS` | `JC_BIND_ADDRESS` — where it listens, which is the port the Service routes to. |
 | `JC_BRANCH` | `JC_BRANCH` — the branch the run proposes its change on. |
 | `JC_ENDPOINT_URL` | `JC_ENDPOINT_URL` — the one Endpoint it may read, as a caller reaches it. |
+| `JC_ME_URL` | `JC_ME_URL` — the Portal route that answers the caller's roles in this App, called with the edge's `X-Access-Token` as the bearer (AP-109). |
 | `JC_ORG_DOMAIN` | `JC_ORG_DOMAIN` — the organisation's domain, a variable of the runner's process. |
 | `JC_PATH_PREFIX` | `JC_PATH_PREFIX` — where the built application will be served, so the code it writes uses the right base path. |
 | `JC_PROXY_BASE` | `JC_PROXY_BASE` — the credential proxy, the one address a run may call out to. |

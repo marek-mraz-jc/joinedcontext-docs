@@ -22,7 +22,8 @@ A **Core** component makes up a working installation and is in the shipped `comp
 | **keycloak** | Core | Java | yes | The realm, its clients and its client scopes, including `mcp:portal` |
 | **apisix** | Core | Lua / NGINX | yes | The standalone edge: the rendered route table, TLS, rate limiting |
 | **openid-connect** | Core | APISIX plugin | yes | Part of `apisix`: the `openid-connect` plugin in session mode on the Portal host and every App on Demand route, through one confidential `edge` client per realm ([ADR-N-019](../Decisions/adr-n-019-login-at-the-edge-apisix-openid-connect.md)) |
-| **gitea** | Core | Go | yes | The in-cluster forge, plus a bootstrap Job that creates the configuration repository, the teams and the tokens the Portal and the gateway read. Gitea Actions is off: the component deploys no runner |
+| **gitea** | Core | Go | yes | The in-cluster forge, plus a bootstrap Job that creates the configuration repository, the teams and the tokens the Portal and the gateway read. Gitea Actions and the package registry are on for the application repositories, whose workflows run on `gitea-runner` (ADR-N-028) |
+| **gitea-runner** | Core | Go (`gitea-runner`) on the builder image | yes | The forge's Actions runner in host mode: it builds every application repository with the workflow the Portal commits into it ([ADR-N-028](../Decisions/adr-n-028-applications-build-on-the-forge.md)) |
 | **context-broker** | Core | Rust (Antares) | yes | The NGSI-LD broker over the shared schema with row-level security |
 | **pipeline-runner** | Core | Bento | yes | The resident streams runner and the CronJobs for scheduled pipelines |
 | **context-gateway** | Core | Rust (Axum) | yes | The Policy Enforcement Point, the query rewriter, the representation translators and the Data MCP server |
@@ -149,6 +150,19 @@ The `functions` component runs `jc-functions` from the platform image (Architect
 ### Verification
 
 `just dev-smoke` gets the Portal client's token from the realm, sends one invocation to the Service over a port-forward and expects the function's answer; a probe pod without the Portal's labels must fail to connect to the Service port.
+
+## 6. The Forge's Actions Runner (`gitea-runner`)
+
+The `gitea-runner` component runs the forge's runner (`gitea-runner` 3.5.0, formerly `act_runner`) in host mode on the builder image of AP-82, the Portal release's `joinedcontext-app-builder` ([ADR-N-028](../Decisions/adr-n-028-applications-build-on-the-forge.md)). It is listed after `gitea`, whose bootstrap Job writes the organization's registration token into the Secret `gitea-runner-registration` in the runner's namespace.
+
+- **One job per registration.** The container's command, `runner`, registers with `--ephemeral`, runs exactly one job, kills every process the job left behind, wipes `/tmp/runner` and registers again. The registration token is copied into memory by an init container, the only container that mounts the Secret, and is read once and deleted before the first job. Deleting the pod is how the runner restarts, so the Deployment has no liveness probe; its health is "online" in the forge.
+- **Walls (AP-81).** No Kubernetes token, no container runtime, no privilege, a read-only root, and `/tmp` as the one writable path. Egress reaches the forge on 3000, the Portal API on 8080 and CoreDNS, and there is no ingress. The job cache is off, so no repository's cache is another repository's input.
+- **What a job sees.** The label `node-22` runs on the image itself. `JC_FORGE_URL` and `JC_PORTAL_URL` are the in-cluster addresses, because the job's `gitea.server_url` is the public host and the runner cannot reach it.
+- **Resources.** A limit of 2 CPU and 3Gi per pod, one job at a time. One replica in `development`, two in `production`. The replica count is the only concurrency setting.
+
+### Verification
+
+`just dev-smoke` waits up to a minute for a runner of the organization to show `online` in the forge's API and prints how long it waited. A probe pod with the runner's label must resolve names and must not reach an address on the internet.
 
 ## Related
 
