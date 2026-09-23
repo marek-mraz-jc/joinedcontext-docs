@@ -407,6 +407,13 @@ POST /api/v1/projects/{project}/changes/{id}/approve     review + merge
 POST /api/v1/projects/{project}/changes/{id}/reject      review "request changes" + close
 ```
 
+A write is judged against the Portal's copy of the repository and cut from the default branch.
+When the default branch already holds the resource otherwise than that copy (another `spec`,
+labels, annotations, title or description at the path the write goes to), the write is `409
+conflict`, "changed on main after the Portal last read it", and nothing is committed or published:
+the caller reads the resource again and sends the change once more, so no Change ever sets back
+what main moved to (T-2674).
+
 `{id}` is the `metadata.name` a write returned: `chg-` plus the merge request number in eight
 lowercase hex digits. A Change targets one repository (CC-87), which `status.repository` names. In
 layout 2 ([ADR-N-029](../Decisions/adr-n-029-one-repository-per-project.md)) a project's own
