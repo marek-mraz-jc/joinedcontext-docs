@@ -111,6 +111,7 @@ Response: `202 Accepted`
 - `unattended`: Optional boolean. Defaults to `false` for `application`. Always `true` for `dashboard` and `analysis` (a value of `false` for these kinds is rejected with `400 Bad Request`).
 - Public visibility (`visibility: "public"`) is rejected with `400 Bad Request` (AP-42).
 - Write operations (`createEntity`, `updateAttrs`, etc.) trigger `allowsWrite: true` and sandbox provisioning; unauthorized write attempts fail with `403 Forbidden`.
+- `dataNeeds[].roles`: Optional list of application role names (`[a-z][a-z0-9-]{0,31}`, at most 16 distinct across the run) that the need is granted to, as in an App manifest (AP-96). A name outside that pattern, or more than 16, answers `400 Bad Request` here, before the run starts. Publishing declares every distinct name in the App's `spec.roles` (`{name}`, no title and no members), so the manifest passes AP-91; the role's title and its members are added on the App page afterwards, each through a Change (AP-91, UI-44). A need without `roles` keeps granting every caller the endpoint admits, and a write on it stays red lane (AP-98).
 - If the builder profile or model secrets are missing, returns `503 Service Unavailable`.
 
 ### List Runs in Project
