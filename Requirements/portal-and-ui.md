@@ -149,6 +149,8 @@ One spreadsheet-like component reads, filters, compares and edits NGSI-LD entiti
 - **UI-79** [S] — The Organization page's Projects tab MUST list every project the person may read and none they may not (PF-59), offer **New project** by the rules of PF-65 and PF-66, and offer the deletion of a project as the red-lane `Change` of PF-77, listing its cascade and asking for the name typed back.
 - **UI-80** [H][S] — Every project MUST have **Project settings** at `/projects/{project}/settings/{tab}` with the tabs General (`project.yaml` title, description and quotas), Members (bindings at project and context-space scope, to an organization role or a role of this project, PF-69), Roles (the project's roles, project kinds only, verbs within the proposer's, PF-68), Service accounts, Your access (`permissions/me`) and Delete project (PF-77, PF-78); a project the person may not read MUST answer `404` there as everywhere (PF-59).
 - **UI-81** [H] — Project → Access MUST no longer be a section: its role bindings, roles and service accounts MUST move to Project settings or the Organization page by their scope, its groups and organization domain to the Organization page, its effective permissions to Project settings → Your access, and `/projects/{project}/access` MUST redirect to `/projects/{project}/settings/members` keeping its query string.
+- **UI-82** [H] — The sidebar MUST carry an Organization section listing its tabs (Settings, People, Members, Roles, Groups, Service accounts, Domain), each a link with `aria-current` on its page (ADR-N-031).
+- **UI-83** [H] — The bottom of the sidebar MUST show the signed-in person with Profile, Organization and Sign out, reachable by keyboard (ADR-N-031).
 
 ## Traceability
 
@@ -180,7 +182,7 @@ One spreadsheet-like component reads, filters, compares and edits NGSI-LD entiti
 | UI-73…UI-74 | [Architecture/09-portal.md#11-the-assistant-workbench](../Architecture/09-portal.md#11-the-assistant-workbench) | [Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest) |
 | UI-61…UI-63 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | UI-64…UI-72 | [Architecture/09-portal.md#13-the-entity-grid](../Architecture/09-portal.md#13-the-entity-grid) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
-| UI-75…UI-81 | [Architecture/09-portal.md#14-organization-and-project-management](../Architecture/09-portal.md#14-organization-and-project-management) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-twice](../Testing/03-frontend-and-e2e-tests.md#2-playwright-twice) |
+| UI-75…UI-83 | [Architecture/09-portal.md#14-organization-and-project-management](../Architecture/09-portal.md#14-organization-and-project-management) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-twice](../Testing/03-frontend-and-e2e-tests.md#2-playwright-twice) |
 
 ## Related
 

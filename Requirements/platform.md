@@ -160,6 +160,17 @@ Family **PF** (PF-01…PF-84). Owning chapters: [Architecture/03-domain-model.md
 - **PF-88** — Creating a project MUST create its repository from the template (`project.yaml`, `.jc/layout`, the CI workflow of CC-90, `CODEOWNERS`, a protected `main`) and its registry entry in one operation, both or neither. Deleting a project (the PF-77 cascade) MUST archive the repository, keep its name reserved for `nameCooldownDays` (PF-78) and remove the registry entry.
 - **PF-89** [S] — Duplicating a project MUST be a fork in the forge, or an import of its bundle (MF-45), plus a registry entry under a new slug with parameters of its own; the copy MUST render its ids from the new slug and MUST NOT be able to write into the origin (PF-83).
 
+## People and group roles
+
+Decided in [ADR-N-031](../Decisions/adr-n-031-people-groups-and-app-groups.md) (T-2682).
+
+- **PF-90** [S] — People MUST live in the organization's Keycloak realm and never in a manifest. The Portal MUST manage them through the Keycloak admin API and MUST write every action on a person to the activity log (actor, action, person, time) without any credential.
+- **PF-91** [S] — The taxonomy MUST seed `people-admin` with `create`, `update`, `disable` and `delete` on the kind `Person` at organization scope, `org-admin` MUST hold it, and every people route MUST refuse anyone else with `403`, the Portal showing its controls disabled with the reason (UI-44).
+- **PF-92** [S] — Creating a person MUST send Keycloak's execute-actions e-mail (`VERIFY_EMAIL`, `UPDATE_PASSWORD`). A realm without SMTP MUST instead get a temporary password with `UPDATE_PASSWORD` required, shown once to the creator and never stored, logged or returned again.
+- **PF-93** [S] — The Portal MUST let a `people-admin` edit a person's name, change their e-mail (which then needs verifying again), disable them (ending every session), enable them, send a password reset, remove their second factor and sign them out everywhere. Deleting a person MUST propose one Change removing them from every `Group` and `RoleBinding` that names them, and MUST delete the Keycloak user only after that Change merges.
+- **PF-94** [H] — A person's page MUST list their groups, their platform roles with scope and their application roles, each linked to where it is granted.
+- **PF-95** [S] — A group's page MUST edit its members, its `RoleBinding`s (a role at organization, project or space scope, PF-60, PF-69) and the `spec.access` entries naming it, each edit through the one propose function. Deleting a group MUST be one Change that also removes every binding and access entry naming it.
+
 ## Traceability
 
 | Requirement Range | Architecture Section | Test Family |
@@ -192,6 +203,7 @@ Family **PF** (PF-01…PF-84). Owning chapters: [Architecture/03-domain-model.md
 | PF-82…PF-83 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | PF-84 | [Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes](../Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
 | PF-85…PF-89 | [Architecture/06-configuration-as-code.md#1-repository-layout-cc-08-cc-85](../Architecture/06-configuration-as-code.md#1-repository-layout-cc-08-cc-85) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
+| PF-90…PF-95 | [Architecture/12-identity-and-access.md](../Architecture/12-identity-and-access.md), [ADR-N-031](../Decisions/adr-n-031-people-groups-and-app-groups.md) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 
 ## Related
 

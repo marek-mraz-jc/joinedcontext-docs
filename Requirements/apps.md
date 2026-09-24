@@ -194,6 +194,16 @@ Decided in [ADR-N-030](../Decisions/adr-n-030-every-application-is-a-keycloak-cl
 - **AP-116** [S] — A project's `service` and `fullstack` Apps MUST run in the namespace `{release}-{project}-apps`. The reconciler MUST create it with the project's first pod-backed App, labelled `joinedcontext.com/project` and `joinedcontext.com/managed-by`, with Pod Security `restricted`, a default-deny NetworkPolicy that admits the APISIX pods only, the pull Secret and a RoleBinding for the Portal. It MUST delete the namespace with the project's last pod-backed App.
 - **AP-117** [S] — The Portal's ServiceAccount MUST be able to create and delete only namespaces that carry the prefix and label of AP-116, and an admission policy MUST refuse any other namespace it asks for.
 
+## 21. Default groups, a login by default and opening inside the Portal
+
+Decided in [ADR-N-031](../Decisions/adr-n-031-people-groups-and-app-groups.md) (T-2682, T-2689, T-2690).
+
+- **AP-118** [S] — Every door that adds a role to an App (propose, generation, import) MUST commit in the same Change the `Group` `{app}-{role}`, annotated `joinedcontext.com/app: {project}/{app}`, and the `spec.access` entry giving that role to that group. Removing a role MUST remove its group, warning when it still has members, and retiring the App MUST propose removing all of them.
+- **AP-119** [H] — "Roles and members" on the App page MUST show each role's default group and its members, add and remove a person through that group, and give the role to or take it from other groups, each through the one propose function (AP-99).
+- **AP-120** [S] — An App without `spec.visibility` MUST be `project`, and every door MUST default to `project`. A Change that sets an App to `public` or moves one to it MUST take the red lane and need `approve` from a publisher (PF-71, PF-72).
+- **AP-121** [H] — "Open app" MUST open `/projects/{project}/apps/{name}/open`, which shows the App in a frame under the Portal's header and sidebar with an "Open in new window" control. The frame is sandboxed without top navigation. A retired or failed App MUST show its state there instead of a frame.
+- **AP-122** [S] — App routes MUST send `Content-Security-Policy: frame-ancestors https://portal.{host}` and no `X-Frame-Options`, so only the Portal's host may frame an App. Keycloak's pages MUST stay unframeable. When the realm session has expired, the frame MUST offer to sign in again in the top window.
+
 ## Traceability
 
 | Requirements | Section | Architecture | Tests |
@@ -220,6 +230,7 @@ Decided in [ADR-N-030](../Decisions/adr-n-030-every-application-is-a-keycloak-cl
 | AP-90…AP-99 | Application roles | [16-apps-on-demand.md §12](../Architecture/16-apps-on-demand.md#12-roles-of-an-application) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | AP-105…AP-110 | Fullstack applications on the forge | [16-apps-on-demand.md §13](../Architecture/16-apps-on-demand.md#13-fullstack-applications-on-the-forge), [ADR-N-028](../Decisions/adr-n-028-applications-build-on-the-forge.md) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | AP-111…AP-117 | Application clients, the composed edge file and unique names | [16-apps-on-demand.md §5](../Architecture/16-apps-on-demand.md#5-login-in-front-of-the-portal-and-every-app-apisix-openid-connect), [ADR-N-030](../Decisions/adr-n-030-every-application-is-a-keycloak-client.md) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
+| AP-118…AP-122 | Default groups, a login by default and opening inside the Portal | [16-apps-on-demand.md §12](../Architecture/16-apps-on-demand.md#12-roles-of-an-application), [ADR-N-031](../Decisions/adr-n-031-people-groups-and-app-groups.md) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | AP-100…AP-104 | The workflow file, the package registry and the host's fetch | [20-app-sdk.md#60-where-the-build-runs](../Architecture/20-app-sdk.md#60-where-the-build-runs) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 
 ## Related
