@@ -6,7 +6,7 @@ title: "ADR-N-027: Application Roles, Declared in the App and Held on Its Endpoi
 # ADR-N-027: Application Roles, Declared in the App and Held on Its Endpoint Only
 
 Date: 2026-09-22  
-Status: Accepted  
+Status: Accepted; §3.2, §3.4 and §3.7 superseded by [ADR-N-030](adr-n-030-every-application-is-a-keycloak-client.md) (roles are client roles of `app-{name}`; the endpoint-only rule stands)  
 Decision Makers: product owner (direction of 2026-09-22, T-2589)
 
 ## 1. Context

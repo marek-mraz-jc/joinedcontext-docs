@@ -68,11 +68,12 @@ Every row below is one entry of `components/<component>/apisix-routes.yaml` with
 | `ckan` | `/*` | `data.{host}` | default | `ckan:5000` | CKAN's own login | Class 1 | `proxy-rewrite` |
 | `ckan-redirect` | `/ckan*` | `{host}` | 5 | terminates at the edge | none | none | `redirect` to `https://data.{host}/` |
 | `keycloak` | `/*` | `idm.{host}` | default | `keycloak-app-keycloakx-http:80` | Identity provider | none at the edge | `proxy-rewrite` |
-| `app-{name}` | `/apps/{name}/*` | `{host}` | 30 | `app-{name}:8080` (service and fullstack) or `portal:8080` (static) | Edge session; `unauth_action: pass` for `visibility: public` | Class 1 | `openid-connect`, cookie path `/apps/{name}/`, logout `/apps/{name}/logout` (AP-26…AP-29) |
+| `app-{name}` | `/apps/{name}/*` | `{host}` | 30 | `app-{name}` in `{release}-{project}-apps` (service and fullstack) or `portal:8080` (static) | Session of the App's own client `app-{name}`; `unauth_action: pass` for `visibility: public` | Class 1 | `openid-connect`, cookie `jc_app_{name}` on `/apps/{name}/`, logout `/apps/{name}/logout` (AP-26…AP-29, AP-112) |
+| `app-{name}-endpoint` | `/apps/{name}/api/endpoint/*` | `{host}` | 35 | `context-gateway:8080`, the `/apps/{name}` prefix stripped | The App's session becomes the bearer; anonymous stays anonymous | Class 3 and Class 4 | as `context-endpoint-apps`, client `app-{name}` (AP-112) |
 
 `context-endpoint-apps` is how a published `static` app reaches its endpoint as the person using it: the apps session cookie lives on `/apps/` (AP-29) and never reaches `/api/endpoint/*` at the root, so the SDK sends its endpoint calls under the app's own path, `/apps/{name}/api/endpoint/{slug}/…`, and this route turns the session into `Authorization: Bearer` and proxies `/api/endpoint/{slug}/…` to the gateway, which decides as for any caller (GW10). The router (`radixtree_host_uri`) reads a `:name` segment literally, so the route matches `/apps/*` and narrows it with a regex on the normalised path. Its priority is above `app-{name}` so an app's own route never swallows its data calls; the egress path is refused here as on the other endpoint routes (T-2670).
 
-The `app-{name}` row is the one route this table describes that no chart renders: `jcctl` builds it from an `App` manifest (section 3). Every other row exists in the deployment repository today.
+The `app-{name}` and `app-{name}-endpoint` rows are the routes no chart renders: the Portal's reconciler adds them per published App to the file helm renders (section 3, ADR-N-030). `apps-surface` and `context-endpoint-apps` stay as the fallback for an App that is not published. Every other row exists in the deployment repository.
 
 Three routes answer at the edge and never dial the upstream their entry declares: `portal-metrics` (`404`, so the scrape path says nothing from outside the cluster), `portal-redirect` (`302` to the Portal host) and `ckan-redirect` (`302` to the catalogue host).
 
@@ -84,14 +85,14 @@ APISIX's own Prometheus surface and control ports are not routed. `global.metric
 
 In accordance with ADR-N-007, APISIX runs in standalone file mode with no etcd cluster and no Admin API. The whole routing table is one file.
 
-### Who renders the file today
+### Who renders the file
 
-Two renderers exist, and only one of them is wired into a deployment:
+Two writers, one after the other (ADR-N-030, AP-112):
 
-1. **The `configuration` chart** (`components/apisix/charts/configuration/templates/configmap.yaml`) renders the platform routes. It reads every `components/<component>/apisix-routes.yaml` and `components/<component>/apisix-plugins.yaml`, merges them into `upstreams`, `routes` and `plugin_configs`, appends `#END`, and writes the ConfigMap `apisix-standalone-config` in the APISIX namespace. This is what runs on a cluster today.
-2. **`jcctl`** (`crates/jcctl/src/apisix.rs`, `pub fn render`) renders the same file from the manifests in a configuration repository, including one `app-{name}` route per `App`. The function and its tests exist; no CLI subcommand and no deployment step calls it yet, so no cluster is served from its output.
+1. **The `configuration` chart** (`components/apisix/charts/configuration/templates/configmap.yaml`) renders the platform routes. It reads every `components/<component>/apisix-routes.yaml` and `components/<component>/apisix-plugins.yaml`, merges them into `upstreams`, `routes` and `plugin_configs`, and writes the ConfigMap `apisix-standalone-base` in the APISIX namespace. It holds no secret: the shared client's secrets appear as APISIX environment references (`${{EDGE_CLIENT_SECRET}}`).
+2. **The Portal's reconciler** reads that base on every tick, adds `app-{name}` and `app-{name}-endpoint` for every published App with the App's own client and its secret, appends `#END`, and writes the Secret `apisix-standalone-config`, which APISIX mounts. It writes only when the result differs, so an unchanged tick is no reload. A base change reaches the edge on the next tick. Until the Portal first writes, the chart seeds the Secret with the base, so a fresh install serves the shared routes.
 
-Until `jcctl` is wired in, an `App` route reaches the edge only when a chart contributes it. The chart's own template says so in a comment, and this page says so here rather than describing the finished shape as the current one.
+`jcctl`'s `apisix::render` stays the offline renderer of the same shape for a configuration repository; no cluster is served from its output.
 
 ### How the file reaches APISIX
 
