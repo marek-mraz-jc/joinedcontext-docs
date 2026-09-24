@@ -11,7 +11,7 @@ This chapter specifies how data models are authored, imported, generated, versio
 
 ## 1. Source of truth and artifacts
 
-- **DM-01** — The single authoring format of a data model MUST be LinkML YAML stored at `projects/{p}/spaces/{s}/datamodels/{name}.linkml.yaml`. JSON Schema, `@context`, documentation and examples are generated artifacts, never hand-edited.
+- **DM-01** — The single authoring format of a data model MUST be LinkML YAML stored at `projects/{p}/spaces/{s}/datamodel.linkml.yaml`, one per space (DM-61); a space that still holds `datamodels/{name}.linkml.yaml` files is migrated by `jcctl model merge` (DM-62). JSON Schema, `@context`, documentation and examples are generated artifacts, never hand-edited.
 - **DM-02** — Generated artifacts MUST be committed next to the source in the same commit (`json-schema/{name}.v{major}.json`, `context/{name}.v{major}.jsonld`, `docs/{name}.md`, `examples/{name}.example.jsonld`) (CC-25). CI MUST regenerate and fail the merge request on any diff between committed and regenerated output.
 - **DM-03** — The JSON Schema dialect MUST be draft-07 (CC-12, stack verdict S4). Generators MUST NOT emit 2019-09 or 2020-12 keywords.
 - **DM-04** — Every slot MUST carry an IRI (`slot_uri`) and every class a `class_uri`; a model without complete IRI bindings MUST NOT reach `published` status. Organisation-local terms MUST use the organisation's own namespace prefix, never the Smart Data Models or ETSI prefixes. A slot or class added locally without an IRI (the editor, the assistant's `addSlot`/`addClass` operations, AG-77) MUST be minted under the model's own prefix: the prefix named after the model, `{model name}: {model id}/`, declared in `prefixes` when the model has none yet, so a model whose `default_prefix` is an imported vocabulary (`sdm`) never mints a local term there (DM-16).
@@ -105,6 +105,14 @@ This chapter specifies how data models are authored, imported, generated, versio
 - **DM-57** [H][A] — A model that the project does not hold yet is created through the same route: a `PUT …/datamodels/{name}/source?space={space}` for a name no manifest in the project carries MUST create the DataModel — a manifest with `contextSpaceRef: {space}`, `spec.linkml: ./{name}.linkml.yaml` and the classes of the text — together with the source and the artifacts, in one `Change` whose lane is the green one a draft gets (DM-24). The route MUST refuse a create without a `space`, a `space` the project does not hold, and a name that is not a DNS-1123 label (PF-09); a `PUT` for a name the project does hold stays the update of DM-56, whatever `space` says. A model inferred from a sample (DM-54) therefore reaches the repository through one call, with no path of its own (DM-31, CC-32).
 - **DM-58** [H][A] — A slot that binds a term this platform did not define — a `slot_uri` from Smart Data Models, INSPIRE, XÖV or another organisation's model (DM-07, DM-08) — MUST NOT redefine it: its `range`, `unit`, `multivalued`, `required` and, for an enum, its permissible values MUST be the upstream term's, and a local addition MUST get an IRI in the project's own namespace. A slot that means something near but not the same MUST carry its own IRI and record the relation as SSSOM (`skos:closeMatch`, `skos:narrowMatch`, DM-42) rather than claim `exact_mappings` to the upstream term. `jcctl model validate` MUST check every bound `slot_uri` against the upstream artifact the model's provenance names (DM-08) and MUST fail on a redefinition, naming the slot, the term and the field that differs; a model whose upstream artifact is not resolvable MUST be reported as unchecked rather than passed. Reuse is add-only: a model may add terms of its own beside a borrowed one, never change what the borrowed one means (MIM2-R1).
 
+## One model per space
+
+Decided in [ADR-N-033](../Decisions/adr-n-033-one-data-model-per-space.md) (T-2698).
+
+- **DM-61** [S] — A Context Space MUST have exactly one `DataModel`, `spaces/{s}/datamodel.linkml.yaml`, named by the space's `spec.dataModel`; its classes are the space's types, validation MUST refuse a second model file in a space, and the Context Gateway MUST refuse a write of a type the model does not declare. The model MAY `import` published models at a pinned version.
+- **DM-62** — Creating a Context Space MUST create its model in the same Change, empty or importing the models picked; `jcctl model merge` MUST merge several models of one space into one, keeping class names, slot IRIs and `class_uri`s, and MUST refuse a clash naming both classes.
+- **DM-63** [S] — `GET /api/v1/organization/datamodels?search=` MUST answer every published model the caller may read (name, project, space, version, classes) and the Smart Data Models catalog entries, and nothing the caller cannot read.
+
 ## Traceability
 
 | Requirements | Section | Architecture | Tests |
@@ -125,6 +133,7 @@ This chapter specifies how data models are authored, imported, generated, versio
 | DM-56–DM-57 | Saving a model | [11-data-models.md §6.8](../Architecture/11-data-models.md#68-saving-a-model-dm-56-dm-57) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-58 | Reusing a term you did not define | [11-data-models.md §3.1](../Architecture/11-data-models.md#31-reusing-a-term-you-did-not-define-dm-58) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-59…DM-60 | QUDT anchors and Data Structure Definitions | [11-data-models.md](../Architecture/11-data-models.md) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
+| DM-61…DM-63 | [ADR-N-033](../Decisions/adr-n-033-one-data-model-per-space.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
 ## Related
 

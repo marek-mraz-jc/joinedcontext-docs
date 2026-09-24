@@ -151,6 +151,8 @@ One spreadsheet-like component reads, filters, compares and edits NGSI-LD entiti
 - **UI-81** [H] — Project → Access MUST no longer be a section: its role bindings, roles and service accounts MUST move to Project settings or the Organization page by their scope, its groups and organization domain to the Organization page, its effective permissions to Project settings → Your access, and `/projects/{project}/access` MUST redirect to `/projects/{project}/settings/members` keeping its query string.
 - **UI-82** [H] — The sidebar MUST carry an Organization section listing its tabs (Settings, People, Members, Roles, Groups, Service accounts, Domain), each a link with `aria-current` on its page (ADR-N-031).
 - **UI-83** [H] — The bottom of the sidebar MUST show the signed-in person with Profile, Organization and Sign out, reachable by keyboard (ADR-N-031).
+- **UI-84** [H] — Every form field that names an existing resource (data model, type, space, Endpoint, pipeline, group, person, role, project) MUST be a picker over what exists and the caller may read, searchable, showing owner and version, offering "create new" where the kind allows (ADR-N-033).
+- **UI-85** [H] — A guard test MUST fail when a form schema references a kind that has no picker (ADR-N-033).
 
 ## Traceability
 
@@ -182,7 +184,7 @@ One spreadsheet-like component reads, filters, compares and edits NGSI-LD entiti
 | UI-73…UI-74 | [Architecture/09-portal.md#11-the-assistant-workbench](../Architecture/09-portal.md#11-the-assistant-workbench) | [Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest) |
 | UI-61…UI-63 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | UI-64…UI-72 | [Architecture/09-portal.md#13-the-entity-grid](../Architecture/09-portal.md#13-the-entity-grid) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
-| UI-75…UI-83 | [Architecture/09-portal.md#14-organization-and-project-management](../Architecture/09-portal.md#14-organization-and-project-management) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-twice](../Testing/03-frontend-and-e2e-tests.md#2-playwright-twice) |
+| UI-75…UI-85 | [Architecture/09-portal.md#14-organization-and-project-management](../Architecture/09-portal.md#14-organization-and-project-management) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-twice](../Testing/03-frontend-and-e2e-tests.md#2-playwright-twice) |
 
 ## Related
 
