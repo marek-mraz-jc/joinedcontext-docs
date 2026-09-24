@@ -1144,9 +1144,9 @@ POST /api/v1/projects/{project}/apps/{name}/rebuild    dispatches build.yml on t
 
 ```json
 {
-  "repositoryUrl": "https://forge.example/user/login?redirect_to=%2Fjoinedcontext%2Fhelsinki_city-bikes",
-  "run": { "status": "completed", "conclusion": "success", "commit": "3f1c…", "url": "https://forge.example/user/login?redirect_to=…" },
-  "packageUrl": "https://forge.example/user/login?redirect_to=%2Fjoinedcontext%2F-%2Fpackages%2Fgeneric%2Fapp-city-bikes%2F3f1c…",
+  "repositoryUrl": "https://forge.example/user/oauth2/keycloak?redirect_to=%2Fjoinedcontext%2Fhelsinki_city-bikes",
+  "run": { "status": "completed", "conclusion": "success", "commit": "3f1c…", "url": "https://forge.example/user/oauth2/keycloak?redirect_to=…" },
+  "packageUrl": "https://forge.example/user/oauth2/keycloak?redirect_to=%2Fjoinedcontext%2F-%2Fpackages%2Fgeneric%2Fapp-city-bikes%2F3f1c…",
   "rebuild": { "allowed": false, "reason": "Rebuild needs propose on App in project helsinki" }
 }
 ```
