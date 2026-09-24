@@ -126,7 +126,18 @@ hint from another field. The other two shape a value the platform has a form for
 asks for the name, key and environment variable of a secret, and `operations` offers the NGSI-LD
 operation groups as checkboxes instead of a free-text list.
 
-The widget name has to be one of those four; an unknown one leaves the parameter with its
+A string that holds prose rather than a name (the prompt of an app, a description) names
+`textarea`, the form's own multi-line box, which takes no options:
+
+```yaml excerpt title="a parameter written as prose"
+      prompt:
+        type: string
+        title: "What should the app do"
+        maxLength: 2000
+        x-jc-widget: textarea
+```
+
+The widget name has to be one of those four or `textarea`; an unknown one leaves the parameter with its
 default input rather than breaking the form. A picker is a convenience, not a control:
 both lists come back narrowed to what the caller may read, and the value is validated against
 the same schema on the server, where the decision is made (CC-60).
