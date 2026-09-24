@@ -133,7 +133,7 @@ Decided in [ADR-N-033](../Decisions/adr-n-033-one-data-model-per-space.md) (T-26
 | DM-56–DM-57 | Saving a model | [11-data-models.md §6.8](../Architecture/11-data-models.md#68-saving-a-model-dm-56-dm-57) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-58 | Reusing a term you did not define | [11-data-models.md §3.1](../Architecture/11-data-models.md#31-reusing-a-term-you-did-not-define-dm-58) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-59…DM-60 | QUDT anchors and Data Structure Definitions | [11-data-models.md](../Architecture/11-data-models.md) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
-| DM-61…DM-63 | [ADR-N-033](../Decisions/adr-n-033-one-data-model-per-space.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| DM-61…DM-63 | One model per space and pickers everywhere | [ADR-N-033](../Decisions/adr-n-033-one-data-model-per-space.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
 ## Related
 
