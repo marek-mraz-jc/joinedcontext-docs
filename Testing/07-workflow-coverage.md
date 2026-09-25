@@ -382,6 +382,17 @@ The owed cells name open tasks, and `gate_workflows` holds their count: it may s
 - **T-2732**: assistant tools for people, organization settings, project copy, a pipeline's rejected rows, an app rebuild and write, and drift.
 - **T-2726**: the one-step Publish dataset from an endpoint, its live journey and its tool.
 
+## 6. Assistant evals
+
+The assistant cell names the tool; the evals show the assistant reaches for it when a person asks in words (TS-26, T-2733). Each workflow of §3 has one conversation in `tests/assistant_evals/<workflow>.yaml` of `joinedcontext-portal`:
+
+- `says`: the steward's message, then the answers to the questions the run asks, in order.
+- `expect.calls`: the tools the run calls, each with the fields its input must carry. A change opens the kind's draft with `change_resource` and the person proposes it (AG-77); a kind with its own create form is opened with `jc_ui_navigate`.
+- `expect.outcome`: `change`, `form`, `answer`, or `person-only` with `why`.
+- `refusal`: what a viewer asks; a viewer may not propose an App, so the conversation itself answers 403 (AG-70).
+
+The nightly batch runs `ui/e2e/live/assistant-evals.spec.ts` on `dev` with the real model and real logins: at most 10 conversations a night, the never recorded first, announced in `AI_shared_folder.md`, drafts named `eval-…` removed after. A run that makes every expected call is written to `tests/assistant_evals/recordings/<workflow>.json`: its events, without what the tools answered. `tests/assistant_evals_tests.rs` rebuilds the model's answers from those events and plays them against every build, with no spend, and fails when a workflow has no conversation, when a recording shows a call that failed on `dev`, or when the build no longer makes the call. A recording is refreshed by a live run, never written by hand; the count of workflows still unrecorded may only fall.
+
 ## Related
 
 - [00-strategy.md](00-strategy.md) — the lanes these layers run in.
