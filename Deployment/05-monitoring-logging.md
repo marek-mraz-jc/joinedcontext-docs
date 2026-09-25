@@ -145,10 +145,12 @@ alertGroups:
           summary: 'Portal 5xx rate above 1%'
 ```
 
-The assistant's two rules ship in the same `platform-health` group once the Portal is in the
-`components` list (T-2771):
+The assistant's two rules ship in their own `assistant` group of the same file whenever the
+Portal is in the `components` list (T-2771):
 
 ```yaml
+  - name: assistant
+    rules:
       - alert: AssistantSlowAnswers
         expr: >
           histogram_quantile(0.95,

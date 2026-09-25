@@ -105,6 +105,8 @@ USER_SIDE: dict[str, str] = {
     "JC_SOURCE_URL": "handed to a pipeline's compute container by its manifest "
     "(Architecture/08 §the compute step), never read by a service of ours",
     "JC_TARGET_URL": "the same, for where the compute step writes back",
+    "JC_APP_CONFIG": "handed to a fullstack application's backend by the reconciler beside "
+    "JC_ME_URL (Architecture/16 §13, AP-126); the application reads it, not a service of ours",
     "JC_ME_URL": "handed to a fullstack application's backend by the reconciler beside "
     "JC_ENDPOINT_URL (Architecture/16 §13, AP-109); the application reads it, not a service of ours",
     "JC_PARAM_": "the prefix of a project parameter a mapping reads as env(\"JC_PARAM_<NAME>\") "
