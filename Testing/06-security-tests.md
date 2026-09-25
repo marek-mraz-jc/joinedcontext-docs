@@ -176,7 +176,7 @@ State of the register on 2026-09-20: 50 vectors, 5 proven, 45 open.
 | edge | TLS, HSTS and the security headers on every host | T-1674 | OPS-27 |  | open |
 | edge | Request smuggling and oversized requests at the edge | T-1675 | GW26 |  | open |
 | edge | The admin surfaces are reachable from the internet | T-1676 | OPS-31 |  | open |
-| forge | The forge as a side door to the configuration | T-1703 | CC-41, PF-51 |  | open |
+| forge | The forge as a side door to the configuration | T-1703 | CC-41, PF-51, PF-104, PF-105 |  | open |
 | gateway | A caller widens what a Policy allows | T-1696 | EP-74, GW33 |  | open |
 | gateway | A tenant header or an entity id of another space | T-1697 | EP-01, PF-84 |  | open |
 | gateway | The JSON-LD context and other URLs the gateway fetches for a caller | T-1698 | R46 |  | open |
