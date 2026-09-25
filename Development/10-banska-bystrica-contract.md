@@ -37,6 +37,7 @@ short name into an id is the mistake this table exists to prevent.
 |---|---|---|---|
 | `bbsk` | `bbsk-kraj` | `bbsk-kraj` | the national feeds filtered to `SK032` and its okresy, as fetched |
 | `bbsk` | `bbsk-kpi` | `bbsk-kpi` | `KeyPerformanceIndicator` entities only |
+| `bbsk` | `bbsk-registre` | `bbsk-registre` | the region's own registers from opendata.bbsk.sk: districts, municipalities, its organisations, hospitals, public social services, bridges (T-2783) |
 | `banskabystrica` | `banskabystrica-mesto` | `banskabystrica-mesto` | the city's own feeds, as fetched |
 | `banskabystrica` | `banskabystrica-kpi` | `banskabystrica-kpi` | `KeyPerformanceIndicator` entities only |
 | `banskabystrica` | `ovzdusie` | `ovzdusie` | the thirteen seeded `AirQualityObserved` entities of T-0945 |
@@ -260,12 +261,15 @@ endpoint for writing would be a second thing to keep in step with the first.
 |---|---|---|---|---|
 | `bbsk` | `bbsk-kraj` | `bbsk-kraj` | `organization` | the pipelines, reading and writing with the `pipelines` service account |
 | `bbsk` | `bbsk-kpi` | `bbsk-kpi` | `public` | the application and anybody, reading; the computing pipeline, writing |
+| `bbsk` | `bbsk-registre` | `bbsk-registre` | `public` | anybody, reading; the register pipelines, writing |
 | `banskabystrica` | `banskabystrica-mesto` | `banskabystrica-mesto` | `organization` | the pipelines, reading and writing |
 | `banskabystrica` | `banskabystrica-kpi` | `banskabystrica-kpi` | `project-list`, `[bbsk]` | the region's application, reading through the share of section 8; the city's pipeline, writing |
 
-One endpoint is `public`: `bbsk`'s `bbsk-kpi`, which is what the demonstration shows. Creating
-it is a red-lane Change that a binding with `approve` on the kind and the public constraint has
-to approve (PF-72), and that approval is part of the demonstration rather than a step around it.
+Two endpoints are `public`: `bbsk`'s `bbsk-kpi`, which is what the demonstration shows, and
+`bbsk-registre`, which republishes the region's own registers under the region's own CC BY-SA 4.0
+licence to its own catalogue organization (T-2783). Creating either is a red-lane Change that a
+binding with `approve` on the kind and the public constraint has to approve (PF-72), and that
+approval is part of the demonstration rather than a step around it.
 The two raw spaces are never public: they are a copy of somebody else's published data, and
 republishing it under our own name at our own URL is not ours to do. The city's KPI space is not
 public either; it reaches the region by a named share and by nothing else.
