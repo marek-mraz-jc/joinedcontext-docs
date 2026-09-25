@@ -18,13 +18,23 @@ and a rule already in force is cited so it can be checked. The feeds these space
 | | `bbsk` | `banskabystrica` |
 |---|---|---|
 | body | Banskobystrický samosprávny kraj | Mesto Banská Bystrica |
-| `orgDomain` | `bbsk.sk` | `banskabystrica.sk` |
+| `orgDomain` | `hel.fi` | `hel.fi` |
 | territory | the kraj, NUTS `SK032`, 13 okresy | the city, LAU `SK0321508438` |
 | people | 607 581 at the end of 2025 | 72 123 on 2026-09-20 |
 | holds the application | yes | no |
 
 They are two projects because they are two publishers with two mandates. A figure of one
 presented as the other is wrong by a factor of eight in population, and no dashboard shows that.
+
+**Both are projects of the one Organization of the instance.** An instance holds one
+Organization (PF-01), and on dev that is `hel`, so both bodies' ids carry `hel.fi`, like every
+other id of the instance (owner decision 2026-09-24, T-2455). The domain therefore does not say
+who published a figure. The `{space}` segment does, and it is minted by the runner as surely as
+the domain: a space whose segment starts with `bbsk-` is the region's, one that starts with
+`banskabystrica-`, and `ovzdusie`, are the city's. An application credits a row to its body by
+that segment and by nothing else. The separation the projects exist for, each with its own
+spaces, policies, endpoints and service account and neither able to write the other's, does not
+depend on the domain.
 
 ## 2. Spaces, and the segment each one writes into an id
 
@@ -70,11 +80,11 @@ is joined with a hyphen and never with a colon.
 
 | space | one literal id |
 |---|---|
-| `bbsk-kraj` | `urn:ngsi-ld:StatisticalObservation:bbsk.sk:bbsk-kraj:zp3803rs-SK032-2023-PROD_TONY-1` |
-| `bbsk-kpi` | `urn:ngsi-ld:KeyPerformanceIndicator:bbsk.sk:bbsk-kpi:emisie-tuhe-okres-brezno` |
-| `banskabystrica-mesto` | `urn:ngsi-ld:StatisticalObservation:banskabystrica.sk:banskabystrica-mesto:vh5003rr-SK0321508438-2023-U03084` |
-| `banskabystrica-kpi` | `urn:ngsi-ld:KeyPerformanceIndicator:banskabystrica.sk:banskabystrica-kpi:spotreba-vody-mesto` |
-| `ovzdusie` | `urn:ngsi-ld:AirQualityObserved:banskabystrica.sk:ovzdusie:stanica-1` |
+| `bbsk-kraj` | `urn:ngsi-ld:StatisticalObservation:hel.fi:bbsk-kraj:zp3803rs-SK032-2023-PROD_TONY-1` |
+| `bbsk-kpi` | `urn:ngsi-ld:KeyPerformanceIndicator:hel.fi:bbsk-kpi:emisie-tuhe-okres-brezno` |
+| `banskabystrica-mesto` | `urn:ngsi-ld:StatisticalObservation:hel.fi:banskabystrica-mesto:vh5003rr-SK0321508438-2023-U03084` |
+| `banskabystrica-kpi` | `urn:ngsi-ld:KeyPerformanceIndicator:hel.fi:banskabystrica-kpi:spotreba-vody-mesto` |
+| `ovzdusie` | `urn:ngsi-ld:AirQualityObserved:hel.fi:ovzdusie:stanica-1` |
 
 The `{localId}` of a raw observation is the publisher's own key, in the publisher's own spelling:
 the cube code, the territory code, the period and the indicator code, joined by hyphens. Nothing
@@ -134,7 +144,7 @@ is a different case and section 5 gives it a value of its own.
 
 ```json ngsi-ld-kpi
 {
-  "id": "urn:ngsi-ld:KeyPerformanceIndicator:bbsk.sk:bbsk-kpi:emisie-tuhe-okres-brezno",
+  "id": "urn:ngsi-ld:KeyPerformanceIndicator:hel.fi:bbsk-kpi:emisie-tuhe-okres-brezno",
   "type": "KeyPerformanceIndicator",
   "name": { "type": "Property", "value": "emisie-tuhe-okres-brezno" },
   "currentValue": {
@@ -153,11 +163,11 @@ is a different case and section 5 gives it a value of its own.
   },
   "derivedFrom": {
     "type": "Relationship",
-    "object": "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kraj:bbsk-kraj"
+    "object": "urn:ngsi-ld:Endpoint:hel.fi:bbsk-kraj:bbsk-kraj"
   },
   "computedBy": {
     "type": "Relationship",
-    "object": "urn:ngsi-ld:Pipeline:bbsk.sk:bbsk-kpi:emisie-tuhe"
+    "object": "urn:ngsi-ld:Pipeline:hel.fi:bbsk-kpi:emisie-tuhe"
   },
   "updatedAt": {
     "type": "Property",
@@ -179,7 +189,7 @@ zero. A zero is a measurement, and a dashboard cannot tell it apart from a real 
 
 ```json ngsi-ld-kpi
 {
-  "id": "urn:ngsi-ld:KeyPerformanceIndicator:bbsk.sk:bbsk-kpi:emisie-tuhe-okres-poltar",
+  "id": "urn:ngsi-ld:KeyPerformanceIndicator:hel.fi:bbsk-kpi:emisie-tuhe-okres-poltar",
   "type": "KeyPerformanceIndicator",
   "name": { "type": "Property", "value": "emisie-tuhe-okres-poltar" },
   "currentValue": { "type": "Property", "value": "not measured" },
@@ -193,11 +203,11 @@ zero. A zero is a measurement, and a dashboard cannot tell it apart from a real 
   },
   "derivedFrom": {
     "type": "Relationship",
-    "object": "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kraj:bbsk-kraj"
+    "object": "urn:ngsi-ld:Endpoint:hel.fi:bbsk-kraj:bbsk-kraj"
   },
   "computedBy": {
     "type": "Relationship",
-    "object": "urn:ngsi-ld:Pipeline:bbsk.sk:bbsk-kpi:emisie-tuhe"
+    "object": "urn:ngsi-ld:Pipeline:hel.fi:bbsk-kpi:emisie-tuhe"
   },
   "updatedAt": {
     "type": "Property",
