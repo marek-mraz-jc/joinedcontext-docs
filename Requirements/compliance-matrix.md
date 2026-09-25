@@ -279,6 +279,7 @@ Generated 2026-09-25 from: `docs` 36beff0, `conformance` 2d6df0f, `deployment` f
 | **AP-133** | [S] | tested | ci-full | platform `crates/jcctl/tests/apisix_tests.rs::every_app_kind_gets_a_route_with_the_edge_login`, platform `crates/jcctl/tests/apisix_tests.rs::every_app_route_is_bound_to_its_own_host`, platform `crates/jcctl/tests/apisix_tests.rs::a_static_app_is_rewritten_to_its_folder_and_a_pod_app_is_not`, and 1 more |
 | **AP-134** | [S] | tested | ci-full | platform `crates/jcctl/tests/validate_tests.rs::an_app_egress_of_every_address_or_a_host_name_is_refused` |
 | **AP-135** | [S] | open |  |  |
+| **AP-136** | [H] [S] | tested | fast ci | portal `ui/tests/apps_catalog.test.tsx::a published app carries the probe's verdict in words, a preview and an unchecked app none (AP-136)`, portal `src/api/validation.rs::an_app_is_green_when_it_passed_red_with_the_reason_when_it_failed`, portal `ui/tests/app_probe.test.ts::passes an App that read data in both places and turned a stranger away`, and 1 more |
 
 ### CC — Configuration as code
 
@@ -442,6 +443,7 @@ Generated 2026-09-25 from: `docs` 36beff0, `conformance` 2d6df0f, `deployment` f
 | **DM-61** | [S] | tested | ci-full, fast ci | deployment `tests/test_banskabystrica_open_data.py::test_every_feed_writes_its_one_type_and_every_record_it_can`, deployment `tests/test_banskabystrica_open_data.py::test_every_entity_is_one_the_gateway_accepts`, deployment `tests/test_banskabystrica_open_data.py::test_every_id_is_the_four_segment_urn_of_the_space_and_unique`, and 105 more |
 | **DM-62** |  | tested | ci-full | platform `crates/jcctl/tests/model_merge_tests.rs::merge_keeps_every_iri_and_writes_out_the_ones_a_default_prefix_gave`, platform `crates/jcctl/tests/model_merge_tests.rs::merge_refuses_a_clash_naming_both_models`, platform `crates/jcctl/tests/model_merge_tests.rs::merge_refuses_a_default_prefix_nobody_declares_and_an_empty_list`, and 12 more |
 | **DM-63** | [S] | tested | ci-full | portal `tests/organization_datamodels_tests.rs::the_list_holds_only_the_models_the_caller_may_read`, portal `tests/organization_datamodels_tests.rs::search_matches_name_space_and_class_and_is_bounded`, portal `tests/organization_datamodels_tests.rs::a_search_lists_matching_smart_data_models`, and 1 more |
+| **DM-70** | [H] [S] | tested | fast ci | portal `ui/tests/space_quality.test.tsx::says the share valid, the rules failing and the freshness in one line (DM-70)`, portal `src/api/quality.rs::example_ids_are_only_for_whoever_reads_the_entities`, portal `src/quality.rs::a_target_is_the_interval_and_its_slack`, and 6 more |
 
 ### DS — Data space connector
 
@@ -804,6 +806,7 @@ Generated 2026-09-25 from: `docs` 36beff0, `conformance` 2d6df0f, `deployment` f
 | **OPS-50** | [H] | built |  | `joinedcontext-portal/ui/src/pages/apps/ActionStep.tsx` |
 | **OPS-51** | [H] | tested | ci-full, fast ci | deployment `tests/test_portal_readiness.py::test_readiness_reads_the_ready_route_and_liveness_the_health_route`, portal `src/ops/drafts.rs::a_notice_from_another_replica_is_delivered_and_its_own_is_not`, portal `src/reconciler/daemon.rs::a_stream_that_writes_nothing_and_only_errors_is_said_to_be_failing`, and 19 more |
 | **OPS-52** | [S] | tested | fast ci | deployment `tests/test_security_txt.py::test_dev_answers_security_txt_on_every_host_with_the_owners_contact`, deployment `tests/test_security_txt.py::test_the_dev_file_is_valid_for_a_month_and_at_most_a_year`, deployment `tests/test_security_txt.py::test_a_production_render_without_a_contact_stops` |
+| **OPS-53** | [H] [S] | tested | fast ci | portal `ui/tests/organization_health.test.tsx::shows every check with its state, counts, trend and the tasks its failures filed (OPS-53)`, portal `ui/tests/organization_health.test.tsx::tells anybody who is not an administrator who can see it, and fetches nothing (OPS-53)` |
 
 ### PF — Platform invariants
 
