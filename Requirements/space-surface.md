@@ -104,9 +104,10 @@ for the **SP-01…SP-22** family.
 ## 4. Per-space MCP instances
 
 - **SP-14** — One MCP service serves all spaces; `/cs/{space}/mcp` is a
-  per-space instance. The space is determined by the path (and, for
-  authenticated callers, confirmed by the token per SP-06), never by a
-  tool argument. A client on one instance physically cannot reach
+  per-space instance. The space is determined by the path or by the
+  `endpoint` argument of the hub (EP-87, ADR-N-025), and, for
+  authenticated callers, confirmed by the token per SP-06; never by any
+  other tool argument. A client on one instance physically cannot reach
   another space.
 - **SP-15** — The tool surface MUST be rendered from the caller's
   effective permissions (R16, AuthZEN shape per R51): a generic tool

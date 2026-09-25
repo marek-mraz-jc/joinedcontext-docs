@@ -5,8 +5,8 @@ title: "ADR-N-025: One MCP Connector Over Several Endpoints"
 
 # ADR-N-025: One MCP Connector Over Several Endpoints
 
-Date: 2026-09-21  
-Status: Proposed  
+Date: 2026-09-25  
+Status: Accepted  
 Decision Makers: product owner
 
 ## 1. Context
@@ -81,15 +81,15 @@ In each case the Endpoint's PDP decides the call with that token as it does toda
 - **The reconciler** renders `mcp-hub` and one `endpoint:{slug}` client scope per MCP-enabled Endpoint.
 - **The Portal** shows one "Connect all" URL beside the per-Endpoint URLs in the Endpoints view.
 - **Conformance** gains an isolation suite for the hub: the rows of section 3, and the per-Endpoint suite run again through the hub with `endpoint` set.
-- **Requirements** land when this ADR is accepted (section 7). Until then the per-Endpoint URL is the only Data MCP, as SP-14 says today.
+- **Requirements** landed on acceptance (section 7). Until the hub is built (T-2490), the per-Endpoint URL is the only Data MCP.
 
 ## 7. Requirements
 
-Wording to land on acceptance, in their families:
+Proposed 2026-09-21, accepted by the owner on 2026-09-25 as proposed: the connect-time `endpoint:{slug}` scopes are the allow-list, a per-subject bucket across Endpoints sits on top of each Endpoint's own, and no call ever joins Endpoints. Landed in their families:
 
 - `Requirements/space-surface.md`, SP-14 extended: the space is determined by the path **or by the `endpoint` argument of the hub**, confirmed by the token, and never by any other tool argument.
-- `Requirements/endpoints.md`, a new EP requirement: the gateway MUST serve a hub at `/api/mcp` whose `list_endpoints` answers only the Endpoints the token may read through it, and whose every data tool takes one required `endpoint` from that list and runs as a call to that Endpoint's own MCP (EP-24, EP-25).
-- `Requirements/endpoints.md`, a new EP requirement [S]: a hub token MUST reach only the Endpoints its `endpoint:{slug}` scopes name, or the one Endpoint its audience names (PF-45, PF-46).
+- `Requirements/endpoints.md`, **EP-87**: the gateway MUST serve a hub at `/api/mcp` whose `list_endpoints` answers only the Endpoints the token may read through it, and whose every data tool takes one required `endpoint` from that list and runs as a call to that Endpoint's own MCP (EP-24, EP-25).
+- `Requirements/endpoints.md`, **EP-88** [S]: a hub token MUST reach only the Endpoints its `endpoint:{slug}` scopes name, or the one Endpoint its audience names (PF-45, PF-46).
 - `Requirements/agents.md`, AG-05 extended as SP-14.
 
 ## Related
@@ -97,5 +97,5 @@ Wording to land on acceptance, in their families:
 - [ADR-N-021](adr-n-021-one-operation-registry-behind-ui-api-assistant-and-mcp.md) — the Portal's Configuration MCP, which this does not touch.
 - [Architecture/07-agents-and-mcp.md](../Architecture/07-agents-and-mcp.md) — §1 and §2, the Data MCP and its catalogue; §7, connecting from a phone.
 - [Requirements/space-surface.md](../Requirements/space-surface.md) — SP-14…SP-20.
-- [Requirements/endpoints.md](../Requirements/endpoints.md) — EP-24, EP-25.
+- [Requirements/endpoints.md](../Requirements/endpoints.md) — EP-24, EP-25, EP-87, EP-88.
 - [Requirements/agents.md](../Requirements/agents.md) — AG-04, AG-05.

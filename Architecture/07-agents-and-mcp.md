@@ -59,7 +59,7 @@ Operates over platform configuration and lifecycle management (CC-45, AG-60, ADR
 
 The catalogue is the CIM 009 read surface, one tool per operation, so an agent can ask anything a REST client can ask and nothing more (AG-29, AG-84). Every tool is scoped to the one Context Space its URL names; a space, tenant or slug offered as a tool argument is refused rather than ignored (AG-05).
 
-A tool's arguments and its handler are functions of the Endpoint the URL names, never of a server-wide "current endpoint": the façade keeps no such state (SP-19), so one connector may later serve several Endpoints and let the agent name which one it reads without anything built today having to change. [ADR-N-025](../Decisions/adr-n-025-one-mcp-connector-several-endpoints.md) (proposed) is that connector: a hub at `/api/mcp` whose tools take a required `endpoint` argument, each call run as that Endpoint's own call; until it is accepted and built, the per-Endpoint URL is the only Data MCP.
+A tool's arguments and its handler are functions of the Endpoint the URL names, never of a server-wide "current endpoint": the façade keeps no such state (SP-19), so one connector may later serve several Endpoints and let the agent name which one it reads without anything built today having to change. [ADR-N-025](../Decisions/adr-n-025-one-mcp-connector-several-endpoints.md) (accepted) is that connector: a hub at `/api/mcp` whose tools take a required `endpoint` argument, each call run as that Endpoint's own call, bounded by the token's `endpoint:{slug}` scopes and a per-subject bucket across Endpoints (EP-87, EP-88); until it is built, the per-Endpoint URL is the only Data MCP.
 
 | CIM 009 operation | REST | Tool | Annotations | Arguments |
 |---|---|---|---|---|
@@ -434,6 +434,6 @@ While it works, the person watches. The assistant edits the draft the open form 
 ## Related
 
 - [Architecture/16](16-apps-on-demand.md) — referenced above.
-- [ADR-N-025](../Decisions/adr-n-025-one-mcp-connector-several-endpoints.md) — one connector over several Endpoints (proposed).
+- [ADR-N-025](../Decisions/adr-n-025-one-mcp-connector-several-endpoints.md) — one connector over several Endpoints (EP-87, EP-88).
 - [01-overview](../Architecture/01-overview.md) — where this chapter sits in the whole.
 - [00-index](../Requirements/00-index.md) — the normative requirements behind it.
