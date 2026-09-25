@@ -238,6 +238,12 @@ The Context Gateway keeps the endpoints in an in-memory map (`ArcSwap<HashMap<St
 
 An Endpoint MAY set `callerRole: true` and list `roles[]` of `{name, subjects}`; a caller it admits holds `endpoint:{project}/{endpoint}` and the matching `endpoint:{project}/{endpoint}/{role}` for that request only, which is how an application's grants stay inside the application (AP-96, AP-97, [16 §12](16-apps-on-demand.md#12-roles-of-an-application)).
 
+### Stopping an Endpoint
+
+An Endpoint has no lifecycle (EP-89, decided 2026-09-25 in T-2286). You stop one by deleting it: the Portal's Endpoint page says so and opens the same deletion as its menu, a red `Change` an approver takes. Once the Change lands, the reaper drops the slug from the table and the gateway answers `404 ResourceNotFound`, the answer an unknown slug gets (`resolver.resolve(slug).ok_or_else(not_found)` in `app.rs`). The slug is not minted again (EP-75), so a stopped address never starts answering something else.
+
+A pause that keeps the address and refuses it was considered and left out: `status.phase` cannot carry it, because the platform writes status and strips it from a manifest on the way in (MF-04), so a pause needs a spec field. When a department asks for one, it becomes `spec.enabled: false` after `Pipeline.spec.enabled` (PL-40): every route refused `503` before any Policy runs, and turning it back on taking the lane publishing took (EP-76).
+
 ---
 
 ## 3a. The Endpoint's own DCAT-AP record
@@ -604,11 +610,41 @@ contains, so every read the specification defines answers over the union of the 
 ```text
                     Endpoint  hel-open  (public or token)
                         │
-                 Context Space  helsinki        ← holds only registrations
+                 Context Space  hub             ← holds only registrations
                     ┌───┴────┐
      CSR transport  │        │  CSR air-quality
                     ▼        ▼
           Space transport   Space air-quality   ← hold the entities
+```
+
+The hub is two manifests beside its registrations: the space, and the Endpoint that serves it.
+`transport` above registers into this space, and a second registration does the same for
+`air-quality`.
+
+```yaml
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSpace
+metadata:
+  name: hub
+  namespace: helsinki
+  title: "Helsinki now"
+  description: "No entities of its own: registrations to transport and air-quality"
+spec:
+  isSandbox: false
+---
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: hel-open
+  namespace: helsinki
+spec:
+  contextSpaceRef: hub
+  slug: ljjrcgyemyy5t23ps25gcsfyazyqd5yc
+  audience: public
+  policyRef: urn:ngsi-ld:Policy:hel.fi:hub:public-read
+  enabledRepresentations:
+    - ngsi-ld
+    - mcp
 ```
 
 Nothing about the hub is a new code path. The gateway applies the hub Endpoint's policy set and
