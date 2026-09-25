@@ -17,7 +17,7 @@ Family **AG** (AG-01…AG-85; AG-82 is unassigned). Owning chapters: [Architectu
 ## 2. Dual MCP Surfaces
 
 - **AG-04** [A] — The platform MUST expose two separate, strictly decoupled Model Context Protocol (MCP) Streamable HTTP surfaces: the Data MCP Façade and the Configuration MCP.
-- **AG-05** [A] — The Data MCP Façade MUST determine the active Context Space exclusively from the URL path or verified token audience, rejecting space names supplied as arbitrary tool arguments (SP-14).
+- **AG-05** [A] — The Data MCP Façade MUST determine the active Context Space exclusively from the URL path or the hub's `endpoint` argument (EP-87), confirmed by the verified token audience, rejecting space names supplied as any other tool argument (SP-14).
 - **AG-06** [A] — The Configuration MCP MUST reject direct write operations to the broker, gateway, or database, submitting all proposed modifications as Git merge requests (CC-46).
 
 ## 3. Tool Annotations and Elicitation Protocol
