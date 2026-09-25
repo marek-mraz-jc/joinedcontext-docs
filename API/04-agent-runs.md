@@ -706,6 +706,14 @@ is created: the person submits the prefilled form through the ordinary change fl
 may not `propose` an `Endpoint` here gets `403` (PF-50); `audience` defaults to `project-list`,
 never to `public`.
 
+`access` (`read`, `update` or `full`, AP-132) renders the endpoint Build an app proposes inline.
+`audience` must then be `project-list` naming this project alone (both default to that). A `read`
+rendering carries no policy and no group: the person reads through the endpoint with the grants
+they hold on the space. `update` and `full` need `entityTypes` and carry one Policy
+`{name}-{project}` granting the preset's operations on those types to the project's group, and
+`lane` is then the lane of the whole Change, red for a Policy. The builder proposes the rendering as one Change of its
+own and starts the run once the endpoint is served.
+
 ## 9. Agent Access
 
 What an assistant or agent may do is the intersection of its `AgentProfile`'s `spec.access` block and the permissions of the person who starts the run, evaluated at every call (AG-70). This route shows that intersection to the signed-in person (UI-56).
