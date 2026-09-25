@@ -82,6 +82,7 @@ Family **PF** (PF-01…PF-84). Owning chapters: [Architecture/03-domain-model.md
 - **PF-39** — Direct writers MUST reach context data exclusively through the Context Gateway, with broker and database listeners blocked from external network reachability.
   > Note: The broker MQTT bridge authenticates devices with ServiceAccount credentials and enforces the same Policy set as HTTP writes.
 - **PF-40** [H] — The Portal MUST provide a dedicated management interface listing every ServiceAccount, active credentials, request counts, and rotation actions.
+- **PF-104** [S][A] — No answer a model reads MUST carry a credential. Minting or rotating an API key over the Portal MCP (`jc_service_account_key_mint`, `jc_service_account_key_rotate`) MUST answer a one-time claim instead of the token: a link into the Portal, bound to the person who asked, expiring after 15 minutes and spent by its first use. The key MUST be minted only when that person opens the claim in the Portal and confirms it, so the token reaches the person's screen and nowhere else (owner decision 2026-09-24, T-2359).
 
 ## 10. Entity identifiers and organization domain
 
@@ -217,6 +218,7 @@ Decided in [ADR-N-035](../Decisions/adr-n-035-organization-policies-and-limits.m
 | PF-84 | [Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes](../Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
 | PF-85…PF-89 | [Architecture/06-configuration-as-code.md#1-repository-layout-cc-08-cc-85](../Architecture/06-configuration-as-code.md#1-repository-layout-cc-08-cc-85) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | PF-90…PF-95 | [Architecture/12-identity-and-access.md](../Architecture/12-identity-and-access.md), [ADR-N-031](../Decisions/adr-n-031-people-groups-and-app-groups.md) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
+| PF-104 | [Architecture/12-identity-and-access.md#3-service-identities](../Architecture/12-identity-and-access.md#3-service-identities) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 | PF-96…PF-103 | [Architecture/03-domain-model.md#project](../Architecture/03-domain-model.md#project), [ADR-N-035](../Decisions/adr-n-035-organization-policies-and-limits.md) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 
 ## Related

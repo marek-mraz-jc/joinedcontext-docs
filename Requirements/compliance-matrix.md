@@ -904,6 +904,7 @@ Generated 2026-09-25 from: `docs` 3f0000b, `conformance` 2d6df0f, `deployment` 6
 | **PF-101** | [H] | open |  |  |
 | **PF-102** | [H] | open |  |  |
 | **PF-103** | [S] | open |  |  |
+| **PF-104** | [S] [A] | open |  |  |
 
 ### PL — Pipelines
 
