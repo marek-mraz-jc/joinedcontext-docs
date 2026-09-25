@@ -172,9 +172,13 @@ one or more manifests; *flow*, a blueprint instance as shown to [H] users.
   UI can re-open any flow as the form that created it (CC-32).
 - **CC-28** — The blueprint library MUST ship with the platform's common
   flows at minimum: threshold alert (subscription → notification
-  channel), data-source onboarding (pipeline + seed entities +
-  registration), dataset publication (registration + open-data view),
-  and cross-city sharing (CSR pair per CC-14).
+  channel), data-source onboarding (data source + pipeline +
+  registration; the pipeline's first run seeds the space, because seed
+  entities are not manifests, CC-72), dataset publication
+  (registration + open-data view), and cross-city sharing (CSR pair per
+  CC-14). The platform publishes the library and an instance follows it
+  through a `SyncSource`, so a new version arrives as a reviewable change
+  (CC-26).
 
 ## 5. User application
 
@@ -361,8 +365,8 @@ one or more manifests; *flow*, a blueprint instance as shown to [H] users.
 ## 11. Interaction lanes and sandboxes
 
 - **CC-63** — The plane MUST implement risk-classed lanes bound to
-  `riskClass` (CC-59): *green*, merge request auto-approved by a
-  policy bot; *yellow*, one domain approver (CC-34); *red*
+  `riskClass` (CC-59): *green*, merge request merged by the Portal
+  as it is proposed (API/01 §13); *yellow*, one domain approver (CC-34); *red*
   (cross-domain, public exposure, federation edges, a standing egress
   of context data to an address the manifest names, any deletion) —
   the full approval chain. Lane assignment MUST be enforced in CI and
