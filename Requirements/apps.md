@@ -28,7 +28,7 @@ Requirement family **AP-01…AP-87, AP-90…AP-129** for AI-generated, purpose-b
 ## 3. Build and supply chain
 
 - **AP-11** — The build lane (AP-80) MUST build apps from source (no prebuilt bundles or images accepted), produce an SBOM, run dependency and secret scanning, and fail on any referenced network host other than the app's own endpoint and the OIDC issuer.
-- **AP-12** — Static builds MUST be served with Subresource Integrity and a CSP whose `connect-src` is limited to `'self'` (the platform host) and whose `frame-ancestors` defaults to `'none'`; the Portal MAY relax `frame-ancestors` for embedding when `spec.embeddable: true`.
+- **AP-12** — Static builds MUST be served with Subresource Integrity and a CSP whose `connect-src` is limited to `'self'` (the platform host) and whose `frame-ancestors` defaults to the Portal's own origin, so the App opens inside the Portal and nowhere else (AP-122); the Portal MAY add the origins of `spec.csp.frameAncestors` for embedding elsewhere when `spec.embeddable: true`.
 - **AP-13** — Service app images MUST be signed and pinned by digest in the rendered Deployment; `latest` tags MUST be rejected in CI.
 - **AP-13a** — The digest the reconciler deploys MUST be `App.status.build` (`digest`, `commit`, `sdkVersion`, `builtAt`), written back by the build lane in the commit that publishes the artifact; an App without it MUST render no pod, and the `joinedcontext.com/image` and `joinedcontext.com/module` annotations MUST be refused with `400` on every write door and on import, so a hand-typed digest never reaches the host (AP-13, AP-18, AP-72, AP-73).
 
