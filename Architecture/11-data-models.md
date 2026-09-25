@@ -268,7 +268,7 @@ and the gateway:
 | `rule` | Where | Refused when |
 |---|---|---|
 | `range-not-a-class` | model | a Relationship's range is no class of the model or an import |
-| `class-range-not-relationship` | model | a slot has a class range and another `ngsi_ld_kind` |
+| `class-range-not-relationship` | model | a slot has a class range and is neither a Relationship nor a nested value (`JsonProperty` or `inlined: true`) |
 | `primitive-range` | model | a Relationship declares a primitive range other than `uriorcurie`, or an enum |
 | `inverse-missing` | model | a class-range Relationship names no `inverse`, or names a slot that does not exist |
 | `inverse-not-reciprocal` | model | the inverse names another slot back, or sits on a class other than the range |
