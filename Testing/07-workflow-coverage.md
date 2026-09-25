@@ -97,7 +97,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | step | unit | API | mocked UI | live journey | assistant |
 |---|---|---|---|---|---|
 | `upload` | `joinedcontext-portal/src/api/import.rs` | `tests/import_api_tests.rs` | `ui/e2e/import.spec.ts` | `ui/e2e/live/import.spec.ts` › "a steward checks a bundle, reads what it would do, proposes it, and the rejected import leaves nothing" | `jc_project_import` |
-| `from-git` | `joinedcontext-portal/src/api/import_git.rs` | `tests/project_import_git_tests.rs` | `ui/tests/import_wizard.test.tsx` | owed: T-2729 | `jc_project_import` |
+| `from-git` | `joinedcontext-portal/src/api/import_git.rs` | `tests/project_import_git_tests.rs` | none: the Portal has no Git import screen; `jcctl` and `jc_project_import` send `?format=git` | `ui/e2e/live/import-git.spec.ts` › "a steward checks a project's Git export as a new project, and nothing is created" | `jc_project_import` |
 | `refused-no-permission` | `joinedcontext-portal/src/api/import.rs` | `tests/edge_import_mutate_tests.rs` | `ui/tests/import_wizard.test.tsx` | `ui/e2e/live/import.spec.ts` › "a viewer meets Propose disabled with its reason, and the door refuses the same bundle" | `jc_project_import` |
 | `refused-secret` | `joinedcontext-portal/src/api/import.rs` | `tests/import_credential_needs_tests.rs` | `ui/e2e/import.spec.ts` | `ui/e2e/live/import.spec.ts` › "a credential written into a bundle is refused at the door, before a report, and never echoed" | `jc_project_import` |
 
@@ -376,7 +376,7 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 
 The owed cells name open tasks, and `gate_workflows` holds their count: it may shrink and never grow.
 
-- **T-2729**: live journeys for an import from Git, the data model editor, CKAN status (with T-2726) and the assistant page.
+- **T-2729**: live journeys for the data model editor, CKAN status (with T-2726) and the assistant page.
 - **T-2746**: the readiness walk creates a person and a group, a project, a key, and walks the steps of people, sync sources, drift and approvals no other journey takes.
 - **T-2732**: assistant tools for people, organization settings, project copy, a pipeline's rejected rows, an app rebuild and write, and drift.
 - **T-2726**: the one-step Publish dataset from an endpoint, its live journey and its tool.
