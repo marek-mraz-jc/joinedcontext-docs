@@ -5,7 +5,7 @@ title: "Architecture Decision Register"
 
 # Architecture Decision Register
 
-This register records all foundational Architecture Decision Records (ADRs) governing the next-generation federated digital twin platform (`ADR-N-001` through `ADR-N-034`), along with explicit status mapping of legacy decision records from preceding platform generations.
+This register records all foundational Architecture Decision Records (ADRs) governing the next-generation federated digital twin platform (`ADR-N-001` through `ADR-N-036`), along with explicit status mapping of legacy decision records from preceding platform generations.
 
 ## 1. Target Architecture Decisions (`ADR-N` Series)
 
@@ -44,6 +44,7 @@ This register records all foundational Architecture Decision Records (ADRs) gove
 | [ADR-N-032](adr-n-032-assistant-paths.md) | The Assistant Starts from Paths the Person Picks | **Accepted** | 2026-09-24 | The empty assistant offers paths as options; each path is a guided flow of options, data requests and actions that navigates the UI with prefill; each path narrows the agent's tools; free text is routed by choose_path; speed budgets per step. |
 | [ADR-N-033](adr-n-033-one-data-model-per-space.md) | A Context Space Has One LinkML Data Model, and Every Reference Is a Picker | **Accepted** | 2026-09-24 | One model per space, named by `spec.dataModelRef`, importing published models; `jcctl model merge` migrates; every form field naming a resource is a picker over what the caller may read. |
 | [ADR-N-034](adr-n-034-pipeline-workbench.md) | One Pipeline Workbench, and Only Validated Records Are Written | **Accepted** | 2026-09-25 | Six steps (source, sample, mapping, mapped output, validation, target), each an operation every actor calls; the runner validates each record against the space's model and sends a refused one to a rejected list; one outcome line per record makes the runs and their log. |
+| [ADR-N-035](adr-n-035-organization-policies-and-limits.md) | Every Organization Policy and Limit Is a Field of the Organization | **Accepted** | 2026-09-25 | `Organization.spec.policies` and `spec.limits` beside `spec.projects` hold every organization-wide choice and number, each with a default, an operator's bound and one enforcer; changes are red lane for an `org-admin`, lowering never deletes, and every refusal names the limit and who can change it. |
 | [ADR-N-036](adr-n-036-three-app-shapes.md) | Three App Shapes, Each with a UI and a Complete Template | **Accepted** | 2026-09-25 | `spec.class` is `ui` (the default, static React on the SDK with serverless functions), `ui-rust` (an axum server) or `ui-node` (a Node.js server, only when asked); `service` is removed and every App has a UI; one template per shape pins every library and its runner image caches every lockfile entry, so a build reaches no registry; CI holds each shape to a 2-minute first build and a 30-second rebuild. |
 
 ## 2. Status of Preceding Decision Records
@@ -135,5 +136,6 @@ The following table explicitly categorizes the disposition of all historical dec
 - [ADR-N-032](adr-n-032-assistant-paths.md) — referenced above.
 - [ADR-N-033](adr-n-033-one-data-model-per-space.md) — referenced above.
 - [ADR-N-034](adr-n-034-pipeline-workbench.md) — referenced above.
+- [ADR-N-035](adr-n-035-organization-policies-and-limits.md) — referenced above.
 - [ADR-N-036](adr-n-036-three-app-shapes.md) — referenced above.
 - [01-overview](../Architecture/01-overview.md) — the architecture these decisions shape.
