@@ -38,7 +38,7 @@ The dataset's metadata is the DCAT-AP record the Endpoint already answers with (
 | `license_id` | `dct:license`, else `spec.publish.ckan.license` | a register id such as `cc-by` (CC-BY 4.0); an IRI goes to the `license_url` extra instead, because CKAN's register holds ids |
 | `private` | `spec.audience` | private unless the Endpoint is `public`, closed by default |
 | `url` | the Endpoint's public URL | the dataset points back at the surface it describes |
-| `tags` | `dcat:keyword` | |
+| `tags` | `dcat:keyword` | one tag per distinct keyword in any language, written the way CKAN holds a tag: a character outside letters, digits, space, `-`, `_` and `.` becomes a space (`P+R` is the tag `P R`), spaces collapse, the tag is cut to 100 characters, and a keyword shorter than 2 characters after that is no tag; the record keeps the keyword as written (EP-63, T-2982) |
 | extra `identifier` | `dct:identifier` | |
 | extra `language` | `dct:language` | |
 | extra `frequency` | `dct:accrualPeriodicity` | what the dataset page shows as the update cadence |
