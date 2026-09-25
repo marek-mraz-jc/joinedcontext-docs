@@ -176,8 +176,10 @@ The reconciler, as a CLI for an operator and as the library the Portal embeds.
 |---|---|---|---|
 | `JC_ENVIRONMENT` | — | no | The overlay `JC_ENVIRONMENT` names, as `validate` and `plan` read it (CC-73). |
 | `JC_GATEWAY_URL` | — | no | `JC_GATEWAY_URL` is the Context Gateway this run writes through, and `JC_TOKEN_FILE` the file holding the reconciler's ServiceAccount token — a path to a secret, projected by the deployment and never a value in the environment. |
+| `JC_IDM` | — | no | `JC_IDM` is the identity provider's issuer when `--idm` is not given, e.g. `https://idm.<domain>/realms/<realm>`. |
 | `JC_MODEL_TOOLS_URL` | — | no | Where Model Tools is, when `--url` names no address: `JC_MODEL_TOOLS_URL`. |
-| `JC_TOKEN_FILE` | — | a path to one | `JC_GATEWAY_URL` is the Context Gateway this run writes through, and `JC_TOKEN_FILE` the file holding the reconciler's ServiceAccount token — a path to a secret, projected by the deployment and never a value in the environment. |
+| `JC_SERVER` | — | no | The Portal the client verbs talk to: `--server` or `JC_SERVER`, with the token from `--token-file` or `JC_TOKEN_FILE` (API/03 §2a). |
+| `JC_TOKEN_FILE` | — | a path to one | The Portal the client verbs talk to: `--server` or `JC_SERVER`, with the token from `--token-file` or `JC_TOKEN_FILE` (API/03 §2a). |
 
 ## 6. Injected into a workload
 
