@@ -2245,6 +2245,130 @@ GET    /api/v1/organization/setup                           the steps and the op
 - The route needs `approve` on `Organization` at organization scope, which `org-admin` holds (PF-56);
   anyone else gets `403`.
 
+## 26. Validation health (OPS-53)
+
+The validation checks run outside the Portal, on their own schedules: deployment drift and the
+supply chain, the conformance suites, the authorization matrix, the performance budgets, the
+restore drill, the live sweep. Each writes a summary for `tasks/file-failures`, and
+`joinedcontext-deployment/scripts/publish-health.py` turns that summary into one digest, the key
+`{check}.json` of the ConfigMap `jc-validation-results`. The Portal mounts that ConfigMap
+(optional, so an installation that publishes nothing still starts), names the directory in
+`JC_HEALTH_DIR`, and reads it on every request:
+
+```text
+GET /api/v1/organization/health     every published check with its state → 200
+```
+
+```json
+{
+  "checks": [
+    {
+      "check": "deployment",
+      "state": "red",
+      "result": {
+        "check": "deployment",
+        "at": "2026-09-25T08:00:00Z",
+        "everyHours": 1,
+        "run": "dev-validate 2026-09-25T08:00:00Z",
+        "counts": { "pass": 41, "fail": 1, "error": 0, "skip": 3 },
+        "failures": [
+          { "key": "images/portal", "verdict": "fail", "title": "portal runs an unsigned image", "task": "T-2901" }
+        ],
+        "history": [
+          { "at": "2026-09-25T07:00:00Z", "pass": 42, "fail": 0, "error": 0, "skip": 3 }
+        ]
+      }
+    }
+  ]
+}
+```
+
+- A digest is what the publisher writes and nothing more: the check's name, when it ran, how
+  often it runs, the run's label, the verdict counts, at most 50 failing or erroring results
+  (`key`, `verdict`, `title`, and the open task that `check: {check}/{key}` names, when there is
+  one) and at most 200 history points of the last seven days. It never carries a result's
+  `detail` or `evidence`: those stay in the summary, beside the task. A check whose passing keys
+  a page shows, as `apps` does, also lists them in `passed` (at most 500, each at most 300
+  characters); every other check leaves it empty.
+- `result` is the digest the publisher wrote. `state` is the Portal's: `stale` when the last run
+  is older than twice `everyHours` (1 to 744, a month), whatever it found; otherwise `red` when
+  it has a `fail` or an `error` and `green` when not. A file that is not such a digest (larger
+  than 256 KiB, an unknown field, more than 50 failures or 200 points, a text over 300
+  characters, a task that is not a task id, a `check` that differs from its file name) is
+  `unreadable` and has no `result`. Rows come in the order of their names.
+- Only an administrator of the organization reads it: a caller whose bindings at organization
+  scope grant `approve` and `delete` on `RoleBinding` (PF-03). Anyone else signed in gets `403`,
+  nobody signed in `401`.
+- Without `JC_HEALTH_DIR`, or before anything is published, the answer is `{"checks": []}`.
+
+### The chip of an App (AP-136)
+
+The probe publishes the check `apps`, one key `{project}/{name}` per published App. The Apps
+list and the App's page read one project's share of it:
+
+```text
+GET /api/v1/projects/{project}/app-checks     the last check of each App of the project → 200
+```
+
+```json
+{
+  "checks": [
+    { "name": "air-quality", "state": "green", "at": "2026-09-25T09:00:00Z" },
+    { "name": "helsinki-alerts", "state": "red", "at": "2026-09-25T09:00:00Z", "reason": "no row read in 60 s" }
+  ]
+}
+```
+
+- `state` is `green` for a key in `passed`, `red` for a key in `failures` (`reason` is its title),
+  and `amber` for either when the digest is stale; an App the last run did not check has no
+  row. An unreadable or absent digest answers `{"checks": []}`.
+- Whoever reads `App` in the project gets the rows; a project the caller may not read is `404`,
+  a caller without `read` on `App` gets `403`, nobody signed in `401`.
+
+## 27. Data quality of a space (DM-70)
+
+Once a day the leading Portal replica reads every entity of every space that names a model, as
+its own client through the space surface, and holds it to the model the way a pipeline's
+validation stage does (PL-59). The last result stays in memory until the next run replaces it;
+a run that fails keeps the one before.
+
+```text
+GET /api/v1/projects/{project}/spaces/{space}/quality     the last run's report → 200
+```
+
+```json
+{
+  "observedAt": "2026-09-25T02:00:00Z",
+  "checked": 1200,
+  "invalid": 16,
+  "truncated": false,
+  "rules": [
+    { "rule": "sh:minCount", "path": "name", "count": 12, "examples": ["urn:ngsi-ld:BikeStation:hel.fi:bikes:001"] }
+  ],
+  "freshness": [
+    { "pipeline": "bikes-feed", "type": "BikeHireDockingStation", "newest": "2026-09-25T01:58:00Z", "targetSeconds": 600, "state": "fresh", "paused": false }
+  ]
+}
+```
+
+- Before the first run, and for a space that names no model, the answer is `{}`: no
+  `observedAt`, which the page reads as "not checked yet", never as "all valid".
+- `invalid` counts entities with at least one problem; `rules` counts problems by the SHACL
+  component and the path (`type` for a class the model does not declare, `id` for PF-42), most
+  frequent first. `truncated` is `true` when the space held more than the 20,000 entities a run
+  reads.
+- `freshness` has one row per pipeline whose output Endpoint writes into the space. `type` is the
+  pipeline's output type, empty when it names none (then the whole space counts). `targetSeconds`
+  is the pipeline's interval (its `period`, or what its cron `schedule` implies) plus the larger
+  of a twelfth of it and 600: 615 for a `15s` feed, 93600 (26 hours) for a daily run. It is
+  `null` for a pipeline its source drives or whose schedule this reading does not understand,
+  and that row is `untargeted`. `state` is `empty`
+  when the space holds no entity of the type, `stale` when the newest is older than the target,
+  `fresh` otherwise.
+- A project the caller may not read, or a space they may not read, is `404`. `examples` are
+  empty for a caller without `read` on `Entity` in the space; the counts are the same for
+  everyone who reads the space.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
