@@ -338,7 +338,7 @@ namespace `org` (MF-02) it is an **organization model** at `datamodels/{name}/` 
 repository, which every project of the organization reads and only red-lane Changes to that
 repository edit. In a project's namespace it is a **project model** at
 `projects/{p}/datamodels/{name}/`. A space's one model uses either kind by `import` at a pinned
-major, `org/{name}/v{major}` or `project/{name}/v{major}` (DM-75). A project shares its model
+major, `org.{name}.v{major}` or `project.{name}.v{major}` (DM-75). A project shares its model
 upwards only through a promotion that an organization-scope approver approves (DM-76), and a
 project bundle carries copies of the organization models it imports (MF-49, MF-50).
 
