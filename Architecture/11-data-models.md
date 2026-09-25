@@ -302,7 +302,7 @@ adds it to an entity it answers, because an attribute the entity does not hold w
 read a CIM 009 reader makes differ from the standard (the owner's read-surface rule).
 
 **Delete rules (DM-66, DM-71).** A delete of an entity that stored ends reference runs the rule
-of each such relationship in the delete's own transaction:
+of each such relationship first, as the gateway's own writes, and deletes the entity last:
 
 | Rule | A single stored end | A many-valued stored end (N:M) |
 |---|---|---|
@@ -312,6 +312,8 @@ of each such relationship in the delete's own transaction:
 
 A rule that would leave a `required` end empty is refused as `restrict` is. So a School whose
 Users all require one cannot be deleted by `set-null`: move them first, or declare `cascade`.
+A step that fails stops the delete: the entity stays, and the answer says how many referencing
+entities were already deleted or changed, so a person can finish or undo by hand.
 
 **Strict at the model (DM-68, DM-69).** The editor's diagnose, the Portal's save route and Model
 Tools' generation refuse the same list: a range that is not a class, a class range on a slot that
@@ -346,10 +348,22 @@ and the gateway:
 **Strict at every write (DM-70).** The gateway checks each write of an Endpoint against the
 space's model. It checks that each target exists in the space and has the range's type, that a
 single end holds one target, that a required end is present, and that a one-to-one or
-one-to-many target is not stored by another source. The last check is a unique constraint in the
-store, so two concurrent writes taking the same target end with one `201` and one `400`. A
-refusal is CIM 009's `BadRequestData` with the members `slot`, `rule` and `object`, and it never
-names an entity or a value the writer cannot read.
+one-to-many target is not stored by another source. The last check is a query of the space
+right before the write (the computed end's query of DM-67). A refusal is CIM 009's
+`BadRequestData` with the members `slot`, `rule` and `object`, and it never names an entity or a
+value the writer cannot read.
+
+**The race window (DM-70, DM-71).** The broker holds no relationship rules, by the owner's decision
+of 2026-09-25 (T-2858): its store stays CIM 009 and nothing else. So the two checks that would
+need a constraint in the store are reads followed by writes, and each has a window:
+
+| Check | What slips through the window | How long the window is |
+|---|---|---|
+| `target-taken` | two writes that name the same one-to-one or one-to-many target both succeed | from the gateway's query to the broker's write of the same request |
+| a delete rule | a reference written after the gateway read the referencing entities survives the delete and points at nothing | the time the gateway spends applying the rule to the referencing entities it found |
+
+Neither is reported by the write that caused it. Both leave data a later read can see: a
+target named by two sources, or a Relationship whose `object` is no entity of the space.
 
 **Models saved before these rules (DM-73).** The seeded models hold class-range Relationships
 without an inverse (`refDistrict: CityDistrict`). The editor shows the refusal and one fix: a
