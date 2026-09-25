@@ -265,6 +265,12 @@ Generated 2026-09-25 from: `docs` cc7c7e9, `conformance` 380549b, `deployment` 9
 | **AP-120** | [S] | open |  |  |
 | **AP-121** | [H] | open |  |  |
 | **AP-122** | [S] | open |  |  |
+| **AP-123** | [S] | open |  |  |
+| **AP-124** | [A] | open |  |  |
+| **AP-125** |  | open |  |  |
+| **AP-126** | [S] | open |  |  |
+| **AP-127** |  | open |  |  |
+| **AP-128** | [S] | open |  |  |
 
 ### CC — Configuration as code
 
