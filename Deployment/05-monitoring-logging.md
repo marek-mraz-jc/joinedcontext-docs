@@ -14,7 +14,7 @@ Platform components export Prometheus metrics on dedicated endpoints. When `glob
 | Component | Metric Endpoint | Key Exposed Metrics |
 |---|---|---|
 | **Context Gateway** | `:8080/metrics` | `jc_gateway_requests_total{route,method,endpoint,status}`<br/>`jc_gateway_request_duration_seconds{route,method,endpoint}`<br/>`jc_gateway_pdp_decisions_total{operation,verdict}`<br/>`jc_gateway_broker_request_duration_seconds{reached}` |
-| **Portal** | `:8080/metrics` | `jc_portal_requests_total{route,method,status}`<br/>`jc_portal_request_duration_seconds{route,method}`<br/>`jc_portal_changes_total{lane,kind}` |
+| **Portal** | `:8080/metrics` | `jc_portal_requests_total{route,method,status}`<br/>`jc_portal_request_duration_seconds{route,method}`<br/>`jc_portal_changes_total{lane,kind}`<br/>`jc_agent_answer_duration_seconds`<br/>`jc_agent_model_call_duration_seconds{kind}`<br/>`jc_agent_model_tokens_total{kind,part}`<br/>`jc_agent_runs_finished_total{kind,status}`<br/>`jc_agent_tool_steps_total{tool,status}` |
 | **Antares Broker** | `:8080/q/metrics` | `antares_http_requests_total`<br/>`antares_http_request_duration_seconds`<br/>`antares_notifications_sent_total`<br/>`antares_pg_pool_timeouts_total` |
 | **APISIX Standalone** | `:9091/apisix/prometheus/metrics` | `apisix_http_status`<br/>`apisix_latency_bucket`<br/>`apisix_bandwidth` |
 | **Bento Runners** | `:4195/metrics` | `bento_processor_latency`<br/>`bento_input_received_total`<br/>`bento_output_sent_total` |
@@ -44,6 +44,15 @@ Production environments must be monitored against the following performance budg
 - **Broker Entity Retrieval**: p95 ≤ 15ms, p99 ≤ 50ms for point queries (`GET /entities/{id}`).
 - **Configuration sync latency, green lane**: form save to live broker state ≤ 5 seconds.
 - **Pipeline Processing**: Ingestion to context availability ≤ 100ms for resident streams.
+- **Assistant answer**: a person's message to the assistant's answer p50 ≤ 3 s, p95 ≤ 8 s
+  (`jc_agent_answer_duration_seconds`, AG-72).
+
+The assistant's series (T-2771) carry no prompt text, entity value, project, person or secret:
+`kind` is a run kind (`conversation`, `application`, `dashboard`, `analysis`), `part` is
+`input`, `output` or `cached`, `status` a run's final status or a step's `ok`/`failed`, and `tool`
+one of the assistant's own tool names, any other name counted as `other`. A slow answer is traced
+to its step on the run's page, whose timeline reads the timestamped events of the run (API/04 §4);
+the Grafana dashboard *Assistant* draws the series.
 
 ## 3. Centralized Logging
 
@@ -134,6 +143,30 @@ alertGroups:
         labels: { severity: warning }
         annotations:
           summary: 'Portal 5xx rate above 1%'
+```
+
+The assistant's two rules ship in their own `assistant` group of the same file whenever the
+Portal is in the `components` list (T-2771):
+
+```yaml
+  - name: assistant
+    rules:
+      - alert: AssistantSlowAnswers
+        expr: >
+          histogram_quantile(0.95,
+            sum(rate(jc_agent_answer_duration_seconds_bucket[15m])) by (le)) > 10
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: 'Assistant answers p95 above 10 s for 15 minutes'
+      - alert: AssistantRunsFailing
+        expr: >
+          sum(increase(jc_agent_runs_finished_total{status=~"failed|expired"}[1h]))
+            / sum(increase(jc_agent_runs_finished_total[1h])) > 0.2
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: 'More than 20% of assistant runs failed or expired in the last hour'
 ```
 
 The prefix is what to get right: every metric this platform exports carries `jc_`, and a rule

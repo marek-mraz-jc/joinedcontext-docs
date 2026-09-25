@@ -65,7 +65,7 @@ spec:
       geoQ: { within: { scopeRef: /geo/FI/HKI } }
       representations: [ngsi-ld, geojson]           # Endpoint.enabledRepresentations vocabulary (EP-08)
   limits: { requestsPerMinute: 600, maxFileRows: 20000 }
-  csp: { connectSrc: [self], frameAncestors: [none] }               # defaults; only the app's own endpoint is reachable
+  csp: { connectSrc: [self], frameAncestors: [] }                   # defaults; only the app's own endpoint is reachable, only the Portal frames it
 ```
 
 Rendering rules:
@@ -284,7 +284,7 @@ The note itself is one attribute, `stewardNote`, on the station entity. It is de
 ## 7. Runtime and isolation
 
 - **Full-stack and service apps** run as one Deployment of the app container alone, behind the edge login (§5); the app image contains the Rust binary with the React build embedded, so one image is the whole app. How a `fullstack` image is built, published and pulled is §13.
-- **Static apps** are built by a Job in the apps namespace that holds no platform credential (AP-80, AP-81) and served from the Portal's static host at `/apps/{name}/` with a strict CSP (`connect-src 'self'`, `frame-ancestors 'none'` unless the app is meant to be embedded), Subresource Integrity on the build output, and no access to Portal session cookies (separate path scope; the app obtains its own token through PKCE or is anonymous).
+- **Static apps** are built by a Job in the apps namespace that holds no platform credential (AP-80, AP-81) and served from the Portal's static host at `/apps/{name}/` with a strict CSP (`connect-src 'self'`, `frame-ancestors` the Portal's own origin, AP-122, plus the declared ones when the app is meant to be embedded elsewhere), Subresource Integrity on the build output, and no access to Portal session cookies (separate path scope; the app obtains its own token through PKCE or is anonymous).
 - **Service apps** run as a Deployment in the instance namespace with default-deny NetworkPolicy: egress only to APISIX (their endpoint) and the OIDC issuer; no broker, database or forge access; resource limits from `spec.limits`; image built in CI, signed, SBOM attached (ADR-N-001 supply-chain rules).
 - **Tokens:** the app never receives a long-lived secret. Static apps use the user's PKCE token (audience = the endpoint, RFC 8707); service apps use client credentials whose token is audience-bound to their endpoint only.
 - **Observability:** per-app request counts, error rates and rate-limit hits are labelled with `app={name}` at the gateway; the App page shows them (CC-35 spirit).
@@ -458,7 +458,7 @@ The crate store is baked into the runner image rather than vendored into each re
 
 ### Run
 
-The reconciler composes `{registry}/joinedcontext/app-{name}@{status.build.digest}` from its own setting, so a manifest cannot point a pod at another registry. The Deployment runs `command: ["/app"]` as a numeric non-root user under the restricted Pod Security Standard on port 8080, and pulls with `imagePullSecrets` naming the Secret the deployment component creates in the apps namespace: a forge token that can read packages and nothing else. Ingress admits only the APISIX pods of the namespace the installation runs APISIX in, a setting; the rendered policy used to name the namespace `apisix` literally, which `dev`, where APISIX runs in `dev`, never matched (AP-108). The environment adds `JC_ME_URL` beside `JC_ENDPOINT_URL`. The configuration knobs (registry host, pull Secret name, APISIX namespace) are Portal settings, listed in [Deployment/13](../Deployment/13-configuration-reference.md).
+The reconciler composes `{registry}/joinedcontext/app-{name}@{status.build.digest}` from its own setting, so a manifest cannot point a pod at another registry. The Deployment runs `command: ["/app"]` as a numeric non-root user under the restricted Pod Security Standard on port 8080, and pulls with `imagePullSecrets` naming the Secret the deployment component creates in the apps namespace: a forge token that can read packages and nothing else. Ingress admits only the APISIX pods of the namespace the installation runs APISIX in, a setting; the rendered policy used to name the namespace `apisix` literally, which `dev`, where APISIX runs in `dev`, never matched (AP-108). The environment adds `JC_ME_URL` beside `JC_ENDPOINT_URL`, and `JC_APP_CONFIG`: the `#jc-config` object the static host writes for a `ui` App (§12, AP-95) without `user`, its endpoints in the order the static host offers them, the primary first. The `ui-rust` template's backend writes that object into the `index.html` it serves, with `user` from `GET {JC_ME_URL}` asked with the person's token, so the interface in `ui/` runs on the App SDK exactly as on the static host (AP-126). It carries slugs and spaces, never a token. The configuration knobs (registry host, pull Secret name, APISIX namespace) are Portal settings, listed in [Deployment/13](../Deployment/13-configuration-reference.md).
 
 A node pulls from the registry host at `https://{host}/v2/`, the path the distribution protocol fixes at the root. Where the forge is served under a path prefix (`/git` on `dev`), the edge routes `/v2/` of that host to the forge as well; the forge's token realm stays under its own prefix. The Portal pushes to the forge's in-cluster address, not through the edge.
 
