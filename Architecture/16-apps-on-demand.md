@@ -73,6 +73,7 @@ Rendering rules:
 
 - One `Endpoint` named `app-{name}` with `audience` = the app's visibility, `enabledRepresentations` = `dataNeeds[].representations`, rate limits from `spec.limits`.
 - One `Policy` per `dataNeeds` item: `assignee` = the endpoint's caller role, held only through the app's endpoint (§12; the service account for `service` apps, the `public` role for `public` ones), and one `Policy` per role for an item that names `roles`, `operations`, `information` (types, attrs), root `q`/`scopeQ`/`geoQ`/`temporalQ` from the constraints. Write operations (`createEntity`, `updateEntity`, …) make the change **red lane** and require the target types to be owned by the same project.
+- The first need's space is the app's own. A `ui` app may name one further space of its project, read only: its needs name read operations and no `roles`, compile into no Endpoint and no Policy, and are read through that space's `public`-audience Endpoints, which answer anyone already, so nothing is granted by naming it (AP-04). The bbsk indicators read the district outlines of `bbsk-registre` this way. A third space, a write or a role on the further space, or a pod-backed app naming one is refused: a pod reads through its one `JC_ENDPOINT_URL`.
 - CI proves `dataNeeds ⊆ what the requesting user may grant` (CC-60): a user cannot give an app more than they hold. CI also greps the built bundle for any host other than the app's own endpoint and fails on a hit.
 - Changing `dataNeeds` after publication re-renders the endpoint and is reviewed like any policy change; widening is yellow, adding writes or going public is red.
 
@@ -158,7 +159,7 @@ The app container reads its own configuration from four environment variables th
 | `JC_ENDPOINT_URL` | `http://context-gateway.{namespace}.svc:8080/api/endpoint/{slug}/`, the gateway in the cluster and the only data surface it may call (AP-04, AP-134); the pod's NetworkPolicy admits that and the destinations of `spec.egress[]`, nothing else |
 | `JC_ANONYMOUS` | `true` on a `public` app, where an absent `X-Access-Token` is normal (AP-28) |
 
-Two constraints follow from the endpoint being singular. Data needs that name two context spaces cannot compile, because one app has one endpoint and an endpoint has one space (AP-04). And an attribute list is granted as both `propertyNames` and `relationshipNames`: the manifest declares `attrs` as one flat list, and until the space's DataModel is available to the reconciler nothing tells a property from a relationship. A property name in the relationship whitelist matches no relationship, so the grant is not widened by it.
+Two constraints follow from the endpoint being singular. Data needs that name a second context space cannot compile for a pod, because it has one endpoint and an endpoint has one space (AP-04); a `ui` app reads a further public space in the page instead (§2). And an attribute list is granted as both `propertyNames` and `relationshipNames`: the manifest declares `attrs` as one flat list, and until the space's DataModel is available to the reconciler nothing tells a property from a relationship. A property name in the relationship whitelist matches no relationship, so the grant is not widened by it.
 
 Why the plugin and not the sidecar ADR-N-017 chose: the owner wants one login mechanism for the Portal and every app, no extra container per pod, and no chance that a generated app carries its own authentication. The price is that an app image runs only behind an OIDC-aware proxy (ADR-N-019).
 
@@ -413,7 +414,7 @@ The gateway matches a `user` subject against `preferred_username`, which is the 
 
 One rule names the Endpoints an App reads, and three places use it: the audience mapper of the client `app-{name}`, the endpoints the static host writes into `#jc-config`, and the Context Gateway's admission (AP-113). The rule is `jc-core` `app::served_endpoints`, and the Portal and the gateway call that function rather than a copy of it, so a change to the rule cannot lock a working App out of an endpoint its client names:
 
-1. for each `dataNeeds` item, the App's own generated `Endpoint app-{name}` when it serves that item's space, otherwise every Endpoint of the App's project over that space, by name;
+1. for each `dataNeeds` item, the App's own generated `Endpoint app-{name}` when it serves that item's space, otherwise every Endpoint of the App's project over that space, by name, and only the `public`-audience ones when the space is not the first need's (the further space of §2);
 2. then the target Endpoint of every `SharedSpaceReference` of the App's project, by name;
 3. each slug once, the first five kept (AP-04).
 
