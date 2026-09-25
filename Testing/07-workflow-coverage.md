@@ -52,9 +52,9 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 
 | step | unit | API | mocked UI | live journey | assistant |
 |---|---|---|---|---|---|
-| `read` | `joinedcontext-portal/src/branding.rs` | `tests/branding_api_tests.rs` | `ui/tests/organization_page.test.tsx` | `ui/e2e/live/organization.spec.ts` › "an administrator reads the organization and grants a role that reaches the person" | owed: T-2732 |
-| `edit-settings` | `joinedcontext-portal/src/quotas.rs` | `tests/ui_limits_tests.rs` | `ui/tests/organization_route.test.tsx` | owed: T-2746 | owed: T-2732 |
-| `refused-no-permission` | `joinedcontext-portal/src/api/people.rs` | `tests/roles_matrix_tests.rs` | `ui/tests/organization_page.test.tsx` | `ui/e2e/live/organization.spec.ts` › "a viewer is told who can see the members, and the list is never fetched for them" | owed: T-2732 |
+| `read` | `joinedcontext-portal/src/branding.rs` | `tests/branding_api_tests.rs` | `ui/tests/organization_page.test.tsx` | `ui/e2e/live/organization.spec.ts` › "an administrator reads the organization and grants a role that reaches the person" | `jc_resource_get` |
+| `edit-settings` | `joinedcontext-portal/src/quotas.rs` | `tests/ui_limits_tests.rs` | `ui/tests/organization_route.test.tsx` | owed: T-2746 | `jc_resource_propose` |
+| `refused-no-permission` | `joinedcontext-portal/src/api/people.rs` | `tests/roles_matrix_tests.rs` | `ui/tests/organization_page.test.tsx` | `ui/e2e/live/organization.spec.ts` › "a viewer is told who can see the members, and the list is never fetched for them" | `jc_resource_propose` |
 
 ### 3.3 People (`people`)
 
