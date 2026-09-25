@@ -785,13 +785,13 @@ Nothing is written: no Git, no broker, no endpoint, no `secretRef` resolved. The
 
 ## 8. The workbench, validation and the log
 
-The workbench ([ADR-N-034](../Decisions/adr-n-034-pipeline-workbench.md), PL-58) is one page with six steps: source, sample, mapping, mapped output, validation, target and save. Each step is one operation of the registry, so the page, the API, MCP and the assistant run the same code (PL-63):
+The workbench ([ADR-N-034](../Decisions/adr-n-034-pipeline-workbench.md), PL-58) is one page with six steps: source, sample, mapping, mapped output, validation, target and save. Each step is one operation of the registry, so the page, the API, MCP and the assistant run the same code (PL-63). The three operations still to build are named in [ADR-N-034 §3](../Decisions/adr-n-034-pipeline-workbench.md#3-decision) and enter this table with their code:
 
 | Step | Operation | Answers |
 |---|---|---|
-| Source and sample | `jc_pipeline_sample_source` | the first records of the picked DataSource or Endpoint, their fields and counts, read through the guard of the run |
-| Mapping and mapped output | `jc_pipeline_try_mapping` | the §7 trace: every mapped record, and each error at its record, step and line |
-| Validation | `jc_pipeline_validate` | one verdict per record against the target space's model (PL-59) |
+| Source and sample | sample source (to build, T-2708…T-2712) | the first records of the picked DataSource or Endpoint, their fields and counts, read through the guard of the run |
+| Mapping and mapped output | try mapping (to build) | the §7 trace: every mapped record, and each error at its record, step and line |
+| Validation | validate (to build) | one verdict per record against the target space's model (PL-59) |
 | Target and save | `jc_pipeline_propose` | the Change the person sends, naming the target space |
 
 ### What the stage checks (PL-59, PL-60)
@@ -818,7 +818,7 @@ flowchart LR
 
 The output is a `switch`: a record the stage refused goes only to the outcome sink, a valid one fans out to the gateway upsert and the sink. The sink is an `http_client` to the Portal's internal outcome route with the runner's own client credential, wrapped in `drop_on` so a Portal that does not answer loses a log line and never holds back a write. Each line carries the pipeline, the run, the record id, the step, the outcome (`sent`, `rejected`, `failed`) and a message; a refused record also carries the record, which the Portal masks before it stores it. A run is one tick of the pipeline's clock, or one UTC hour for a source that never ends.
 
-The Portal keeps the newest 1000 rejected records and the newest 5000 log lines per pipeline, and the counts per run. `GET /api/v1/projects/{project}/pipelines/{name}/rejected` and `GET …/runs` answer them with read on the pipeline; "Retry after fix" replays the kept records once through the pipeline's current stream on the runner (the §7 harness with the real output): a record that passes now is written, one that still fails comes back with its rule.
+The Portal keeps the newest 1000 rejected records and the newest 5000 log lines per pipeline, and the counts per run. `GET /api/v1/projects/{project}/pipelines/{name}/rejected` and `GET …/runs` answer them with read on the pipeline; "Retry after fix", which needs `propose` on `Pipeline` because it writes, replays the kept records once through the pipeline's current stream on the runner (the §7 harness with the real output): a record that passes now is written, one that still fails comes back with its rule.
 
 ## Related
 

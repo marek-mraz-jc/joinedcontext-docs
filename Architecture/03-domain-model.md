@@ -359,7 +359,7 @@ spec:
   locales: [sk, en, de, cs]         # ordered, most preferred first (PF-25)
   defaultLocale: sk                 # the fallback locale, MUST be one of spec.locales (PF-25, PF-26)
   contacts:
-    - role: administrative          # administrative | technical | data-protection | security
+    - role: administrative          # administrative | technical | data-protection | security | open-data
       name: "Odbor digitalizácie"
       email: digital@example.org
 ```

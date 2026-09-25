@@ -247,7 +247,7 @@ The record lists two families of distribution, and the second is what makes the 
 
 | Distribution | From | Carries |
 |---|---|---|
-| One per enabled representation | `spec.enabledRepresentations` | `dcat:accessURL` under the endpoint, `dcat:mediaType`, and `dcterms:conformsTo` naming the standard it answers (NGSI-LD, OGC API - Features, SensorThings, MCP) |
+| One per enabled representation | `spec.enabledRepresentations` | `dcat:accessURL` under the endpoint, `dcat:mediaType`, `dcat:accessService` naming the endpoint's `dcat:DataService`, and `dcterms:conformsTo` naming the standard it answers (NGSI-LD, OGC API - Features, SensorThings, MCP) |
 | One per schema artifact | the schema surface (§1a) | `dcat:accessURL` under `schema/v{major}/`, `dcat:mediaType`, `spdx:checksum` with the sha256 of the projected document, and `dcterms:conformsTo` naming the formalism (LinkML, JSON Schema, JSON-LD, SHACL, OWL, RDF) — EP-68 |
 
 The checksum is the digest of what this caller would download, not of a file on disk: the schema surface projects to the grant, so two callers see two documents and each record names its own. That is the same digest the artifact's `ETag` carries, so a harvester that stored the record can tell whether the artifact it holds is still current without fetching it (EP-51).
@@ -255,6 +255,65 @@ The checksum is the digest of what this caller would download, not of a file on 
 Access rights are on the record rather than only in the policy set. `dcterms:accessRights` is `PUBLIC` for a `public` audience and `RESTRICTED` for every other, and a restricted endpoint points at its own `access` document with `odrl:hasPolicy`, which is the pointer the data space connector dereferences to build an offer (EP-69, EP-55, DS-08). A catalogue therefore knows before it harvests whether the dataset it is about to list is one anybody may open.
 
 The record is the granted projection like everything else on the endpoint. A representation or a schema artifact this caller may not read is absent from it, never listed and then refused: listing it would disclose that it exists (R20).
+
+### The catalogue block (EP-78…EP-80)
+
+What a catalogue needs beyond the distributions is authored once, on the Endpoint, in `spec.catalog`. Every member is optional, and the record carries what is declared and nothing it would have to guess:
+
+```yaml excerpt
+spec:
+  catalog:
+    publisher:
+      name: { fi: Helsingin kaupunki, sv: Helsingfors stad, en: City of Helsinki }
+      uri: https://www.hel.fi/
+    contactPoint:
+      name: Helsinki open data
+      email: opendata@example.org        # a role address, never a person (EP-80)
+    license: CC_BY_4_0                   # EU licence table code
+    attribution: { en: "Source: City of Helsinki, Helsinki Region Infoshare" }
+    themes: [TRAN, REGI]                 # EU data-theme table codes
+    keywords: { fi: [tapahtumat], en: [events, culture] }
+    spatial: [FI1B1, "https://sws.geonames.org/658225/"]   # a NUTS code or a location IRI
+    temporal: { start: 2019-01-01 }
+    frequency: DAILY                     # EU frequency table code
+    source:
+      - url: https://hri.fi/data/en_GB/dataset/helsinki-events
+        title: { en: Helsinki events (Linked Events) }
+        description: { en: Events of the City of Helsinki, as Linked Events publishes them }
+    pipelineRef: { kind: Pipeline, name: helsinki-events }
+    applicableLegislation: ["http://data.europa.eu/eli/reg_impl/2023/138/oj"]
+```
+
+| `spec.catalog` | Record term | Rule |
+|---|---|---|
+| `publisher` | `dct:publisher` | a `foaf:Agent` with `foaf:name` per language and the `uri` as its identifier; the Portal prefills the Organization's title and `https://{domain}/` |
+| `contactPoint` | `dcat:contactPoint` | a `vcard:Kind` with `vcard:fn` and `vcard:hasEmail` as a `mailto:` IRI; a role address, prefilled from the Organization's `open-data` contact and checked against the organization's members (EP-80) |
+| `license` | `dct:license` | the EU licence table IRI, on the dataset and on every distribution; the codes accepted are the ones whose duties are known (below), anything else is refused at validation with the list |
+| `attribution` | `dct:rights` | a `dct:RightsStatement` on every distribution, the words the attribution duty asks for |
+| `themes` | `dcat:theme` | the EU data-theme table IRIs (`AGRI`, `ECON`, `EDUC`, `ENER`, `ENVI`, `GOVE`, `HEAL`, `INTR`, `JUST`, `REGI`, `SOCI`, `TECH`, `TRAN`) |
+| `keywords` | `dcat:keyword` | one language-tagged literal per keyword |
+| `spatial` | `dct:spatial` | a NUTS code becomes `http://data.europa.eu/nuts/code/{code}`; an `https://` IRI (a municipality's GeoNames or national register entry) is used as written |
+| `temporal` | `dct:temporal` | a `dct:PeriodOfTime` with `dcat:startDate` and `dcat:endDate`, either one alone for an open interval |
+| `frequency` | `dct:accrualPeriodicity` | the EU frequency table IRI (`CONT`, `HOURLY`, `DAILY`, `WEEKLY`, `MONTHLY`, `QUARTERLY`, `ANNUAL`, `IRREG`, `NEVER`, `UNKNOWN`) |
+| `source` | `dct:source` | the original open dataset the pipeline reads, as a `dcat:Dataset` with its own title and description, which DCAT-AP requires of every dataset it names |
+| `pipelineRef` | `prov:wasGeneratedBy` | a `prov:Activity` naming the pipeline of this project that fills the space |
+| `applicableLegislation` | `dcatap:applicableLegislation` | an ELI IRI, for a high-value dataset the Implementing Regulation (EU) 2023/138 |
+
+The Endpoint itself is a `dcat:DataService`: its `dcat:endpointURL` is the endpoint's own URL, it `dcat:servesDataset` the record, and every representation distribution names it in `dcat:accessService`. Both serialisations carry the same graph, and the Turtle is written from the JSON-LD so they cannot drift apart. The JSON-LD keeps its compact keys (`dct:title`, `dcat:accessURL`) and declares their prefixes and IRI-valued terms in its own `@context`, so a reader that reads keys and a reader that expands to RDF see the same record; the classes DCAT-AP requires of a referenced value (`dct:LicenseDocument`, `dct:RightsStatement`, `dct:MediaType`, `dct:Standard`, `skos:Concept` with its label) are stated in `@included`. `dcat:mediaType` is the IANA media-type IRI (`https://www.iana.org/assignments/media-types/application/ld+json`) and `dct:format` the EU file-type IRI, because DCAT-AP ranges both over IRIs; a reader that wants the bare media type takes the part after `media-types/`. A dataset with no description of its own, on the endpoint or the space, says which space it serves, because DCAT-AP makes `dct:description` mandatory. The platform pins the SEMIC DCAT-AP 3.0 SHACL shapes in its repository and the fast CI lane validates both serialisations of every record variant against them (EP-78).
+
+### The offer the licence makes (EP-79)
+
+A licence is a policy too, and the record states it as one. `odrl:hasPolicy` carries an `odrl:Offer` whose assigner is the organization and whose permission is `odrl:use` of the dataset, with the duties the licence imposes:
+
+| Licence | Duty on the permission |
+|---|---|
+| `CC0`, `ODC_PDDL` | none |
+| `CC_BY_4_0`, `ODC_BY` | `odrl:attribute` |
+| `CC_BYSA_4_0`, `ODC_ODBL` | `odrl:attribute` and share-alike (`cc:ShareAlike`) |
+
+A non-public Endpoint's offer adds a constraint on `odrl:recipient`, `isPartOf` the organization, and its audience class in the `ngsi-ld:` profile (`organization` or `project-list`); it never names a project, a group or a person, because the record is read by callers who hold none of them (EP-69, R20). A restricted Endpoint's record keeps the pointer to its own `access` document beside the offer, so its `odrl:hasPolicy` names both. The access surface's ODRL `Set` (§1b) carries the same duties on every permission, so the offer and the grants cannot tell a consumer two different things (EP-57, DS-03).
+
+The Portal's endpoint page shows the record as a card — who publishes it, under what licence, how often it updates, where it comes from — and the offer as plain sentences ("Anyone may use this data if they credit the City of Helsinki"), with the raw JSON-LD, Turtle and ODRL one link away. The endpoint form has a Catalogue section with a picker for each table-coded member.
 
 ---
 
@@ -673,7 +732,7 @@ spec:
       datastore: { representation: csv, refresh: onChange }  # optional row mirror
 ```
 
-The licence is the one member that says something the endpoint's record does not: the CKAN licence id the organization chose, used when the record names none, which today it never does.
+The licence is the one member that may say something the endpoint's record does not: the CKAN licence id the organization chose, used when the Endpoint declares no `spec.catalog.license` and the record therefore names none (§3a).
 
 The instance itself is a manifest like everything else, so a second catalogue is a second file and never a Portal setting nobody can review:
 
