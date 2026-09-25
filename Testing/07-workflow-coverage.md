@@ -264,14 +264,14 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | step | unit | API | mocked UI | live journey | assistant |
 |---|---|---|---|---|---|
 | `copy` | `joinedcontext-portal/src/store.rs` | `tests/workspace_api_tests.rs` | `ui/tests/form_work_on_copy_dialog.test.tsx` | `ui/e2e/live/copy-employee.spec.ts` › "an employee copies the project, edits in the copy, and brings it back as one change" | `jc_workspace_open` |
-| `compare` | `joinedcontext-portal/src/plan.rs` | `tests/workspace_change_tests.rs` | `ui/e2e/workspaces.spec.ts` | owed: T-2729 | `jc_workspace_compare` |
-| `update-from-main` | `joinedcontext-portal/src/plan.rs` | `tests/workspace_api_tests.rs` | `ui/tests/part_workspace_bar.test.tsx` | owed: T-2729 | `jc_workspace_update_from_main` |
+| `compare` | `joinedcontext-portal/src/plan.rs` | `tests/workspace_change_tests.rs` | `ui/e2e/workspaces.spec.ts` | `ui/e2e/live/copy-employee.spec.ts` › "an employee copies the project, edits in the copy, and brings it back as one change" | `jc_workspace_compare` |
+| `update-from-main` | `joinedcontext-portal/src/plan.rs` | `tests/workspace_api_tests.rs` | `ui/tests/part_workspace_bar.test.tsx` | `ui/e2e/live/copy-lifecycle.spec.ts` › "the owner updates a copy from the project and discards it from the list" | `jc_workspace_update_from_main` |
 | `preview` | `joinedcontext-portal/src/ops/previews.rs` | `tests/workspace_preview_tests.rs` | `ui/e2e/workspaces.spec.ts` | `ui/e2e/live/workspace-preview.spec.ts` › "a copy's preview answers on its own addresses and stops answering when stopped" | `jc_workspace_preview_start` |
 | `stop-preview` | `joinedcontext-portal/src/ops/previews.rs` | `tests/ops_workspace_previews_tests.rs` | `ui/tests/page_try_it_page.test.tsx` | `ui/e2e/live/workspace-preview.spec.ts` › "a copy's preview answers on its own addresses and stops answering when stopped" | `jc_workspace_preview_stop` |
 | `bring-back` | `joinedcontext-portal/src/plan.rs` | `tests/workspace_propose_tests.rs` | `ui/tests/page_bring_back_page.test.tsx` | `ui/e2e/live/copy-employee.spec.ts` › "an employee copies the project, edits in the copy, and brings it back as one change" | person only: bringing a copy back proposes every change of it at once and is left to a person (AG-11) |
-| `discard` | `joinedcontext-portal/src/store.rs` | `tests/workspace_api_tests.rs` | `ui/e2e/workspaces.spec.ts` | owed: T-2729 | person only: throwing a copy away loses the work in it, and an agent never does (AG-11) |
+| `discard` | `joinedcontext-portal/src/store.rs` | `tests/workspace_api_tests.rs` | `ui/e2e/workspaces.spec.ts` | `ui/e2e/live/copy-lifecycle.spec.ts` › "the owner updates a copy from the project and discards it from the list" | person only: throwing a copy away loses the work in it, and an agent never does (AG-11) |
 | `refused-agent-way-out` | `joinedcontext-portal/src/ops/workspaces.rs` | `tests/workspace_bypass_tests.rs` | `ui/tests/workspaces_ui.test.tsx` | `ui/e2e/live/copy-agent.spec.ts` › "the assistant works in a copy and leaves both ways out to a person" | `jc_workspace_propose` |
-| `refused-no-permission` | `joinedcontext-portal/src/ops/workspaces.rs` | `tests/workspace_security_tests.rs` | `ui/tests/page_workspaces_page.test.tsx` | owed: T-2729 | `jc_workspace_open` |
+| `refused-no-permission` | `joinedcontext-portal/src/ops/workspaces.rs` | `tests/workspace_security_tests.rs` | `ui/tests/page_workspaces_page.test.tsx` | `ui/e2e/live/copy-lifecycle.spec.ts` › "a viewer is refused a copy with the reason, and the API refuses the same" | `jc_workspace_open` |
 
 ### 3.21 Changes and approvals (`change`)
 
@@ -376,7 +376,7 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 
 The owed cells name open tasks, and `gate_workflows` holds their count: it may shrink and never grow.
 
-- **T-2729**: live journeys for an import from Git, the data model editor, a copy's compare, update and discard, CKAN status and the assistant page.
+- **T-2729**: live journeys for an import from Git, the data model editor, CKAN status (with T-2726) and the assistant page.
 - **T-2746**: the readiness walk creates a person and a group, a project, a key, and walks the steps of people, sync sources, drift and approvals no other journey takes.
 - **T-2732**: assistant tools for people, organization settings, project copy, a pipeline's rejected rows, an app rebuild and write, and drift.
 - **T-2726**: the one-step Publish dataset from an endpoint, its live journey and its tool.
