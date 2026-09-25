@@ -77,6 +77,7 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_GITEA_URL` | — | no | `JC_GITEA_URL` (the API base the Portal dials), `JC_GITEA_OWNER`, `JC_GITEA_REPO` and `JC_GITEA_TOKEN` (a secret: the token every push and merge request is written with). |
 | `JC_GITEA_WEBHOOK_SECRET` | — | yes | The secret the forge signs its webhook calls with (`JC_GITEA_WEBHOOK_SECRET`). |
 | `JC_GITEA_WEBHOOK_SECRET_PREVIOUS` | — | yes | The secret this Portal accepted before the current one, during a rotation (`JC_GITEA_WEBHOOK_SECRET_PREVIOUS`). |
+| `JC_HEALTH_DIR` | — | no | The directory the ConfigMap `jc-validation-results` is mounted at (`JC_HEALTH_DIR`; OPS-53): one digest per validation check, read on every request to `/api/v1/organization/health`. |
 | `JC_INTERNAL_BIND` | `0.0.0.0:9090` | no | `JC_AGENTS_NAMESPACE` and `JC_AGENT_PROXY_BASE` are set together or not at all; `JC_PORTAL_NAMESPACE` (default: the workspaces' own namespace), `JC_INTERNAL_BIND` (default `0.0.0.0:9090`), `JC_AGENT_RUN_TTL` (whole seconds, default `1200`) and `JC_AGENT_APPROVAL_TTL` (whole seconds a run waits for its change's approval, default `604800`) tune the rest. |
 | `JC_OIDC_CA_FILE` | — | no | The realm humans sign in against: `JC_OIDC_ISSUER`, `JC_OIDC_CLIENT_ID` and `JC_OIDC_CLIENT_SECRET` (a secret), all three together or none, plus the optional `JC_OIDC_CA_FILE` for a realm behind a private CA. |
 | `JC_OIDC_CLIENT_ID` | — | no | The realm humans sign in against: `JC_OIDC_ISSUER`, `JC_OIDC_CLIENT_ID` and `JC_OIDC_CLIENT_SECRET` (a secret), all three together or none, plus the optional `JC_OIDC_CA_FILE` for a realm behind a private CA. |
@@ -126,6 +127,9 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_PORTAL_SERVICE_ACCOUNT` | — | no | `JC_PORTAL_SERVICE_ACCOUNT` — the Portal's ServiceAccount in `JC_PORTAL_APPS_NAMESPACE`, the subject of the RoleBinding in each project's apps namespace (AP-116). |
 | `JC_PORTAL_SOPS_AGE_KEY_FILE` | — | a path to one | `JC_PORTAL_SOPS_AGE_KEY_FILE` names the age key file and chooses SOPS; otherwise `JC_PORTAL_OPENBAO_ADDR` and `JC_PORTAL_OPENBAO_ROLE` choose OpenBao, with `JC_PORTAL_OPENBAO_JWT_PATH` (default `/var/run/secrets/kubernetes.io/serviceaccount/token`) for the ServiceAccount token it logs in with. |
 | `JC_PORTAL_SYNC_INTERVAL` | `60` | no | How often the reconciler re-reads the configuration repository (`JC_PORTAL_SYNC_INTERVAL`, whole seconds, default `60`). |
+| `JC_SETUP_BACKUPS` | — | no | The databases are backed up to an object store (`JC_SETUP_BACKUPS`, the literal `true`). |
+| `JC_SETUP_LOGIN_THEME` | — | no | The realm's login theme (`JC_SETUP_LOGIN_THEME`); unset or blank says nothing about it. |
+| `JC_SETUP_SMTP` | — | no | The realm sends mail (`JC_SETUP_SMTP`, the literal `true`). |
 | `JC_TRUST_EDGE_TOKEN` | `false` | no | The deployment sets it behind the edge, which strips the header from every client request first; a Portal without an edge in front leaves it off and the header is ignored (`JC_TRUST_EDGE_TOKEN`, the literal string `true` to turn it on; default `false`). |
 
 ## 3. Agent proxy
@@ -173,8 +177,10 @@ The reconciler, as a CLI for an operator and as the library the Portal embeds.
 |---|---|---|---|
 | `JC_ENVIRONMENT` | — | no | The overlay `JC_ENVIRONMENT` names, as `validate` and `plan` read it (CC-73). |
 | `JC_GATEWAY_URL` | — | no | `JC_GATEWAY_URL` is the Context Gateway this run writes through, and `JC_TOKEN_FILE` the file holding the reconciler's ServiceAccount token — a path to a secret, projected by the deployment and never a value in the environment. |
+| `JC_IDM` | — | no | `JC_IDM` is the identity provider's issuer when `--idm` is not given, e.g. `https://idm.<domain>/realms/<realm>`. |
 | `JC_MODEL_TOOLS_URL` | — | no | Where Model Tools is, when `--url` names no address: `JC_MODEL_TOOLS_URL`. |
-| `JC_TOKEN_FILE` | — | a path to one | `JC_GATEWAY_URL` is the Context Gateway this run writes through, and `JC_TOKEN_FILE` the file holding the reconciler's ServiceAccount token — a path to a secret, projected by the deployment and never a value in the environment. |
+| `JC_SERVER` | — | no | The Portal the client verbs talk to: `--server` or `JC_SERVER`, with the token from `--token-file` or `JC_TOKEN_FILE` (API/03 §2a). |
+| `JC_TOKEN_FILE` | — | a path to one | The Portal the client verbs talk to: `--server` or `JC_SERVER`, with the token from `--token-file` or `JC_TOKEN_FILE` (API/03 §2a). |
 
 ## 6. Injected into a workload
 

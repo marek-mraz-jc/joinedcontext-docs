@@ -61,7 +61,7 @@ All API endpoints are protected by default (fail-closed, [R5](../Requirements/ac
 - **Protocol:** OpenID Connect (OIDC) / OAuth 2.1 via Keycloak ([I1](../Requirements/policy-firewall.md#21-identity-stack-i1i4-canonical-here)).
 - **Header:** `Authorization: Bearer <jwt>`
 - **Token Claims:** Tokens carry client identity (`sub`) and tenant membership only. **Tokens never carry permissions or roles** ([I4](../Requirements/policy-firewall.md#21-identity-stack-i1i4-canonical-here)); permissions are evaluated dynamically at the gateway using stored `Policy` entities.
-- **Proof of possession:** not implemented. Tokens are bearer tokens today, bound to the audience of the endpoint they were minted for and short-lived; nothing in the platform verifies a DPoP proof (RFC 9449). [AG-02](../Requirements/agents.md) asks for one on the agent surfaces, and T-2358 tracks the gap.
+- **Proof of possession:** not in the MVP. Tokens are bearer tokens, bound to the audience of the endpoint they were minted for and short-lived, which is what [AG-02](../Requirements/agents.md) requires; DPoP proofs (RFC 9449) at the edge come after the MVP (owner decision 2026-09-24).
 
 ### Anonymous Public Access
 
