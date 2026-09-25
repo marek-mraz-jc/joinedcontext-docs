@@ -183,6 +183,7 @@ carries a credential — a run's ticket is minted per run and is not a stored se
 |---|---|
 | `JC_ANONYMOUS` | `JC_ANONYMOUS` — set to `true` for a public app, so its backend treats an absent `X-Access-Token` as normal rather than as a bug. |
 | `JC_APP_CLASS` | `JC_APP_NAME`, `JC_APP_CLASS` — the application being built and what kind it is. |
+| `JC_APP_CONFIG` | `JC_APP_CONFIG` — the `#jc-config` object the static host writes for a `ui` App, without `user`: the backend writes it into its page with `user` from `JC_ME_URL`, so the App SDK in `ui/` reads its endpoints as it does on the static host (AP-95, AP-126). |
 | `JC_APP_NAME` | `JC_APP_NAME`, `JC_APP_CLASS` — the application being built and what kind it is. |
 | `JC_BASE_PATH` | `JC_BASE_PATH` — the path it is served under, so every link it writes resolves. |
 | `JC_BIND_ADDRESS` | `JC_BIND_ADDRESS` — where it listens, which is the port the Service routes to. |
