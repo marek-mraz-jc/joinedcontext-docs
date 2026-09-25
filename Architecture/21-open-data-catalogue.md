@@ -51,7 +51,7 @@ The dataset's metadata is the DCAT-AP record the Endpoint already answers with (
 | extra `endpoint` | the Endpoint URL | so an edit made by hand in CKAN is visible as drift |
 | extra `generated_by` | the publisher | `jcctl/ckan-publisher` |
 
-The mapping lives in `crates/jcctl/src/publish/ckan.rs` and is asserted against the official DCAT-AP shapes by the conformance suite, which is what makes the catalogue harvestable: a national portal reads `catalog.rdf` from CKAN's DCAT extension, and every field it needs is one of the rows above. A record that carries no publisher produces a dataset without one rather than with an invented one, so a harvester's own validation says what is missing instead of accepting a guess. The licence is the one term the gateway's record does not carry, and the only one the publication block may state: `spec.publish.ckan.license` is the licence the organization chose for the dataset, used when the record names none. Without either, the dataset has no licence, and a licence set by hand in CKAN does not survive the next run, because every run writes the whole dataset (CC-18).
+The mapping lives in `crates/jcctl/src/publish/ckan.rs` and is asserted against the official DCAT-AP shapes by the conformance suite, so a harvester reading the dataset finds every field it needs in the rows above; the feed a national portal harvests is the gateway's own catalogue (§8). A record that carries no publisher produces a dataset without one rather than with an invented one, so a harvester's own validation says what is missing instead of accepting a guess. The licence is the one term the gateway's record does not carry, and the only one the publication block may state: `spec.publish.ckan.license` is the licence the organization chose for the dataset, used when the record names none. Without either, the dataset has no licence, and a licence set by hand in CKAN does not survive the next run, because every run writes the whole dataset (CC-18).
 
 ## 3. Rows, links and dumps
 
@@ -98,10 +98,54 @@ The three other Endpoints of the two bodies stay out of the catalogue: `banskaby
 
 The publisher is a library and a command. The Portal's reconciler holds the library and runs it on every sync (`src/reconciler/ckan.rs`, T-2405): each Endpoint that declares `spec.publish.ckan` is published, and an Endpoint that stopped declaring one has its dataset withdrawn, which is the cadence `refresh: onReconcile` names. `jcctl publish ckan` publishes one Endpoint or a whole repository from a shell with the same code, which is how a catalogue is filled before a Portal runs against it.
 
+## 6. The Portal's catalogue page
+
+`data.{host}` is CKAN's own site, and a person working in the Portal should not have to leave it to find what the installation publishes. The Portal therefore carries one catalogue page, `/catalogue`, linked from the sidebar and readable without signing in, so a link to it can be handed to a citizen (EP-81).
+
+**Source.** The page reads CKAN, never the manifests: what it lists is what the catalogue holds, and the two views cannot disagree. The Portal collects the distinct `spec.url` of every `CkanInstance` of the installation and calls `package_search` on each as an anonymous caller, with no API token. CKAN answers an anonymous caller with public datasets only, and the Portal drops any dataset still marked `private`, so a restricted dataset can only be absent from the page (EP-67, EP-69). Several catalogues are merged into one list.
+
+**Search and facets.** The text a person types goes to CKAN's own full-text search (`q`). Facets are computed by the Portal over the datasets that search returns, because the extras the publisher writes (§2) are free text to CKAN's Solr and cannot be faceted there:
+
+| Facet | Read from | Shown as |
+|---|---|---|
+| Publisher | `organization.name` | the organization's title |
+| Theme | extra `theme`, the EU data-theme IRIs | the theme's label (EP-78) |
+| Format | `resources[].format` | the format as written |
+| Licence | `license_id` | `license_title` |
+| Spatial | extra `spatial_uri`, else `spatial` | the NUTS code or the last segment of the location IRI |
+| Temporal | extras `temporal_start`, `temporal_end` | one value per calendar year covered; an open end runs to the current year |
+
+Values in one facet are alternatives and facets combine with AND. The Portal keeps one answer per catalogue for 60 seconds, so a burst of anonymous visitors costs CKAN one search a minute, and reads at most 1000 datasets per catalogue.
+
+**The dataset page** (EP-82) shows the description, keywords, publisher, licence, update frequency and themes from `package_show`, every resource with its format and URL, and the DataStore preview link where the dataset has a sheet (§3). When the dataset's `endpoint` extra is an Endpoint of this installation, the page adds three things the catalogue does not hold:
+
+- the classes of the space's data model, each with its description, and a link to the Endpoint's schema documentation;
+- a sample of up to ten rows, read anonymously through the Endpoint's NGSI-LD representation (`options=keyValues`), so the sample passes the Endpoint's policy set like any other read (EP-66);
+- "Use this data": a curl command, the App SDK call and the MCP client configuration, all against the Endpoint's own URLs.
+
+The Portal derives the Endpoint from the slug in that extra and builds every URL it fetches itself on the installation's own host. A dataset edited by hand in CKAN to point elsewhere gets no sample and no model, never a request to the address it names.
+
+## 7. Publish a dataset in one step
+
+Declaring `spec.publish.ckan` by hand asks a steward to know CKAN's vocabulary. The Portal offers one flow instead (EP-83), started from an Endpoint's page, from a space, or from the catalogue's **Publish** button:
+
+1. **Pick the Endpoint** the person can propose changes to.
+2. **Describe it.** The Portal drafts the DCAT-AP block of the Endpoint (`spec.catalog`, EP-78) from what the platform already knows: title and description from the Endpoint, else from the model's classes; keywords from the model's class and slot names, in the space's language; themes mapped from the model's class and slot IRIs where the vocabulary is known (Smart Data Models domains to EU data themes); the licence from a picker, CC BY 4.0 unless the person picks another; publisher and contact point from the organization's contacts (EP-80); temporal coverage from the earliest `observedAt` of the entities the Endpoint answers the proposer with. Every drafted field is editable, and a field the platform cannot know is left empty rather than guessed.
+3. **Preview** the catalogue entry exactly as the dataset page of §6 will show it.
+4. **Propose.** The flow writes one `Change` on the Endpoint: `spec.publish.ckan` naming the project's `CkanInstance` and `spec.catalog`. When the Endpoint is not `public` yet, the flow says, before the proposal, that publishing makes it public, and the Change takes the red lane with a publisher's approval (EP-76, PF-72). An Endpoint that stays non-public would publish a private dataset nobody browsing can open, so the flow offers the public audience and never publishes a restricted Endpoint silently.
+5. **After approval** the reconciler publishes the dataset on its next run (§5, What runs the publication), and it appears on the catalogue page.
+
+The flow writes nothing to CKAN and needs no CKAN credential: the Change is the only write, and the publication stays the reconciler's.
+
+## 8. The organization's DCAT-AP feed
+
+A national portal (data.gov.sk, data.europa.eu) harvests a catalogue, not a list of endpoints. The context gateway serves the installation's catalogue as one `dcat:Catalog` at `https://{host}/catalog.jsonld` and `https://{host}/catalog.ttl` (EP-84): its datasets are the records of EP-27 of every Endpoint whose audience is `public`, each as the anonymous caller would read it, so the feed carries nothing a public read would not. The same pinned SEMIC shapes that check each record check the feed in the fast CI lane. CKAN's own `catalog.rdf` is not used: the catalogue image carries no DCAT extension, and the gateway already writes each record in both serializations.
+
 ## Related
 
 - [04-context-spaces-and-endpoints.md](04-context-spaces-and-endpoints.md#7-publication-to-an-open-data-portal) — the publication contract, the manifest fields and what one Endpoint becomes.
 - [../Requirements/endpoints.md](../Requirements/endpoints.md) — EP-62 to EP-69, the normative rules this chapter designs around.
 - [../Deployment/04-components-and-addons.md](../Deployment/04-components-and-addons.md) — the `ckan` add-on, what it deploys and what it costs to run.
 - [../Deployment/12-branding-and-naming.md](../Deployment/12-branding-and-naming.md) — the branding block the catalogue mounts.
-- [09-portal.md](09-portal.md) — the Portal, which holds the reconciler the publication belongs to.
+- [09-portal.md](09-portal.md) — the Portal, which holds the reconciler the publication belongs to and the catalogue page of §6.
+- [../API/01-portal-api.md](../API/01-portal-api.md#16a-the-catalogue-ep-81-ep-82) — the catalogue and publication routes of §6 and §7.
