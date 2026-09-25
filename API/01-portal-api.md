@@ -863,8 +863,10 @@ POST /api/v1/projects/{project}/import?dryRun=All
   ContextSpace. An organization-scoped kind is written in namespace `org` whatever project imported
   it, and a `Project` manifest inside the bundle is dropped: the destination project is the one in
   the path.
-- An upload is at most 32 MiB and 2 000 archive entries, and an entry whose path leaves the archive
-  root is refused before it is read.
+- An upload is at most the organization's `spec.limits.data.uploadMegabytes` (16 MiB when it sets
+  none, never past 64 MiB, the edge's largest body; ADR-N-035), judged on the body as it arrives,
+  and at most 2 000 archive entries. A larger one is refused with `400` naming its size, the limit
+  and the setting. An entry whose path leaves the archive root is refused before it is read.
 - `bundle.yaml` describes the bundle and is never imported as a resource. Its `project` and
   `revision` become `joinedcontext.com/imported-from` on every manifest that lands, so an imported
   object says where it came from (MF-20); an upload with no index is annotated `upload`.
@@ -2447,6 +2449,70 @@ GET /api/v1/projects/{project}/spaces/{space}/quality     the last run's report 
 - A project the caller may not read, or a space they may not read, is `404`. `examples` are
   empty for a caller without `read` on `Entity` in the space; the counts are the same for
   everyone who reads the space.
+
+## 28. Organization limits (PF-96…PF-102, ADR-N-035)
+
+What Organization settings shows for every policy and limit (PF-102): the catalog of ADR-N-035
+with the bound the operator's file sets on each entry (PF-97), the value in force and where it
+comes from (PF-99, PF-101), and the quota of each project with what it uses (PF-73, PF-75).
+
+```text
+GET /api/v1/organization/limits     the catalog, its bounds and the values in force → 200
+```
+
+```json
+{
+  "entries": [
+    {
+      "path": "spec.projects.quota.contextSpaces",
+      "section": "projects",
+      "security": false,
+      "default": null,
+      "min": 0,
+      "max": 20,
+      "value": 10,
+      "origin": "organization"
+    },
+    {
+      "path": "spec.limits.signIn.sessionIdleMinutes",
+      "section": "signIn",
+      "security": true,
+      "default": 60,
+      "min": 5,
+      "max": 120,
+      "value": null,
+      "origin": "default"
+    }
+  ],
+  "projects": [
+    {
+      "project": "helsinki",
+      "origin": "project",
+      "quota": {
+        "contextSpaces": { "limit": 12, "used": 3 },
+        "agentRunsPerDay": { "limit": null, "used": null }
+      }
+    }
+  ]
+}
+```
+
+- `entries` lists every numeric entry of the catalog in its order. `section` is one of
+  `projects`, `applications`, `edge`, `signIn`, `people`, `agents`, `pipelinesAndData`.
+  `security` is `true` for an entry whose bound the operator may only tighten.
+- `min` and `max` are the range an organization may set: the operator's bound where
+  `portal.organizationBounds` sets one, else the catalog's own. `max` is `null` where neither
+  sets a ceiling.
+- `value` is what the Organization manifest sets, `null` when it sets nothing. `origin` is then
+  `organization` or `default`, and `default` is the catalog's default, `null` for no limit.
+- `projects` has one row per project the caller may read. `origin` says whose quota is in force:
+  `project` (the Project's own `spec.quotas`), `organization` (`spec.projects.quota`) or
+  `default` (neither, so no limit). `quota` holds each dimension: `limit` is `null` for no
+  limit, and `used` is the manifest count for the four countable dimensions (PF-75), `null` for
+  a limit enforced at run time.
+- Any signed-in person reads the route: the catalog and the bounds are the installation's, not
+  a project's. A project the caller may not read is left out of `projects`, so nothing of its
+  size is said (R20).
 
 ## Related
 
