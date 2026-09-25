@@ -225,7 +225,7 @@ Rules that make bundles portable: identity is `(group, kind, namespace, name)` a
 | `ContextSpace` | `projects/{p}/spaces/{s}/space.yaml` | `schema/kinds/ContextSpace.json` | Gateway in-memory table (reloaded from Git); tenant resolved per request |
 | `DataModel` | `projects/{p}/spaces/{s}/datamodels/` | `schema/kinds/DataModel.json` | Gateway (`schema/` endpoints, reloaded from Git) |
 | `Policy` | `projects/{p}/spaces/{s}/policies/` | `schema/kinds/Policy.json` | Gateway in-process PDP (reloaded directly from Git repository by reaper) |
-| `ScopeDefinition`| `projects/{p}/spaces/{s}/policies/` | `schema/kinds/ScopeDefinition.json`| Gateway in-process PDP (reloaded directly from Git repository) |
+| `ScopeDefinition`| `projects/{p}/policies/` | `schema/kinds/ScopeDefinition.json`| Gateway in-process PDP (reloaded directly from Git repository) |
 | `Subscription` | `projects/{p}/spaces/{s}/subscriptions/`| `schema/kinds/Subscription.json` | Context Broker (`POST /ngsi-ld/v1/subscriptions` through the space surface, by the Portal reconciler) |
 | `ContextSourceRegistration` | `projects/{p}/spaces/{s}/registrations/` | `schema/kinds/ContextSourceRegistration.json` | Gateway federation table (reloaded from Git) & broker tenant registration |
 | `Entity` (Seed) | `projects/{p}/spaces/{s}/entities/seed/*.json` | Standard Smart Data Model Schema | Context Broker (`POST /cs/{space}/ngsi-ld/v1/entityOperations/upsert` via `jcctl apply`, CC-72). A seed entity is a plain NGSI-LD entity in a `.json` file, never a manifest with an envelope: nothing writes a `kind: Entity` YAML |

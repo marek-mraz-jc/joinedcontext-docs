@@ -58,7 +58,7 @@ Typed references (`{kind, name, namespace?}`) instead of paths or ids keep bundl
 | `Group` | `users/groups/{name}.yaml` | reconciler → Keycloak | One named set of people by e-mail; the reconciler is the only writer of the Keycloak group it manages and reports drift (PF-62, PF-63) |
 | `Role` | `users/roles/{name}.yaml` or `projects/{p}/roles/{name}.yaml` (PF-68) | `jcctl` roles / Keycloak | One named set of verbs on kinds, with constraints; compiled into CODEOWNERS, `policies/roles.json` and the organization repository's Rego gate (PF-51, CC-41) |
 | `RoleBinding` | `users/assignments/{name}.yaml` | `jcctl` roles / Keycloak | Assignment of one `Role` to a subject over a scope, with a validity window (PF-52, CC-42) |
-| `ScopeDefinition` | `.../spaces/{s}/scopes/` | Antares Broker | Node of the hierarchical scope tree (`isRoot`, `isChildOf`, `scopeString`, ADR 005) |
+| `ScopeDefinition` | `projects/{p}/policies/` | Antares Broker | Node of the hierarchical scope tree (`isRoot`, `isChildOf`, `scopeString`, ADR 005); served as `scopedefinitions`, a plural of its own, although its file sits beside the project's other access files (R19) |
 | `SharedSpaceReference` | `projects/{p}/shares/` | Context Gateway | Cross-project or cross-instance mount of another Endpoint (EP-15, DS-17) |
 | `ContextSourceRegistration` | `.../spaces/{s}/registrations/` | Antares Broker | Where part of a space's data actually lives, so the broker can forward and merge; a hub space holds only these (MF-36, EP-70, PF-48) |
 | `CkanInstance` | `projects/{p}/ckan/` | `jcctl` publisher / Portal API | One open-data portal an Endpoint may publish to: base URL, default organization and the API token `secretRef` (EP-62, EP-67) |
