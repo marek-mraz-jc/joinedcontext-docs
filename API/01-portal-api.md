@@ -1504,7 +1504,7 @@ alternatives, filters combine with AND) and `page` (from 1, twenty datasets a pa
   caller sees public datasets only, so the answer cannot list a restricted one (EP-67, EP-69).
 - Facet counts are over the datasets that match `q` and every other facet's filter.
 - A catalogue that does not answer is named in `unavailable` and the others still answer; when
-  none answers, the route answers `502` with `problem+json`. No `CkanInstance` at all is an empty
+  none answers, the route answers `503` with `problem+json`, as every Portal route whose upstream is down does. No `CkanInstance` at all is an empty
   catalogue, `200` with `total: 0`.
 
 `GET /api/v1/catalogue/datasets/{name}` answers the dataset page:
@@ -1527,7 +1527,7 @@ alternatives, filters combine with AND) and `page` (from 1, twenty datasets a pa
   "resources": [
     { "name": "CSV", "format": "CSV", "url": "https://{host}/api/endpoint/{endpointSlug}/file.csv", "description": "…", "previewUrl": "https://data.{host}/dataset/bbsk-kpi/resource/{id}" }
   ],
-  "endpoint": { "url": "https://{host}/api/endpoint/{endpointSlug}/" },
+  "endpoint": { "url": "https://{host}/api/endpoint/{endpointSlug}/", "representations": ["ngsi-ld", "csv", "mcp"] },
   "model": {
     "name": "key-performance-indicator",
     "classes": [{ "name": "KeyPerformanceIndicator", "description": "…" }],
@@ -1541,13 +1541,16 @@ alternatives, filters combine with AND) and `page` (from 1, twenty datasets a pa
   installation whose audience is `public`: the Portal parses the slug out of the extra, finds the
   Endpoint in its mirror and builds the URL on its own host. `docsUrl` is the dataset's Markdown
   schema resource. A dataset whose extra names another host, or no Endpoint, has neither.
-- An unknown or private dataset answers `404`: a caller cannot tell the two apart.
+- `representations` are the Endpoint's `enabledRepresentations`; the "Use this data" snippets
+  offer only what it serves.
+- An unknown or private dataset answers `404`: a caller cannot tell the two apart. When no
+  catalogue answers at all, `503`.
 
 `GET /api/v1/catalogue/datasets/{name}/sample` answers up to ten entities of the Endpoint's first
 model class, read anonymously through its NGSI-LD representation with `options=keyValues`, as
 `{ "type": "KeyPerformanceIndicator", "columns": ["id", "name", "value"], "rows": [["urn:…", "…", "12"]] }`.
 A dataset with no Endpoint of this installation, or one that does not serve `ngsi-ld`, answers
-`404`; an Endpoint that does not answer, `502`. Nested values are written as compact JSON.
+`404`; an Endpoint that does not answer, `503`. Nested values are written as compact JSON.
 
 ## 16b. Publish a dataset in one step (EP-83)
 
@@ -1577,7 +1580,8 @@ proposes; it writes nothing. The caller needs `propose` on `Endpoint` in the pro
 
 - `catalog` is the drafted `spec.catalog` (EP-78) and `publish` the drafted `spec.publish`
   (EP-62); a block the Endpoint already declares is returned as it is, so re-running the flow
-  never overwrites what a steward wrote. `missing` names the catalogue fields nothing could fill.
+  never overwrites what a steward wrote. `missing` names the catalogue fields nothing could fill;
+  `spatial`, `temporal` and `frequency` are never drafted.
 - `makesPublic` is `true` when the Endpoint's audience is not `public`: the UI then says so before
   the proposal, and the Change the UI proposes with `spec.audience: public` takes the red lane
   with a publisher's approval (EP-76, PF-72).
@@ -2189,6 +2193,54 @@ An App's `spec.access` entry naming the e-mail then matches nobody, and the App 
 - Without the admin client every route answers `503`.
 - Every action writes one `person.changed` event of the project `org` to the activity feed (§14):
   who, what, and the person's id, never an e-mail body, a password or a token (PF-90).
+
+## 25. Organization setup (PF-90, UI-82)
+
+What a new organization still lacks, in one answer, for the page that walks an Organization
+Administrator through it (`/organization/setup`, T-2748). The Portal reads it from what it already
+holds and writes nothing: every step links to the page that proposes that change the normal way.
+
+```text
+GET    /api/v1/organization/setup                           the steps and the operator's part → 200
+```
+
+```json
+{
+  "complete": false,
+  "steps": [
+    { "id": "organization", "done": true },
+    { "id": "domain", "done": false },
+    { "id": "people", "done": false },
+    { "id": "project", "done": true },
+    { "id": "publishers", "done": false },
+    { "id": "policies", "done": false }
+  ],
+  "operator": [
+    { "id": "branding", "done": true },
+    { "id": "loginTheme", "done": true },
+    { "id": "smtp", "done": false },
+    { "id": "backups", "done": false }
+  ]
+}
+```
+
+- `steps`, in the order the page shows them, each `done` when:
+  - `organization`: the `Organization` manifest names a domain and at least one locale;
+  - `domain`: that domain is verified (PF-41);
+  - `people`: the realm holds a second person besides the one reading, so the organization does
+    not hang on one account; `done` is `false`, never an error, when no admin client is configured;
+  - `project`: a project holds a `ContextSpace` that names a data model;
+  - `publishers`: a `CkanInstance` is declared, the catalogue the projects publish to (EP-62);
+  - `policies`: the `Organization` manifest sets `spec.projects` (ADR-N-035).
+- `operator` is what the installation provides and the Portal cannot change: `branding` is `true`
+  when `global.branding` names the installation (an `instanceName` other than `joinedcontext`, or a
+  logo); `loginTheme`, `smtp` and `backups` are the deployment's own statements,
+  `JC_SETUP_LOGIN_THEME`, `JC_SETUP_SMTP` and `JC_SETUP_BACKUPS`, rendered from the values that
+  switch those on ([Deployment/13](../Deployment/13-configuration-reference.md)). An unset
+  statement is `false`: the page never claims what nobody said.
+- `complete` is `true` when every step and every operator item is done.
+- The route needs `approve` on `Organization` at organization scope, which `org-admin` holds (PF-56);
+  anyone else gets `403`.
 
 ## Related
 

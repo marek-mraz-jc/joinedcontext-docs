@@ -5,14 +5,14 @@ title: "Artifact Store"
 
 # Artifact Store
 
-The platform has three kinds of state and gives each one home: **authored** state lives in Git (manifests, LinkML, Bloblang, app source), **runtime** state lives in PostgreSQL and the broker (preferences, sessions, entities), and **rendered** state lives in the artifact store. Rendered state is everything a machine produced from the first two and that has to be served fast, unchanged and for years: schema artifacts in every formalism, compiled mappings, RDF dumps, export bundles, app builds, cached file downloads.
+The platform has three kinds of state and gives each one home: **authored** state lives in Git (manifests, LinkML, Bloblang, app source), **runtime** state lives in PostgreSQL and the broker (preferences, sessions, entities), and **rendered** state lives in the artifact store. Rendered state is everything a machine produced from the first two and that has to be served fast, unchanged and for years: schema artifacts in every formalism, compiled mappings, export bundles, app builds, cached file downloads.
 
 ```mermaid
 flowchart LR
     GIT["Gitea org repository<br/>(authored: LinkML, manifests, Bloblang, app src)"]
     CI["CI / jcctl apply<br/>Model Tools render · bento compile · vite build"]
-    S3["Artifact store (RustFS, S3 API)<br/>schemas/ · endpoints/ · mappings/ · dumps/ · exports/ · apps/ · filecache/"]
-    GW["Context Gateway<br/>schema/ · dump/ · file.* · MCP resources"]
+    S3["Artifact store (RustFS, S3 API)<br/>schemas/ · endpoints/ · mappings/ · exports/ · apps/ · filecache/"]
+    GW["Context Gateway<br/>schema/ · file.* · MCP resources"]
     PORTAL["Portal static host<br/>{name}.apps.{domain}"]
     C["Consumers: partners, open-data users, agents, browsers"]
     GIT --> CI -->|"PutObject (write-once, object lock)"| S3
@@ -34,7 +34,6 @@ flowchart LR
 | `schemas/{org}/{project}/{space}/{model}/v{n}/` | jcctl after merge (Model Tools) | `/cs/{space}/schema/`, space MCP resources | object lock | forever (retired versions stay resolvable) |
 | `endpoints/{slug}/schema/v{n}/` | jcctl on model publish and on Policy change (projection per policy digest) | `/api/endpoint/{slug}/schema/`, endpoint MCP resources | object lock per digest; superseded digests deleted after grace period | follows the endpoint |
 | `mappings/{org}/{project}/{name}/{rev}/` | CI (Model Tools compile) | reconciler injects into Bento | write-once | follows the Mapping |
-| `dumps/{org}/{project}/{space}/{date}.nq.gz` | scheduled dump job | `/cs/{space}/dump/` | object lock | retention from space manifest |
 | `exports/{org}/{project}/{rev}.zip` | jcctl export | Portal download, `import` of another instance | write-once | 30 days default |
 | `filecache/{slug}/{sha256(query)}/` | gateway (only cache writer) | `file.*` on `If-None-Match` miss | none | 24 h lifecycle rule; purgeable |
 
@@ -54,7 +53,7 @@ Application builds are not here. An application's workflow publishes its bundle 
 ## 4. Operations
 
 - **Deployment**: core component `artifact-store` (RustFS Helm chart, single-node with a PVC by default; erasure-coded multi-node for production sizes), bucket `jc-artifacts` with versioning and object lock enabled at creation by the reconciler's bootstrap job. Values block `artifactStore: { endpoint, bucket, region, credentialsSecretRef, pathStyle }` is the only coupling.
-- **Backup**: low priority (OPS-09 scope) because every object is reproducible: `jcctl artifacts rebuild --repo-dir <path> --out-dir <dir> [--space <name>] [--revision <sha>]` re-renders schemas, recompiles mappings and re-exports from Git; dumps are the exception and are mirrored to the CNPG backup bucket if retention matters.
+- **Backup**: low priority (OPS-09 scope) because every object is reproducible: `jcctl artifacts rebuild --repo-dir <path> --out-dir <dir> [--space <name>] [--revision <sha>]` re-renders schemas, recompiles mappings and re-exports from Git. A space's dump is not stored at all: `/cs/{space}/dump/` generates it per request from what the caller may read (SP-13).
 - **Quota**: per-organization byte quota enforced by the reconciler on write (it lists the prefix size from `index.json` totals rather than walking the bucket), shown in the Portal with the other quotas.
 - **Observability**: request counts, bytes and latency per prefix from the gateway; store health from the RustFS metrics endpoint; alert on object-lock policy drift.
 
