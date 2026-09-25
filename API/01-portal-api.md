@@ -1436,6 +1436,11 @@ GET /api/v1/branding/favicon     the favicon file, from the same mount
   because the choice needs the contrast ratio of the lightened colour: the UI wrote a near-black
   label on it by rule instead, which left an installation branded `#111827` at 2.31:1 and one
   branded `#0000bf` at 3.43:1 (T-2324, UI-30). A value for either in the file is overwritten.
+- `hiddenSections` lists the project sections this installation hides, always present and empty
+  when none is: `["dashboards"]` unless `JC_PORTAL_DASHBOARDS` is `true` (T-2874). The Portal
+  leaves a hidden section out of the project menu, sends its addresses to the project's spaces and
+  does not offer its assistant path, which `POST …/assistant/conversations` refuses with `400`;
+  the kind, its manifests and its API stay. A value in the file is overwritten.
 - The logo and the favicon are file names, never URLs. A value carrying a scheme, a host or `..`
   is dropped, and the file is read from the branding file's own directory: the two assets the
   ConfigMap carries are the only files those routes can reach.
