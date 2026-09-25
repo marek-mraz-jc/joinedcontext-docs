@@ -299,7 +299,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 
 | step | unit | API | mocked UI | live journey | assistant |
 |---|---|---|---|---|---|
-| `open-and-ask` | `joinedcontext-portal/src/agents/oneshot/conversation.rs` | `tests/assistant_ask_tests.rs` | `ui/e2e/assistant_page.spec.ts` | owed: T-2729 | `jc_ask` |
+| `open-and-ask` | `joinedcontext-portal/src/agents/oneshot/conversation.rs` | `tests/assistant_ask_tests.rs` | `ui/e2e/assistant_page.spec.ts` | `ui/e2e/live/assistant-page.spec.ts` › "a steward asks from the assistant page, gets an answer, and finds the conversation listed" | `jc_ask` |
 | `integrate-pipeline` | `joinedcontext-portal/src/agents/oneshot/integrate.rs` | `tests/assistant_paths_tests.rs` | `ui/tests/assistant_capabilities.test.tsx` | `ui/e2e/live/assistant-paths.spec.ts` › "Integrate a pipeline from a CSV and its feed stays within its budgets (T-2695, T-2697)" | `jc_switch_path` |
 | `open-a-form` | `joinedcontext-portal/src/agents/change.rs` | `tests/assistant_access_tests.rs` | `ui/tests/form_assistant_dock.test.tsx` | `ui/e2e/live/assistant-creates.spec.ts` › "the assistant opens the form for a data source, filled from one sentence" | `jc_ui_navigate` |
 | `propose-endpoint` | `joinedcontext-portal/src/agents/share.rs` | `tests/assistant_share_tests.rs` | `ui/tests/assistant_endpoints.test.tsx` | `ui/e2e/live/share.spec.ts` › "an endpoint proposed and approved through the UI: Live, the hidden attribute absent, the viewer refused on the organization one" | `jc_endpoint_propose` |
@@ -376,7 +376,7 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 
 The owed cells name open tasks, and `gate_workflows` holds their count: it may shrink and never grow.
 
-- **T-2729**: live journeys for the data model editor, CKAN status (with T-2726) and the assistant page.
+- **T-2729**: live journeys for the data model editor and CKAN status (with T-2726).
 - **T-2746**: the readiness walk creates a person and a group, a project, a key, and walks the steps of people, sync sources, drift and approvals no other journey takes.
 - **T-2732**: assistant tools for people, organization settings, project copy, a pipeline's rejected rows, an app rebuild and write, and drift.
 - **T-2726**: the one-step Publish dataset from an endpoint, its live journey and its tool.
