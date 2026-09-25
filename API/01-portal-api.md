@@ -1009,18 +1009,20 @@ PUT /api/v1/projects/{project}/datamodels/{name}/source           text/yaml body
 PUT /api/v1/projects/{project}/datamodels/{name}/source?space=s   text/yaml body → 202 Change, the model created (DM-57)
 ```
 
-A text whose relationships break a rule of DM-68 creates no Change: the answer is `422` with one
-entry per broken rule, whatever the editor said before sending it.
+A text whose relationships break a rule of DM-68 creates no Change, whatever the editor said
+before sending it: the answer is `400` with one `errors` entry per broken rule, each
+`{path}: {rule}: {message}` with the rule identifier of
+[Architecture/11 §1.2](../Architecture/11-data-models.md#12-relationships-between-classes-dm-64dm-73) (CC-24).
 
 ```json
 {
-  "type": "https://joinedcontext.com/errors/invalid-model",
-  "title": "The model has broken relationships",
-  "status": 422,
-  "detail": "2 relationship rules are broken; nothing was saved (DM-68)",
+  "type": "https://joinedcontext.com/errors/invalid-request",
+  "title": "Invalid Request",
+  "status": 400,
+  "detail": "the model breaks 2 relationship rules; nothing was saved (DM-68)",
   "errors": [
-    { "path": "slots.users", "rule": "inverse-missing", "message": "users (School → User) names no inverse" },
-    { "path": "slots.school", "rule": "required-on-computed-end", "message": "school is computed on read and cannot be required" }
+    "slots.users: inverse-missing: users (School → User) names no inverse",
+    "slots.school: required-on-computed-end: school is computed on read and cannot be required"
   ]
 }
 ```
