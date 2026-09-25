@@ -70,13 +70,17 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_BRANDING_FILE` | — | no | The file the deployment renders `global.branding` into (`JC_BRANDING_FILE`; UI-30, OPS-46). |
 | `JC_ENVIRONMENT` | — | no | `JC_ENVIRONMENT` names the overlay the branch is rendered with, the same one the reconciler applies for this installation (CC-73); unset renders the manifests as they are written. |
 | `JC_FUNCTIONS_URL` | — | no | Base URL of the `jc-functions` runtime (`JC_FUNCTIONS_URL`), e.g. `http://jc-functions.jc-system.svc.cluster.local:8080`. |
+| `JC_GITEA_APPS_OWNER` | — | no | `JC_GITEA_APPS_OWNER` — the forge organization the generated applications' repositories, packages and images live in, apart from the configuration's (PF-105); the configuration's organization when unset. |
+| `JC_GITEA_APPS_TOKEN` | — | yes | `JC_GITEA_APPS_TOKEN` — the token of the applications' own machine user, which writes their repositories and packages and nothing of the configuration's; set with the owner or not at all. |
 | `JC_GITEA_OWNER` | — | no | `JC_GITEA_URL` (the API base the Portal dials), `JC_GITEA_OWNER`, `JC_GITEA_REPO` and `JC_GITEA_TOKEN` (a secret: the token every push and merge request is written with). |
 | `JC_GITEA_PUBLIC_URL` | — | no | `JC_GITEA_PUBLIC_URL`; the API base when unset. |
+| `JC_GITEA_READER` | — | no | The forge user the Context Gateway reads the configuration as (`JC_GITEA_READER`, PF-105): a repository the Portal opens for a project it reads too. |
 | `JC_GITEA_REPO` | — | no | `JC_GITEA_URL` (the API base the Portal dials), `JC_GITEA_OWNER`, `JC_GITEA_REPO` and `JC_GITEA_TOKEN` (a secret: the token every push and merge request is written with). |
 | `JC_GITEA_TOKEN` | — | yes | `JC_GITEA_URL` (the API base the Portal dials), `JC_GITEA_OWNER`, `JC_GITEA_REPO` and `JC_GITEA_TOKEN` (a secret: the token every push and merge request is written with). |
 | `JC_GITEA_URL` | — | no | `JC_GITEA_URL` (the API base the Portal dials), `JC_GITEA_OWNER`, `JC_GITEA_REPO` and `JC_GITEA_TOKEN` (a secret: the token every push and merge request is written with). |
 | `JC_GITEA_WEBHOOK_SECRET` | — | yes | The secret the forge signs its webhook calls with (`JC_GITEA_WEBHOOK_SECRET`). |
 | `JC_GITEA_WEBHOOK_SECRET_PREVIOUS` | — | yes | The secret this Portal accepted before the current one, during a rotation (`JC_GITEA_WEBHOOK_SECRET_PREVIOUS`). |
+| `JC_HEALTH_DIR` | — | no | The directory the ConfigMap `jc-validation-results` is mounted at (`JC_HEALTH_DIR`; OPS-53): one digest per validation check, read on every request to `/api/v1/organization/health`. |
 | `JC_INTERNAL_BIND` | `0.0.0.0:9090` | no | `JC_AGENTS_NAMESPACE` and `JC_AGENT_PROXY_BASE` are set together or not at all; `JC_PORTAL_NAMESPACE` (default: the workspaces' own namespace), `JC_INTERNAL_BIND` (default `0.0.0.0:9090`), `JC_AGENT_RUN_TTL` (whole seconds, default `1200`) and `JC_AGENT_APPROVAL_TTL` (whole seconds a run waits for its change's approval, default `604800`) tune the rest. |
 | `JC_OIDC_CA_FILE` | — | no | The realm humans sign in against: `JC_OIDC_ISSUER`, `JC_OIDC_CLIENT_ID` and `JC_OIDC_CLIENT_SECRET` (a secret), all three together or none, plus the optional `JC_OIDC_CA_FILE` for a realm behind a private CA. |
 | `JC_OIDC_CLIENT_ID` | — | no | The realm humans sign in against: `JC_OIDC_ISSUER`, `JC_OIDC_CLIENT_ID` and `JC_OIDC_CLIENT_SECRET` (a secret), all three together or none, plus the optional `JC_OIDC_CA_FILE` for a realm behind a private CA. |
@@ -88,7 +92,7 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_PORTAL_APPS_DIR` | — | no | Root of the built app bundles, one directory per app (`JC_PORTAL_APPS_DIR`). |
 | `JC_PORTAL_APPS_NAMESPACE` | — | no | Where an App's four Kubernetes objects are applied (`JC_PORTAL_APPS_NAMESPACE` with `JC_PORTAL_ORG_DOMAIN`; AP-13, AP-18, T-0411). |
 | `JC_PORTAL_APPS_PULL_SECRET_NAME` | — | no | `JC_PORTAL_APPS_PULL_SECRET_NAME` — the name of the `dockerconfigjson` Secret in the apps namespace a node pulls app images with (a forge token that reads packages only). |
-| `JC_PORTAL_APPS_REGISTRY` | — | no | `JC_PORTAL_APPS_REGISTRY` — the host, and port if any, of the forge's container registry; an App's image is composed as `{registry}/{forge organization}/app-{name}@{digest}`. |
+| `JC_PORTAL_APPS_REGISTRY` | — | no | `JC_PORTAL_APPS_REGISTRY` — the host, and port if any, of the forge's container registry; an App's image is composed as `{registry}/{forge organization}/app-{name}@{digest}`, the organization being the applications' own when they have one of their own. |
 | `JC_PORTAL_APPS_URL` | — | no | `JC_PORTAL_APPS_URL`: an absolute `http(s)` origin with nothing after it. |
 | `JC_PORTAL_APP_TESTS_IMAGE` | — | no | The run's test sandbox (SDK-38): `JC_PORTAL_APP_TESTS_NAMESPACE`, a Kubernetes name, and `JC_PORTAL_APP_TESTS_IMAGE`, an image reference pinned by `@sha256:` digest, both or neither. |
 | `JC_PORTAL_APP_TESTS_NAMESPACE` | — | no | The run's test sandbox (SDK-38): `JC_PORTAL_APP_TESTS_NAMESPACE`, a Kubernetes name, and `JC_PORTAL_APP_TESTS_IMAGE`, an image reference pinned by `@sha256:` digest, both or neither. |
@@ -176,8 +180,10 @@ The reconciler, as a CLI for an operator and as the library the Portal embeds.
 |---|---|---|---|
 | `JC_ENVIRONMENT` | — | no | The overlay `JC_ENVIRONMENT` names, as `validate` and `plan` read it (CC-73). |
 | `JC_GATEWAY_URL` | — | no | `JC_GATEWAY_URL` is the Context Gateway this run writes through, and `JC_TOKEN_FILE` the file holding the reconciler's ServiceAccount token — a path to a secret, projected by the deployment and never a value in the environment. |
+| `JC_IDM` | — | no | `JC_IDM` is the identity provider's issuer when `--idm` is not given, e.g. `https://idm.<domain>/realms/<realm>`. |
 | `JC_MODEL_TOOLS_URL` | — | no | Where Model Tools is, when `--url` names no address: `JC_MODEL_TOOLS_URL`. |
-| `JC_TOKEN_FILE` | — | a path to one | `JC_GATEWAY_URL` is the Context Gateway this run writes through, and `JC_TOKEN_FILE` the file holding the reconciler's ServiceAccount token — a path to a secret, projected by the deployment and never a value in the environment. |
+| `JC_SERVER` | — | no | The Portal the client verbs talk to: `--server` or `JC_SERVER`, with the token from `--token-file` or `JC_TOKEN_FILE` (API/03 §2a). |
+| `JC_TOKEN_FILE` | — | a path to one | The Portal the client verbs talk to: `--server` or `JC_SERVER`, with the token from `--token-file` or `JC_TOKEN_FILE` (API/03 §2a). |
 
 ## 6. Injected into a workload
 

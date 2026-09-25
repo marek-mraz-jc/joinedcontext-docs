@@ -610,11 +610,41 @@ contains, so every read the specification defines answers over the union of the 
 ```text
                     Endpoint  hel-open  (public or token)
                         │
-                 Context Space  helsinki        ← holds only registrations
+                 Context Space  hub             ← holds only registrations
                     ┌───┴────┐
      CSR transport  │        │  CSR air-quality
                     ▼        ▼
           Space transport   Space air-quality   ← hold the entities
+```
+
+The hub is two manifests beside its registrations: the space, and the Endpoint that serves it.
+`transport` above registers into this space, and a second registration does the same for
+`air-quality`.
+
+```yaml
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSpace
+metadata:
+  name: hub
+  namespace: helsinki
+  title: "Helsinki now"
+  description: "No entities of its own: registrations to transport and air-quality"
+spec:
+  isSandbox: false
+---
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: hel-open
+  namespace: helsinki
+spec:
+  contextSpaceRef: hub
+  slug: ljjrcgyemyy5t23ps25gcsfyazyqd5yc
+  audience: public
+  policyRef: urn:ngsi-ld:Policy:hel.fi:hub:public-read
+  enabledRepresentations:
+    - ngsi-ld
+    - mcp
 ```
 
 Nothing about the hub is a new code path. The gateway applies the hub Endpoint's policy set and
