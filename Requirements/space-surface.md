@@ -9,7 +9,7 @@ Status: Draft
 Date: 2026-08-23
 Scope: The public surface of one context space (tenant/dataset space):
 its URL scheme, the representations exposed under it (NGSI-LD API, MCP,
-WebSocket, schema artifacts, RDF dumps, DCAT record), tenancy without a
+WebSocket, schema artifacts, dumps, DCAT record), tenancy without a
 client-facing tenant header, and the per-space MCP instance model.
 Decision rationale and rejected variants: ADR 013.
 Related: ADR 001 (URN), ADR 007 (@context discovery), ADR 010 (LOD),
@@ -48,11 +48,10 @@ for the **SP-01…SP-22** family.
   `.well-known/oauth-protected-resource`. No other invented segments;
   in particular there is no `endpoint/` intermediary and no
   per-representation ad-hoc naming.
-  > Note: the gateway routes `ngsi-ld/v1/` and `mcp` today
-  > (`context-gateway` `src/app.rs`). `schema/`, `dump/` and the protected-resource
-  > document are the permitted set this requirement fixes, not a set that answers:
-  > the schema artifacts are served on the Endpoint (EP-46…EP-52) and the dated dumps
-  > (SP-13) are not built. The space record advertises what is routed and grows with it
+  > Note: the gateway routes `ngsi-ld/v1/`, `mcp`, `schema/index.json` with
+  > `schema/v{major}/{artifact}`, and `dump/` (`context-gateway` `src/app.rs`, T-2373,
+  > T-2391); the protected-resource document is permitted and not routed. The space
+  > record advertises what is routed and grows with it
   > (`handlers/space_surface.rs::children`, T-2379), so a discovery document never names
   > a path that answers 404.
 
@@ -93,13 +92,21 @@ for the **SP-01…SP-22** family.
   cannot at least discover.
 - **SP-12** — Format handling: each artifact has one canonical
   content-negotiated resource; extension-suffixed URLs
-  (`model.linkml.yaml`, `latest.nq.gz`, …) MUST exist as direct-download
-  aliases of the same resource, never as divergent copies.
+  (`model.linkml.yaml`, …) MUST exist as direct-download aliases of the
+  same resource, never as divergent copies. The dump is one resource,
+  `dump/`, a ZIP archive with no alias (SP-13).
 - **SP-13** — Versioning: `schema/context.jsonld` and model artifacts
   MUST have stable versioned URLs (e.g. `schema/v3/context.jsonld`)
   with `latest` as a redirect, a subscription's `jsonldContext` must
-  not change meaning under a live consumer. Dumps are dated and
-  immutable; `dump/latest.*` is a pointer.
+  not change meaning under a live consumer. A dump is not versioned:
+  `GET /cs/{space}/dump/` MUST generate, per request, the `file.zip`
+  bundle (EP-41) over everything in the space the caller's grants read
+  at that instant, projected as the NGSI-LD surface projects it, named
+  by its date in `Content-Disposition`; a caller whose grants reach
+  nothing gets the `404` of a space that does not exist (SP-06), and a
+  dump past the byte or row ceiling (EP-44) MUST be refused whole with
+  `413`, never truncated. Nothing is stored, so there is no
+  `dump/latest` and no dated URL to pin (T-2391).
 
 ## 4. Per-space MCP instances
 
