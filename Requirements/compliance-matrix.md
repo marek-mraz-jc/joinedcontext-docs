@@ -893,6 +893,14 @@ Generated 2026-09-25 from: `docs` e62cde8, `conformance` 4b8c9e9, `deployment` 7
 | **PF-93** | [S] | tested | ci-full, fast ci | portal `src/api/people.rs::an_email_is_trimmed_lowered_and_shaped`, portal `src/api/people.rs::a_name_and_a_locale_are_checked`, portal `tests/people_tests.rs::disabling_a_person_ends_their_sessions`, and 3 more |
 | **PF-94** | [H] | tested | ci-full, fast ci | portal `src/api/people.rs::an_email_is_trimmed_lowered_and_shaped`, portal `src/api/people.rs::a_name_and_a_locale_are_checked`, portal `tests/people_tests.rs::a_persons_page_names_their_groups_and_roles`, and 1 more |
 | **PF-95** | [S] | tested | ci-full | portal `tests/group_delete_tests.rs::a_group_leaves_every_binding_and_access_entry_in_the_same_change`, portal `tests/group_delete_tests.rs::a_reference_in_a_projects_own_repository_refuses_the_deletion_naming_it`, portal `tests/group_delete_tests.rs::deleting_a_group_needs_the_rights_its_cascade_needs`, and 1 more |
+| **PF-96** | [S] | open |  |  |
+| **PF-97** | [S] | open |  |  |
+| **PF-98** | [S] | open |  |  |
+| **PF-99** |  | open |  |  |
+| **PF-100** | [S] | open |  |  |
+| **PF-101** | [H] | open |  |  |
+| **PF-102** | [H] | open |  |  |
+| **PF-103** | [S] | open |  |  |
 
 ### PL — Pipelines
 
