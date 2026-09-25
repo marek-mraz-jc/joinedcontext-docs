@@ -774,6 +774,7 @@ downloaded is byte-for-byte what a `git archive` of that path would hold:
 ```text
 GET /api/v1/projects/{project}/export?format=yaml|json|zip|git&revision={commit}&kinds={plurals}&names={names}
 GET /api/v1/projects/{project}/revisions?limit=20
+GET /api/v1/projects/{project}/apps/{name}/export
 ```
 
 - `format=yaml` (default) is one multi-document YAML stream, one manifest per document; with
@@ -847,6 +848,19 @@ GET /api/v1/projects/{project}/revisions?limit=20
 
 - `503` with `problem+json` when no forge is configured (CC-03): a Portal that cannot read the
   repository has nothing to export.
+- `GET …/apps/{name}/export` exports one application, for an organization administrator only
+  (UI-87): anybody else who may read the project gets `403`, and a project or an App the caller
+  may not read is `404`. The App must build from a repository of the forge's applications
+  organization (`source.git`, AP-72, AP-75); one that builds from anywhere else is `409` naming
+  it, because an export without its source would import an App that cannot build. The archive
+  (`application/zip`, `{name}-app-{short}.zip`) holds `{name}.bundle`, the forge's `git bundle`
+  of the App repository's default branch with its whole history; `{name}.tags` as in
+  `format=git`; `app.yaml`, the App manifest as the project's repository holds it at its head,
+  stripped as every export strips it (`status`, the built digest, secret values; MF-17, AP-13a);
+  and the `kind: Bundle` index `bundle.yaml` (namespace the project, name the App), whose `items`
+  list the App, whose `repositories` list the one `application` bundle with the head it ends at,
+  and whose `files` carry every file's SHA-256 (MF-42). A bundle that ends elsewhere than the
+  head read in the same export is `409` (export again).
 
 Import is the same bundle read back, into a project that is not the one it left (MF-20…MF-26):
 
@@ -945,6 +959,22 @@ POST /api/v1/projects/{project}/import?dryRun=All
   import form is drawn from; nothing is created. As for every import, that dry run is the check
   PF-57 holds the import to under `strict`, over the archive's SHA-256, the slug and the
   parameters.
+- `?format=app` imports the archive of `GET …/apps/{name}/export` as a new App of `{project}`, a
+  project of layout 2, for an organization administrator only (UI-87, `403` otherwise, before
+  the body is read). The body is `multipart/form-data` with the archive as `file` and an optional
+  `name`, the App's name here (the archive's by default, a DNS-1123 label). Before anything is
+  created the archive is checked: the index is a valid `kind: Bundle` whose `repositories` are
+  one `application` bundle and nothing else, every file's SHA-256 equals the index (MF-42), the
+  bundle ends at the head the index lists (MF-46), and `app.yaml` loads as an `App` at this
+  release's `apiVersion` (MF-47); each failure is `400` naming it. An App of that name in the
+  project, or a repository `{project}_{name}` in the forge (AP-75), is `409`. Then the
+  repository is created empty and private in the applications organization, the bundle is
+  pushed as `main` with its tags, its head is read back against the index, and `main` is
+  protected; the answer is `202` and the project's `Change`, red lane, that adds the App under
+  the new name with `source.git.url` naming the new repository and every other field as
+  exported. A failure after the repository exists removes it again (CC-85). `dryRun` answers
+  `200` with the repository it would create and the head, and is the check PF-57 holds the
+  import to, over the archive's SHA-256, the project and the name.
 - The `{"url": …}` source of MF-20 answers `501`. Fetching a host the caller names is an egress
   decision the Portal has no policy behind, and the upload form carries the same bundle; see
   `OPEN-QUESTIONS.md`.
