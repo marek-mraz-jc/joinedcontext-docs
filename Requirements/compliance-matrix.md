@@ -140,7 +140,7 @@ Generated 2026-09-25 from: `docs` cc7c7e9, `conformance` 380549b, `deployment` 9
 | **AG-90** | [H] | open |  |  |
 | **AG-91** | [A] | tested | ci-full, fast ci | portal `src/agents/oneshot/integrate.rs::the_first_step_of_the_path_is_the_source_step`, portal `src/agents/oneshot/integrate.rs::a_csv_is_its_header_and_its_rows`, portal `src/agents/oneshot/integrate.rs::json_is_the_records_it_holds`, and 30 more |
 | **AG-92** | [A] [S] | tested | ci-full, fast ci | portal `src/agents/capabilities.rs::each_preset_takes_the_paths_of_the_one_before_and_its_own`, portal `src/agents/capabilities.rs::read_keeps_the_reading_tools_and_refuses_every_other`, portal `src/agents/capabilities.rs::a_change_to_entities_needs_the_endpoints_own_read_write`, and 8 more |
-| **AG-93** | [A] [S] | open |  |  |
+| **AG-93** | [A] [S] | tested | fast ci | portal `tests/agent_runs_tests.rs::a_journey_s_run_is_marked_and_a_list_leaves_it_out_unless_asked`, `src/api/agent_runs.rs::tests::origin`, `ui/tests/assistant_page.test.tsx::leaves the journeys' test runs out until Show test runs is ticked, and marks them` |
 
 ### AP — Apps on demand
 
