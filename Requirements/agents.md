@@ -168,6 +168,7 @@ Decided in [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) (T-2691).
 - **AG-89** [A][S] — Each path MUST declare its tool set and the agent MUST see only those tools, never more than the caller's permissions allow; every write MUST end as a Change the person sends from the page the flow filled (AG-73).
 - **AG-90** [H] — A path step MUST be a question with options and free text, a request for data (a file, a URL, a space or an Endpoint picker) or an action, and a step that works on a page MUST open it with its prefill through the `navigate` event.
 - **AG-91** [A] — A path's first step MUST answer without a model call in under 300 ms, a model step MUST stream its first token in under 2 s, profiling an upload up to 10 MB MUST take under 3 s, and every step event MUST carry `elapsedMs`.
+- **AG-92** [A][S] — A conversation MAY carry the capabilities the person chose for it (`access`): a preset, `read` (only reading tools and the Find data path), `propose` (also the tools and paths that draft a Change the person sends) or `build` (also the paths that build an app, a dashboard, a pipeline or a KPI), and per endpoint `read` or `readWrite`, set from a Capabilities control on the data bar in at most two clicks and changeable with any message; the platform MUST intersect it with the person's effective permissions and the profile's `spec.access` (AG-70), so the choice only narrows, and MUST refuse a tool or a path outside it as a refused `tool` step or a `403` naming the choice, never run it (AG-73, AG-75, AG-89).
 
 ## Traceability
 
@@ -212,7 +213,7 @@ Decided in [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) (T-2691).
 | AG-79 | [Architecture/09-portal.md#10-operations-drafts-and-verdicts](../Architecture/09-portal.md#10-operations-drafts-and-verdicts) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | AG-82 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 | AG-86 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
-| AG-87…AG-91 | [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| AG-87…AG-92 | [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
 ## Related
 

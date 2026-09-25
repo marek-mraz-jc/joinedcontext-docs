@@ -352,7 +352,8 @@ when the profile does not grant reading one), recorded as an `endpoints` event w
 and the gateway's policy for the person still decides every row. On any other kind of run the
 field answers `400 Bad Request`.
 
-It MAY also carry `pageContext`, the page the person is on as they send it, checked as on the
+It MAY also carry `access` (AG-92), checked as on the start: the capabilities from this message
+on, replacing the ones before; the `message` event carries it. It MAY also carry `pageContext`, the page the person is on as they send it, checked as on the
 start (section 8, "Start or Continue") and refused the same way. The `message` event carries the
 page read from it as `page`: `{route, page, kind, name, sub, tab}`, names only. The run answers
 about the newest page it was told. On any other kind of run `pageContext` answers `400 Bad Request`.
@@ -566,6 +567,12 @@ Request payload properties:
   - a `tab` query parameter, when it is a label, is kept; every other query parameter is dropped.
   The route is at most 300 characters. Anything else answers `400 Bad Request`. It carries names only, never a value. The run is told which page is open and how to read it: `jc_resource_get` on the kind and name of a detail page, `jc_resource_list` on a list. A question about "this page" is answered from that page, never from a catalog search. The same `pageContext` may ride on every later message (`POST …/agent-runs/{id}/messages`), and the newest one is the page the run answers about.
 - `endpointNames`: Optional, zero to five distinct endpoint names of the project the conversation may query (AG-75). Each is resolved like an application run's (AP-44) and refused with `403 Forbidden` when the profile does not grant reading it (AG-70); the gateway's policy for the person still decides every row. A continuation without it keeps the endpoints of the run it continues.
+- `access`: Optional, the capabilities the person chose for the conversation (AG-92, T-2718): `{ "preset": "read" | "propose" | "build", "endpoints": { "<endpoint name>": "read" | "readWrite" } }`.
+  - `read`: the reading tools only (`jc_ask`, `jc_ui_navigate`, `jc_switch_path`, `describe_tool`, `search_catalog`, `jc_catalog_search`, `query_endpoint`, and the registry's read-only operations such as `jc_resource_get`), and of the paths only `find-data`.
+  - `propose`: also every tool that drafts something the person proposes (`change_resource`, `propose_endpoint`, `edit_endpoint`, `grant_role`, `write_entities`, `space_complete`, `compute_kpi`, `draft_kpi_pipeline` and the registry's operations that are not read-only), and the paths `share-data`, `upload-data` and `create-data-model`.
+  - `build`: also the paths `build-app`, `build-dashboard`, `integrate-pipeline` and `define-kpi`.
+  - Per endpoint, `readWrite` lets `write_entities` prepare a change to that endpoint's entities; `read`, the default for an endpoint not named, does not.
+  The choice only narrows: the Portal intersects it with the person's permissions and the profile's `spec.access` (AG-70). A tool outside it is a `failed` `tool` step naming the choice, which goes back to the model; a `path` outside it answers `403 Forbidden` naming the preset. Without `access` nothing is narrowed beyond AG-70. Any other shape answers `400 Bad Request`.
 - `continues`: Optional string referencing the `id` of an ended conversation run. When supplied, the Portal seeds the new run with the prior conversation transcript (user and assistant messages and tool results, newest retained if token budgets require truncation) and links the thread.
 
 Response: `202 Accepted`

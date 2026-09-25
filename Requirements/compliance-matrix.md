@@ -139,6 +139,7 @@ Generated 2026-09-24 from: `docs` 705cfc1, `conformance` 167a505, `deployment` 0
 | **AG-89** | [A] [S] | open |  |  |
 | **AG-90** | [H] | open |  |  |
 | **AG-91** | [A] | open |  |  |
+| **AG-92** | [A] [S] | open |  |  |
 
 ### AP — Apps on demand
 
