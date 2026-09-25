@@ -5,11 +5,11 @@ title: "Operations, Deployment & Reliability"
 
 # Operations, Deployment & Reliability
 
-Family **OPS** (OPS-01…OPS-51). Owning chapter: [13-security.md](../Architecture/13-security.md). Verified by: [05-deployment-and-performance-tests.md](../Testing/05-deployment-and-performance-tests.md).
+Family **OPS** (OPS-01…OPS-52). Owning chapter: [13-security.md](../Architecture/13-security.md). Verified by: [05-deployment-and-performance-tests.md](../Testing/05-deployment-and-performance-tests.md).
 
 This chapter specifies the operational, deployment, and Site Reliability Engineering (SRE) requirements for operating the federated digital twin platform in production Kubernetes environments.
 
-The family runs OPS-01…OPS-51 with two holes: no OPS-24 and no OPS-25 were ever issued.
+The family runs OPS-01…OPS-52 with two holes: no OPS-24 and no OPS-25 were ever issued.
 
 ## 1. Helmfile Component Architecture
 
@@ -108,6 +108,10 @@ The family runs OPS-01…OPS-51 with two holes: no OPS-24 and no OPS-25 were eve
 
 - **OPS-51** [H] — The Portal MUST answer `GET /api/v1/ready` with 503 until its mirror holds the configuration repository (the first successful sync of this replica, leader or follower) and 200 afterwards, MUST keep `GET /api/v1/health` unconditional for liveness, and its readiness probe MUST read the ready route, so traffic never reaches a replica that would list an empty project or refuse a check against a project it has not loaded; a follower loads the repository read-only (no stream, app or roles convergence), so a rolling update never waits on the leader's lock, and the answer carries nothing but the state (OPS-06, MF-04).
 
+## 12. Vulnerability reporting
+
+- **OPS-52** [S] — Every host the edge serves MUST answer `GET /.well-known/security.txt` (RFC 9116) itself, as `text/plain; charset=utf-8`, with the installation's `Contact` and an `Expires` at most a year ahead, from `global.securityTxt`; a production render without both MUST fail, and the render test of `dev` MUST fail 30 days before its `Expires` passes, so the file is renewed before a reporter reads an expired one (T-1721).
+
 ## Traceability
 
 | Requirements | Section | Architecture | Tests |
@@ -124,6 +128,7 @@ The family runs OPS-01…OPS-51 with two holes: no OPS-24 and no OPS-25 were eve
 | OPS-48…OPS-49 | Activity pipeline | [../Deployment/05-monitoring-logging.md#5-the-activity-pipeline](../Deployment/05-monitoring-logging.md#5-the-activity-pipeline) | [05-deployment-and-performance-tests.md](../Testing/05-deployment-and-performance-tests.md) |
 | OPS-50 | The Action Inspector | [../Architecture/19-agent-runner.md#7-attribution-and-audit](../Architecture/19-agent-runner.md#7-attribution-and-audit) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | OPS-51 | Readiness | [../Architecture/09-portal.md#1-portal-api-specification](../Architecture/09-portal.md#1-portal-api-specification) | [05-deployment-and-performance-tests.md](../Testing/05-deployment-and-performance-tests.md) |
+| OPS-52 | Vulnerability reporting | [../Deployment/10-edge-routing-apisix.md](../Deployment/10-edge-routing-apisix.md#2-public-url-surface-and-path-based-route-table) | [06-security-tests.md](../Testing/06-security-tests.md) |
 
 ## Related
 

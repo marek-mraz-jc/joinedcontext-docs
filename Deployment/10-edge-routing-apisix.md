@@ -54,6 +54,7 @@ Every row below is one entry of `components/<component>/apisix-routes.yaml` with
 | Route ID | Path Pattern | Host | Priority | Upstream Service | Auth Mode | Rate Limit | Notable plugins |
 |---|---|---|---|---|---|---|---|
 | `portal-ui` | `/*` | `portal.{host}` | 1 | `portal:8080` | Edge session (`openid-connect`, `unauth_action: auth`) | Class 1 | `openid-connect`, `proxy-rewrite` |
+| `security-txt` | `/.well-known/security.txt`, `GET` and `HEAD` | every host | 50 | terminates at the edge | none | Class 1 | `fault-injection` answering `200` with `Contact` and `Expires` from `global.securityTxt` (OPS-52) |
 | `portal-metrics` | `/metrics` | `portal.{host}` | 5 | terminates at the edge | none | none | `fault-injection` answering `404` |
 | `portal-well-known` | `/.well-known/oauth-protected-resource*` | `portal.{host}` | 5 | `portal:8080` | Anonymous (RFC 9728 discovery, AG-60) | 600/min per IP | `proxy-rewrite` |
 | `portal-api` | `/api/v1/*` | `portal.{host}` | 10 | `portal:8080` | Edge session or OIDC bearer (`unauth_action: pass`) | Class 2 | `openid-connect`, `proxy-rewrite` |
@@ -75,7 +76,7 @@ Every row below is one entry of `components/<component>/apisix-routes.yaml` with
 
 The `app-{name}` and `app-{name}-endpoint` rows are the routes no chart renders: the Portal's reconciler adds them per published App to the file helm renders (section 3, ADR-N-030). `apps-surface` and `context-endpoint-apps` stay as the fallback for an App that is not published. Every other row exists in the deployment repository.
 
-Three routes answer at the edge and never dial the upstream their entry declares: `portal-metrics` (`404`, so the scrape path says nothing from outside the cluster), `portal-redirect` (`302` to the Portal host) and `ckan-redirect` (`302` to the catalogue host).
+Four routes answer at the edge and never dial the upstream their entry declares: `security-txt` (`200`, the RFC 9116 file), `portal-metrics` (`404`, so the scrape path says nothing from outside the cluster), `portal-redirect` (`302` to the Portal host) and `ckan-redirect` (`302` to the catalogue host).
 
 The `context-endpoint` routes refuse one path of their own before anything else runs: a URI matching `^/api/endpoint/[^/]+/egress/` is answered `403` in the rewrite phase. That is the notification delivery path, which carries no token by design (R46) and is reachable in-cluster only; published at the edge it would be a delivery-forging surface.
 
