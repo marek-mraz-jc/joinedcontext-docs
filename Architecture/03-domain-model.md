@@ -266,9 +266,11 @@ slot, the way it carries `x-ngsi-ld-kind`, and `model.qb.ttl` is rendered from t
 Tools beside the SHACL and the OWL (`gen_qb.py`), and by the gateway from the endpoint's
 projection on the schema surface, where the OWL also types each component property as a
 `qb:DimensionProperty` or a `qb:MeasureProperty` (Architecture/11 §8). An observation's
-`{localId}` is the DSD's class name and its dimension values joined by hyphens
-(`jc_core::qb::observation_local_id`), so the same cell always has the same id and a re-run of
-the pipeline that writes it updates rather than duplicates.
+`{localId}` is the DSD's class name and its dimension values joined by `~`, a dimension that is
+an entity contributing that entity's own `{localId}` (`jc_core::qb::observation_local_id`):
+`PopulationObservation~okres-banska-bystrica~15-19~2024`. Not `-`, which an age band carries.
+The same cell always has the same id, so a re-run of the pipeline that writes it updates rather
+than duplicates.
 
 ---
 
