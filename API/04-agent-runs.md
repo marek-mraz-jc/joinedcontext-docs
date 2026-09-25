@@ -352,6 +352,11 @@ when the profile does not grant reading one), recorded as an `endpoints` event w
 and the gateway's policy for the person still decides every row. On any other kind of run the
 field answers `400 Bad Request`.
 
+It MAY also carry `pageContext`, the page the person is on as they send it, checked as on the
+start (section 8, "Start or Continue") and refused the same way. The `message` event carries the
+page read from it as `page`: `{route, page, kind, name, sub, tab}`, names only. The run answers
+about the newest page it was told. On any other kind of run `pageContext` answers `400 Bad Request`.
+
 ### Calling a Function
 
 The page that frames a code run's preview forwards the SDK's `/functions/{fn}` requests here (Architecture/20 §3, SDK-23):
@@ -554,6 +559,12 @@ Request payload properties:
   the run is told which form is open and which field was asked about, so "what goes here?" is answerable
   and "fill this from a sentence" writes the draft the open form is already showing — the form picks the
   new values up from the draft's own event stream. The assistant still never proposes (AG-77).
+- `pageContext`: Optional, the page the person is on when they ask (UI-61, AG-77, T-2763): `{ "route": "/projects/helsinki/spaces/helsinki?tab=inside" }`, the address bar's path and query. The Portal reads it against its own page table, never trusting a kind the browser names:
+  - the path is `/projects/{project}/{page}[/{name}[/{sub}]]`, with `{project}` the conversation's own;
+  - `{page}` is a kind's plural (or `models` for DataModel) or another page of the project (`approvals`, `activity`, `import`, `explore` and the rest);
+  - `{name}` and `{sub}` are DNS-1123 labels, and `new`, `edit` or `complete` are actions, never names;
+  - a `tab` query parameter, when it is a label, is kept; every other query parameter is dropped.
+  The route is at most 300 characters. Anything else answers `400 Bad Request`. It carries names only, never a value. The run is told which page is open and how to read it: `jc_resource_get` on the kind and name of a detail page, `jc_resource_list` on a list. A question about "this page" is answered from that page, never from a catalog search. The same `pageContext` may ride on every later message (`POST …/agent-runs/{id}/messages`), and the newest one is the page the run answers about.
 - `endpointNames`: Optional, zero to five distinct endpoint names of the project the conversation may query (AG-75). Each is resolved like an application run's (AP-44) and refused with `403 Forbidden` when the profile does not grant reading it (AG-70); the gateway's policy for the person still decides every row. A continuation without it keeps the endpoints of the run it continues.
 - `continues`: Optional string referencing the `id` of an ended conversation run. When supplied, the Portal seeds the new run with the prior conversation transcript (user and assistant messages and tool results, newest retained if token budgets require truncation) and links the thread.
 
