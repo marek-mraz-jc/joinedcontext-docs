@@ -153,6 +153,8 @@ Use it for full-snapshot sources: a vehicle list, a register of stations, a cata
 
 Leave it off for incremental and event feeds: sensor readings, change streams, a feed that only sends what changed. There a quiet entity has nothing new to say, and expiry would delete it. That is why expiry is off unless you switch it on.
 
+### Switch On Expiry
+
 #### By hand
 
 1. On `/projects/helsinki/pipelines`, open the pipeline and switch on **Remove entities the source no longer sends**.
