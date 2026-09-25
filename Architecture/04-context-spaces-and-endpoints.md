@@ -483,7 +483,7 @@ The MCP façade is an encoder like the others: a tool call is turned into the NG
 
 | Field | Effect | When absent |
 |---|---|---|
-| `spec.enabledRepresentations` | The child paths this Endpoint serves. A path that is not enabled answers `404`, the same answer an unknown slug gets (EP-23). | At least one is required. |
+| `spec.enabledRepresentations` | The child paths this Endpoint serves beyond `ngsi-ld`, `geojson` and `mcp`, which every Endpoint serves whether or not it lists them (EP-10, EP-24, T-2939). A path that is not served answers `404`, the same answer an unknown slug gets (EP-23). | At least one is required. |
 | `spec.mcp` | `false` turns off the Endpoint's MCP instance, the one child path that is on without being listed: every Endpoint, public or internal, serves `mcp` by default, gated by its own Policy like every other path (EP-24, T-2901). `false` beside `mcp` in `spec.enabledRepresentations` is refused. | `true`: the Endpoint serves `mcp`. |
 | `spec.rateLimits.requestsPerMinute`, `spec.rateLimits.burst` | Token bucket per consumer IP or authenticated identity, advertised in `RateLimit-*` headers (EP-20). Set only by choice: no door writes one the person did not ask for. | No limit: the gateway counts nothing and sends no `RateLimit-*` fields. The edge's anti-flood bucket still protects the node. |
 | `spec.caching.maxAgeSeconds` | `Cache-Control: max-age` on read responses of every representation. Public endpoints are cached publicly, everything else privately, because a shared cache must never serve one caller's projection to another. | Read responses are validated with ETags and not cached by age. |

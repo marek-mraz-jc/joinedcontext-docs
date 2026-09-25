@@ -28,8 +28,8 @@ Family **EP** (EP-01…EP-90). Owning chapter: [Architecture/04-context-spaces-a
 ## 3. Representation Translation Mappings
 
 - **EP-08** [P] — Tabular representations (`file.csv`, `file.xlsx`) MUST flatten NGSI-LD entity properties using dot-notation keys and serialize relationships as URN strings.
-- **EP-09** [P] — GeoJSON representations (`file.geojson`) MUST map entities containing a valid `GeoProperty` to standard GeoJSON `Feature` objects.
-- **EP-10** [P] — If an entity query directed to spatial representations targets types that lack a spatial `GeoProperty`, the gateway MUST reject the request with HTTP 400 Bad Request.
+- **EP-09** [P] — GeoJSON representations (`file.geojson`) MUST map every entity of the answer to one standard GeoJSON `Feature`, whose `geometry` is the entity's valid primary `GeoProperty` (`location`) and `null` when it has none (RFC 7946 §3.2).
+- **EP-10** [P] — Every Endpoint MUST serve `ngsi-ld` and `geojson` whether or not `spec.enabledRepresentations` lists them, as it serves `mcp` (EP-24), and MUST advertise both wherever it advertises its representations; a query whose types lack a spatial `GeoProperty` MUST answer `200` with the `null`-geometry Features of EP-09, never a `4xx`, so no Endpoint advertises a surface that refuses (T-2901, T-2939).
 - **EP-11** [P] — OGC Features representations MUST expose each distinct NGSI-LD entity type within the space as an OGC Feature Collection.
 - **EP-12** [P] — SensorThings representations (`sta/v1.1/`) MUST map Smart Data Models observation entities directly to STA entity sets.
 - **EP-13** [P] — Inexpressible STA entities MUST return HTTP 404 Not Found, while non-temporal write operations MUST be rejected with HTTP 405 Method Not Allowed.
