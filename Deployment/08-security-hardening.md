@@ -98,6 +98,10 @@ A key removed before the window has passed signs out whoever was idle through it
 login and nothing else; a key left there for ever is a key that is never retired, which is what
 the rotation is for. The window is the session lifetime, not a fixed day.
 
+In the deployment, `scripts/rotate-secret.sh --secret portal-cookie-key` does step 1: it keeps the
+old key under the Secret's `previous` key, which the Portal reads as `JC_PORTAL_COOKIE_KEY_PREVIOUS`.
+`--drop-previous` does step 3 (Operations/01, Runbook 5; T-2842).
+
 #### Rotating a secret that two sides share
 
 A secret only one component holds is rotated by writing the new value and restarting it. A
