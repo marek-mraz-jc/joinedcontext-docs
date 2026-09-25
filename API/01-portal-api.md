@@ -344,6 +344,19 @@ forge, with the gate's own document (`reason` is `verdict_absent`, `verdict_fail
       "detail": "The manifest has not been checked; check it, then propose it." }
 ```
 
+A manifest naming a resource of its project that is not merged yet but that an open change creates
+checks as waiting (MF-48): `valid: true`, and the verdict adds the change it waits on and says so:
+
+```json
+"verdict": { "ok": true, "waitsOn": ["chg-0000002a"],
+             "findings": [ { "level": "warning", "path": "spec.sources[0].dataSourceRef",
+                             "message": "DataSource 'hsl-bikes' resolves once chg-0000002a is approved" } ],
+             "checkedAt": "2026-09-25T12:00:00Z", "inputDigest": "sha256:…" }
+```
+
+The proposal is let through and its merge request records the change it waits on; a reference
+nothing holds, or one whose change was rejected in the meantime, is refused naming the field.
+
 The check is the same request with `?dryRun=All`, so a client sends the manifest twice: first to
 check it, then, unchanged, to propose it. A proposal that became a Change forgets the draft its
 check created; a person's draft of the same resource with other content stays.
@@ -500,6 +513,10 @@ Approval rules, enforced by the API and not only by the UI:
   count;
 - a proposal in the `red` lane needs the `portal-approver` role **and** an explicit
   `{"confirm": "<resource name>"}` body, so a destructive merge is never one click (CC-19, CC-39);
+- a change that waits on another (MF-48) lists it in `waitsOn`, one `{ "name": "chg-…", "phase":
+  "PendingApproval" | "Merged" | "Rejected" }` each, on the list and on the detail;
+  approving it is `409 conflict` while one of them is not merged, and a `Rejected` one flags the
+  change: what it names will not be created, so it is rejected or proposed again;
 - approving answers `202` with the `Change`, its `phase` moved to `Deploying`; the reconciler
   moves it to `Live` when the merge lands on the default branch and the mirror sync observes it.
 
