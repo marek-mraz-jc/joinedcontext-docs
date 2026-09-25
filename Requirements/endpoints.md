@@ -6,7 +6,7 @@ description: Universal ingress and egress multi-representation views, opaque slu
 
 # Endpoints & Representation Parity
 
-Family **EP** (EP-01…EP-86). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **EP** (EP-01…EP-88). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
 ## 1. Endpoint Identity and Opaque Slug
 
@@ -56,6 +56,8 @@ Family **EP** (EP-01…EP-86). Owning chapter: [Architecture/04-context-spaces-a
 - **EP-24** [A] — Each Endpoint MUST serve an isolated MCP instance at `/api/endpoint/{endpointSlug}/mcp` conforming to SP-14 through SP-20.
 - **EP-25** [A] — The tool list advertised by the Endpoint MCP instance MUST be dynamically rendered from the active Policy grants attached to the Endpoint and caller token (SP-15).
 - **EP-26** [A] — Tool calls executed through the Endpoint MCP instance MUST forward the caller's verified OAuth 2.1 bearer token through the gateway PEP without ambient privileges.
+- **EP-87** [A] — The gateway MUST serve a hub at `/api/mcp` ([ADR-N-025](../Decisions/adr-n-025-one-mcp-connector-several-endpoints.md)) whose `list_endpoints` answers only the Endpoints the token may read through it, and whose every data tool takes one required `endpoint` from that list and runs as a call to that Endpoint's own MCP (EP-24, EP-25): that Endpoint's PDP with the caller's token, its projection, its rate limit and its elicitation. A hub call MUST also spend one request of a per-subject bucket shared by every Endpoint, so a burst cannot be spread across Endpoints. `endpoint` is one string, never a list, and no tool, filter, join or subscription of the hub reads more than one Endpoint in a call. The per-Endpoint URL stays.
+- **EP-88** [S] — A hub token MUST reach only the Endpoints its `endpoint:{slug}` scopes name, chosen by the person at connect time, or the one Endpoint its audience names (PF-45, PF-46); a token with no `endpoint:` scope reaches none. An `endpoint` outside that set MUST be refused with the same bytes as an unknown slug (SP-20). The allow-list narrows and never grants: each call is still decided by the Endpoint's own Policy.
 
 ## 8. Discovery and Performance Budgets
 
@@ -174,6 +176,7 @@ Family **EP** (EP-01…EP-86). Owning chapter: [Architecture/04-context-spaces-a
 | EP-17…EP-20 | [Architecture/05-context-gateway.md#3-cache-architecture--revocation-propagation-r40-r48](../Architecture/05-context-gateway.md#3-cache-architecture--revocation-propagation-r40-r48) | [Testing/01-backend-tests.md#6-what-the-requirements-ask-for-and-is-not-built-yet](../Testing/01-backend-tests.md#6-what-the-requirements-ask-for-and-is-not-built-yet) |
 | EP-21…EP-23 | [Architecture/04-context-spaces-and-endpoints.md#2-tenancy-without-client-headers-sp-05sp-09](../Architecture/04-context-spaces-and-endpoints.md#2-tenancy-without-client-headers-sp-05sp-09) | [Testing/01-backend-tests.md#2-the-context-gateway-harness](../Testing/01-backend-tests.md#2-the-context-gateway-harness) |
 | EP-24…EP-26 | [Architecture/07-agents-and-mcp.md#1-dual-mcp-surfaces](../Architecture/07-agents-and-mcp.md#1-dual-mcp-surfaces) | [Testing/02-conformance-tests.md#4-model-context-protocol](../Testing/02-conformance-tests.md#4-model-context-protocol) |
+| EP-87…EP-88 | [Architecture/07-agents-and-mcp.md#1-dual-mcp-surfaces](../Architecture/07-agents-and-mcp.md#1-dual-mcp-surfaces) | [Testing/02-conformance-tests.md#4-model-context-protocol](../Testing/02-conformance-tests.md#4-model-context-protocol) |
 | EP-27…EP-28 | [Architecture/04-context-spaces-and-endpoints.md#3-the-endpoint-model](../Architecture/04-context-spaces-and-endpoints.md#3-the-endpoint-model) | [Testing/05-deployment-and-performance-tests.md#5-the-k6-budgets](../Testing/05-deployment-and-performance-tests.md#5-the-k6-budgets) |
 | EP-29…EP-40 | [Architecture/04-context-spaces-and-endpoints.md#4-multi-representation-translation-engine](../Architecture/04-context-spaces-and-endpoints.md#4-multi-representation-translation-engine) | [Testing/02-conformance-tests.md#2-ogc-api---features-part-1](../Testing/02-conformance-tests.md#2-ogc-api---features-part-1) |
 | EP-41…EP-45 | [Architecture/04-context-spaces-and-endpoints.md#4-multi-representation-translation-engine](../Architecture/04-context-spaces-and-endpoints.md#4-multi-representation-translation-engine) | [Testing/01-backend-tests.md#2-the-context-gateway-harness](../Testing/01-backend-tests.md#2-the-context-gateway-harness) |
