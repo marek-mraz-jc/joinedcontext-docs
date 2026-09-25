@@ -153,6 +153,7 @@ The credential holder of a builder run (`jc-agent-proxy`): a workspace reaches t
 | `JC_OIDC_ISSUER` | `http://keycloak:8080/realms/joinedcontext` | no | The realm every token the proxy mints and verifies is issued by (`JC_OIDC_ISSUER`, default `http://keycloak:8080/realms/joinedcontext`). |
 | `JC_OIDC_TOKEN_URL` | — | no | Where the realm's token endpoint is, for the same reason the gateway needs one (`JC_OIDC_TOKEN_URL`, T-2272): the issuer is the address a browser uses, and a pod cannot dial its own cluster's ingress hostname. |
 | `JC_PORTAL_BASE` | `http://portal:8080` | no | The Portal as the proxy reaches it inside the cluster (`JC_PORTAL_BASE`, default `http://portal:8080`), where it reads a run's plan and posts its callbacks. |
+| `JC_PORTAL_CLIENT_ID` | `portal-api` | no | The Portal's Keycloak client (`JC_PORTAL_CLIENT_ID`, default `portal-api`): the one caller whose service-account token may hand this proxy a person's token for a run (`POST /internal/runs/{run}/identity`, ADR-N-038, AG-52, AG-94). |
 | `JC_PROXY_BIND` | `0.0.0.0:8080` | no | The address to listen on (`JC_PROXY_BIND`, default `0.0.0.0:8080`). |
 | `JC_REQUIRE_MESH_IDENTITY` | — | no | Whether a caller must arrive through the mesh with a Linkerd identity (`JC_REQUIRE_MESH_IDENTITY`, the string `true` to require it; default off). |
 
