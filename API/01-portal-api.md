@@ -128,7 +128,7 @@ DELETE /api/v1/projects/{project}/{plural}/{name}     → 202 + Change (explicit
 POST   /api/v1/projects/{project}/{plural}?dryRun=All validate + plan, no change created
 GET    /api/v1/projects                                 the projects this caller may read
 GET    /api/v1/blueprints                               the Blueprint catalogue of the organization
-GET    /api/v1/endpoints                                every Endpoint of every project the caller may read, each with its project (PF-60, PF-61)
+GET    /api/v1/endpoints                                every Endpoint of every project, each with its project: administrators of the organization only (PF-61)
 GET    /api/v1/organization/datamodels?search=          every DataModel the caller may read, and matching Smart Data Models entries: what the model and type pickers list (DM-63)
 POST   /api/v1/projects                                 open a project → 202 + Change: project.yaml and the creator's steward binding in one merge request (PF-65, PF-66)
 GET    /api/v1/projects/{project}                       the project and `status.usage`: what it holds of each quota (PF-73, PF-75)
@@ -175,15 +175,17 @@ read: the copy's teams and bindings are its own and grant nothing in the origin 
 ids render from the new slug (PF-79). Layout 1 answers `409`, because a project there has no
 repository to copy; its duplicate is an import of its export under the new name (MF-45).
 
-`GET /api/v1/endpoints` is the organization-level Endpoints page (PF-61): an `org-admin` bound at
-organization scope reads every project's, a project's steward their own projects', a binding
-scoped to one context space that space's alone, and a caller no binding names an empty list,
-never a `403` — nothing the caller may not `read` is in it, and a project they may not read is
-not disclosed by refusing it (R20).
+`GET /api/v1/endpoints` is the organization-level Endpoints page (PF-61), an administration view:
+an administrator of the organization (`approve` and `delete` on `RoleBinding` at organization
+scope, PF-03, as `org-admin` holds them) reads every Endpoint of every project, each with its
+project, and every other signed-in caller gets `404`, the answer for a page that is not theirs
+(R20). The MCP operation `jc_endpoint_list_all` is the same read with the same refusal. A
+project's own Endpoints stay at `GET /api/v1/projects/{project}/endpoints`, under that project's
+`read`.
 
 `GET /api/v1/organization/datamodels` is the one list behind the data model and type pickers
 (DM-63, ADR-N-033). `items` holds every `DataModel` of every project whose manifest the caller may
-`read` by the rule of `GET /api/v1/endpoints`, a retired version excepted (DM-26), each as
+`read`, project by project and space by space (PF-60), a retired version excepted (DM-26), each as
 `{name, project, space, version, lifecycle, classes}`, sorted by project, space and name.
 `smartDataModels` holds up to 50 entries of the Smart Data Models catalogue index (DM-12) as
 `{id, name, subject, description}`, and only when `search` has two characters or more: the index
@@ -774,6 +776,7 @@ downloaded is byte-for-byte what a `git archive` of that path would hold:
 ```text
 GET /api/v1/projects/{project}/export?format=yaml|json|zip|git&revision={commit}&kinds={plurals}&names={names}
 GET /api/v1/projects/{project}/revisions?limit=20
+GET /api/v1/projects/{project}/apps/{name}/export
 ```
 
 - `format=yaml` (default) is one multi-document YAML stream, one manifest per document; with
@@ -788,7 +791,10 @@ GET /api/v1/projects/{project}/revisions?limit=20
   transfer can be verified before the source is deleted, MF-42) and `omitted`. An export whose filters select no manifest carries no index, because a Bundle lists
   at least one resource. Media types: `application/yaml`, `application/json`, `application/zip`,
   with a `Content-Disposition: attachment` filename that names the project and the short revision.
-- A whole-project export (no `names` filter) is complete and self-describing (MF-41). The archive
+- A whole-project export (no `names` filter, and every `format=git` export) is for an organization
+  administrator (`approve` and `delete` on `RoleBinding` at organization scope, PF-03, UI-87): anybody else who may read the project gets
+  `403` naming that, and an export that names its manifests stays with the project's readers.
+- A whole-project export is complete and self-describing (MF-41). The archive
   adds, at its root, `README.md` (what each kind it holds is, how many resources, where the schema
   is, the revision and the exporter) and `schemas/`: `schemas/kinds/{Kind}.schema.json`, the JSON
   Schema (draft-07) of every kind in the archive with its field descriptions, and
@@ -844,6 +850,19 @@ GET /api/v1/projects/{project}/revisions?limit=20
 
 - `503` with `problem+json` when no forge is configured (CC-03): a Portal that cannot read the
   repository has nothing to export.
+- `GET …/apps/{name}/export` exports one application, for an organization administrator only
+  (UI-87): anybody else who may read the project gets `403`, and a project or an App the caller
+  may not read is `404`. The App must build from a repository of the forge's applications
+  organization (`source.git`, AP-72, AP-75); one that builds from anywhere else is `409` naming
+  it, because an export without its source would import an App that cannot build. The archive
+  (`application/zip`, `{name}-app-{short}.zip`) holds `{name}.bundle`, the forge's `git bundle`
+  of the App repository's default branch with its whole history; `{name}.tags` as in
+  `format=git`; `app.yaml`, the App manifest as the project's repository holds it at its head,
+  stripped as every export strips it (`status`, the built digest, secret values; MF-17, AP-13a);
+  and the `kind: Bundle` index `bundle.yaml` (namespace `org`, name the App), whose one item is
+  the App with its project as namespace, whose `repositories` list the one `application` bundle
+  with the head it ends at, and whose `files` carry every file's SHA-256 (MF-42). A bundle that ends elsewhere than the
+  head read in the same export is `409` (export again).
 
 Import is the same bundle read back, into a project that is not the one it left (MF-20…MF-26):
 
@@ -863,8 +882,10 @@ POST /api/v1/projects/{project}/import?dryRun=All
   ContextSpace. An organization-scoped kind is written in namespace `org` whatever project imported
   it, and a `Project` manifest inside the bundle is dropped: the destination project is the one in
   the path.
-- An upload is at most 32 MiB and 2 000 archive entries, and an entry whose path leaves the archive
-  root is refused before it is read.
+- An upload is at most the organization's `spec.limits.data.uploadMegabytes` (16 MiB when it sets
+  none, never past 64 MiB, the edge's largest body; ADR-N-035), judged on the body as it arrives,
+  and at most 2 000 archive entries. A larger one is refused with `400` naming its size, the limit
+  and the setting. An entry whose path leaves the archive root is refused before it is read.
 - `bundle.yaml` describes the bundle and is never imported as a resource. Its `project` and
   `revision` become `joinedcontext.com/imported-from` on every manifest that lands, so an imported
   object says where it came from (MF-20); an upload with no index is annotated `upload`.
@@ -919,7 +940,7 @@ POST /api/v1/projects/{project}/import?dryRun=All
   of the path, in an organization of layout 2 (MF-45, MF-46). The body is `multipart/form-data`
   with the archive as `file`, `parameters` (a JSON object of values for what `project.yaml`
   declares, CC-88; a `secret` parameter takes a `secretRef` name, never a value) and an optional
-  `displayName`. Who may open a project may import one (PF-65), and the name passes the checks of
+  `displayName`. An organization administrator imports one (UI-87), within the rules of who may open a project (PF-65), and the name passes the checks of
   `POST /api/v1/projects`. Before anything is created the archive is checked: the index is a
   valid `kind: Bundle` with one `project` repository and no `organization` one, every file's
   SHA-256 equals the index (MF-42), `project.yaml` loads at this release's `apiVersion` (an older
@@ -942,6 +963,22 @@ POST /api/v1/projects/{project}/import?dryRun=All
   import form is drawn from; nothing is created. As for every import, that dry run is the check
   PF-57 holds the import to under `strict`, over the archive's SHA-256, the slug and the
   parameters.
+- `?format=app` imports the archive of `GET …/apps/{name}/export` as a new App of `{project}`, a
+  project of layout 2, for an organization administrator only (UI-87, `403` otherwise, before
+  the body is read). The body is `multipart/form-data` with the archive as `file` and an optional
+  `name`, the App's name here (the archive's by default, a DNS-1123 label). Before anything is
+  created the archive is checked: the index is a valid `kind: Bundle` whose `repositories` are
+  one `application` bundle and nothing else, every file's SHA-256 equals the index (MF-42), the
+  bundle ends at the head the index lists (MF-46), and `app.yaml` loads as an `App` at this
+  release's `apiVersion` (MF-47); each failure is `400` naming it. An App of that name in the
+  project, or a repository `{project}_{name}` in the forge (AP-75), is `409`. Then the
+  repository is created empty and private in the applications organization, the bundle is
+  pushed as `main` with its tags, its head is read back against the index, and `main` is
+  protected; the answer is `202` and the project's `Change`, red lane, that adds the App under
+  the new name with `source.git.url` naming the new repository and every other field as
+  exported. A failure after the repository exists removes it again (CC-85). `dryRun` answers
+  `200` with the repository it would create and the head, and is the check PF-57 holds the
+  import to, over the archive's SHA-256, the project and the name.
 - The `{"url": …}` source of MF-20 answers `501`. Fetching a host the caller names is an egress
   decision the Portal has no policy behind, and the upload form carries the same bundle; see
   `OPEN-QUESTIONS.md`.
@@ -1052,6 +1089,24 @@ the answer is `400`.
 GET /api/v1/projects/{project}/datamodels/{name}/source          → 200 text/yaml, the LinkML document
 PUT /api/v1/projects/{project}/datamodels/{name}/source           text/yaml body → 202 Change (MF-12)
 PUT /api/v1/projects/{project}/datamodels/{name}/source?space=s   text/yaml body → 202 Change, the model created (DM-57)
+```
+
+A text whose relationships break a rule of DM-68 creates no Change, whatever the editor said
+before sending it: the answer is `400` with one `errors` entry per broken rule, each
+`{path}: {rule}: {message}` with the rule identifier of
+[Architecture/11 §1.2](../Architecture/11-data-models.md#12-relationships-between-classes-dm-64dm-73) (CC-24).
+
+```json
+{
+  "type": "https://joinedcontext.com/errors/invalid-request",
+  "title": "Invalid Request",
+  "status": 400,
+  "detail": "the model breaks 2 relationship rules; nothing was saved (DM-68)",
+  "errors": [
+    "slots.users: inverse-missing: users (School → User) names no inverse",
+    "slots.school: required-on-computed-end: school is computed on read and cannot be required"
+  ]
+}
 ```
 
 ```json
@@ -1172,8 +1227,9 @@ to the Context Gateway, for the App's own endpoints only (Deployment/10, AP-133)
   retired app is `404` — the same answer as a name that does not exist, so the host never
   discloses which apps are being worked on.
 - Every response carries the app's own Content Security Policy, built from `spec.csp`:
-  `default-src 'self'; connect-src 'self'; frame-ancestors {portal origin}` by default, with
-  `connect-src` extended by `spec.csp.connectSrc`, `connect-src` and `img-src` by the project's
+  `default-src 'self'; connect-src 'self'; frame-src 'self'; frame-ancestors {portal origin}`
+  by default, with `connect-src` extended by `spec.csp.connectSrc`, `frame-src` by the https
+  origins of `spec.csp.frameSrc` (an App's own map or video frame, T-2871), `connect-src` and `img-src` by the project's
   basemap route prefix when the platform configures a basemap (its style URL is `basemap` in
   `#jc-config`, AP-67), and the origins of `spec.csp.frameAncestors`
   added to `frame-ancestors` only when `spec.embeddable: true` (AP-12). The Portal's own origin
@@ -1286,6 +1342,14 @@ merely hides a card is not an authorisation.
   kinds are on their own terms (CC-59, CC-63). A Green blueprint whose template renders a `Policy`
   therefore lands in the Red lane; declaring a lane can narrow nothing that section 4 already
   calls Red.
+- A flow that is Green after that rule is merged in the same call, for the person who started it
+  (AG-14, CC-63, CC-65): the Portal merges it pinned to the commit it wrote, with the merge
+  message naming the blueprint, its version and that person, and answers the `Change` as
+  `Deploying`. It merges only while the merge request holds exactly the files the flow wrote; a
+  merge request with any other file, one whose files cannot be read, or one the forge will not
+  merge answers `PendingApproval` and waits for a person. A Yellow or Red flow always waits. Over
+  MCP, `jc_flow_start` runs in the flow's own lane, so a Green flow is not asked about (AG-63)
+  and a Red one is asked about as Red.
 - Every rendered manifest passes the same checks a hand-written one does. A template that renders
   a namespace other than the project the flow runs in is `400`, and so is a literal secret
   (MF-04, MF-24): a blueprint is authored once and run in many projects, so a namespace in a
@@ -1436,6 +1500,11 @@ GET /api/v1/branding/favicon     the favicon file, from the same mount
   because the choice needs the contrast ratio of the lightened colour: the UI wrote a near-black
   label on it by rule instead, which left an installation branded `#111827` at 2.31:1 and one
   branded `#0000bf` at 3.43:1 (T-2324, UI-30). A value for either in the file is overwritten.
+- `hiddenSections` lists the project sections this installation hides, always present and empty
+  when none is: `["dashboards"]` unless `JC_PORTAL_DASHBOARDS` is `true` (T-2874). The Portal
+  leaves a hidden section out of the project menu, sends its addresses to the project's spaces and
+  does not offer its assistant path, which `POST …/assistant/conversations` refuses with `400`;
+  the kind, its manifests and its API stay. A value in the file is overwritten.
 - The logo and the favicon are file names, never URLs. A value carrying a scheme, a host or `..`
   is dropped, and the file is read from the branding file's own directory: the two assets the
   ConfigMap carries are the only files those routes can reach.
@@ -2290,7 +2359,7 @@ GET    /api/v1/organization/setup                           the steps and the op
   switch those on ([Deployment/13](../Deployment/13-configuration-reference.md)). An unset
   statement is `false`: the page never claims what nobody said.
 - `complete` is `true` when every step and every operator item is done.
-- The route needs `approve` on `Organization` at organization scope, which `org-admin` holds (PF-56);
+- The route needs an administrator of the organization, `approve` and `delete` on `RoleBinding` at organization scope, which `org-admin` holds (PF-03, PF-56);
   anyone else gets `403`.
 
 ## 26. Validation health (OPS-53)
@@ -2373,7 +2442,7 @@ GET /api/v1/projects/{project}/app-checks     the last check of each App of the 
 - Whoever reads `App` in the project gets the rows; a project the caller may not read is `404`,
   a caller without `read` on `App` gets `403`, nobody signed in `401`.
 
-## 27. Data quality of a space (DM-70)
+## 27. Data quality of a space (DM-74)
 
 Once a day the leading Portal replica reads every entity of every space that names a model, as
 its own client through the space surface, and holds it to the model the way a pipeline's
@@ -2417,7 +2486,71 @@ GET /api/v1/projects/{project}/spaces/{space}/quality     the last run's report 
   empty for a caller without `read` on `Entity` in the space; the counts are the same for
   everyone who reads the space.
 
-## 28. Size of a space (T-2889)
+## 28. Organization limits (PF-96…PF-102, ADR-N-035)
+
+What Organization settings shows for every policy and limit (PF-102): the catalog of ADR-N-035
+with the bound the operator's file sets on each entry (PF-97), the value in force and where it
+comes from (PF-99, PF-101), and the quota of each project with what it uses (PF-73, PF-75).
+
+```text
+GET /api/v1/organization/limits     the catalog, its bounds and the values in force → 200
+```
+
+```json
+{
+  "entries": [
+    {
+      "path": "spec.projects.quota.contextSpaces",
+      "section": "projects",
+      "security": false,
+      "default": null,
+      "min": 0,
+      "max": 20,
+      "value": 10,
+      "origin": "organization"
+    },
+    {
+      "path": "spec.limits.signIn.sessionIdleMinutes",
+      "section": "signIn",
+      "security": true,
+      "default": 60,
+      "min": 5,
+      "max": 120,
+      "value": null,
+      "origin": "default"
+    }
+  ],
+  "projects": [
+    {
+      "project": "helsinki",
+      "origin": "project",
+      "quota": {
+        "contextSpaces": { "limit": 12, "used": 3 },
+        "agentRunsPerDay": { "limit": null, "used": null }
+      }
+    }
+  ]
+}
+```
+
+- `entries` lists every numeric entry of the catalog in its order. `section` is one of
+  `projects`, `applications`, `edge`, `signIn`, `people`, `agents`, `pipelinesAndData`.
+  `security` is `true` for an entry whose bound the operator may only tighten.
+- `min` and `max` are the range an organization may set: the operator's bound where
+  `portal.organizationBounds` sets one, else the catalog's own. `max` is `null` where neither
+  sets a ceiling.
+- `value` is what the Organization manifest sets, `null` when it sets nothing. `origin` is then
+  `organization` or `default`, and `default` is the catalog's default, `null` for no limit.
+- `projects` has one row per project the caller may read. `origin` says whose quota is in force:
+  `project` (the Project's own `spec.quotas`), `organization` (`spec.projects.quota`) or
+  `default` (neither, so no limit). `quota` holds each dimension: `limit` is `null` for no
+  limit, and `used` is the manifest count for the four countable dimensions (PF-75), `null` for
+  a limit enforced at run time.
+- Any signed-in person reads the route: the catalog and the bounds are the installation's, not
+  a project's. A project the caller may not read is left out of `projects`, so nothing of its
+  size is said (R20).
+
+## 29. Size of a space (T-2889)
 
 How much a space holds, read from the broker that holds it: the entity count of the space's
 tenant (`GET /q/tenants/{space}` on the broker, the admin surface the Portal already reaches for

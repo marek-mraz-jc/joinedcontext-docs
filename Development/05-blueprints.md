@@ -137,7 +137,22 @@ A string that holds prose rather than a name (the prompt of an app, a descriptio
         x-jc-widget: textarea
 ```
 
-The widget name has to be one of those four or `textarea`; an unknown one leaves the parameter with its
+An Endpoint a blueprint renders needs a slug nobody can guess (EP-02), and nobody should type one.
+Name `endpointSlug` on a string parameter for it, with the pattern `^[a-z2-7]{26,64}$`. The form
+does not show the parameter, and when a flow starts without a value the Portal fills it: the
+first 160 bits of an HMAC-SHA-256, under the Portal's own key, over the project, the blueprint, its
+version and the other parameters, in lowercase base32. The value is recorded with the other
+parameters (CC-27), so a re-render is byte-identical (CC-25) and a retry of the same submission
+lands on the same branch. A caller may pass a slug of its own that matches the pattern.
+
+```yaml excerpt title="a parameter the Portal fills"
+      endpointSlug:
+        type: string
+        pattern: "^[a-z2-7]{26,64}$"
+        x-jc-widget: endpointSlug
+```
+
+The widget name has to be one of those four, `textarea` or `endpointSlug`; an unknown one leaves the parameter with its
 default input rather than breaking the form. A picker is a convenience, not a control:
 both lists come back narrowed to what the caller may read, and the value is validated against
 the same schema on the server, where the decision is made (CC-60).
@@ -194,6 +209,26 @@ metadata:
 The parameter annotation is canonical JSON with sorted keys. Same blueprint version, same
 parameters, byte-identical output — that is what makes a re-render a reviewable diff instead
 of noise.
+
+## 5. The library (CC-28)
+
+The platform publishes a blueprint library: `library/blueprints/{name}/blueprint.yaml` in the
+platform repository, one folder per flow. It holds the four common flows of CC-28:
+
+| Blueprint | Renders |
+|---|---|
+| `threshold-alert` | a `Subscription` that calls a webhook when a property crosses a limit, with the webhook's token as a `secretRef` |
+| `data-source-onboarding` | a `DataSource`, the `Pipeline` that writes it into a space, and the `Endpoint` that registers it as a read surface of the organization; the pipeline's first run seeds the space |
+| `dataset-publication` | one public `Endpoint` carrying the DCAT-AP catalogue record (EP-78) and the CKAN publication (EP-62) |
+| `cross-city-sharing` | the CSR pair of CC-14: a `ContextSourceRegistration` that brings the partner city into a hub space, and the `Endpoint` the partner's own registration points at, open to the partner's project alone |
+
+An instance follows the library through a `SyncSource` of `source.git` at that path with
+`autoMerge: false`, so every new version of the library arrives as a merge request somebody
+reviews (CC-26, MF-27). Nothing is rewritten on a deploy.
+
+Every string parameter a template quotes carries a `pattern`. The parameter validator reads
+`format` as an annotation and checks nothing against it, so without a pattern a value could
+close the quote and write a member of its own into the rendered manifest.
 
 ## Related
 

@@ -184,7 +184,8 @@ annotation, `ngsi_ld_kind`, and it is decided by the shape of the data and by no
 |---|---|---|---|
 | a number, a string, a boolean, a timestamp | `Property` (the default) | `range` | the term's IRI |
 | a point, a line, an area | `GeoProperty` | `range: GeoJSONGeometry` | the term's IRI |
-| the id of another entity | `Relationship` | `range: uriorcurie` | `@type: @id` |
+| the id of another entity of the model | `Relationship` | `range: <the class>`, `inverse`, §1.2 | `@type: @id` |
+| the id of an entity outside the model | `Relationship` | `range: uriorcurie` (an external reference, DM-69) | `@type: @id` |
 | a term from a controlled vocabulary | `VocabProperty` | `range: <the enum>` | `@type: @vocab` |
 | a name or a description a person reads, per language | `LanguageProperty` | `range: string` | `@container: @language` |
 | several values whose order is part of the meaning | `ListProperty` | `multivalued: true` | `@container: @list` |
@@ -215,6 +216,151 @@ What each kind becomes downstream is the generators' business and is written onc
 renders), and the `x-ngsi-ld-kind` keyword that carries the kind itself to the editor and to the
 export (DM-20). A kind is never repeated in the term definition: JSON-LD 1.1 rejects a term
 carrying a key it does not know, and an invalid `@context` expands to nothing.
+
+### 1.2 Relationships between classes (DM-64…DM-73)
+
+A relationship is a foreign key with a name at each end. The owner asked for a model editor in
+which a person declares one-to-one, one-to-many, many-to-one and many-to-many as in a regular
+database, and for the platform to be strict about it. Everything below follows from four
+decisions: both ends are declared, the cardinality is two `multivalued` flags, one end is stored,
+and a broken relationship is refused rather than warned about.
+
+**Declared on both ends (DM-64).** A School has many Users, and a User belongs to one School:
+
+```yaml
+classes:
+  School:
+    slots: [name, users]
+  User:
+    slots: [name, school, courses]
+  Course:
+    slots: [title, students]
+slots:
+  users:                      # the source end, on School
+    range: User
+    multivalued: true
+    inverse: school
+    inlined: false
+    slot_uri: rozvoj:users
+    annotations:
+      ngsi_ld_kind: Relationship
+      on_delete: restrict
+  school:                     # the inverse end, on User: stored, required
+    range: School
+    inverse: users
+    required: true
+    inlined: false
+    slot_uri: rozvoj:school
+    annotations:
+      ngsi_ld_kind: Relationship
+  courses:                    # User N:M Course, stored on the source end
+    range: Course
+    multivalued: true
+    inverse: students
+    inlined: false
+    slot_uri: rozvoj:courses
+    annotations:
+      ngsi_ld_kind: Relationship
+      on_delete: cascade
+  students:
+    range: User
+    multivalued: true
+    inverse: courses
+    inlined: false
+    slot_uri: rozvoj:students
+    annotations:
+      ngsi_ld_kind: Relationship
+```
+
+**Which end is the source (DM-64).** The source is the end that carries `on_delete`. The editor
+writes it on every relationship it creates, `restrict` included, so the direction is in the
+model and not in the order of the file. A hand-written pair with no `on_delete` takes the end
+declared first under `slots` as its source, and a pair with `on_delete` on both ends is refused.
+The direction matters for one-to-one and many-to-many, where it decides which end is stored.
+
+**Cardinality is two flags (DM-65).** Read from the source class A to its range B:
+
+| A's slot multivalued | B's slot multivalued | Cardinality | Stored on | A UML reader sees |
+|---|---|---|---|---|
+| no | no | one-to-one | A (the source) | `0..1 — 0..1` |
+| yes | no | one-to-many | B | `0..1 — *` |
+| no | yes | many-to-one | A | `* — 0..1` |
+| yes | yes | many-to-many | A, one `datasetId` per target | `* — *` |
+
+`required` turns `0..1` into `1` and `*` into `1..*`. It is allowed on the stored end only: a
+School whose `users` were required could not be created before its first User, and a User
+could not be created before its School existed.
+
+**One end is stored (DM-67).** The "many" side holds the id, as a foreign-key column would, so
+there is one source of truth and no pair of copies that can drift. The stored end is an ordinary
+NGSI-LD Relationship attribute. For User → School it is
+`"school": {"type": "Relationship", "object": "urn:ngsi-ld:School:…"}`. For many-to-many it is
+the multi-attribute form, one instance per course with its own `datasetId`. The computed end is
+a query: the Users of a School are `GET …/entities?type=User&q=school=="urn:ngsi-ld:School:…"`.
+The Portal's grid, forms and assistant show it as a read-only list of links. The gateway never
+adds it to an entity it answers, because an attribute the entity does not hold would make every
+read a CIM 009 reader makes differ from the standard (the owner's read-surface rule).
+
+**Delete rules (DM-66, DM-71).** A delete of an entity that stored ends reference runs the rule
+of each such relationship in the delete's own transaction:
+
+| Rule | A single stored end | A many-valued stored end (N:M) |
+|---|---|---|
+| `restrict` (default) | `409`, the slot and how many still reference it | the same |
+| `cascade` | the referencing entities are deleted too | the one link instance is removed; the entity stays |
+| `set-null` | the attribute is removed from them | the one link instance is removed |
+
+A rule that would leave a `required` end empty is refused as `restrict` is. So a School whose
+Users all require one cannot be deleted by `set-null`: move them first, or declare `cascade`.
+
+**Strict at the model (DM-68, DM-69).** The editor's diagnose, the Portal's save route and Model
+Tools' generation refuse the same list: a range that is not a class, a class range on a slot that
+is not a Relationship, a primitive range on a Relationship, a missing or non-reciprocal inverse,
+one slot serving two relationships, `required` on a computed end, and an unknown delete rule. The
+one Relationship that takes no inverse is the external reference, `range: uriorcurie` or no
+range at all (how Smart Data Models writes one). It points
+outside the model, as Smart Data Models' `refDevice` does, so there is no class to check a target
+against and no inverse to declare. Every class-range relationship is a relationship in full.
+
+Each refusal carries one `rule`, the same identifier in the editor, the save route, Model Tools
+and the gateway:
+
+| `rule` | Where | Refused when |
+|---|---|---|
+| `range-not-a-class` | model | a Relationship's range is no class of the model or an import |
+| `class-range-not-relationship` | model | a slot has a class range and is neither a Relationship nor a nested value (`JsonProperty` or `inlined: true`) |
+| `primitive-range` | model | a Relationship declares a primitive range other than `uriorcurie`, or an enum |
+| `inverse-missing` | model | a class-range Relationship names no `inverse`, or names a slot that does not exist |
+| `inverse-not-reciprocal` | model | the inverse names another slot back, or sits on a class other than the range |
+| `slot-in-two-relationships` | model | one slot is an end of two relationships |
+| `required-on-computed-end` | model | `required` is set on the end that is not stored |
+| `on-delete-unknown` | model | `on_delete` is not `restrict`, `cascade` or `set-null` |
+| `on-delete-on-both-ends` | model | both ends of one pair carry `on_delete`, so neither is the source |
+| `target-missing` | write | the object is no entity of the space |
+| `target-wrong-type` | write | the object is an entity of another type |
+| `single-end-many-targets` | write | a single end holds more than one object |
+| `required-end-missing` | write | a required stored end is absent or emptied |
+| `target-taken` | write | a one-to-one or one-to-many target is stored by another source |
+| `restrict` | delete | an entity is still referenced under `restrict`, or a rule would empty a required end |
+
+**Strict at every write (DM-70).** The gateway checks each write of an Endpoint against the
+space's model. It checks that each target exists in the space and has the range's type, that a
+single end holds one target, that a required end is present, and that a one-to-one or
+one-to-many target is not stored by another source. The last check is a unique constraint in the
+store, so two concurrent writes taking the same target end with one `201` and one `400`. A
+refusal is CIM 009's `BadRequestData` with the members `slot`, `rule` and `object`, and it never
+names an entity or a value the writer cannot read.
+
+**Models saved before these rules (DM-73).** The seeded models hold class-range Relationships
+without an inverse (`refDistrict: CityDistrict`). The editor shows the refusal and one fix: a
+multivalued inverse on the target class. The fix keeps the stored end where the data already
+is: a single slot becomes many-to-one, a multivalued one many-to-many. The seeds are migrated in
+the batch that turns the refusal on, so no seeded space stops publishing.
+
+**Generated artifacts (DM-72).** §2 renders each relationship into JSON Schema (`object`
+patterned on the target's URN prefix, `minItems`), SHACL (`sh:class`, `sh:nodeKind sh:IRI`,
+`sh:minCount`, `sh:maxCount 1`), the `@context` (`@type: @id`) and OWL (`owl:inverseOf`,
+`owl:FunctionalProperty` on a single end).
 
 ---
 
@@ -332,6 +478,15 @@ its major matches the `v{major}` in every artifact path (DM-22); only `published
 referenced by an Endpoint, Pipeline or Dashboard (DM-26); a `retired` model stays resolvable at
 its versioned URLs but accepts no new references; every path is relative to the manifest and
 inside the space directory, so a bundle stays importable into another namespace (MF-07).
+
+A model that no single space owns leaves `spec.contextSpaceRef` out (ADR-N-039, DM-75). In
+namespace `org` (MF-02) it is an **organization model** at `datamodels/{name}/` of the organization
+repository, which every project of the organization reads and only red-lane Changes to that
+repository edit. In a project's namespace it is a **project model** at
+`projects/{p}/datamodels/{name}/`. A space's one model uses either kind by `import` at a pinned
+major, `org.{name}.v{major}` or `project.{name}.v{major}` (DM-76). A project shares its model
+upwards only through a promotion that an organization-scope approver approves (DM-77), and a
+project bundle carries copies of the organization models it imports (MF-49, MF-50).
 
 ---
 

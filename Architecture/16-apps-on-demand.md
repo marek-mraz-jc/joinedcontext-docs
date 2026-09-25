@@ -65,7 +65,7 @@ spec:
       geoQ: { within: { scopeRef: /geo/FI/HKI } }
       representations: [ngsi-ld, geojson]           # Endpoint.enabledRepresentations vocabulary (EP-08)
   limits: { requestsPerMinute: 600, maxFileRows: 20000 }
-  csp: { connectSrc: [self], frameAncestors: [] }                   # defaults; only the app's own endpoint is reachable, only the Portal frames it
+  csp: { connectSrc: [self], frameAncestors: [], frameSrc: [] }     # defaults; only the app's own endpoint is reachable, only the Portal frames it, it frames only itself
   egress: []                                                         # a server pod's destinations besides its endpoint: {cidr, ports}, red lane (AP-134)
 ```
 
