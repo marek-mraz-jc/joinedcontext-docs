@@ -52,7 +52,7 @@ metadata:
     joinedcontext.com/generated-by: "agent:app-builder@bb"     # attribution (AG-17)
     joinedcontext.com/prompt-digest: "sha256:…"               # the request that produced it, stored in apps/{name}/PROMPT.md
 spec:
-  kind: fullstack                    # static | service | fullstack
+  kind: ui-rust                      # ui | ui-rust (AP-124)
   source: { path: ./src }            # or { git: {url, ref, path} }
   build: { rust: "1.90", node: "22" }   # Rust axum backend + Vite/React UI in one image
   visibility: public
@@ -215,7 +215,7 @@ metadata:
   title: "Air quality"
   description: "Stations, their latest values and 24 hours of history; a steward may add a note."
 spec:
-  kind: fullstack
+  kind: ui-rust
   source: { path: ./apps/air-quality }
   build: { rust: "1.90", node: "22" }
   visibility: project
@@ -240,7 +240,7 @@ metadata:
   title: "Buses live"
   description: "The position of 30 buses on a map, updated as they move."
 spec:
-  kind: fullstack
+  kind: ui-rust
   source: { path: ./apps/hsl-transport }
   build: { rust: "1.90", node: "22" }
   visibility: public
