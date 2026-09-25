@@ -145,6 +145,23 @@ The assistant opens `/projects/helsinki/pipelines?edit=hel-news` with the form t
 
 The live journey `change.spec.ts` replays these steps.
 
+## 7. Removing Entities the Source Dropped
+
+A pipeline writes what its source sends and never deletes. When a feed stops listing a vehicle, the vehicle stays in the space with its last position. If the source sends the whole picture every run, you can tell the pipeline that absence means removal.
+
+Use it for full-snapshot sources: a vehicle list, a register of stations, a catalogue export. An entry missing from the snapshot is gone.
+
+Leave it off for incremental and event feeds: sensor readings, change streams, a feed that only sends what changed. There a quiet entity has nothing new to say, and expiry would delete it. That is why expiry is off unless you switch it on.
+
+### Switch On Expiry
+
+#### By hand
+
+1. On `/projects/helsinki/pipelines`, open the pipeline and switch on **Remove entities the source no longer sends**.
+2. Enter the window (for example `14d`) and the entity types this pipeline writes.
+3. Click **Propose change**. The Portal refuses the proposal while another pipeline writes into the same space, and while no Policy grants the pipeline's account `deleteBatch` on those types; the message names the Policy to extend.
+4. An approver confirms it in Approvals. The pipeline page and the list then say "Entities not updated for 14 days are removed", and the deletions appear in the activity trail under the pipeline's account.
+
 ## Related
 
 - [Organizations, Projects & Context Spaces](./02-organizations-projects-spaces.md): managing target spaces.
