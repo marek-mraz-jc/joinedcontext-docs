@@ -468,6 +468,7 @@ Organization-level manifests are read and proposed through the organization's na
 | Tab | What it shows | What it proposes |
 |---|---|---|
 | **Settings** (`settings`) | the `Organization` manifest as a form: `domain` with its verification state (PF-41, the TXT record to publish while unverified), `locales` and `defaultLocale`, `contacts[]`, and the projects policy: `projects.creation`, `projects.visibility`, `projects.quota`, `projects.nameCooldownDays` (PF-65, PF-61, PF-78) | an update of `organization.yaml`, red lane |
+| **People** (`people`) | the people of the realm, searched and paged: name, e-mail, enabled, verified, last active; a person's page with their groups, platform roles by scope and application roles, and the lifecycle actions (PF-90…PF-94, ADR-N-031) | nothing in Git: create, edit, disable, enable, reset password, remove the second factor and sign out go to the realm's admin API ([API/01 §24](../API/01-portal-api.md)); **Delete** proposes the Change that takes the person out of every `Group` and `RoleBinding`, red lane |
 | **Members** (`members`) | every person and group bound at organization scope, with the role of each binding and its validity; each row links to the person's effective permissions | a `RoleBinding` at `scope: { organization }` to add, its removal to remove |
 | **Roles** (`roles`) | the roles of `users/roles/`, the PF-56 taxonomy marked *seeded*, each with its rules in words ("proposes Pipeline and DataSource") | a new `Role` or a change to one, red lane |
 | **Groups** (`groups`) | the `Group` manifests with their members, a member not yet in Keycloak marked as such (PF-62) | a `Group` or a change to its members, red lane |
@@ -522,7 +523,7 @@ Keycloak holds identity only: who a person is and how they sign in (I4). No role
 
 ### 14.6 Out of scope
 
-Replacing the Keycloak admin console, and provisioning people. A person arrives in the organization by signing in; a binding or a group may name them before their first login, which the Members and Groups tabs show as "not signed in yet".
+Replacing the Keycloak admin console: realm settings, identity providers, clients and authentication flows stay there. People are provisioned on the People tab (ADR-N-031); a binding or a group may still name a person before their first login, which the Members and Groups tabs show as "not signed in yet".
 
 ## Related
 
