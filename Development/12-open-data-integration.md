@@ -88,9 +88,11 @@ Each chosen dataset becomes five things in its project, in this order.
    description, so a harvester sees both the republisher and the source.
 
 **Attribution travels with the data.** Each entity carries `dataProvider` (the publisher) and
-`source` (the URL it was read from), the two Smart Data Models common properties for it, and the
-space's model states the licence in its schema-level `license`. An application that shows the
-data shows the publisher and the licence beside it.
+`source` (the URL it was read from), the two Smart Data Models common properties for it, and both
+are declared in the space's model. The licence is the dataset's, not the entity's: the Endpoint's
+`publish.ckan.license` states it to a harvester, and the space's description names it to a
+person. The model's own `license` is the licence of the model document and says nothing about the
+data. An application that shows the data shows the publisher and the licence beside it.
 
 ## 4. Capacity on one node
 
@@ -128,7 +130,7 @@ Copy this list into the city's task and tick it there:
 - [ ] At least ten datasets chosen, or the inventory proving fewer.
 - [ ] Per dataset: `DataSource`, classes in the space's one model, ids by PF-84, pipeline with
       `spec.quotas` and a schedule that matches the source, CKAN publication with the licence.
-- [ ] `dataProvider` and `source` on every entity, the licence in the model's `license`.
+- [ ] `dataProvider` and `source` on every entity; the licence in `publish.ckan.license` and the space's description.
 - [ ] Every key a `secretRef`, and `blocked` with `@user` until it exists.
 - [ ] Each pipeline's sample test green, and one test showing a bad row rejected.
 - [ ] Node and broker numbers recorded before the city is applied.
