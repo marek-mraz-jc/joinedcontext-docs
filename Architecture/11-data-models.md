@@ -391,7 +391,7 @@ On every change the editor calls Model Tools and shows, side by side:
 | Filter & layer options | slot classification (numeric → range filter/`sizeBy`; enum → select/`colorBy`; datetime → temporal; GeoProperty → map layer) | Dashboards and Layers (chapter 10) |
 | Documentation | `gen-doc` (Markdown) | `model.md` on the schema surface, rendered in the Portal |
 | SHACL / OWL / RDF | `gen-shacl`, `gen-owl`, `gen-rdf` | `schema/v{n}/model.shacl.ttl`, `model.owl.ttl`, `model.rdf.ttl` on the space and on every endpoint (§8); external validators, ontology tooling, federation partners |
-| RDF Data Cube | `gen-qb` | `schema/v{n}/model.qb.ttl`, on a model that declares a Data Structure Definition only (DM-60); SDMX-shaped statistical consumers. Not built: no model declares one yet, and [Architecture/03 §2](03-domain-model.md#when-one-number-is-not-the-indicator-dm-60) says what would unblock it |
+| RDF Data Cube | `gen_qb.py` (Model Tools, the `qb` field of `POST /generate`); the gateway renders the served one from the projection | `schema/v{n}/model.qb.ttl`, on a model that declares a Data Structure Definition only (DM-60; [Architecture/03 §2](03-domain-model.md#when-one-number-is-not-the-indicator-dm-60)); SDMX-shaped statistical consumers. A model without one has no `qb` field and the file answers `404` |
 | Diff vs previous version | JSON Schema structural diff | version classification (§6.4) and the merge request description |
 
 Preview never touches the broker; publishing does not either, the reconciler does, after merge.
