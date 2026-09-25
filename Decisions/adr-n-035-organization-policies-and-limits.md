@@ -82,6 +82,7 @@ An organization that wants a lower rate for the web, a shorter invitation, a cap
 Model spend is counted in the currency the agent proxy's provider bills in, with the day and the month in UTC. When a limit is reached, the agent proxy refuses the next model call, and the run ends with that reason.
 
 Two entries of the owner's list are deliberately left out:
+
 - **A required second factor.** The owner decided on 2026-09-24 that no second factor is required for now (T-2351). It joins `spec.policies.signIn` when the owner asks.
 - **Temporal retention.** The broker has no retention to set. It joins `spec.limits.data` with the broker work that adds it, not before.
 
