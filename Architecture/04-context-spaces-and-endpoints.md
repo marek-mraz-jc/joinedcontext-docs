@@ -16,7 +16,7 @@ This specification establishes the public URL structure, tenancy abstraction, re
 |     ├── ngsi-ld/v1/          (Standard ETSI CIM 009 Tree: entities, subscriptions, types)        |
 |     ├── mcp                  (Direct Data-Plane Model Context Protocol Streamable HTTP)           |
 |     ├── schema/              (index.json, then v{major}/: LinkML, JSON Schema, @context, SHACL…)  |
-|     └── dump/                (N-Quads dumps: specified by SP-04, not built, T-2391)               |
+|     └── dump/                (ZIP of what the caller's grants read, generated per request, SP-13) |
 |                                                                                                   |
 |  2. Shared & Public Endpoint Surface (Addons, Public APIs, External Consumers, Agents):          |
 |     https://{host}/api/endpoint/{endpointSlug}/            (GET → DCAT-AP record of the endpoint)  |
@@ -49,8 +49,9 @@ No arbitrary path extensions are permitted. The gateway routes exactly these (SP
 - `/cs/{space}/ngsi-ld/v1/`: Byte-for-byte implementation of the ETSI GS CIM 009 REST specification (SP-03).
 - `/cs/{space}/mcp`: Data-plane Model Context Protocol Streamable HTTP endpoint (SP-03, SP-14).
 - `/cs/{space}/schema/index.json` and `/cs/{space}/schema/v{major}/{artifact}`: the same schema surface an Endpoint serves (§1a), named by its space. `{major}` is `v` and a whole number; anything else answers `404`.
+- `/cs/{space}/dump/`: the space's dump, the `file.zip` bundle (EP-41) over everything in the space the caller's grants read, generated per request and projected as `ngsi-ld/v1/` projects it (SP-13). Past the byte or row ceiling it is `413` whole, never a truncated archive; nothing is stored, so there is no dated or `latest` dump to pin (T-2391).
 
-A space has no `access` child: the caller's grants are an Endpoint's (`/api/endpoint/{slug}/access`). SP-04 also names `dump/` with dated and latest N-Quads snapshots; the gateway does not serve it yet (T-2391), and the space record does not advertise it.
+A space has no `access` child: the caller's grants are an Endpoint's (`/api/endpoint/{slug}/access`).
 
 ---
 
@@ -68,10 +69,11 @@ Consumers of a shared endpoint (partner organisations, open-data users, agents) 
 │   ├── model.shacl.ttl              SHACL shapes (gen-shacl)                   text/turtle
 │   ├── model.owl.ttl                OWL ontology (gen-owl)                     text/turtle
 │   ├── model.rdf.ttl                RDF rendering of the schema (gen-rdf)      text/turtle
+│   ├── model.qb.ttl                 RDF Data Cube, a model with a DSD only     text/turtle
 │   └── model.md                     human documentation (gen-doc)              text/markdown
 ```
 
-Each artifact also answers to a short name (`linkml`, `json-schema`, `context`, `shacl`, `owl`, `rdf`, `docs`; `handlers/schema.rs::artifact_of`). EP-46 to EP-49 also name an `example.jsonld`, per-type slices, a `latest` redirect and `.jsonld`/`.nt` suffixes for the RDF; the gateway serves none of them, and a request for one answers `404`.
+Each artifact also answers to a short name (`linkml`, `json-schema`, `context`, `shacl`, `owl`, `rdf`, `qb`, `docs`; `handlers/schema.rs::artifact_of`). EP-46 to EP-49 also name an `example.jsonld`, per-type slices, a `latest` redirect and `.jsonld`/`.nt` suffixes for the RDF; the gateway serves none of them, and a request for one answers `404`.
 
 Rules: `Accept` negotiation is honoured on `v{major}/model`: `text/turtle` returns the SHACL, `text/turtle` with an `owl` or `rdf` profile the OWL or the RDF rendering, `text/yaml` the LinkML, `text/markdown` the documentation, `application/ld+json` the `@context`, and anything else the JSON Schema. The suffix form is canonical and cacheable. Every artifact carries a strong `ETag` (sha256 of the bytes) and revalidates, and `Link: rel="describedby"` pointers come from every NGSI-LD, OGC and file representation (EP-46…EP-52). The same artifacts are reachable through the endpoint's MCP as tools (`describe_schema(format=…)`) and as MCP *resources* (`schema://{slug}/v{n}/model.shacl.ttl`), so an agent can pull the SHACL or the LinkML directly (DM-46).
 
@@ -236,6 +238,12 @@ The Context Gateway keeps the endpoints in an in-memory map (`ArcSwap<HashMap<St
 - `public`: Access is permitted without authentication under the `public` anonymous role grant (GW22).
 
 An Endpoint MAY set `callerRole: true` and list `roles[]` of `{name, subjects}`; a caller it admits holds `endpoint:{project}/{endpoint}` and the matching `endpoint:{project}/{endpoint}/{role}` for that request only, which is how an application's grants stay inside the application (AP-96, AP-97, [16 §12](16-apps-on-demand.md#12-roles-of-an-application)).
+
+### Stopping an Endpoint
+
+An Endpoint has no lifecycle (EP-89, decided 2026-09-25 in T-2286). You stop one by deleting it: the Portal's Endpoint page says so and opens the same deletion as its menu, a red `Change` an approver takes. Once the Change lands, the reaper drops the slug from the table and the gateway answers `404 ResourceNotFound`, the answer an unknown slug gets (`resolver.resolve(slug).ok_or_else(not_found)` in `app.rs`). The slug is not minted again (EP-75), so a stopped address never starts answering something else.
+
+A pause that keeps the address and refuses it was considered and left out: `status.phase` cannot carry it, because the platform writes status and strips it from a manifest on the way in (MF-04), so a pause needs a spec field. When a department asks for one, it becomes `spec.enabled: false` after `Pipeline.spec.enabled` (PL-40): every route refused `503` before any Policy runs, and turning it back on taking the lane publishing took (EP-76).
 
 ---
 
@@ -603,11 +611,41 @@ contains, so every read the specification defines answers over the union of the 
 ```text
                     Endpoint  hel-open  (public or token)
                         │
-                 Context Space  helsinki        ← holds only registrations
+                 Context Space  hub             ← holds only registrations
                     ┌───┴────┐
      CSR transport  │        │  CSR air-quality
                     ▼        ▼
           Space transport   Space air-quality   ← hold the entities
+```
+
+The hub is two manifests beside its registrations: the space, and the Endpoint that serves it.
+`transport` above registers into this space, and a second registration does the same for
+`air-quality`.
+
+```yaml
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSpace
+metadata:
+  name: hub
+  namespace: helsinki
+  title: "Helsinki now"
+  description: "No entities of its own: registrations to transport and air-quality"
+spec:
+  isSandbox: false
+---
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: hel-open
+  namespace: helsinki
+spec:
+  contextSpaceRef: hub
+  slug: ljjrcgyemyy5t23ps25gcsfyazyqd5yc
+  audience: public
+  policyRef: urn:ngsi-ld:Policy:hel.fi:hub:public-read
+  enabledRepresentations:
+    - ngsi-ld
+    - mcp
 ```
 
 Nothing about the hub is a new code path. The gateway applies the hub Endpoint's policy set and

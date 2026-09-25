@@ -720,6 +720,51 @@ A listed key carries what an operator decides on and nothing that opens a door:
   not (R20).
 - `503` with `problem+json` when the Portal runs without its PostgreSQL tier, as for section 8.
 
+### 9.1 A key asked for over MCP: the claim (PF-104)
+
+A person's MCP client is driven by a model, and whatever an operation answers lands in that model's
+context and the client's transcript. So `jc_service_account_key_mint` and
+`jc_service_account_key_rotate` called over `/api/v1/mcp` mint nothing. They check the request as the
+routes above do (the account, the credential, the expiry, the key and the overlap), record a claim
+and answer it:
+
+```json
+{
+  "claim": {
+    "id": "c7e1f0a94b2d6e8f13a5c9d7b0e4f261",
+    "expiresAt": "2026-09-25T10:15:00Z",
+    "url": "https://portal.example.org/projects/bikes/settings/service-accounts?account=legacy-push&claim=c7e1f0a94b2d6e8f13a5c9d7b0e4f261"
+  },
+  "account": "legacy-push",
+  "action": "mint",
+  "credential": "legacy-push"
+}
+```
+
+`action` is `mint` or `rotate`; a rotation's answer also names `keyId`, the key it replaces, and
+`overlapHours`; an expiry asked for is `keyExpiresAt`. The
+answer carries no token and no key id of a key that does not exist yet. The person opens `url` in the
+Portal, signed in, sees what the claim will do and confirms it; only then is the key minted, or the
+rotation made, and the token shown once, exactly as a mint in the Portal shows it:
+
+```text
+GET  /api/v1/projects/{project}/serviceaccounts/{name}/keys/claims/{claimId}   what the claim will do → 200
+POST /api/v1/projects/{project}/serviceaccounts/{name}/keys/claims/{claimId}   mint or rotate now → 201 MintedKey, the claim spent
+```
+
+- A claim belongs to the person who asked for it. Anyone else, a claim that has expired and a claim
+  already spent answer `404`, the same answer as a claim that never existed (R20), so the link in a
+  transcript opens nothing for whoever reads it.
+- A claim lives 15 minutes and is spent by its first `POST`, whether the mint succeeds or not; a
+  second `POST` is `404`. Expired claims are deleted.
+- The caller MUST still be allowed to manage the account's keys when the claim is used, as for a
+  mint; a key rotated in between answers `409` as a direct rotation of a revoked key does.
+- The claim row holds what the claim will do and who asked for it, never a secret: nothing is minted
+  until the person confirms (PF-36).
+- `jc_service_account_key_revoke` answers no secret and revokes over MCP at once, as in the Portal.
+- The REST routes and the Portal mint directly; their answer reaches a person, not a model. A run is
+  refused all three operations (§21).
+
 ## 10. Export, import, revisions and sync (MF-16…MF-32, CC-49)
 
 The repository at any revision is the complete configuration export (CC-49). These routes hand it
@@ -1094,7 +1139,8 @@ The editor's operations (DM-13) are `addClass`, `removeClass`, `renameClass`, `s
   normal state of an editor, not a server error.
 - `jsonSchema`, `context`, `docs` and `example` are the four artifacts DM-02 commits beside the
   source, and `jcctl model generate` writes exactly these (see [API/03 §4](03-jcctl.md)); `shacl`
-  and `owl` are rendered in the same run for the artifact store (DM-44). `docs` is one Markdown
+  and `owl` are rendered in the same run for the artifact store (DM-44), and so is `qb`, the RDF
+  Data Cube in Turtle, present only when the model declares a Data Structure Definition (DM-60). `docs` is one Markdown
   page for the whole model, not a directory, and `example` is one entity in the key-value form the
   JSON Schema describes, validated against that schema and against the `@context` before it is
   answered (DM-21). An import answers with the catalogue's own example instead of a generated one:
@@ -1499,7 +1545,7 @@ alternatives, filters combine with AND) and `page` (from 1, twenty datasets a pa
   caller sees public datasets only, so the answer cannot list a restricted one (EP-67, EP-69).
 - Facet counts are over the datasets that match `q` and every other facet's filter.
 - A catalogue that does not answer is named in `unavailable` and the others still answer; when
-  none answers, the route answers `502` with `problem+json`. No `CkanInstance` at all is an empty
+  none answers, the route answers `503` with `problem+json`, as every Portal route whose upstream is down does. No `CkanInstance` at all is an empty
   catalogue, `200` with `total: 0`.
 
 `GET /api/v1/catalogue/datasets/{name}` answers the dataset page:
@@ -1522,7 +1568,7 @@ alternatives, filters combine with AND) and `page` (from 1, twenty datasets a pa
   "resources": [
     { "name": "CSV", "format": "CSV", "url": "https://{host}/api/endpoint/{endpointSlug}/file.csv", "description": "…", "previewUrl": "https://data.{host}/dataset/bbsk-kpi/resource/{id}" }
   ],
-  "endpoint": { "url": "https://{host}/api/endpoint/{endpointSlug}/" },
+  "endpoint": { "url": "https://{host}/api/endpoint/{endpointSlug}/", "representations": ["ngsi-ld", "csv", "mcp"] },
   "model": {
     "name": "key-performance-indicator",
     "classes": [{ "name": "KeyPerformanceIndicator", "description": "…" }],
@@ -1536,13 +1582,16 @@ alternatives, filters combine with AND) and `page` (from 1, twenty datasets a pa
   installation whose audience is `public`: the Portal parses the slug out of the extra, finds the
   Endpoint in its mirror and builds the URL on its own host. `docsUrl` is the dataset's Markdown
   schema resource. A dataset whose extra names another host, or no Endpoint, has neither.
-- An unknown or private dataset answers `404`: a caller cannot tell the two apart.
+- `representations` are the Endpoint's `enabledRepresentations`; the "Use this data" snippets
+  offer only what it serves.
+- An unknown or private dataset answers `404`: a caller cannot tell the two apart. When no
+  catalogue answers at all, `503`.
 
 `GET /api/v1/catalogue/datasets/{name}/sample` answers up to ten entities of the Endpoint's first
 model class, read anonymously through its NGSI-LD representation with `options=keyValues`, as
 `{ "type": "KeyPerformanceIndicator", "columns": ["id", "name", "value"], "rows": [["urn:…", "…", "12"]] }`.
 A dataset with no Endpoint of this installation, or one that does not serve `ngsi-ld`, answers
-`404`; an Endpoint that does not answer, `502`. Nested values are written as compact JSON.
+`404`; an Endpoint that does not answer, `503`. Nested values are written as compact JSON.
 
 ## 16b. Publish a dataset in one step (EP-83)
 
@@ -1572,7 +1621,8 @@ proposes; it writes nothing. The caller needs `propose` on `Endpoint` in the pro
 
 - `catalog` is the drafted `spec.catalog` (EP-78) and `publish` the drafted `spec.publish`
   (EP-62); a block the Endpoint already declares is returned as it is, so re-running the flow
-  never overwrites what a steward wrote. `missing` names the catalogue fields nothing could fill.
+  never overwrites what a steward wrote. `missing` names the catalogue fields nothing could fill;
+  `spatial`, `temporal` and `frequency` are never drafted.
 - `makesPublic` is `true` when the Endpoint's audience is not `public`: the UI then says so before
   the proposal, and the Change the UI proposes with `spec.audience: public` takes the red lane
   with a publisher's approval (EP-76, PF-72).
@@ -1885,7 +1935,9 @@ route's problem document.
   jc_run_publish (a run does not drive another run), jc_run_answer (a run does not answer the
   question a run asked the person it acts for, AG-45), and jc_service_account_key_mint,
   jc_service_account_key_rotate and jc_service_account_key_revoke (a run does not mint or retire
-  the credentials the platform authenticates with). Each refusal names its own act. Proposing a
+  the credentials the platform authenticates with). Each refusal names its own act. Over `/api/v1/mcp`
+  a person's own client still calls jc_service_account_key_mint and jc_service_account_key_rotate,
+  and is answered a claim the person opens in the Portal instead of the token (§9.1, PF-104). Proposing a
   deletion is not among them: jc_resource_delete and jc_project_delete stay open to a run and to
   an MCP client, because a deletion is a Red change a person still approves (AG-77, CC-39).
   The rejection's reason is written on the merge request beside who rejected it; the REST route
@@ -2184,6 +2236,186 @@ An App's `spec.access` entry naming the e-mail then matches nobody, and the App 
 - Without the admin client every route answers `503`.
 - Every action writes one `person.changed` event of the project `org` to the activity feed (§14):
   who, what, and the person's id, never an e-mail body, a password or a token (PF-90).
+- The registry offers the same actions as operations (§21, AG-77, T-2732): `jc_person_list`,
+  `jc_person_get`, `jc_person_create`, `jc_person_edit`, `jc_person_disable`, `jc_person_enable`
+  and `jc_person_sign_out`. Each calls its route's function, so the check and the answers are the
+  route's. `jc_person_create` never answers a temporary password: when the realm sends no e-mail
+  its answer carries `handOver`, which says that a person gives one with `reset-password` on the
+  person's page. Resetting a password, removing a second factor and deleting a person have no
+  operation: the first two hand over or take away a way in, and a deletion is a Change a person
+  proposes on the page (PF-92, PF-94).
+
+## 25. Organization setup (PF-90, UI-82)
+
+What a new organization still lacks, in one answer, for the page that walks an Organization
+Administrator through it (`/organization/setup`, T-2748). The Portal reads it from what it already
+holds and writes nothing: every step links to the page that proposes that change the normal way.
+
+```text
+GET    /api/v1/organization/setup                           the steps and the operator's part → 200
+```
+
+```json
+{
+  "complete": false,
+  "steps": [
+    { "id": "organization", "done": true },
+    { "id": "domain", "done": false },
+    { "id": "people", "done": false },
+    { "id": "project", "done": true },
+    { "id": "publishers", "done": false },
+    { "id": "policies", "done": false }
+  ],
+  "operator": [
+    { "id": "branding", "done": true },
+    { "id": "loginTheme", "done": true },
+    { "id": "smtp", "done": false },
+    { "id": "backups", "done": false }
+  ]
+}
+```
+
+- `steps`, in the order the page shows them, each `done` when:
+  - `organization`: the `Organization` manifest names a domain and at least one locale;
+  - `domain`: that domain is verified (PF-41);
+  - `people`: the realm holds a second person besides the one reading, so the organization does
+    not hang on one account; `done` is `false`, never an error, when no admin client is configured;
+  - `project`: a project holds a `ContextSpace` that names a data model;
+  - `publishers`: a `CkanInstance` is declared, the catalogue the projects publish to (EP-62);
+  - `policies`: the `Organization` manifest sets `spec.projects` (ADR-N-035).
+- `operator` is what the installation provides and the Portal cannot change: `branding` is `true`
+  when `global.branding` names the installation (an `instanceName` other than `joinedcontext`, or a
+  logo); `loginTheme`, `smtp` and `backups` are the deployment's own statements,
+  `JC_SETUP_LOGIN_THEME`, `JC_SETUP_SMTP` and `JC_SETUP_BACKUPS`, rendered from the values that
+  switch those on ([Deployment/13](../Deployment/13-configuration-reference.md)). An unset
+  statement is `false`: the page never claims what nobody said.
+- `complete` is `true` when every step and every operator item is done.
+- The route needs `approve` on `Organization` at organization scope, which `org-admin` holds (PF-56);
+  anyone else gets `403`.
+
+## 26. Validation health (OPS-53)
+
+The validation checks run outside the Portal, on their own schedules: deployment drift and the
+supply chain, the conformance suites, the authorization matrix, the performance budgets, the
+restore drill, the live sweep. Each writes a summary for `tasks/file-failures`, and
+`joinedcontext-deployment/scripts/publish-health.py` turns that summary into one digest, the key
+`{check}.json` of the ConfigMap `jc-validation-results`. The Portal mounts that ConfigMap
+(optional, so an installation that publishes nothing still starts), names the directory in
+`JC_HEALTH_DIR`, and reads it on every request:
+
+```text
+GET /api/v1/organization/health     every published check with its state → 200
+```
+
+```json
+{
+  "checks": [
+    {
+      "check": "deployment",
+      "state": "red",
+      "result": {
+        "check": "deployment",
+        "at": "2026-09-25T08:00:00Z",
+        "everyHours": 1,
+        "run": "dev-validate 2026-09-25T08:00:00Z",
+        "counts": { "pass": 41, "fail": 1, "error": 0, "skip": 3 },
+        "failures": [
+          { "key": "images/portal", "verdict": "fail", "title": "portal runs an unsigned image", "task": "T-2901" }
+        ],
+        "history": [
+          { "at": "2026-09-25T07:00:00Z", "pass": 42, "fail": 0, "error": 0, "skip": 3 }
+        ]
+      }
+    }
+  ]
+}
+```
+
+- A digest is what the publisher writes and nothing more: the check's name, when it ran, how
+  often it runs, the run's label, the verdict counts, at most 50 failing or erroring results
+  (`key`, `verdict`, `title`, and the open task that `check: {check}/{key}` names, when there is
+  one) and at most 200 history points of the last seven days. It never carries a result's
+  `detail` or `evidence`: those stay in the summary, beside the task. A check whose passing keys
+  a page shows, as `apps` does, also lists them in `passed` (at most 500, each at most 300
+  characters); every other check leaves it empty.
+- `result` is the digest the publisher wrote. `state` is the Portal's: `stale` when the last run
+  is older than twice `everyHours` (1 to 744, a month), whatever it found; otherwise `red` when
+  it has a `fail` or an `error` and `green` when not. A file that is not such a digest (larger
+  than 256 KiB, an unknown field, more than 50 failures or 200 points, a text over 300
+  characters, a task that is not a task id, a `check` that differs from its file name) is
+  `unreadable` and has no `result`. Rows come in the order of their names.
+- Only an administrator of the organization reads it: a caller whose bindings at organization
+  scope grant `approve` and `delete` on `RoleBinding` (PF-03). Anyone else signed in gets `403`,
+  nobody signed in `401`.
+- Without `JC_HEALTH_DIR`, or before anything is published, the answer is `{"checks": []}`.
+
+### The chip of an App (AP-136)
+
+The probe publishes the check `apps`, one key `{project}/{name}` per published App. The Apps
+list and the App's page read one project's share of it:
+
+```text
+GET /api/v1/projects/{project}/app-checks     the last check of each App of the project → 200
+```
+
+```json
+{
+  "checks": [
+    { "name": "air-quality", "state": "green", "at": "2026-09-25T09:00:00Z" },
+    { "name": "helsinki-alerts", "state": "red", "at": "2026-09-25T09:00:00Z", "reason": "no row read in 60 s" }
+  ]
+}
+```
+
+- `state` is `green` for a key in `passed`, `red` for a key in `failures` (`reason` is its title),
+  and `amber` for either when the digest is stale; an App the last run did not check has no
+  row. An unreadable or absent digest answers `{"checks": []}`.
+- Whoever reads `App` in the project gets the rows; a project the caller may not read is `404`,
+  a caller without `read` on `App` gets `403`, nobody signed in `401`.
+
+## 27. Data quality of a space (DM-70)
+
+Once a day the leading Portal replica reads every entity of every space that names a model, as
+its own client through the space surface, and holds it to the model the way a pipeline's
+validation stage does (PL-59). The last result stays in memory until the next run replaces it;
+a run that fails keeps the one before.
+
+```text
+GET /api/v1/projects/{project}/spaces/{space}/quality     the last run's report → 200
+```
+
+```json
+{
+  "observedAt": "2026-09-25T02:00:00Z",
+  "checked": 1200,
+  "invalid": 16,
+  "truncated": false,
+  "rules": [
+    { "rule": "sh:minCount", "path": "name", "count": 12, "examples": ["urn:ngsi-ld:BikeStation:hel.fi:bikes:001"] }
+  ],
+  "freshness": [
+    { "pipeline": "bikes-feed", "type": "BikeHireDockingStation", "newest": "2026-09-25T01:58:00Z", "targetSeconds": 600, "state": "fresh", "paused": false }
+  ]
+}
+```
+
+- Before the first run, and for a space that names no model, the answer is `{}`: no
+  `observedAt`, which the page reads as "not checked yet", never as "all valid".
+- `invalid` counts entities with at least one problem; `rules` counts problems by the SHACL
+  component and the path (`type` for a class the model does not declare, `id` for PF-42), most
+  frequent first. `truncated` is `true` when the space held more than the 20,000 entities a run
+  reads.
+- `freshness` has one row per pipeline whose output Endpoint writes into the space. `type` is the
+  pipeline's output type, empty when it names none (then the whole space counts). `targetSeconds`
+  is the pipeline's interval (its `period`, or what its cron `schedule` implies) plus the larger
+  of a twelfth of it and 600: 615 for a `15s` feed, 93600 (26 hours) for a daily run. It is
+  `null` for a pipeline its source drives or whose schedule this reading does not understand,
+  and that row is `untargeted`. `state` is `empty`
+  when the space holds no entity of the type, `stale` when the newest is older than the target,
+  `fresh` otherwise.
+- A project the caller may not read, or a space they may not read, is `404`. `examples` are
+  empty for a caller without `read` on `Entity` in the space; the counts are the same for
+  everyone who reads the space.
 
 ## Related
 
