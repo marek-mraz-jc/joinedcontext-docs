@@ -863,8 +863,10 @@ POST /api/v1/projects/{project}/import?dryRun=All
   ContextSpace. An organization-scoped kind is written in namespace `org` whatever project imported
   it, and a `Project` manifest inside the bundle is dropped: the destination project is the one in
   the path.
-- An upload is at most 32 MiB and 2 000 archive entries, and an entry whose path leaves the archive
-  root is refused before it is read.
+- An upload is at most the organization's `spec.limits.data.uploadMegabytes` (16 MiB when it sets
+  none, never past 64 MiB, the edge's largest body; ADR-N-035), judged on the body as it arrives,
+  and at most 2 000 archive entries. A larger one is refused with `400` naming its size, the limit
+  and the setting. An entry whose path leaves the archive root is refused before it is read.
 - `bundle.yaml` describes the bundle and is never imported as a resource. Its `project` and
   `revision` become `joinedcontext.com/imported-from` on every manifest that lands, so an imported
   object says where it came from (MF-20); an upload with no index is annotated `upload`.
