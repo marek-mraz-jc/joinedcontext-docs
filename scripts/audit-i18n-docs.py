@@ -109,6 +109,9 @@ def _language_maps(lines: list[str], info: str) -> list[tuple[int, list[str]]]:
             maps.append((offset, inline))
     run: list[str] = []
     run_indent, run_start = None, 0
+    # Indentations where the open object already has an ordinary key: a map's keys are all
+    # locales, so `"id"` and `"url"` beside `"expiresAt"` are two fields, not two languages.
+    ordinary: set[int] = set()
     for offset, line in enumerate(lines):
         key, indent = None, None
         if info.startswith("json"):
@@ -119,7 +122,19 @@ def _language_maps(lines: list[str], info: str) -> list[tuple[int, list[str]]]:
             m = YAML_ENTRY.match(line)
             if m:
                 key, indent = m.group(2), len(m.group(1))
-        if key is not None and LOCALE_LIKE.match(key) and (run_indent is None or indent == run_indent):
+        if line.strip():
+            # Deeper objects end where a line comes back out to their level or above.
+            level = indent if indent is not None else len(line) - len(line.lstrip())
+            ordinary = {i for i in ordinary if i <= level}
+        if key is not None and not LOCALE_LIKE.match(key):
+            ordinary.add(indent)
+            if indent == run_indent:
+                run = []
+        elif (
+            key is not None
+            and indent not in ordinary
+            and (run_indent is None or indent == run_indent)
+        ):
             if not run:
                 run_start = offset
             run_indent = indent
@@ -261,6 +276,33 @@ Bundles live in `portal/locales/{locale}.json` for sk, en, de and cs.
 """, None, None),
         ("no ADR", clean, "the locale policy lives here", ""),
         ("no language map at all", "---\ntitle: P\n---\n\n# P\n\nProse.\n", "no language map was found", None),
+        ("locale-shaped fields beside an ordinary one are not a map", clean + """
+```json
+{
+  "claim": {
+    "id": "c7e1f0a9",
+    "url": "https://portal.example.org/claim",
+    "expiresAt": "2026-09-25T10:15:00Z"
+  },
+  "item": {
+    "account": "legacy-push",
+    "id": "k1",
+    "url": "https://portal.example.org/k1"
+  }
+}
+```
+""", None, None),
+        ("a map after an ordinary object is still checked", clean + """
+```json
+{
+  "claim": { "expiresAt": "2026-09-25T10:15:00Z" },
+  "title": {
+    "de": "Raum",
+    "fi": "Tila"
+  }
+}
+```
+""", "has no 'en' entry", None),
         ("locale-shaped plugin keys are not a map", clean + """
 ```yaml
 openid-connect:
