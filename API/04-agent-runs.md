@@ -630,7 +630,9 @@ A `pick` with nothing the person may read asks the same question as free text an
 3. After either, the Portal asks "Which space should it land in?" (`step: "integrate-target"`). The options are the spaces the person may read and `new`, "A new context space".
 4. `new` runs `space_complete` on what was handed over, as the model's call would. That is one `tool` event with the drafts, each draft with its verdict (the pipeline's is its test run on the sample), then a `navigate` to `/projects/{project}/spaces/complete?space={name}` carrying the drafts. The person proposes them there, as one Change. The run proposes nothing.
 5. From an address, the drafts are the space, its data model, a data source, an endpoint and the pipeline that reads the address.
-6. From a file, only the space and its model are drafted: a file is data once, not a feed. A `thought` says so, and says the rows load through Import once the space is approved.
+6. A file is a sample of a feed. Before `new` drafts anything, the Portal asks "What is the address of the feed this file is a sample of?" (`step: "integrate-feed"`). The question takes an address (`input.url`) or the option `none`, "There is no feed".
+7. With an address, the drafts are those of step 5: the data source reads the address, and the pipeline's verdict is its test run on the file. Nothing fetches the address while drafting.
+8. With `none`, only the space and its model are drafted, because the file is data once. A `thought` says so, and says the rows load through Import once the space is approved. Words instead go to the model, on the path.
 
 An existing space, a data source, a context space as the source, or words: these go to the model, on the path, with where the data lands said plainly.
 
