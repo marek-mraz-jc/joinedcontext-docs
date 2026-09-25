@@ -181,6 +181,12 @@ scripts/emergency-revoke.sh --instance dev --policy public-read \
    never as a success.
 3. **Keycloak stops issuing new tokens.** Sessions are logged out for a user, the client
    secret is rotated for a service account. The script prints no token and no secret.
+   For a client the platform declares (edge, portal-api, the gateway, Grafana, Gitea …) the
+   script also writes the new secret into every copy of the generated Secret
+   `keycloak-client-<client>` and restarts the workloads that read it, because
+   keycloak-config-cli imports the secret from that Secret on every apply and would otherwise
+   write the revoked one back. Apply the platform afterwards: the forge's login source takes
+   the new secret only then. A client the Portal created is rotated in Keycloak alone.
 4. **Commit the revocation to Git.** Delete the manifest in the configuration repository as
    well, so the next reconcile does not bring the policy back.
 
