@@ -301,7 +301,7 @@ sequenceDiagram
 
 ## 4. Agent Identity, Attributability & Audit (CC-44)
 
-1. **No rights of its own:** An agent run acts for the person who started it, narrowed by its AgentProfile's `spec.access` (`src/agents/access.rs`, AG-03, AG-70). It holds no credential; `jc-agent-proxy` injects the ones a request needs.
+1. **No rights of its own:** An agent run acts for the person who started it, narrowed by its AgentProfile's `spec.access` (`src/agents/access.rs`, AG-03, AG-70). It holds no credential; `jc-agent-proxy` injects the ones a request needs, and on the data plane that is a token exchanged from the person's own, so the gateway decides a run's reads on that person's grants ([ADR-N-038](../Decisions/adr-n-038-an-agent-run-reads-as-its-person.md), AG-01, AG-94, AG-95).
 2. **Audit Attribution:** When the app builder commits to the forge through `jc-agent-proxy` (`crates/agent-proxy/src/routes/forge.rs`):
    - **Git Author and Committer:** `agent:app-builder@{project} <agent-builder@{project}.local>`.
    - **Git Trailer:** `Co-Proposed-By:` names the person who started the run:

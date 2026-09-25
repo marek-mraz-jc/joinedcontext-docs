@@ -197,6 +197,7 @@ spec:
       expiresAt: "2027-03-01T00:00:00Z"
       ipAllowList: ["203.0.113.0/24"]
   limits: { requestsPerMinute: 1200 }
+  # delegation: token-exchange  # only a client that reads for a person, e.g. jc-agent-proxy (ADR-N-038, AG-95)
 # status (never in Git): keycloak clientId, keyIds, lastUsedAt per credential, rotation state
 ```
 
@@ -204,6 +205,7 @@ spec:
 - **Credentials** are never in Git. The manifest declares that a credential *exists*; the reconciler creates the Keycloak client or the API key, the secret is shown once in the Portal (or written to OpenBao for automation), and the Portal API stores only `argon2id(key)`, key id, expiry and last-used. API keys are prefixed `jc_{keyId}_…` so the gateway resolves the ServiceAccount by key id before hashing, and are accepted only as `Authorization: Bearer` over TLS; they never cross a request boundary as query parameters.
 - **Direct writers** reach the platform only through the gateway (`/cs/{space}/ngsi-ld/v1` for members, or an Endpoint with write grants); the broker, the database and the message bus have no external listener. MQTT devices go through the broker's MQTT bridge, which authenticates them with the same ServiceAccount credentials (username = account, password = api key) and applies the same Policy set.
 - **Rotation and revocation** are Portal actions: *Rotate* issues a new key with an overlap window (default 24 h) and shows both as active until the old one is dropped; *Revoke* is immediate at the gateway (the PDP's principal cache is invalidated by the Portal API event). Expiring keys notify the owner 14 and 3 days ahead; unused keys (90 days) are flagged.
+- **Delegation** (`spec.delegation: token-exchange`, absent by default) marks the one kind of account whose tokens may carry a person as their subject: a token its client obtained by exchanging a person's own (RFC 8693) is decided as that person, never with the account's roles, and a person-subject token from any other account is `403` (ADR-N-038, AG-95). The realm enables the exchange on that client alone.
 - **Pipeline runners** are ServiceAccounts rendered by the reconciler from the `Pipeline` manifest (`oauth-client`, roles from `spec.access`), so a pipeline's identity appears on the same page as everything else.
 - **Autonomous agents** are ServiceAccounts with `roles` restricted to the lanes they may use (AG-xx) and short-lived OAuth 2.1 tokens.
 - **The Portal's reconciler** holds the platform-owned account. Its Keycloak client is `portal-reconciler`, separate from the login client on purpose, with `manage-users` and `query-groups` in `realm-management` and nothing else, so the client people log in with cannot write anybody into a group.
