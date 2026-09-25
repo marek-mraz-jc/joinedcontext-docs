@@ -501,7 +501,7 @@ To balance strict governance with operational velocity, configuration changes pa
 | **Risk Class** | `riskClass: green` | `riskClass: yellow` | `riskClass: red` |
 | **Typical Changes** | Ephemeral sandbox creation, private dashboard adjustments. | New resident pipeline, new data model version, endpoint creation within an existing space. | Public endpoint publication, cross-city federation registration, identity role changes, a standing egress of context data, any resource deletion. |
 | **Authoring** | Portal UI generated form or MCP `instantiate_blueprint`. | Portal UI or Git pull request. | Git pull request only. |
-| **Approval Gate** | **Auto-Approved:** Conftest policy bot evaluates constraints in CI and auto-merges (CC-63). | **Single Approver:** Approved in-app by the domain owner (CODEOWNERS) (CC-34). | **Full Approval Chain:** Multiple approvals required (Security, Platform Admin, Data Owner). |
+| **Approval Gate** | **Merged as proposed:** a blueprint flow that is Green after the stricter-of-two rule is merged by the Portal in the same call, for the person who started it, while its merge request holds exactly the files the flow wrote; anything else waits for a person (CC-63, AG-14, API/01 §13). | **Single Approver:** Approved in-app by the domain owner (CODEOWNERS) (CC-34). | **Full Approval Chain:** Multiple approvals required (Security, Platform Admin, Data Owner). |
 | **Latency Budget** | ≤ 5 seconds from form submit to live deployment (CC-65). | Minutes to hours (Human-dependent). | Days (Formal governance cycle). |
 | **Drift Action** | Automatically reverted or reaped upon TTL expiry. | Monitored; requires manual in-app resolution. | Monitored; triggers critical platform security alert. |
 
