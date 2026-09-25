@@ -988,6 +988,8 @@ Generated 2026-09-25 from: `docs` 75cb9bf, `conformance` 376606c, `deployment` f
 | **PL-61** | [S] | tested | ci-full, fast ci | portal `src/api/internal/pipeline_rejected.rs::a_refused_record_is_kept_with_the_rule_the_workbench_names`, portal `src/api/internal/pipeline_rejected.rs::a_record_that_failed_in_a_step_is_kept_with_its_step_and_an_unknown_pipeline_is_404`, portal `src/api/internal/pipeline_rejected.rs::a_call_without_the_runners_token_is_401`, and 13 more |
 | **PL-62** | [S] | tested | ci-full, fast ci | portal `src/api/internal/pipeline_rejected.rs::a_refused_record_is_kept_with_the_rule_the_workbench_names`, portal `src/api/internal/pipeline_rejected.rs::a_record_that_failed_in_a_step_is_kept_with_its_step_and_an_unknown_pipeline_is_404`, portal `src/api/internal/pipeline_rejected.rs::a_call_without_the_runners_token_is_401`, and 13 more |
 | **PL-63** | [A] [S] | tested | ci-full, fast ci | portal `src/ops/pipeline_steps.rs::fields_are_every_key_once_in_name_order`, portal `tests/ops_pipeline_steps_tests.rs::a_sample_is_the_sources_first_records_with_their_fields`, portal `tests/ops_pipeline_steps_tests.rs::a_source_with_a_credential_a_stream_or_no_name_says_what_to_give_instead`, and 4 more |
+| **PL-64** | [S] | open |  |  |
+| **PL-65** | [H] | open |  |  |
 
 ### R — Access control and federation
 
