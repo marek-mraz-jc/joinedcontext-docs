@@ -5,7 +5,7 @@ title: "App SDK (SDK)"
 
 # App SDK
 
-Family **SDK** (SDK-01…SDK-30, SDK-35…SDK-37). Owning chapter: [Architecture/20-app-sdk.md](../Architecture/20-app-sdk.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
+Family **SDK** (SDK-01…SDK-30, SDK-35…SDK-38). Owning chapter: [Architecture/20-app-sdk.md](../Architecture/20-app-sdk.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
 
 Generated `static` applications are code written against one platform package, `@joinedcontext/sdk` ([ADR-N-022](../Decisions/adr-n-022-generated-applications-are-code-on-the-app-sdk.md)). This family defines the package, the template application a generation run starts from (interface, serverless functions and tests), the runtime that executes functions, the one-shot first run, the editing agent that follows and the preview that shows the result. The application rules of [apps.md](apps.md) still hold; this family says how a generated application meets them.
 
@@ -52,7 +52,7 @@ path in this platform's own tree.
 - **SDK-22** [S] — The `jc-functions` runtime MUST execute every invocation in a fresh QuickJS context holding only the function's transpiled files, with 64 MiB of memory, 5 seconds of execution, a 256 KiB request and a 1 MiB response, no `fetch`, file system, environment, timer beyond the call or state between calls, and `ctx.jc` as its one host capability, which MUST call the application's endpoint through the Context Gateway with the caller's token (anonymously for a public application) so a function never reads or writes more than its caller may (GW10, AP-16).
 - **SDK-23** [S] — The runtime MUST hold no credential, database connection or application code of its own and MUST be reachable from the Portal only; the Portal MUST invoke it for the preview from `POST /api/v1/projects/{project}/agent-runs/{id}/functions/{fn}` with the run's current functions and the reviewer's token, and for a published application from the edge route `/apps/{name}/api/functions/{fn}` with the published build's functions and the `X-Access-Token` the edge set (AP-28).
   > Note: The published half is AP-84, `POST /apps/{name}/api/functions/{fn}` on the static host; it is not built yet (T-2594), and `src/apps/static_host.rs` serves no functions route today.
-- **SDK-24** — Publication MUST run the application's interface and function tests in the build lane (AP-80) and MUST refuse to publish when one fails (AP-11).
+- **SDK-24** — Publication MUST run the application's interface and function tests in the build lane (AP-80) and MUST refuse to publish when one fails (AP-11). The run runs the same tests before it offers publication (SDK-38), so the lane's refusal is the second check, never the first a person hears of.
 
 ## 5. The Entity Grid in the SDK
 
@@ -63,6 +63,7 @@ path in this platform's own tree.
 
 - **SDK-35** [S] — `me()` and `useMe()` MUST return the `user` of the served configuration, `{id, name, email, roles}` or `null` for an anonymous visitor, and MUST NOT fetch, decode or store a token (AP-95).
 - **SDK-36** [H] — When `useAccess().can()` answers no to a person who holds roles in the application, its reason MUST name them, "your role viewer does not permit updateAttrs on Alert", so a generated control is disabled with that sentence (SDK-07, UI-44).
+- **SDK-38** [S] — Before a run offers publication, the Portal MUST run the application's interface and function tests on each version that builds, as the build lane runs them (AP-80, AP-82), in a sandbox where model-written code runs alone: a Kubernetes `Job` in the installation's app-tests namespace with no service-account token, no network in or out, the restricted Pod Security Standard, a read-only root file system and at most 1 CPU, 1 GiB of memory and 120 seconds. Each failing test's file, name and message MUST go back to the model as a verification pass, counted with those of SDK-28; every result MUST be a `tests` event on the conversation (AP-51); and `publish` MUST answer `409` naming the failing tests while the newest version's tests fail or still run. An installation without the sandbox MUST say so on the run, and the lane's check (SDK-24) stays the gate.
 - **SDK-37** [S] — A function MUST receive in `request.user` the same `{id, name, email, roles}` the page was served, set by the static host from AP-92 and never from the caller's body or headers (SDK-21, AP-95).
 
 ## Traceability
@@ -75,6 +76,7 @@ path in this platform's own tree.
 | SDK-13…SDK-15 | [Architecture/20-app-sdk.md#4-the-first-run-and-the-editing-agent](../Architecture/20-app-sdk.md#4-the-first-run-and-the-editing-agent) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | SDK-26 | [Architecture/20-app-sdk.md#4-the-first-run-and-the-editing-agent](../Architecture/20-app-sdk.md#4-the-first-run-and-the-editing-agent) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | SDK-27…SDK-28 | [Architecture/20-app-sdk.md#4-the-first-run-and-the-editing-agent](../Architecture/20-app-sdk.md#4-the-first-run-and-the-editing-agent) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| SDK-38 | [Architecture/20-app-sdk.md#41-first-run-one-shot-with-every-file](../Architecture/20-app-sdk.md#41-first-run-one-shot-with-every-file) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
 | SDK-16…SDK-18 | [Architecture/20-app-sdk.md#5-the-preview-document](../Architecture/20-app-sdk.md#5-the-preview-document) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
 | SDK-19…SDK-20 | [Architecture/20-app-sdk.md#4-the-first-run-and-the-editing-agent](../Architecture/20-app-sdk.md#4-the-first-run-and-the-editing-agent) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | SDK-21…SDK-24 | [Architecture/20-app-sdk.md#3-functions-and-their-runtime](../Architecture/20-app-sdk.md#3-functions-and-their-runtime) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
