@@ -783,10 +783,48 @@ A mapping that yields an array is split into one entity per element before valid
 
 Nothing is written: no Git, no broker, no endpoint, no `secretRef` resolved. The runner refuses a harness that does not lint, and its answer carries the line numbers the trace reports; a processor that throws is a `mapping` error naming the message. One test stream per project at a time, three seconds, then gone. The studio (§7 of Architecture/09) runs the test on the manifest being edited, draws the stages, paints the step an error names red and the steps behind it grey (PL-56), underlines an error at its line, and drafts the `DataSource`, the type and the Bloblang mapping from a dropped CSV or JSON sample so the first test runs before anything is typed (PL-44).
 
+## 8. The workbench, validation and the log
+
+The workbench ([ADR-N-034](../Decisions/adr-n-034-pipeline-workbench.md), PL-58) is one page with six steps: source, sample, mapping, mapped output, validation, target and save. Each step is one operation of the registry, so the page, the API, MCP and the assistant run the same code (PL-63). The three operations still to build are named in [ADR-N-034 §3](../Decisions/adr-n-034-pipeline-workbench.md#3-decision) and enter this table with their code:
+
+| Step | Operation | Answers |
+|---|---|---|
+| Source and sample | sample source (to build, T-2708…T-2712) | the first records of the picked DataSource or Endpoint, their fields and counts, read through the guard of the run |
+| Mapping and mapped output | try mapping (to build) | the §7 trace: every mapped record, and each error at its record, step and line |
+| Validation | validate (to build) | one verdict per record against the target space's model (PL-59) |
+| Target and save | `jc_pipeline_propose` | the Change the person sends, naming the target space |
+
+### What the stage checks (PL-59, PL-60)
+
+The target space's one model (DM-61) carries a JSON Schema of its classes in key-value form (DM-02). The Portal compiles that schema into a schema of the normalized entity a pipeline writes: per class, `id` and `type` required, `type` the class name, each declared attribute an object of its NGSI-LD kind (`Property` with a `value`, `Relationship` with an `object`, `LanguageProperty` with a `languageMap`, `GeoProperty` with a GeoJSON `value`), the value checked against the slot's schema, required slots required, and no other attribute unless the model is open. Those are the constraints the model's SHACL shapes carry (`sh:closed`, `sh:minCount`, `sh:maxCount`, `sh:datatype`, `sh:in`), rendered from the same LinkML (DM-43), so a refusal names its SHACL component and path:
+
+```json
+{ "index": 3, "ok": false, "problems": [ { "rule": "sh:datatype", "path": "pm10", "message": "pm10 must be a number, got \"n/a\"" } ] }
+```
+
+The reconciler renders the same schema into the stream: after the author's steps, a `switch` on the type runs Bento's `json_schema` processor with the class's schema, and a mapping checks the id against `urn:ngsi-ld:{type}:{JC_ORG_DOMAIN}:{JC_SPACE}:` (PF-42, PL-57). The schema comes from the artifacts at the version the space's `dataModelRef` pins; a new version is a new render. A pipeline whose space has no model renders no stage, and `jcctl validate` warns about the space (DM-61).
+
+### Where a refused record goes (PL-61, PL-62)
+
+```mermaid
+flowchart LR
+  steps[author steps] --> stage[validation stage]
+  stage -- valid --> fan{fan out}
+  fan --> gw[gateway upsert]
+  fan --> sink[outcome sink]
+  stage -- refused --> sink
+  sink -->|drop on error| portal[(Portal: rejected list, runs, log)]
+```
+
+The output is a `switch`: a record the stage refused goes only to the outcome sink, a valid one fans out to the gateway upsert and the sink. The sink is an `http_client` to the Portal's internal outcome route with the runner's own client credential, wrapped in `drop_on` so a Portal that does not answer loses a log line and never holds back a write. Each line carries the pipeline, the run, the record id, the step, the outcome (`sent`, `rejected`, `failed`) and a message; a refused record also carries the record, which the Portal masks before it stores it. A run is one tick of the pipeline's clock, or one UTC hour for a source that never ends.
+
+The Portal keeps the newest 1000 rejected records and the newest 5000 log lines per pipeline, and the counts per run. `GET /api/v1/projects/{project}/pipelines/{name}/rejected` and `GET …/runs` answer them with read on the pipeline; "Retry after fix", which needs `propose` on `Pipeline` because it writes, replays the kept records once through the pipeline's current stream on the runner (the §7 harness with the real output): a record that passes now is written, one that still fails comes back with its rule.
+
 ## Related
 
 - [Architecture/11 §7](11-data-models.md) — referenced above.
 - [PL-31…PL-38, PL-45…PL-46](../Requirements/pipelines.md) — derived pipelines, compute steps and the KPI preset.
 - [ADR-N-006 §6](../Decisions/adr-n-006-bento-pipelines-supersede-nifi.md) — compute steps addendum.
+- [ADR-N-034](../Decisions/adr-n-034-pipeline-workbench.md) — why one workbench and a validation stage.
 - [01-overview](../Architecture/01-overview.md) — where this chapter sits in the whole.
 - [00-index](../Requirements/00-index.md) — the normative requirements behind it.

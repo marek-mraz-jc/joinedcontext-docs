@@ -6,7 +6,7 @@ description: Normative requirements for data integration, transformation, and in
 
 # Pipeline Execution & Processing
 
-Family **PL** (PL-01…PL-57). Owning chapter: [Architecture/08-pipelines.md](../Architecture/08-pipelines.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
+Family **PL** (PL-01…PL-63). Owning chapter: [Architecture/08-pipelines.md](../Architecture/08-pipelines.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
 
 ## 1. Manifest Envelope and Native Payloads
 
@@ -110,6 +110,17 @@ A Pipeline takes the shape Bento runs: inputs, an ordered list of processors, ou
 - **PL-56** [H] — The pipeline studio MUST draw a Pipeline as one lane, sources on the left, the steps in order, outputs on the right, with no free wiring; it MUST offer a palette of the runner's processors grouped by category with the runner's one-line summary each, insert the chosen processor as a step between two nodes, show the selected node's own Bento block as YAML (never another node's block and never a secret value, PL-17), and paint the test trace of PL-43 per step by the index of its processor.
 - **PL-57** [P] — The reconciler MUST inject `JC_SPACE`, the rendered segment of the pipeline's target space (PF-84), beside `JC_ORG_DOMAIN`, and a mapping MUST build entity ids from the two (PF-44); a pipeline with several outputs gets one variable per output, named `JC_SPACE` for the first output and `JC_SPACE_2` for the second, the suffix counting on from there.
 
+## 13. The workbench, validated writes and the log
+
+The pipeline workbench and the rule that only valid records are written ([ADR-N-034](../Decisions/adr-n-034-pipeline-workbench.md)).
+
+- **PL-58** [H][A] — The Portal MUST offer one pipeline workbench whose steps, in order, are source, sample, mapping, mapped output, validation, and target and save; each step MUST show its output and a one-line hint, and the schedule, batching and retries MUST sit folded behind "More options" with safe defaults (ADR-N-034, UI-84).
+- **PL-59** [S] — A record MUST count as valid only when its type is a class of the target space's model (DM-61), its id follows PF-42 for that space, and its attributes satisfy the model's shape: closed unless the model is open, required present, single where not multivalued, of the slot's datatype, within its enum and of its NGSI-LD attribute kind; a refusal MUST name the constraint by its SHACL component and its path (DM-43).
+- **PL-60** [S] — The reconciler MUST render, before the output of every pipeline whose target space has a model, a validation stage built from that model's artifacts at the version the space pins, MUST re-render it when that version changes, and a record the stage refuses MUST NOT be written (PL-59).
+- **PL-61** [S] — A refused record MUST go to the pipeline's rejected list in the Portal database, newest 1000 kept per pipeline, holding the record with every secret-shaped value masked, the rule it broke and the time; the list MUST need read on the pipeline, and its "Retry after fix", which writes the records that now pass, MUST need `propose` on `Pipeline` (PL-25, PF-50).
+- **PL-62** [S] — The runner MUST send one outcome line per record (pipeline, run, record id, step, outcome, message) through a sink that drops rather than retries, and the Portal MUST answer a pipeline's runs with their written, rejected and failed counts and each run's log, for that pipeline only, with read on it and never a token or a secret's value.
+- **PL-63** [A][S] — Each workbench step MUST be an operation of the registry (the four ADR-N-034 §3 names, `jc_pipeline_propose` among them) that calls the code the workbench calls and answers what it shows, under the permission of the route it mirrors; the sample MUST read through the same guard as the run (ADR-N-021, AG-73).
+
 ## Traceability
 
 | Requirement Range | Architecture Section | Test Family |
@@ -137,6 +148,7 @@ A Pipeline takes the shape Bento runs: inputs, an ordered list of processors, ou
 | PL-52…PL-55 | [Architecture/08-pipelines.md#sources-steps-and-outputs-pl-52pl-56](../Architecture/08-pipelines.md#sources-steps-and-outputs-pl-52pl-56) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
 | PL-56 | [Architecture/08-pipelines.md#sources-steps-and-outputs-pl-52pl-56](../Architecture/08-pipelines.md#sources-steps-and-outputs-pl-52pl-56) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | PL-57 | [Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes](../Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
+| PL-58…PL-63 | [Architecture/08-pipelines.md#8-the-workbench-validation-and-the-log](../Architecture/08-pipelines.md#8-the-workbench-validation-and-the-log) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
 
 ## Related
 
