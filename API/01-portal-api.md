@@ -732,7 +732,7 @@ and answer it:
 {
   "claim": {
     "id": "c7e1f0a94b2d6e8f13a5c9d7b0e4f261",
-    "url": "https://portal.example.org/projects/bikes/settings/service-accounts?claim=c7e1f0a94b2d6e8f13a5c9d7b0e4f261",
+    "url": "https://portal.example.org/projects/bikes/settings/service-accounts?account=legacy-push&claim=c7e1f0a94b2d6e8f13a5c9d7b0e4f261",
     "expiresAt": "2026-09-25T10:15:00Z"
   },
   "account": "legacy-push",
@@ -741,7 +741,8 @@ and answer it:
 }
 ```
 
-`action` is `mint` or `rotate`; a rotation's answer also names `keyId`, the key it replaces. The
+`action` is `mint` or `rotate`; a rotation's answer also names `keyId`, the key it replaces, and
+`overlapHours`; an expiry asked for is `keyExpiresAt`. The
 answer carries no token and no key id of a key that does not exist yet. The person opens `url` in the
 Portal, signed in, sees what the claim will do and confirms it; only then is the key minted, or the
 rotation made, and the token shown once, exactly as a mint in the Portal shows it:
