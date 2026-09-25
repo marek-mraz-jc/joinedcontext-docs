@@ -128,7 +128,7 @@ DELETE /api/v1/projects/{project}/{plural}/{name}     → 202 + Change (explicit
 POST   /api/v1/projects/{project}/{plural}?dryRun=All validate + plan, no change created
 GET    /api/v1/projects                                 the projects this caller may read
 GET    /api/v1/blueprints                               the Blueprint catalogue of the organization
-GET    /api/v1/endpoints                                every Endpoint of every project the caller may read, each with its project (PF-60, PF-61)
+GET    /api/v1/endpoints                                every Endpoint of every project, each with its project: administrators of the organization only (PF-61)
 GET    /api/v1/organization/datamodels?search=          every DataModel the caller may read, and matching Smart Data Models entries: what the model and type pickers list (DM-63)
 POST   /api/v1/projects                                 open a project → 202 + Change: project.yaml and the creator's steward binding in one merge request (PF-65, PF-66)
 GET    /api/v1/projects/{project}                       the project and `status.usage`: what it holds of each quota (PF-73, PF-75)
@@ -175,15 +175,17 @@ read: the copy's teams and bindings are its own and grant nothing in the origin 
 ids render from the new slug (PF-79). Layout 1 answers `409`, because a project there has no
 repository to copy; its duplicate is an import of its export under the new name (MF-45).
 
-`GET /api/v1/endpoints` is the organization-level Endpoints page (PF-61): an `org-admin` bound at
-organization scope reads every project's, a project's steward their own projects', a binding
-scoped to one context space that space's alone, and a caller no binding names an empty list,
-never a `403` — nothing the caller may not `read` is in it, and a project they may not read is
-not disclosed by refusing it (R20).
+`GET /api/v1/endpoints` is the organization-level Endpoints page (PF-61), an administration view:
+an administrator of the organization (`approve` and `delete` on `RoleBinding` at organization
+scope, PF-03, as `org-admin` holds them) reads every Endpoint of every project, each with its
+project, and every other signed-in caller gets `404`, the answer for a page that is not theirs
+(R20). The MCP operation `jc_endpoint_list_all` is the same read with the same refusal. A
+project's own Endpoints stay at `GET /api/v1/projects/{project}/endpoints`, under that project's
+`read`.
 
 `GET /api/v1/organization/datamodels` is the one list behind the data model and type pickers
 (DM-63, ADR-N-033). `items` holds every `DataModel` of every project whose manifest the caller may
-`read` by the rule of `GET /api/v1/endpoints`, a retired version excepted (DM-26), each as
+`read`, project by project and space by space (PF-60), a retired version excepted (DM-26), each as
 `{name, project, space, version, lifecycle, classes}`, sorted by project, space and name.
 `smartDataModels` holds up to 50 entries of the Smart Data Models catalogue index (DM-12) as
 `{id, name, subject, description}`, and only when `search` has two characters or more: the index
