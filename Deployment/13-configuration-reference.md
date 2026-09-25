@@ -70,11 +70,11 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_BRANDING_FILE` | — | no | The file the deployment renders `global.branding` into (`JC_BRANDING_FILE`; UI-30, OPS-46). |
 | `JC_ENVIRONMENT` | — | no | `JC_ENVIRONMENT` names the overlay the branch is rendered with, the same one the reconciler applies for this installation (CC-73); unset renders the manifests as they are written. |
 | `JC_FUNCTIONS_URL` | — | no | Base URL of the `jc-functions` runtime (`JC_FUNCTIONS_URL`), e.g. `http://jc-functions.jc-system.svc.cluster.local:8080`. |
-| `JC_GITEA_APPS_OWNER` | — | no | `JC_GITEA_APPS_OWNER` — the forge organization the generated applications' repositories, packages and images live in, apart from the configuration's (PF-105); the configuration's organization when unset. |
+| `JC_GITEA_APPS_OWNER` | — | no | `JC_GITEA_APPS_OWNER` — the forge organization the generated applications' repositories, packages and images live in, apart from the configuration's (PF-106); the configuration's organization when unset. |
 | `JC_GITEA_APPS_TOKEN` | — | yes | `JC_GITEA_APPS_TOKEN` — the token of the applications' own machine user, which writes their repositories and packages and nothing of the configuration's; set with the owner or not at all. |
 | `JC_GITEA_OWNER` | — | no | `JC_GITEA_URL` (the API base the Portal dials), `JC_GITEA_OWNER`, `JC_GITEA_REPO` and `JC_GITEA_TOKEN` (a secret: the token every push and merge request is written with). |
 | `JC_GITEA_PUBLIC_URL` | — | no | `JC_GITEA_PUBLIC_URL`; the API base when unset. |
-| `JC_GITEA_READER` | — | no | The forge user the Context Gateway reads the configuration as (`JC_GITEA_READER`, PF-105): a repository the Portal opens for a project it reads too. |
+| `JC_GITEA_READER` | — | no | The forge user the Context Gateway reads the configuration as (`JC_GITEA_READER`, PF-106): a repository the Portal opens for a project it reads too. |
 | `JC_GITEA_REPO` | — | no | `JC_GITEA_URL` (the API base the Portal dials), `JC_GITEA_OWNER`, `JC_GITEA_REPO` and `JC_GITEA_TOKEN` (a secret: the token every push and merge request is written with). |
 | `JC_GITEA_TOKEN` | — | yes | `JC_GITEA_URL` (the API base the Portal dials), `JC_GITEA_OWNER`, `JC_GITEA_REPO` and `JC_GITEA_TOKEN` (a secret: the token every push and merge request is written with). |
 | `JC_GITEA_URL` | — | no | `JC_GITEA_URL` (the API base the Portal dials), `JC_GITEA_OWNER`, `JC_GITEA_REPO` and `JC_GITEA_TOKEN` (a secret: the token every push and merge request is written with). |
