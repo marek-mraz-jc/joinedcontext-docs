@@ -40,6 +40,7 @@ classDiagram
         +String brokerTenant
         +Boolean isSandbox
         +Duration ttl
+        +MissingUnitCode missingUnitCode
     }
 
     class DataModel {
