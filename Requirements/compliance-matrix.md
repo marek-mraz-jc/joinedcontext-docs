@@ -23,7 +23,7 @@ Generated 2026-09-25 from: `docs` 3f0000b, `conformance` 2d6df0f, `deployment` 6
 | Family | Requirements | Tested | Built | Open | Untested and security-tagged |
 |---|---|---|---|---|---|
 | **AG** — Agents and MCP | 92 | 73 | 5 | 14 | 8 |
-| **AP** — Apps on demand | 129 | 100 | 8 | 21 | 5 |
+| **AP** — Apps on demand | 130 | 100 | 8 | 22 | 6 |
 | **CC** — Configuration as code | 90 | 71 | 9 | 10 | 0 |
 | **DM** — Data models | 63 | 50 | 7 | 6 | 0 |
 | **DS** — Data space connector | 20 | 11 | 5 | 4 | 1 |
@@ -37,11 +37,11 @@ Generated 2026-09-25 from: `docs` 3f0000b, `conformance` 2d6df0f, `deployment` 6
 | **PF** — Platform invariants | 95 | 78 | 9 | 8 | 3 |
 | **PL** — Pipelines | 63 | 43 | 11 | 9 | 4 |
 | **R** — Access control and federation | 60 | 23 | 10 | 27 | 0 |
-| **SDK** — App SDK | 33 | 28 | 3 | 2 | 1 |
+| **SDK** — App SDK | 34 | 28 | 3 | 3 | 2 |
 | **SP** — Context-space surface | 22 | 18 | 1 | 3 | 0 |
 | **TS** — Testing and quality | 25 | 15 | 4 | 6 | 0 |
 | **UI** — Portal and user interface | 84 | 60 | 16 | 8 | 5 |
-| **Total** | 1073 | 758 | 105 | 210 | 34 |
+| **Total** | 1075 | 758 | 105 | 212 | 36 |
 
 ## 3. Requirement to test
 
@@ -275,6 +275,7 @@ Generated 2026-09-25 from: `docs` 3f0000b, `conformance` 2d6df0f, `deployment` 6
 | **AP-129** | [S] | open |  |  |
 | **AP-130** | [S] | tested | ci-full, fast ci | portal `src/apps/build_pods.rs::only_the_two_build_labels_are_an_apps_build`, portal `src/apps/build_pods.rs::a_repository_is_an_apps_only_when_the_mirror_holds_that_app`, portal `src/apps/build_pods.rs::a_job_name_is_a_dns_label_unique_per_forge_job`, and 9 more |
 | **AP-131** | [S] | tested | ci-full, fast ci | portal `src/apps/build_pods.rs::only_the_two_build_labels_are_an_apps_build`, portal `src/apps/build_pods.rs::a_repository_is_an_apps_only_when_the_mirror_holds_that_app`, portal `src/apps/build_pods.rs::a_job_name_is_a_dns_label_unique_per_forge_job`, and 9 more |
+| **AP-132** | [S] | open |  |  |
 
 ### CC — Configuration as code
 
@@ -1074,6 +1075,7 @@ Generated 2026-09-25 from: `docs` 3f0000b, `conformance` 2d6df0f, `deployment` 6
 | **SDK-35** | [S] | tested | ci-full, fast ci | portal `sdk/tests/sdk-hooks.test.tsx::useMe returns the served person and useAccess names their roles in a refusal`, portal `sdk/tests/sdk-hooks.test.tsx::useMe is null for an anonymous visitor`, portal `src/apps/roles.rs::the_served_user_carries_the_app_roles_and_null_for_nobody`, and 1 more |
 | **SDK-36** | [H] | tested | fast ci | portal `sdk/tests/sdk-access.test.ts::names the person's roles in a refusal`, portal `sdk/tests/sdk-hooks.test.tsx::useMe returns the served person and useAccess names their roles in a refusal` |
 | **SDK-37** | [S] | built |  | `joinedcontext-portal/src/apps/functions.rs`, `joinedcontext-portal/src/apps/roles.rs` |
+| **SDK-38** | [S] | open |  |  |
 
 ### SP — Context-space surface
 
