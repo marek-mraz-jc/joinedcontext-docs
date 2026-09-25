@@ -24,8 +24,8 @@ jcctl [COMMAND] [OPTIONS]
 | **`export`** | `--repo-dir <path>`, `--project <slug>`, `--out-dir <path>` | Writes `projects/{p}/` of the checkout as a bundle: manifests without `status` or secret values, native files verbatim, and a `kind: Bundle` index (MF-16, MF-17) |
 | **`validate`**| `--repo-dir <path>` | Executes local JSON Schema and Conftest validation on manifests |
 | **`schema export`** | `--out <dir>` | Writes the JSON Schema draft-07 of every manifest kind to `<dir>/{Kind}.json` (default `schemas/kinds`, MF-09, CC-12) |
-| **`model generate`** | `--repo-dir <path>` | Renders every DataModel's artifacts through Model Tools and writes the ones `spec.artifacts` declares (DM-02, DM-32) |
-| **`model diff`** | `--repo-dir <path>` | The same render, compared with what is committed; exit 2 and the stale paths on any difference (DM-02) |
+| **`model generate`** | `--repo-dir <path> [--org-dir <organization checkout>]` | Renders every DataModel's artifacts through Model Tools and writes the ones `spec.artifacts` declares (DM-02, DM-32); a model's `org.{name}.v{major}` imports are read from `--org-dir`, or from `--repo-dir` without it, and its `project.{name}.v{major}` imports from `--repo-dir`, at the version the checkout holds, which must be of the pinned major and not a draft (DM-76) |
+| **`model diff`** | `--repo-dir <path> [--org-dir <organization checkout>]` | The same render, compared with what is committed; exit 2 and the stale paths on any difference (DM-02) |
 | **`model validate`** | `--repo-dir <path>` | Compiles every DataModel and reports what does not compile; writes nothing (DM-17) |
 | **`model import`** | `<dataModel.Subject/Model> --out <file>` | Imports one Smart Data Models model and writes the LinkML source it becomes (DM-07…DM-11) |
 | **`workspace render`** | `--repo-dir <path>`, `--prefix <ws-name->`, `[--out-dir <dir>]` | The workspace preview render of the checkout: `prefix` in front of every project namespace, space segment and id of this organization; one file per manifest under `<dir>`, else one YAML stream on stdout. Refused when a name would stay unprefixed (CC-78, PF-83) |

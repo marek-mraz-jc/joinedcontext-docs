@@ -185,8 +185,13 @@ project's own Endpoints stay at `GET /api/v1/projects/{project}/endpoints`, unde
 
 `GET /api/v1/organization/datamodels` is the one list behind the data model and type pickers
 (DM-63, ADR-N-033). `items` holds every `DataModel` of every project whose manifest the caller may
-`read`, project by project and space by space (PF-60), a retired version excepted (DM-26), each as
-`{name, project, space, version, lifecycle, classes}`, sorted by project, space and name.
+`read`, project by project and space by space (PF-60), and every organization model when the caller
+holds any binding in the organization (DM-75), a retired version excepted (DM-26), each as
+`{name, level, project, space?, version, lifecycle, classes, origin?}`: `level` is `organization`
+or `project` (DM-79), `project` is `org` for an organization model, `space` is absent on a model
+no space owns, and `origin` (`{project, space?, name, version}`) names the project model an
+organization model was shared from (DM-77). Sorted organization models first, then by project,
+space and name.
 `smartDataModels` holds up to 50 entries of the Smart Data Models catalogue index (DM-12) as
 `{id, name, subject, description}`, and only when `search` has two characters or more: the index
 holds about a thousand models, and a picker lists the organization's own first. `search` matches
@@ -1079,7 +1084,9 @@ POST /api/v1/tools/infer-schema  a sample file (multipart, ≤ 10 MiB: CSV, XLSX
 The source of a model is a file of the repository, read and saved through one route scoped to it
 (DM-56, Architecture/11 §6.8): `GET` answers the text at the manifest's `spec.linkml`, `PUT` with
 the new text answers `202` and a `Change` whose commit carries the source, the manifest and the
-generated artifacts, in the lane DM-24 assigns.
+generated artifacts, in the lane DM-24 assigns. An organization model's source,
+`GET /api/v1/projects/org/datamodels/{name}/source`, is every member's to read, like the list
+(DM-75).
 
 A name the project does not hold yet is created by the same `PUT` when it names the space the
 model belongs to (DM-57): the Change then carries the new manifest as well, and without `space`
@@ -1108,6 +1115,37 @@ before sending it: the answer is `400` with one `errors` entry per broken rule, 
   ]
 }
 ```
+
+A project shares a published model with the organization through one more route of the model
+(DM-77, ADR-N-039 §3.2). The
+caller needs `propose` on the model; the answer is a red-lane `Change` of the organization
+repository (`chg-org-…`, CC-87) that copies the source byte for byte to `datamodels/{name}/`, with
+the manifest in namespace `org`, no `contextSpaceRef`, `spec.origin` naming the project, the space,
+the model, its version and the project repository's commit, and the artifacts compiled from that
+source. Only a person whose organization-scope binding grants `approve` on `DataModel` approves it,
+with the model's name typed (CC-19); a project-scope approver is refused `403` there, and so is a
+bearer caller, an agent run or MCP (PF-58). An organization administrator who shares their own
+model sends `confirm` with the name and the Change merges at once (PF-58).
+
+```text
+POST /api/v1/projects/{project}/datamodels/{name}/share   {"confirm"?: name} → 202 Change
+```
+
+| Answer | When |
+|---|---|
+| `202` | the Change, waiting for an organization approver, or merged when `confirm` came from one |
+| `400` | the source imports a model of the project (`project.{name}.v{major}`): share that one first, an organization model imports organization models only |
+| `404` | the project holds no model of that name, or the caller may not read it (R20) |
+| `409` | the model is not `published`; the organization holds a model of that name from another origin (the answer names it); or the organization's copy from this origin already has this source |
+
+A second share from the same origin proposes the organization copy's next version, by the
+severity of its difference (DM-22): a breaking difference is a new major, which projects importing
+the old major keep until they move their `import`.
+
+After the share merges, the model's page offers **Use the organization's copy** (DM-78): the same
+`PUT …/source` with a text that keeps the model's `id`, `name` and prefixes, imports
+`org.{name}.v{major}` and drops every class, slot, enum and type the organization copy defines, so
+class names and IRIs stay as they were and no entity id changes.
 
 ```json
 {
@@ -1185,6 +1223,11 @@ The editor's operations (DM-13) are `addClass`, `removeClass`, `renameClass`, `s
   the document the editor then edits, and its `annotations` carry `spec.source.repository`,
   `spec.source.path` and `spec.source.commit` so the import is reproducible and its provenance
   reaches the manifest (DM-08). `generate` is given a source and does not echo one back.
+- A source that imports platform models (`org.{name}.v{major}`, `project.{name}.v{major}`, DM-76)
+  is compiled with them: the Portal reads each one it may resolve, an organization model or a model
+  of the route's own project at the pinned major, and hands Model Tools its source. A caller never
+  sends another model's source, and an import the Portal cannot resolve is an `errors` entry naming
+  it.
 - `import-sdm` takes a model **identifier** (`dataModel.Environment/AirQualityObserved`), never a
   URL. The allowlist that limits fetching to the Smart Data Models organisation lives in Model
   Tools (DM-10); the Portal refuses `400` for anything that is not an identifier so no caller can

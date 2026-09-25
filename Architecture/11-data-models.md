@@ -574,7 +574,7 @@ The image is `ghcr.io/marek-mraz-jc/joinedcontext-platform/model-tools`, built f
 |---|---|---|
 | `GET /healthz` | — | `{"status", "generatorVersion"}`, which is what a readiness probe reads |
 | `GET /catalog?refresh=&subject=` | — | the Smart Data Models index, cached with a daily refresh (DM-12); `subject=` fills that subject's attribute names |
-| `POST /generate` | `{"source"}` | the artifact set of one LinkML document |
+| `POST /generate` | `{"source", "imports"?}` | the artifact set of one LinkML document; `imports` maps each `org.{name}.v{major}` or `project.{name}.v{major}` the document imports, directly or through another import, to that model's LinkML (at most 32, DM-76), and an import left out is an `errors` entry naming it, never a file Model Tools looks for |
 | `POST /import-sdm` | `{"model"}` | the same set, plus the LinkML an import produced |
 | `POST /infer-schema` | `{"file", "format"}`, the sample base64 in JSON | a draft model from one sample: `linkml`, `operations`, `detectedTypes`, `matches`, `untyped`, `rows` (§6.7, DM-54, DM-55) |
 
