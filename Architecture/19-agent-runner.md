@@ -57,6 +57,7 @@ The pod runs the upstream `openhands-agent-server` image unchanged, digest pinne
 - The agent server's own session key (`OH_SESSION_API_KEYS_0`) is generated per run. It protects the workspace from anything else in the cluster and is not a platform credential: it grants nothing outside that one pod, and it dies with it.
 - Kubernetes objects follow from that: the workspace pod accepts ingress from the Portal on 8000 and nothing else, and its egress stays limited to the proxy and DNS (AG-34).
 - `/v1/runs/events` on the proxy stays the path for events the **proxy itself** raises, `usage` above all, which is where the per-run token accounting of AG-41 comes from.
+- A model call that asks for a stream (`"stream": true`) is passed through as the provider's own Server-Sent Events, chunk by chunk, so the first words reach the caller while the rest is written (ADR-N-032, T-2821). The proxy asks an OpenAI-compatible provider for the usage chunk (`stream_options.include_usage`) when the request does not, reads the usage from the stream (`usage.total_tokens`, or `prompt_tokens` + `completion_tokens`; Anthropic's `message_start` input and `message_delta` output tokens), and records and reports it when the stream ends, as for a whole answer. A stream that ends without a usage, or that the caller leaves early, is counted as the request's `max_tokens` plus a quarter of its body's bytes: a streamed call is never uncounted, since the run's token budget is a cost control (AG-41).
 
 ```mermaid
 flowchart LR
