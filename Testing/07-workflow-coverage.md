@@ -60,16 +60,16 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 
 | step | unit | API | mocked UI | live journey | assistant |
 |---|---|---|---|---|---|
-| `create` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | owed: T-2732 |
-| `read` | `joinedcontext-portal/src/api/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | `ui/e2e/live/organization.spec.ts` › "an administrator reads the organization and grants a role that reaches the person" | owed: T-2732 |
-| `edit` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | owed: T-2732 |
-| `disable` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | owed: T-2732 |
-| `enable` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | owed: T-2732 |
+| `create` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | `jc_person_create` |
+| `read` | `joinedcontext-portal/src/api/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | `ui/e2e/live/organization.spec.ts` › "an administrator reads the organization and grants a role that reaches the person" | `jc_person_get` |
+| `edit` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | `jc_person_edit` |
+| `disable` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | `jc_person_disable` |
+| `enable` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | `jc_person_enable` |
 | `reset-password` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | person only: a reset sends a person a way into their account; an agent that can start one can take the account over |
 | `remove-second-factor` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | person only: removing a second factor weakens a person's sign-in and is decided by an administrator in person |
-| `sign-out-everywhere` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | owed: T-2732 |
+| `sign-out-everywhere` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | `jc_person_sign_out` |
 | `remove` | `joinedcontext-portal/src/api/people.rs` | `tests/last_administrator_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | person only: removing a person deletes their account and cannot be proposed as a Change a second person approves |
-| `refused-no-permission` | `joinedcontext-portal/src/api/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | `ui/e2e/live/organization.spec.ts` › "a viewer is told who can see the members, and the list is never fetched for them" | owed: T-2732 |
+| `refused-no-permission` | `joinedcontext-portal/src/api/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | `ui/e2e/live/organization.spec.ts` › "a viewer is told who can see the members, and the list is never fetched for them" | `jc_person_list` |
 
 ### 3.4 Groups and roles (`groups`)
 
