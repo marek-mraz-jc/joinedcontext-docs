@@ -34,14 +34,14 @@ Generated 2026-09-25 from: `docs` 36beff0, `conformance` 2d6df0f, `deployment` f
 | **MIM** — OASC interoperability | 76 | 1 | 5 | 70 | 0 |
 | **MP** — Model projections | 3 | 3 | 0 | 0 | 0 |
 | **OPS** — Operations and reliability | 50 | 44 | 2 | 4 | 1 |
-| **PF** — Platform invariants | 105 | 78 | 9 | 18 | 10 |
+| **PF** — Platform invariants | 106 | 78 | 9 | 19 | 11 |
 | **PL** — Pipelines | 63 | 43 | 12 | 8 | 4 |
 | **R** — Access control and federation | 60 | 23 | 10 | 27 | 0 |
 | **SDK** — App SDK | 34 | 29 | 3 | 2 | 1 |
 | **SP** — Context-space surface | 22 | 19 | 0 | 3 | 0 |
 | **TS** — Testing and quality | 26 | 15 | 5 | 6 | 0 |
 | **UI** — Portal and user interface | 84 | 62 | 15 | 7 | 5 |
-| **Total** | 1094 | 776 | 107 | 211 | 40 |
+| **Total** | 1095 | 776 | 107 | 212 | 41 |
 
 ## 3. Requirement to test
 
@@ -915,8 +915,9 @@ Generated 2026-09-25 from: `docs` 36beff0, `conformance` 2d6df0f, `deployment` f
 | **PF-101** | [H] | open |  |  |
 | **PF-102** | [H] | open |  |  |
 | **PF-103** | [S] | open |  |  |
-| **PF-104** | [S] | open |  |  |
+| **PF-104** | [S] [A] | open |  |  |
 | **PF-105** | [S] | open |  |  |
+| **PF-106** | [S] | open |  |  |
 
 ### PL — Pipelines
 

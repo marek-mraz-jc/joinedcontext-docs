@@ -29,7 +29,7 @@ The ID range of each family is its lowest and highest live ID, not a count: a re
 
 | Family Prefix | Family Name | Requirement Range | Specification File | Owning Architecture Chapter | Test Family |
 |---|---|---|---|---|---|
-| **PF** | Platform & Domain Invariants | PF-01…PF-103 | [platform.md](platform.md) | [Architecture/03-domain-model.md](../Architecture/03-domain-model.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
+| **PF** | Platform & Domain Invariants | PF-01…PF-106 | [platform.md](platform.md) | [Architecture/03-domain-model.md](../Architecture/03-domain-model.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | **MF** | Manifest Model, Import/Sync/Download | MF-01…MF-47 | [manifests.md](manifests.md) | [Architecture/06-configuration-as-code.md](../Architecture/06-configuration-as-code.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | **EP** | Endpoints & Representations | EP-01…EP-88 | [endpoints.md](endpoints.md) | [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | **PL** | Pipeline Execution | PL-01…PL-57 | [pipelines.md](pipelines.md) | [Architecture/08-pipelines.md](../Architecture/08-pipelines.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
