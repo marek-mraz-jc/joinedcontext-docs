@@ -75,7 +75,7 @@ Family **PF** (PF-01…PF-84). Owning chapters: [Architecture/03-domain-model.md
 ## 9. Service Identities and Credentials
 
 - **PF-34** — Every non-human writer or reader MUST act as a `kind: ServiceAccount` in a Project namespace with an accountable owner, purpose, scoped roles, and declared credentials.
-- **PF-35** — ServiceAccounts MUST be principals of the same authorization model as users, compiling to standard `Policy` entities and evaluated through the in-process PDP (ADR-N-003).
+- **PF-35** — ServiceAccounts MUST be principals of the same authorization model as users, compiling to standard `Policy` entities and evaluated through the in-process PDP (ADR-N-003). A ServiceAccount's grants MUST come from its manifest alone: a `groups` claim in a workload's token MUST NOT reach a `Policy` granted to a group, because Keycloak group membership of a service-account user is not a reviewed change (T-2545).
 - **PF-36** — Credential secrets MUST NOT exist in Git or in manifests, storing only Argon2id key hashes, key identifiers, expiration timestamps, and IP allowlists in the database.
 - **PF-37** — API keys MUST be accepted only as `Authorization: Bearer jc_{keyId}_{secret}` over TLS, while OAuth client credentials issue tokens with a lifetime not exceeding 15 minutes.
 - **PF-38** — Credential rotation MUST support an overlap window during which both keys remain valid, propagating revocations to the gateway within 5 seconds across all replicas.
