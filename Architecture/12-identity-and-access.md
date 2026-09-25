@@ -240,6 +240,14 @@ A token that fails any of the three is `401` with `type: …/unauthorized`. The 
 
 A human token carries `preferred_username` and no `azp` of a service account; it takes the user path, with `realm_access.roles` and `groups` as the subject the PDP sees.
 
+### What the Portal checks in a service account's token
+
+The Portal maps `azp` the same way, for the same reason: a workload's rights to the configuration live in its own manifest and nowhere else ([PF-45](../Requirements/platform.md), [PF-49](../Requirements/platform.md)). A bearer token the Portal verified (issuer, signature, `exp`, `nbf`, and `aud` naming the Portal's own client, `portal-api`) is a `ServiceAccount` when its `azp` is the derived client id of exactly one account in the repository and its `preferred_username` is Keycloak's name for that client's service account, `service-account-{azp}`. Its rights are then the `roles` of that manifest that name a `Role` (§2a), each on the scope written beside it, as a `RoleBinding` naming a person would give them; the account's other roles are the gateway's templates and grant nothing in the Portal. A `RoleBinding` never has to name an account, so a workload's configuration rights have one home, the manifest the PF-52 check already reads when the account is proposed.
+
+`approve` is never among them, whatever the role says: a workload proposes and a person approves (PF-58). A token no single account explains (an id two accounts derive, a client no manifest derives, the edge's token) keeps the person path of §2a, bindings by `user` and `group`: that is how the build lane's platform client, which has no manifest, holds its one rule as `service-account-jc-build-lane` (the table in §2a).
+
+The audience is what keeps the two doors apart. An account that acts on the Portal has a client whose audience mapper names `portal-api` and no endpoint slug, so its token opens the Portal API and the MCP door (`/api/v1/mcp`) and is `401` at every endpoint; an account that reads or writes context data has a client audienced to its endpoints and is `401` at the Portal. A workload that needs both holds two accounts.
+
 - **PF-45** [S] — every non-human caller is a `ServiceAccount` with an audience-bound `client_credentials` token.
 - **PF-46** [S] — the PEP serving the request verifies issuer, signature, expiry and audience, and maps `azp` itself; the edge is not the verifier ([ADR-N-018](../Decisions/adr-n-018-token-verification-in-the-peps.md)).
 
