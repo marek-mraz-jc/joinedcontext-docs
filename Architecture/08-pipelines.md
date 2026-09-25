@@ -785,13 +785,13 @@ Nothing is written: no Git, no broker, no endpoint, no `secretRef` resolved. The
 
 ## 8. The workbench, validation and the log
 
-The workbench ([ADR-N-034](../Decisions/adr-n-034-pipeline-workbench.md), PL-58) is one page with six steps: source, sample, mapping, mapped output, validation, target and save. Each step is one operation of the registry, so the page, the API, MCP and the assistant run the same code (PL-63):
+The workbench ([ADR-N-034](../Decisions/adr-n-034-pipeline-workbench.md), PL-58) is one page with six steps: source, sample, mapping, mapped output, validation, target and save. Each step is one operation of the registry, so the page, the API, MCP and the assistant run the same code (PL-63). The three operations still to build are named in [ADR-N-034 §3](../Decisions/adr-n-034-pipeline-workbench.md#3-decision) and enter this table with their code:
 
 | Step | Operation | Answers |
 |---|---|---|
-| Source and sample | `jc_pipeline_sample_source` | the first records of the picked DataSource or Endpoint, their fields and counts, read through the guard of the run |
-| Mapping and mapped output | `jc_pipeline_try_mapping` | the §7 trace: every mapped record, and each error at its record, step and line |
-| Validation | `jc_pipeline_validate` | one verdict per record against the target space's model (PL-59) |
+| Source and sample | sample source (to build, T-2708…T-2712) | the first records of the picked DataSource or Endpoint, their fields and counts, read through the guard of the run |
+| Mapping and mapped output | try mapping (to build) | the §7 trace: every mapped record, and each error at its record, step and line |
+| Validation | validate (to build) | one verdict per record against the target space's model (PL-59) |
 | Target and save | `jc_pipeline_propose` | the Change the person sends, naming the target space |
 
 ### What the stage checks (PL-59, PL-60)
