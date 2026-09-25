@@ -208,7 +208,6 @@ metadata:
 spec:
   isSandbox: false
   defaultLocale: sk
-  missingUnitCode: fill        # fill (default) | refuse: a write without a quantity's unitCode (DM-06)
 # status is computed by jcctl and served by the Portal API only — never committed:
 # status:
 #   phase: Live

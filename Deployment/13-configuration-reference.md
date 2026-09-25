@@ -52,6 +52,7 @@ The management application: the API, the embedded UI and the in-process reconcil
 | Variable | Default | Secret | What it is |
 |---|---|---|---|
 | `JC_AGENTS_NAMESPACE` | — | no | `JC_AGENTS_NAMESPACE` and `JC_AGENT_PROXY_BASE` are set together or not at all; `JC_PORTAL_NAMESPACE` (default: the workspaces' own namespace), `JC_INTERNAL_BIND` (default `0.0.0.0:9090`) and `JC_AGENT_RUN_TTL` (whole seconds, default `1200`) tune the rest. |
+| `JC_AGENT_APPROVAL_TTL` | — | no | How long a run that built an application waits for its change's approval, in seconds (`JC_AGENT_APPROVAL_TTL`, T-2772): the run's own wall clock stops when it proposes, and an approver has days, not what was left of the build's twenty minutes. |
 | `JC_AGENT_PROXY_BASE` | — | no | `JC_AGENTS_NAMESPACE` and `JC_AGENT_PROXY_BASE` are set together or not at all; `JC_PORTAL_NAMESPACE` (default: the workspaces' own namespace), `JC_INTERNAL_BIND` (default `0.0.0.0:9090`) and `JC_AGENT_RUN_TTL` (whole seconds, default `1200`) tune the rest. |
 | `JC_AGENT_RUN_TTL` | `1200` | no | `JC_AGENTS_NAMESPACE` and `JC_AGENT_PROXY_BASE` are set together or not at all; `JC_PORTAL_NAMESPACE` (default: the workspaces' own namespace), `JC_INTERNAL_BIND` (default `0.0.0.0:9090`) and `JC_AGENT_RUN_TTL` (whole seconds, default `1200`) tune the rest. |
 | `JC_APP_MIRROR_GITHUB_API` | — | no | `JC_APP_MIRROR_GITHUB_API` and `JC_APP_MIRROR_GITHUB_URL` name a GitHub Enterprise server; github.com when unset. |
