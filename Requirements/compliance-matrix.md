@@ -443,6 +443,7 @@ Generated 2026-09-25 from: `docs` 4fb64e7, `conformance` 2d6df0f, `deployment` 6
 | **DM-61** | [S] | tested | ci-full, fast ci | deployment `tests/test_banskabystrica_open_data.py::test_every_feed_writes_its_one_type_and_every_record_it_can`, deployment `tests/test_banskabystrica_open_data.py::test_every_entity_is_one_the_gateway_accepts`, deployment `tests/test_banskabystrica_open_data.py::test_every_id_is_the_four_segment_urn_of_the_space_and_unique`, and 105 more |
 | **DM-62** |  | tested | ci-full | platform `crates/jcctl/tests/model_merge_tests.rs::merge_keeps_every_iri_and_writes_out_the_ones_a_default_prefix_gave`, platform `crates/jcctl/tests/model_merge_tests.rs::merge_refuses_a_clash_naming_both_models`, platform `crates/jcctl/tests/model_merge_tests.rs::merge_refuses_a_default_prefix_nobody_declares_and_an_empty_list`, and 12 more |
 | **DM-63** | [S] | tested | ci-full | portal `tests/organization_datamodels_tests.rs::the_list_holds_only_the_models_the_caller_may_read`, portal `tests/organization_datamodels_tests.rs::search_matches_name_space_and_class_and_is_bounded`, portal `tests/organization_datamodels_tests.rs::a_search_lists_matching_smart_data_models`, and 1 more |
+| **DM-70** | [H] [S] | tested | fast ci | portal `ui/tests/space_quality.test.tsx::says the share valid, the rules failing and the freshness in one line (DM-70)`, portal `src/api/quality.rs::example_ids_are_only_for_whoever_reads_the_entities`, portal `src/quality.rs::a_target_is_the_interval_and_its_slack`, and 6 more |
 
 ### DS — Data space connector
 

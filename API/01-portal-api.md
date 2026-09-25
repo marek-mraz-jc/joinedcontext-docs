@@ -2317,6 +2317,50 @@ GET /api/v1/projects/{project}/app-checks     the last check of each App of the 
 - Whoever reads `App` in the project gets the rows; a project the caller may not read is `404`,
   a caller without `read` on `App` gets `403`, nobody signed in `401`.
 
+## 27. Data quality of a space (DM-70)
+
+Once a day the leading Portal replica reads every entity of every space that names a model, as
+its own client through the space surface, and holds it to the model the way a pipeline's
+validation stage does (PL-59). The last result stays in memory until the next run replaces it;
+a run that fails keeps the one before.
+
+```text
+GET /api/v1/projects/{project}/spaces/{space}/quality     the last run's report → 200
+```
+
+```json
+{
+  "observedAt": "2026-09-25T02:00:00Z",
+  "checked": 1200,
+  "invalid": 16,
+  "truncated": false,
+  "rules": [
+    { "rule": "sh:minCount", "path": "name", "count": 12, "examples": ["urn:ngsi-ld:BikeStation:hel.fi:bikes:001"] }
+  ],
+  "freshness": [
+    { "pipeline": "bikes-feed", "type": "BikeHireDockingStation", "newest": "2026-09-25T01:58:00Z", "targetSeconds": 600, "state": "fresh", "paused": false }
+  ]
+}
+```
+
+- Before the first run, and for a space that names no model, the answer is `{}`: no
+  `observedAt`, which the page reads as "not checked yet", never as "all valid".
+- `invalid` counts entities with at least one problem; `rules` counts problems by the SHACL
+  component and the path (`type` for a class the model does not declare, `id` for PF-42), most
+  frequent first. `truncated` is `true` when the space held more than the 20,000 entities a run
+  reads.
+- `freshness` has one row per pipeline whose output Endpoint writes into the space. `type` is the
+  pipeline's output type, empty when it names none (then the whole space counts). `targetSeconds`
+  is the pipeline's interval (its `period`, or what its cron `schedule` implies) plus the larger
+  of a twelfth of it and 600: 615 for a `15s` feed, 93600 (26 hours) for a daily run. It is
+  `null` for a pipeline its source drives or whose schedule this reading does not understand,
+  and that row is `untargeted`. `state` is `empty`
+  when the space holds no entity of the type, `stale` when the newest is older than the target,
+  `fresh` otherwise.
+- A project the caller may not read, or a space they may not read, is `404`. `examples` are
+  empty for a caller without `read` on `Entity` in the space; the counts are the same for
+  everyone who reads the space.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
