@@ -91,7 +91,8 @@ contracts feed the R21 flow (MIM3-R10), DPV consent gates personal data
 - **I3** — Peer FDTs never get Keycloak accounts; identity = did:web,
   trust = Trusted Issuers Registry.
 - **I4** — Tokens carry identity only (`sub`, did), never permissions;
-  short-lived; RFC 8693 exchange for service hops; DPoP at the edge.
+  short-lived and audience-bound; RFC 8693 exchange for service hops;
+  DPoP at the edge is `next`, not MVP (AG-02).
 
 ---
 
@@ -277,7 +278,7 @@ rows 9 and GW24 (both rung-4, both candidate ETSI CRs).
   `managementInterval` temporal axes, scope taxonomy, operation
   vocabulary, ProblemDetails errors, all CIM 009.
 - **Standards adopted at the edges:** OIDC/OID4VCI/OID4VP, did:web,
-  RFC 8693, DPoP, RFC 9110 conditional requests (R45), RFC 8417 SET +
+  RFC 8693, DPoP (`next`, AG-02), RFC 9110 conditional requests (R45), RFC 8417 SET +
   OpenID SSF/CAEP (R48), W3C Bitstring Status List (R50), OpenID AuthZEN
   (R51), W3C ODRL 2.2 profile over the IDSA DSP subset (R52), W3C DPV
   (R54), RFC 2119/7807/9325 throughout.
