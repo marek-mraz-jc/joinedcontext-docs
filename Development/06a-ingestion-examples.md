@@ -109,7 +109,7 @@ pipeline:
         }
 ```
 
-The full file adds the `@context`, the route, and a thirty-vehicle cap: a Bento memory cache remembers which buses have been admitted and hands each new one a slot from `counter()`, so the demo follows the same thirty buses instead of flickering between hundreds. The cap is what the golden test asserts.
+The full file adds the `@context`, the route, and a thirty-vehicle cap: thirty slot keys in a Bento memory cache, each taken with `add` by one bus and refreshed by every frame it sends, so the demo follows the same thirty buses instead of flickering between hundreds. A bus silent for the cache's ttl frees its slot for the next one. A slot handed out by `counter()` is never handed out again, and that feed went silent half an hour after a start (T-2961). `tests/test_hfp_fleet_cap.py` in the deployment repository asserts the cap and the reuse.
 
 ## 3. HTTP: polling a JSON API
 
