@@ -1130,6 +1130,11 @@ The editor's operations (DM-13) are `addClass`, `removeClass`, `renameClass`, `s
   the document the editor then edits, and its `annotations` carry `spec.source.repository`,
   `spec.source.path` and `spec.source.commit` so the import is reproducible and its provenance
   reaches the manifest (DM-08). `generate` is given a source and does not echo one back.
+- A source that imports platform models (`org.{name}.v{major}`, `project.{name}.v{major}`, DM-75)
+  is compiled with them: the Portal reads each one it may resolve, an organization model or a model
+  of the route's own project at the pinned major, and hands Model Tools its source. A caller never
+  sends another model's source, and an import the Portal cannot resolve is an `errors` entry naming
+  it.
 - `import-sdm` takes a model **identifier** (`dataModel.Environment/AirQualityObserved`), never a
   URL. The allowlist that limits fetching to the Smart Data Models organisation lives in Model
   Tools (DM-10); the Portal refuses `400` for anything that is not an identifier so no caller can
