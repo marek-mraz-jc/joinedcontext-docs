@@ -11,13 +11,13 @@ Family **AG** (AG-01…AG-85; AG-82 is unassigned). Owning chapters: [Architectu
 ## 1. Identity, Authentication, and Scoping
 
 - **AG-01** [A] — Every AI agent interacting with the platform MUST operate under an individual, auditable identity (Keycloak service account or an end-user delegated session via OAuth 2.1 Token Exchange RFC 8693) without generic shared bot accounts (CC-44).
-- **AG-02** [A] — An AI agent MUST authenticate against platform endpoints using standard OAuth 2.1 Bearer tokens containing DPoP proofs.
+- **AG-02** [A][S] — An AI agent MUST authenticate against platform endpoints with OAuth 2.1 Bearer tokens that are short-lived and bound by `aud` to the one Endpoint or surface they were minted for, so a token taken from one surface is refused on every other. Proof of possession is not part of the MVP (owner decision 2026-09-24, T-2358): DPoP (RFC 9449) at the edge is `next`, and when it lands a token carrying `cnf.jkt` MUST be refused without a proof whose `htm`, `htu`, `iat` and unreplayed `jti` match the request.
 - **AG-03** [A] — An agent's access rights across data entities and configuration manifests MUST be governed strictly by standard `Policy` entities and Git repository permissions without ambient superuser access.
 
 ## 2. Dual MCP Surfaces
 
 - **AG-04** [A] — The platform MUST expose two separate, strictly decoupled Model Context Protocol (MCP) Streamable HTTP surfaces: the Data MCP Façade and the Configuration MCP.
-- **AG-05** [A] — The Data MCP Façade MUST determine the active Context Space exclusively from the URL path or verified token audience, rejecting space names supplied as arbitrary tool arguments (SP-14).
+- **AG-05** [A] — The Data MCP Façade MUST determine the active Context Space exclusively from the URL path or the hub's `endpoint` argument (EP-87), confirmed by the verified token audience, rejecting space names supplied as any other tool argument (SP-14).
 - **AG-06** [A] — The Configuration MCP MUST reject direct write operations to the broker, gateway, or database, submitting all proposed modifications as Git merge requests (CC-46).
 
 ## 3. Tool Annotations and Elicitation Protocol

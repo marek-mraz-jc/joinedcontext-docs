@@ -28,6 +28,7 @@ The enforcement point in front of every broker surface (`context-gateway`).
 | `JC_GATEWAY_ASSEMBLY_DIR` | `/tmp/jc-assembly` | no | Where a layout 2 organization is assembled (`JC_GATEWAY_ASSEMBLY_DIR`, default `/tmp/jc-assembly`), a scratch directory the pod owns. |
 | `JC_GATEWAY_BIND` | `0.0.0.0:8080` | no | The address to listen on (`JC_GATEWAY_BIND`, default `0.0.0.0:8080`). |
 | `JC_GATEWAY_BROKER_URL` | — | no | The broker to forward to, scheme and authority only (`JC_GATEWAY_BROKER_URL`). |
+| `JC_GATEWAY_DELIVERY_KEY` | — | yes | The key a subscription's subscriber is sealed with (`JC_GATEWAY_DELIVERY_KEY`, a secret of at least 32 bytes), so each delivery is decided again against the policies in force (GW27, T-2383); unset refuses every subscription that routes a delivery with `501`. |
 | `JC_GATEWAY_DOMAIN_VERIFICATION` | `report` | no | `report` or `enforce` (`JC_GATEWAY_DOMAIN_VERIFICATION`, default `report`): whether a write waits for the Organization's verified domain (PF-41, Architecture/03 §3). |
 | `JC_GATEWAY_DOMAIN_VERIFICATIONS_URL` | — | no | The Portal's list of domain states (`JC_GATEWAY_DOMAIN_VERIFICATIONS_URL`, its internal listener's `/internal/domain-verifications`); required under `enforce`. |
 | `JC_GATEWAY_EGRESS_CA_BUNDLE` | — | no | A PEM file of extra trust anchors the notification egress trusts on top of the public roots (`JC_GATEWAY_EGRESS_CA_BUNDLE`), for subscribers behind the installation's own CA (R46). |
@@ -125,6 +126,9 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_PORTAL_SERVICE_ACCOUNT` | — | no | `JC_PORTAL_SERVICE_ACCOUNT` — the Portal's ServiceAccount in `JC_PORTAL_APPS_NAMESPACE`, the subject of the RoleBinding in each project's apps namespace (AP-116). |
 | `JC_PORTAL_SOPS_AGE_KEY_FILE` | — | a path to one | `JC_PORTAL_SOPS_AGE_KEY_FILE` names the age key file and chooses SOPS; otherwise `JC_PORTAL_OPENBAO_ADDR` and `JC_PORTAL_OPENBAO_ROLE` choose OpenBao, with `JC_PORTAL_OPENBAO_JWT_PATH` (default `/var/run/secrets/kubernetes.io/serviceaccount/token`) for the ServiceAccount token it logs in with. |
 | `JC_PORTAL_SYNC_INTERVAL` | `60` | no | How often the reconciler re-reads the configuration repository (`JC_PORTAL_SYNC_INTERVAL`, whole seconds, default `60`). |
+| `JC_SETUP_BACKUPS` | — | no | The databases are backed up to an object store (`JC_SETUP_BACKUPS`, the literal `true`). |
+| `JC_SETUP_LOGIN_THEME` | — | no | The realm's login theme (`JC_SETUP_LOGIN_THEME`); unset or blank says nothing about it. |
+| `JC_SETUP_SMTP` | — | no | The realm sends mail (`JC_SETUP_SMTP`, the literal `true`). |
 | `JC_TRUST_EDGE_TOKEN` | `false` | no | The deployment sets it behind the edge, which strips the header from every client request first; a Portal without an edge in front leaves it off and the header is ignored (`JC_TRUST_EDGE_TOKEN`, the literal string `true` to turn it on; default `false`). |
 
 ## 3. Agent proxy
@@ -172,8 +176,10 @@ The reconciler, as a CLI for an operator and as the library the Portal embeds.
 |---|---|---|---|
 | `JC_ENVIRONMENT` | — | no | The overlay `JC_ENVIRONMENT` names, as `validate` and `plan` read it (CC-73). |
 | `JC_GATEWAY_URL` | — | no | `JC_GATEWAY_URL` is the Context Gateway this run writes through, and `JC_TOKEN_FILE` the file holding the reconciler's ServiceAccount token — a path to a secret, projected by the deployment and never a value in the environment. |
+| `JC_IDM` | — | no | `JC_IDM` is the identity provider's issuer when `--idm` is not given, e.g. `https://idm.<domain>/realms/<realm>`. |
 | `JC_MODEL_TOOLS_URL` | — | no | Where Model Tools is, when `--url` names no address: `JC_MODEL_TOOLS_URL`. |
-| `JC_TOKEN_FILE` | — | a path to one | `JC_GATEWAY_URL` is the Context Gateway this run writes through, and `JC_TOKEN_FILE` the file holding the reconciler's ServiceAccount token — a path to a secret, projected by the deployment and never a value in the environment. |
+| `JC_SERVER` | — | no | The Portal the client verbs talk to: `--server` or `JC_SERVER`, with the token from `--token-file` or `JC_TOKEN_FILE` (API/03 §2a). |
+| `JC_TOKEN_FILE` | — | a path to one | The Portal the client verbs talk to: `--server` or `JC_SERVER`, with the token from `--token-file` or `JC_TOKEN_FILE` (API/03 §2a). |
 
 ## 6. Injected into a workload
 
