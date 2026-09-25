@@ -5,9 +5,9 @@ title: "Data Models & the LinkML Editor"
 
 # Data Models & the LinkML Editor
 
-Family **DM** (DM-01…DM-73). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **DM** (DM-01…DM-74). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
-This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-73**. Consumer classes per `00-index.md`.
+This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-74**. Consumer classes per `00-index.md`.
 
 ## 1. Source of truth and artifacts
 
