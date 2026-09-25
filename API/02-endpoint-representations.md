@@ -716,6 +716,11 @@ Accept: application/odrl+json
 The same ODRL policy is served as RDF to a caller that sends `Accept: text/turtle` — one document,
 two serializations, so a catalogue that reads Turtle needs no JSON-LD processor.
 
+An Endpoint that declares a licence in `spec.catalog.license` adds the licence's duties to every
+permission: `"duty": [{"action": "attribute"}]` for CC BY and ODC-By, the same plus
+`{"action": "cc:ShareAlike"}` for CC BY-SA and ODbL, nothing for CC0 and PDDL (EP-79,
+[Architecture/04 §3a](../Architecture/04-context-spaces-and-endpoints.md#3a-the-endpoints-own-dcat-ap-record)).
+
 ```http
 GET /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/access
 Accept: application/vnd.joinedcontext.grant-ast+json
