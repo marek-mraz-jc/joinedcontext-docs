@@ -1128,7 +1128,10 @@ proxies them to the Context Gateway's `/api/endpoint/{slug}/…` (Deployment/10,
   `default-src 'self'; connect-src 'self'; frame-ancestors {portal origin}` by default, with
   `connect-src` extended by `spec.csp.connectSrc` and the origins of `spec.csp.frameAncestors`
   added to `frame-ancestors` only when `spec.embeddable: true` (AP-12). The Portal's own origin
-  is always there, since "Open app" frames the App under the Portal's header (AP-122). It
+  is always there, since "Open app" frames the App under the Portal's header (AP-122), unless
+  Apps have no origin of their own (`JC_PORTAL_APPS_URL` unset): an App on the Portal's origin
+  would reach into the Portal's page, so it keeps `frame-ancestors 'none'` (`'self'` when
+  embeddable). It
   replaces the Portal's own CSP for these paths, and no `X-Frame-Options` is sent: its
   `SAMEORIGIN` would refuse the Portal, whose host is not the apps origin.
 - The bundle is served from the app artifact root, one directory per app, and each directory
