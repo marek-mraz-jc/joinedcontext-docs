@@ -125,7 +125,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | `validate` | `joinedcontext-portal/src/tools/model_tools.rs` | `tests/edge_model_tools_tests.rs` | `ui/tests/linkml_preview.test.tsx` | `ui/e2e/live/verdict-gate.spec.ts` › "a check refuses a model that does not exist, names the field, and a fix clears it" | `jc_manifest_dry_run` |
 | `read` | `joinedcontext-portal/src/api/datamodels.rs` | `tests/organization_datamodels_tests.rs` | `ui/tests/models_list_page.test.tsx` | `ui/e2e/live/walk.spec.ts` › "every page opens cleanly for the steward" | `jc_model_source_get` |
 | `edit-source` | `joinedcontext-portal/src/api/datamodels.rs` | `tests/datamodel_source_tests.rs` | `ui/tests/linkml_source_editor.test.tsx` | `ui/e2e/live/models.spec.ts` › "a steward builds a model with classes, an enum and a has-many relation, edits its source, checks and proposes it" | `jc_model_source_put` |
-| `share-with-organization` | `joinedcontext-portal/src/api/datamodels.rs` | `tests/datamodel_share_tests.rs` | `ui/tests/model_share.test.tsx` | owed: T-2885 | person only: sharing puts a project's schema in front of every project; the Change is red and an organization administrator approves it, so a person decides to ask (DM-76, PF-58) |
+| `share-with-organization` | `joinedcontext-portal/src/api/datamodels.rs` | `tests/datamodel_share_tests.rs` | `ui/tests/model_share.test.tsx` | owed: T-2885 | person only: sharing puts a project's schema in front of every project; the Change is red and an organization administrator approves it, so a person decides to ask (DM-77, PF-58) |
 | `retire` | `joinedcontext-portal/src/api/delete.rs` | `tests/resource_delete_tests.rs` | `ui/tests/resource_delete.test.tsx` | `ui/e2e/live/models.spec.ts` › "a steward proposes removing a model, and the rejected removal keeps it" | `jc_resource_delete` |
 | `refused-no-permission` | `joinedcontext-portal/src/permissions.rs` | `tests/permissions_tests.rs` | `ui/tests/models_page_save.test.tsx` | `ui/e2e/live/viewer-refused.spec.ts` › "a viewer is refused with a reason on every page, and at the door" | `jc_model_propose` |
 | `refused-red-verdict` | `joinedcontext-portal/src/ops/verdict.rs` | `tests/verdict_findings_tests.rs` | `ui/tests/linkml_editor.test.tsx` | `ui/e2e/live/verdict-gate.spec.ts` › "a check refuses a model that does not exist, names the field, and a fix clears it" | `jc_model_propose` |
@@ -383,7 +383,7 @@ The owed cells name open tasks, and `gate_workflows` holds their count: it may s
 - **T-2732**: assistant tools for people, organization settings, project copy, a pipeline's rejected rows, an app rebuild and write, and drift.
 - **T-2867**: drift adopt and revert, once a page mounts the drift modal and dev holds a seed that can drift.
 - **T-2726**: the one-step Publish dataset from an endpoint, its live journey and its tool.
-- **T-2885**: the live share of a project model with the organization, walked with the export and import round trip of the models a project uses (DM-76, MF-49, MF-50).
+- **T-2885**: the live share of a project model with the organization, walked with the export and import round trip of the models a project uses (DM-77, MF-49, MF-50).
 
 ## 6. Assistant evals
 

@@ -186,11 +186,11 @@ project's own Endpoints stay at `GET /api/v1/projects/{project}/endpoints`, unde
 `GET /api/v1/organization/datamodels` is the one list behind the data model and type pickers
 (DM-63, ADR-N-033). `items` holds every `DataModel` of every project whose manifest the caller may
 `read`, project by project and space by space (PF-60), and every organization model when the caller
-holds any binding in the organization (DM-74), a retired version excepted (DM-26), each as
+holds any binding in the organization (DM-75), a retired version excepted (DM-26), each as
 `{name, level, project, space?, version, lifecycle, classes, origin?}`: `level` is `organization`
-or `project` (DM-78), `project` is `org` for an organization model, `space` is absent on a model
+or `project` (DM-79), `project` is `org` for an organization model, `space` is absent on a model
 no space owns, and `origin` (`{project, space?, name, version}`) names the project model an
-organization model was shared from (DM-76). Sorted organization models first, then by project,
+organization model was shared from (DM-77). Sorted organization models first, then by project,
 space and name.
 `smartDataModels` holds up to 50 entries of the Smart Data Models catalogue index (DM-12) as
 `{id, name, subject, description}`, and only when `search` has two characters or more: the index
@@ -1086,7 +1086,7 @@ The source of a model is a file of the repository, read and saved through one ro
 the new text answers `202` and a `Change` whose commit carries the source, the manifest and the
 generated artifacts, in the lane DM-24 assigns. An organization model's source,
 `GET /api/v1/projects/org/datamodels/{name}/source`, is every member's to read, like the list
-(DM-74).
+(DM-75).
 
 A name the project does not hold yet is created by the same `PUT` when it names the space the
 model belongs to (DM-57): the Change then carries the new manifest as well, and without `space`
@@ -1117,7 +1117,7 @@ before sending it: the answer is `400` with one `errors` entry per broken rule, 
 ```
 
 A project shares a published model with the organization through one more route of the model
-(DM-76, ADR-N-039 §3.2). The
+(DM-77, ADR-N-039 §3.2). The
 caller needs `propose` on the model; the answer is a red-lane `Change` of the organization
 repository (`chg-org-…`, CC-87) that copies the source byte for byte to `datamodels/{name}/`, with
 the manifest in namespace `org`, no `contextSpaceRef`, `spec.origin` naming the project, the space,
@@ -1142,7 +1142,7 @@ A second share from the same origin proposes the organization copy's next versio
 severity of its difference (DM-22): a breaking difference is a new major, which projects importing
 the old major keep until they move their `import`.
 
-After the share merges, the model's page offers **Use the organization's copy** (DM-77): the same
+After the share merges, the model's page offers **Use the organization's copy** (DM-78): the same
 `PUT …/source` with a text that keeps the model's `id`, `name` and prefixes, imports
 `org.{name}.v{major}` and drops every class, slot, enum and type the organization copy defines, so
 class names and IRIs stay as they were and no entity id changes.
@@ -1223,7 +1223,7 @@ The editor's operations (DM-13) are `addClass`, `removeClass`, `renameClass`, `s
   the document the editor then edits, and its `annotations` carry `spec.source.repository`,
   `spec.source.path` and `spec.source.commit` so the import is reproducible and its provenance
   reaches the manifest (DM-08). `generate` is given a source and does not echo one back.
-- A source that imports platform models (`org.{name}.v{major}`, `project.{name}.v{major}`, DM-75)
+- A source that imports platform models (`org.{name}.v{major}`, `project.{name}.v{major}`, DM-76)
   is compiled with them: the Portal reads each one it may resolve, an organization model or a model
   of the route's own project at the pinned major, and hands Model Tools its source. A caller never
   sends another model's source, and an import the Portal cannot resolve is an `errors` entry naming
