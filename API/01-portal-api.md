@@ -1572,7 +1572,8 @@ proposes; it writes nothing. The caller needs `propose` on `Endpoint` in the pro
 
 - `catalog` is the drafted `spec.catalog` (EP-78) and `publish` the drafted `spec.publish`
   (EP-62); a block the Endpoint already declares is returned as it is, so re-running the flow
-  never overwrites what a steward wrote. `missing` names the catalogue fields nothing could fill.
+  never overwrites what a steward wrote. `missing` names the catalogue fields nothing could fill;
+  `spatial`, `temporal` and `frequency` are never drafted.
 - `makesPublic` is `true` when the Endpoint's audience is not `public`: the UI then says so before
   the proposal, and the Change the UI proposes with `spec.audience: public` takes the red lane
   with a publisher's approval (EP-76, PF-72).
