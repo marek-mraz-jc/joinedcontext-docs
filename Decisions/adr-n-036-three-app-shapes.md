@@ -66,11 +66,11 @@ The `static` template pins its libraries with ranges (`^9.4.0`), and the Rust se
 
 ## 5. Consequences
 
-- AP-01 names the three shapes. AP-123…AP-128 are new. AP-105…AP-108 speak of `ui-rust` and extend to `ui-node`. SDK-13 picks and states the shape. AP-08 and the `service` clauses of AP-94 and AP-116 are withdrawn.
+- AP-01 names the three shapes. AP-124…AP-129 are new. AP-105…AP-108 speak of `ui-rust` and extend to `ui-node`. SDK-13 picks and states the shape. AP-08 and the `service` clauses of AP-94 and AP-116 are withdrawn.
 - jc-core renames `AppClass` and reads the aliases. The Portal, jcctl and the reference manifests follow. Work: T-2723 (`ui-node`) and T-2724 (complete templates and the scaffold jobs).
 
 ## Related
 
-- [Requirements/apps](../Requirements/apps.md) — AP-01, AP-105…AP-108 and AP-123…AP-128.
+- [Requirements/apps](../Requirements/apps.md) — AP-01, AP-105…AP-108 and AP-124…AP-129.
 - [Requirements/app-sdk](../Requirements/app-sdk.md) — SDK-13, SDK-21.
 - [ADR-N-028](adr-n-028-applications-build-on-the-forge.md) — the forge lane every shape builds on.
