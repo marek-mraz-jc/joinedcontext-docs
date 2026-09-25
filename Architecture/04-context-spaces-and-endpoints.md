@@ -286,8 +286,8 @@ spec:
 
 | `spec.catalog` | Record term | Rule |
 |---|---|---|
-| `publisher` | `dct:publisher` | a `foaf:Agent` with `foaf:name` per language and the `uri` as its identifier; the Portal prefills it from the organization's settings |
-| `contactPoint` | `dcat:contactPoint` | a `vcard:Kind` with `vcard:fn` and `vcard:hasEmail` as a `mailto:` IRI; a role address, which the Portal checks against the organization's members (EP-80) |
+| `publisher` | `dct:publisher` | a `foaf:Agent` with `foaf:name` per language and the `uri` as its identifier; the Portal prefills the Organization's title and `https://{domain}/` |
+| `contactPoint` | `dcat:contactPoint` | a `vcard:Kind` with `vcard:fn` and `vcard:hasEmail` as a `mailto:` IRI; a role address, prefilled from the Organization's `open-data` contact and checked against the organization's members (EP-80) |
 | `license` | `dct:license` | the EU licence table IRI, on the dataset and on every distribution; the codes accepted are the ones whose duties are known (below), anything else is refused at validation with the list |
 | `attribution` | `dct:rights` | a `dct:RightsStatement` on every distribution, the words the attribution duty asks for |
 | `themes` | `dcat:theme` | the EU data-theme table IRIs (`AGRI`, `ECON`, `EDUC`, `ENER`, `ENVI`, `GOVE`, `HEAL`, `INTR`, `JUST`, `REGI`, `SOCI`, `TECH`, `TRAN`) |
