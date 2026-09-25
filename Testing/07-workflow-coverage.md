@@ -96,10 +96,10 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 
 | step | unit | API | mocked UI | live journey | assistant |
 |---|---|---|---|---|---|
-| `upload` | `joinedcontext-portal/src/api/import.rs` | `tests/import_api_tests.rs` | `ui/tests/import_wizard.test.tsx` | owed: T-2729 | `jc_project_import` |
+| `upload` | `joinedcontext-portal/src/api/import.rs` | `tests/import_api_tests.rs` | `ui/e2e/import.spec.ts` | `ui/e2e/live/import.spec.ts` › "a steward checks a bundle, reads what it would do, proposes it, and the rejected import leaves nothing" | `jc_project_import` |
 | `from-git` | `joinedcontext-portal/src/api/import_git.rs` | `tests/project_import_git_tests.rs` | `ui/tests/import_wizard.test.tsx` | owed: T-2729 | `jc_project_import` |
-| `refused-no-permission` | `joinedcontext-portal/src/api/import.rs` | `tests/edge_import_mutate_tests.rs` | `ui/tests/import_wizard.test.tsx` | owed: T-2729 | `jc_project_import` |
-| `refused-secret` | `joinedcontext-portal/src/api/import.rs` | `tests/import_credential_needs_tests.rs` | `ui/tests/import_wizard.test.tsx` | owed: T-2729 | `jc_project_import` |
+| `refused-no-permission` | `joinedcontext-portal/src/api/import.rs` | `tests/edge_import_mutate_tests.rs` | `ui/tests/import_wizard.test.tsx` | `ui/e2e/live/import.spec.ts` › "a viewer meets Propose disabled with its reason, and the door refuses the same bundle" | `jc_project_import` |
+| `refused-secret` | `joinedcontext-portal/src/api/import.rs` | `tests/import_credential_needs_tests.rs` | `ui/e2e/import.spec.ts` | `ui/e2e/live/import.spec.ts` › "a credential written into a bundle is refused at the door, before a report, and never echoed" | `jc_project_import` |
 
 ### 3.7 Context spaces (`space`)
 
@@ -219,7 +219,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | step | unit | API | mocked UI | live journey | assistant |
 |---|---|---|---|---|---|
 | `share-space` | `joinedcontext-portal/src/references.rs` | `tests/foreign_model_mirror_tests.rs` | `ui/e2e/sharing.spec.ts` | `ui/e2e/live/kind-shared.spec.ts` › "SharedSpaceReference: created, changed and removed through the page by a person" | `jc_resource_propose` |
-| `read-shared` | `joinedcontext-portal/src/reconciler/foreign.rs` | `tests/foreign_model_mirror_tests.rs` | `ui/e2e/sharing.spec.ts` | owed: T-2729 | `jc_federation_graph` |
+| `read-shared` | `joinedcontext-portal/src/reconciler/foreign.rs` | `tests/foreign_model_mirror_tests.rs` | `ui/e2e/sharing.spec.ts` | `ui/e2e/live/shared.spec.ts` › "the old address lands on what other projects share with this one, and the list follows the audience rule" | `jc_federation_graph` |
 | `register-source` | `joinedcontext-portal/src/reconciler/registrations.rs` | `tests/csrs_api_tests.rs` | `ui/tests/contextsourceregistration_form.test.tsx` | `ui/e2e/live/kind-csrs.spec.ts` › "ContextSourceRegistration: created, changed and removed through the page by a person" | `jc_resource_propose` |
 | `refused-no-permission` | `joinedcontext-portal/src/permissions.rs` | `tests/attack_cross_project_tests.rs` | `ui/e2e/sharing.spec.ts` | `ui/e2e/live/kind-shared.spec.ts` › "SharedSpaceReference: a viewer finds every write control disabled with its reason, and the door answers 403" | `jc_resource_propose` |
 
@@ -264,12 +264,12 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | step | unit | API | mocked UI | live journey | assistant |
 |---|---|---|---|---|---|
 | `copy` | `joinedcontext-portal/src/store.rs` | `tests/workspace_api_tests.rs` | `ui/tests/form_work_on_copy_dialog.test.tsx` | `ui/e2e/live/copy-employee.spec.ts` › "an employee copies the project, edits in the copy, and brings it back as one change" | `jc_workspace_open` |
-| `compare` | `joinedcontext-portal/src/plan.rs` | `tests/workspace_change_tests.rs` | `ui/tests/page_compare_page.test.tsx` | owed: T-2729 | `jc_workspace_compare` |
+| `compare` | `joinedcontext-portal/src/plan.rs` | `tests/workspace_change_tests.rs` | `ui/e2e/workspaces.spec.ts` | owed: T-2729 | `jc_workspace_compare` |
 | `update-from-main` | `joinedcontext-portal/src/plan.rs` | `tests/workspace_api_tests.rs` | `ui/tests/part_workspace_bar.test.tsx` | owed: T-2729 | `jc_workspace_update_from_main` |
-| `preview` | `joinedcontext-portal/src/ops/previews.rs` | `tests/workspace_preview_tests.rs` | `ui/tests/page_try_it_page.test.tsx` | `ui/e2e/live/workspace-preview.spec.ts` › "a copy's preview answers on its own addresses and stops answering when stopped" | `jc_workspace_preview_start` |
+| `preview` | `joinedcontext-portal/src/ops/previews.rs` | `tests/workspace_preview_tests.rs` | `ui/e2e/workspaces.spec.ts` | `ui/e2e/live/workspace-preview.spec.ts` › "a copy's preview answers on its own addresses and stops answering when stopped" | `jc_workspace_preview_start` |
 | `stop-preview` | `joinedcontext-portal/src/ops/previews.rs` | `tests/ops_workspace_previews_tests.rs` | `ui/tests/page_try_it_page.test.tsx` | `ui/e2e/live/workspace-preview.spec.ts` › "a copy's preview answers on its own addresses and stops answering when stopped" | `jc_workspace_preview_stop` |
 | `bring-back` | `joinedcontext-portal/src/plan.rs` | `tests/workspace_propose_tests.rs` | `ui/tests/page_bring_back_page.test.tsx` | `ui/e2e/live/copy-employee.spec.ts` › "an employee copies the project, edits in the copy, and brings it back as one change" | person only: bringing a copy back proposes every change of it at once and is left to a person (AG-11) |
-| `discard` | `joinedcontext-portal/src/store.rs` | `tests/workspace_api_tests.rs` | `ui/tests/page_workspaces_page.test.tsx` | owed: T-2729 | person only: throwing a copy away loses the work in it, and an agent never does (AG-11) |
+| `discard` | `joinedcontext-portal/src/store.rs` | `tests/workspace_api_tests.rs` | `ui/e2e/workspaces.spec.ts` | owed: T-2729 | person only: throwing a copy away loses the work in it, and an agent never does (AG-11) |
 | `refused-agent-way-out` | `joinedcontext-portal/src/ops/workspaces.rs` | `tests/workspace_bypass_tests.rs` | `ui/tests/workspaces_ui.test.tsx` | `ui/e2e/live/copy-agent.spec.ts` › "the assistant works in a copy and leaves both ways out to a person" | `jc_workspace_propose` |
 | `refused-no-permission` | `joinedcontext-portal/src/ops/workspaces.rs` | `tests/workspace_security_tests.rs` | `ui/tests/page_workspaces_page.test.tsx` | owed: T-2729 | `jc_workspace_open` |
 
@@ -299,7 +299,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 
 | step | unit | API | mocked UI | live journey | assistant |
 |---|---|---|---|---|---|
-| `open-and-ask` | `joinedcontext-portal/src/agents/oneshot/conversation.rs` | `tests/assistant_ask_tests.rs` | `ui/tests/assistant_page.test.tsx` | owed: T-2729 | `jc_ask` |
+| `open-and-ask` | `joinedcontext-portal/src/agents/oneshot/conversation.rs` | `tests/assistant_ask_tests.rs` | `ui/e2e/assistant_page.spec.ts` | owed: T-2729 | `jc_ask` |
 | `integrate-pipeline` | `joinedcontext-portal/src/agents/oneshot/integrate.rs` | `tests/assistant_paths_tests.rs` | `ui/tests/assistant_capabilities.test.tsx` | `ui/e2e/live/assistant-paths.spec.ts` › "Integrate a pipeline from a CSV and its feed stays within its budgets (T-2695, T-2697)" | `jc_switch_path` |
 | `open-a-form` | `joinedcontext-portal/src/agents/change.rs` | `tests/assistant_access_tests.rs` | `ui/tests/form_assistant_dock.test.tsx` | `ui/e2e/live/assistant-creates.spec.ts` › "the assistant opens the form for a data source, filled from one sentence" | `jc_ui_navigate` |
 | `propose-endpoint` | `joinedcontext-portal/src/agents/share.rs` | `tests/assistant_share_tests.rs` | `ui/tests/assistant_endpoints.test.tsx` | `ui/e2e/live/share.spec.ts` › "an endpoint proposed and approved through the UI: Live, the hidden attribute absent, the viewer refused on the organization one" | `jc_endpoint_propose` |
@@ -376,7 +376,7 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 
 The owed cells name open tasks, and `gate_workflows` holds their count: it may shrink and never grow.
 
-- **T-2729**: live journeys for import, the data model editor, a copy's compare, update and discard, the shared list, CKAN status and the assistant page.
+- **T-2729**: live journeys for an import from Git, the data model editor, a copy's compare, update and discard, CKAN status and the assistant page.
 - **T-2746**: the readiness walk creates a person and a group, a project, a key, and walks the steps of people, sync sources, drift and approvals no other journey takes.
 - **T-2732**: assistant tools for people, organization settings, project copy, a pipeline's rejected rows, an app rebuild and write, and drift.
 - **T-2726**: the one-step Publish dataset from an endpoint, its live journey and its tool.
