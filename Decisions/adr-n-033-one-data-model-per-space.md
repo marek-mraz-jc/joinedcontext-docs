@@ -11,7 +11,7 @@ Decision Makers: product owner (decisions of 2026-09-24)
 
 ## 1. Context
 
-The owner's direction of 2026-09-24: "one context space should have one data model, with LinkML, and make everywhere options to pick from all data models … so everywhere is the options to make that pickable". Today a space holds any number of `DataModel` files (`spaces/{s}/datamodels/{name}.linkml.yaml`, DM-01), and many forms take a model, a type, a space or an Endpoint as free text.
+The owner's direction of 2026-09-24: "one context space should have one data model, with LinkML, and make everywhere options to pick from all data models … so everywhere is the options to make that pickable". Today a space holds any number of `DataModel` files (`spaces/{s}/datamodels/{name}.linkml.yaml`, DM-01) and names none of them, and many forms take a model, a type, a space or an Endpoint as free text.
 
 ## 2. Checked Architecture Principles
 
@@ -25,7 +25,7 @@ The owner's direction of 2026-09-24: "one context space should have one data mod
 
 ## 3. Decision
 
-1. **One model per space.** A Context Space has exactly one `DataModel`, `spaces/{s}/datamodel.linkml.yaml`, which the space manifest names in `spec.dataModel`. Its classes are the space's entity types, and the gateway refuses a write of a type the model does not declare. The model may `import` published models (Smart Data Models, or another space's model at a pinned version), which is how a space reuses a type without a second model.
+1. **One model per space.** A Context Space has exactly one `DataModel`, its manifest and LinkML source under the space's `datamodels/` folder (DM-01), which the space manifest names in `spec.dataModelRef`. Its classes are the space's entity types, and the gateway refuses a write of a type the model does not declare. The model may `import` published models (Smart Data Models, or another space's model at a pinned version), which is how a space reuses a type without a second model.
 2. **A new space comes with its model.** Creating a space creates its model in the same Change, either empty or importing picked models.
 3. **Migration.** `jcctl model merge` turns several models of one space into one, keeping class names and IRIs, and refuses a clash naming both classes. Validation refuses a second model file in a space.
 4. **Pickers everywhere.** Every form field that names an existing resource is a picker over what exists and the caller may read. The kinds are data model, type, space, Endpoint, pipeline, group, person, role and project. A picker searches, shows the owner and the version, and offers "create new" where the kind allows it.
