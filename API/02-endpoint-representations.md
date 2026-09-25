@@ -86,6 +86,21 @@ operation of the CIM 009 Table 4.20-1 vocabulary, which is the operation the cal
 `Policy` grants have to cover; the vocabulary itself is listed in
 [03-domain-model](../Architecture/03-domain-model.md).
 
+**The base URL answers ([EP-90](../Requirements/endpoints.md)).** `GET /api/endpoint/{endpointSlug}/ngsi-ld/v1/` is the access URL the DCAT record and the catalogue give a person, so it answers `200` with an entry document rather than `404`. The document is the gateway's own and names only what this caller may read:
+
+```json
+{
+  "entities": "https://{host}/api/endpoint/{endpointSlug}/ngsi-ld/v1/entities",
+  "types": [
+    { "type": "BikeHireDockingStation", "query": "https://{host}/api/endpoint/{endpointSlug}/ngsi-ld/v1/entities?type=BikeHireDockingStation" }
+  ],
+  "access": "https://{host}/api/endpoint/{endpointSlug}/access",
+  "schema": "https://{host}/api/endpoint/{endpointSlug}/schema/index.json"
+}
+```
+
+A query with no selector answers `400 BadRequestData` (CIM 009 5.7.2.4), and its detail points the caller at this document for the types it may query.
+
 Three headers are the gateway's own conclusions and are removed from the request before
 anything reads them, whatever the client sent ([GW20](../Requirements/gateway-firewall.md), [EP-21](../Requirements/endpoints.md)):
 
