@@ -627,13 +627,19 @@ A `pick` with nothing the person may read asks the same question as free text an
 
 An existing space, a data source, a context space as the source, or words: these go to the model, on the path, with where the data lands said plainly.
 
+**Build an app enters the app builder** (T-2696). Its first question carries `step: "build-app-endpoints"`, and the Portal answers the chosen endpoints itself; the model never sees this step:
+
+1. A `thought` says the builder opens on those endpoints and that the person names the app, says what it should do and starts it.
+2. A `navigate` to `/projects/{project}/apps/new` carries `prefill: { "endpoints": [...] }`, the endpoints in the order chosen. The builder reads the first as the app's endpoint and the rest as the endpoints it reads beside it.
+3. The person starts the run from the builder. The conversation starts no run itself (AG-11). Words instead of a choice go to the model, on the path.
+
 | `path` | Proposes (the guard) | First step | Tools beyond every path's |
 |---|---|---|---|
 | `integrate-pipeline` | `Pipeline` | "Where does the data come from?": a data source or a context space the project has (each disabled with the reason when there is none), a file dropped (`input.file`) or a feed's address (`input.url`) | `change_resource`, `jc_datasource_check`, `jc_pipeline_test`, `jc_pipeline_metrics`, `jc_manifest_dry_run`, `jc_draft_put` |
 | `upload-data` | `ContextSpace` | "Which space should the data go into?" (`pick: spaces`), and opens the import page | `space_complete`, `change_resource`, `jc_manifest_dry_run`, `jc_draft_put` |
 | `find-data` | none | "What are you looking for?", free text | none |
 | `share-data` | `Endpoint` | "Which data do you want to share?" (`pick: endpoints`) | `propose_endpoint`, `edit_endpoint`, `grant_role`, `change_resource`, `jc_manifest_dry_run` |
-| `build-app` | `App` | "Which endpoints should the app read?" (`pick: endpoints`, several) | `change_resource`, `jc_manifest_dry_run`, `jc_draft_put` |
+| `build-app` | `App` | "Which endpoints should the app read?" (`pick: endpoints`, several), then opens the app builder on them | `change_resource`, `jc_manifest_dry_run`, `jc_draft_put` |
 | `build-dashboard` | `Dashboard` | "Which endpoint should the dashboard draw?" (`pick: endpoints`) | `change_resource`, `jc_manifest_dry_run`, `jc_draft_put` |
 | `create-data-model` | `DataModel` | "Where does the model start?": a Smart Data Model, a sample file, or nothing, and opens the models page | `change_resource`, `jc_manifest_dry_run`, `jc_draft_put` |
 | `define-kpi` | `Pipeline` | "Which space do you measure?" (`pick: spaces`) | `compute_kpi`, `draft_kpi_pipeline`, `jc_kpi_compute`, `jc_pipeline_test`, `change_resource` |
