@@ -221,13 +221,13 @@ pipeline:
     - dedupe: { cache: pipeline_changes, key: '${! json("id") }' }
 output:
   broker:
-    pattern: fan_out
+    pattern: fan_out_fail_fast
     outputs:
       - <the upsert through ep-bikes-ops, PL-47>
       - <the update-attrs through ep-kpi-write>
 ```
 
-One source renders as its own input with no `broker`, and one output as its own output, so a `v1alpha1` Pipeline — `source`, `compute`, `output` and `targetEndpoint` — reads as `sources: [source]`, `steps: [compute]`, `outputs: [{ targetEndpoint, mode }]` and renders the same bytes it rendered before (PL-54). It keeps running unchanged, and the Portal writes it back as `v1alpha2` the first time somebody edits it.
+Every broker in front of the writes fails fast, the outcome sink's `fan_out_sequential_fail_fast` (PL-62) included: a write that fails after its own retries is nacked back to the input, which replays it. The plain patterns retry inside the broker without heeding a stop, so a stream whose target failed could be neither replaced nor deleted until the runner restarted (T-2983). One source renders as its own input with no `broker`, and one output as its own output, so a `v1alpha1` Pipeline — `source`, `compute`, `output` and `targetEndpoint` — reads as `sources: [source]`, `steps: [compute]`, `outputs: [{ targetEndpoint, mode }]` and renders the same bytes it rendered before (PL-54). It keeps running unchanged, and the Portal writes it back as `v1alpha2` the first time somebody edits it.
 
 A conditional path is a step: `branch`, `switch` and `workflow` carry their own processors in their configuration, so the manifest never stores edges and the studio never offers free wiring. Admission reads the pipeline's grant once per source (read) and once per output (write), and each source's secrets keep their own names (PL-55).
 
