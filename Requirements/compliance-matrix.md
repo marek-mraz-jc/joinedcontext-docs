@@ -22,7 +22,7 @@ Generated 2026-09-25 from: `docs` 4fb64e7, `conformance` 2d6df0f, `deployment` 6
 
 | Family | Requirements | Tested | Built | Open | Untested and security-tagged |
 |---|---|---|---|---|---|
-| **AG** — Agents and MCP | 92 | 73 | 5 | 14 | 8 |
+| **AG** — Agents and MCP | 92 | 73 | 5 | 14 | 9 |
 | **AP** — Apps on demand | 133 | 104 | 9 | 20 | 8 |
 | **CC** — Configuration as code | 90 | 71 | 9 | 10 | 0 |
 | **DM** — Data models | 63 | 50 | 7 | 6 | 0 |
@@ -41,7 +41,7 @@ Generated 2026-09-25 from: `docs` 4fb64e7, `conformance` 2d6df0f, `deployment` 6
 | **SP** — Context-space surface | 22 | 18 | 1 | 3 | 0 |
 | **TS** — Testing and quality | 25 | 15 | 5 | 5 | 0 |
 | **UI** — Portal and user interface | 84 | 62 | 15 | 7 | 5 |
-| **Total** | 1091 | 767 | 109 | 215 | 43 |
+| **Total** | 1091 | 767 | 109 | 215 | 44 |
 
 ## 3. Requirement to test
 
@@ -50,7 +50,7 @@ Generated 2026-09-25 from: `docs` 4fb64e7, `conformance` 2d6df0f, `deployment` 6
 | Requirement | Tags | State | Lane | Tests, or the code that claims it |
 |---|---|---|---|---|
 | **AG-01** | [A] | open |  |  |
-| **AG-02** | [A] | open |  |  |
+| **AG-02** | [A] [S] | open |  |  |
 | **AG-03** | [A] | tested | ci-full, fast ci | portal `src/agents/access.rs::no_access_block_allows_read_only_operations_only`, portal `src/agents/access.rs::a_profile_that_names_the_change_reads_is_offered_them`, portal `src/agents/access.rs::a_kind_named_at_the_call_needs_the_operation_and_propose_on_that_kind`, and 3 more |
 | **AG-04** | [A] | tested | ci-full, conformance, fast ci | conformance `tests/mcp/test_mcp_protocol.py::test_ag04_initialize_handshake_negotiates_protocol_and_capabilities`, platform `crates/context-gateway/src/mcp/endpoint_facade.rs::a_tool_that_both_reads_and_writes_is_not_read_only`, platform `crates/context-gateway/tests/mcp_facade_tests.rs::the_handshake_names_the_protocol_the_server_and_the_one_space_it_serves`, and 4 more |
 | **AG-05** | [A] | tested | ci-full, conformance, fast ci | conformance `tests/mcp/test_mcp_isolation.py::test_ag05_sp14_a_space_argument_never_moves_the_caller`, platform `crates/context-gateway/src/mcp/endpoint_facade.rs::a_tool_that_both_reads_and_writes_is_not_read_only`, platform `crates/context-gateway/tests/mcp_facade_tests.rs::the_handshake_names_the_protocol_the_server_and_the_one_space_it_serves`, and 11 more |
