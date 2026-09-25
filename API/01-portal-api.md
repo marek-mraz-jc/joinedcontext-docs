@@ -1126,7 +1126,9 @@ proxies them to the Context Gateway's `/api/endpoint/{slug}/…` (Deployment/10,
   discloses which apps are being worked on.
 - Every response carries the app's own Content Security Policy, built from `spec.csp`:
   `default-src 'self'; connect-src 'self'; frame-ancestors {portal origin}` by default, with
-  `connect-src` extended by `spec.csp.connectSrc` and the origins of `spec.csp.frameAncestors`
+  `connect-src` extended by `spec.csp.connectSrc`, `connect-src` and `img-src` by the project's
+  basemap route prefix when the platform configures a basemap (its style URL is `basemap` in
+  `#jc-config`, AP-67), and the origins of `spec.csp.frameAncestors`
   added to `frame-ancestors` only when `spec.embeddable: true` (AP-12). The Portal's own origin
   is always there, since "Open app" frames the App under the Portal's header (AP-122), unless
   Apps have no origin of their own (`JC_PORTAL_APPS_URL` unset): an App on the Portal's origin
