@@ -149,16 +149,13 @@ Path: `/api/endpoint/{endpointSlug}/file.geojson`
 Converts spatial NGSI-LD entities into standard RFC 7946 GeoJSON.
 
 - **Feature `id`:** Bound to the entity URN.
-- **`geometry`:** Extracted from the primary `location` GeoProperty. An entity without one is not a
-  Feature and is left out of the collection.
-- **An answer with no geometry at all:** `400`, by
-  [EP-10](../Requirements/endpoints.md) — the caller asked a non-spatial type for a spatial
-  representation, and an empty FeatureCollection would read as "nothing here today" instead of
-  "this endpoint has no geography". `helsinki-news` on the dev cluster is the live example:
-  `NewsArticle` carries no `location`, so `/file.geojson` answers
-  `{"type": "https://joinedcontext.com/errors/bad-request", "detail": "no entity in the answer
-  carries a geometry"}`. An answer with no entities at all is an empty collection and a `200`:
-  nothing to show is not a type error (`translators/geojson.rs`).
+- **`geometry`:** Extracted from the primary `location` GeoProperty. An entity without one is still
+  a Feature, with `"geometry": null` (RFC 7946 §3.2), so the download carries every entity the
+  grant lets through and a map client skips what it cannot place.
+- **An answer with no geometry at all:** a `200` FeatureCollection whose Features all carry a
+  `null` geometry, by [EP-10](../Requirements/endpoints.md): every Endpoint serves GeoJSON, a
+  KPI or a news endpoint included, and no Endpoint advertises a surface that refuses. An answer
+  with no entities at all is an empty collection (`translators/geojson.rs`, T-2939).
 - **`properties`:** One key per remaining attribute, by the table of §6: the attribute's `value` or
   a Relationship's `object` under its own name, and the `unitCode` and `observedAt` it carries
   under `{name}_unitCode` and `{name}_observedAt` (T-2380). An attribute that carries neither gains
@@ -196,7 +193,8 @@ Converts spatial NGSI-LD entities into standard RFC 7946 GeoJSON.
 Path: `/api/endpoint/{endpointSlug}/file.csv` (also `file.geojson`, `file.json`, `file.xlsx`,
 `file.zip`; EP-41…EP-45)
 
-Which of them an Endpoint answers is `spec.enabledRepresentations`, and the set a manifest may name
+Which of them an Endpoint answers is `spec.enabledRepresentations`, plus `ngsi-ld`, `geojson` and
+`mcp`, which every Endpoint serves whether or not it lists them (EP-10, EP-24); the set a manifest may name
 is the `Representation` enum of the Endpoint kind (`crates/jc-core/src/kinds/endpoint.rs`), which is
 what the published `schemas/kinds/Endpoint.json` validates a manifest against. `json` is one of
 them, so an administrator can enable it, and §4a says what it answers.
