@@ -119,13 +119,13 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | step | unit | API | mocked UI | live journey | assistant |
 |---|---|---|---|---|---|
 | `create` | `joinedcontext-portal/src/agents/model_change.rs` | `tests/datamodel_source_tests.rs` | `ui/tests/datamodel_form.test.tsx` | `ui/e2e/live/parity.spec.ts` › "DataModel helsinki: the form, the REST route, the registry and the assistant plan the same change" | `jc_model_propose` |
-| `infer-from-sample` | `joinedcontext-portal/src/tools/model_tools.rs` | `tests/model_tools_proxy_tests.rs` | `ui/tests/model_file_drop.test.tsx` | owed: T-2729 | `jc_model_infer` |
-| `import-smart-data-model` | `joinedcontext-portal/src/tools/model_tools.rs` | `tests/edge_model_tools_tests.rs` | `ui/tests/sdm_import.test.tsx` | owed: T-2729 | `jc_catalog_search` |
-| `add-class-enum-relation` | `joinedcontext-portal/src/api/datamodels.rs` | `tests/datamodel_source_tests.rs` | `ui/tests/linkml_visual_editor.test.tsx` | owed: T-2729 | `jc_model_source_put` |
+| `infer-from-sample` | `joinedcontext-portal/src/tools/model_tools.rs` | `tests/model_tools_proxy_tests.rs` | `ui/tests/model_file_drop.test.tsx` | `ui/e2e/live/models.spec.ts` › "a steward drafts a model from a CSV sample into the editor" | `jc_model_infer` |
+| `import-smart-data-model` | `joinedcontext-portal/src/tools/model_tools.rs` | `tests/edge_model_tools_tests.rs` | `ui/tests/sdm_import.test.tsx` | `ui/e2e/live/models.spec.ts` › "a steward imports a Smart Data Model into a model being built" | `jc_catalog_search` |
+| `add-class-enum-relation` | `joinedcontext-portal/src/api/datamodels.rs` | `tests/datamodel_source_tests.rs` | `ui/tests/linkml_visual_editor.test.tsx` | `ui/e2e/live/models.spec.ts` › "a steward builds a model with classes, an enum and a has-many relation, edits its source, checks and proposes it" | `jc_model_source_put` |
 | `validate` | `joinedcontext-portal/src/tools/model_tools.rs` | `tests/edge_model_tools_tests.rs` | `ui/tests/linkml_preview.test.tsx` | `ui/e2e/live/verdict-gate.spec.ts` › "a check refuses a model that does not exist, names the field, and a fix clears it" | `jc_manifest_dry_run` |
 | `read` | `joinedcontext-portal/src/api/datamodels.rs` | `tests/organization_datamodels_tests.rs` | `ui/tests/models_list_page.test.tsx` | `ui/e2e/live/walk.spec.ts` › "every page opens cleanly for the steward" | `jc_model_source_get` |
-| `edit-source` | `joinedcontext-portal/src/api/datamodels.rs` | `tests/datamodel_source_tests.rs` | `ui/tests/linkml_source_editor.test.tsx` | owed: T-2729 | `jc_model_source_put` |
-| `retire` | `joinedcontext-portal/src/api/delete.rs` | `tests/resource_delete_tests.rs` | `ui/tests/resource_delete.test.tsx` | owed: T-2729 | `jc_resource_delete` |
+| `edit-source` | `joinedcontext-portal/src/api/datamodels.rs` | `tests/datamodel_source_tests.rs` | `ui/tests/linkml_source_editor.test.tsx` | `ui/e2e/live/models.spec.ts` › "a steward builds a model with classes, an enum and a has-many relation, edits its source, checks and proposes it" | `jc_model_source_put` |
+| `retire` | `joinedcontext-portal/src/api/delete.rs` | `tests/resource_delete_tests.rs` | `ui/tests/resource_delete.test.tsx` | `ui/e2e/live/models.spec.ts` › "a steward proposes removing a model, and the rejected removal keeps it" | `jc_resource_delete` |
 | `refused-no-permission` | `joinedcontext-portal/src/permissions.rs` | `tests/permissions_tests.rs` | `ui/tests/models_page_save.test.tsx` | `ui/e2e/live/viewer-refused.spec.ts` › "a viewer is refused with a reason on every page, and at the door" | `jc_model_propose` |
 | `refused-red-verdict` | `joinedcontext-portal/src/ops/verdict.rs` | `tests/verdict_findings_tests.rs` | `ui/tests/linkml_editor.test.tsx` | `ui/e2e/live/verdict-gate.spec.ts` › "a check refuses a model that does not exist, names the field, and a fix clears it" | `jc_model_propose` |
 
@@ -376,7 +376,7 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 
 The owed cells name open tasks, and `gate_workflows` holds their count: it may shrink and never grow.
 
-- **T-2729**: live journeys for the data model editor and CKAN status (with T-2726).
+- **T-2729**: the live journey for CKAN status, with T-2726.
 - **T-2746**: the readiness walk creates a person and a group, a project, a key, and walks the steps of people, sync sources, drift and approvals no other journey takes.
 - **T-2732**: assistant tools for people, organization settings, project copy, a pipeline's rejected rows, an app rebuild and write, and drift.
 - **T-2726**: the one-step Publish dataset from an endpoint, its live journey and its tool.
