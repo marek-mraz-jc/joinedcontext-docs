@@ -543,7 +543,9 @@ Publishes what the data contains, in every mainstream formalism, narrowed to the
 (EP-46…EP-52). Two routes: `schema/index.json` is the catalogue, `schema/v{major}/{artifact}` is one
 document. `{artifact}` is a file name or its short alias — `model.schema.json`/`json-schema`,
 `context.jsonld`/`context`, `model.shacl.ttl`/`shacl`, `model.owl.ttl`/`owl`, `model.rdf.ttl`/`rdf`,
-`model.linkml.yaml`/`linkml`, `model.md`/`docs`, and `model` for whatever `Accept` asks for. The
+`model.qb.ttl`/`qb` (only when a granted class is a Data Structure Definition, DM-60; `404`
+otherwise), `model.linkml.yaml`/`linkml`, `model.md`/`docs`, and `model` for whatever `Accept`
+asks for. The
 documents are built per request from the checked-in artifacts (or derived from the grants when a
 model has none) and carry a strong sha256 `ETag`; nothing is addressed per type, because a major
 renders as one document over every class it declares.
