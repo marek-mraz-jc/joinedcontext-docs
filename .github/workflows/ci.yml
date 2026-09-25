@@ -39,7 +39,7 @@ jobs:
         # "Schema not published yet" list on Development/04-manifest-kinds.md shortens.
         # v0.7.49 -> v0.7.61 (T-2853): App spec.egress (AP-134) and a RoleBinding subject's
         # source (PF-64) are documented, and CC-13 holds the hub example to its space and Endpoint.
-        env: { JC_SCHEMAS_TAG: jc-core-v0.7.61 }
+        env: { JC_SCHEMAS_TAG: jc-core-v0.7.67 }
         run: |
           set -eu
           curl -sSL "https://github.com/marek-mraz-jc/joinedcontext-platform/archive/refs/tags/${JC_SCHEMAS_TAG}.tar.gz" \
@@ -163,7 +163,7 @@ jobs:
     # minute after the first run.
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env: { JC_PLATFORM_TAG: jc-core-v0.7.61 }
+    env: { JC_PLATFORM_TAG: jc-core-v0.7.67 }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
