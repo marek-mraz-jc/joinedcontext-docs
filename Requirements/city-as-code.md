@@ -291,7 +291,8 @@ one or more manifests; *flow*, a blueprint instance as shown to [H] users.
 - **CC-49** [H][P] — Full export MUST be trivially available: the
   repository at any revision IS the complete configuration export. The
   application MUST offer it as a one-click archive download (current or
-  historical revision) without Git knowledge.
+  historical revision) without Git knowledge, to an organization
+  administrator on the Administration page (UI-87).
 - **CC-50** — Restoring a city onto a fresh, empty, compliant platform
   MUST require only: deploy infrastructure, point the reconciler at the
   repository, `apply`. This is simultaneously the disaster-recovery and

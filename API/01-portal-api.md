@@ -788,7 +788,10 @@ GET /api/v1/projects/{project}/revisions?limit=20
   transfer can be verified before the source is deleted, MF-42) and `omitted`. An export whose filters select no manifest carries no index, because a Bundle lists
   at least one resource. Media types: `application/yaml`, `application/json`, `application/zip`,
   with a `Content-Disposition: attachment` filename that names the project and the short revision.
-- A whole-project export (no `names` filter) is complete and self-describing (MF-41). The archive
+- A whole-project export (no `names` filter, and every `format=git` export) is for an organization
+  administrator (`approve` on `Organization`, UI-87): anybody else who may read the project gets
+  `403` naming that, and an export that names its manifests stays with the project's readers.
+- A whole-project export is complete and self-describing (MF-41). The archive
   adds, at its root, `README.md` (what each kind it holds is, how many resources, where the schema
   is, the revision and the exporter) and `schemas/`: `schemas/kinds/{Kind}.schema.json`, the JSON
   Schema (draft-07) of every kind in the archive with its field descriptions, and
@@ -919,7 +922,7 @@ POST /api/v1/projects/{project}/import?dryRun=All
   of the path, in an organization of layout 2 (MF-45, MF-46). The body is `multipart/form-data`
   with the archive as `file`, `parameters` (a JSON object of values for what `project.yaml`
   declares, CC-88; a `secret` parameter takes a `secretRef` name, never a value) and an optional
-  `displayName`. Who may open a project may import one (PF-65), and the name passes the checks of
+  `displayName`. An organization administrator imports one (UI-87), within the rules of who may open a project (PF-65), and the name passes the checks of
   `POST /api/v1/projects`. Before anything is created the archive is checked: the index is a
   valid `kind: Bundle` with one `project` repository and no `organization` one, every file's
   SHA-256 equals the index (MF-42), `project.yaml` loads at this release's `apiVersion` (an older

@@ -457,13 +457,13 @@ One component lists entities wherever the Portal shows them (UI-64…UI-72, UI-8
 
 ## 14. Organization and project management
 
-Two places hold everything about who may do what (UI-75…UI-81). The **Organization page** holds what is the same in every project: the Organization manifest, the organization's members, roles, groups and service accounts, and the list of projects. **Project settings** holds what belongs to one project: its title and quotas, who is bound in it, its own roles, its service accounts, and its deletion. Until now all of it sat under **Project → Access**, where a group or the organization's domain looked as if it belonged to the project whose menu the person had opened. Every write on both pages is a proposed `Change` in its lane, exactly as the manifest's own form would propose it. Neither page has a write path of its own.
+Two places hold everything about who may do what (UI-75…UI-81). The **Administration page** (the Organization page until T-2879) holds what is the same in every project: the Organization manifest, the organization's members, roles, groups and service accounts, and the list of projects. **Project settings** holds what belongs to one project: its title and quotas, who is bound in it, its own roles, its service accounts, and its deletion. Until now all of it sat under **Project → Access**, where a group or the organization's domain looked as if it belonged to the project whose menu the person had opened. Every write on both pages is a proposed `Change` in its lane, exactly as the manifest's own form would propose it. Neither page has a write path of its own.
 
 Organization-level manifests are read and proposed through the organization's namespace, `/api/v1/projects/org/{plural}` (`Organization`, `Role`, `RoleBinding`, `Group`, `ServiceAccount` of namespace `org`); a project's through its own, `/api/v1/projects/{project}/{plural}`. Neither page needs a new API.
 
-### 14.1 The Organization page
+### 14.1 The Administration page
 
-`/organization`, in the top bar beside the project switcher, outside any project, open to every signed-in person of the organization. One tab per concern, each at its own URL (`/organization/{tab}`), so a link or a bookmark lands on the tab:
+`/organization`, behind the one **Administration** entry of the top bar, outside any project, for organization administrators only: `approve` on `Organization`, which the seeded `org-admin` role holds (PF-56). A person who is not one sees no entry, and the address tells them the page is for organization administrators and fetches nothing of it. The organization-wide powers live here and nowhere else: exporting and importing a whole project (UI-87) left the top bar's **Export project** and the **New project** dialog. An organization-wide administrative view that comes later joins as a tab, never as a navigation entry of its own (UI-75). One tab per concern, each at its own URL (`/organization/{tab}`), so a link or a bookmark lands on the tab:
 
 | Tab | What it shows | What it proposes |
 |---|---|---|
@@ -473,10 +473,10 @@ Organization-level manifests are read and proposed through the organization's na
 | **Roles** (`roles`) | the roles of `users/roles/`, the PF-56 taxonomy marked *seeded*, each with its rules in words ("proposes Pipeline and DataSource") | a new `Role` or a change to one, red lane |
 | **Groups** (`groups`) | the `Group` manifests with their members, a member not yet in Keycloak marked as such (PF-62) | a `Group` or a change to its members, red lane |
 | **Service accounts** (`service-accounts`) | the service accounts of namespace `org`: owner, roles, credentials, last use | as in [12 §3](12-identity-and-access.md#3-service-identities) |
-| **Projects** (`projects`) | every project the person may read: title, visibility, the number of people bound in it | **New project** (the dialog of PF-65/PF-66); **Delete** of one project, which lists the cascade of PF-77 and asks for the name typed back |
+| **Projects** (`projects`) | every project the person may read: title, visibility, the number of people bound in it | **New project** (the dialog of PF-65/PF-66); **Import project** from a `format=git` archive under a new name, the registry entry's parameters set in the form (MF-46, CC-88); **Export** of one project, the archive of MF-45 or MF-41 at a revision (CC-49); **Delete** of one project, which lists the cascade of PF-77 and asks for the name typed back |
 | **Health** (`health`) | every validation check's last published run: its state (green, red, stale, unreadable), counts, a seven-day trend and the failures with the tasks they filed, under one summary line; for an administrator of the organization only (OPS-53, [API/01 §26](../API/01-portal-api.md#26-validation-health-ops-53)) | nothing |
 
-Members are the one sensitive list. The tab shows its rows only to a person who holds `read` on `RoleBinding` at organization scope. Anybody else sees "You cannot see who belongs to this organization; an organization administrator can", and the Portal fetches no binding for them at all.
+Members are the one sensitive list. Inside the page, the tab still shows its rows only to a person who holds `read` on `RoleBinding` at organization scope. Anybody else sees "You cannot see who belongs to this organization; an organization administrator can", and the Portal fetches no binding for them at all.
 
 ### 14.2 Project settings
 
