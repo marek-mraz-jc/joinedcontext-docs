@@ -463,7 +463,7 @@ Organization-level manifests are read and proposed through the organization's na
 
 ### 14.1 The Administration page
 
-`/organization`, behind the one **Administration** entry of the top bar, outside any project, for organization administrators only: `approve` on `Organization`, which the seeded `org-admin` role holds (PF-56). A person who is not one sees no entry, and the address tells them the page is for organization administrators and fetches nothing of it. The organization-wide powers live here and nowhere else: exporting and importing a whole project (UI-87) left the top bar's **Export project** and the **New project** dialog. An organization-wide administrative view that comes later joins as a tab, never as a navigation entry of its own (UI-75). One tab per concern, each at its own URL (`/organization/{tab}`), so a link or a bookmark lands on the tab:
+`/organization`, behind the one **Administration** entry of the top bar, outside any project, for organization administrators only: `approve` and `delete` on `RoleBinding` at organization scope, which the seeded `org-admin` role holds (PF-03, PF-56), the same question validation health asks. A person who is not one sees no entry, and the address tells them the page is for organization administrators and fetches nothing of it. The organization-wide powers live here and nowhere else: exporting and importing a whole project (UI-87) left the top bar's **Export project** and the **New project** dialog. An organization-wide administrative view that comes later joins as a tab, never as a navigation entry of its own (UI-75). One tab per concern, each at its own URL (`/organization/{tab}`), so a link or a bookmark lands on the tab:
 
 | Tab | What it shows | What it proposes |
 |---|---|---|

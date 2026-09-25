@@ -789,7 +789,7 @@ GET /api/v1/projects/{project}/revisions?limit=20
   at least one resource. Media types: `application/yaml`, `application/json`, `application/zip`,
   with a `Content-Disposition: attachment` filename that names the project and the short revision.
 - A whole-project export (no `names` filter, and every `format=git` export) is for an organization
-  administrator (`approve` on `Organization`, UI-87): anybody else who may read the project gets
+  administrator (`approve` and `delete` on `RoleBinding` at organization scope, PF-03, UI-87): anybody else who may read the project gets
   `403` naming that, and an export that names its manifests stays with the project's readers.
 - A whole-project export is complete and self-describing (MF-41). The archive
   adds, at its root, `README.md` (what each kind it holds is, how many resources, where the schema
@@ -2293,7 +2293,7 @@ GET    /api/v1/organization/setup                           the steps and the op
   switch those on ([Deployment/13](../Deployment/13-configuration-reference.md)). An unset
   statement is `false`: the page never claims what nobody said.
 - `complete` is `true` when every step and every operator item is done.
-- The route needs `approve` on `Organization` at organization scope, which `org-admin` holds (PF-56);
+- The route needs an administrator of the organization, `approve` and `delete` on `RoleBinding` at organization scope, which `org-admin` holds (PF-03, PF-56);
   anyone else gets `403`.
 
 ## 26. Validation health (OPS-53)
