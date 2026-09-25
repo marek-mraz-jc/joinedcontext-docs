@@ -210,7 +210,7 @@ spec:
 
 ### One identity provider for everyone: users, apps, workloads
 
-Keycloak is the only place identities come from. Humans log in through OIDC at the edge: the APISIX `openid-connect` plugin in front of the Portal (`portal.{domain}`) and of every app (`/apps/*`) holds the session and hands the upstream `X-Userinfo` and `X-Access-Token` (ADR-N-019); `kubectl`-style CLIs use the device flow. Everything that is not a human is a `ServiceAccount` with an `oauth-client` credential, and that includes the platform's own components and any third-party service an organization runs in the clusters:
+Keycloak is the only place identities come from. Humans log in through OIDC at the edge: the APISIX `openid-connect` plugin in front of the Portal (`portal.{domain}`) and of every app (on its own host `{name}.apps.{domain}`, ADR-N-037) holds the session and hands the upstream `X-Userinfo` and `X-Access-Token` (ADR-N-019); `kubectl`-style CLIs use the device flow. Everything that is not a human is a `ServiceAccount` with an `oauth-client` credential, and that includes the platform's own components and any third-party service an organization runs in the clusters:
 
 | Caller | Credential | Calls |
 |---|---|---|
