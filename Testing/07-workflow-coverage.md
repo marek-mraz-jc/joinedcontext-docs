@@ -60,22 +60,22 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 
 | step | unit | API | mocked UI | live journey | assistant |
 |---|---|---|---|---|---|
-| `create` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | `jc_person_create` |
+| `create` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "2. the organization: settings, a new person, a group with a role, and the person's page" | `jc_person_create` |
 | `read` | `joinedcontext-portal/src/api/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | `ui/e2e/live/organization.spec.ts` › "an administrator reads the organization and grants a role that reaches the person" | `jc_person_get` |
 | `edit` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | `jc_person_edit` |
 | `disable` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | `jc_person_disable` |
 | `enable` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | `jc_person_enable` |
 | `reset-password` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | person only: a reset sends a person a way into their account; an agent that can start one can take the account over |
 | `remove-second-factor` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | person only: removing a second factor weakens a person's sign-in and is decided by an administrator in person |
-| `sign-out-everywhere` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | `jc_person_sign_out` |
-| `remove` | `joinedcontext-portal/src/api/people.rs` | `tests/last_administrator_tests.rs` | `ui/tests/people_page.test.tsx` | owed: T-2746 | person only: removing a person deletes their account and cannot be proposed as a Change a second person approves |
+| `sign-out-everywhere` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "10. nothing of the walk is left, the person is signed out everywhere and removed, and the steward signs out" | `jc_person_sign_out` |
+| `remove` | `joinedcontext-portal/src/api/people.rs` | `tests/last_administrator_tests.rs` | `ui/tests/people_page.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "10. nothing of the walk is left, the person is signed out everywhere and removed, and the steward signs out" | person only: removing a person deletes their account and cannot be proposed as a Change a second person approves |
 | `refused-no-permission` | `joinedcontext-portal/src/api/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | `ui/e2e/live/organization.spec.ts` › "a viewer is told who can see the members, and the list is never fetched for them" | `jc_person_list` |
 
 ### 3.4 Groups and roles (`groups`)
 
 | step | unit | API | mocked UI | live journey | assistant |
 |---|---|---|---|---|---|
-| `create` | `joinedcontext-portal/src/groups.rs` | `tests/groups_api_tests.rs` | `ui/tests/access_groups.test.tsx` | owed: T-2746 | `jc_resource_propose` |
+| `create` | `joinedcontext-portal/src/groups.rs` | `tests/groups_api_tests.rs` | `ui/tests/access_groups.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "2. the organization: settings, a new person, a group with a role, and the person's page" | `jc_resource_propose` |
 | `grant-role` | `joinedcontext-portal/src/agents/grant.rs` | `tests/roles_matrix_tests.rs` | `ui/tests/role_bindings.test.tsx` | `ui/e2e/live/project-settings.spec.ts` › "a project role bound to a group reaches the group's member, and only as far as it says" | `jc_resource_propose` |
 | `edit` | `joinedcontext-portal/src/groups.rs` | `tests/groups_api_tests.rs` | `ui/tests/group_page.test.tsx` | `ui/e2e/live/parity.spec.ts` › "RoleBinding stewards: the form, the REST route, the registry and the assistant plan the same change" | `jc_resource_propose` |
 | `retire` | `joinedcontext-portal/src/reconciler/groups.rs` | `tests/group_delete_tests.rs` | `ui/tests/group_page.test.tsx` | owed: T-2746 | `jc_resource_delete` |
