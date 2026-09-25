@@ -238,6 +238,12 @@ The Context Gateway keeps the endpoints in an in-memory map (`ArcSwap<HashMap<St
 
 An Endpoint MAY set `callerRole: true` and list `roles[]` of `{name, subjects}`; a caller it admits holds `endpoint:{project}/{endpoint}` and the matching `endpoint:{project}/{endpoint}/{role}` for that request only, which is how an application's grants stay inside the application (AP-96, AP-97, [16 §12](16-apps-on-demand.md#12-roles-of-an-application)).
 
+### Stopping an Endpoint
+
+An Endpoint has no lifecycle (EP-89, decided 2026-09-25 in T-2286). You stop one by deleting it: the Portal's Endpoint page says so and opens the same deletion as its menu, a red `Change` an approver takes. Once the Change lands, the reaper drops the slug from the table and the gateway answers `404 ResourceNotFound`, the answer an unknown slug gets (`resolver.resolve(slug).ok_or_else(not_found)` in `app.rs`). The slug is not minted again (EP-75), so a stopped address never starts answering something else.
+
+A pause that keeps the address and refuses it was considered and left out: `status.phase` cannot carry it, because the platform writes status and strips it from a manifest on the way in (MF-04), so a pause needs a spec field. When a department asks for one, it becomes `spec.enabled: false` after `Pipeline.spec.enabled` (PL-40): every route refused `503` before any Policy runs, and turning it back on taking the lane publishing took (EP-76).
+
 ---
 
 ## 3a. The Endpoint's own DCAT-AP record
