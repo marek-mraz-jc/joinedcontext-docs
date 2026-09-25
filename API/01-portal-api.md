@@ -822,7 +822,13 @@ GET /api/v1/projects/{project}/apps/{name}/export
   `bundle.yaml`, whose `spec.repositories` lists each bundle with its `role` and the `head`
   commit it ends at and whose `spec.files` carries every file's SHA-256 (MF-42). `project.yaml`
   at the archive root is the project's own file at that head, the one an import reads the
-  parameter declarations from without unpacking a bundle. Other branches
+  parameter declarations from without unpacking a bundle. Every organization model a DataModel of
+  the project imports (`org.{name}.v{major}`, and what those import in turn) travels as
+  `models/{name}.v{major}.yaml`, its manifest, and `models/{name}.v{major}.linkml.yaml`, its
+  source, at the version the organization holds; `spec.models` of the index lists each with its
+  `name`, `version`, `manifest`, `file`, the `sha256` of the source and its `origin`
+  (`{organization, name}`), and nothing else about it travels: no data, no credential (MF-49). An
+  import the organization no longer holds at that major is `409`, named. Other branches
   and the annotation of an annotated tag do not travel; `git bundle create --all` of a mirror
   clone (Deployment/11 §7) carries them. A bundle that ends elsewhere than the head read in the
   same export is `409` (export again), and so is an App whose repository is outside the forge's
@@ -962,10 +968,19 @@ POST /api/v1/projects/{project}/import?dryRun=All
   repository), so the head after the import is that commit and the answer names both. `main` is
   then protected, and the answer is `202` and the organization's `Change`: the registry entry
   with the given values and the caller's steward binding, as opening a project proposes it. A
-  `Change` that cannot be opened removes the repositories again (CC-85). The report in the
+  `Change` that cannot be opened removes the repositories again (CC-85). Each model of
+  `spec.models` (MF-50) is **mapped** when this organization holds a published model of that name
+  and major whose source is byte-identical, and the project's imports stay as they are; otherwise
+  it **lands** as a project model, `projects/{project}/datamodels/{name}/{name}.yaml` in the
+  project's namespace with the carried `spec.origin` kept and its source beside it, and every
+  DataModel source of the project that imports `org.{name}.v{major}` imports
+  `project.{name}.v{major}` instead, in one commit on `main` before it is protected. A model that
+  can do neither, because the project holds a model of that name already, is `409` naming it
+  before anything is created. The organization repository is never written. The report in the
   `Change` body carries `verified`, one `{path, equal}` per bundle with its head. `dryRun` answers
-  `200` with the checks alone and the parameters `project.yaml` declares, which the Portal's
-  import form is drawn from; nothing is created. As for every import, that dry run is the check
+  `200` with the checks alone, the parameters `project.yaml` declares, which the Portal's
+  import form is drawn from, and `models`, one `{name, version, action}` per carried model with
+  `action` `map` or `land`, which the form shows before the person imports; nothing is created. As for every import, that dry run is the check
   PF-57 holds the import to under `strict`, over the archive's SHA-256, the slug and the
   parameters.
 - `?format=app` imports the archive of `GET …/apps/{name}/export` as a new App of `{project}`, a
