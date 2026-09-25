@@ -1443,6 +1443,137 @@ GET /api/v1/projects/{project}/ckan/status    catalogues, and what each endpoint
   a steward has to see.
 - The route needs a session, like every other project route.
 
+## 16a. The catalogue (EP-81, EP-82)
+
+The platform-wide catalogue page of [Architecture/21 §6](../Architecture/21-open-data-catalogue.md#6-the-portals-catalogue-page)
+reads these routes. They need no session and answer `Cache-Control: public, max-age=60`: what
+they carry is what the public catalogue already shows.
+
+```text
+GET /api/v1/catalogue                          search, facets and one page of datasets
+GET /api/v1/catalogue/datasets/{name}          one dataset
+GET /api/v1/catalogue/datasets/{name}/sample   up to ten rows, read through its Endpoint
+```
+
+`GET /api/v1/catalogue` takes `q` (full text, passed to CKAN), the facet filters `publisher`,
+`theme`, `format`, `licence`, `spatial` and `year` (each repeatable; values of one filter are
+alternatives, filters combine with AND) and `page` (from 1, twenty datasets a page):
+
+```json
+{
+  "total": 1,
+  "page": 1,
+  "pageSize": 20,
+  "datasets": [
+    {
+      "name": "bbsk-kpi",
+      "title": "Ukazovatele kraja",
+      "notes": "Ukazovatele Banskobystrického samosprávneho kraja…",
+      "publisher": { "name": "bbsk", "title": "Banskobystrický samosprávny kraj" },
+      "licence": { "id": "cc-by", "title": "Creative Commons Attribution" },
+      "formats": ["CSV", "JSON", "NGSI-LD"],
+      "themes": ["ECON"],
+      "modified": "2026-09-21T05:52:34Z"
+    }
+  ],
+  "facets": {
+    "publisher": [{ "value": "bbsk", "label": "Banskobystrický samosprávny kraj", "count": 1 }],
+    "theme": [{ "value": "ECON", "label": "Economy and finance", "count": 1 }],
+    "format": [{ "value": "CSV", "label": "CSV", "count": 1 }],
+    "licence": [{ "value": "cc-by", "label": "Creative Commons Attribution", "count": 1 }],
+    "spatial": [],
+    "year": []
+  },
+  "unavailable": []
+}
+```
+
+- The Portal calls `package_search` on the distinct `spec.url` of every `CkanInstance` of the
+  installation, with no API token, and drops any dataset marked `private`: an anonymous CKAN
+  caller sees public datasets only, so the answer cannot list a restricted one (EP-67, EP-69).
+- Facet counts are over the datasets that match `q` and every other facet's filter.
+- A catalogue that does not answer is named in `unavailable` and the others still answer; when
+  none answers, the route answers `502` with `problem+json`. No `CkanInstance` at all is an empty
+  catalogue, `200` with `total: 0`.
+
+`GET /api/v1/catalogue/datasets/{name}` answers the dataset page:
+
+```json
+{
+  "name": "bbsk-kpi",
+  "title": "Ukazovatele kraja",
+  "notes": "…",
+  "keywords": ["ukazovatele", "kraj"],
+  "publisher": { "name": "bbsk", "title": "Banskobystrický samosprávny kraj" },
+  "licence": { "id": "cc-by", "title": "Creative Commons Attribution", "url": "https://creativecommons.org/licenses/by/4.0/" },
+  "frequency": "http://publications.europa.eu/resource/authority/frequency/MONTHLY",
+  "themes": [{ "code": "ECON", "label": "Economy and finance" }],
+  "spatial": ["SK032"],
+  "temporal": { "start": "2020-01-01", "end": null },
+  "contact": { "name": "Open data desk", "email": "opendata@example.org" },
+  "modified": "2026-09-21T05:52:34Z",
+  "catalogueUrl": "https://data.{host}/dataset/bbsk-kpi",
+  "resources": [
+    { "name": "CSV", "format": "CSV", "url": "https://{host}/api/endpoint/{endpointSlug}/file.csv", "description": "…", "previewUrl": "https://data.{host}/dataset/bbsk-kpi/resource/{id}" }
+  ],
+  "endpoint": { "url": "https://{host}/api/endpoint/{endpointSlug}/" },
+  "model": {
+    "name": "key-performance-indicator",
+    "classes": [{ "name": "KeyPerformanceIndicator", "description": "…" }],
+    "docsUrl": "https://{host}/api/endpoint/{endpointSlug}/schema/1/key-performance-indicator.v1.md"
+  }
+}
+```
+
+- `previewUrl` is set on a resource with an active DataStore sheet (§3 of Architecture/21).
+- `endpoint` and `model` are set only when the dataset's `endpoint` extra names an Endpoint of this
+  installation whose audience is `public`: the Portal parses the slug out of the extra, finds the
+  Endpoint in its mirror and builds the URL on its own host. `docsUrl` is the dataset's Markdown
+  schema resource. A dataset whose extra names another host, or no Endpoint, has neither.
+- An unknown or private dataset answers `404`: a caller cannot tell the two apart.
+
+`GET /api/v1/catalogue/datasets/{name}/sample` answers up to ten entities of the Endpoint's first
+model class, read anonymously through its NGSI-LD representation with `options=keyValues`, as
+`{ "type": "KeyPerformanceIndicator", "columns": ["id", "name", "value"], "rows": [["urn:…", "…", "12"]] }`.
+A dataset with no Endpoint of this installation, or one that does not serve `ngsi-ld`, answers
+`404`; an Endpoint that does not answer, `502`. Nested values are written as compact JSON.
+
+## 16b. Publish a dataset in one step (EP-83)
+
+```text
+POST /api/v1/projects/{project}/catalogue/drafts    {"endpoint": "bbsk-kpi"}
+```
+
+Drafts what the publish flow of [Architecture/21 §7](../Architecture/21-open-data-catalogue.md#7-publish-a-dataset-in-one-step)
+proposes; it writes nothing. The caller needs `propose` on `Endpoint` in the project.
+
+```json
+{
+  "endpoint": "bbsk-kpi",
+  "makesPublic": false,
+  "catalog": {
+    "license": "CC_BY_4_0",
+    "themes": ["ECON"],
+    "keywords": { "sk": ["ukazovateľ", "hodnota"] },
+    "temporal": { "start": "2020-01-01" },
+    "publisher": { "name": { "sk": "Banskobystrický samosprávny kraj" } },
+    "contactPoint": { "name": "Open data desk", "email": "opendata@example.org" }
+  },
+  "publish": { "ckan": { "instanceRef": { "kind": "CkanInstance", "name": "bbsk" } } },
+  "missing": ["spatial", "frequency"]
+}
+```
+
+- `catalog` is the drafted `spec.catalog` (EP-78) and `publish` the drafted `spec.publish`
+  (EP-62); a block the Endpoint already declares is returned as it is, so re-running the flow
+  never overwrites what a steward wrote. `missing` names the catalogue fields nothing could fill.
+- `makesPublic` is `true` when the Endpoint's audience is not `public`: the UI then says so before
+  the proposal, and the Change the UI proposes with `spec.audience: public` takes the red lane
+  with a publisher's approval (EP-76, PF-72).
+- The UI proposes the Change through the resource API (`PUT …/endpoints/{name}`, §4) with the two
+  blocks merged into the Endpoint's manifest.
+- `404` for an unknown Endpoint; `409` naming `CkanInstance` when the project has none to publish to.
+
 ## 17. Federation registrations and the graph (MF-36, UI-27, UI-28, EP-71, PF-48)
 
 A `ContextSourceRegistration` is a manifest, so it is listed, created and removed through the
