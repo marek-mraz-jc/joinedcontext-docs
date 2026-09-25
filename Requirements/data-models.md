@@ -5,9 +5,9 @@ title: "Data Models & the LinkML Editor"
 
 # Data Models & the LinkML Editor
 
-Family **DM** (DM-01…DM-74). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **DM** (DM-01…DM-79). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
-This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-74**. Consumer classes per `00-index.md`.
+This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-79**. Consumer classes per `00-index.md`.
 
 ## 1. Source of truth and artifacts
 
@@ -133,6 +133,11 @@ Owner, 2026-09-24 (T-2735). A relationship between two classes of a model behave
 The owner, 2026-09-24: "write more tasks to validate everything" (T-2796). A write is checked when it happens; data that was written before a model changed, or by a pipeline that stopped, is not.
 
 - **DM-74** [H][S] — The Portal MUST re-validate, once a day, every entity of every Context Space that names a model against that model with the checks of PL-59 (class, id, required, datatype, enum, closed shape, attribute kind, unit), reading the space surface as its own client, at most 1,000 entities a page and 20,000 a space a run, and MUST keep per space the entities checked, those invalid, and each failing rule by its SHACL component and path with its count and at most five example ids. For each pipeline writing into the space it MUST compare the age of the space's newest entity of the pipeline's output type with the pipeline's freshness target (its interval, the `period` or what its cron `schedule` implies, plus a twelfth of it and at least ten minutes: about ten minutes for a real-time feed, 26 hours for a daily one; none for a pipeline its source drives) and say `fresh`, `stale` or `empty`, and whether the pipeline is paused. The space page MUST show the share valid, the failing rules and the freshness, and MUST show example ids only to whoever may read `Entity` in the space.
+- **DM-75** [S] — A `DataModel` MUST live at one of two levels: an **organization model** in the organization repository at `datamodels/{name}/` (namespace `org`, MF-02; no `spec.contextSpaceRef`), readable by every person holding a binding in the organization and changed only by red-lane Changes to that repository; or a **project model**, which is a space's model (DM-61) or a model at `projects/{p}/datamodels/{name}/` (the project's namespace, without `spec.contextSpaceRef`), readable only by the project's readers ([ADR-N-039](../Decisions/adr-n-039-organization-and-project-data-models.md)).
+- **DM-76** [S] — A space's model MAY `import` an organization model or a project model of its own project at a pinned major, named `org.{name}.v{major}` or `project.{name}.v{major}`, and MUST NOT import another project's model; the Portal MUST resolve the import from the repository at that version and hand Model Tools the imported source; deleting an organization model that a space imports MUST be refused naming the importers.
+- **DM-77** [S][H] — A person with `propose` on `DataModel` in a project MUST be able to propose sharing a published model with the organization as a red-lane Change that copies its source byte for byte (every `class_uri` and `slot_uri`) into the organization repository with `spec.origin` (`project`, `space`, `name`, `version`, `commit`); only a person whose organization-scope binding grants `approve` on `DataModel` MAY approve it, with the typed name, a project-scope approval MUST be refused `403`, and an agent run, MCP or a bearer caller MUST NOT approve it (PF-58); a name held by an organization model of another origin MUST be refused `409` naming it, and a promotion from the same origin MUST propose that model's next version (DM-22).
+- **DM-78** — After a promotion merges, the promoting space's model MUST stay unchanged, and the Portal MUST offer the project a Change that replaces the space model's own classes by an import of the organization model at the promoted version, keeping class names and IRIs; an organization model MUST be edited only by Changes to the organization repository.
+- **DM-79** [H] — The Data models page MUST show "Organization models" and "This project's models" as two sections, every model picker MUST show each entry's level, and `GET /api/v1/organization/datamodels` MUST answer `level` (`organization` or `project`) for every model (DM-63).
 
 ## Traceability
 
@@ -157,6 +162,7 @@ The owner, 2026-09-24: "write more tasks to validate everything" (T-2796). A wri
 | DM-61…DM-63 | One model per space and pickers everywhere | [ADR-N-033](../Decisions/adr-n-033-one-data-model-per-space.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | DM-64…DM-73 | Relationships, strict like foreign keys | [11-data-models.md](../Architecture/11-data-models.md#12-relationships-between-classes-dm-64dm-73) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-74 | Stored data held to its model | [API/01 §27](../API/01-portal-api.md#27-data-quality-of-a-space-dm-74) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| DM-75…DM-79 | Organization and project models, shared upwards by an administrator | [ADR-N-039](../Decisions/adr-n-039-organization-and-project-data-models.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
 ## Related
 
