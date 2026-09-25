@@ -97,7 +97,7 @@ Copy endpoint addresses using the **Copy URL** button beside any slug:
 4. On the chosen row, click **Use in this project**.
 5. A change proposal is submitted to declare a `SharedSpaceReference`.
 6. In `/projects/helsinki/approvals`, an approver approves the reference. Once merged, the status chip shows **Referenced**.
-7. To view all published endpoints across every project in the organization, open **All endpoints** at `/endpoints`.
+7. An administrator of the organization finds every endpoint of every project on the **Organization** page, tab **Endpoints** (`/organization/endpoints`). Nobody else is offered that table: a project's own endpoints stay under its **Endpoints** section.
 
 #### By asking the assistant
 
