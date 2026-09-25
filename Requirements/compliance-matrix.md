@@ -1188,6 +1188,7 @@ Generated 2026-09-24 from: `docs` 705cfc1, `conformance` 167a505, `deployment` 0
 | **UI-83** | [H] | open |  |  |
 | **UI-84** | [H] | open |  |  |
 | **UI-85** | [H] | open |  |  |
+| **UI-86** | [H] | open |  |  |
 
 ## Related
 

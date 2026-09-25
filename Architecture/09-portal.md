@@ -440,7 +440,7 @@ Entities are not resources: writing them stays with the endpoint's own write too
 
 ## 13. The entity grid
 
-One component lists entities wherever the Portal shows them (UI-64…UI-72): the data explorer of an Endpoint, a whole Context Space, the two side by side, a Dashboard view and a generated application. It lives in the App SDK and the Portal uses it unchanged (UI-71, SDK-29), so a fix reaches every place at once.
+One component lists entities wherever the Portal shows them (UI-64…UI-72, UI-86): the data explorer of an Endpoint, a whole Context Space, the two side by side, a Dashboard view and a generated application. It lives in the App SDK and the Portal uses it unchanged (UI-71, SDK-29), so a fix reaches every place at once.
 
 **What a cell is.** The grid reads the normalized representation with `options=sysAttrs`, never `keyValues`, so every attribute arrives with what a person needs to trust it: `observedAt`, `unitCode`, `datasetId`, `createdAt` and `modifiedAt` (UI-64, UI-65). A cell shows the value with its unit; the metadata are columns the person turns on. A Relationship is a link to its object, a GeoProperty its geometry type with a map, a LanguageProperty the value in the person's language.
 
@@ -449,6 +449,8 @@ One component lists entities wherever the Portal shows them (UI-64…UI-72): the
 **The comparison.** The space on the left, an Endpoint of it on the right, one type, rows aligned by id: what the Endpoint filters out or projects away is marked on the left, so a steward sees what a grant hides before anyone asks (UI-69).
 
 **How it writes.** In edit mode a changed cell joins a list of pending changes. The review shows entity, attribute, old and new, and Apply sends each as a partial attribute update through the same Endpoint with the signed-in person's session, the path the assistant's write card already uses (AG-78, EP-55). The Endpoint's Policy decides each one; a refused cell keeps the person's value, shows the gateway's sentence and stays pending. The grid never writes with the Portal's rights and never batches around the Policy (UI-67). A geometry is edited on the map with the same pending-change path (UI-72).
+
+**An enum is picked, never typed (UI-86).** `gen-json-schema` writes a LinkML enum as a `$ref` to `$defs/{Enum}`, and an optional slot wraps that in an `anyOf` with `null`. One schema reader in the SDK follows `$ref`, `allOf`, `anyOf` and `oneOf` down to the permissible values, with a title and a description for each where the model gives them (`permissible_values.{v}.title`, in the person's language when it is a language map, else `description`). The grid's edit cell and the SDK's forms offer exactly those values and store the value, not the title; the filter row offers a multi-select that builds `attr=="a","b"`, NGSI-LD's value list. A stored value outside the enum is shown and marked invalid, and stays as it is until the person picks another. The Endpoint validates the write regardless: the picker is convenience, not the control.
 
 **Access.** The grid is a keyboard grid (`role="grid"`, arrows, Enter, Escape, Tab) that announces coordinates and edits, and at 400 px it pins the id column and scrolls the rest (UI-70).
 
