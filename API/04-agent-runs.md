@@ -296,6 +296,35 @@ chosen twice, or a count outside `min`/`max` answers `400` and the question stay
 of the model's own options with one answer keeps "Something else…" (UI-57), so its answer is free
 text. A kind the person may not read at all is a refusal the model reads, never an empty question.
 
+**Options a person cannot take, and data to hand over** (T-2694, ADR-N-032, UI-44). Each entry of the
+`question` event's `options` carries `value`, `title` and `description`. An option the platform offers
+but the person cannot take right now also carries `disabledReason`, one sentence saying why (for
+example, the project has no data sources yet). The panel shows that option disabled, with the reason,
+and the answer refuses it. A question may also ask for data, in the event's `input`:
+
+```json
+{ "input": { "file": { "accept": ["csv", "tsv", "json"], "maxBytes": 262144 }, "url": true } }
+```
+
+`file` takes one text file of a format in `accept`, at most `maxBytes` bytes. `url` takes one
+absolute `http` or `https` address. The Portal's own first steps set `input`. A model sets it
+with `jc_ask`'s `input: ["file"]`, `["url"]` or both, and the Portal fills in `accept` and
+`maxBytes`. The answer is exactly one of:
+
+- `{"answer": "<value>"}`, an option;
+- `{"file": {"name": "stations.csv", "format": "csv", "text": "…"}}`, the file's text;
+- `{"url": "https://…"}`, the address. The run fetches it later, through the same guard as every other fetch (no cluster, private or metadata address).
+
+The answer is refused with `400`, and the question stays open, when it:
+
+- names an option that was not offered or that carries a `disabledReason`;
+- hands over a file or an address the question did not ask for;
+- gives a format outside `accept`, or a text over `maxBytes` or empty;
+- gives a file name with a path separator, JSON text that does not parse, or text with a NUL character;
+- gives an address that is not absolute `http(s)`, or that is longer than 2048 characters.
+
+The model reads a file answer as its name, format, size, line count and first lines. It never reads the whole file.
+
 ### Steering the Run
 
 Any status short of a terminal one accepts an instruction, so a person who sees the build going
@@ -578,7 +607,7 @@ A `pick` with nothing the person may read asks the same question as free text an
 
 | `path` | Proposes (the guard) | First step | Tools beyond every path's |
 |---|---|---|---|
-| `integrate-pipeline` | `Pipeline` | "Where does the data come from?": a feed on the web, a file, or a data source the project has | `change_resource`, `jc_datasource_check`, `jc_pipeline_test`, `jc_pipeline_metrics`, `jc_manifest_dry_run`, `jc_draft_put` |
+| `integrate-pipeline` | `Pipeline` | "Where does the data come from?": a data source or a context space the project has (each disabled with the reason when there is none), a file dropped (`input.file`) or a feed's address (`input.url`) | `change_resource`, `jc_datasource_check`, `jc_pipeline_test`, `jc_pipeline_metrics`, `jc_manifest_dry_run`, `jc_draft_put` |
 | `upload-data` | `ContextSpace` | "Which space should the data go into?" (`pick: spaces`), and opens the import page | `space_complete`, `change_resource`, `jc_manifest_dry_run`, `jc_draft_put` |
 | `find-data` | none | "What are you looking for?", free text | none |
 | `share-data` | `Endpoint` | "Which data do you want to share?" (`pick: endpoints`) | `propose_endpoint`, `edit_endpoint`, `grant_role`, `change_resource`, `jc_manifest_dry_run` |
