@@ -62,7 +62,7 @@ Approvers work in the Portal, not in the forge.
 
 Identity comes from Keycloak over OIDC ([I1](../Requirements/policy-firewall.md#21-identity-stack-i1i4-canonical-here)). What a signed-in person may do is decided by `Role` and `RoleBinding` manifests in the organization repository, evaluated by the Portal on every request ([CC-41](../Requirements/city-as-code.md#6-roles-and-identity)); a token carries no permission of its own.
 
-A role's rules pair kinds with verbs, and the verbs are `read`, `propose`, `approve` and `delete`. The set an instance starts from is seeded with the repository (`components/context-gateway/seed/<instance>/` in `joinedcontext-deployment`):
+A role's rules pair kinds with verbs, and the verbs are `read`, `propose`, `approve` and `delete`; the kind `Person`, a person in Keycloak rather than a manifest, takes `read`, `create`, `update`, `disable` and `delete` (ADR-N-031). The set an instance starts from is seeded with the repository (`components/context-gateway/seed/<instance>/` in `joinedcontext-deployment`):
 
 | Role | Verbs | Kinds | Who holds it |
 |---|---|---|---|
@@ -70,7 +70,8 @@ A role's rules pair kinds with verbs, and the verbs are `read`, `propose`, `appr
 | `pipeline-editor`, `model-editor`, `endpoint-editor`, `app-editor` | `propose` | the one kind in the name | the people who build that kind of thing |
 | `steward` | `propose`, `approve` | the project's kinds | data stewards of a project |
 | `approver` | `approve` | the project's kinds | whoever signs off other people's work |
-| `org-admin` | `propose`, `approve`, `delete` | organization-wide | the two or three people who run the instance |
+| `people-admin` | `read`, `create`, `update`, `disable`, `delete` | `Person` | whoever creates accounts and offboards people (PF-91) |
+| `org-admin` | `propose`, `approve`, `delete`, and everything `people-admin` holds | organization-wide | the two or three people who run the instance |
 
 Bind a person by adding a `RoleBinding` in the repository, which is itself a red-lane change. Nobody is given a role by clicking in the Portal, and no role is granted by a Keycloak group alone.
 
