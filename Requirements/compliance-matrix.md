@@ -266,6 +266,12 @@ Generated 2026-09-25 from: `docs` e62cde8, `conformance` 4b8c9e9, `deployment` 7
 | **AP-121** | [H] | open |  |  |
 | **AP-122** | [S] | open |  |  |
 | **AP-123** | [H] | tested | fast ci | portal `src/agents/theme.rs::every_look_of_every_branding_reads_at_aa`, portal `src/agents/theme.rs::every_look_is_reached_and_each_is_a_different_file`, portal `src/agents/theme.rs::the_apps_of_a_project_get_different_looks_and_the_same_one_on_every_run`, and 3 more |
+| **AP-124** | [S] | open |  |  |
+| **AP-125** | [A] | open |  |  |
+| **AP-126** |  | open |  |  |
+| **AP-127** | [S] | open |  |  |
+| **AP-128** |  | open |  |  |
+| **AP-129** | [S] | open |  |  |
 
 ### CC — Configuration as code
 
