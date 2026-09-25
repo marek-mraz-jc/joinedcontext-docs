@@ -40,6 +40,7 @@ short name into an id is the mistake this table exists to prevent.
 | `bbsk` | `bbsk-registre` | `bbsk-registre` | the region's own registers from opendata.bbsk.sk: districts, municipalities, its organisations, hospitals, public social services, bridges (T-2783) |
 | `banskabystrica` | `banskabystrica-mesto` | `banskabystrica-mesto` | the city's own feeds, as fetched |
 | `banskabystrica` | `banskabystrica-kpi` | `banskabystrica-kpi` | `KeyPerformanceIndicator` entities only |
+| `banskabystrica` | `banskabystrica-verejne` | `banskabystrica-verejne` | the city's events, the schools of the national school map in the city, and hourly PM10 and PM2.5 of station SK0263A from the EEA (T-2781) |
 | `banskabystrica` | `ovzdusie` | `ovzdusie` | the thirteen seeded `AirQualityObserved` entities of T-0945 |
 
 `ovzdusie` predates PF-84 and its entity ids are already published, so its space manifest pins
@@ -264,15 +265,19 @@ endpoint for writing would be a second thing to keep in step with the first.
 | `bbsk` | `bbsk-registre` | `bbsk-registre` | `public` | anybody, reading; the register pipelines, writing |
 | `banskabystrica` | `banskabystrica-mesto` | `banskabystrica-mesto` | `organization` | the pipelines, reading and writing |
 | `banskabystrica` | `banskabystrica-kpi` | `banskabystrica-kpi` | `project-list`, `[bbsk]` | the region's application, reading through the share of section 8; the city's pipeline, writing |
+| `banskabystrica` | `banskabystrica-verejne` | `banskabystrica-verejne` | `public` | anybody, reading; the city's open-data pipelines, writing |
 
-Two endpoints are `public`: `bbsk`'s `bbsk-kpi`, which is what the demonstration shows, and
+Three endpoints are `public`: `bbsk`'s `bbsk-kpi`, which is what the demonstration shows;
 `bbsk-registre`, which republishes the region's own registers under the region's own CC BY-SA 4.0
-licence to its own catalogue organization (T-2783). Creating either is a red-lane Change that a
-binding with `approve` on the kind and the public constraint has to approve (PF-72), and that
-approval is part of the demonstration rather than a step around it.
+licence to its own catalogue organization (T-2783); and `banskabystrica-verejne`, which
+republishes open data under CC BY 4.0 with each publisher's credit (T-2781). Creating any of them
+is a red-lane Change that a binding with `approve` on the kind and the public constraint has to
+approve (PF-72), and that approval is part of the demonstration rather than a step around it.
 The two raw spaces are never public: they are a copy of somebody else's published data, and
-republishing it under our own name at our own URL is not ours to do. The city's KPI space is not
-public either; it reaches the region by a named share and by nothing else.
+republishing it under our own name at our own URL is not ours to do. `banskabystrica-verejne` is
+the exception by construction: every source in it is licensed for republication with credit, and
+every entity carries that credit in `dataProvider`. The city's KPI space is not public either; it
+reaches the region by a named share and by nothing else.
 
 ## 8. How the city's indicators reach the region's application
 
