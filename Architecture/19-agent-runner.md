@@ -162,7 +162,7 @@ stateDiagram-v2
 | `interviewing` | Workspace / Portal | Interactive questionnaire displayed in conversation feed. | All required form questions answered or defaults applied. |
 | `building` | Workspace | Real-time thoughts, tool invocations, and file delta tree. | Code generated, clean `cargo check` and `pnpm build`. |
 | `testing` | Workspace | Test execution progress (`cargo test`, `vitest`, `playwright`). | All test suites pass or step limit reached. |
-| `previewing` | Portal / APISIX | Sandboxed preview iframe live under `/apps/{name}/`. | User clicks "Publish Application" or cancels run. |
+| `previewing` | Portal / APISIX | Sandboxed preview iframe live in the Portal; the App's host `{name}.apps.{domain}` serves nothing until it is published. | User clicks "Publish Application" or cancels run. |
 | `awaiting_approval`| Gitea / Portal | Pending merge request banner with visual diff. | Approver merges pull request. |
 | `published` | Reconciler | Application listed as Live in catalog. | Terminal successful state. |
 | `failed` | Portal | Error description and last diagnostic log excerpt. | Terminal error state. |

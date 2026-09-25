@@ -13,7 +13,7 @@ flowchart LR
     CI["CI / jcctl apply<br/>Model Tools render · bento compile · vite build"]
     S3["Artifact store (RustFS, S3 API)<br/>schemas/ · endpoints/ · mappings/ · dumps/ · exports/ · apps/ · filecache/"]
     GW["Context Gateway<br/>schema/ · dump/ · file.* · MCP resources"]
-    PORTAL["Portal static host<br/>/apps/{name}/"]
+    PORTAL["Portal static host<br/>{name}.apps.{domain}"]
     C["Consumers: partners, open-data users, agents, browsers"]
     GIT --> CI -->|"PutObject (write-once, object lock)"| S3
     S3 -->|"GetObject, read-only credential"| GW --> C
