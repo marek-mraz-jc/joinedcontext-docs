@@ -479,6 +479,15 @@ referenced by an Endpoint, Pipeline or Dashboard (DM-26); a `retired` model stay
 its versioned URLs but accepts no new references; every path is relative to the manifest and
 inside the space directory, so a bundle stays importable into another namespace (MF-07).
 
+A model that no single space owns leaves `spec.contextSpaceRef` out (ADR-N-039, DM-75). In
+namespace `org` (MF-02) it is an **organization model** at `datamodels/{name}/` of the organization
+repository, which every project of the organization reads and only red-lane Changes to that
+repository edit. In a project's namespace it is a **project model** at
+`projects/{p}/datamodels/{name}/`. A space's one model uses either kind by `import` at a pinned
+major, `org.{name}.v{major}` or `project.{name}.v{major}` (DM-76). A project shares its model
+upwards only through a promotion that an organization-scope approver approves (DM-77), and a
+project bundle carries copies of the organization models it imports (MF-49, MF-50).
+
 ---
 
 ## 5. Gateway Validation at the Trust Boundary
