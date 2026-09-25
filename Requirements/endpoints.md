@@ -43,7 +43,7 @@ Family **EP** (EP-01…EP-84). Owning chapter: [Architecture/04-context-spaces-a
 - **EP-17** — The Context Gateway MUST maintain an in-memory resolution table mapping `endpointSlug` to Context Space name, enabled representations, audience rules, and rate limits.
 - **EP-18** — Slug resolution in memory MUST use concurrent read-optimized primitives ensuring resolution latency under 100 microseconds.
 - **EP-19** — Endpoint updates deployed by the reconciler MUST invalidate the in-memory gateway resolution cache within 2 seconds (R48).
-- **EP-20** — Every Endpoint MUST configure token-bucket rate limiting per consumer IP or authenticated identity, advertising thresholds via standard `RateLimit-*` headers (MIM0-R7).
+- **EP-20** — An Endpoint is not rate limited unless its manifest sets `spec.rateLimits`: a limit is an explicit choice of the person who configures the Endpoint, never a platform default (owner decision 2026-09-24). When `spec.rateLimits` is set, the gateway MUST count every request in a token bucket per authenticated identity or, without one, per consumer IP, and MUST advertise the thresholds via the standard `RateLimit-*` headers (MIM0-R7); without it the gateway MUST NOT count the Endpoint and its answers MUST NOT carry `RateLimit-*` fields. No Portal door (the form, the assistant, the KPI and share drafts, the seed) MAY write a limit the person did not ask for. The edge's anti-flood buckets (Deployment/10 §4) protect the node and are not an Endpoint limit.
 
 ## 6. Tenancy Stripping and Internal Hop
 
