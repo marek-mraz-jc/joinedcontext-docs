@@ -1227,8 +1227,9 @@ to the Context Gateway, for the App's own endpoints only (Deployment/10, AP-133)
   retired app is `404` — the same answer as a name that does not exist, so the host never
   discloses which apps are being worked on.
 - Every response carries the app's own Content Security Policy, built from `spec.csp`:
-  `default-src 'self'; connect-src 'self'; frame-ancestors {portal origin}` by default, with
-  `connect-src` extended by `spec.csp.connectSrc`, `connect-src` and `img-src` by the project's
+  `default-src 'self'; connect-src 'self'; frame-src 'self'; frame-ancestors {portal origin}`
+  by default, with `connect-src` extended by `spec.csp.connectSrc`, `frame-src` by the https
+  origins of `spec.csp.frameSrc` (an App's own map or video frame, T-2871), `connect-src` and `img-src` by the project's
   basemap route prefix when the platform configures a basemap (its style URL is `basemap` in
   `#jc-config`, AP-67), and the origins of `spec.csp.frameAncestors`
   added to `frame-ancestors` only when `spec.embeddable: true` (AP-12). The Portal's own origin
