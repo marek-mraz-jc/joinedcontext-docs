@@ -173,7 +173,7 @@ What an answer must not lose, because a REST client does not lose it: the result
 result carries no `partial` flag of its own); and a refusal as the tool error carrying the REST
 ProblemDetails' `type`, `title` and `detail`, in the same words (AG-84).
 
-`describe_schema` answers the JSON formalisms as the document itself (`summary`, `json-schema`, `context`) and every text formalism (`linkml`, `shacl`, `owl`, `rdf`, `markdown`) as `{ "format", "mediaType", "document" }`, the same bytes the REST route `/api/endpoint/{slug}/schema/v{major}/{artifact}` serves for the same token. With no `format` it answers `summary`, which names LinkML as the
+`describe_schema` answers the JSON formalisms as the document itself (`summary`, `json-schema`, `context`) and every text formalism (`linkml`, `shacl`, `owl`, `rdf`, `markdown`, and `qb` where a granted class is a Data Structure Definition, DM-60) as `{ "format", "mediaType", "document" }`, the same bytes the REST route `/api/endpoint/{slug}/schema/v{major}/{artifact}` serves for the same token. With no `format` it answers `summary`, which names LinkML as the
 formalism to load (`recommended: "linkml"`) and lists every artifact with its `format`, `mediaType`,
 `bytes`, `sha256` and resource URI, LinkML first: LinkML is the source the others are rendered from
 (ADR-N-010), so it is the one document that cannot disagree with the model. SHACL is for validating
@@ -193,7 +193,7 @@ The same server lists resources (`resources/list`, `resources/read`):
 |---|---|
 | `ngsi-ld://{space}/types/{type}` | the type's current entity set, as the caller may read it |
 | `ngsi-ld://{space}/entities/{id}` | one entity, projected to the grant |
-| `schema://{endpointSlug}/v{n}/{artifact}` | a rendered schema artifact; `{artifact}` is the `format` name the summary publishes (`linkml`, `json-schema`, `context`, `shacl`, `owl`, `rdf`, `markdown`), and the REST file name (`model.shacl.ttl`) names the same document (EP-52) |
+| `schema://{endpointSlug}/v{n}/{artifact}` | a rendered schema artifact; `{artifact}` is the `format` name the summary publishes (`linkml`, `json-schema`, `context`, `shacl`, `owl`, `rdf`, `markdown`, `qb`), and the REST file name (`model.shacl.ttl`) names the same document (EP-52) |
 | `access://{endpointSlug}` | the caller's effective grant document (EP-60) |
 
 The Portal's own server addresses its resources under `jc://` (AG-81):

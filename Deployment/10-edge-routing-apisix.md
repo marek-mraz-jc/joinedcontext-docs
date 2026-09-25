@@ -248,7 +248,8 @@ flowchart LR
     P5 --> P6["6. proxy-rewrite<br/>(X-Forwarded-Proto and -Port)"]
     P6 --> Forward["Forward to Upstream via Mesh<br/>(Authorization header untouched)"]
     Forward --> P7["7. response-rewrite<br/>(HSTS, nosniff, frame, referrer)"]
-    P7 --> OutResp["Outbound Response"]
+    P7 --> P8["8. serverless-post-function<br/>(baseline CSP where none)"]
+    P8 --> OutResp["Outbound Response"]
 ```
 
 ### Plugin Parameterization Specifications
@@ -280,6 +281,7 @@ flowchart LR
    - `X-Frame-Options`
    - `Referrer-Policy`
    - `Cache-Control: no-store, no-cache, must-revalidate` on the gateway routes
+9. **`serverless-post-function` (baseline Content Security Policy, OPS-34):** runs in the `header_filter` phase on every route and sets `Content-Security-Policy` only when the answer carries none. The Portal sends its own policy and each App its per-App one (AP-12, AP-122); `response-rewrite` would replace them, and a second header would intersect with them and break the page, so the edge never touches a policy an upstream wrote. The baseline is `frame-ancestors` matching the route's `X-Frame-Options` (`'self'` or `'none'`), `object-src 'none'` and `base-uri 'self'`: it restricts framing, plugins and `<base>` on a page that sets no policy (Gitea, Grafana, CKAN) without restricting its script origins, which only the upstream knows. The phase runs for the answers APISIX writes itself (a `401` of `key-auth`, the `302` of `openid-connect`), so those carry it too; the `429` page of the server block's `error_page` is built after the plugin chain and sets the `DENY` baseline itself.
 
 ### Extended Timeouts for Bulk Exports
 
