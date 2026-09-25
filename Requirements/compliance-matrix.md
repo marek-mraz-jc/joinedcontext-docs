@@ -279,6 +279,7 @@ Generated 2026-09-25 from: `docs` 4fb64e7, `conformance` 2d6df0f, `deployment` 6
 | **AP-133** | [S] | open |  |  |
 | **AP-134** | [S] | open |  |  |
 | **AP-135** | [S] | open |  |  |
+| **AP-136** | [H] [S] | tested | fast ci | portal `ui/tests/apps_catalog.test.tsx::a published app carries the probe's verdict in words, a preview and an unchecked app none (AP-136)`, portal `src/api/validation.rs::an_app_is_green_when_it_passed_red_with_the_reason_when_it_failed`, portal `ui/tests/app_probe.test.ts::passes an App that read data in both places and turned a stranger away`, and 1 more |
 
 ### CC — Configuration as code
 

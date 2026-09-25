@@ -2227,7 +2227,9 @@ GET /api/v1/organization/health     every published check with its state → 200
   often it runs, the run's label, the verdict counts, at most 50 failing or erroring results
   (`key`, `verdict`, `title`, and the open task that `check: {check}/{key}` names, when there is
   one) and at most 200 history points of the last seven days. It never carries a result's
-  `detail` or `evidence`: those stay in the summary, beside the task.
+  `detail` or `evidence`: those stay in the summary, beside the task. A check whose passing keys
+  a page shows, as `apps` does, also lists them in `passed` (at most 500, each at most 300
+  characters); every other check leaves it empty.
 - `result` is the digest the publisher wrote. `state` is the Portal's: `stale` when the last run
   is older than twice `everyHours` (1 to 744, a month), whatever it found; otherwise `red` when
   it has a `fail` or an `error` and `green` when not. A file that is not such a digest (larger
@@ -2238,6 +2240,30 @@ GET /api/v1/organization/health     every published check with its state → 200
   scope grant `approve` and `delete` on `RoleBinding` (PF-03). Anyone else signed in gets `403`,
   nobody signed in `401`.
 - Without `JC_HEALTH_DIR`, or before anything is published, the answer is `{"checks": []}`.
+
+### The chip of an App (AP-136)
+
+The probe publishes the check `apps`, one key `{project}/{name}` per published App. The Apps
+list and the App's page read one project's share of it:
+
+```text
+GET /api/v1/projects/{project}/app-checks     the last check of each App of the project → 200
+```
+
+```json
+{
+  "checks": [
+    { "name": "air-quality", "state": "green", "at": "2026-09-25T09:00:00Z" },
+    { "name": "helsinki-alerts", "state": "red", "at": "2026-09-25T09:00:00Z", "reason": "no row read in 60 s" }
+  ]
+}
+```
+
+- `state` is `green` for a key in `passed`, `red` for a key in `failures` (`reason` is its title),
+  and `amber` for either when the digest is stale; an App the last run did not check has no
+  row. An unreadable or absent digest answers `{"checks": []}`.
+- Whoever reads `App` in the project gets the rows; a project the caller may not read is `404`,
+  a caller without `read` on `App` gets `403`, nobody signed in `401`.
 
 ## Related
 

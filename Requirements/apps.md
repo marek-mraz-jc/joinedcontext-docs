@@ -7,7 +7,7 @@ title: "Apps on Demand"
 
 Family **AP** (AP-01…AP-87, AP-90…AP-104). Owning chapters: [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) and [19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
 
-Requirement family **AP-01…AP-87, AP-90…AP-135** for AI-generated, purpose-built applications that consume context data through a dedicated, least-privilege Endpoint. Architecture in [Architecture/16-apps-on-demand](../Architecture/16-apps-on-demand.md) and [Architecture/19-agent-runner](../Architecture/19-agent-runner.md).
+Requirement family **AP-01…AP-87, AP-90…AP-136** for AI-generated, purpose-built applications that consume context data through a dedicated, least-privilege Endpoint. Architecture in [Architecture/16-apps-on-demand](../Architecture/16-apps-on-demand.md) and [Architecture/19-agent-runner](../Architecture/19-agent-runner.md).
 
 ## 1. Manifest and source
 
@@ -232,6 +232,12 @@ Decided in [ADR-N-037](../Decisions/adr-n-037-an-origin-per-app.md) (T-2477). Ap
 - **AP-134** [S] — The NetworkPolicy of a `ui-rust` or `ui-node` App's pod MUST admit egress only to DNS, the Linkerd control plane, the Context Gateway pods on their port and the Linkerd inbound port, and the destinations of `spec.egress[]`; each destination is `{cidr, ports[]}` and MUST be rendered as an `ipBlock` with `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `100.64.0.0/10` and `169.254.0.0/16` excepted. `JC_ENDPOINT_URL` MUST name the gateway's Service in the cluster, never the public host, and the gateway's NetworkPolicy MUST admit the apps namespace. Every write door and `jcctl validate` MUST refuse a destination of `0.0.0.0/0`, `::/0` or a host name, and a Change that adds or widens a destination MUST take the red lane and need `approve` from a publisher (PF-71).
 - **AP-135** [S] — The security suite MUST prove, against two published Apps A and B on `dev`: a page on A's host reads none of B's `localStorage`; a request from A's host to `/git/`, `/api/v1/` or an endpoint slug of B's is a `404` at the edge; A's session cookie is not sent to B's host and `/apps/A/` on the apex redirects without setting a cookie; and a connection from A's pod to an address outside its NetworkPolicy fails.
 
+## 25. A Probe for Every Published App
+
+The owner's rule of 2026-09-23: every App of the Portal must work and read data on `dev`, checked by a machine rather than by hand (T-2795).
+
+- **AP-136** [H][S] — A probe MUST open every published App on `dev` as a dedicated person, `demo.probe`, who is a member of each App's default group and holds `read` on `App` and nothing else, its password a generated Secret and never in Git: inside the Portal and in a window of its own, waiting for one row the App reads through `/api/endpoint/{slug}/ngsi-ld/v1/`, recording the load time and every console error. It MUST also open a `public` App without signing in, and MUST find every other App refusing a visitor who did not sign in. Each App's verdict MUST be published as the check `apps`, with the key `{project}/{name}` (OPS-53). The Apps list and the App's page MUST show a chip per checked App to whoever reads the App: green when its last check passed, red with the reason when it failed, amber when the last check is older than twice its interval, and no chip before the first check.
+
 ## Traceability
 
 | Requirements | Section | Architecture | Tests |
@@ -265,6 +271,7 @@ Decided in [ADR-N-037](../Decisions/adr-n-037-an-origin-per-app.md) (T-2477). Ap
 | AP-130…AP-131 | A build pod per App and a build cache of its own | [20-app-sdk.md#60-where-the-build-runs](../Architecture/20-app-sdk.md#60-where-the-build-runs), [ADR-N-028](../Decisions/adr-n-028-applications-build-on-the-forge.md) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | AP-132 | Access presets of Build an app | [19-agent-runner.md#1-what-runs-where](../Architecture/19-agent-runner.md#1-what-runs-where) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | AP-133…AP-135 | An origin and an egress allow-list per App | [ADR-N-037](../Decisions/adr-n-037-an-origin-per-app.md), [16-apps-on-demand.md §5](../Architecture/16-apps-on-demand.md#5-login-in-front-of-the-portal-and-every-app-apisix-openid-connect) | [06-security-tests.md](../Testing/06-security-tests.md) |
+| AP-136 | A probe for every published App | [../API/01-portal-api.md#25-validation-health-ops-53](../API/01-portal-api.md#25-validation-health-ops-53) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
 ## Related
 
