@@ -1499,7 +1499,7 @@ alternatives, filters combine with AND) and `page` (from 1, twenty datasets a pa
   caller sees public datasets only, so the answer cannot list a restricted one (EP-67, EP-69).
 - Facet counts are over the datasets that match `q` and every other facet's filter.
 - A catalogue that does not answer is named in `unavailable` and the others still answer; when
-  none answers, the route answers `502` with `problem+json`. No `CkanInstance` at all is an empty
+  none answers, the route answers `503` with `problem+json`, as every Portal route whose upstream is down does. No `CkanInstance` at all is an empty
   catalogue, `200` with `total: 0`.
 
 `GET /api/v1/catalogue/datasets/{name}` answers the dataset page:
@@ -1522,7 +1522,7 @@ alternatives, filters combine with AND) and `page` (from 1, twenty datasets a pa
   "resources": [
     { "name": "CSV", "format": "CSV", "url": "https://{host}/api/endpoint/{endpointSlug}/file.csv", "description": "…", "previewUrl": "https://data.{host}/dataset/bbsk-kpi/resource/{id}" }
   ],
-  "endpoint": { "url": "https://{host}/api/endpoint/{endpointSlug}/" },
+  "endpoint": { "url": "https://{host}/api/endpoint/{endpointSlug}/", "representations": ["ngsi-ld", "csv", "mcp"] },
   "model": {
     "name": "key-performance-indicator",
     "classes": [{ "name": "KeyPerformanceIndicator", "description": "…" }],
@@ -1536,13 +1536,16 @@ alternatives, filters combine with AND) and `page` (from 1, twenty datasets a pa
   installation whose audience is `public`: the Portal parses the slug out of the extra, finds the
   Endpoint in its mirror and builds the URL on its own host. `docsUrl` is the dataset's Markdown
   schema resource. A dataset whose extra names another host, or no Endpoint, has neither.
-- An unknown or private dataset answers `404`: a caller cannot tell the two apart.
+- `representations` are the Endpoint's `enabledRepresentations`; the "Use this data" snippets
+  offer only what it serves.
+- An unknown or private dataset answers `404`: a caller cannot tell the two apart. When no
+  catalogue answers at all, `503`.
 
 `GET /api/v1/catalogue/datasets/{name}/sample` answers up to ten entities of the Endpoint's first
 model class, read anonymously through its NGSI-LD representation with `options=keyValues`, as
 `{ "type": "KeyPerformanceIndicator", "columns": ["id", "name", "value"], "rows": [["urn:…", "…", "12"]] }`.
 A dataset with no Endpoint of this installation, or one that does not serve `ngsi-ld`, answers
-`404`; an Endpoint that does not answer, `502`. Nested values are written as compact JSON.
+`404`; an Endpoint that does not answer, `503`. Nested values are written as compact JSON.
 
 ## 16b. Publish a dataset in one step (EP-83)
 
@@ -1572,7 +1575,8 @@ proposes; it writes nothing. The caller needs `propose` on `Endpoint` in the pro
 
 - `catalog` is the drafted `spec.catalog` (EP-78) and `publish` the drafted `spec.publish`
   (EP-62); a block the Endpoint already declares is returned as it is, so re-running the flow
-  never overwrites what a steward wrote. `missing` names the catalogue fields nothing could fill.
+  never overwrites what a steward wrote. `missing` names the catalogue fields nothing could fill;
+  `spatial`, `temporal` and `frequency` are never drafted.
 - `makesPublic` is `true` when the Endpoint's audience is not `public`: the UI then says so before
   the proposal, and the Change the UI proposes with `spec.audience: public` takes the red lane
   with a publisher's approval (EP-76, PF-72).
