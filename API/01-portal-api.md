@@ -1304,6 +1304,14 @@ merely hides a card is not an authorisation.
   kinds are on their own terms (CC-59, CC-63). A Green blueprint whose template renders a `Policy`
   therefore lands in the Red lane; declaring a lane can narrow nothing that section 4 already
   calls Red.
+- A flow that is Green after that rule is merged in the same call, for the person who started it
+  (AG-14, CC-63, CC-65): the Portal merges it pinned to the commit it wrote, with the merge
+  message naming the blueprint, its version and that person, and answers the `Change` as
+  `Deploying`. It merges only while the merge request holds exactly the files the flow wrote; a
+  merge request with any other file, one whose files cannot be read, or one the forge will not
+  merge answers `PendingApproval` and waits for a person. A Yellow or Red flow always waits. Over
+  MCP, `jc_flow_start` runs in the flow's own lane, so a Green flow is not asked about (AG-63)
+  and a Red one is asked about as Red.
 - Every rendered manifest passes the same checks a hand-written one does. A template that renders
   a namespace other than the project the flow runs in is `400`, and so is a literal secret
   (MF-04, MF-24): a blueprint is authored once and run in many projects, so a namespace in a

@@ -6,11 +6,13 @@ description: Normative requirements governing autonomous AI agents, Model Contex
 
 # Agent Governance & Model Context Protocol
 
-Family **AG** (AG-01…AG-85; AG-82 is unassigned). Owning chapters: [Architecture/07-agents-and-mcp.md](../Architecture/07-agents-and-mcp.md) and [Architecture/19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [Testing/06-security-tests.md](../Testing/06-security-tests.md).
+Family **AG** (AG-01…AG-95). Owning chapters: [Architecture/07-agents-and-mcp.md](../Architecture/07-agents-and-mcp.md) and [Architecture/19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [Testing/06-security-tests.md](../Testing/06-security-tests.md).
 
 ## 1. Identity, Authentication, and Scoping
 
-- **AG-01** [A] — Every AI agent interacting with the platform MUST operate under an individual, auditable identity (Keycloak service account or an end-user delegated session via OAuth 2.1 Token Exchange RFC 8693) without generic shared bot accounts (CC-44).
+- **AG-01** [A] — Every AI agent interacting with the platform MUST operate under an individual, auditable identity (Keycloak service account or an end-user delegated session via OAuth 2.1 Token Exchange RFC 8693) without generic shared bot accounts (CC-44). A run of `jc-agent-proxy` reads the data plane as the person who started it, through a token exchanged from theirs ([ADR-N-038](../Decisions/adr-n-038-an-agent-run-reads-as-its-person.md), AG-94, AG-95); no run reads through a token the proxy's client obtained for itself.
+- **AG-94** [A][S] — `jc-agent-proxy` MUST exchange the starting person's access token, handed to it once by the Portal when the run starts, for an access token and a same-session refresh token of its own client whose subject is that person (RFC 8693, Keycloak standard token exchange), MUST send only that run's delegated token on the run's data-plane calls (`/v1/data/…`, `/v1/data/mcp`), MUST hold the grant in memory for the run alone and revoke it (RFC 7009) when the run ends, and MUST answer `401` with the reason rather than fall back to a token of its own when a run has no delegated grant. Neither the Portal nor the proxy writes the person's token to a log, a file or the run record.
+- **AG-95** [S] — The Context Gateway MUST evaluate a token whose `azp` names a `ServiceAccount` declaring `spec.delegation: token-exchange`, and whose subject is a person rather than that client's own service-account user, as that person (their username, groups and roles, never the account's roles), and MUST record the account beside the person in its decision log; a person-subject token from a client whose account declares no delegation MUST be refused with `403` (PF-46).
 - **AG-02** [A][S] — An AI agent MUST authenticate against platform endpoints with OAuth 2.1 Bearer tokens that are short-lived and bound by `aud` to the one Endpoint or surface they were minted for, so a token taken from one surface is refused on every other. Proof of possession is not part of the MVP (owner decision 2026-09-24, T-2358): DPoP (RFC 9449) at the edge is `next`, and when it lands a token carrying `cnf.jkt` MUST be refused without a proof whose `htm`, `htu`, `iat` and unreplayed `jti` match the request.
 - **AG-03** [A] — An agent's access rights across data entities and configuration manifests MUST be governed strictly by standard `Policy` entities and Git repository permissions without ambient superuser access.
 
@@ -38,7 +40,7 @@ Family **AG** (AG-01…AG-85; AG-82 is unassigned). Owning chapters: [Architectu
 
 ## 6. Sandboxes and Ephemeral Workspaces
 
-- **AG-14** [A] — An agent with developer or analyst roles MUST be permitted to instantiate unmanaged, ephemeral sandbox spaces instantly via Green-lane blueprints (CC-67).
+- **AG-14** [A] — An agent with developer or analyst roles MUST be permitted to instantiate unmanaged, ephemeral sandbox spaces instantly via Green-lane blueprints (CC-67): a Green flow is merged as it is proposed and is not asked about over MCP, for a caller whose role the blueprint's `allowedRoles` names; anyone else is refused as for an unknown blueprint (CC-59, API/01 §13).
 - **AG-15** [A] — Ephemeral sandbox spaces MUST carry metadata indicating `unmanaged: true` and an explicit expiration timestamp, excluded from automated drift detection runs (CC-21).
 - **AG-16** [A] — Promotion of artifacts developed within an agent sandbox into durable, managed configuration MUST be conducted exclusively through the export and adopt workflow (CC-22, CC-68).
 
@@ -214,6 +216,7 @@ Decided in [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) (T-2691).
 | AG-79 | [Architecture/09-portal.md#10-operations-drafts-and-verdicts](../Architecture/09-portal.md#10-operations-drafts-and-verdicts) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | AG-82 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 | AG-86 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
+| AG-94…AG-95 | [ADR-N-038](../Decisions/adr-n-038-an-agent-run-reads-as-its-person.md) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 | AG-87…AG-93 | [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
 ## Related
