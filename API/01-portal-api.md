@@ -2229,11 +2229,11 @@ GET /api/v1/organization/health     every published check with its state → 200
   one) and at most 200 history points of the last seven days. It never carries a result's
   `detail` or `evidence`: those stay in the summary, beside the task.
 - `result` is the digest the publisher wrote. `state` is the Portal's: `stale` when the last run
-  is older than twice `everyHours` (1 to 168), whatever it found; otherwise `red` when it has a
-  `fail` or an `error` and `green` when not. A file that is not such a digest (larger than
-  256 KiB, an unknown field, more than 50 failures or 200 points, a text over 300 characters, a
-  task that is not a task id, a `check` that differs from its file name) is `unreadable` and
-  has no `result`. Rows come in the order of their names.
+  is older than twice `everyHours` (1 to 744, a month), whatever it found; otherwise `red` when
+  it has a `fail` or an `error` and `green` when not. A file that is not such a digest (larger
+  than 256 KiB, an unknown field, more than 50 failures or 200 points, a text over 300
+  characters, a task that is not a task id, a `check` that differs from its file name) is
+  `unreadable` and has no `result`. Rows come in the order of their names.
 - Only an administrator of the organization reads it: a caller whose bindings at organization
   scope grant `approve` and `delete` on `RoleBinding` (PF-03). Anyone else signed in gets `403`,
   nobody signed in `401`.
