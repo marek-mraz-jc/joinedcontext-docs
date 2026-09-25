@@ -605,6 +605,17 @@ A path is a guided flow (AG-87…AG-91). It is started by `path` on the first re
 
 A `pick` with nothing the person may read asks the same question as free text and says why in a `thought`. The answer is an `answer` event like any other, checked against what the question offered, and the next turn is the model's, on the path.
 
+**Integrate a pipeline takes its next steps itself** (T-2695). Its first question carries `step: "integrate-source"`. The Portal answers some sources itself; the model never sees these steps:
+
+1. A file: the Portal writes a `tool` event `profile_sample` with the file's rows and columns, `durationMs` and `elapsedMs`.
+2. A feed's address: the Portal keeps it. The runner reads it once, in step 4, never twice.
+3. After either, the Portal asks "Which space should it land in?" (`step: "integrate-target"`). The options are the spaces the person may read and `new`, "A new context space".
+4. `new` runs `space_complete` on what was handed over, as the model's call would. That is one `tool` event with the drafts, each draft with its verdict (the pipeline's is its test run on the sample), then a `navigate` to `/projects/{project}/spaces/complete?space={name}` carrying the drafts. The person proposes them there, as one Change. The run proposes nothing.
+5. From an address, the drafts are the space, its data model, a data source, an endpoint and the pipeline that reads the address.
+6. From a file, only the space and its model are drafted: a file is data once, not a feed. A `thought` says so, and says the rows load through Import once the space is approved.
+
+An existing space, a data source, a context space as the source, or words: these go to the model, on the path, with where the data lands said plainly.
+
 | `path` | Proposes (the guard) | First step | Tools beyond every path's |
 |---|---|---|---|
 | `integrate-pipeline` | `Pipeline` | "Where does the data come from?": a data source or a context space the project has (each disabled with the reason when there is none), a file dropped (`input.file`) or a feed's address (`input.url`) | `change_resource`, `jc_datasource_check`, `jc_pipeline_test`, `jc_pipeline_metrics`, `jc_manifest_dry_run`, `jc_draft_put` |
