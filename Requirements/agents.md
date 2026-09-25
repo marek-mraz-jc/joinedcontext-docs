@@ -38,7 +38,7 @@ Family **AG** (AG-01…AG-85; AG-82 is unassigned). Owning chapters: [Architectu
 
 ## 6. Sandboxes and Ephemeral Workspaces
 
-- **AG-14** [A] — An agent with developer or analyst roles MUST be permitted to instantiate unmanaged, ephemeral sandbox spaces instantly via Green-lane blueprints (CC-67).
+- **AG-14** [A] — An agent with developer or analyst roles MUST be permitted to instantiate unmanaged, ephemeral sandbox spaces instantly via Green-lane blueprints (CC-67): a Green flow is merged as it is proposed and is not asked about over MCP, for a caller whose role the blueprint's `allowedRoles` names; anyone else is refused as for an unknown blueprint (CC-59, API/01 §13).
 - **AG-15** [A] — Ephemeral sandbox spaces MUST carry metadata indicating `unmanaged: true` and an explicit expiration timestamp, excluded from automated drift detection runs (CC-21).
 - **AG-16** [A] — Promotion of artifacts developed within an agent sandbox into durable, managed configuration MUST be conducted exclusively through the export and adopt workflow (CC-22, CC-68).
 
