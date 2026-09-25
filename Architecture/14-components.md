@@ -28,7 +28,7 @@ Platform components are cleanly partitioned between core services and pluggable 
 
 ### jcctl (`jcctl`)
 
-- **Primary Role:** the configuration plane as a command, shipped by `joinedcontext-platform` and deployed as no workload of its own: `validate`, `plan`, `apply`, `drift`, `export`, `import`, `sync`, `model`, `roles`, `pipeline test`, `artifacts rebuild`, `publish ckan` (`crates/jcctl/src/main.rs`). A person or a CI lane runs it against a repository checkout.
+- **Primary Role:** the configuration plane as a command, shipped by `joinedcontext-platform` and deployed as no workload of its own: `validate`, `plan`, `apply`, `drift`, `export`, `import`, `sync`, `model`, `roles`, `pipeline test`, `artifacts rebuild`, `publish ckan` (`crates/jcctl/src/main.rs`). A person or a CI lane runs it against a repository checkout. The kubectl-shaped verbs `get`, `describe`, `apply -f`, `diff -f` and `delete -f` are a client of the Portal resource API instead, with an OIDC token, and every write they make is a proposed `Change` (MF-14, [API/03 §2a](../API/03-jcctl.md#2a-talking-to-the-portal-get-describe-apply--f-diff--f-delete--f)).
 - **Interfaces:** the repository on disk; CIM 009 management calls to the Context Gateway and the broker.
 - **State & Failure Behavior:** one verb, one exit code, no daemon and no lease. The reconciling loop that runs *inside* the cluster is the Portal's (`portal` component, `src/reconciler/`), which is where leader election, the waves and CC-18's "a transient failure pauses without rolling back the waves already converged" live.
 
