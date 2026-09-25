@@ -972,11 +972,14 @@ POST /api/v1/projects/{project}/import?dryRun=All
   `spec.models` (MF-50) is **mapped** when this organization holds a published model of that name
   and major whose source is byte-identical, and the project's imports stay as they are; otherwise
   it **lands** as a project model, `projects/{project}/datamodels/{name}/{name}.yaml` in the
-  project's namespace with the carried `spec.origin` kept and its source beside it, and every
-  DataModel source of the project that imports `org.{name}.v{major}` imports
-  `project.{name}.v{major}` instead, in one commit on `main` before it is protected. A model that
-  can do neither, because the project holds a model of that name already, is `409` naming it
-  before anything is created. The organization repository is never written. The report in the
+  project's namespace with the carried `spec.origin` kept, its source beside it and the four
+  artifacts Model Tools compiles from that source (DM-02), and every DataModel source of the
+  project that imports `org.{name}.v{major}` imports `project.{name}.v{major}` instead, in one
+  commit on `main` before it is protected. A landing model is compiled before anything is
+  created, so a source Model Tools refuses is `409` from the dry run on. A model that can do
+  neither, because the project holds a model of that name already, is `409` naming it, and the
+  repositories the import created are removed again (CC-85). The organization repository is never
+  written. The report in the
   `Change` body carries `verified`, one `{path, equal}` per bundle with its head. `dryRun` answers
   `200` with the checks alone, the parameters `project.yaml` declares, which the Portal's
   import form is drawn from, and `models`, one `{name, version, action}` per carried model with
