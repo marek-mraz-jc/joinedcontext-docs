@@ -39,6 +39,11 @@ jcctl [COMMAND] [OPTIONS]
 | **`migrate`** | `--repo-dir <layout 1 clone>`, `--out-dir <empty dir>` | Splits each `projects/{slug}/` into a project repository of its own with its history, and writes the organization repository of layout 2 with the registry in their place (CC-85) |
 | **`export --format git`** | `--repo-dir <project checkout>`, `--project <slug>`, `--out-dir <dir>`, `[--app-dir <name>=<checkout>]` | One `git bundle` per repository of the project, its registry entry without values, and a `kind: Bundle` index of roles, SHA-256 and head commits (MF-45) |
 | **`import --format git`** | `<dir> --out-dir <empty dir>` | Clones each bundle, refuses the import unless every file and head is the one the index lists, and migrates a layout 1 organization on the way in (MF-46, MF-47) |
+| **`get`** | `<plural> [<name>]`, `--project <slug>`, `[-o name\|yaml\|json]`, `[-l <labelSelector>]` | Reads live manifests from the Portal: a list follows `continue` to the end; `-o name` (the default) prints `{plural}/{name}` per line (MF-14) |
+| **`describe`** | `<plural> <name>`, `--project <slug>` | One live manifest for a person to read: its identity and title, then `spec` and `status` as YAML (MF-14) |
+| **`apply -f`** | `<file>`, `[--project <slug>]` | Proposes every manifest of the file as a `Change`: `POST` when the Portal holds no such resource, `PUT` when it holds a different one, nothing when it already matches; exit `1` when any was refused (MF-12, MF-14) |
+| **`diff -f`** | `<file>`, `[--project <slug>]` | Compares every manifest of the file with the live one, member by member as `plan` does; exit `2` on any difference; writes nothing (MF-14, CC-17) |
+| **`delete -f`** | `<file>`, `[--project <slug>]` | Proposes the deletion of every resource the file names as a `Change` on the deletion lane (MF-12, MF-14) |
 | **`checkouts`** | `--org-dir <organization checkout>`, `--projects-dir <dir>`, `--forge <base>/<org>`, `[--token-file <path>]`, `[--secrets-dir <dir>]`, `[--once]`, `[--interval <seconds>]` | Keeps every registered project checked out at its `spec.ref` under `<dir>/{slug}`, a link swapped in one rename; a failed fetch keeps the last checkout, and `--once` fails only when the registry does not read (CC-86, CC-89) |
 
 `jcctl --help` prints the same list; `crates/jcctl/src/main.rs` holds it as one `USAGE` string, so a
@@ -78,6 +83,33 @@ Without `--gateway-url` the command works on the repository alone: `validate`, `
 the `model` verbs need no platform, and `plan` says so rather than comparing against an empty
 world.
 
+### 2a. Talking to the Portal (`get`, `describe`, `apply -f`, `diff -f`, `delete -f`)
+
+The kubectl-shaped verbs are a client of the Portal resource API ([01 §4](01-portal-api.md#4-resource-api-mf-11mf-15)), not of a
+repository checkout, and take their own address and identity:
+
+| Flag | Environment | Meaning |
+|---|---|---|
+| `--server <url>` | `JC_SERVER` | Base URL of the Portal, e.g. `https://portal.dev.joinedcontext.com` |
+| `--token-file <path>` | `JC_TOKEN_FILE` | File holding an OIDC access token for the Portal: a person's from the device flow (PF-45), or a `ServiceAccount`'s from the client credentials grant (PF-34) |
+
+The token is read from a file so that it never stands in a process list or a shell history, and
+it is never repeated in an error: an answer that echoes it has it replaced by `[redacted]`. A URL
+carrying a user name or password is refused.
+
+A manifest's project is `--project`, else its `metadata.namespace`; a file whose manifest names
+another project than `--project` is refused before anything is sent. Every write is a proposal:
+the Portal answers `202` with a `Change`, and the command prints one line per manifest,
+`{plural}/{name}: {created|replaced|deleted}, {Change name} {phase} ({lane} lane)`. A bearer
+caller never approves on propose (API/01 §5), so the `Change` waits for a person on the approval
+page; `delete -f` proposes on the deletion lane and never removes anything by itself (MF-12). A
+refusal prints the API's own `detail` and the command goes on with the next manifest, exiting `1`
+at the end.
+
+`get -o yaml` and `-o json` print the manifest as the API serves it. The Portal serves what the
+repository holds, which carries a `secretRef` naming a secret and never its value (CC-06), so
+no output of these verbs carries a resolved secret.
+
 ## 3. JSON Output Contract (`--json`)
 
 ```json
@@ -115,7 +147,7 @@ there is nothing to say, so a caller reads `flags` without checking whether the 
 
 - `0`: Success / No changes pending (for `plan`) / No drift detected (for `drift`).
 - `1`: Operational error (network, authentication failure, invalid syntax).
-- `2`: Succeeded with pending changes (for `plan` and `workspace diff`) or drift detected (for `drift`). A stale committed artifact is a pending change, so `model diff` uses the same `2`.
+- `2`: Succeeded with pending changes (for `plan`, `workspace diff` and `diff -f`) or drift detected (for `drift`). A stale committed artifact is a pending change, so `model diff` uses the same `2`.
 
 ## 5. `model` — Data Model Artifacts
 
