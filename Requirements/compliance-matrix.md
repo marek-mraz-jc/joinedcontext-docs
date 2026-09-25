@@ -37,11 +37,11 @@ Generated 2026-09-25 from: `docs` e62cde8, `conformance` 4b8c9e9, `deployment` 7
 | **PF** — Platform invariants | 95 | 78 | 9 | 8 | 3 |
 | **PL** — Pipelines | 63 | 38 | 11 | 14 | 9 |
 | **R** — Access control and federation | 60 | 23 | 10 | 27 | 0 |
-| **SDK** — App SDK | 33 | 28 | 3 | 2 | 1 |
+| **SDK** — App SDK | 34 | 28 | 3 | 3 | 2 |
 | **SP** — Context-space surface | 22 | 18 | 1 | 3 | 0 |
 | **TS** — Testing and quality | 25 | 15 | 4 | 6 | 0 |
 | **UI** — Portal and user interface | 84 | 60 | 16 | 8 | 5 |
-| **Total** | 1060 | 746 | 106 | 208 | 37 |
+| **Total** | 1061 | 746 | 106 | 209 | 38 |
 
 ## 3. Requirement to test
 
@@ -1064,6 +1064,7 @@ Generated 2026-09-25 from: `docs` e62cde8, `conformance` 4b8c9e9, `deployment` 7
 | **SDK-35** | [S] | tested | ci-full, fast ci | portal `sdk/tests/sdk-hooks.test.tsx::useMe returns the served person and useAccess names their roles in a refusal`, portal `sdk/tests/sdk-hooks.test.tsx::useMe is null for an anonymous visitor`, portal `src/apps/roles.rs::the_served_user_carries_the_app_roles_and_null_for_nobody`, and 1 more |
 | **SDK-36** | [H] | tested | fast ci | portal `sdk/tests/sdk-access.test.ts::names the person's roles in a refusal`, portal `sdk/tests/sdk-hooks.test.tsx::useMe returns the served person and useAccess names their roles in a refusal` |
 | **SDK-37** | [S] | built |  | `joinedcontext-portal/src/apps/functions.rs`, `joinedcontext-portal/src/apps/roles.rs` |
+| **SDK-38** | [S] | open |  |  |
 
 ### SP — Context-space surface
 
