@@ -512,7 +512,7 @@ Content-Type: application/json
 Request payload properties:
 
 - `message`: The initial prompt or question; required unless `path` is given, when it may be absent or empty.
-- `path`: Optional, the path the person picked in the empty assistant (AG-87, [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md)): one of `integrate-pipeline`, `upload-data`, `find-data`, `share-data`, `build-app`, `build-dashboard`, `create-data-model`, `define-kpi`. Any other value answers `400 Bad Request`, and a path whose kind (the table below) the caller may not propose answers `403 Forbidden` naming the kind, the same reason the dock shows on the disabled option. See [Paths](#paths).
+- `path`: Optional, the path the person picked in the empty assistant (AG-87, [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md)): one of `integrate-pipeline`, `upload-data`, `find-data`, `share-data`, `build-app`, `build-dashboard`, `create-data-model`, `define-kpi`. Any other value answers `422 Unprocessable Entity`, as a body the route cannot read does, and a path whose kind (the table below) the caller may not propose answers `403 Forbidden` naming the kind, the same reason the dock shows on the disabled option. See [Paths](#paths).
 - `profile`: Optional string naming the `AgentProfile` to execute. Defaults to the project default assistant profile.
 - `formContext`: Optional, where the person is standing when they ask (UI-61, AG-77): `kind` is the
   manifest kind whose form is open, `name` the draft that form is editing, and `field` the path of the
