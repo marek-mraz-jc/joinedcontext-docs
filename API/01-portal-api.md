@@ -732,8 +732,8 @@ and answer it:
 {
   "claim": {
     "id": "c7e1f0a94b2d6e8f13a5c9d7b0e4f261",
-    "url": "https://portal.example.org/projects/bikes/settings/service-accounts?account=legacy-push&claim=c7e1f0a94b2d6e8f13a5c9d7b0e4f261",
-    "expiresAt": "2026-09-25T10:15:00Z"
+    "expiresAt": "2026-09-25T10:15:00Z",
+    "url": "https://portal.example.org/projects/bikes/settings/service-accounts?account=legacy-push&claim=c7e1f0a94b2d6e8f13a5c9d7b0e4f261"
   },
   "account": "legacy-push",
   "action": "mint",
