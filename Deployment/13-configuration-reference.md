@@ -88,6 +88,8 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_PORTAL_APPS_PULL_SECRET_NAME` | — | no | `JC_PORTAL_APPS_PULL_SECRET_NAME` — the name of the `dockerconfigjson` Secret in the apps namespace a node pulls app images with (a forge token that reads packages only). |
 | `JC_PORTAL_APPS_REGISTRY` | — | no | `JC_PORTAL_APPS_REGISTRY` — the host, and port if any, of the forge's container registry; an App's image is composed as `{registry}/{forge organization}/app-{name}@{digest}`. |
 | `JC_PORTAL_APPS_URL` | — | no | `JC_PORTAL_APPS_URL`: an absolute `http(s)` origin with nothing after it. |
+| `JC_PORTAL_APP_TESTS_IMAGE` | — | no | The run's test sandbox (SDK-38): `JC_PORTAL_APP_TESTS_NAMESPACE`, a Kubernetes name, and `JC_PORTAL_APP_TESTS_IMAGE`, an image reference pinned by `@sha256:` digest, both or neither. |
+| `JC_PORTAL_APP_TESTS_NAMESPACE` | — | no | The run's test sandbox (SDK-38): `JC_PORTAL_APP_TESTS_NAMESPACE`, a Kubernetes name, and `JC_PORTAL_APP_TESTS_IMAGE`, an image reference pinned by `@sha256:` digest, both or neither. |
 | `JC_PORTAL_ARTIFACT_STORE_ACCESS_KEY` | — | yes | `JC_PORTAL_ARTIFACT_STORE_ENDPOINT`, `JC_PORTAL_ARTIFACT_STORE_ACCESS_KEY` and `JC_PORTAL_ARTIFACT_STORE_SECRET_KEY` (the last two secrets) name the store and the root credential; `JC_PORTAL_ARTIFACT_STORE_BUCKET` (default `jc-artifacts`) and `JC_PORTAL_ARTIFACT_STORE_REGION` (default `us-east-1`) are the same in every installation this platform deploys, so they have defaults. |
 | `JC_PORTAL_ARTIFACT_STORE_BUCKET` | `jc-artifacts` | no | `JC_PORTAL_ARTIFACT_STORE_ENDPOINT`, `JC_PORTAL_ARTIFACT_STORE_ACCESS_KEY` and `JC_PORTAL_ARTIFACT_STORE_SECRET_KEY` (the last two secrets) name the store and the root credential; `JC_PORTAL_ARTIFACT_STORE_BUCKET` (default `jc-artifacts`) and `JC_PORTAL_ARTIFACT_STORE_REGION` (default `us-east-1`) are the same in every installation this platform deploys, so they have defaults. |
 | `JC_PORTAL_ARTIFACT_STORE_ENDPOINT` | — | no | `JC_PORTAL_ARTIFACT_STORE_ENDPOINT`, `JC_PORTAL_ARTIFACT_STORE_ACCESS_KEY` and `JC_PORTAL_ARTIFACT_STORE_SECRET_KEY` (the last two secrets) name the store and the root credential; `JC_PORTAL_ARTIFACT_STORE_BUCKET` (default `jc-artifacts`) and `JC_PORTAL_ARTIFACT_STORE_REGION` (default `us-east-1`) are the same in every installation this platform deploys, so they have defaults. |
@@ -192,6 +194,7 @@ carries a credential — a run's ticket is minted per run and is not a stored se
 | `JC_RUN_TICKET` | `JC_RUN_TICKET` — the bearer that proves it to the proxy: minted for this run, spent with it, and worth nothing anywhere else. |
 | `JC_SOURCE_SPACE` | `JC_SOURCE_SPACE` — the space an indicator pipeline records its provenance from. |
 | `JC_SPACE` | `JC_SPACE`, `JC_SPACE_2`, … — the space segment of each output, which the renderer writes into the stream before it reaches the runner. |
+| `JC_TEST_TIMEOUT_MS` | `JC_TEST_TIMEOUT_MS` — how many milliseconds the lane's `test-project` gives the whole test run before it reports the tests as not finished. |
 
 ## Related
 
