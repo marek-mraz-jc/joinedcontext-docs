@@ -306,6 +306,7 @@ The vocabulary is closed because a filter over free text is not a filter:
 | `federation.forward` | broker | a query forwarded to a Context Source, with latency |
 | `federation.error` | broker | a forward that failed or was cut off by the loop guard |
 | `catalogue.published` | CKAN publisher | a dataset created or updated, with the row count |
+| `person.changed` | portal | a people administrator created, edited, disabled, enabled, reset, signed out or deleted a person (PF-90): the actor, the action and the person's id, never a credential; filed under the project `org` |
 
 The `pipeline.*`, `endpoint.traffic`, `access.denied` and `federation.*` kinds are part of the vocabulary and the collector's ingest route accepts them, but no pipeline runner, gateway or broker emits them yet; `mcp.tool` arrives from the Portal's own MCP only.
 

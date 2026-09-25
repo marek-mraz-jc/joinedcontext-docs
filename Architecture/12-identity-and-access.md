@@ -64,6 +64,8 @@ A `RoleBinding` names one of the first three scopes (PF-49); the fourth is what 
 
 Reading is a verb (PF-59). `read` joins `propose`, `approve` and `delete` in a rule, and `propose` on a kind implies `read` on it, so every role written before the verb existed keeps working. What answers under `read` is everything that shows configuration: lists and gets of the resource API, `export`, `/revisions`, `permissions/me` and the MCP resources. A project the caller has no `read` on answers `404`, never `403`, on every one of them, the one answer for "missing" and "not yours" (R20), so a name is not disclosed by refusing it. The `viewer` role of the taxonomy is the seeded `read` on every project kind; whether every signed-in person holds it is the organization's setting, `Organization.spec.projects.visibility: organization | members` (PF-61). Administrators see everything: `org-admin` at organization scope reads every Endpoint of every project, which is the organization-level Endpoints page. The gateway is untouched by all of this: reading context data stays a `Policy` on the Endpoint (R1), never a binding.
 
+People are the one thing a rule names that is not a manifest (ADR-N-031). A person lives in Keycloak, so `propose` cannot reach them, and the kind `Person` takes verbs of its own: `create`, `update`, `disable` and `delete`. `disable` covers enable, sign-out and removing a second factor as well; `update` covers the name, the e-mail and a password reset. These three verbs are valid on `Person` alone, `Person` is valid in an organization role alone, and `read` on `Person` lists and opens people. The taxonomy seeds `people-admin` with all five at organization scope, and `org-admin` holds it (PF-91).
+
 ---
 
 ## 2a. Roles as code
@@ -94,7 +96,7 @@ metadata: { name: pipeline-developer, namespace: org }
 spec:
   rules:
     - kinds: [Pipeline, DataSource, Mapping]
-      verbs: [propose]                       # read | propose | approve | delete; propose implies read
+      verbs: [propose]                       # read | propose | approve | delete; propose implies read; Person also create | update | disable
     - kinds: [Endpoint]
       verbs: [propose]
       constraints:

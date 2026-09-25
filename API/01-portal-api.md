@@ -147,6 +147,14 @@ deletion with `409` and names the referencing manifests; removing the reference 
 own change. On merge the reconciler drops each space's broker tenant last, after the export the
 `Change` body offers (CC-07), retires the endpoint slugs and removes the app builds.
 
+`DELETE /api/v1/projects/org/groups/{name}` works the same way for a `Group` (PF-95): the one
+red-lane `Change` removes the group's manifest and, in the same commit, takes the group out of
+every `RoleBinding` subject list and every `App.spec.access` entry naming it. A binding left with
+no subject is removed, and so is an access entry left with none; a removal that would leave the
+organization without an administrator is `409` (PF-03). A binding or an App in a project with a
+repository of its own (layout 2) cannot ride in that `Change`, so it refuses the deletion with
+`409` naming it; removing the group there is that project's own change.
+
 The name is then reserved for `Organization.spec.projects.nameCooldownDays` (30 days by default,
 `0` for none) counted from the commit that removed it, and `POST /api/v1/projects` answers `409`
 with the date it becomes free (PF-78).
@@ -1917,6 +1925,108 @@ the MCP endpoint itself.
 
 A route here that needs no authentication says so because of what it carries, never for
 convenience: none of them answers anything of a project.
+
+## 24. People (PF-90…PF-94)
+
+A person is a user of the organization's Keycloak realm and never a manifest
+([ADR-N-031](../Decisions/adr-n-031-people-groups-and-app-groups.md)). The Portal manages people
+through the realm's admin API with its admin client, which holds `manage-users` and
+`query-groups` of `realm-management` and nothing else (PF-63). Membership stays as code: a person
+joins a group through the `Group` manifest, and deleting a person is a Change.
+
+```text
+GET    /api/v1/organization/people                          search and page → 200
+POST   /api/v1/organization/people                          create → 201
+GET    /api/v1/organization/people/{id}                     one person, their groups and roles → 200
+PATCH  /api/v1/organization/people/{id}                     edit the name, the e-mail, the language → 200
+POST   /api/v1/organization/people/{id}/disable             disable and end every session → 200
+POST   /api/v1/organization/people/{id}/enable              enable → 200
+POST   /api/v1/organization/people/{id}/reset-password      send a password reset → 202, or 200 with a temporary password
+POST   /api/v1/organization/people/{id}/remove-second-factor  remove every OTP and WebAuthn credential → 204
+POST   /api/v1/organization/people/{id}/sign-out            end every session → 204
+DELETE /api/v1/organization/people/{id}                     remove → 202 with the Change, or 204
+```
+
+`{id}` is the Keycloak user id. `GET` takes `search` (a substring of the name or e-mail), `first`
+(default 0) and `max` (default 50, at most 100), and answers the page with `next`, the `first` of
+the following page, when there is one:
+
+```json
+{
+  "items": [
+    {
+      "id": "7d1f0c9e-4b8a-4f63-9a51-2c0d8e3b6f14",
+      "email": "jana.kovacova@example.org",
+      "firstName": "Jana",
+      "lastName": "Kováčová",
+      "locale": "sk",
+      "enabled": true,
+      "emailVerified": true,
+      "requiredActions": [],
+      "createdAt": "2026-09-24T09:12:40Z",
+      "lastSeen": "2026-09-25T07:02:11Z",
+      "pendingDeletion": null
+    }
+  ],
+  "next": 50
+}
+```
+
+- `lastSeen` is the last access of the person's newest open session, `null` when none is open. The
+  realm keeps no login history the Portal's client may read, so there is no "last login".
+- `pendingDeletion` names the Change a deletion waits for, `null` otherwise.
+
+`GET {id}` answers the person with where they are granted something, each item naming the
+manifest that grants it (PF-94):
+
+```json
+{
+  "person": { "id": "7d1f0c9e-…", "email": "jana.kovacova@example.org", "…": "as above" },
+  "groups": [{ "name": "helsinki-stewards" }],
+  "platformRoles": [
+    { "role": "steward", "binding": "stewards", "scope": { "project": "helsinki" }, "via": { "group": "helsinki-stewards" } }
+  ],
+  "appRoles": [
+    { "project": "helsinki", "app": "helsinki-alerts", "role": "steward", "via": { "user": "jana.kovacova@example.org" } }
+  ]
+}
+```
+
+Creating takes the e-mail, the name and the language, and nothing else
+(`deny_unknown_fields`):
+
+```json
+{ "email": "jana.kovacova@example.org", "firstName": "Jana", "lastName": "Kováčová", "locale": "sk" }
+```
+
+The e-mail is also the username, the name members and subjects name the person by (PF-04). The
+realm sends its execute-actions e-mail, `VERIFY_EMAIL` and `UPDATE_PASSWORD` (PF-92), and the
+answer is `201` with `{ "person": {…}, "emailSent": true }`. When the realm cannot send mail, the
+Portal sets a temporary password with `UPDATE_PASSWORD` required instead and answers it once, as
+`{ "person": {…}, "emailSent": false, "temporaryPassword": "…" }`. A password reset works the same
+way: `202` when the e-mail went, `200` with `temporaryPassword` when it could not. The Portal never
+stores, logs or returns that password again, and nothing else ever carries it.
+
+`PATCH` takes any of `firstName`, `lastName`, `email` and `locale`. A changed e-mail is set
+unverified and `VERIFY_EMAIL` is required again.
+
+`DELETE` proposes one Change, in the organization repository, that takes the person's e-mail out
+of every `Group` member list and every `RoleBinding` subject list naming it, and removes a binding
+left with no subject. The person is disabled at once and marked with the Change; the reconciler
+deletes the Keycloak user once that Change is on `main`, and clears the mark, leaving the person
+disabled, when the Change is rejected. A person no manifest names is deleted at once: `204`.
+An App's `spec.access` entry naming the e-mail then matches nobody, and the App page lists it.
+
+- Every route needs a binding at organization scope whose role grants the verb on `Person`
+  (PF-91): `read` for the two `GET`s, `create` for `POST`, `update` for `PATCH` and
+  `reset-password`, `disable` for `disable`, `enable`, `remove-second-factor` and `sign-out`, and
+  `delete` for `DELETE`. Anyone else gets `403` naming the verb.
+- An e-mail another person already has is `409` naming it. A malformed e-mail, a name longer than
+  255 characters, a locale outside the Portal's languages or an unknown field is `400`.
+- An `{id}` the realm does not know is `404`.
+- Without the admin client every route answers `503`.
+- Every action writes one `person.changed` event of the project `org` to the activity feed (§14):
+  who, what, and the person's id, never an e-mail body, a password or a token (PF-90).
 
 ## Related
 
