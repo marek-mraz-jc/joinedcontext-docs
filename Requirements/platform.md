@@ -54,7 +54,7 @@ Family **PF** (PF-01…PF-106). Owning chapters: [Architecture/03-domain-model.m
 
 ## 7. Multi-Language Metadata
 
-- **PF-24** — Human-facing metadata a person authors MUST be a single plain-text string in the author's language, as UI-50 requires; the legacy `{locale: text}` map keyed by ISO 639-1 codes still parses and resolves per PF-28.
+- **PF-24** — Human-facing metadata a person authors MUST be a single plain-text string in the author's language, as UI-50 requires; the legacy `{locale: text}` map keyed by ISO 639-1 codes still parses and resolves per PF-28. A manifest carries no translations beside its title (UI-50, T-2378).
   > Note: This reverses what PF-24 used to say. `ObjectMeta.title` and `ObjectMeta.description` are `Text`, which is `Plain(String)` or the legacy `Localized` map (`crates/jc-core/src/i18n.rs:148`), and the plain form is what every new manifest writes. PF-25 to PF-28 still govern the locales an Organization declares, the fallback, and how the legacy form and the Portal's own chrome resolve.
 - **PF-25** — An Organization manifest MUST define an ordered list of supported locales, designating exactly one primary fallback locale.
 - **PF-26** — Manifest validation in CI MUST verify that every human-facing metadata field provides at minimum a value for the Organization's designated fallback locale.
