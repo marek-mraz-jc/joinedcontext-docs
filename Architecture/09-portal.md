@@ -473,6 +473,7 @@ Organization-level manifests are read and proposed through the organization's na
 | **Roles** (`roles`) | the roles of `users/roles/`, the PF-56 taxonomy marked *seeded*, each with its rules in words ("proposes Pipeline and DataSource") | a new `Role` or a change to one, red lane |
 | **Groups** (`groups`) | the `Group` manifests with their members, a member not yet in Keycloak marked as such (PF-62) | a `Group` or a change to its members, red lane |
 | **Service accounts** (`service-accounts`) | the service accounts of namespace `org`: owner, roles, credentials, last use | as in [12 §3](12-identity-and-access.md#3-service-identities) |
+| **Blueprints** (`blueprints`) | the `Blueprint` manifests of namespace `org`, the templates the Flows gallery offers (CC-23…CC-27): name, version, risk class, the roles that may run one | **New Blueprint** or a change to one through its form: the parameter schema written as JSON, each template as text (CC-59, T-1537) |
 | **Projects** (`projects`) | every project the person may read: title, visibility, the number of people bound in it | **New project** (the dialog of PF-65/PF-66); **Delete** of one project, which lists the cascade of PF-77 and asks for the name typed back |
 
 Members are the one sensitive list. The tab shows its rows only to a person who holds `read` on `RoleBinding` at organization scope. Anybody else sees "You cannot see who belongs to this organization; an organization administrator can", and the Portal fetches no binding for them at all.
