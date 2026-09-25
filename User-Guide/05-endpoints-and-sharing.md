@@ -34,10 +34,11 @@ Each endpoint has its own address: a 26-character random slug nobody can guess.
 5. Click **Generate slug** to mint a random address.
 6. Under **Audience**, select `Public: anyone with the address` (or `Organization`).
 7. Under **Representations**, check the needed formats: `NGSI-LD API`, `GeoJSON`, `CSV`, `Excel (xlsx)`, and `MCP for AI assistants`.
-8. Under **Model projection**, tick the classes (e.g. `BikeHireDockingStation`) and slots to expose. Identity slots `id` and `type` remain locked.
-9. Click **Check**. You should see the verdict chip display `Checked`.
-10. Click **Propose change**.
-11. In `/projects/helsinki/approvals`, an approver enters `helsinki-bikes` into **Resource name confirmation** and clicks **Approve**.
+8. Leave **Traffic and caching** empty for an endpoint without a rate limit, the default. Set **Requests per minute** only to protect a public endpoint from one heavy caller.
+9. Under **Model projection**, tick the classes (e.g. `BikeHireDockingStation`) and slots to expose. Identity slots `id` and `type` remain locked.
+10. Click **Check**. You should see the verdict chip display `Checked`.
+11. Click **Propose change**.
+12. In `/projects/helsinki/approvals`, an approver enters `helsinki-bikes` into **Resource name confirmation** and clicks **Approve**.
 
 The live journey `share.spec.ts` replays these steps.
 
