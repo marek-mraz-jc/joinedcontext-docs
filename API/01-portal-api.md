@@ -183,8 +183,11 @@ not disclosed by refusing it (R20).
 
 `GET /api/v1/organization/datamodels` is the one list behind the data model and type pickers
 (DM-63, ADR-N-033). `items` holds every `DataModel` of every project whose manifest the caller may
-`read` by the rule of `GET /api/v1/endpoints`, a retired version excepted (DM-26), each as
-`{name, project, space, version, lifecycle, classes}`, sorted by project, space and name.
+`read` by the rule of `GET /api/v1/endpoints`, and every organization model when the caller holds
+any binding in the organization (DM-74), a retired version excepted (DM-26), each as
+`{name, level, project, space?, version, lifecycle, classes}`: `level` is `organization` or
+`project` (DM-78), `project` is `org` for an organization model, and `space` is absent on a model
+no space owns. Sorted organization models first, then by project, space and name.
 `smartDataModels` holds up to 50 entries of the Smart Data Models catalogue index (DM-12) as
 `{id, name, subject, description}`, and only when `search` has two characters or more: the index
 holds about a thousand models, and a picker lists the organization's own first. `search` matches
