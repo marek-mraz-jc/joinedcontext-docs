@@ -2021,6 +2021,10 @@ An App's `spec.access` entry naming the e-mail then matches nobody, and the App 
   (PF-91): `read` for the two `GET`s, `create` for `POST`, `update` for `PATCH` and
   `reset-password`, `disable` for `disable`, `enable`, `remove-second-factor` and `sign-out`, and
   `delete` for `DELETE`. Anyone else gets `403` naming the verb.
+- A person who holds a right the caller does not hold (an `org-admin`, for a caller who is only
+  `people-admin`) is refused every write above with `403` naming that right, so a reset's temporary
+  password never opens a stronger account; disabling or deleting yourself, or the last Organization
+  Administrator, is `409` (PF-93, PF-03).
 - An e-mail another person already has is `409` naming it. A malformed e-mail, a name longer than
   255 characters, a locale outside the Portal's languages or an unknown field is `400`.
 - An `{id}` the realm does not know is `404`.
