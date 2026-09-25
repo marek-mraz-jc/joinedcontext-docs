@@ -409,6 +409,8 @@ A `Policy` names a context space, not an endpoint, so a grant made to a person d
 
 The gateway matches a `user` subject against `preferred_username`, which is the e-mail because the realm sets `registrationEmailAsUsername`, and a `group` against the `groups` claim; the roles exist for the one request through that endpoint. A token that asserts a role starting with `endpoint:` has it dropped, so no realm role can impersonate one. Before this section the base grant named the role `app-{name}`, which no token carries, so a `project` or `organization` application read nothing (ADR-N-027 §1).
 
+The roles are also the only way in. On an App's generated Endpoint the gateway keeps, of the space's Policies, the permissions assigned to these endpoint roles and every prohibition, and nothing else: a department's grant to a person, a group or the role `public` stays on the endpoints written for it. Without that, a public App endpoint would serve every type the space's open-data policy grants, and a steward's write grant would appear in the `/access` document of every App the steward opens (AP-139, T-2938).
+
 ### The endpoints an App's token reaches
 
 One rule names the Endpoints an App reads, and three places use it: the audience mapper of the client `app-{name}`, the endpoints the static host writes into `#jc-config`, and the Context Gateway's admission (AP-113). The rule is `jc-core` `app::served_endpoints`, and the Portal and the gateway call that function rather than a copy of it, so a change to the rule cannot lock a working App out of an endpoint its client names:
