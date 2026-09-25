@@ -1054,6 +1054,24 @@ PUT /api/v1/projects/{project}/datamodels/{name}/source           text/yaml body
 PUT /api/v1/projects/{project}/datamodels/{name}/source?space=s   text/yaml body → 202 Change, the model created (DM-57)
 ```
 
+A text whose relationships break a rule of DM-68 creates no Change, whatever the editor said
+before sending it: the answer is `400` with one `errors` entry per broken rule, each
+`{path}: {rule}: {message}` with the rule identifier of
+[Architecture/11 §1.2](../Architecture/11-data-models.md#12-relationships-between-classes-dm-64dm-73) (CC-24).
+
+```json
+{
+  "type": "https://joinedcontext.com/errors/invalid-request",
+  "title": "Invalid Request",
+  "status": 400,
+  "detail": "the model breaks 2 relationship rules; nothing was saved (DM-68)",
+  "errors": [
+    "slots.users: inverse-missing: users (School → User) names no inverse",
+    "slots.school: required-on-computed-end: school is computed on read and cannot be required"
+  ]
+}
+```
+
 ```json
 {
   "refreshedAt": "2026-09-06T04:00:00Z",
@@ -2386,7 +2404,7 @@ GET /api/v1/projects/{project}/app-checks     the last check of each App of the 
 - Whoever reads `App` in the project gets the rows; a project the caller may not read is `404`,
   a caller without `read` on `App` gets `403`, nobody signed in `401`.
 
-## 27. Data quality of a space (DM-70)
+## 27. Data quality of a space (DM-74)
 
 Once a day the leading Portal replica reads every entity of every space that names a model, as
 its own client through the space surface, and holds it to the model the way a pipeline's
