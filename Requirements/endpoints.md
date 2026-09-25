@@ -6,7 +6,7 @@ description: Universal ingress and egress multi-representation views, opaque slu
 
 # Endpoints & Representation Parity
 
-Family **EP** (EP-01…EP-89). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **EP** (EP-01…EP-90). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
 ## 1. Endpoint Identity and Opaque Slug
 
@@ -17,6 +17,7 @@ Family **EP** (EP-01…EP-89). Owning chapter: [Architecture/04-context-spaces-a
 - **EP-76** [S][H] — A `Change` that gives an Endpoint `spec.audience: public`, on creation or by an update from another audience, MUST take the red lane and MUST be approved by a binding whose `approve` on `Endpoint` satisfies the constraint `spec.audience in [public]` (the `publisher` of PF-71 or `org-admin`); the Approvals page and the assistant MUST name `publisher` as the missing role when another approver tries (PF-72, CC-19).
 - **EP-04** — Endpoint configuration state MUST be stored declaratively as a `kind: Endpoint` manifest in the owning Context Space directory.
 - **EP-89** [H][S] — An Endpoint MUST NOT carry a lifecycle field (no `paused`, `enabled` or `retiring` in `spec`; `status.phase` stays the platform's own, MF-04): an Endpoint stops by being deleted through a `Change`, after which the gateway answers its slug `404` like an invalid slug (EP-23) and the slug is never served again (EP-75). The Portal's Endpoint page MUST say so and MUST offer the deletion from that sentence, under the same permission and approval as the page's delete action; it MUST NOT paint a pause control. A pause (`spec.enabled`, the PL-40 pattern) is to be added when a department asks for one, docs first (T-2286).
+- **EP-90** [H] — The gateway MUST answer `GET /api/endpoint/{slug}/ngsi-ld/v1/` (and the same path without the trailing slash), the NGSI-LD access URL the Endpoint's DCAT record and catalogue entry advertise (EP-62), with `200` and a JSON entry document for an admitted caller: the URL of `entities`, the entity types this caller may read here, each with its query URL, and the URLs of `access` and `schema/index.json`. The types come from the same projection as the schema surface (EP-47), so a caller learns no type the grants withhold; an unknown slug or a refused caller is answered as on every other child (EP-23). The document is the gateway's own and not a CIM 009 resource, so no ETSI path changes its status (T-2932).
 
 ## 2. Fixed Child Set and Representation Parity
 
@@ -196,6 +197,7 @@ Family **EP** (EP-01…EP-89). Owning chapter: [Architecture/04-context-spaces-a
 | EP-73…EP-75 | [Architecture/04-context-spaces-and-endpoints.md#3b-the-named-projection-of-a-model](../Architecture/04-context-spaces-and-endpoints.md#3b-the-named-projection-of-a-model) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | EP-77 | [Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes](../Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
 | EP-89 | [Architecture/04-context-spaces-and-endpoints.md#stopping-an-endpoint](../Architecture/04-context-spaces-and-endpoints.md#stopping-an-endpoint) | [Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest) |
+| EP-90 | [API/02-endpoint-representations.md#2a-what-the-ngsi-ld-surface-answers](../API/02-endpoint-representations.md#2a-what-the-ngsi-ld-surface-answers) | [Testing/01-backend-tests.md](../Testing/01-backend-tests.md) |
 
 ## Related
 
