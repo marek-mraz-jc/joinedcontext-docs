@@ -40,7 +40,7 @@ Platform components are cleanly partitioned between core services and pluggable 
 
 ### Edge login (APISIX `openid-connect`)
 
-- **Primary Role:** Login front of the Portal (`portal.{domain}`) and of every App on Demand route (`/apps/*`): one confidential OIDC client `edge` per realm, Keycloak code flow and session in APISIX, `X-Userinfo` and `X-Access-Token` to the upstream (ADR-N-019).
+- **Primary Role:** Login front of the Portal (`portal.{domain}`) and of every App on Demand host (`{name}.apps.{domain}`, ADR-N-037): one confidential OIDC client `edge` per realm, Keycloak code flow and session in APISIX, `X-Userinfo` and `X-Access-Token` to the upstream (ADR-N-019).
 - **Interfaces:** the APISIX routes themselves; OIDC to Keycloak; HTTP 8080 to the Portal and to every app container.
 - **State & Failure Behavior:** Stateless (encrypted cookie session). Keycloak outage blocks new logins; existing sessions live until cookie expiry. See [Architecture/16 §5](16-apps-on-demand.md#5-login-in-front-of-the-portal-and-every-app-apisix-openid-connect).
 
