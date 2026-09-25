@@ -84,6 +84,17 @@ Walking the committed route files rather than a render is deliberate: a render c
 
 The live half of each vector, sending the header and the oversized body at a running edge, belongs to the conformance repository and runs against a throwaway environment, never against `dev`. `joinedcontext-deployment/tests/test_apisix_429_contract.py` is the one that starts the pinned APISIX image with the repository's own configuration and reads the answers back.
 
+### One origin per App (AP-133…AP-135)
+
+Apps on one origin read each other's storage and send requests carrying each other's sessions (T-2477), so each App has a host of its own (ADR-N-037). The render test of the edge suite holds the route file to it: every `app-{name}` and `app-{name}-endpoint` route is bound to `{name}.apps.{domain}`, an endpoint route names only the App's own slugs, and no apex route serves an App except the `308` of `app-{name}-moved`. A unit test of the reconciler holds each App pod's NetworkPolicy to DNS, the Linkerd control plane, the gateway and the App's declared destinations with the private ranges excepted, and `jcctl validate` refuses `0.0.0.0/0`, `::/0` and a host name in `spec.egress`.
+
+The live half runs in the conformance repository's e2e suite against two published Apps, A and B (AP-135):
+
+1. a page on A's host reads nothing of B's `localStorage`;
+2. `fetch` from A's host to `/git/`, `/api/v1/` and one of B's endpoint slugs answers `404` at the edge;
+3. A's session cookie is not sent to B's host, and `/apps/A/` on the apex redirects without a `Set-Cookie`;
+4. a connection from A's pod to an address outside its NetworkPolicy fails, while its endpoint answers.
+
 ---
 
 ## 4. MCP authorization and isolation

@@ -9,6 +9,8 @@ Date: 2026-09-07
 Status: Accepted  
 Decision Makers: product owner
 
+> Amended by [ADR-N-037](adr-n-037-an-origin-per-app.md) (2026-09-25): every App has a host of its own, `{name}.apps.{domain}`, instead of the `/apps/{name}/` path this record lays out. The edge login stays as decided here.
+
 ## 1. Context
 
 This decision supersedes ADR-N-017 §3.2 (the oauth2-proxy sidecar) and its rejection of the `openid-connect` plugin; the rest of ADR-N-017 (full-stack kind, builder agent) stands.
