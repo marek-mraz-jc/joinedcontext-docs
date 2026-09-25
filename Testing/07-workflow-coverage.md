@@ -86,10 +86,10 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 
 | step | unit | API | mocked UI | live journey | assistant |
 |---|---|---|---|---|---|
-| `create` | `joinedcontext-portal/src/api/projects.rs` | `tests/projects_api_tests.rs` | `ui/tests/new_project.test.tsx` | owed: T-2746 | `jc_project_create` |
+| `create` | `joinedcontext-portal/src/api/projects.rs` | `tests/projects_api_tests.rs` | `ui/tests/new_project.test.tsx` | `ui/e2e/live/readiness-project.spec.ts` › "a project is opened, duplicated where it can be, and deleted" | `jc_project_create` |
 | `read` | `joinedcontext-portal/src/api/export.rs` | `tests/project_read_tests.rs` | `ui/tests/page_project_settings.test.tsx` | `ui/e2e/live/walk.spec.ts` › "every page opens cleanly for the steward" | `jc_project_get` |
-| `copy` | `joinedcontext-portal/src/api/import.rs` | `tests/project_duplicate_tests.rs` | `ui/tests/project_duplicate_import.test.tsx` | owed: T-2746 | person only: copying a whole repository of the forge under a new slug is a person's decision in the Portal, not a tool a run holds (PF-89) |
-| `retire` | `joinedcontext-portal/src/api/delete.rs` | `tests/delete_not_there_tests.rs` | `ui/tests/project_settings.test.tsx` | owed: T-2746 | person only: deleting a project removes its repository and every resource in it, and no agent may take that act (AG-11) |
+| `copy` | `joinedcontext-portal/src/api/import.rs` | `tests/project_duplicate_tests.rs` | `ui/tests/project_duplicate_import.test.tsx` | `ui/e2e/live/readiness-project.spec.ts` › "a project is opened, duplicated where it can be, and deleted" | person only: copying a whole repository of the forge under a new slug is a person's decision in the Portal, not a tool a run holds (PF-89) |
+| `retire` | `joinedcontext-portal/src/api/delete.rs` | `tests/delete_not_there_tests.rs` | `ui/tests/project_settings.test.tsx` | `ui/e2e/live/readiness-project.spec.ts` › "a project is opened, duplicated where it can be, and deleted" | person only: deleting a project removes its repository and every resource in it, and no agent may take that act (AG-11) |
 | `refused-no-permission` | `joinedcontext-portal/src/api/delete.rs` | `tests/attack_cross_project_tests.rs` | `ui/tests/project_settings.test.tsx` | `ui/e2e/live/project-settings.spec.ts` › "an old Access link lands on Members, and a viewer meets Delete project refused" | `jc_project_delete` |
 
 ### 3.6 Import a project (`import`)
@@ -177,7 +177,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 |---|---|---|---|---|---|
 | `create` | `joinedcontext-portal/src/agents/grant.rs` | `tests/access_escalation_tests.rs` | `ui/tests/policy_form.test.tsx` | `ui/e2e/live/change.spec.ts` › "the assistant drafts a role grant into the Members form, and the person proposes it as a red change" | `jc_resource_propose` |
 | `edit` | `joinedcontext-portal/src/api/mutate.rs` | `tests/resource_mutate_tests.rs` | `ui/tests/form_role_bindings.test.tsx` | `ui/e2e/live/parity.spec.ts` › "RoleBinding stewards: the form, the REST route, the registry and the assistant plan the same change" | `jc_resource_propose` |
-| `retire` | `joinedcontext-portal/src/api/delete.rs` | `tests/resource_delete_tests.rs` | `ui/tests/resource_delete.test.tsx` | owed: T-2746 | `jc_resource_delete` |
+| `retire` | `joinedcontext-portal/src/api/delete.rs` | `tests/resource_delete_tests.rs` | `ui/tests/resource_delete.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "9d. a grant on the walk's space is approved, then removed from the policies page" | `jc_resource_delete` |
 | `refused-no-permission` | `joinedcontext-portal/src/agents/grant.rs` | `tests/attack_grant_escalation_tests.rs` | `ui/tests/roles_matrix.test.tsx` | `ui/e2e/live/roles-refusals.spec.ts` › "a person without the role is refused an approval, in the page and at the door" | `jc_resource_propose` |
 | `refused-red-verdict` | `joinedcontext-portal/src/agents/grant.rs` | `tests/access_escalation_tests.rs` | `ui/tests/access_forms.test.tsx` | `ui/e2e/live/roles-refusals.spec.ts` › "a grant wider than the proposer's own rights is refused, and a narrower control is not" | `jc_resource_propose` |
 
@@ -378,7 +378,6 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 The owed cells name open tasks, and `gate_workflows` holds their count: it may shrink and never grow.
 
 - **T-2849**: the CKAN journeys, mocked and live, once T-2726 rebuilds the page.
-- **T-2746**: the readiness walk's nightly slice: a project created, copied and deleted, and a policy removed through its page.
 - **T-2732**: assistant tools for people, organization settings, project copy, a pipeline's rejected rows, an app rebuild and write, and drift.
 - **T-2867**: drift adopt and revert, once a page mounts the drift modal and dev holds a seed that can drift.
 - **T-2726**: the one-step Publish dataset from an endpoint, its live journey and its tool.
