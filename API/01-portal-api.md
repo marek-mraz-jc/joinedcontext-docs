@@ -1372,10 +1372,15 @@ GET /api/v1/branding/favicon     the favicon file, from the same mount
   "languages": { "default": "sk", "offered": ["sk", "en"] },
   "primaryForeground": "#ffffff",
   "primaryDark": "#3666d7",
-  "primaryForegroundDark": "#ffffff"
+  "primaryForegroundDark": "#ffffff",
+  "appsOrigin": "https://bb.example.org"
 }
 ```
 
+- `appsOrigin` is not read from the branding file: it is the origin the Portal serves published
+  Apps from (`JC_PORTAL_APPS_URL`), or absent when Apps are served on the Portal's own origin. The
+  in-Portal page of an App frames the App at that origin, and only a frame whose origin differs
+  from the Portal's may keep its own origin inside the sandbox (AP-122, AP-19, T-2840).
 - All three routes are unauthenticated on purpose: the login page needs the name and the logo
   before anyone has signed in, and the block holds no secret. They answer `Cache-Control: public,
   max-age=300`, the only API answers a browser may keep.
