@@ -239,7 +239,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | step | unit | API | mocked UI | live journey | assistant |
 |---|---|---|---|---|---|
 | `connect-instance` | `joinedcontext-portal/src/api/resources.rs` | `tests/ckan_api_tests.rs` | `ui/tests/form_ckan_page.test.tsx` | `ui/e2e/live/kind-ckaninstances.spec.ts` › "CkanInstance: created, changed and removed through the page by a person" | `jc_resource_propose` |
-| `status` | `joinedcontext-portal/src/api/resources.rs` | `tests/ckan_reconciler_tests.rs` | `ui/tests/ckan_view.test.tsx` | owed: T-2729 | `jc_ckan_status` |
+| `status` | `joinedcontext-portal/src/api/resources.rs` | `tests/ckan_reconciler_tests.rs` | `ui/tests/ckan_view.test.tsx` | owed: T-2849 | `jc_ckan_status` |
 | `publish-dataset` | `joinedcontext-portal/src/agents/endpoints.rs` | `tests/ckan_reconciler_tests.rs` | `ui/tests/endpoint_open_data.test.tsx` | owed: T-2726 | owed: T-2726 |
 | `refused-no-permission` | `joinedcontext-portal/src/permissions.rs` | `tests/ckan_api_tests.rs` | `ui/tests/ckan_view.test.tsx` | `ui/e2e/live/kind-ckaninstances.spec.ts` › "CkanInstance: a viewer finds every write control disabled with its reason, and the door answers 403" | `jc_resource_propose` |
 
@@ -337,6 +337,7 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 | `POST /api/v1/projects/{project}/apps/{name}/rebuild` | `app/rebuild` |
 | `POST /api/v1/projects/{project}/assistant/conversations` | `assistant/open-and-ask` |
 | `POST /api/v1/projects/{project}/assistant/propose-endpoint` | `assistant/propose-endpoint` |
+| `POST /api/v1/projects/{project}/catalogue/drafts` | `ckan/publish-dataset` |
 | `POST /api/v1/projects/{project}/changes/{id}/approve` | `change/approve`, `space/approve` |
 | `POST /api/v1/projects/{project}/changes/{id}/reject` | `change/reject` |
 | `PUT /api/v1/projects/{project}/datamodels/{name}/source` | `datamodel/edit-source`, `datamodel/add-class-enum-relation` |
@@ -376,7 +377,7 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 
 The owed cells name open tasks, and `gate_workflows` holds their count: it may shrink and never grow.
 
-- **T-2729**: the live journey for CKAN status, with T-2726.
+- **T-2849**: the CKAN journeys, mocked and live, once T-2726 rebuilds the page.
 - **T-2746**: the readiness walk creates a person and a group, a project, a key, and walks the steps of people, sync sources, drift and approvals no other journey takes.
 - **T-2732**: assistant tools for people, organization settings, project copy, a pipeline's rejected rows, an app rebuild and write, and drift.
 - **T-2726**: the one-step Publish dataset from an endpoint, its live journey and its tool.
