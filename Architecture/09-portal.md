@@ -221,12 +221,16 @@ says "the reconciler renders it as the last `mapping` processor of the generated
 answered a question nobody asked (T-1604). A field with no `help` still shows the description, so a
 kind whose manifest is not written yet gets no worse.
 
-**`placeholder` is the example, and the form offers to use it.** The Portal shows it in the empty
-input and, beside it, one action that writes it into the field, so a person facing
-`spec.source.query.q` starts from something that works instead of from a blank. It must therefore be
-a value the field accepts — `600`, `https://opendata.example.org/aq.json`, `availableBikeNumber==0` —
-and never a hint about one ("26 characters"). An example never carries a real credential or a real
-person's address (MF-24).
+**`placeholder` is the example, one per form, and the form offers to use it.** An example on
+field after field drowned the one that helps, so a form carries one at most (T-2882, owner rule of
+2026-09-25), on the field whose value carries the pattern: the name a person has to invent, or the
+query or schedule nobody types from memory. Every other field has its label and, where the value
+has a rule, a `help` sentence that states the rule ("lowercase letters, digits and dashes") instead
+of an example. The Portal shows the example in the empty input and, beside it, one action that
+writes it into the field. It must therefore be a value the field accepts — `air-quality`,
+`0 4 * * *`, `availableBikeNumber==0` — and never a hint about one ("26 characters"). An example
+never carries a real credential or a real person's address (MF-24). The same rule holds for a form
+a page builds by hand, and for the help strings of the locale bundles: one "e.g." per form.
 
 **How a form gets its manifest.** Every manifest dialog fetches `GET /api/v1/forms` once
 (API/01 §8a) and arranges the kind it edits. The manifest decides the arrangement of the fields it

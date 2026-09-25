@@ -2611,6 +2611,30 @@ GET /api/v1/organization/limits     the catalog, its bounds and the values in fo
   a project's. A project the caller may not read is left out of `projects`, so nothing of its
   size is said (R20).
 
+## 29. Size of a space (T-2889)
+
+How much a space holds, read from the broker that holds it: the entity count of the space's
+tenant (`GET /q/tenants/{space}` on the broker, the admin surface the Portal already reaches for
+registrations). The Portal keeps each answer for five minutes; these are dashboard numbers, not
+per-request work.
+
+```text
+GET /api/v1/projects/{project}/spaces/{space}/usage     the space's entity count → 200
+```
+
+```json
+{ "entities": 14232, "observedAt": "2026-09-25T11:40:00Z" }
+```
+
+- A space the broker has no tenant for yet holds nothing: `entities` is `0`.
+- Without a broker address (`JC_PORTAL_BROKER_URL`), or while the broker does not answer, the
+  answer is `503` with the reason. The page shows the reason, never a zero.
+- A project or a space the caller may not read is `404`, as in §27. The count is the space's,
+  the same for everyone who reads the space; which entities they are is the entity read's.
+- The per-type breakdown on the space's page is the gateway's own `count=true` per type, read
+  with the person's token, so it narrows as the person's grants do.
+- The storage size in bytes is not answered yet: the broker has no surface for it (T-2890).
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
