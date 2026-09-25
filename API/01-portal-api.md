@@ -2185,7 +2185,7 @@ An App's `spec.access` entry naming the e-mail then matches nobody, and the App 
 - Every action writes one `person.changed` event of the project `org` to the activity feed (§14):
   who, what, and the person's id, never an e-mail body, a password or a token (PF-90).
 
-## 25. Validation health (OPS-52)
+## 25. Validation health (OPS-53)
 
 The validation checks run outside the Portal, on their own schedules: deployment drift and the
 supply chain, the conformance suites, the authorization matrix, the performance budgets, the

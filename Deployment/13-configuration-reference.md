@@ -28,6 +28,7 @@ The enforcement point in front of every broker surface (`context-gateway`).
 | `JC_GATEWAY_ASSEMBLY_DIR` | `/tmp/jc-assembly` | no | Where a layout 2 organization is assembled (`JC_GATEWAY_ASSEMBLY_DIR`, default `/tmp/jc-assembly`), a scratch directory the pod owns. |
 | `JC_GATEWAY_BIND` | `0.0.0.0:8080` | no | The address to listen on (`JC_GATEWAY_BIND`, default `0.0.0.0:8080`). |
 | `JC_GATEWAY_BROKER_URL` | — | no | The broker to forward to, scheme and authority only (`JC_GATEWAY_BROKER_URL`). |
+| `JC_GATEWAY_DELIVERY_KEY` | — | yes | The key a subscription's subscriber is sealed with (`JC_GATEWAY_DELIVERY_KEY`, a secret of at least 32 bytes), so each delivery is decided again against the policies in force (GW27, T-2383); unset refuses every subscription that routes a delivery with `501`. |
 | `JC_GATEWAY_DOMAIN_VERIFICATION` | `report` | no | `report` or `enforce` (`JC_GATEWAY_DOMAIN_VERIFICATION`, default `report`): whether a write waits for the Organization's verified domain (PF-41, Architecture/03 §3). |
 | `JC_GATEWAY_DOMAIN_VERIFICATIONS_URL` | — | no | The Portal's list of domain states (`JC_GATEWAY_DOMAIN_VERIFICATIONS_URL`, its internal listener's `/internal/domain-verifications`); required under `enforce`. |
 | `JC_GATEWAY_EGRESS_CA_BUNDLE` | — | no | A PEM file of extra trust anchors the notification egress trusts on top of the public roots (`JC_GATEWAY_EGRESS_CA_BUNDLE`), for subscribers behind the installation's own CA (R46). |
@@ -76,7 +77,7 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_GITEA_URL` | — | no | `JC_GITEA_URL` (the API base the Portal dials), `JC_GITEA_OWNER`, `JC_GITEA_REPO` and `JC_GITEA_TOKEN` (a secret: the token every push and merge request is written with). |
 | `JC_GITEA_WEBHOOK_SECRET` | — | yes | The secret the forge signs its webhook calls with (`JC_GITEA_WEBHOOK_SECRET`). |
 | `JC_GITEA_WEBHOOK_SECRET_PREVIOUS` | — | yes | The secret this Portal accepted before the current one, during a rotation (`JC_GITEA_WEBHOOK_SECRET_PREVIOUS`). |
-| `JC_HEALTH_DIR` | — | no | The directory the ConfigMap `jc-validation-results` is mounted at (`JC_HEALTH_DIR`; OPS-52): one digest per validation check, read on every request to `/api/v1/organization/health`. |
+| `JC_HEALTH_DIR` | — | no | The directory the ConfigMap `jc-validation-results` is mounted at (`JC_HEALTH_DIR`; OPS-53): one digest per validation check, read on every request to `/api/v1/organization/health`. |
 | `JC_INTERNAL_BIND` | `0.0.0.0:9090` | no | `JC_AGENTS_NAMESPACE` and `JC_AGENT_PROXY_BASE` are set together or not at all; `JC_PORTAL_NAMESPACE` (default: the workspaces' own namespace), `JC_INTERNAL_BIND` (default `0.0.0.0:9090`), `JC_AGENT_RUN_TTL` (whole seconds, default `1200`) and `JC_AGENT_APPROVAL_TTL` (whole seconds a run waits for its change's approval, default `604800`) tune the rest. |
 | `JC_OIDC_CA_FILE` | — | no | The realm humans sign in against: `JC_OIDC_ISSUER`, `JC_OIDC_CLIENT_ID` and `JC_OIDC_CLIENT_SECRET` (a secret), all three together or none, plus the optional `JC_OIDC_CA_FILE` for a realm behind a private CA. |
 | `JC_OIDC_CLIENT_ID` | — | no | The realm humans sign in against: `JC_OIDC_ISSUER`, `JC_OIDC_CLIENT_ID` and `JC_OIDC_CLIENT_SECRET` (a secret), all three together or none, plus the optional `JC_OIDC_CA_FILE` for a realm behind a private CA. |

@@ -29,7 +29,7 @@ This document provides end-to-end traceability cross-referencing requirement fam
 | **SDK-01–SDK-38** | App SDK | `app-sdk.md` | `@joinedcontext/sdk` and its template app (portal `sdk/`), `jc-functions` QuickJS runtime, Model Tools `gen-typescript`, Portal first run, editing agent and preview transpiler, host-page bridge | SDK vitest suites, import allow-list and bridge tests, preview e2e |
 | **UI-01–UI-86** | Portal & User Interface | `portal-and-ui.md` | Portal UI (React 19), Portal API (Rust), MapLibre / deck.gl | Playwright E2E, Vitest Unit Tests, Axe WCAG 2.1 AA Audits |
 | **TS-01–TS-25** | Testing & Quality | `testing.md` | CI Pipelines, Test Harnesses, Fuzzing Frameworks | Cargo Clippy, Schemathesis, K6 Load Tests, Trivy Scans |
-| **OPS-01–OPS-52** | Operations & Reliability | `operations.md` | Helmfile Deployments, CNPG Operator, Linkerd mTLS | Kyverno Policy Scans, Disaster Recovery Replay Drills |
+| **OPS-01–OPS-53** | Operations & Reliability | `operations.md` | Helmfile Deployments, CNPG Operator, Linkerd mTLS | Kyverno Policy Scans, Disaster Recovery Replay Drills |
 | **DS-01–DS-20** | Data Space Connector | `data-space.md` | Connector addon (post-MVP, engine not chosen), ODRL mapper, Context Gateway, OpenBao | DSP conformance kit, negotiation-to-Policy tests, token revocation tests |
 
 ## 2. Quality Gate Mapping
