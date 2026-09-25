@@ -114,6 +114,17 @@ Response: `202 Accepted`
 - `dataNeeds[].roles`: Optional list of application role names (`[a-z][a-z0-9-]{0,31}`, at most 16 distinct across the run) that the need is granted to, as in an App manifest (AP-96). A name outside that pattern, or more than 16, answers `400 Bad Request` here, before the run starts. Publishing declares every distinct name in the App's `spec.roles` (`{name}`, no title and no members), so the manifest passes AP-91; the role's title and its members are added on the App page afterwards, each through a Change (AP-91, UI-44). A need without `roles` keeps granting every caller the endpoint admits, and a write on it stays red lane (AP-98).
 - If the builder profile or model secrets are missing, returns `503 Service Unavailable`.
 
+### Test Runs of the Live Journeys (AG-93)
+
+A run started by the Portal's own live journeys carries `"origin": "journey"`; every other run carries `"origin": "person"`. The journeys mark theirs with one request header on `POST /api/v1/projects/{project}/agent-runs` and `POST /api/v1/projects/{project}/assistant/conversations`:
+
+```http
+X-JC-Run-Origin: journey
+```
+
+- Only the journeys set it: a browser session (the Portal's cookie or the edge's `X-Access-Token`) of a user named in `JC_PORTAL_JOURNEY_USERS`, the demo people the journeys sign in as. Anyone else who sends it answers `403 Forbidden`, an administrator included, and so does the header beside `Authorization: Bearer`, so neither a person, a service, a script nor an agent hides a run. Any value other than `journey` answers `400 Bad Request`.
+- The marker only hides a run from a list's default. It deletes nothing and changes nothing else: the run and its events stay whole for the audit (AG-45).
+
 ### List Runs in Project
 
 ```http
@@ -127,6 +138,7 @@ Query parameters:
 - `mine`: Boolean (`true` or `false`). When `true`, restricts results to runs initiated by the calling user.
 - `app`: Filter runs associated with a specific application name.
 - `limit`: Maximum number of records returned.
+- `origin`: `person`, `journey` or `all` (AG-93). Without it, a list leaves the journeys' test runs out (`person`). A request that carries `X-JC-Run-Origin: journey` itself lists `all`, so a journey finds the runs it started; from anyone but a journey the header answers `403`. Any other value answers `400 Bad Request`.
 
 Access visibility: A user sees the runs they initiated. Users holding the `portal-approver` role in the project also see all project runs.
 
@@ -150,6 +162,7 @@ Response: `200 OK`
       "steps": 14,
       "tokensUsed": 245000,
       "createdBy": "demo.steward@hel.fi",
+      "origin": "person",
       "createdAt": "2026-09-12T10:15:30Z"
     }
   ]
