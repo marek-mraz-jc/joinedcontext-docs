@@ -2185,6 +2185,60 @@ An App's `spec.access` entry naming the e-mail then matches nobody, and the App 
 - Every action writes one `person.changed` event of the project `org` to the activity feed (§14):
   who, what, and the person's id, never an e-mail body, a password or a token (PF-90).
 
+## 25. Validation health (OPS-52)
+
+The validation checks run outside the Portal, on their own schedules: deployment drift and the
+supply chain, the conformance suites, the authorization matrix, the performance budgets, the
+restore drill, the live sweep. Each writes a summary for `tasks/file-failures`, and
+`joinedcontext-deployment/scripts/publish-health.py` turns that summary into one digest, the key
+`{check}.json` of the ConfigMap `jc-validation-results`. The Portal mounts that ConfigMap
+(optional, so an installation that publishes nothing still starts), names the directory in
+`JC_HEALTH_DIR`, and reads it on every request:
+
+```text
+GET /api/v1/organization/health     every published check with its state → 200
+```
+
+```json
+{
+  "checks": [
+    {
+      "check": "deployment",
+      "state": "red",
+      "result": {
+        "check": "deployment",
+        "at": "2026-09-25T08:00:00Z",
+        "everyHours": 1,
+        "run": "dev-validate 2026-09-25T08:00:00Z",
+        "counts": { "pass": 41, "fail": 1, "error": 0, "skip": 3 },
+        "failures": [
+          { "key": "images/portal", "verdict": "fail", "title": "portal runs an unsigned image", "task": "T-2901" }
+        ],
+        "history": [
+          { "at": "2026-09-25T07:00:00Z", "pass": 42, "fail": 0, "error": 0, "skip": 3 }
+        ]
+      }
+    }
+  ]
+}
+```
+
+- A digest is what the publisher writes and nothing more: the check's name, when it ran, how
+  often it runs, the run's label, the verdict counts, at most 50 failing or erroring results
+  (`key`, `verdict`, `title`, and the open task that `check: {check}/{key}` names, when there is
+  one) and at most 200 history points of the last seven days. It never carries a result's
+  `detail` or `evidence`: those stay in the summary, beside the task.
+- `result` is the digest the publisher wrote. `state` is the Portal's: `stale` when the last run
+  is older than twice `everyHours` (1 to 168), whatever it found; otherwise `red` when it has a
+  `fail` or an `error` and `green` when not. A file that is not such a digest (larger than
+  256 KiB, an unknown field, more than 50 failures or 200 points, a text over 300 characters, a
+  task that is not a task id, a `check` that differs from its file name) is `unreadable` and
+  has no `result`. Rows come in the order of their names.
+- Only an administrator of the organization reads it: a caller whose bindings at organization
+  scope grant `approve` and `delete` on `RoleBinding` (PF-03). Anyone else signed in gets `403`,
+  nobody signed in `401`.
+- Without `JC_HEALTH_DIR`, or before anything is published, the answer is `{"checks": []}`.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.

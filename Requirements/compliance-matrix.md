@@ -801,6 +801,7 @@ Generated 2026-09-25 from: `docs` a6f0044, `conformance` 2d6df0f, `deployment` 7
 | **OPS-49** |  | tested | ci-full, fast ci | portal `src/activity.rs::a_page_is_newest_first_and_its_cursor_starts_the_next_one`, portal `src/activity.rs::a_severity_names_the_floor_and_a_kind_narrows_to_itself`, portal `src/activity.rs::another_project_s_events_are_not_in_this_project_s_answer`, and 15 more |
 | **OPS-50** | [H] | built |  | `joinedcontext-portal/ui/src/pages/apps/ActionStep.tsx` |
 | **OPS-51** | [H] | tested | ci-full, fast ci | deployment `tests/test_portal_readiness.py::test_readiness_reads_the_ready_route_and_liveness_the_health_route`, portal `src/ops/drafts.rs::a_notice_from_another_replica_is_delivered_and_its_own_is_not`, portal `src/reconciler/daemon.rs::a_stream_that_writes_nothing_and_only_errors_is_said_to_be_failing`, and 19 more |
+| **OPS-52** | [H] [S] | tested | fast ci | portal `ui/tests/organization_health.test.tsx::shows every check with its state, counts, trend and the tasks its failures filed (OPS-52)`, portal `ui/tests/organization_health.test.tsx::tells anybody who is not an administrator who can see it, and fetches nothing (OPS-52)` |
 
 ### PF — Platform invariants
 

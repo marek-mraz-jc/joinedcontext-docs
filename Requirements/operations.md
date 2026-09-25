@@ -108,6 +108,10 @@ The family runs OPS-01…OPS-51 with two holes: no OPS-24 and no OPS-25 were eve
 
 - **OPS-51** [H] — The Portal MUST answer `GET /api/v1/ready` with 503 until its mirror holds the configuration repository (the first successful sync of this replica, leader or follower) and 200 afterwards, MUST keep `GET /api/v1/health` unconditional for liveness, and its readiness probe MUST read the ready route, so traffic never reaches a replica that would list an empty project or refuse a check against a project it has not loaded; a follower loads the repository read-only (no stream, app or roles convergence), so a rolling update never waits on the leader's lock, and the answer carries nothing but the state (OPS-06, MF-04).
 
+## 12. Validation Health
+
+- **OPS-52** [H][S] — The Portal MUST show the organization's administrators one page, `/organization/health`, with a row per validation check (deployment drift and supply chain, conformance, the authorization matrix, performance budgets, backup and restore, the live sweep and the others that publish): its state (green, red, stale when it missed two of its runs, unreadable), its last run, its verdict counts, a seven-day trend and the failing results with the task each one filed, under one summary line; a result MUST carry only check keys, titles, verdicts, counts and task ids, never a detail, an evidence path, a secret or a person's data, and anyone who is not an administrator of the organization MUST be refused.
+
 ## Traceability
 
 | Requirements | Section | Architecture | Tests |
@@ -124,6 +128,7 @@ The family runs OPS-01…OPS-51 with two holes: no OPS-24 and no OPS-25 were eve
 | OPS-48…OPS-49 | Activity pipeline | [../Deployment/05-monitoring-logging.md#5-the-activity-pipeline](../Deployment/05-monitoring-logging.md#5-the-activity-pipeline) | [05-deployment-and-performance-tests.md](../Testing/05-deployment-and-performance-tests.md) |
 | OPS-50 | The Action Inspector | [../Architecture/19-agent-runner.md#7-attribution-and-audit](../Architecture/19-agent-runner.md#7-attribution-and-audit) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | OPS-51 | Readiness | [../Architecture/09-portal.md#1-portal-api-specification](../Architecture/09-portal.md#1-portal-api-specification) | [05-deployment-and-performance-tests.md](../Testing/05-deployment-and-performance-tests.md) |
+| OPS-52 | Validation Health | [../API/01-portal-api.md#25-validation-health-ops-52](../API/01-portal-api.md#25-validation-health-ops-52) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
 ## Related
 
