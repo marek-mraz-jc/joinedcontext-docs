@@ -171,6 +171,19 @@ Decided in [ADR-N-031](../Decisions/adr-n-031-people-groups-and-app-groups.md) (
 - **PF-94** [H] — A person's page MUST list their groups, their platform roles with scope and their application roles, each linked to where it is granted.
 - **PF-95** [S] — A group's page MUST edit its members, its `RoleBinding`s (a role at organization, project or space scope, PF-60, PF-69) and the `spec.access` entries naming it, each edit through the one propose function. Deleting a group MUST be one Change that also removes every binding and access entry naming it.
 
+## Organization policies and limits
+
+Decided in [ADR-N-035](../Decisions/adr-n-035-organization-policies-and-limits.md) (T-2714).
+
+- **PF-96** [S] — Every organization-wide policy and limit MUST be a field of the `Organization` manifest: `spec.projects` (PF-65, PF-73, PF-78), `spec.policies` for the choices and `spec.limits` for the numbers, with exactly the entries, defaults, bounds and enforcers of ADR-N-035's catalog. An absent field MUST be its default, and an unknown field MUST be refused.
+- **PF-97** [S] — The operator MUST set the bound of each entry in the deployment (`portal.organizationBounds`, read by the Portal from a mounted file), an entry left out keeping the catalog's built-in bound. The Portal MUST refuse, on every door before a `Change` exists and again at approval, an Organization change that crosses a bound, naming the entry, the value and the bound. No bound MAY be raised from the Portal.
+- **PF-98** [S] — A `Change` to the `Organization` MUST take the red lane and need `approve` from an `org-admin` (PF-52).
+- **PF-99** — Each enforcer MUST read the effective value of its entries (the project's override where the catalog allows one, then the organization's value, then the default) and apply a change on its next reconcile. The activity log MUST record each changed entry with its old and new value.
+- **PF-100** [S] — Lowering a limit MUST refuse only new writes and new resources. It MUST NOT delete, stop or truncate what already exists; a project over a lowered limit MUST show it in its usage (PF-75).
+- **PF-101** [H] — Every refusal by a limit or a policy MUST name the entry, its effective value and the usage where there is one, where the value comes from (the organization, the project or the default) and who may change it, for example "the organization allows 3 public endpoints (3 in use); an org admin can change this in Organization settings".
+- **PF-102** [H] — Organization settings MUST show one section per catalog section. Each entry MUST show its value, its default, its bound and a one-line hint, and the page MUST show the effective values per project in one table.
+- **PF-103** [S] — `spec.policies.apps.public: refused` MUST make every door refuse a Change that sets an App to `public` or moves one to it, citing the policy. Apps already `public` MUST stay public until a Change moves them (PF-100).
+
 ## Traceability
 
 | Requirement Range | Architecture Section | Test Family |
@@ -204,6 +217,7 @@ Decided in [ADR-N-031](../Decisions/adr-n-031-people-groups-and-app-groups.md) (
 | PF-84 | [Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes](../Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
 | PF-85…PF-89 | [Architecture/06-configuration-as-code.md#1-repository-layout-cc-08-cc-85](../Architecture/06-configuration-as-code.md#1-repository-layout-cc-08-cc-85) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | PF-90…PF-95 | [Architecture/12-identity-and-access.md](../Architecture/12-identity-and-access.md), [ADR-N-031](../Decisions/adr-n-031-people-groups-and-app-groups.md) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
+| PF-96…PF-103 | [Architecture/03-domain-model.md#project](../Architecture/03-domain-model.md#project), [ADR-N-035](../Decisions/adr-n-035-organization-policies-and-limits.md) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 
 ## Related
 
