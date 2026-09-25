@@ -131,7 +131,7 @@ git log --grep="Co-Proposed-By:" --all --pretty=fuller
 ### Every month: the agents
 
 - No agent holds a database or broker credential. Agents reach data through an Endpoint and its Policy, with a `ServiceAccount` client of their own.
-- Every agent's client is audience-bound and short-lived. Rotate the client secret of any that is not, and read [Requirements/agents.md](../Requirements/agents.md) for what an agent's identity is required to be; DPoP proofs are named there and are not implemented today (T-2358).
+- Every agent's client is audience-bound and short-lived. Rotate the client secret of any that is not, and read [Requirements/agents.md](../Requirements/agents.md) for what an agent's identity is required to be; DPoP proofs come after the MVP (AG-02).
 
 ## Related
 
