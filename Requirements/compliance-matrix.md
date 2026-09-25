@@ -915,6 +915,7 @@ Generated 2026-09-25 from: `docs` 36beff0, `conformance` 2d6df0f, `deployment` f
 | **PF-101** | [H] | open |  |  |
 | **PF-102** | [H] | open |  |  |
 | **PF-103** | [S] | open |  |  |
+| **PF-104** | [S] [A] | open |  |  |
 
 ### PL — Pipelines
 

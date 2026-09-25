@@ -720,6 +720,51 @@ A listed key carries what an operator decides on and nothing that opens a door:
   not (R20).
 - `503` with `problem+json` when the Portal runs without its PostgreSQL tier, as for section 8.
 
+### 9.1 A key asked for over MCP: the claim (PF-104)
+
+A person's MCP client is driven by a model, and whatever an operation answers lands in that model's
+context and the client's transcript. So `jc_service_account_key_mint` and
+`jc_service_account_key_rotate` called over `/api/v1/mcp` mint nothing. They check the request as the
+routes above do (the account, the credential, the expiry, the key and the overlap), record a claim
+and answer it:
+
+```json
+{
+  "claim": {
+    "id": "c7e1f0a94b2d6e8f13a5c9d7b0e4f261",
+    "url": "https://portal.example.org/projects/bikes/settings/service-accounts?account=legacy-push&claim=c7e1f0a94b2d6e8f13a5c9d7b0e4f261",
+    "expiresAt": "2026-09-25T10:15:00Z"
+  },
+  "account": "legacy-push",
+  "action": "mint",
+  "credential": "legacy-push"
+}
+```
+
+`action` is `mint` or `rotate`; a rotation's answer also names `keyId`, the key it replaces, and
+`overlapHours`; an expiry asked for is `keyExpiresAt`. The
+answer carries no token and no key id of a key that does not exist yet. The person opens `url` in the
+Portal, signed in, sees what the claim will do and confirms it; only then is the key minted, or the
+rotation made, and the token shown once, exactly as a mint in the Portal shows it:
+
+```text
+GET  /api/v1/projects/{project}/serviceaccounts/{name}/keys/claims/{claimId}   what the claim will do → 200
+POST /api/v1/projects/{project}/serviceaccounts/{name}/keys/claims/{claimId}   mint or rotate now → 201 MintedKey, the claim spent
+```
+
+- A claim belongs to the person who asked for it. Anyone else, a claim that has expired and a claim
+  already spent answer `404`, the same answer as a claim that never existed (R20), so the link in a
+  transcript opens nothing for whoever reads it.
+- A claim lives 15 minutes and is spent by its first `POST`, whether the mint succeeds or not; a
+  second `POST` is `404`. Expired claims are deleted.
+- The caller MUST still be allowed to manage the account's keys when the claim is used, as for a
+  mint; a key rotated in between answers `409` as a direct rotation of a revoked key does.
+- The claim row holds what the claim will do and who asked for it, never a secret: nothing is minted
+  until the person confirms (PF-36).
+- `jc_service_account_key_revoke` answers no secret and revokes over MCP at once, as in the Portal.
+- The REST routes and the Portal mint directly; their answer reaches a person, not a model. A run is
+  refused all three operations (§21).
+
 ## 10. Export, import, revisions and sync (MF-16…MF-32, CC-49)
 
 The repository at any revision is the complete configuration export (CC-49). These routes hand it
@@ -1889,7 +1934,9 @@ route's problem document.
   jc_run_publish (a run does not drive another run), jc_run_answer (a run does not answer the
   question a run asked the person it acts for, AG-45), and jc_service_account_key_mint,
   jc_service_account_key_rotate and jc_service_account_key_revoke (a run does not mint or retire
-  the credentials the platform authenticates with). Each refusal names its own act. Proposing a
+  the credentials the platform authenticates with). Each refusal names its own act. Over `/api/v1/mcp`
+  a person's own client still calls jc_service_account_key_mint and jc_service_account_key_rotate,
+  and is answered a claim the person opens in the Portal instead of the token (§9.1, PF-104). Proposing a
   deletion is not among them: jc_resource_delete and jc_project_delete stay open to a run and to
   an MCP client, because a deletion is a Red change a person still approves (AG-77, CC-39).
   The rejection's reason is written on the merge request beside who rejected it; the REST route
