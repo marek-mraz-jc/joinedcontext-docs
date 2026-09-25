@@ -23,7 +23,7 @@ Generated 2026-09-25 from: `docs` 75cb9bf, `conformance` 376606c, `deployment` f
 | Family | Requirements | Tested | Built | Open | Untested and security-tagged |
 |---|---|---|---|---|---|
 | **AG** — Agents and MCP | 92 | 73 | 5 | 14 | 9 |
-| **AP** — Apps on demand | 134 | 107 | 9 | 18 | 6 |
+| **AP** — Apps on demand | 135 | 108 | 9 | 18 | 6 |
 | **CC** — Configuration as code | 90 | 71 | 9 | 10 | 0 |
 | **DM** — Data models | 69 | 51 | 7 | 11 | 3 |
 | **DS** — Data space connector | 20 | 12 | 4 | 4 | 1 |
@@ -41,7 +41,7 @@ Generated 2026-09-25 from: `docs` 75cb9bf, `conformance` 376606c, `deployment` f
 | **SP** — Context-space surface | 22 | 19 | 0 | 3 | 0 |
 | **TS** — Testing and quality | 26 | 16 | 5 | 5 | 0 |
 | **UI** — Portal and user interface | 84 | 62 | 15 | 7 | 5 |
-| **Total** | 1106 | 788 | 110 | 208 | 40 |
+| **Total** | 1107 | 789 | 110 | 208 | 40 |
 
 ## 3. Requirement to test
 
@@ -267,6 +267,7 @@ Generated 2026-09-25 from: `docs` 75cb9bf, `conformance` 376606c, `deployment` f
 | **AP-121** | [H] | open |  |  |
 | **AP-122** | [S] | tested | ci-full, fast ci | portal `tests/branding_api_tests.rs::the_apps_origin_comes_from_the_configuration_and_never_from_the_file`, portal `tests/edge_preview_apps_tests.rs::an_app_answer_carries_its_own_policy_and_a_refusal_carries_nothing`, portal `tests/static_host_tests.rs::on_the_apps_origin_only_the_portal_frames_an_app`, and 6 more |
 | **AP-123** | [H] | tested | fast ci | portal `src/agents/theme.rs::every_look_of_every_branding_reads_at_aa`, portal `src/agents/theme.rs::every_look_is_reached_and_each_is_a_different_file`, portal `src/agents/theme.rs::the_apps_of_a_project_get_different_looks_and_the_same_one_on_every_run`, and 3 more |
+| **AP-137** | [H] | tested | ci-full, fast ci | portal `src/agents/samples.rs::a_twin_design_is_offered_a_layout_nobody_holds`, portal `src/agents/samples.rs::when_every_layout_is_taken_the_least_used_other_one_is_offered`, portal `tests/kit_pass_tests.rs::an_app_like_another_of_the_project_is_asked_for_another_layout` |
 | **AP-124** | [S] | open |  |  |
 | **AP-125** | [A] | open |  |  |
 | **AP-126** |  | tested | ci-full | portal `tests/app_reconciler_tests.rs::a_pod_app_is_handed_the_sdk_configuration_of_its_one_endpoint` |
