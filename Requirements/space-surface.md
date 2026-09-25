@@ -145,15 +145,13 @@ for the **SP-01…SP-22** family.
   a manifest merge, never a hand-written route, and the rendered
   `apisix.yaml` (standalone file mode) is the only gateway
   configuration surface.
-- **SP-22** — The gateway MUST count every request to `/cs/{space}/…`
-  against a token bucket per caller — the presented credential, or the
-  client address when there is none — and MUST advertise it with the
-  standard `RateLimit-*` fields, the same way it counts a published
-  Endpoint (EP-20, MIM0-R7). A space declares no limit of its own, so
-  the gateway's default applies (600 requests per minute, burst 50).
-  The edge's bucket is not a substitute: it is one bucket for every
-  anonymous caller of every space, so one client can spend the
-  canonical surface for everybody.
+- **SP-22** — The gateway MUST NOT rate limit the canonical surface
+  `/cs/{space}/…`: a space declares no limit of its own, the gateway
+  applies no default of its own, and the answers carry no `RateLimit-*`
+  fields (EP-20, owner decision 2026-09-24). A limit is an explicit
+  choice, made on a published Endpoint. The edge keeps its per-credential
+  anti-flood bucket on the space route (Deployment/10 §4), which protects
+  the node and is not a limit of the space.
 
 ## 6. Standardization statement
 

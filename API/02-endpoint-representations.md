@@ -747,6 +747,51 @@ the AuthZEN document. Types the caller may not see are absent.
 
 `scopeQ`, `geoQ` and `temporalQ` have a known shape, so they become `where` branches. A residual `q` does not: it is an NGSI-LD query filter, and [R56](../Requirements/policy-firewall.md) allows exactly one grammar for those, the broker's own parser compiled to Wasm, which the gateway does not host. So `q` travels verbatim beside `where`, and a client applies it as it applies any other NGSI-LD filter. Leaving it out would understate the residual and let a client compile a filter wider than its grant.
 
+## 7c. Filter preview (`preview`)
+
+Path: `POST /api/endpoint/{endpointSlug}/preview` ([EP-85](../Requirements/endpoints.md)). It answers
+one page of what the Endpoint would serve if its filter were the draft in the body, which is how the
+Portal's filter editor shows its left side while the person edits ([EP-86](../Requirements/endpoints.md)).
+The route sits beside `access`, outside the `ngsi-ld/v1` tree, because a draft is not a CIM 009 query.
+
+```http
+POST /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/preview
+Authorization: Bearer eyJ…
+Content-Type: application/json
+
+{
+  "projection": {
+    "classes": [{ "name": "Event", "slots": ["name", "startDate", "endDate", "location"] }],
+    "filter": { "q": "endDate>=\"2026-09-25T00:00:00Z\"" }
+  },
+  "hiddenAttributes": ["source"],
+  "type": "Event",
+  "id": ["urn:ngsi-ld:Event:hel.fi:helsinki:agent-123", "urn:ngsi-ld:Event:hel.fi:helsinki:agent-124"],
+  "limit": 50,
+  "offset": 0
+}
+```
+
+| Member | Required | Meaning |
+|---|---|---|
+| `projection` | no | The draft `ModelProjection`: `classes` (at least one, each with its `slots`, empty for identity only) and an optional `filter` (`q`, `scopeQ`, `geoQ`, `temporalQ`), validated like the manifest ([MP-01](../Requirements/model-projections.md)). `null` or absent means the draft names no projection. |
+| `hiddenAttributes` | no | The draft `spec.projection.hiddenAttributes`; empty or absent hides nothing. |
+| `type` | yes | The entity type of the page, as in a query. |
+| `id` | no | At most 100 entity ids: the page is restricted to them, which is how the Portal aligns the two sides row by row. |
+| `limit`, `offset` | no | The page, 1 to 100 entities (default 50) from `offset` (default 0). |
+
+Unknown members are refused with `400`. The answer is the answer of `GET …/ngsi-ld/v1/entities?type=…&count=true`
+under the draft: the normalized entities as a JSON array and the total in `NGSILD-Results-Count`.
+The draft takes the place of the saved projection and hidden attributes; the Endpoint's Policies,
+audience and view mapping stay as saved, so the preview never serves what the Policies do not grant,
+and the same draft saved answers the same entities through the ordinary read.
+
+Who may ask: a caller the space's canonical surface `/cs/{space}` admits. Anybody else, anonymous or
+not, gets the `404` an unknown slug gets, because a draft can name a class or an attribute the saved
+projection does not publish yet. The draft is evaluated for the audience: as the anonymous caller on a
+`public` Endpoint, as the caller on the others. A refused draft (`400`) names the member at fault:
+`projection.classes: a projection exposes at least one class (MP-01)`.
+
 ## 8. Model Context Protocol (MCP)
 
 Path: `/api/endpoint/{endpointSlug}/mcp`
