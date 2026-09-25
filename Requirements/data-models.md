@@ -111,7 +111,7 @@ Decided in [ADR-N-033](../Decisions/adr-n-033-one-data-model-per-space.md) (T-26
 
 - **DM-61** [S] — A Context Space MUST have exactly one `DataModel`, `spaces/{s}/datamodel.linkml.yaml`, named by the space's `spec.dataModel`; its classes are the space's types, validation MUST refuse a second model file in a space, and the Context Gateway MUST refuse a write of a type the model does not declare. The model MAY `import` published models at a pinned version.
 - **DM-62** — Creating a Context Space MUST create its model in the same Change, empty or importing the models picked; `jcctl model merge` MUST merge several models of one space into one, keeping class names, slot IRIs and `class_uri`s, and MUST refuse a clash naming both classes.
-- **DM-63** [S] — `GET /api/v1/organization/datamodels?search=` MUST answer every published model the caller may read (name, project, space, version, classes) and the Smart Data Models catalog entries, and nothing the caller cannot read.
+- **DM-63** [S] — `GET /api/v1/organization/datamodels?search=` MUST answer every model the caller may read that is not retired (name, project, space, version, lifecycle, classes) and the Smart Data Models catalog entries matching the search, and nothing the caller cannot read ([API/01](../API/01-portal-api.md)).
 
 ## Traceability
 
