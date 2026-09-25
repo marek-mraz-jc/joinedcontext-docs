@@ -147,6 +147,14 @@ deletion with `409` and names the referencing manifests; removing the reference 
 own change. On merge the reconciler drops each space's broker tenant last, after the export the
 `Change` body offers (CC-07), retires the endpoint slugs and removes the app builds.
 
+`DELETE /api/v1/projects/org/groups/{name}` works the same way for a `Group` (PF-95): the one
+red-lane `Change` removes the group's manifest and, in the same commit, takes the group out of
+every `RoleBinding` subject list and every `App.spec.access` entry naming it. A binding left with
+no subject is removed, and so is an access entry left with none; a removal that would leave the
+organization without an administrator is `409` (PF-03). A binding or an App in a project with a
+repository of its own (layout 2) cannot ride in that `Change`, so it refuses the deletion with
+`409` naming it; removing the group there is that project's own change.
+
 The name is then reserved for `Organization.spec.projects.nameCooldownDays` (30 days by default,
 `0` for none) counted from the commit that removed it, and `POST /api/v1/projects` answers `409`
 with the date it becomes free (PF-78).
