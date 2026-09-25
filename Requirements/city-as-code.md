@@ -361,8 +361,8 @@ one or more manifests; *flow*, a blueprint instance as shown to [H] users.
 ## 11. Interaction lanes and sandboxes
 
 - **CC-63** — The plane MUST implement risk-classed lanes bound to
-  `riskClass` (CC-59): *green*, merge request auto-approved by a
-  policy bot; *yellow*, one domain approver (CC-34); *red*
+  `riskClass` (CC-59): *green*, merge request merged by the Portal
+  as it is proposed (API/01 §13); *yellow*, one domain approver (CC-34); *red*
   (cross-domain, public exposure, federation edges, a standing egress
   of context data to an address the manifest names, any deletion) —
   the full approval chain. Lane assignment MUST be enforced in CI and
