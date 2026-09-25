@@ -857,9 +857,9 @@ GET /api/v1/projects/{project}/apps/{name}/export
   of the App repository's default branch with its whole history; `{name}.tags` as in
   `format=git`; `app.yaml`, the App manifest as the project's repository holds it at its head,
   stripped as every export strips it (`status`, the built digest, secret values; MF-17, AP-13a);
-  and the `kind: Bundle` index `bundle.yaml` (namespace the project, name the App), whose `items`
-  list the App, whose `repositories` list the one `application` bundle with the head it ends at,
-  and whose `files` carry every file's SHA-256 (MF-42). A bundle that ends elsewhere than the
+  and the `kind: Bundle` index `bundle.yaml` (namespace `org`, name the App), whose one item is
+  the App with its project as namespace, whose `repositories` list the one `application` bundle
+  with the head it ends at, and whose `files` carry every file's SHA-256 (MF-42). A bundle that ends elsewhere than the
   head read in the same export is `409` (export again).
 
 Import is the same bundle read back, into a project that is not the one it left (MF-20…MF-26):
