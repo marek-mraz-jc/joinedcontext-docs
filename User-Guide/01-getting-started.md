@@ -79,7 +79,7 @@ Making an endpoint public is a bigger step than the others, and the approval in 
 ## 6. Get the change approved, and watch it happen
 
 1. Open **Approvals**. Every change to the project sits here until an approver merges it. Each one shows its **Author**, its **Risk lane** and, field by field, what it would change.
-2. An approver opens it and chooses **Approve** or **Reject**. You cannot approve your own proposal, and letting an endpoint out to the public needs the publisher role; a steward alone cannot. A red-lane change asks for the resource name to be typed back before it will go.
+2. An approver opens it and chooses **Approve** or **Reject**. You cannot approve your own proposal, and letting an endpoint or an app out to the public needs the publisher role; a steward alone cannot. A red-lane change asks for the resource name to be typed back before it will go.
 3. Once approved, the page says the change is being deployed, and then that it is applied. Open the endpoint's row and its links answer.
 4. **Activity** is the history of all of this afterwards: what changed, who proposed it, who approved it.
 
