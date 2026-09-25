@@ -225,6 +225,9 @@ see it.
 so a new kind is served the moment it is registered and needs no route of its own. `datasources`
 is the newest of them: the connection of one external feed, described in
 [Architecture/08-pipelines.md §6](../Architecture/08-pipelines.md#6-external-feeds-the-datasource-kind-mf-35-pl-39).
+Every kind has a plural of its own, so a route never has to guess the kind: a `ScopeDefinition`
+answers under `/api/v1/projects/{project}/scopedefinitions` although its file is
+`projects/{p}/policies/{name}.yaml`, and `policies` is `Policy` alone (R19).
 A write carrying a credential as a literal string rather than a `secretRef` is refused with `400`
 before any merge request exists (MF-24, CC-06), whatever the kind.
 
