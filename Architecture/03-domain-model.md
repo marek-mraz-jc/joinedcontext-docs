@@ -234,13 +234,43 @@ dimension key. The rendered artifacts gain one more formalism beside SHACL and O
 `model.qb.ttl`, which is what an SDMX consumer reads; every other surface — the endpoint, the
 policy, the filters, the export — is the one it already has, because an observation is an entity.
 
-**Not built.** No model in this platform has more than one dimension today, and none of the
-seeded indicators, pipelines or dashboards asks for a slice. Building the DSD annotation, the
-generator and the schema surface for no consumer would put a permanent vocabulary into four
-components to serve a case nobody has brought yet, and a data cube modelled without a real one
-in front of it is a guess committed to the architecture. The shape above is the decision; the
-implementation waits for the first model that needs it, and the question that unblocks it is
-which indicator that is (T-1186, T-1187, T-1188).
+**How a model declares one.** Two LinkML annotations, and nothing else new in the model:
+`qb_dsd: true` on the class makes it the Data Structure Definition and its entities the
+observations, and `qb_component: dimension` or `qb_component: measure` on a slot names its role.
+The first cube is the one the design was written against: population of Banská Bystrica by
+district, age band and year, from the Statistical Office of the Slovak Republic.
+
+```yaml
+classes:
+  PopulationObservation:
+    is_a: Entity
+    annotations: { qb_dsd: true }
+    slots: [refDistrict, ageBand, year, population]
+slots:
+  refDistrict: { range: District, required: true,
+                 annotations: { ngsi_ld_kind: Relationship, qb_component: dimension } }
+  ageBand:     { range: AgeBand, required: true,
+                 annotations: { ngsi_ld_kind: VocabProperty, qb_component: dimension } }
+  year:        { range: integer, required: true,
+                 annotations: { qb_component: dimension } }
+  population:  { range: integer, required: true, unit: { ucum_code: "1", exact_mappings: [ucefact:IE] },
+                 annotations: { qb_component: measure } }
+```
+
+Model Tools refuses a DSD that breaks a rule of DM-60 and names the slot: a dimension is a
+`VocabProperty`, a `Relationship` or the one time dimension (a `Property` whose range is `date`,
+`datetime` or `integer`), a measure is a `Property` with a unit, each of them is `required`
+because an observation without one is not a cell of the table, and a DSD has at least one of
+each. The JSON Schema carries the roles as `x-qb-dsd` on the class and `x-qb-component` on the
+slot, the way it carries `x-ngsi-ld-kind`, and `model.qb.ttl` is rendered from them: by Model
+Tools beside the SHACL and the OWL (`gen_qb.py`), and by the gateway from the endpoint's
+projection on the schema surface, where the OWL also types each component property as a
+`qb:DimensionProperty` or a `qb:MeasureProperty` (Architecture/11 §8). An observation's
+`{localId}` is the DSD's class name and its dimension values joined by `~`, a dimension that is
+an entity contributing that entity's own `{localId}` (`jc_core::qb::observation_local_id`):
+`PopulationObservation~okres-banska-bystrica~15-19~2024`. Not `-`, which an age band carries.
+The same cell always has the same id, so a re-run of the pipeline that writes it updates rather
+than duplicates.
 
 ---
 
