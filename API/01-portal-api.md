@@ -2188,6 +2188,14 @@ An App's `spec.access` entry naming the e-mail then matches nobody, and the App 
 - Without the admin client every route answers `503`.
 - Every action writes one `person.changed` event of the project `org` to the activity feed (§14):
   who, what, and the person's id, never an e-mail body, a password or a token (PF-90).
+- The registry offers the same actions as operations (§21, AG-77, T-2732): `jc_person_list`,
+  `jc_person_get`, `jc_person_create`, `jc_person_edit`, `jc_person_disable`, `jc_person_enable`
+  and `jc_person_sign_out`. Each calls its route's function, so the check and the answers are the
+  route's. `jc_person_create` never answers a temporary password: when the realm sends no e-mail
+  its answer carries `handOver`, which says that a person gives one with `reset-password` on the
+  person's page. Resetting a password, removing a second factor and deleting a person have no
+  operation: the first two hand over or take away a way in, and a deletion is a Change a person
+  proposes on the page (PF-92, PF-94).
 
 ## 25. Organization setup (PF-90, UI-82)
 

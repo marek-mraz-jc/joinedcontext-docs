@@ -39,9 +39,9 @@ Generated 2026-09-25 from: `docs` 36beff0, `conformance` 2d6df0f, `deployment` f
 | **R** — Access control and federation | 60 | 23 | 10 | 27 | 0 |
 | **SDK** — App SDK | 34 | 29 | 3 | 2 | 1 |
 | **SP** — Context-space surface | 22 | 19 | 0 | 3 | 0 |
-| **TS** — Testing and quality | 25 | 15 | 5 | 5 | 0 |
+| **TS** — Testing and quality | 26 | 15 | 5 | 6 | 0 |
 | **UI** — Portal and user interface | 84 | 62 | 15 | 7 | 5 |
-| **Total** | 1091 | 776 | 107 | 208 | 38 |
+| **Total** | 1092 | 776 | 107 | 209 | 38 |
 
 ## 3. Requirement to test
 
@@ -1141,6 +1141,7 @@ Generated 2026-09-25 from: `docs` 36beff0, `conformance` 2d6df0f, `deployment` f
 | **TS-23** |  | tested | fast ci | deployment `tests/test_reusable_workflows.py::test_every_action_is_pinned_by_commit` |
 | **TS-24** |  | open |  |  |
 | **TS-25** |  | tested | conformance | conformance `tests/security/test_prompt_injection.py::test_ts25_corpus_has_no_structural_violations`, conformance `tests/security/test_prompt_injection.py::test_ts25_corpus_contains_at_least_50_vectors`, conformance `tests/security/test_prompt_injection.py::test_ts25_corpus_covers_all_mandated_families`, and 4 more |
+| **TS-26** | [H] [A] | open |  |  |
 
 ### UI — Portal and user interface
 

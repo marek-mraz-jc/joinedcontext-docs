@@ -65,6 +65,7 @@ OUR_PREFIXES = (
     "crates/",
     "ui/src/",
     "ui/tests/",
+    "ui/e2e/",
     "charts/",
     "schemas/",
     "tests/",
@@ -78,6 +79,7 @@ BARE_PREFIX_OWNERS = {
     "crates/": ("joinedcontext-platform",),
     "ui/src/": ("joinedcontext-portal",),
     "ui/tests/": ("joinedcontext-portal",),
+    "ui/e2e/": ("joinedcontext-portal",),
     "charts/": ("joinedcontext-deployment",),
     "schemas/": ("joinedcontext-platform",),
     "tests/": (
