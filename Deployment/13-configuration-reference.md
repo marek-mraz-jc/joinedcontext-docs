@@ -70,6 +70,8 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_BRANDING_FILE` | — | no | The file the deployment renders `global.branding` into (`JC_BRANDING_FILE`; UI-30, OPS-46). |
 | `JC_ENVIRONMENT` | — | no | `JC_ENVIRONMENT` names the overlay the branch is rendered with, the same one the reconciler applies for this installation (CC-73); unset renders the manifests as they are written. |
 | `JC_FUNCTIONS_URL` | — | no | Base URL of the `jc-functions` runtime (`JC_FUNCTIONS_URL`), e.g. `http://jc-functions.jc-system.svc.cluster.local:8080`. |
+| `JC_GITEA_APPS_OWNER` | — | no | `JC_GITEA_APPS_OWNER` — the forge organization the generated applications' repositories, packages and images live in, apart from the configuration's (PF-105); the configuration's organization when unset. |
+| `JC_GITEA_APPS_TOKEN` | — | yes | `JC_GITEA_APPS_TOKEN` — the token of the applications' own machine user, which writes their repositories and packages and nothing of the configuration's; set with the owner or not at all. |
 | `JC_GITEA_OWNER` | — | no | `JC_GITEA_URL` (the API base the Portal dials), `JC_GITEA_OWNER`, `JC_GITEA_REPO` and `JC_GITEA_TOKEN` (a secret: the token every push and merge request is written with). |
 | `JC_GITEA_PUBLIC_URL` | — | no | `JC_GITEA_PUBLIC_URL`; the API base when unset. |
 | `JC_GITEA_REPO` | — | no | `JC_GITEA_URL` (the API base the Portal dials), `JC_GITEA_OWNER`, `JC_GITEA_REPO` and `JC_GITEA_TOKEN` (a secret: the token every push and merge request is written with). |
@@ -88,7 +90,7 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_PORTAL_APPS_DIR` | — | no | Root of the built app bundles, one directory per app (`JC_PORTAL_APPS_DIR`). |
 | `JC_PORTAL_APPS_NAMESPACE` | — | no | Where an App's four Kubernetes objects are applied (`JC_PORTAL_APPS_NAMESPACE` with `JC_PORTAL_ORG_DOMAIN`; AP-13, AP-18, T-0411). |
 | `JC_PORTAL_APPS_PULL_SECRET_NAME` | — | no | `JC_PORTAL_APPS_PULL_SECRET_NAME` — the name of the `dockerconfigjson` Secret in the apps namespace a node pulls app images with (a forge token that reads packages only). |
-| `JC_PORTAL_APPS_REGISTRY` | — | no | `JC_PORTAL_APPS_REGISTRY` — the host, and port if any, of the forge's container registry; an App's image is composed as `{registry}/{forge organization}/app-{name}@{digest}`. |
+| `JC_PORTAL_APPS_REGISTRY` | — | no | `JC_PORTAL_APPS_REGISTRY` — the host, and port if any, of the forge's container registry; an App's image is composed as `{registry}/{forge organization}/app-{name}@{digest}`, the organization being the applications' own when they have one of their own. |
 | `JC_PORTAL_APPS_URL` | — | no | `JC_PORTAL_APPS_URL`: an absolute `http(s)` origin with nothing after it. |
 | `JC_PORTAL_APP_TESTS_IMAGE` | — | no | The run's test sandbox (SDK-38): `JC_PORTAL_APP_TESTS_NAMESPACE`, a Kubernetes name, and `JC_PORTAL_APP_TESTS_IMAGE`, an image reference pinned by `@sha256:` digest, both or neither. |
 | `JC_PORTAL_APP_TESTS_NAMESPACE` | — | no | The run's test sandbox (SDK-38): `JC_PORTAL_APP_TESTS_NAMESPACE`, a Kubernetes name, and `JC_PORTAL_APP_TESTS_IMAGE`, an image reference pinned by `@sha256:` digest, both or neither. |
