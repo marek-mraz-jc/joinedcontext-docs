@@ -5,7 +5,7 @@ title: "Architecture Decision Register"
 
 # Architecture Decision Register
 
-This register records all foundational Architecture Decision Records (ADRs) governing the next-generation federated digital twin platform (`ADR-N-001` through `ADR-N-036`), along with explicit status mapping of legacy decision records from preceding platform generations.
+This register records all foundational Architecture Decision Records (ADRs) governing the next-generation federated digital twin platform (`ADR-N-001` through `ADR-N-037`), along with explicit status mapping of legacy decision records from preceding platform generations.
 
 ## 1. Target Architecture Decisions (`ADR-N` Series)
 
@@ -46,6 +46,7 @@ This register records all foundational Architecture Decision Records (ADRs) gove
 | [ADR-N-034](adr-n-034-pipeline-workbench.md) | One Pipeline Workbench, and Only Validated Records Are Written | **Accepted** | 2026-09-25 | Six steps (source, sample, mapping, mapped output, validation, target), each an operation every actor calls; the runner validates each record against the space's model and sends a refused one to a rejected list; one outcome line per record makes the runs and their log. |
 | [ADR-N-035](adr-n-035-organization-policies-and-limits.md) | Every Organization Policy and Limit Is a Field of the Organization | **Accepted** | 2026-09-25 | `Organization.spec.policies` and `spec.limits` beside `spec.projects` hold every organization-wide choice and number, each with a default, an operator's bound and one enforcer; changes are red lane for an `org-admin`, lowering never deletes, and every refusal names the limit and who can change it. |
 | [ADR-N-036](adr-n-036-three-app-shapes.md) | Three App Shapes, Each with a UI and a Complete Template | **Accepted** | 2026-09-25 | `spec.class` is `ui` (the default, static React on the SDK with serverless functions), `ui-rust` (an axum server) or `ui-node` (a Node.js server, only when asked); `service` is removed and every App has a UI; one template per shape pins every library and its runner image caches every lockfile entry, so a build reaches no registry; CI holds each shape to a 2-minute first build and a 30-second rebuild. |
+| [ADR-N-037](adr-n-037-an-origin-per-app.md) | An Origin per App and an Egress Allow-List per App | **Accepted** | 2026-09-25 | Every published App is served on `{name}.apps.{domain}` with a host-only session, its own endpoints only and an HTTP-01 certificate per App, so Apps no longer share storage, cookies or sessions with each other, the forge or the endpoints; `/apps/{name}/` redirects; a server pod reaches only DNS, the mesh, the gateway in the cluster and the CIDRs `spec.egress` declares, on the red lane. |
 
 ## 2. Status of Preceding Decision Records
 
@@ -138,4 +139,5 @@ The following table explicitly categorizes the disposition of all historical dec
 - [ADR-N-034](adr-n-034-pipeline-workbench.md) — referenced above.
 - [ADR-N-035](adr-n-035-organization-policies-and-limits.md) — referenced above.
 - [ADR-N-036](adr-n-036-three-app-shapes.md) — referenced above.
+- [ADR-N-037](adr-n-037-an-origin-per-app.md) — referenced above.
 - [01-overview](../Architecture/01-overview.md) — the architecture these decisions shape.

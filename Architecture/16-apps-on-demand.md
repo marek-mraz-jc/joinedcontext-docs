@@ -16,7 +16,7 @@ flowchart LR
     CI["CI: build · tests · SBOM · dataNeeds ⊆ granted check"]
     REC["Portal reconciler<br/>renders Endpoint + Policy from dataNeeds"]
     EP["/api/endpoint/{slug}/ (only the declared types, attrs, operations)"]
-    RUN["App runtime<br/>static SPA under /apps/{name}/ or container"]
+    RUN["App runtime<br/>static SPA on {name}.apps.{domain} or container"]
     U --> AG --> BP --> REPO --> CI --> REC --> EP
     CI -- "failing build / tests / smoke test" --> AG
     REC --> RUN --> EP --> CB["Context Gateway → Broker"]
@@ -128,9 +128,9 @@ The builder acts as `agent:app-builder@{org}` (AG-17); the workspace holds a for
 
 One login front for everything a person opens in a browser (ADR-N-019): the `openid-connect` plugin of APISIX in session mode on the Portal routes (`portal.{domain}`) and on every app route, `static` apps included. No app pod carries a sidecar and no app contains login code (AP-26).
 
-- **Client**: one confidential OIDC client `edge` in the organization's Keycloak realm, redirect URIs `https://portal.{domain}/*` and `https://{domain}/apps/*`. Its tokens are signed RS256 by per-client override, because lua-resty-openidc verifies RS/HS only while the realm default stays ES256 (T-0252). Its secret and the session secret reach APISIX as environment variables from Kubernetes Secrets (AP-27).
-- **Session**: the plugin's encrypted cookie, `Secure`, `HttpOnly`, `SameSite=Lax`; path `/` on the Portal host, `/apps/{name}/` on an app route (`/apps/` on the shared surface); `logout_path` `/apps/{name}/logout` (and `/logout` on the Portal) ends the edge and the Keycloak session front-channel; the cookie lifetime is bounded by the realm's SSO idle time (AP-29).
-- **Routing**: `app-{name}` routes (`/apps/{name}/*`) are rendered by jcctl for every App, at a higher priority than the shared `apps-surface`; `service`/`fullstack` apps upstream to `app-{name}:8080`, `static` apps to the Portal's static host. The route strips `X-Userinfo` and `X-Access-Token` from the client request and the plugin sets them from the session; non-public routes use `unauth_action: auth`, `visibility: public` routes `unauth_action: pass` (AP-28).
+- **Client**: one confidential OIDC client `edge` in the organization's Keycloak realm, redirect URI `https://portal.{domain}/*`; each App logs in with its own client `app-{name}`, whose only redirect URI is its host (AP-111, AP-133). Its tokens are signed RS256 by per-client override, because lua-resty-openidc verifies RS/HS only while the realm default stays ES256 (T-0252). Its secret and the session secret reach APISIX as environment variables from Kubernetes Secrets (AP-27).
+- **Session**: the plugin's encrypted cookie, `Secure`, `HttpOnly`, `SameSite=Lax`; host-only, path `/` on the Portal host and on each App's host; `logout_path` `/logout` on either ends the edge and the Keycloak session front-channel; the cookie lifetime is bounded by the realm's SSO idle time (AP-29).
+- **Routing**: every App has a host of its own, `{name}.apps.{domain}` (ADR-N-037, AP-133): its `app-{name}` route (`/*`) and `app-{name}-endpoint` route (`/api/endpoint/{slug}/*`, the App's own endpoints only) match that host alone, everything else on it is a `404`, and `/apps/{name}/*` on the apex answers `308` to the host. A host is a browser origin, so one App cannot read another's storage, frame it or send a request that carries its session. The reconciler creates the host's edge Ingress and its HTTP-01 certificate once, when the App is published; `service`/`fullstack` apps upstream to `app-{name}:8080`, `static` apps to the Portal's static host. The route strips `X-Userinfo` and `X-Access-Token` from the client request and the plugin sets them from the session; non-public routes use `unauth_action: auth`, `visibility: public` routes `unauth_action: pass` (AP-28).
 - **Data calls**: the app calls its endpoint with `X-Access-Token`, so the grant is the intersection of user and endpoint (GW10); background jobs use the app's service account (AP-08). Public apps call the endpoint anonymously.
 - **Audience**: `visibility` is enforced by the endpoint and its policy; the edge only decides whether an anonymous request may pass.
 - **Generated apps**: the builder prompt of `app-from-prompt` carries this contract; an app that ships an OIDC library or a login route fails CI (AP-23).
@@ -153,8 +153,8 @@ The app container reads its own configuration from four environment variables th
 | Variable | Value |
 |---|---|
 | `JC_BIND_ADDRESS` | `0.0.0.0:8080`, the pod port APISIX upstreams to (AP-26) |
-| `JC_BASE_PATH` | `/apps/{name}/`, the path the app is served under |
-| `JC_ENDPOINT_URL` | `https://{host}/api/endpoint/{slug}/`, the only data surface it may call (AP-04) |
+| `JC_BASE_PATH` | `/`, since the App has its host to itself (AP-133) |
+| `JC_ENDPOINT_URL` | `http://context-gateway.{namespace}.svc:8080/api/endpoint/{slug}/`, the gateway in the cluster and the only data surface it may call (AP-04, AP-134); the pod's NetworkPolicy admits that and the destinations of `spec.egress[]`, nothing else |
 | `JC_ANONYMOUS` | `true` on a `public` app, where an absent `X-Access-Token` is normal (AP-28) |
 
 Two constraints follow from the endpoint being singular. Data needs that name two context spaces cannot compile, because one app has one endpoint and an endpoint has one space (AP-04). And an attribute list is granted as both `propertyNames` and `relationshipNames`: the manifest declares `attrs` as one flat list, and until the space's DataModel is available to the reconciler nothing tells a property from a relationship. A property name in the relationship whitelist matches no relationship, so the grant is not widened by it.
@@ -284,7 +284,7 @@ The note itself is one attribute, `stewardNote`, on the station entity. It is de
 ## 7. Runtime and isolation
 
 - **Full-stack and service apps** run as one Deployment of the app container alone, behind the edge login (§5); the app image contains the Rust binary with the React build embedded, so one image is the whole app. How a `fullstack` image is built, published and pulled is §13.
-- **Static apps** are built by a Job in the apps namespace that holds no platform credential (AP-80, AP-81) and served from the Portal's static host at `/apps/{name}/` with a strict CSP (`connect-src 'self'`, `frame-ancestors` the Portal's own origin, AP-122, plus the declared ones when the app is meant to be embedded elsewhere), Subresource Integrity on the build output, and no access to Portal session cookies (separate path scope; the app obtains its own token through PKCE or is anonymous).
+- **Static apps** are built by a Job in the apps namespace that holds no platform credential (AP-80, AP-81) and served from the Portal's static host on the App's own host `{name}.apps.{domain}` (AP-133) with a strict CSP (`connect-src 'self'`, which is that host, `frame-ancestors` the Portal's own origin, AP-122, plus the declared ones when the app is meant to be embedded elsewhere), Subresource Integrity on the build output, and no access to Portal session cookies (separate path scope; the app obtains its own token through PKCE or is anonymous).
 - **Service apps** run as a Deployment in the instance namespace with default-deny NetworkPolicy: egress only to APISIX (their endpoint) and the OIDC issuer; no broker, database or forge access; resource limits from `spec.limits`; image built in CI, signed, SBOM attached (ADR-N-001 supply-chain rules).
 - **Tokens:** the app never receives a long-lived secret. Static apps use the user's PKCE token (audience = the endpoint, RFC 8707); service apps use client credentials whose token is audience-bound to their endpoint only.
 - **Observability:** per-app request counts, error rates and rate-limit hits are labelled with `app={name}` at the gateway; the App page shows them (CC-35 spirit).
@@ -298,7 +298,7 @@ A save is one request through the app's endpoint and nothing else: `PATCH /api/e
 
 | Where the form runs | How the write carries the person | Who evaluates it |
 |---|---|---|
-| A published `static` app on the platform origin (`/apps/{name}/`) | the apps session cookie and the CSRF header, same origin, under `/apps/{name}/api/endpoint/{slug}/`, where the edge sets the session as the bearer | the gateway, through the app's endpoint |
+| A published `static` app on its own host (`{name}.apps.{domain}`, AP-133) | the App's session cookie and the CSRF header, same origin, under `/api/endpoint/{slug}/` of that host, where the edge sets the session as the bearer | the gateway, through the app's endpoint |
 | A `fullstack` app behind the edge login | `X-Access-Token` set by APISIX from the session (§5) | the gateway, through the app's endpoint |
 | The sandboxed preview of a run (AP-50) | a `postMessage` to the page that framed it; the Portal page performs the write with the reviewer's session against the app's sandbox space (AP-19) and posts the answer back | the gateway, through the sandbox endpoint |
 
@@ -339,7 +339,7 @@ Generation runs are durable and survive browser navigation or disconnects. Navig
 
 ### Draft visibility and isolation (AP-70)
 
-Draft applications appear in the project Applications catalog with their real-time state badge (`building`, `needs you`, `failed`, `ready to publish`). However, the public or edge route `/apps/{name}/` answers only for `published` applications (AP-18). Drafts cannot be embedded or accessed outside the platform. The only interface for interacting with a draft application is the sandboxed preview iframe (AP-50, AP-63).
+Draft applications appear in the project Applications catalog with their real-time state badge (`building`, `needs you`, `failed`, `ready to publish`). However, the App's host `{name}.apps.{domain}` answers only for `published` applications (AP-18, AP-133). Drafts cannot be embedded or accessed outside the platform. The only interface for interacting with a draft application is the sandboxed preview iframe (AP-50, AP-63).
 
 ### Automated lease reaping (AG-66)
 
@@ -354,9 +354,9 @@ The Portal executes an internal background reaper loop on a periodic schedule. R
 | Interview | `draft` | `interviewing` | Agent emits `question` | User questionnaire rendered in chat; run pauses until answered (AG-44). |
 | Build / Spec | `draft` | `building` | Model call / workspace compilation | Code pass writes the application files (AP-56); workspace runs compiler. |
 | Verification | `draft` | `testing` | Transpile / test suite | Portal transpiles and checks imports (AP-59, SDK-12); workspace test runners execute. |
-| Preview | `draft` | `previewing` | Preview document ready | Sandboxed iframe mounted (AP-50). Route `/apps/{name}/` stays unservable (AP-70). |
+| Preview | `draft` | `previewing` | Preview document ready | Sandboxed iframe mounted (AP-50). The App's host stays unservable (AP-70). |
 | Publish Proposal | `draft` | `awaiting_approval` | User clicks "Publish Application" | Change proposal and Gitea merge request created (AP-20). |
-| Published | `published` | `published` | Merge request merged | Reconciler provisions APISIX edge route; application live at `/apps/{name}/` (AP-18). |
+| Published | `published` | `published` | Merge request merged | Reconciler provisions APISIX edge route; application live at `https://{name}.apps.{domain}/` (AP-18, AP-133). |
 | Build Failure | `draft` | `failed` | Compiler error or invalid spec unrecovered | Run failed with no page: draft catalog entry marks failure with diagnostic excerpt. |
 | Lease Expired | `draft` | `expired` | Wall-clock limit exceeded unattended | Lease expired unattended: background reaper terminates Job, invalidates ticket, updates draft (AG-66). |
 | User Cancel | `draft` | `cancelled` | User cancels run | Workspace stopped, ticket invalidated, commits preserved (AG-52). |
