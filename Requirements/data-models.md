@@ -11,7 +11,7 @@ This chapter specifies how data models are authored, imported, generated, versio
 
 ## 1. Source of truth and artifacts
 
-- **DM-01** — The single authoring format of a data model MUST be LinkML YAML stored at `projects/{p}/spaces/{s}/datamodel.linkml.yaml`, one per space (DM-61); a space that still holds `datamodels/{name}.linkml.yaml` files is migrated by `jcctl model merge` (DM-62). JSON Schema, `@context`, documentation and examples are generated artifacts, never hand-edited.
+- **DM-01** — The single authoring format of a data model MUST be LinkML YAML stored at `projects/{p}/spaces/{s}/datamodels/{name}.linkml.yaml`, one per space (DM-61); a space that still holds `datamodels/{name}.linkml.yaml` files is migrated by `jcctl model merge` (DM-62). JSON Schema, `@context`, documentation and examples are generated artifacts, never hand-edited.
 - **DM-02** — Generated artifacts MUST be committed next to the source in the same commit (`json-schema/{name}.v{major}.json`, `context/{name}.v{major}.jsonld`, `docs/{name}.md`, `examples/{name}.example.jsonld`) (CC-25). CI MUST regenerate and fail the merge request on any diff between committed and regenerated output.
 - **DM-03** — The JSON Schema dialect MUST be draft-07 (CC-12, stack verdict S4). Generators MUST NOT emit 2019-09 or 2020-12 keywords.
 - **DM-04** — Every slot MUST carry an IRI (`slot_uri`) and every class a `class_uri`; a model without complete IRI bindings MUST NOT reach `published` status. Organisation-local terms MUST use the organisation's own namespace prefix, never the Smart Data Models or ETSI prefixes. A slot or class added locally without an IRI (the editor, the assistant's `addSlot`/`addClass` operations, AG-77) MUST be minted under the model's own prefix: the prefix named after the model, `{model name}: {model id}/`, declared in `prefixes` when the model has none yet, so a model whose `default_prefix` is an imported vocabulary (`sdm`) never mints a local term there (DM-16).
@@ -109,7 +109,7 @@ This chapter specifies how data models are authored, imported, generated, versio
 
 Decided in [ADR-N-033](../Decisions/adr-n-033-one-data-model-per-space.md) (T-2698).
 
-- **DM-61** [S] — A Context Space MUST have exactly one `DataModel`, `spaces/{s}/datamodel.linkml.yaml`, named by the space's `spec.dataModel`; its classes are the space's types, validation MUST refuse a second model file in a space, and the Context Gateway MUST refuse a write of a type the model does not declare. The model MAY `import` published models at a pinned version.
+- **DM-61** [S] — A Context Space MUST have exactly one `DataModel`, named by the space's `spec.dataModelRef`; its classes are the space's types, validation MUST refuse a second model file in a space, and the Context Gateway MUST refuse a write of a type the model does not declare. The model MAY `import` published models at a pinned version.
 - **DM-62** — Creating a Context Space MUST create its model in the same Change, empty or importing the models picked; `jcctl model merge` MUST merge several models of one space into one, keeping class names, slot IRIs and `class_uri`s, and MUST refuse a clash naming both classes.
 - **DM-63** [S] — `GET /api/v1/organization/datamodels?search=` MUST answer every published model the caller may read (name, project, space, version, classes) and the Smart Data Models catalog entries, and nothing the caller cannot read.
 
