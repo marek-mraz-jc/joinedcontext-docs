@@ -409,6 +409,16 @@ A `Policy` names a context space, not an endpoint, so a grant made to a person d
 
 The gateway matches a `user` subject against `preferred_username`, which is the e-mail because the realm sets `registrationEmailAsUsername`, and a `group` against the `groups` claim; the roles exist for the one request through that endpoint. A token that asserts a role starting with `endpoint:` has it dropped, so no realm role can impersonate one. Before this section the base grant named the role `app-{name}`, which no token carries, so a `project` or `organization` application read nothing (ADR-N-027 §1).
 
+### The endpoints an App's token reaches
+
+One rule names the Endpoints an App reads, and three places use it: the audience mapper of the client `app-{name}`, the endpoints the static host writes into `#jc-config`, and the Context Gateway's admission (AP-113). The rule is `jc-core` `app::served_endpoints`, and the Portal and the gateway call that function rather than a copy of it, so a change to the rule cannot lock a working App out of an endpoint its client names:
+
+1. for each `dataNeeds` item, the App's own generated `Endpoint app-{name}` when it serves that item's space, otherwise every Endpoint of the App's project over that space, by name;
+2. then the target Endpoint of every `SharedSpaceReference` of the App's project, by name;
+3. each slug once, the first five kept (AP-04).
+
+The gateway computes the set from the repository it loads, on every reconcile, beside its ServiceAccount table. A token whose `azp` is `app-{name}` is admitted on an Endpoint only when that Endpoint's slug is in the set of the App `{name}`; on any other Endpoint, and for an `app-*` client no App of the repository names, the answer is `401`, the same answer as a token bound to another resource. The reconciler already removes every audience mapper an App does not declare (T-2857); the gateway's check holds inside a reconcile interval and after a defect in the client writer too. A person's edge token (`aud: context-gateway`, `azp` of the edge client) is not an App client's and is unchanged.
+
 ### Who opens it, and what it learns
 
 The static host resolves the person's roles on every request, from the identity the Portal verifies on the edge's `X-Access-Token` (`sub`, `email`, `name`, `groups`) against `spec.access` of the published manifest; nothing about roles is cached in the bundle or read from the request. With `visibility: roles` a person holding none gets a `403` page with the application's title, its roles and their titles, and the sentence "Ask a steward of the project helsinki to add you to one of these roles", in the person's language. It never names a member. The index it serves carries the person in `#jc-config`, and `Cache-Control: private, no-store` keeps it out of every shared cache:
