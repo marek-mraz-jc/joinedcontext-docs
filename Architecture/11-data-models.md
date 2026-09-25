@@ -149,11 +149,21 @@ the list through `jc_core::units` (`lookup`, `validate`, `convert`).
 #### 1.0.2 The unit on the wire, in a pipeline and on screen (DM-06)
 
 - **On the wire.** Each Property of a slot that declares a unit carries `unitCode` with exactly
-  that code. On a write through an Endpoint, the gateway refuses another code with `400`,
-  naming the attribute, the expected code and the code it found. A missing `unitCode` is filled
-  with the model's code, which the answer says in a header. A space whose
-  `spec.missingUnitCode` is `refuse` refuses it instead (the default is `fill`). Reads stay
-  CIM 009 conformant: `unitCode` comes back as stored.
+  that code. The gateway reads the code from the space's model, the `x-unit.exactMappings` of
+  its generated JSON Schema (`ucefact:GQ`), and checks every write through an Endpoint or the
+  space's own surface before the broker is asked: another code is refused with `400`, naming
+  the attribute, the expected code with its symbol and name, and the code it found, and never
+  the entity. A missing `unitCode` is filled with the model's code, in the normalized form and
+  in the concise one, and the answer names what was filled in the header
+  `JC-Unit-Code-Filled: pm10=GQ, temperature=CEL`. A space whose `spec.missingUnitCode` is
+  `refuse` refuses it instead (the default is `fill`). Batches, attribute fragments, one
+  attribute's value, the instances of a multi-attribute and temporal instances are checked the
+  same way; a deletion by `urn:ngsi-ld:null` carries no unit and is left alone. An Endpoint that
+  serves a view (EP-54) writes in the target model, which its Mapping converts, so these rules
+  do not apply to it. Reads stay CIM 009 conformant: `unitCode` comes back as stored.
+  The JSON Schema and the SHACL shapes describe the entity in its key-value form, which carries
+  no `unitCode`, so neither states the code as a constraint; the gateway is the one place it is
+  enforced.
 - **In a pipeline.** A source in another unit is converted in the mapping, with the factors of
   the list, before the entity is written: a space never stores one attribute in two units. A
   conversion between two quantity kinds (a temperature into a concentration) is refused when
