@@ -197,7 +197,7 @@ exits non-zero when it is over the bound (5 seconds by default, per
 
 ### Scope
 
-The age key that decrypts the deployment repository's `secrets.enc.yaml`, Keycloak client secrets, and PostgreSQL passwords.
+The age key that decrypts the deployment repository's `secrets.enc.yaml`, and every other credential the platform holds or uses, by class, with who rotates it (OPS-45).
 
 ### The age key never enters the cluster
 
@@ -229,13 +229,38 @@ Encrypted values are resolved by `vals` while `helmfile` templates or applies, s
      scripts/render.sh <env> /tmp/rendered.yaml
    ```
 
-### Keycloak client secrets and database passwords
+### Every credential class, who rotates it and how the old one is refused
 
-A generated secret is rotated by the platform rather than by hand: delete the Kubernetes Secret the component owns and apply the component again, which generates a new value and rolls the workloads that mount it. A client secret a department holds is rotated with `scripts/emergency-revoke.sh --service-account <client>`, which is Runbook 4.
+The generator writes a Secret only where no copy exists and copies the first copy it finds to every namespace, and nothing restarts a pod when a Secret changes. Deleting one copy and applying therefore changes nothing. `scripts/rotate-secret.sh` in `joinedcontext-deployment` does the whole rotation for every class the platform generates (OPS-45, T-1719):
+
+1. It deletes every copy.
+2. It applies the release that makes the Secret again, and the release that hands it to the other side.
+3. It restarts every Deployment, StatefulSet and DaemonSet whose pods read the Secret.
+4. It measures that the old value is refused and the new one accepted, within `--bound` seconds (60 by default), and exits `1` when it is not.
+
+The value is never printed and never put on a command line. A Secret that carries no Helm release, and the classes the table names for another procedure, are refused before anything is deleted.
+
+| Class | Secrets | Who rotates it | How | How the old one is refused |
+|---|---|---|---|---|
+| Platform OIDC client secrets | `keycloak-client-<client>` | the platform operator | `scripts/rotate-secret.sh --instance <env> --secret keycloak-client-<client> --idm https://idm.<domain> --realm <realm>`: the generator makes a new secret and keycloak-config-cli writes it to the client | a `client_credentials` grant with the old secret answers `401` |
+| Database passwords | `db-portal`, `db-keycloak`, `db-gitea`, `db-ckan`, `db-ckan-datastore-read`, `db-antares` | the platform operator | `scripts/rotate-secret.sh --instance <env> --secret db-<name>`: CloudNativePG applies the new role password from the Secret | a login with the old password on the primary fails, and one with the new password succeeds |
+| Forge tokens | `gitea-token-portal`, `gitea-token-gateway`, `gitea-token-lane-secret` | the platform operator | `scripts/rotate-secret.sh --instance <env> --secret gitea-token-<name> --forge https://<domain>/git`: the forge bootstrap deletes the old token in Gitea by name and mints one | `/api/v1/user` answers `401` to the old token |
+| Session and signing keys | `portal-cookie-key`, `apisix-oidc-session`, `ckan-session`, `artifact-store-root` | the platform operator | `scripts/rotate-secret.sh --instance <env> --secret <name>`, then every reader restarts. Rotating these ends every session they signed: the Portal's cookies, the edge sessions, CKAN's sessions and API tokens (its token Job mints a new one). A new artifact-store root re-derives every organization's keys. | nothing outside the cluster to ask; the script checks that every copy changed |
+| Demo people | `keycloak-user-<name>` (development profile only) | the platform operator | `scripts/rotate-secret.sh --instance <env> --secret keycloak-user-<name>`: keycloak-config-cli writes the new password | the person's next login needs the new password |
+| Department ServiceAccount keys | the ServiceAccount's keys in the Portal | the project's steward | the Portal's ServiceAccount page: add a key, move the caller, revoke the old one (both keys work in between) | revocation ends the old key at once; `service_account_api_tests.rs::rotation_keeps_both_keys_alive_and_revocation_ends_one_now` |
+| A compromised credential, now | any of the above | whoever holds the cluster | Runbook 4, `scripts/emergency-revoke.sh`, then the row of its class | measured by the script within 5 s |
+| Administrators | `gitea-admin-credentials`, `keycloak-admin-user` | the platform operator | written once at install and never reset by an apply (`initialOnlyNoReset`): change the password in Gitea or Keycloak first, then write the same value into every copy of the Secret, since keycloak-config-cli and the forge bootstrap log in with it. The script refuses them. | the old password fails the application's own login |
+| Runner registration | `gitea-runner-registration` | the platform operator | reset the registration token in Gitea (site administration, runners), delete every copy of the Secret, apply `gitea-bootstrap`, restart the runner | the runner registers with the new token only |
+| SOPS age key | the operators' `.secrets/` and the CI secret | the platform operator | the procedure above | a render with the new key alone succeeds |
+| Model key | `agent-runner-model-key` | the owner, in the OpenRouter account | create a new key, write it with `kubectl create secret generic agent-runner-model-key --from-file=key=<file> --dry-run=client -o yaml \| kubectl apply -f -`, restart the agent proxy, then delete the old key in OpenRouter | the provider answers `401` to the deleted key |
+| GitHub token of the board and the mirror | `.secrets/` and `github-app-mirror` | the owner, in the GitHub account | create the new token, replace the file and the Secret, restart the mirror, revoke the old token | GitHub answers `401` to the revoked token |
+| Image signing | none | nobody | signing is keyless (GitHub OIDC in `reusable-container-sign.yml`), so there is no key to rotate; the trust is the workflow identity | not applicable |
+
+`tests/test_rotate_secret.py` holds the script to this table against stubs. Proving each class on a running cluster is the ci-full `k3d-deploy` case: rotate, see the old value refused and the new one accepted.
 
 ### Verification
 
-`scripts/render.sh` with only the new key set renders without a `sops` error, the components that mount a rotated secret come back up, and a login through the Portal still works.
+For the age key, `scripts/render.sh` with only the new key set renders without a `sops` error. For every other class, `scripts/rotate-secret.sh` ends with "the old value is refused" or names what failed; after it, a login through the Portal still works.
 
 ---
 
