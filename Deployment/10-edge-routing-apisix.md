@@ -63,6 +63,7 @@ Every row below is one entry of `components/<component>/apisix-routes.yaml` with
 | `context-space` | `/cs/*` | `{host}` | 15 | `context-gateway:8080` | OIDC bearer, verified by the Context Gateway | Class 2 | `proxy-buffering` off, `limit-count` |
 | `context-endpoint` | `/api/endpoint/*` | `{host}` | 20 | `context-gateway:8080` | Bearer or anonymous, decided by the Context Gateway PEP | Class 3 and Class 4 | `cors`, `proxy-buffering` off, `limit-conn` |
 | `context-endpoint-portal` | `/api/endpoint/*` | `portal.{host}` | 20 | `context-gateway:8080` | Edge session becomes the bearer, or a bearer passes through | Class 3 and Class 4 | as above, plus `openid-connect` |
+| `context-mcp-hub` | `/api/mcp*` (the gateway answers `/api/mcp` and `/api/mcp/.well-known/oauth-protected-resource`, 404 on anything else) | `{host}` | 20 | `context-gateway:8080` | Bearer, verified by the Context Gateway, which decides each call as the named Endpoint's own (EP-87, EP-88) | Class 3 and Class 4 | the `context-endpoint` plugin config |
 | `catalog-feed` | `/catalog.*` (the gateway answers `/catalog.jsonld` and `/catalog.ttl`, 404 on anything else) | `{host}` | 20 | `context-gateway:8080` | Anonymous: the feed reads no token and lists public Endpoints only (EP-84) | Class 1 | `proxy-rewrite` |
 | `gitea-forge` | `/git/*` | `{host}` | 10 | `gitea-http:3000` | Basic or token, verified by Gitea | Class 2 | `proxy-rewrite` |
 | `grafana` | `/grafana*` | `{host}` | 5 | `grafana:3000` | Grafana's own OIDC login | Class 2 | `proxy-rewrite` |
