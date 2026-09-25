@@ -1139,7 +1139,8 @@ The editor's operations (DM-13) are `addClass`, `removeClass`, `renameClass`, `s
   normal state of an editor, not a server error.
 - `jsonSchema`, `context`, `docs` and `example` are the four artifacts DM-02 commits beside the
   source, and `jcctl model generate` writes exactly these (see [API/03 §4](03-jcctl.md)); `shacl`
-  and `owl` are rendered in the same run for the artifact store (DM-44). `docs` is one Markdown
+  and `owl` are rendered in the same run for the artifact store (DM-44), and so is `qb`, the RDF
+  Data Cube in Turtle, present only when the model declares a Data Structure Definition (DM-60). `docs` is one Markdown
   page for the whole model, not a directory, and `example` is one entity in the key-value form the
   JSON Schema describes, validated against that schema and against the `@context` before it is
   answered (DM-21). An import answers with the catalogue's own example instead of a generated one:

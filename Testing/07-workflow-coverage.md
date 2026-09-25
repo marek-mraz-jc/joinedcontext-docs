@@ -239,7 +239,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | step | unit | API | mocked UI | live journey | assistant |
 |---|---|---|---|---|---|
 | `connect-instance` | `joinedcontext-portal/src/api/resources.rs` | `tests/ckan_api_tests.rs` | `ui/tests/form_ckan_page.test.tsx` | `ui/e2e/live/kind-ckaninstances.spec.ts` › "CkanInstance: created, changed and removed through the page by a person" | `jc_resource_propose` |
-| `status` | `joinedcontext-portal/src/api/resources.rs` | `tests/ckan_reconciler_tests.rs` | `ui/tests/ckan_view.test.tsx` | owed: T-2849 | `jc_ckan_status` |
+| `status` | `joinedcontext-portal/src/api/resources.rs` | `tests/ckan_reconciler_tests.rs` | `ui/tests/ckan_view.test.tsx` | `ui/e2e/live/ckan.spec.ts` › "ckan/status: a steward reads each catalogue and each published endpoint the status names" | `jc_ckan_status` |
 | `publish-dataset` | `joinedcontext-portal/src/agents/endpoints.rs` | `tests/ckan_reconciler_tests.rs` | `ui/tests/endpoint_open_data.test.tsx` | owed: T-2726 | owed: T-2726 |
 | `refused-no-permission` | `joinedcontext-portal/src/permissions.rs` | `tests/ckan_api_tests.rs` | `ui/tests/ckan_view.test.tsx` | `ui/e2e/live/kind-ckaninstances.spec.ts` › "CkanInstance: a viewer finds every write control disabled with its reason, and the door answers 403" | `jc_resource_propose` |
 

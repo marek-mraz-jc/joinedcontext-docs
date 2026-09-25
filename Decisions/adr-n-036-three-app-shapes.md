@@ -46,6 +46,8 @@ The `static` template pins its libraries with ranges (`^9.4.0`), and the Rust se
    - computation too heavy for a function.
 
    It then picks `ui-rust`, and picks `ui-node` only when the person asks for Node. The run states the shape and the reason before its first build. The person may switch shapes until then.
+
+   `ui-node` is declared and not built yet (owner, 2026-09-25, T-2723): no App on the installation asks for Node, and its runner instance would take up to 3 Gi on a node that is full. Until a person asks for one, validation refuses `ui-node` with a message naming `ui` and `ui-rust` (AP-124), and the generator offers `ui-rust` instead (AP-125).
 3. **One complete template per shape, in the Portal release.** Every template carries, pinned to an exact version with its lockfile committed:
    - the SDK and its grid, map (maplibre), charts (echarts), forms (`EntityForm`), i18n and the typed endpoint client;
    - routing between pages;
