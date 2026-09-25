@@ -785,21 +785,21 @@ Nothing is written: no Git, no broker, no endpoint, no `secretRef` resolved. The
 
 ## 8. The workbench, validation and the log
 
-The workbench ([ADR-N-034](../Decisions/adr-n-034-pipeline-workbench.md), PL-58) is one page with six steps: source, sample, mapping, mapped output, validation, target and save. Each step is one operation of the registry, so the page, the API, MCP and the assistant run the same code (PL-63). The three operations still to build are named in [ADR-N-034 §3](../Decisions/adr-n-034-pipeline-workbench.md#3-decision) and enter this table with their code:
+The workbench ([ADR-N-034](../Decisions/adr-n-034-pipeline-workbench.md), PL-58) is one page with six steps: source, sample, mapping, mapped output, validation, target and save. Each step is one operation of the registry, so the page, the API (`POST /api/v1/projects/{project}/ops/{name}`), MCP and the assistant run the same code and see the same output (PL-63). Sampling and trying a mapping run on the project's runner and need propose on Pipeline, like the §7 test; validating writes nothing and needs read on Pipeline:
 
 | Step | Operation | Answers |
 |---|---|---|
-| Source and sample | sample source (to build, T-2708…T-2712) | the first records of the picked DataSource or Endpoint, their fields and counts, read through the guard of the run |
-| Mapping and mapped output | try mapping (to build) | the §7 trace: every mapped record, and each error at its record, step and line |
-| Validation | validate (to build) | one verdict per record against the target space's model (PL-59) |
+| Source and sample | `jc_pipeline_sample_source` | the first 20 records of the picked `http` DataSource, fetched once on the runner under its egress policy, or of a sample file or URL; their fields and count. A DataSource with a credential or one that streams (MQTT, a socket) has no dry-run sample (MF-38), and the answer asks for a file instead; an Endpoint is read with the caller's own token (the workbench through the gateway, an agent with `query_endpoint`) and passed in as the sample |
+| Mapping and mapped output | `jc_pipeline_try_mapping` | the §7 trace of the candidate over the sample: every mapped record, and each error at its step and line; the same answer as the pipeline test for the same input |
+| Validation | `jc_pipeline_validate` | one verdict per record (at most 100) against the model of the space the pipeline writes into, or of a space named directly: each rule broken by its SHACL component and path (PL-59); a space that names no model answers 409 |
 | Target and save | `jc_pipeline_propose` | the Change the person sends, naming the target space |
 
 ### What the stage checks (PL-59, PL-60)
 
-The target space's one model (DM-61) carries a JSON Schema of its classes in key-value form (DM-02). The Portal compiles that schema into a schema of the normalized entity a pipeline writes: per class, `id` and `type` required, `type` the class name, each declared attribute an object of its NGSI-LD kind (`Property` with a `value`, `Relationship` with an `object`, `LanguageProperty` with a `languageMap`, `GeoProperty` with a GeoJSON `value`), the value checked against the slot's schema, required slots required, and no other attribute unless the model is open. Those are the constraints the model's SHACL shapes carry (`sh:closed`, `sh:minCount`, `sh:maxCount`, `sh:datatype`, `sh:in`), rendered from the same LinkML (DM-43), so a refusal names its SHACL component and path:
+The target space's one model (DM-61) carries a JSON Schema of its classes in key-value form (DM-02). The Portal compiles that schema into a schema of the normalized entity a pipeline writes: per class, `id` and `type` required, `type` the class name, each declared attribute an object of its NGSI-LD kind (`Property` with a `value`, `Relationship` with an `object`, `LanguageProperty` with a `languageMap`, `GeoProperty` with a GeoJSON `value`), the value checked against the slot's schema, required slots required, and no other attribute unless the model is open. Those are the constraints the model's SHACL shapes carry (`sh:closed`, `sh:minCount`, `sh:maxCount`, `sh:datatype`, `sh:in`), rendered from the same LinkML (DM-43), so a refusal names its SHACL component and path, and never quotes the value it refused:
 
 ```json
-{ "index": 3, "ok": false, "problems": [ { "rule": "sh:datatype", "path": "pm10", "message": "pm10 must be a number, got \"n/a\"" } ] }
+{ "index": 3, "ok": false, "problems": [ { "rule": "sh:datatype", "path": "pm10", "message": "pm10 is not of the slot's datatype" } ] }
 ```
 
 The reconciler renders the same schema into the stream: after the author's steps, a `switch` on the type runs Bento's `json_schema` processor with the class's schema, and a mapping checks the id against `urn:ngsi-ld:{type}:{JC_ORG_DOMAIN}:{JC_SPACE}:` (PF-42, PL-57). The schema comes from the artifacts at the version the space's `dataModelRef` pins; a new version is a new render. A pipeline whose space has no model renders no stage, and `jcctl validate` warns about the space (DM-61).

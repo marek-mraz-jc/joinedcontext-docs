@@ -96,7 +96,11 @@ Two writers, one after the other (ADR-N-030, AP-112):
 
 ### How the file reaches APISIX
 
-The chart mounts the ConfigMap and symlinks it to `conf/apisix.yaml` inside the container. An init container first copies the image's own `conf/` into a writable volume and deletes the `apisix.yaml` that ships in the image, or the symlink fails with `File exists` and the gateway crash-loops. `/usr/local/apisix/conf/apisix.yaml` is therefore a path inside the running container, not a file in any repository.
+The upstream chart mounts its rule file from a ConfigMap only. The `apisix` part therefore carries a helmfile `jsonPatches` entry (`components/apisix/component.yaml`) that turns that volume into the Secret `apisix-standalone-config`, after a `test` that fails the render if a chart upgrade moves the volume. Rendering the part needs `kustomize` on the path, as helmfile's patching runs through it. The mount is a whole directory, never a `subPath`, so the kubelet swaps in each write of the reconciler and APISIX reloads the file without a restart.
+
+The Secret has two writers in turn. The `configuration` chart seeds it with the base, marked `helm.sh/resource-policy: keep`, on every sync until the reconciler first writes it and annotates it `joinedcontext.com/composed-by: portal`. From then on helm's `lookup` sees the annotation and renders no Secret, and `keep` stops helm from deleting it, so a sync never takes the Apps' routes off the edge. An installation without the Portal keeps receiving the base from every sync. The Portal's ServiceAccount holds the Role `edge-file-composer` in the APISIX namespace: `get` on the ConfigMap `apisix-standalone-base` and `get`, `update` on the Secret `apisix-standalone-config`, both by name. It holds no `create`, because Kubernetes cannot narrow a `create` to one name.
+
+The chart symlinks the mounted file to `conf/apisix.yaml` inside the container. An init container first copies the image's own `conf/` into a writable volume and deletes the `apisix.yaml` that ships in the image, or the symlink fails with `File exists` and the gateway crash-loops. `/usr/local/apisix/conf/apisix.yaml` is therefore a path inside the running container, not a file in any repository. `dev-smoke` reads the platform routes from the base ConfigMap and never reads the served Secret, which holds the App client secrets.
 
 ### What the rendered file looks like
 

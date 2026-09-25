@@ -18,13 +18,28 @@ and a rule already in force is cited so it can be checked. The feeds these space
 | | `bbsk` | `banskabystrica` |
 |---|---|---|
 | body | Banskobystrický samosprávny kraj | Mesto Banská Bystrica |
-| `orgDomain` | `bbsk.sk` | `banskabystrica.sk` |
+| `orgDomain` | the instance's Organization, `hel.fi` on dev | the same |
 | territory | the kraj, NUTS `SK032`, 13 okresy | the city, LAU `SK0321508438` |
 | people | 607 581 at the end of 2025 | 72 123 on 2026-09-20 |
 | holds the application | yes | no |
 
 They are two projects because they are two publishers with two mandates. A figure of one
 presented as the other is wrong by a factor of eight in population, and no dashboard shows that.
+
+They are two projects of **one** Organization, not two Organizations: an instance serves one
+Organization (PF-01), so both bodies' ids carry the same `{orgDomain}`, and on dev that is
+`hel.fi`. The domain therefore cannot say whose a figure is. The `{space}` segment can: every
+space of a project is named with that project's prefix (section 2), a space name and its segment
+are unique in the Organization (PF-44), and only a project's own pipeline writes into its
+indicator space (section 7). A reader credits a `KeyPerformanceIndicator` by the space it sits in:
+
+| `{space}` segment | publisher |
+|---|---|
+| `bbsk-kpi` | `bbsk`, the region |
+| `banskabystrica-kpi` | `banskabystrica`, the city |
+
+A KPI in any other space is no indicator of either body and is not shown, because section 2
+puts indicators in these two spaces and nowhere else.
 
 ## 2. Spaces, and the segment each one writes into an id
 
@@ -37,8 +52,10 @@ short name into an id is the mistake this table exists to prevent.
 |---|---|---|---|
 | `bbsk` | `bbsk-kraj` | `bbsk-kraj` | the national feeds filtered to `SK032` and its okresy, as fetched |
 | `bbsk` | `bbsk-kpi` | `bbsk-kpi` | `KeyPerformanceIndicator` entities only |
+| `bbsk` | `bbsk-registre` | `bbsk-registre` | the region's own registers from opendata.bbsk.sk: districts, municipalities, its organisations, hospitals, public social services, bridges (T-2783) |
 | `banskabystrica` | `banskabystrica-mesto` | `banskabystrica-mesto` | the city's own feeds, as fetched |
 | `banskabystrica` | `banskabystrica-kpi` | `banskabystrica-kpi` | `KeyPerformanceIndicator` entities only |
+| `banskabystrica` | `banskabystrica-verejne` | `banskabystrica-verejne` | the city's events, the schools of the national school map in the city, and hourly PM10 and PM2.5 of station SK0263A from the EEA (T-2781) |
 | `banskabystrica` | `ovzdusie` | `ovzdusie` | the thirteen seeded `AirQualityObserved` entities of T-0945 |
 
 `ovzdusie` predates PF-84 and its entity ids are already published, so its space manifest pins
@@ -69,11 +86,11 @@ is joined with a hyphen and never with a colon.
 
 | space | one literal id |
 |---|---|
-| `bbsk-kraj` | `urn:ngsi-ld:StatisticalObservation:bbsk.sk:bbsk-kraj:zp3803rs-SK032-2023-PROD_TONY-1` |
-| `bbsk-kpi` | `urn:ngsi-ld:KeyPerformanceIndicator:bbsk.sk:bbsk-kpi:emisie-tuhe-okres-brezno` |
-| `banskabystrica-mesto` | `urn:ngsi-ld:StatisticalObservation:banskabystrica.sk:banskabystrica-mesto:vh5003rr-SK0321508438-2023-U03084` |
-| `banskabystrica-kpi` | `urn:ngsi-ld:KeyPerformanceIndicator:banskabystrica.sk:banskabystrica-kpi:spotreba-vody-mesto` |
-| `ovzdusie` | `urn:ngsi-ld:AirQualityObserved:banskabystrica.sk:ovzdusie:stanica-1` |
+| `bbsk-kraj` | `urn:ngsi-ld:StatisticalObservation:hel.fi:bbsk-kraj:zp3803rs-SK032-2023-PROD_TONY-1` |
+| `bbsk-kpi` | `urn:ngsi-ld:KeyPerformanceIndicator:hel.fi:bbsk-kpi:emisie-tuhe-okres-brezno` |
+| `banskabystrica-mesto` | `urn:ngsi-ld:StatisticalObservation:hel.fi:banskabystrica-mesto:vh5003rr-SK0321508438-2023-U03084` |
+| `banskabystrica-kpi` | `urn:ngsi-ld:KeyPerformanceIndicator:hel.fi:banskabystrica-kpi:spotreba-vody-mesto` |
+| `ovzdusie` | `urn:ngsi-ld:AirQualityObserved:hel.fi:ovzdusie:stanica-1` |
 
 The `{localId}` of a raw observation is the publisher's own key, in the publisher's own spelling:
 the cube code, the territory code, the period and the indicator code, joined by hyphens. Nothing
@@ -133,7 +150,7 @@ is a different case and section 5 gives it a value of its own.
 
 ```json ngsi-ld-kpi
 {
-  "id": "urn:ngsi-ld:KeyPerformanceIndicator:bbsk.sk:bbsk-kpi:emisie-tuhe-okres-brezno",
+  "id": "urn:ngsi-ld:KeyPerformanceIndicator:hel.fi:bbsk-kpi:emisie-tuhe-okres-brezno",
   "type": "KeyPerformanceIndicator",
   "name": { "type": "Property", "value": "emisie-tuhe-okres-brezno" },
   "currentValue": {
@@ -152,11 +169,11 @@ is a different case and section 5 gives it a value of its own.
   },
   "derivedFrom": {
     "type": "Relationship",
-    "object": "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kraj:bbsk-kraj"
+    "object": "urn:ngsi-ld:Endpoint:hel.fi:bbsk-kraj:bbsk-kraj"
   },
   "computedBy": {
     "type": "Relationship",
-    "object": "urn:ngsi-ld:Pipeline:bbsk.sk:bbsk-kpi:emisie-tuhe"
+    "object": "urn:ngsi-ld:Pipeline:hel.fi:bbsk-kpi:emisie-tuhe"
   },
   "updatedAt": {
     "type": "Property",
@@ -178,7 +195,7 @@ zero. A zero is a measurement, and a dashboard cannot tell it apart from a real 
 
 ```json ngsi-ld-kpi
 {
-  "id": "urn:ngsi-ld:KeyPerformanceIndicator:bbsk.sk:bbsk-kpi:emisie-tuhe-okres-poltar",
+  "id": "urn:ngsi-ld:KeyPerformanceIndicator:hel.fi:bbsk-kpi:emisie-tuhe-okres-poltar",
   "type": "KeyPerformanceIndicator",
   "name": { "type": "Property", "value": "emisie-tuhe-okres-poltar" },
   "currentValue": { "type": "Property", "value": "not measured" },
@@ -192,11 +209,11 @@ zero. A zero is a measurement, and a dashboard cannot tell it apart from a real 
   },
   "derivedFrom": {
     "type": "Relationship",
-    "object": "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kraj:bbsk-kraj"
+    "object": "urn:ngsi-ld:Endpoint:hel.fi:bbsk-kraj:bbsk-kraj"
   },
   "computedBy": {
     "type": "Relationship",
-    "object": "urn:ngsi-ld:Pipeline:bbsk.sk:bbsk-kpi:emisie-tuhe"
+    "object": "urn:ngsi-ld:Pipeline:hel.fi:bbsk-kpi:emisie-tuhe"
   },
   "updatedAt": {
     "type": "Property",
@@ -260,15 +277,22 @@ endpoint for writing would be a second thing to keep in step with the first.
 |---|---|---|---|---|
 | `bbsk` | `bbsk-kraj` | `bbsk-kraj` | `organization` | the pipelines, reading and writing with the `pipelines` service account |
 | `bbsk` | `bbsk-kpi` | `bbsk-kpi` | `public` | the application and anybody, reading; the computing pipeline, writing |
+| `bbsk` | `bbsk-registre` | `bbsk-registre` | `public` | anybody, reading; the register pipelines, writing |
 | `banskabystrica` | `banskabystrica-mesto` | `banskabystrica-mesto` | `organization` | the pipelines, reading and writing |
 | `banskabystrica` | `banskabystrica-kpi` | `banskabystrica-kpi` | `project-list`, `[bbsk]` | the region's application, reading through the share of section 8; the city's pipeline, writing |
+| `banskabystrica` | `banskabystrica-verejne` | `banskabystrica-verejne` | `public` | anybody, reading; the city's open-data pipelines, writing |
 
-One endpoint is `public`: `bbsk`'s `bbsk-kpi`, which is what the demonstration shows. Creating
-it is a red-lane Change that a binding with `approve` on the kind and the public constraint has
-to approve (PF-72), and that approval is part of the demonstration rather than a step around it.
+Three endpoints are `public`: `bbsk`'s `bbsk-kpi`, which is what the demonstration shows;
+`bbsk-registre`, which republishes the region's own registers under the region's own CC BY-SA 4.0
+licence to its own catalogue organization (T-2783); and `banskabystrica-verejne`, which
+republishes open data under CC BY 4.0 with each publisher's credit (T-2781). Creating any of them
+is a red-lane Change that a binding with `approve` on the kind and the public constraint has to
+approve (PF-72), and that approval is part of the demonstration rather than a step around it.
 The two raw spaces are never public: they are a copy of somebody else's published data, and
-republishing it under our own name at our own URL is not ours to do. The city's KPI space is not
-public either; it reaches the region by a named share and by nothing else.
+republishing it under our own name at our own URL is not ours to do. `banskabystrica-verejne` is
+the exception by construction: every source in it is licensed for republication with credit, and
+every entity carries that credit in `dataProvider`. The city's KPI space is not public either; it
+reaches the region by a named share and by nothing else.
 
 ## 8. How the city's indicators reach the region's application
 
