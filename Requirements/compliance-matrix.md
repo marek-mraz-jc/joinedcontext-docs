@@ -1194,6 +1194,7 @@ Generated 2026-09-25 from: `docs` cc7c7e9, `conformance` 380549b, `deployment` 9
 | **UI-83** | [H] | built |  | `joinedcontext-portal/ui/src/components/layout/Shell.tsx` |
 | **UI-84** | [H] | open |  |  |
 | **UI-85** | [H] | open |  |  |
+| **UI-86** | [H] | open |  |  |
 
 ## Related
 
