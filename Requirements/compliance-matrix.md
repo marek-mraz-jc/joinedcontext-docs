@@ -25,12 +25,12 @@ Generated 2026-09-25 from: `docs` 75cb9bf, `conformance` 376606c, `deployment` f
 | **AG** — Agents and MCP | 92 | 73 | 5 | 14 | 9 |
 | **AP** — Apps on demand | 134 | 107 | 9 | 18 | 6 |
 | **CC** — Configuration as code | 90 | 71 | 9 | 10 | 0 |
-| **DM** — Data models | 64 | 51 | 7 | 6 | 0 |
+| **DM** — Data models | 69 | 51 | 7 | 11 | 3 |
 | **DS** — Data space connector | 20 | 12 | 4 | 4 | 1 |
 | **EP** — Endpoints and parity | 89 | 78 | 5 | 6 | 2 |
 | **GW** — Gateway firewall | 34 | 26 | 2 | 6 | 1 |
 | **I** — Identity and credentials | 4 | 2 | 0 | 2 | 0 |
-| **MF** — Manifests | 47 | 43 | 4 | 0 | 0 |
+| **MF** — Manifests | 49 | 43 | 4 | 2 | 2 |
 | **MIM** — OASC interoperability | 76 | 1 | 5 | 70 | 0 |
 | **MP** — Model projections | 3 | 3 | 0 | 0 | 0 |
 | **OPS** — Operations and reliability | 51 | 45 | 2 | 4 | 1 |
@@ -41,7 +41,7 @@ Generated 2026-09-25 from: `docs` 75cb9bf, `conformance` 376606c, `deployment` f
 | **SP** — Context-space surface | 22 | 19 | 0 | 3 | 0 |
 | **TS** — Testing and quality | 26 | 16 | 5 | 5 | 0 |
 | **UI** — Portal and user interface | 84 | 62 | 15 | 7 | 5 |
-| **Total** | 1099 | 788 | 110 | 201 | 35 |
+| **Total** | 1106 | 788 | 110 | 208 | 40 |
 
 ## 3. Requirement to test
 
@@ -444,6 +444,11 @@ Generated 2026-09-25 from: `docs` 75cb9bf, `conformance` 376606c, `deployment` f
 | **DM-62** |  | tested | ci-full | platform `crates/jcctl/tests/model_merge_tests.rs::merge_keeps_every_iri_and_writes_out_the_ones_a_default_prefix_gave`, platform `crates/jcctl/tests/model_merge_tests.rs::merge_refuses_a_clash_naming_both_models`, platform `crates/jcctl/tests/model_merge_tests.rs::merge_refuses_a_default_prefix_nobody_declares_and_an_empty_list`, and 12 more |
 | **DM-63** | [S] | tested | ci-full | portal `tests/organization_datamodels_tests.rs::the_list_holds_only_the_models_the_caller_may_read`, portal `tests/organization_datamodels_tests.rs::search_matches_name_space_and_class_and_is_bounded`, portal `tests/organization_datamodels_tests.rs::a_search_lists_matching_smart_data_models`, and 1 more |
 | **DM-70** | [H] [S] | tested | fast ci | portal `src/api/quality.rs::example_ids_are_only_for_whoever_reads_the_entities`, portal `src/quality.rs::a_tally_counts_entities_once_per_rule_and_keeps_five_examples`, portal `src/quality.rs::the_newest_entity_is_per_type_or_of_the_whole_space`, and 9 more |
+| **DM-74** | [S] | open |  |  |
+| **DM-75** | [S] | open |  |  |
+| **DM-76** | [S] [H] | open |  |  |
+| **DM-77** |  | open |  |  |
+| **DM-78** | [H] | open |  |  |
 
 ### DS — Data space connector
 
@@ -663,6 +668,8 @@ Generated 2026-09-25 from: `docs` 75cb9bf, `conformance` 376606c, `deployment` f
 | **MF-45** |  | tested | ci-full, fast ci | platform `crates/jcctl/tests/git_bundle_tests.rs::a_project_round_trips_with_its_history_and_equal_heads`, portal `src/api/export_git.rs::the_head_is_read_from_the_bundle_header`, portal `src/api/export_git.rs::what_is_not_a_bundle_has_no_head`, and 7 more |
 | **MF-46** | [H] | tested | ci-full, fast ci | platform `crates/jcctl/tests/git_bundle_tests.rs::a_project_round_trips_with_its_history_and_equal_heads`, platform `crates/jcctl/tests/git_bundle_tests.rs::a_tampered_bundle_or_a_moved_head_is_refused`, portal `src/api/import_git.rs::a_tags_file_is_read_as_refs`, and 4 more |
 | **MF-47** |  | tested | ci-full, fast ci | platform `crates/jcctl/tests/git_bundle_tests.rs::a_newer_layout_and_a_path_out_of_the_bundle_are_refused`, platform `crates/jcctl/tests/git_bundle_tests.rs::an_older_organization_is_migrated_on_import`, portal `src/api/import_git.rs::a_tags_file_is_read_as_refs`, and 2 more |
+| **MF-49** | [S] | open |  |  |
+| **MF-50** | [S] | open |  |  |
 
 ### MIM — OASC interoperability
 
