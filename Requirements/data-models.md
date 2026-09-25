@@ -113,6 +113,12 @@ Decided in [ADR-N-033](../Decisions/adr-n-033-one-data-model-per-space.md) (T-26
 - **DM-62** — Creating a Context Space MUST create its model in the same Change, empty or importing the models picked; `jcctl model merge` MUST merge several models of one space into one, keeping class names, slot IRIs and `class_uri`s, and MUST refuse a clash naming both classes.
 - **DM-63** [S] — `GET /api/v1/organization/datamodels?search=` MUST answer every model the caller may read that is not retired (name, project, space, version, lifecycle, classes) and the Smart Data Models catalog entries matching the search, and nothing the caller cannot read ([API/01](../API/01-portal-api.md)).
 
+## Stored data held to its model
+
+The owner, 2026-09-24: "write more tasks to validate everything" (T-2796). A write is checked when it happens; data that was written before a model changed, or by a pipeline that stopped, is not.
+
+- **DM-70** [H][S] — The Portal MUST re-validate, once a day, every entity of every Context Space that names a model against that model with the checks of PL-59 (class, id, required, datatype, enum, closed shape, attribute kind, unit), reading the space surface as its own client, at most 1,000 entities a page and 20,000 a space a run, and MUST keep per space the entities checked, those invalid, and each failing rule by its SHACL component and path with its count and at most five example ids. For each pipeline writing into the space it MUST compare the age of the space's newest entity of the pipeline's output type with the pipeline's freshness target (its interval, the `period` or what its cron `schedule` implies, plus a twelfth of it and at least ten minutes: about ten minutes for a real-time feed, 26 hours for a daily one; none for a pipeline its source drives) and say `fresh`, `stale` or `empty`, and whether the pipeline is paused. The space page MUST show the share valid, the failing rules and the freshness, and MUST show example ids only to whoever may read `Entity` in the space.
+
 ## Traceability
 
 | Requirements | Section | Architecture | Tests |
@@ -134,6 +140,7 @@ Decided in [ADR-N-033](../Decisions/adr-n-033-one-data-model-per-space.md) (T-26
 | DM-58 | Reusing a term you did not define | [11-data-models.md §3.1](../Architecture/11-data-models.md#31-reusing-a-term-you-did-not-define-dm-58) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-59…DM-60 | QUDT anchors and Data Structure Definitions | [11-data-models.md](../Architecture/11-data-models.md) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-61…DM-63 | One model per space and pickers everywhere | [ADR-N-033](../Decisions/adr-n-033-one-data-model-per-space.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| DM-70 | Stored data held to its model | [API/01 §27](../API/01-portal-api.md#27-data-quality-of-a-space-dm-70) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
 ## Related
 
