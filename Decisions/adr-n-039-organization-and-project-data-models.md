@@ -83,7 +83,7 @@ An organization model is edited only at the organization level, by Changes to th
 
 ## 5. Consequences
 
-- DM-74…DM-78 and MF-49…MF-50 are new. DM-63's list gains `level`, and DM-01 gains the two new paths (T-2886).
+- DM-75…DM-79 and MF-49…MF-50 are new. DM-63's list gains `level`, and DM-01 gains the two new paths (T-2886).
 - Work, filed against this ADR:
   - T-2886: the two levels in `jc-core` and the loaders, plus import resolution.
   - T-2883: the Data models page sections, the pickers' level, and `level` in DM-63.
@@ -95,6 +95,6 @@ An organization model is edited only at the organization level, by Changes to th
 
 - [ADR-N-033](adr-n-033-one-data-model-per-space.md): one model per space, pickers everywhere.
 - [ADR-N-029](adr-n-029-one-repository-per-project.md): the organization repository and one repository per project.
-- [Requirements/data-models](../Requirements/data-models.md): DM-74…DM-78.
+- [Requirements/data-models](../Requirements/data-models.md): DM-75…DM-79.
 - [Requirements/manifests](../Requirements/manifests.md): MF-49…MF-50.
 - [Architecture/11-data-models](../Architecture/11-data-models.md): `kind: DataModel`, Model Tools.
