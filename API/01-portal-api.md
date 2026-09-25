@@ -1153,8 +1153,9 @@ The editor's operations (DM-13) are `addClass`, `removeClass`, `renameClass`, `s
 
 ## 12. Static apps host (AP-12, AP-14, AP-17)
 
-A `static` app is served by the Portal under the platform host, without a hostname of its own
-(AP-14):
+A `static` app is served by the Portal on its own host, `https://{name}.apps.{domain}/`
+(AP-14, AP-133). The edge rewrites a request on that host to these paths of the static host,
+which nothing else routes to:
 
 ```text
 GET  /apps/{name}/                      the app's index.html
@@ -1162,9 +1163,9 @@ GET  /apps/{name}/{path}                any asset of the built bundle
 POST /apps/{name}/api/functions/{fn}    one function of the served build, run in jc-functions (AP-84)
 ```
 
-The app's data calls go to `/apps/{name}/api/endpoint/{slug}/…` on the same origin. The Portal
-does not serve them: the edge route `context-endpoint-apps` sets the apps session as the bearer and
-proxies them to the Context Gateway's `/api/endpoint/{slug}/…` (Deployment/10, T-2670).
+The app's data calls go to `/api/endpoint/{slug}/…` on its own host. The Portal does not serve
+them: the edge route `app-{name}-endpoint` sets the App's session as the bearer and proxies them
+to the Context Gateway, for the App's own endpoints only (Deployment/10, AP-133).
 
 - Only an app whose manifest is `lifecycle: published` is reachable. A draft, a preview or a
   retired app is `404` — the same answer as a name that does not exist, so the host never

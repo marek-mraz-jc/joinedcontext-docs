@@ -294,7 +294,11 @@ they reach the broker (GW27):
   above and no `scopeQ` is ever stored.
 - `notification.endpoint.uri` is rewritten to
   `{egressUrl}/api/endpoint/{slug}/egress/notifications?to={original uri, percent-encoded}`,
-  followed by one `&area={granted geoQ, percent-encoded}` per granted area (GW11).
+  followed by one `&area={granted geoQ, percent-encoded}` per granted area (GW11) and one
+  `&sub={subject}`: the subscriber as the gateway established it (user, service account,
+  groups, roles, participant, agreement), base64url JSON, a `.`, and an HMAC-SHA256 over the
+  slug, the `to`, the areas and that JSON under `JC_GATEWAY_DELIVERY_KEY` (GW27, T-2383). A
+  gateway without that key refuses a subscription with `501`, as it does without an egress URL.
 
 The areas ride in that URI rather than in the subscription's own `geoQ` because `geoQ` holds one
 geometry and a caller may hold several grants; the delivery path applies them the way a read
@@ -325,6 +329,14 @@ notification and, before anything leaves:
 
 1. reads the stored subscription named by `subscriptionId` from the broker — the stored form is
    the authority, so a forged request can neither widen the projection nor choose the target;
+   verifies the `sub` its URI carries, and decides the subscription again for that subject
+   against the policies in force now (GW27): a subject that no longer holds a grant for it gets
+   nothing delivered (`204`, nothing leaves), a narrowed grant narrows the types, attributes,
+   `q` and areas below, and a missing or unverifiable `sub` is not delivered at all (`404`,
+   the answer for a subscription the gateway did not route). The subject is the one the token
+   carried at creation: a revoked `Policy` stops a delivery within the reload bound (R48), a
+   group taken away in the realm does not until the subscription is written again, so that
+   revocation goes through the `Policy` or the subscription;
 2. projects every entity in `data` to the subscription's narrowed `notification.attributes`
    minus the endpoint's hidden attributes;
 3. re-checks the subscription's `q` against the stored state of each entity, dropping the ones
