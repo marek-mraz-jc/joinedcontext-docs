@@ -271,7 +271,7 @@ The owner's rule of 2026-09-23: every App of the Portal must work and read data 
 | AP-130…AP-131 | A build pod per App and a build cache of its own | [20-app-sdk.md#60-where-the-build-runs](../Architecture/20-app-sdk.md#60-where-the-build-runs), [ADR-N-028](../Decisions/adr-n-028-applications-build-on-the-forge.md) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | AP-132 | Access presets of Build an app | [19-agent-runner.md#1-what-runs-where](../Architecture/19-agent-runner.md#1-what-runs-where) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | AP-133…AP-135 | An origin and an egress allow-list per App | [ADR-N-037](../Decisions/adr-n-037-an-origin-per-app.md), [16-apps-on-demand.md §5](../Architecture/16-apps-on-demand.md#5-login-in-front-of-the-portal-and-every-app-apisix-openid-connect) | [06-security-tests.md](../Testing/06-security-tests.md) |
-| AP-136 | A probe for every published App | [../API/01-portal-api.md#25-validation-health-ops-53](../API/01-portal-api.md#25-validation-health-ops-53) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| AP-136 | A probe for every published App | [../API/01-portal-api.md#26-validation-health-ops-53](../API/01-portal-api.md#26-validation-health-ops-53) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
 ## Related
 

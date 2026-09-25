@@ -133,7 +133,7 @@ The family runs OPS-01…OPS-53 with two holes: no OPS-24 and no OPS-25 were eve
 | OPS-50 | The Action Inspector | [../Architecture/19-agent-runner.md#7-attribution-and-audit](../Architecture/19-agent-runner.md#7-attribution-and-audit) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | OPS-51 | Readiness | [../Architecture/09-portal.md#1-portal-api-specification](../Architecture/09-portal.md#1-portal-api-specification) | [05-deployment-and-performance-tests.md](../Testing/05-deployment-and-performance-tests.md) |
 | OPS-52 | Vulnerability reporting | [../Deployment/10-edge-routing-apisix.md](../Deployment/10-edge-routing-apisix.md#2-public-url-surface-and-path-based-route-table) | [06-security-tests.md](../Testing/06-security-tests.md) |
-| OPS-53 | Validation Health | [../API/01-portal-api.md#25-validation-health-ops-53](../API/01-portal-api.md#25-validation-health-ops-53) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| OPS-53 | Validation Health | [../API/01-portal-api.md#26-validation-health-ops-53](../API/01-portal-api.md#26-validation-health-ops-53) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
 ## Related
 

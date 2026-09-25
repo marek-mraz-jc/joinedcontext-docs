@@ -2189,7 +2189,55 @@ An App's `spec.access` entry naming the e-mail then matches nobody, and the App 
 - Every action writes one `person.changed` event of the project `org` to the activity feed (§14):
   who, what, and the person's id, never an e-mail body, a password or a token (PF-90).
 
-## 25. Validation health (OPS-53)
+## 25. Organization setup (PF-90, UI-82)
+
+What a new organization still lacks, in one answer, for the page that walks an Organization
+Administrator through it (`/organization/setup`, T-2748). The Portal reads it from what it already
+holds and writes nothing: every step links to the page that proposes that change the normal way.
+
+```text
+GET    /api/v1/organization/setup                           the steps and the operator's part → 200
+```
+
+```json
+{
+  "complete": false,
+  "steps": [
+    { "id": "organization", "done": true },
+    { "id": "domain", "done": false },
+    { "id": "people", "done": false },
+    { "id": "project", "done": true },
+    { "id": "publishers", "done": false },
+    { "id": "policies", "done": false }
+  ],
+  "operator": [
+    { "id": "branding", "done": true },
+    { "id": "loginTheme", "done": true },
+    { "id": "smtp", "done": false },
+    { "id": "backups", "done": false }
+  ]
+}
+```
+
+- `steps`, in the order the page shows them, each `done` when:
+  - `organization`: the `Organization` manifest names a domain and at least one locale;
+  - `domain`: that domain is verified (PF-41);
+  - `people`: the realm holds a second person besides the one reading, so the organization does
+    not hang on one account; `done` is `false`, never an error, when no admin client is configured;
+  - `project`: a project holds a `ContextSpace` that names a data model;
+  - `publishers`: a `CkanInstance` is declared, the catalogue the projects publish to (EP-62);
+  - `policies`: the `Organization` manifest sets `spec.projects` (ADR-N-035).
+- `operator` is what the installation provides and the Portal cannot change: `branding` is `true`
+  when `global.branding` names the installation (an `instanceName` other than `joinedcontext`, or a
+  logo); `loginTheme`, `smtp` and `backups` are the deployment's own statements,
+  `JC_SETUP_LOGIN_THEME`, `JC_SETUP_SMTP` and `JC_SETUP_BACKUPS`, rendered from the values that
+  switch those on ([Deployment/13](../Deployment/13-configuration-reference.md)). An unset
+  statement is `false`: the page never claims what nobody said.
+- `complete` is `true` when every step and every operator item is done.
+- The route needs `approve` on `Organization` at organization scope, which `org-admin` holds (PF-56);
+  anyone else gets `403`.
+
+## 26. Validation health (OPS-53)
 
 The validation checks run outside the Portal, on their own schedules: deployment drift and the
 supply chain, the conformance suites, the authorization matrix, the performance budgets, the
