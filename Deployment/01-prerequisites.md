@@ -22,7 +22,8 @@ One base domain is delegated to the ingress controller (`global.domain`). The ed
 
 | Host | Target | Usage |
 |---|---|---|
-| `<domain>` | APISIX data plane | The programmatic surfaces: `/api/endpoint/*` (NGSI-LD, STA, OGC Features, MCP, per Endpoint), `/cs/*`, `/apps/*`, and the forge under `/git/*` |
+| `<domain>` | APISIX data plane | The programmatic surfaces: `/api/endpoint/*` (NGSI-LD, STA, OGC Features, MCP, per Endpoint), `/cs/*`, the forge under `/git/*`, and `/apps/{name}/*` only as a `308` to the App's host |
+| `{name}.apps.<domain>` | APISIX, one host per published App | The App, its endpoint calls and its functions ([ADR-N-037](../Decisions/adr-n-037-an-origin-per-app.md)); covered by the `*.<domain>` record, one HTTP-01 certificate per App, no wildcard certificate |
 | `portal.<domain>` | Portal | The API, the UI and the Portal's MCP door ([ADR-N-019](../Decisions/adr-n-019-login-at-the-edge-apisix-openid-connect.md)) |
 | `idm.<domain>` | Keycloak | OIDC authentication, token issuance, account console |
 | `data.<domain>` | CKAN | The open-data catalogue, when the `ckan` component is deployed |

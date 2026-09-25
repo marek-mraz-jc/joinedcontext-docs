@@ -52,7 +52,7 @@ The application never picks how its requests travel; the document the Portal ser
 
 | Where the application runs | Data requests | Function calls |
 |---|---|---|
-| Published, `/apps/{name}/` | `fetch` on the same origin under the app's own path, `/apps/{name}/api/endpoint/{slug}/…`, with the apps session cookie and the CSRF header; the edge turns the session into the bearer ([Deployment/10](../Deployment/10-edge-routing-apisix.md), `context-endpoint-apps`) | `POST /apps/{name}/api/functions/{fn}` on the same origin |
+| Published, on `{name}.apps.{domain}` | `fetch` on the App's own host, `/api/endpoint/{slug}/…`, with the App's session cookie and the CSRF header; the edge turns the session into the bearer ([Deployment/10](../Deployment/10-edge-routing-apisix.md), `app-{name}-endpoint`, AP-133) | `POST /api/functions/{fn}` on the same host |
 | The sandboxed preview of a run | `postMessage` of `{kind: "jc-request", id, method, path, body}` to the framing page, answered by `{kind: "jc-response", id, status, body}` | the same message with `path: "/functions/{fn}"` |
 
 ## 2. The template application
@@ -177,7 +177,7 @@ The module loader resolves an import only to a key of `files`; the runtime impor
 **Who calls it.** The runtime is reachable from the Portal only (NetworkPolicy), and the Portal is the only party that knows the code (SDK-23):
 
 - *Preview.* The SDK in the frame sends `jc-request` with path `/functions/{fn}`; the host page posts it to `POST /api/v1/projects/{project}/agent-runs/{id}/functions/{fn}` with the reviewer's session; the Portal sends the run's current transpiled functions, the request and the reviewer's access token to the runtime.
-- *Published.* The edge route `POST /apps/{name}/api/functions/{fn}` reaches the Portal's static host with `X-Access-Token` (§5 of [16-apps-on-demand](16-apps-on-demand.md#5-login-in-front-of-the-portal-and-every-app-apisix-openid-connect)); the host sends the functions of the build it is serving (the `functions.js` the lane bundled, §6), the request and that token to the runtime, and answers `404` for a function that build does not hold (AP-84). A call that carries the edge's token carries the double-submit CSRF header too, which the SDK's origin transport sends on every write ([API/01 §12](../API/01-portal-api.md#12-static-apps-host-ap-12-ap-14-ap-17)).
+- *Published.* `POST /api/functions/{fn}` on the App's host reaches, rewritten by the edge to `/apps/{name}/api/functions/{fn}` (AP-133), the Portal's static host with `X-Access-Token` (§5 of [16-apps-on-demand](16-apps-on-demand.md#5-login-in-front-of-the-portal-and-every-app-apisix-openid-connect)); the host sends the functions of the build it is serving (the `functions.js` the lane bundled, §6), the request and that token to the runtime, and answers `404` for a function that build does not hold (AP-84). A call that carries the edge's token carries the double-submit CSRF header too, which the SDK's origin transport sends on every write ([API/01 §12](../API/01-portal-api.md#12-static-apps-host-ap-12-ap-14-ap-17)).
 
 ## 4. The first run and the editing agent
 
