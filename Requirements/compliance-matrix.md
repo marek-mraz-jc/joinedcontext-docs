@@ -23,7 +23,7 @@ Generated 2026-09-25 from: `docs` cc7c7e9, `conformance` 380549b, `deployment` 9
 | Family | Requirements | Tested | Built | Open | Untested and security-tagged |
 |---|---|---|---|---|---|
 | **AG** — Agents and MCP | 91 | 71 | 6 | 14 | 9 |
-| **AP** — Apps on demand | 120 | 91 | 7 | 22 | 8 |
+| **AP** — Apps on demand | 122 | 91 | 7 | 24 | 10 |
 | **CC** — Configuration as code | 90 | 71 | 9 | 10 | 0 |
 | **DM** — Data models | 63 | 47 | 7 | 9 | 2 |
 | **DS** — Data space connector | 20 | 11 | 5 | 4 | 1 |
@@ -41,7 +41,7 @@ Generated 2026-09-25 from: `docs` cc7c7e9, `conformance` 380549b, `deployment` 9
 | **SP** — Context-space surface | 22 | 18 | 1 | 3 | 0 |
 | **TS** — Testing and quality | 25 | 15 | 4 | 6 | 0 |
 | **UI** — Portal and user interface | 83 | 59 | 13 | 11 | 5 |
-| **Total** | 1058 | 727 | 103 | 228 | 49 |
+| **Total** | 1060 | 727 | 103 | 230 | 51 |
 
 ## 3. Requirement to test
 
@@ -265,6 +265,8 @@ Generated 2026-09-25 from: `docs` cc7c7e9, `conformance` 380549b, `deployment` 9
 | **AP-120** | [S] | open |  |  |
 | **AP-121** | [H] | open |  |  |
 | **AP-122** | [S] | open |  |  |
+| **AP-124** | [S] | open |  |  |
+| **AP-125** | [S] | open |  |  |
 
 ### CC — Configuration as code
 
