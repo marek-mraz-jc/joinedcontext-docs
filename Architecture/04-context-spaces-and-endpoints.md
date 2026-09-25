@@ -16,7 +16,7 @@ This specification establishes the public URL structure, tenancy abstraction, re
 |     ├── ngsi-ld/v1/          (Standard ETSI CIM 009 Tree: entities, subscriptions, types)        |
 |     ├── mcp                  (Direct Data-Plane Model Context Protocol Streamable HTTP)           |
 |     ├── schema/              (index.json, then v{major}/: LinkML, JSON Schema, @context, SHACL…)  |
-|     └── dump/                (N-Quads dumps: specified by SP-04, not built, T-2391)               |
+|     └── dump/                (ZIP of what the caller's grants read, generated per request, SP-13) |
 |                                                                                                   |
 |  2. Shared & Public Endpoint Surface (Addons, Public APIs, External Consumers, Agents):          |
 |     https://{host}/api/endpoint/{endpointSlug}/            (GET → DCAT-AP record of the endpoint)  |
@@ -49,8 +49,9 @@ No arbitrary path extensions are permitted. The gateway routes exactly these (SP
 - `/cs/{space}/ngsi-ld/v1/`: Byte-for-byte implementation of the ETSI GS CIM 009 REST specification (SP-03).
 - `/cs/{space}/mcp`: Data-plane Model Context Protocol Streamable HTTP endpoint (SP-03, SP-14).
 - `/cs/{space}/schema/index.json` and `/cs/{space}/schema/v{major}/{artifact}`: the same schema surface an Endpoint serves (§1a), named by its space. `{major}` is `v` and a whole number; anything else answers `404`.
+- `/cs/{space}/dump/`: the space's dump, the `file.zip` bundle (EP-41) over everything in the space the caller's grants read, generated per request and projected as `ngsi-ld/v1/` projects it (SP-13). Past the byte or row ceiling it is `413` whole, never a truncated archive; nothing is stored, so there is no dated or `latest` dump to pin (T-2391).
 
-A space has no `access` child: the caller's grants are an Endpoint's (`/api/endpoint/{slug}/access`). SP-04 also names `dump/` with dated and latest N-Quads snapshots; the gateway does not serve it yet (T-2391), and the space record does not advertise it.
+A space has no `access` child: the caller's grants are an Endpoint's (`/api/endpoint/{slug}/access`).
 
 ---
 
