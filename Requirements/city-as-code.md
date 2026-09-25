@@ -172,9 +172,13 @@ one or more manifests; *flow*, a blueprint instance as shown to [H] users.
   UI can re-open any flow as the form that created it (CC-32).
 - **CC-28** — The blueprint library MUST ship with the platform's common
   flows at minimum: threshold alert (subscription → notification
-  channel), data-source onboarding (pipeline + seed entities +
-  registration), dataset publication (registration + open-data view),
-  and cross-city sharing (CSR pair per CC-14).
+  channel), data-source onboarding (data source + pipeline +
+  registration; the pipeline's first run seeds the space, because seed
+  entities are not manifests, CC-72), dataset publication
+  (registration + open-data view), and cross-city sharing (CSR pair per
+  CC-14). The platform publishes the library and an instance follows it
+  through a `SyncSource`, so a new version arrives as a reviewable change
+  (CC-26).
 
 ## 5. User application
 
