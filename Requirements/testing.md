@@ -5,7 +5,7 @@ title: "Testing & Quality Assurance"
 
 # Testing & Quality Assurance
 
-Family **TS** (TS-01…TS-25). Owning chapter: [01-overview.md](../Architecture/01-overview.md). Verified by: [00-strategy.md](../Testing/00-strategy.md).
+Family **TS** (TS-01…TS-26). Owning chapter: [01-overview.md](../Architecture/01-overview.md). Verified by: [00-strategy.md](../Testing/00-strategy.md).
 
 This chapter specifies the normative verification pyramid, automated quality gates, and conformance suites required across all platform components.
 
@@ -44,6 +44,7 @@ This chapter specifies the normative verification pyramid, automated quality gat
   - Playwright tests MUST interact exclusively with user-visible DOM elements (labels, buttons, roles), avoiding direct URL-manipulation shortcuts.
 - **TS-13** [H] — Accessibility Audits: Automated accessibility scans using `@axe-core/playwright` MUST run against all core portal views during E2E test runs, enforcing zero WCAG 2.1 AA violations.
 - **TS-14** [H] — Localization Integrity: CI MUST execute an automated translation check verifying that all ICU translation keys defined in `en.json` exist across `sk.json`, `de.json`, and `cs.json`.
+- **TS-26** [H] [A] — Workflow Coverage: Every step of every workflow the Portal offers (create, read, edit, validate, propose, approve, apply, retire, and the refusals of each write step: no permission, a red verdict, a secret typed in) MUST have a live journey on the deployed instance and an assistant tool, or an entry naming the open task that owes it. The matrix is [Testing/07](../Testing/07-workflow-coverage.md); the Portal's UI tests read it and fail on a named test that no longer exists, a mutating route no step claims, and a step with neither an assistant tool nor an owing task (AG-87).
 
 ## 5. Pipeline and Blueprint Verification
 
@@ -89,3 +90,4 @@ This chapter specifies the normative verification pyramid, automated quality gat
 | TS-18…TS-21 | Manifest CI Gates and Reconciler Verification | [01-overview.md](../Architecture/01-overview.md) | [00-strategy.md](../Testing/00-strategy.md) |
 | TS-22 | Performance and Latency Budgets | [01-overview.md](../Architecture/01-overview.md) | [00-strategy.md](../Testing/00-strategy.md) |
 | TS-23…TS-25 | Security, Supply Chain, and Red-Teaming | [01-overview.md](../Architecture/01-overview.md) | [00-strategy.md](../Testing/00-strategy.md) |
+| TS-26 | Workflow Coverage | [01-overview.md](../Architecture/01-overview.md) | [07-workflow-coverage.md](../Testing/07-workflow-coverage.md) |
