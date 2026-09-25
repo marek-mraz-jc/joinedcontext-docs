@@ -212,6 +212,12 @@ slots:
       ngsi_ld_kind: Relationship
 ```
 
+**Which end is the source (DM-64).** The source is the end that carries `on_delete`. The editor
+writes it on every relationship it creates, `restrict` included, so the direction is in the
+model and not in the order of the file. A hand-written pair with no `on_delete` takes the end
+declared first under `slots` as its source, and a pair with `on_delete` on both ends is refused.
+The direction matters for one-to-one and many-to-many, where it decides which end is stored.
+
 **Cardinality is two flags (DM-65).** Read from the source class A to its range B:
 
 | A's slot multivalued | B's slot multivalued | Cardinality | Stored on | A UML reader sees |
@@ -251,7 +257,8 @@ Users all require one cannot be deleted by `set-null`: move them first, or decla
 Tools' generation refuse the same list: a range that is not a class, a class range on a slot that
 is not a Relationship, a primitive range on a Relationship, a missing or non-reciprocal inverse,
 one slot serving two relationships, `required` on a computed end, and an unknown delete rule. The
-one Relationship that takes no inverse is the external reference, `range: uriorcurie`. It points
+one Relationship that takes no inverse is the external reference, `range: uriorcurie` or no
+range at all (how Smart Data Models writes one). It points
 outside the model, as Smart Data Models' `refDevice` does, so there is no class to check a target
 against and no inverse to declare. Every class-range relationship is a relationship in full.
 
@@ -262,12 +269,13 @@ and the gateway:
 |---|---|---|
 | `range-not-a-class` | model | a Relationship's range is no class of the model or an import |
 | `class-range-not-relationship` | model | a slot has a class range and another `ngsi_ld_kind` |
-| `primitive-range` | model | a Relationship's range is a primitive other than `uriorcurie` |
+| `primitive-range` | model | a Relationship declares a primitive range other than `uriorcurie`, or an enum |
 | `inverse-missing` | model | a class-range Relationship names no `inverse`, or names a slot that does not exist |
 | `inverse-not-reciprocal` | model | the inverse names another slot back, or sits on a class other than the range |
 | `slot-in-two-relationships` | model | one slot is an end of two relationships |
 | `required-on-computed-end` | model | `required` is set on the end that is not stored |
 | `on-delete-unknown` | model | `on_delete` is not `restrict`, `cascade` or `set-null` |
+| `on-delete-on-both-ends` | model | both ends of one pair carry `on_delete`, so neither is the source |
 | `target-missing` | write | the object is no entity of the space |
 | `target-wrong-type` | write | the object is an entity of another type |
 | `single-end-many-targets` | write | a single end holds more than one object |
