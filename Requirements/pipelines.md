@@ -121,6 +121,13 @@ The pipeline workbench and the rule that only valid records are written ([ADR-N-
 - **PL-62** [S] — The runner MUST send one outcome line per record (pipeline, run, record id, step, outcome, message) through a sink that drops rather than retries, and the Portal MUST answer a pipeline's runs with their written, rejected and failed counts and each run's log, for that pipeline only, with read on it and never a token or a secret's value.
 - **PL-63** [A][S] — Each workbench step MUST be an operation of the registry (`jc_pipeline_sample_source`, `jc_pipeline_try_mapping`, `jc_pipeline_validate` and `jc_pipeline_propose`, ADR-N-034 §3) that calls the code the workbench calls and answers what it shows, under the permission of the route it mirrors; the sample MUST read through the same guard as the run (ADR-N-021, AG-73).
 
+## 14. Stale-entity expiry
+
+An entity whose source dropped it stays in the space with its last value until someone deletes it. A pipeline that reads a full snapshot MAY say that absence means removal.
+
+- **PL-64** [S] — A Pipeline MAY carry `spec.expiry: { after, types }`: `after` a whole number of hours or days (`12h`, `14d`) from `1h` to `365d`, `types` one to twenty distinct entity types. Without it nothing is ever deleted automatically. With it, the reconciler MUST run one sweep per hour on the project's runner, as the pipeline's ServiceAccount through its output Endpoint, that deletes (`deleteBatch`) every entity of those types in that Endpoint's space whose `modifiedAt`, or `createdAt` when it was never modified, is older than `after`, and no other entity; a disabled pipeline sweeps nothing. The Portal MUST refuse the proposal when the pipeline has more than one output, when another Pipeline of the project writes into the same space, when a type is not a class of the space's model, or when no Policy grants the account `deleteBatch` and `queryBatch` on those types in that space, naming the Policy to extend; the grant is never widened for the author.
+- **PL-65** [H] — The pipeline form MUST offer expiry off by default, with the window and the types, and say before saving what it deletes; the pipelines list and the pipeline page MUST state it in words ("Entities not updated for 14 days are removed") on every pipeline that has it.
+
 ## Traceability
 
 | Requirement Range | Architecture Section | Test Family |
@@ -149,6 +156,7 @@ The pipeline workbench and the rule that only valid records are written ([ADR-N-
 | PL-56 | [Architecture/08-pipelines.md#sources-steps-and-outputs-pl-52pl-56](../Architecture/08-pipelines.md#sources-steps-and-outputs-pl-52pl-56) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | PL-57 | [Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes](../Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
 | PL-58…PL-63 | [Architecture/08-pipelines.md#8-the-workbench-validation-and-the-log](../Architecture/08-pipelines.md#8-the-workbench-validation-and-the-log) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
+| PL-64…PL-65 | [Architecture/08-pipelines.md#stale-entity-expiry-pl-64-pl-65](../Architecture/08-pipelines.md#stale-entity-expiry-pl-64-pl-65) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
 
 ## Related
 

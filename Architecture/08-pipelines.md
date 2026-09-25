@@ -233,6 +233,24 @@ A conditional path is a step: `branch`, `switch` and `workflow` carry their own 
 
 The studio draws the same list: a lane with the sources on the left, the steps in order, the outputs on the right; a palette of the runner's processors inserts a step between two nodes, a selected node shows its own Bento block as YAML, and the test trace paints each step by its processor index (PL-56).
 
+### Stale-entity expiry (PL-64, PL-65)
+
+A pipeline writes what its source sends and deletes nothing, so a vehicle that left the feed stays in the space with its last position. A pipeline whose source sends the whole picture on every run can say that absence means removal:
+
+```yaml
+spec:
+  outputs:
+    - targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:ep-vehicles-write
+  expiry:
+    after: 14d          # 1h … 365d, whole hours or days
+    types: [Vehicle]    # one to twenty entity types
+```
+
+- **Off unless written.** A pipeline without `expiry` never deletes anything; nothing turns it on by default, because for an event feed silence means no news, not a removal.
+- **The sweep.** Beside the pipeline's stream the reconciler runs a second one on the same runner, named `{pipeline}.expiry` (a pipeline name has no dot, so the two never collide). Once an hour it pages through `POST /ngsi-ld/v1/entityOperations/query?options=sysAttrs` on the output Endpoint for the listed types, keeps the ids whose `modifiedAt` (or `createdAt`, for an entity never modified) is older than `after`, and posts them to `entityOperations/delete` on the same Endpoint, as the same `{project}-pipelines` client the pipeline writes with. The gateway judges and audits each delete like any other write, so the deletions appear in the activity trail under the pipeline's account. An entity is removed within an hour after its window passes.
+- **Only its own entities.** Nothing on an entity records which pipeline wrote it, and a closed model forbids adding such a field, so the scope is the space: the Portal refuses expiry on a pipeline with more than one output, and while another Pipeline of the project writes into the same space. An entity of a listed type that a person created in that space by hand is swept like the rest, which the form says before saving.
+- **The grant is the author's.** The write Policy the Portal drafts for a pipeline grants `upsertBatch`, `createBatch` and `queryBatch` and no delete. Expiry needs `deleteBatch` beside `queryBatch` on the listed types in that space, and the Portal refuses the proposal until a Policy grants it, naming the Policy to extend; it never widens a grant on its own. A pipeline that is disabled, or removed, stops its sweep with it.
+
 ### Model-to-model mappings in a pipeline
 
 A pipeline's own Bloblang handles the last mile (unpacking the source frame, splitting batches, timestamps). The step that produces the target entity SHOULD be a `kind: Mapping` (LinkML-Map, [Architecture/11 §7](11-data-models.md#7-mappings-with-linkml-map)) referenced from the compute step (`spec.compute.mappingRef`), so the target entity is schema-checked by construction. The reconciler does not deploy a `mapping` pipeline yet (see *What runs today*); the excerpt shows the manifest and what the rendering is meant to produce:
@@ -557,7 +575,8 @@ output:
    - The value is in the Secret and nowhere else: not in the stream the Portal posts to the runner, not in a ConfigMap, not in a plan, a log line or an activity entry (PL-17).
 3. **Network Isolation:** Every Project Pipeline Runner deployment runs within its own network policy boundary (`components/pipeline-runner/networkpolicies.yaml`): the runner reaches the gateway on 8080, the Portal's internal listener on 9090, the ingress controller, DNS, and any public address on 443 with every private range excepted. Its NetworkPolicy opens no application port; the Portal reaches the streams API on 4195 through the Linkerd proxy's inbound port 4143, which `pipeline-runner-allow-linkerd` admits and the mesh's inbound policy governs. Egress is not narrowed to the hosts a pipeline declares.
 4. **Lint and test (PL-21, PL-22):** The platform repository's CI runs `bento lint` and `bento test` over the example pipelines in `examples/ingestion`. A project's `bento.yaml` never passes through that lane: the runner lints it in the pipeline test (PL-43), which returns the lint errors with their line numbers before the pipeline is proposed (§7). The organization repository's CI checks manifests (`jcctl validate`) and the author's role bindings, not Bento.
-5. **Ids that cannot claim another organization:** the runner's environment carries `JC_ORG_DOMAIN`, resolved by the reconciler from the project's Organization, and a mapping mints `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}` from that variable rather than from a literal (PF-42, PF-44, [Architecture/03 §3](03-domain-model.md#3-identity-and-urn-specification)). A pipeline that writes a domain of its own is refused at admission by the gateway, not silently accepted.
+5. **Deletes only by a grant the author wrote (PL-64):** a pipeline deletes nothing unless its manifest carries `expiry` and a Policy grants its account `deleteBatch` on the listed types in the one space it writes; the sweep goes through the output Endpoint like the writes, so the gateway judges and audits every delete.
+6. **Ids that cannot claim another organization:** the runner's environment carries `JC_ORG_DOMAIN`, resolved by the reconciler from the project's Organization, and a mapping mints `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}` from that variable rather than from a literal (PF-42, PF-44, [Architecture/03 §3](03-domain-model.md#3-identity-and-urn-specification)). A pipeline that writes a domain of its own is refused at admission by the gateway, not silently accepted.
 
 ## 6. External Feeds: the `DataSource` Kind (MF-35, PL-39)
 
