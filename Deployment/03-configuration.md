@@ -83,14 +83,24 @@ addresses are fully qualified, every NetworkPolicy peer names the namespace it m
 component keeps its own ServiceAccount, so co-locating components never merges two identities.
 `tests/test_namespace_modes.py` renders both and asserts exactly that.
 
-The `development` profile seeds two realm users for the demo walkthrough, `demo.steward`
-(realm role `portal-approver`, may approve change proposals) and `demo.viewer` (no role,
-read only); `production` seeds none. The realm sets `registrationEmailAsUsername`, so the
-login a person types is the address, `demo.steward@{orgDomain}`, not the short handle; the
-handle names the Secret. Seeding a user whose username and email differ aborts the whole
-realm import, which leaves the realm without any of its clients. Their passwords are
-generated per cluster into the Secrets `keycloak-user-demo-steward` and
-`keycloak-user-demo-viewer` in the instance namespace and never appear in Git:
+The `development` profile seeds five realm users for the demo walkthrough and the live
+journeys; `production` seeds none. What each may do is its RoleBinding in the configuration
+repository (`seed/helsinki/helsinki-rolebinding-*.yaml`), never its realm role, which only
+names the person:
+
+| User | Role binding | For |
+|---|---|---|
+| `demo.steward` | `org-admin`, `steward` | proposes and administers, steps 1 to 7 of the demo |
+| `demo.viewer` | `viewer`, through the group `platform-readers` | reads, the other side of step 5 |
+| `demo.approver` | `approver` | approves what another person proposes (CC-34) |
+| `demo.editor` | `editor` | proposes and administers nothing (T-2231) |
+| `demo.janitor` | `janitor` | approves and deletes only resources named as a journey's or a take's (`metadata.name` pattern), for the residue sweep alone (T-2627) |
+
+The realm sets `registrationEmailAsUsername`, so the login a person types is the address,
+`demo.steward@{orgDomain}`, not the short handle; the handle names the Secret. Seeding a user
+whose username and email differ aborts the whole realm import, which leaves the realm without
+any of its clients. Their passwords are generated per cluster into the Secrets
+`keycloak-user-demo-{handle}` in the instance namespace and never appear in Git:
 
 ```bash
 kubectl get secret -n dev keycloak-user-demo-steward -o jsonpath='{.data.password}' | base64 -d && echo
