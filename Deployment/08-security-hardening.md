@@ -129,6 +129,8 @@ and syncs the repository on its interval instead (T-0982).
 
 - **Gaps Closed:** SEC-GAP-02 (ServiceAccount token exposure) and SEC-GAP-03 (mutable image tags).
 
+- **Model-written code in the run's sandbox:** The application tests a run executes before it offers publication (SDK-38) run in the namespace `{slug}-app-tests`, which holds nothing else. The namespace enforces the restricted Pod Security Standard, a `NetworkPolicy` admits no traffic in or out of any pod in it, and a `ResourceQuota` caps it at four pods. The Portal's ServiceAccount holds a `Role` there to create, read and delete `ConfigMap`s and `Job`s and to read pods and their logs, and nothing more; each test pod runs without a ServiceAccount token.
+
 ### Layer 6: Ingress and Egress Network Policies
 
 - **Inherited Baseline:** Component network policy templates in `civitas-core-deployment/components/*/networkpolicies.yaml` specifying ingress rules.
