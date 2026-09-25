@@ -27,7 +27,7 @@ Generated 2026-09-25 from: `docs` 9117c01, `conformance` 2d6df0f, `deployment` 6
 | **CC** — Configuration as code | 90 | 71 | 9 | 10 | 0 |
 | **DM** — Data models | 63 | 50 | 7 | 6 | 0 |
 | **DS** — Data space connector | 20 | 11 | 5 | 4 | 1 |
-| **EP** — Endpoints and parity | 86 | 72 | 6 | 8 | 5 |
+| **EP** — Endpoints and parity | 87 | 73 | 6 | 8 | 5 |
 | **GW** — Gateway firewall | 34 | 26 | 2 | 6 | 1 |
 | **I** — Identity and credentials | 4 | 2 | 0 | 2 | 0 |
 | **MF** — Manifests | 47 | 42 | 4 | 1 | 0 |
@@ -41,7 +41,7 @@ Generated 2026-09-25 from: `docs` 9117c01, `conformance` 2d6df0f, `deployment` 6
 | **SP** — Context-space surface | 22 | 18 | 1 | 3 | 0 |
 | **TS** — Testing and quality | 25 | 15 | 4 | 6 | 0 |
 | **UI** — Portal and user interface | 84 | 62 | 15 | 7 | 5 |
-| **Total** | 1089 | 766 | 108 | 215 | 43 |
+| **Total** | 1090 | 767 | 108 | 215 | 43 |
 
 ## 3. Requirement to test
 
@@ -478,6 +478,7 @@ Generated 2026-09-25 from: `docs` 9117c01, `conformance` 2d6df0f, `deployment` 6
 | **EP-75** | [H] [S] | tested | fast ci | portal `ui/tests/endpoint_form.test.tsx::keeps the minted slug when the YAML view names another one` |
 | **EP-76** | [S] [H] | tested | ci-full | portal `tests/attack_grant_escalation_tests.rs::a_grant_inside_the_proposers_own_rights_still_comes_back`, portal `tests/attack_grant_escalation_tests.rs::the_refusal_names_the_verb_and_carries_nothing_else_of_the_manifest`, portal `tests/changes_tests.rs::the_operation_refuses_a_public_endpoint_in_the_same_words` |
 | **EP-04** |  | built |  | `docs/scripts/verify-traceability.py` |
+| **EP-87** | [H] [S] | tested | fast ci | portal `ui/tests/endpoint_page.test.tsx::says an endpoint stops by being deleted and opens that deletion (EP-87)`, portal `ui/tests/endpoint_page.test.tsx::refuses a viewer the deletion that stops an endpoint, with its reason (EP-87)` |
 | **EP-05** | [P] [A] | tested | ci-full, conformance | conformance `e2e/journeys/07-endpoints-manager.spec.ts::EP-05 a representation the endpoint does not offer is refused, not guessed`, platform `crates/context-gateway/tests/edge_app_file_geojson_tests.rs::an_endpoint_that_does_not_serve_geojson_is_not_found_and_the_broker_is_not_asked`, platform `crates/context-gateway/tests/edge_app_file_geojson_tests.rs::an_unknown_slug_and_a_representation_not_served_answer_the_same_bytes`, and 18 more |
 | **EP-06** |  | tested | ci-full, conformance, fast ci | conformance `tests/security/test_representation_parity.py::test_ep06_every_representation_answers_for_the_same_caller`, platform `crates/context-gateway/src/translators/tabular.rs::column_names_carry_past_z`, platform `crates/context-gateway/src/translators/tabular.rs::a_control_character_never_reaches_the_workbook`, and 4 more |
 | **EP-07** |  | tested | ci-full, conformance, fast ci, live on dev | conformance `tests/etsi/temporal_projected.robot::EP30 Current Value And Temporal Representation Parity`, conformance `tests/security/test_representation_parity.py::test_ep07_the_same_entities_appear_in_every_representation`, conformance `tests/security/test_representation_parity.py::test_ep07_attribute_values_agree_across_representations`, and 33 more |

@@ -6,7 +6,7 @@ description: Universal ingress and egress multi-representation views, opaque slu
 
 # Endpoints & Representation Parity
 
-Family **EP** (EP-01…EP-86). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **EP** (EP-01…EP-87). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
 ## 1. Endpoint Identity and Opaque Slug
 
@@ -16,6 +16,7 @@ Family **EP** (EP-01…EP-86). Owning chapter: [Architecture/04-context-spaces-a
 - **EP-75** [H][S] — The `endpointSlug` MUST be minted by the platform when an Endpoint is proposed; a person gives an Endpoint one name (`metadata.name`) and never types the slug, because a typed slug is how a space name reaches a public URL (EP-03). An import MUST mint it too, and MUST NOT take the slug the bundle carries (CC-74): otherwise the destination answers at the source's capability URL, and two imports of one bundle answer at one address. The exception is the slug this instance already minted for the same Endpoint (same project and `metadata.name`), which an import MUST keep, so updating a project by re-importing its bundle does not move its endpoints under the people using them; a renamed Endpoint is a different Endpoint and is minted a slug of its own.
 - **EP-76** [S][H] — A `Change` that gives an Endpoint `spec.audience: public`, on creation or by an update from another audience, MUST take the red lane and MUST be approved by a binding whose `approve` on `Endpoint` satisfies the constraint `spec.audience in [public]` (the `publisher` of PF-71 or `org-admin`); the Approvals page and the assistant MUST name `publisher` as the missing role when another approver tries (PF-72, CC-19).
 - **EP-04** — Endpoint configuration state MUST be stored declaratively as a `kind: Endpoint` manifest in the owning Context Space directory.
+- **EP-87** [H][S] — An Endpoint MUST NOT carry a lifecycle field (no `paused`, `enabled` or `retiring` in `spec`; `status.phase` stays the platform's own, MF-04): an Endpoint stops by being deleted through a `Change`, after which the gateway answers its slug `404` like an invalid slug (EP-23) and the slug is never served again (EP-75). The Portal's Endpoint page MUST say so and MUST offer the deletion from that sentence, under the same permission and approval as the page's delete action; it MUST NOT paint a pause control. A pause (`spec.enabled`, the PL-40 pattern) is to be added when a department asks for one, docs first (T-2286).
 
 ## 2. Fixed Child Set and Representation Parity
 
@@ -191,6 +192,7 @@ Family **EP** (EP-01…EP-86). Owning chapter: [Architecture/04-context-spaces-a
 | EP-62…EP-67 | [Architecture/04-context-spaces-and-endpoints.md#7-publication-to-an-open-data-portal](../Architecture/04-context-spaces-and-endpoints.md#7-publication-to-an-open-data-portal) | [Testing/05-deployment-and-performance-tests.md#5-the-k6-budgets](../Testing/05-deployment-and-performance-tests.md#5-the-k6-budgets) |
 | EP-73…EP-75 | [Architecture/04-context-spaces-and-endpoints.md#3b-the-named-projection-of-a-model](../Architecture/04-context-spaces-and-endpoints.md#3b-the-named-projection-of-a-model) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | EP-77 | [Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes](../Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
+| EP-87 | [Architecture/04-context-spaces-and-endpoints.md#stopping-an-endpoint](../Architecture/04-context-spaces-and-endpoints.md#stopping-an-endpoint) | [Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest) |
 
 ## Related
 
