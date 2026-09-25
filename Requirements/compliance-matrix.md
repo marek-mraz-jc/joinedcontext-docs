@@ -27,7 +27,7 @@ Generated 2026-09-25 from: `docs` cc7c7e9, `conformance` 380549b, `deployment` 9
 | **CC** — Configuration as code | 90 | 71 | 9 | 10 | 0 |
 | **DM** — Data models | 63 | 47 | 7 | 9 | 2 |
 | **DS** — Data space connector | 20 | 11 | 5 | 4 | 1 |
-| **EP** — Endpoints and parity | 77 | 69 | 4 | 4 | 1 |
+| **EP** — Endpoints and parity | 80 | 69 | 4 | 7 | 2 |
 | **GW** — Gateway firewall | 34 | 26 | 2 | 6 | 1 |
 | **I** — Identity and credentials | 4 | 2 | 0 | 2 | 0 |
 | **MF** — Manifests | 47 | 42 | 4 | 1 | 0 |
@@ -41,7 +41,7 @@ Generated 2026-09-25 from: `docs` cc7c7e9, `conformance` 380549b, `deployment` 9
 | **SP** — Context-space surface | 22 | 18 | 1 | 3 | 0 |
 | **TS** — Testing and quality | 25 | 15 | 4 | 6 | 0 |
 | **UI** — Portal and user interface | 83 | 59 | 13 | 11 | 5 |
-| **Total** | 1055 | 727 | 103 | 225 | 48 |
+| **Total** | 1058 | 727 | 103 | 228 | 49 |
 
 ## 3. Requirement to test
 
@@ -535,6 +535,9 @@ Generated 2026-09-25 from: `docs` cc7c7e9, `conformance` 380549b, `deployment` 9
 | **EP-73** | [H] [S] | open |  |  |
 | **EP-74** | [S] | tested | ci-full | platform `crates/context-gateway/tests/attack_policy_widening_tests.rs::a_hidden_name_in_an_or_branch_of_a_cql2_filter_is_not_an_oracle`, platform `crates/context-gateway/tests/attack_policy_widening_tests.rs::a_cql2_filter_the_endpoint_serves_is_compiled_and_forwarded`, platform `crates/context-gateway/tests/attack_policy_widening_tests.rs::a_sensorthings_filter_the_endpoint_serves_is_compiled_and_forwarded`, and 1 more |
 | **EP-77** | [P] | tested | ci-full, fast ci | deployment `tests/test_seed_identity_contract.py::test_every_space_pins_the_segment_its_ids_carry_today`, deployment `tests/test_seed_identity_contract.py::test_no_mapping_types_its_space_or_project_in`, deployment `tests/test_seed_identity_contract.py::test_helsinki_policies_name_the_organization_by_placeholder`, and 14 more |
+| **EP-78** | [H] [P] [A] | open |  |  |
+| **EP-79** | [A] | open |  |  |
+| **EP-80** | [S] | open |  |  |
 
 ### GW — Gateway firewall
 
