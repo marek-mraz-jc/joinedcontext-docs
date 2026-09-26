@@ -586,8 +586,9 @@ GET /api/v1/projects/{project}/pipelines/{name}/metrics    counters of one runni
 - Counters are cumulative since the runner started, exactly as the runner reports them. The view
   samples them to show a rate; the Portal keeps no history, that is Prometheus' job (OPS-16).
 - A field is absent when the runner does not export it. Absent is not zero.
-- Only series carrying `stream="{name}"` are read, so one pipeline's view never discloses the
-  traffic of its neighbours in the same runner.
+- Only series carrying `stream="{project}.{name}"` are read, so one pipeline's view never
+  discloses the traffic of its neighbours in the same runner, another project's pipeline of the
+  same name included (T-3002).
 - `503` with `problem+json` when the project has no runner configured or its metrics port does not
   answer within the scrape timeout. The view then shows the pipeline without numbers, not as
   failed: a runner that is down is an operational fact, not a manifest error.
