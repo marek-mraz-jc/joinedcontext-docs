@@ -223,8 +223,8 @@ Keycloak is the only place identities come from. Humans log in through OIDC at t
 | Caller | Credential | Calls |
 |---|---|---|
 | Portal → Context Gateway, Gitea, RustFS | platform ServiceAccount `portal` (client credentials) | resource API reads/writes on behalf of the reconciler; user-initiated calls forward the **user's** token instead |
-| the Portal's reconciler → the realm's groups | client `portal-reconciler` (`manage-users`, `query-groups`) | brings the realm's platform-owned groups to what `users/groups/` says (PF-63), and nothing else |
-| the Portal → the Keycloak admin API | the login client `portal-api` (`manage-clients`) | provisioning every published App's client and the federated client of every `ServiceAccount` bound to a workload (PF-47) |
+| the Portal's reconciler → the realm's groups and role holders | client `portal-reconciler` (`manage-users`, `query-groups`) | brings the realm's platform-owned groups to what `users/groups/` says (PF-63); looks up the groups and users an App's `spec.access` names and adds or removes their mapping to the App's client roles (AP-113); nothing else |
+| the Portal → the Keycloak admin API | the login client `portal-api` (`manage-clients`, `query-users`) | provisioning every published App's client and the federated client of every `ServiceAccount` bound to a workload (PF-47); reading who holds each App client role, which Keycloak answers only to a caller that may view the client (`query-users` is read-only; it writes no mapping) |
 | Bento runners, derived pipelines, `container` compute | ServiceAccount rendered from the `Pipeline` | writes through the target Endpoint |
 | Apps on Demand (`service`, `fullstack`) | the edge login (APISIX `openid-connect`, client `edge`) for the user **plus** the app's own ServiceAccount for background calls | the app Endpoint only |
 | Data space connector, Agent Runner, conformance runners | their ServiceAccounts | Endpoints, MCP surfaces |
