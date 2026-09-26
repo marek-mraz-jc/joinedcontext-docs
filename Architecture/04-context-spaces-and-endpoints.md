@@ -813,7 +813,7 @@ The record itself says the same thing to a harvester that never logs in: `dcterm
 
 ### DataStore, when rows are wanted
 
-A CKAN DataStore table gives the catalogue a preview, a filtered API and a SQL surface over the rows. It is optional because it is a copy: the endpoint stays the source. When `datastore` is declared, each `jcctl publish ckan` run reads the endpoint's `file.csv` as the publisher's ServiceAccount and upserts every row, and rows the endpoint no longer returns leave the table (EP-65, EP-44; `crates/jcctl/src/commands/publish_ckan.rs`). The DataStore takes only the `csv` representation; declaring another is refused with the fix named. `publish.ckan.datastore.refresh: onChange`, a refresh driven by the endpoint's subscription, is accepted in the manifest but not wired: today every refresh is a full reload on the next run.
+A CKAN DataStore table gives the catalogue a preview, a filtered API and a SQL surface over the rows. It is optional because it is a copy: the endpoint stays the source. When `datastore` is declared, each `jcctl publish ckan` run reads the endpoint's `file.csv` and `schema/v1/model.schema.json` as the publisher's ServiceAccount and upserts every row into its entity type's table, whose columns cover the type's model, and rows the endpoint no longer returns leave the table (EP-65, EP-44; `crates/jcctl/src/commands/publish_ckan.rs`). The DataStore takes only the `csv` representation; declaring another is refused with the fix named. `publish.ckan.datastore.refresh: onChange`, a refresh driven by the endpoint's subscription, is accepted in the manifest but not wired: today every refresh is a full reload on the next run.
 
 ## Related
 
