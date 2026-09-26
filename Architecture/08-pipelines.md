@@ -77,7 +77,7 @@ flowchart TD
         end
         
         CM -.->|-w reload of a changed file| Process
-        PR["Portal reconciler"] -->|PUT / POST / DELETE /streams/{name}| Process
+        PR["Portal reconciler"] -->|PUT / POST / DELETE /streams/{project}.{name}| Process
     end
 
     MQTT["City MQTT Broker"] --> SP1
@@ -90,7 +90,7 @@ flowchart TD
 ### Streams Mode Properties
 
 - **Memory Footprint:** Each idle Bento stream consumes between 15 MiB and 30 MiB of RAM. A single 1 GiB pod easily hosts 30–50 concurrent streaming pipelines.
-- **Dynamic Stream Reloading:** Bento runs `-w -r /streams/resources.yaml streams /streams/{name}…`, one argument per seeded stream file (`values/runner/base-values.yaml.gotmpl`); `-r` loads the shared resources, `-w` reloads a changed file. The Portal reconciler creates, replaces or deletes each approved stream over the runner's REST API (`PUT`, then `POST` on a `404`, and `DELETE` on `/streams/{name}`), so a stream starts, restarts or stops without a pod restart and without disturbing its siblings.
+- **Dynamic Stream Reloading:** Bento runs `-w -r /streams/resources.yaml streams /streams/{name}…`, one argument per seeded stream file (`values/runner/base-values.yaml.gotmpl`); `-r` loads the shared resources, `-w` reloads a changed file. The Portal reconciler creates, replaces or deletes each approved stream over the runner's REST API (`PUT`, then `POST` on a `404`, and `DELETE` on `/streams/{project}.{name}`), so a stream starts, restarts or stops without a pod restart and without disturbing its siblings. The stream id carries the project because one runner may serve every project and two projects may each have a pipeline of the same name; under the bare name the last `PUT` won and the other pipeline read Live without running (T-3002). A Portal that finds a stream under the bare name of one of a project's pipelines (or `{name}.expiry`) deletes it once, on its first pass over that project.
 - **Approved pipelines become streams (PL-47):** the Portal reconciler renders every approved `Pipeline` that reads a `DataSource` into one stream file: the input of §6, the inline mapping (PL-41), an `unarchive` of the mapping's array so one poll writes many entities, and an upsert through `spec.targetEndpoint` with the project pipelines client interpolated from the runner's environment (PL-16). It creates or replaces the stream over the runner's REST API on every sync (a restarted runner is whole again within one interval; the static ConfigMap stays the deployment's seed), then sets `status.phase` from the runner's answer. `Live` is the runner's word, never Git's: a manifest the runner refuses is `Error` with the runner's reason.
 - **Failure Isolation:** An unhandled error in one stream terminates only that stream. Bento isolates memory heaps across streams, preventing cascading crashes.
 
@@ -307,8 +307,8 @@ input exists.
 
 A `trigger.subscription` becomes two things. In the runner it is an `http_server` input on
 `path: /notify` accepting `POST`; Bento streams mode prefixes a stream's HTTP endpoints with the
-stream id, which is the pipeline name, so the runner receives notifications at
-`http://pipeline-runner.{project}.svc.cluster.local:4195/{pipeline}/notify`. On the platform it
+stream id, which is `{project}.{pipeline}`, so the runner receives notifications at
+`http://pipeline-runner.{project}.svc.cluster.local:4195/{project}.{pipeline}/notify`. On the platform it
 is one CIM 009 subscription, created through the source endpoint like every other write, whose
 `notification.endpoint.uri` is that address:
 

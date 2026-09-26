@@ -110,7 +110,7 @@ mapper that binds the token to `portal-internal` — the pattern the endpoint su
 bind a token to one endpoint slug. No static key is added for a new caller of this listener, and a
 caller that presents no token is refused before the handler reads the body.
 
-The pipeline runner's streams API (4195, `PUT` and `DELETE /streams/{name}`) holds the pipeline
+The pipeline runner's streams API (4195, `PUT` and `DELETE /streams/{project}.{name}`) holds the pipeline
 secrets in its environment (PL-07), so reaching it is decided by the mesh, not by the other side's
 egress: a Linkerd `Server` on that port, a `MeshTLSAuthentication` naming the Portal's
 ServiceAccount, and an `AuthorizationPolicy` binding the two. Any other meshed pod is refused by
