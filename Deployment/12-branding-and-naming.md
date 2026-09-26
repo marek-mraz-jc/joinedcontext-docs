@@ -123,7 +123,7 @@ The catalogue is the public face of the instance, so its pages are laid out arou
 
 The theme is templates, `jc-theme.css` and `plugin.py`, and nothing else. The stylesheet carries no colour of its own: `base.html` writes the brand values as `--jc-primary`, `--jc-primary-fg`, `--jc-primary-rgb`, `--jc-secondary`, `--jc-accent`, `--jc-background`, `--jc-text`, `--jc-font-heading` and `--jc-font-body`, and every other colour (the neutral scale, the soft tints, the focus ring, the dark footer) is mixed from them with `color-mix()`, the way the Portal's `tokens.css` derives its scales. A second installation restyles the whole catalogue by its branding block alone. `ckan.site_title`, `ckan.site_logo`, `ckan.favicon`, `ckan.locale_default` and `ckan.locales_offered` are set from the same block when CKAN starts, so the catalogue's own configuration never carries a literal either. A language the running CKAN does not ship is dropped from the offered list rather than taken as an instruction, because an unknown locale stops CKAN at start-up.
 
-`jc_theme` is the first plugin in `ckan.plugins`: CKAN gives the templates of the first plugin precedence, and the theme overrides the table view's own page so that the grid framed on a dataset page wears the same look.
+The theme (package `ckanext_jc_theme`) is the first plugin in `ckan.plugins`: CKAN gives the templates of the first plugin precedence, and the theme overrides the table view's own page so that the grid framed on a dataset page wears the same look.
 
 ## Related
 
