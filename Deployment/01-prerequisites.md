@@ -23,12 +23,23 @@ One base domain is delegated to the ingress controller (`global.domain`). The ed
 | Host | Target | Usage |
 |---|---|---|
 | `<domain>` | APISIX data plane | The programmatic surfaces: `/api/endpoint/*` (NGSI-LD, STA, OGC Features, MCP, per Endpoint), `/cs/*`, the forge under `/git/*`, and `/apps/{name}/*` only as a `308` to the App's host |
-| `{name}.apps.<domain>` | APISIX, one host per published App | The App, its endpoint calls and its functions ([ADR-N-037](../Decisions/adr-n-037-an-origin-per-app.md)); covered by the `*.<domain>` record, one HTTP-01 certificate per App, no wildcard certificate |
+| `{name}.apps.<domain>` | APISIX, one host per published App | The App, its endpoint calls and its functions ([ADR-N-037](../Decisions/adr-n-037-an-origin-per-app.md)); covered by the `*.<domain>` record and one HTTP-01 certificate per App, or by a delegated `apps.<domain>` zone and the wildcard certificate `*.apps.<domain>` when `global.ingress.appsWildcard` is on |
 | `portal.<domain>` | Portal | The API, the UI and the Portal's MCP door ([ADR-N-019](../Decisions/adr-n-019-login-at-the-edge-apisix-openid-connect.md)) |
 | `idm.<domain>` | Keycloak | OIDC authentication, token issuance, account console |
 | `data.<domain>` | CKAN | The open-data catalogue, when the `ckan` component is deployed |
 
 There is no `api.<domain>`: the data-plane surfaces live on the apex. Gitea has no host of its own either, so the installation needs one certificate and one DNS record fewer; Git over SSH is off and clones go over HTTPS ([10-edge-routing-apisix.md](10-edge-routing-apisix.md) §2).
+
+### The wildcard certificate for App hosts
+
+`global.ingress.appsWildcard` gives every App host one certificate `*.apps.<domain>` by DNS-01 ([ADR-N-037](../Decisions/adr-n-037-an-origin-per-app.md) §6), so a published App answers at once. It needs four things, done once:
+
+1. A Hetzner project that holds the App zone and nothing else. A Hetzner token is scoped to a project, so this project is what limits the token to one zone.
+2. In that project, the zone `apps.<domain>` with the record `*` `A` set to the ingress address. Add it before step 4, so no App host stops resolving.
+3. A Read & Write API token of that project. Supply it as an operator secret (the deployment's `components/secrets/README.md` §2): `hetzner-dns` with the key `token` in the APISIX namespace, never in values or Git.
+4. At the parent zone's registrar, `NS` records for `apps.<domain>` naming the Hetzner name servers the zone lists.
+
+Then set `appsWildcard.enabled: true` and apply. `openssl s_client -servername x.apps.<domain>` shows `CN = *.apps.<domain>` for any host, including one never published.
 
 ## 3. Component Resource Sizing
 
