@@ -89,6 +89,8 @@ authorization code flow with PKCE runs server-side and the result is an encrypte
 | `GET` | `/api/v1/auth/login?redirect_to=<in-app path>` | starts the code flow; `redirect_to` is honoured only when it is a same-origin path |
 | `GET` | `/api/v1/auth/callback` | consumes the code, verifies the ID token against the stored nonce, issues the session |
 | `GET` | `/api/v1/auth/me` | the signed-in identity, or `401` `application/problem+json` when there is no live session |
+| `GET` | `/api/v1/auth/sso-check` | a redirect into the realm with `prompt=none` for the public `portal-ui` client, answered to `/api/v1/auth/sso-check/done` in the fragment: `#error=login_required` when the person must sign in, `#code=…` when the realm session lives; the Open page reads it from a hidden frame of its own origin to decide whether a silent App means "sign in again" (AP-122); the code is never redeemed |
+| `GET` | `/api/v1/auth/sso-check/done` | an empty page the check lands on; the answer is in its fragment, which never reaches the server |
 | `POST` | `/api/v1/auth/logout` | clears the session and answers `{ "endSessionUrl": "…" }`; the SPA navigates there itself, because a cross-origin 302 to Keycloak is unreadable to `fetch` |
 | `POST` | `/api/v1/auth/backchannel-logout` | Keycloak-initiated logout; revokes every session issued at or before the token's mark |
 
@@ -2252,6 +2254,7 @@ the MCP endpoint itself.
 |---|---|---|---|---|
 | `GET` | `/api/v1/auth/login` | a browser | a redirect into the realm's code flow (§3) | none: it is how a session starts |
 | `GET` | `/api/v1/auth/callback` | the realm, through the browser | the session cookie and a redirect to the page asked for (§3) | the code and the stored nonce |
+| `GET` | `/api/v1/auth/sso-check`, `/api/v1/auth/sso-check/done` | the Open page's hidden frame | a silent (`prompt=none`) check of the realm session and the empty page it lands on (§3, AP-122) | the Portal session; the realm's own cookie decides the answer |
 | `POST` | `/api/v1/auth/backchannel-logout` | Keycloak | revokes the sessions the logout token names (§3) | the logout token, verified against the realm's keys |
 | `GET` | `/.well-known/oauth-protected-resource` | an MCP client | the RFC 9728 metadata naming the Portal's MCP resource and its realm | none: RFC 9728 makes it public, and it names no secret |
 | `GET` | `/.well-known/oauth-protected-resource/api/v1/mcp` | an MCP client | the same document, at the path RFC 9728 derives from the resource | none, as above |
