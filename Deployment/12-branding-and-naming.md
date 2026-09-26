@@ -37,9 +37,14 @@ global:
       offered: ["sk", "en"]
     documentationBaseUrl: "https://docs.bb.example.com"   # where this installation serves the
                                                           # User Guide; omit it and no form links
+    tagline: "Otvorené dáta mesta, naživo"        # the catalogue's home page, under the name
+    footerLines:                                  # the catalogue's footer, one paragraph each
+      - "Demo instance, not affiliated with the city."
 ```
 
 Every value is a string or a list of strings. Colours are hex triplets or sextets and are validated as such before anything renders them, because a colour token reaches a browser as a CSS custom property and a value that is not a colour is a way into the page (OPS-46). The logo and the favicon are file names, never URLs: they sit beside the branding file in the same ConfigMap and the Portal serves them from its own origin at `/api/v1/branding/logo` and `/api/v1/branding/favicon`. Those two names are the whole of the route: `GET /api/v1/branding/{asset}` accepts `logo` and `favicon` and answers `404` to anything else, so the path can reach no file the ConfigMap does not carry. The content type comes from the file's own extension (`.svg`, `.png`, `.jpg`, `.webp`, `.ico`).
+
+`tagline` and `footerLines` are the catalogue's own words: the line under the name on its home page (empty means the theme's default, in the page's language) and the lines of its footer, such as a demo disclaimer or an imprint. A value that is not a string, or a list entry that is empty, is dropped rather than rendered.
 
 A colour the Portal UI cannot read is named in the browser console and skipped; the token keeps the default it already had rather than taking a value that is not a colour.
 
@@ -51,7 +56,7 @@ A colour the Portal UI cannot read is named in the browser console and skipped; 
 |---|---|---|
 | Portal API | the whole block, from `JC_BRANDING_FILE` | answers `GET /api/v1/branding` with `Cache-Control: public, max-age=300` |
 | Portal UI | that endpoint at runtime | page title, sidebar and login logo, colour tokens (`--portal-color-primary`, `--portal-color-primary-fg`, `--portal-color-primary-dark`, `--portal-color-primary-fg-dark`, `--portal-color-secondary`, `--portal-color-accent`, `--portal-color-surface`, `--portal-color-surface-fg`), font stacks (`--portal-font-heading`, `--portal-font-sans`), language switcher, footer organisation and contact |
-| CKAN | `instanceName`, `organisation`, `logo`, `favicon`, `colours`, `languages` | site title, site logo, theme tokens, `locale_default` and `locales_offered`, and the organization the publisher creates for a project |
+| CKAN | `instanceName`, `organisation`, `contactEmail`, `logo`, `favicon`, `colours`, `fonts`, `languages`, `tagline`, `footerLines`, `domain` | site title, site logo and favicon, the whole stylesheet (every colour mixed from the five brand colours), `locale_default` and `locales_offered`, the home page's tagline, the footer, and the organization the publisher creates for a project |
 | DCAT-AP records | `organisation`, `contactEmail`, `licenseDefault`, `domain` | `dcterms:publisher`, `dcat:contactPoint`, the default `dcterms:license` of a distribution |
 | Keycloak | `instanceName`, `orgDomain`, `colours`, `logo` | realm display name and login theme |
 | E-mail templates | `shortName`, `organisation`, `contactEmail`, `domain` | subject prefix, signature, links |
@@ -109,15 +114,16 @@ Two constraints shape it. The organisation line says *demo instance, not affilia
 
 ## 6. Catalogue page layout
 
-The catalogue is the public face of the instance, so its pages are laid out around what a visitor is looking for rather than around CKAN's defaults.
+The catalogue is the public face of the instance, so its pages are laid out around what a visitor is looking for rather than around CKAN's defaults, and they look like the Portal's family: a light header with a hairline under it, surfaces on a tinted page, one type scale, the brand colour for actions and the current place (T-3009).
 
-- **Front page.** A hero carrying the instance name, the one-line organisation, and how many datasets the catalogue holds. Below it, one group per context space (transport, air quality, and so on), so the first choice a visitor makes is a subject and not a search box.
-- **Dataset page.** The representation resources come first, in the order the publisher writes them: NGSI-LD, then GeoJSON, then the tabular and API surfaces the Endpoint offers. The model artifacts that describe those representations, the JSON Schema and the JSON-LD context, sit apart in a **Model** section at the end. A visitor who wants the data never scrolls past a schema; a developer who wants the schema knows where it always is.
-- **Everything else** is stock CKAN. The theme overrides the header, the footer and one stylesheet of custom properties, and holds no copy of a CKAN page it does not need to change.
+- **Home page.** A hero in the brand colour carrying the instance name, the `tagline`, one search field and how many datasets and publishers the catalogue holds. Below it, the datasets changed last as cards (publisher, title, description, the formats a reader gets, the last update), and beside them the ways in by publisher and by keyword. CKAN's sample page ("Welcome to CKAN" and its placeholder image) is gone.
+- **Dataset page.** The description, then **the data itself**: the DataStore table, framed on the page with its row count, searchable and sortable, with a link to the table's own page and a download. Then the About list, the live API box and the downloads in three sections: the data as files (the DataStore file first), the APIs (NGSI-LD, MCP), and the **data model** (the artifacts under the Endpoint's `/schema/` path), folded, because its formats are for validators and developers. Each resource is one row with its format, one line saying what it is for, and its one action (Download, or Open for an API) in place of CKAN's "Explore" menu. The sidebar keeps the publisher; the follower count, the share buttons and a second licence box are gone.
+- **Search results.** One row per dataset with the data and API formats as plain chips, never the model's seven artifacts, and the publisher and last update beside them.
+- **Everything else** is stock CKAN, restyled by the same stylesheet.
 
-Of that layout, the header, the footer, the colours and the resource order arrive with the branding block and the publisher: `jcctl` writes the representation resources first and the schema resource last, so a stock dataset page already reads in the order above. The hero's dataset count and the separate **Model** heading are template overrides the theme does not carry yet; they are the next change to it, and they are worth writing against a running catalogue rather than blind.
+The theme is templates, `jc-theme.css` and `plugin.py`, and nothing else. The stylesheet carries no colour of its own: `base.html` writes the brand values as `--jc-primary`, `--jc-primary-fg`, `--jc-primary-rgb`, `--jc-secondary`, `--jc-accent`, `--jc-background`, `--jc-text`, `--jc-font-heading` and `--jc-font-body`, and every other colour (the neutral scale, the soft tints, the focus ring, the dark footer) is mixed from them with `color-mix()`, the way the Portal's `tokens.css` derives its scales. A second installation restyles the whole catalogue by its branding block alone. `ckan.site_title`, `ckan.site_logo`, `ckan.favicon`, `ckan.locale_default` and `ckan.locales_offered` are set from the same block when CKAN starts, so the catalogue's own configuration never carries a literal either. A language the running CKAN does not ship is dropped from the offered list rather than taken as an instruction, because an unknown locale stops CKAN at start-up.
 
-The colour tokens the theme sets are `--jc-primary`, `--jc-primary-fg`, `--jc-secondary`, `--jc-accent`, `--jc-background`, `--jc-text`, `--jc-font-heading` and `--jc-font-body`, all filled from the block in section 1. `ckan.site_title`, `ckan.site_logo`, `ckan.locale_default` and `ckan.locales_offered` are set from the same block when CKAN starts, so the catalogue's own configuration never carries a literal either. A language the running CKAN does not ship is dropped from the offered list rather than taken as an instruction, because an unknown locale stops CKAN at start-up.
+`jc_theme` is the first plugin in `ckan.plugins`: CKAN gives the templates of the first plugin precedence, and the theme overrides the table view's own page so that the grid framed on a dataset page wears the same look.
 
 ## Related
 
