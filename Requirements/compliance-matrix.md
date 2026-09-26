@@ -27,7 +27,7 @@ Generated 2026-09-25 from: `docs` d661561, `conformance` 47f59e6, `deployment` f
 | **CC** — Configuration as code | 90 | 73 | 8 | 9 | 0 |
 | **DM** — Data models | 79 | 66 | 7 | 6 | 0 |
 | **DS** — Data space connector | 20 | 13 | 3 | 4 | 0 |
-| **EP** — Endpoints and parity | 90 | 80 | 5 | 5 | 1 |
+| **EP** — Endpoints and parity | 91 | 80 | 5 | 6 | 1 |
 | **GW** — Gateway firewall | 34 | 26 | 2 | 6 | 1 |
 | **I** — Identity and credentials | 4 | 2 | 0 | 2 | 0 |
 | **MF** — Manifests | 49 | 45 | 4 | 0 | 0 |
@@ -41,7 +41,7 @@ Generated 2026-09-25 from: `docs` d661561, `conformance` 47f59e6, `deployment` f
 | **SP** — Context-space surface | 22 | 19 | 0 | 3 | 0 |
 | **TS** — Testing and quality | 26 | 16 | 5 | 5 | 0 |
 | **UI** — Portal and user interface | 85 | 63 | 15 | 7 | 5 |
-| **Total** | 1122 | 825 | 103 | 194 | 29 |
+| **Total** | 1123 | 825 | 103 | 195 | 29 |
 
 ## 3. Requirement to test
 
@@ -502,6 +502,7 @@ Generated 2026-09-25 from: `docs` d661561, `conformance` 47f59e6, `deployment` f
 | **EP-04** |  | built |  | `docs/scripts/verify-traceability.py` |
 | **EP-89** | [H] [S] | tested | fast ci | portal `ui/tests/endpoint_page.test.tsx::says an endpoint stops by being deleted and opens that deletion (EP-89)`, portal `ui/tests/endpoint_page.test.tsx::refuses a viewer the deletion that stops an endpoint, with its reason (EP-89)` |
 | **EP-90** | [H] | open |  |  |
+| **EP-91** | [H] [P] [A] | open |  |  |
 | **EP-05** | [P] [A] | tested | ci-full, conformance | conformance `e2e/journeys/07-endpoints-manager.spec.ts::EP-05 a representation the endpoint does not offer is refused, not guessed`, platform `crates/context-gateway/tests/edge_app_file_geojson_tests.rs::an_endpoint_that_does_not_serve_geojson_is_not_found_and_the_broker_is_not_asked`, platform `crates/context-gateway/tests/edge_app_file_geojson_tests.rs::an_unknown_slug_and_a_representation_not_served_answer_the_same_bytes`, and 18 more |
 | **EP-06** |  | tested | ci-full, conformance, fast ci | conformance `tests/security/test_representation_parity.py::test_ep06_every_representation_answers_for_the_same_caller`, platform `crates/context-gateway/src/translators/tabular.rs::column_names_carry_past_z`, platform `crates/context-gateway/src/translators/tabular.rs::a_control_character_never_reaches_the_workbook`, and 4 more |
 | **EP-07** |  | tested | ci-full, conformance, fast ci, live on dev | conformance `tests/etsi/temporal_projected.robot::EP30 Current Value And Temporal Representation Parity`, conformance `tests/security/test_representation_parity.py::test_ep07_the_same_entities_appear_in_every_representation`, conformance `tests/security/test_representation_parity.py::test_ep07_attribute_values_agree_across_representations`, and 33 more |

@@ -6,7 +6,7 @@ description: Universal ingress and egress multi-representation views, opaque slu
 
 # Endpoints & Representation Parity
 
-Family **EP** (EP-01…EP-90). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **EP** (EP-01…EP-91). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
 ## 1. Endpoint Identity and Opaque Slug
 
@@ -143,6 +143,7 @@ Family **EP** (EP-01…EP-90). Owning chapter: [Architecture/04-context-spaces-a
 - **EP-82** [H][S] — Each dataset of EP-81 MUST have a page showing its description, keywords, publisher, licence, update frequency and themes, the data model's classes with a link to the model's documentation, every resource of the dataset (EP-64) with the DataStore preview where it has one, a sample of up to ten rows read anonymously through the Endpoint itself (EP-66), and "Use this data" snippets (curl, the App SDK, an MCP client) against the Endpoint's own URLs; the Portal MUST read a sample only from an Endpoint of this installation, derived from the dataset's `endpoint` extra and never fetched from a URL the catalogue supplies.
 - **EP-83** [H][S] — A steward MUST be able to publish an Endpoint in one flow — pick the Endpoint, review a DCAT-AP description prefilled from the Endpoint and its space's data model, preview the catalogue entry, propose — and the flow MUST end in one `Change` that writes `spec.publish.ckan` and `spec.catalog` on that Endpoint; a flow that also makes the Endpoint public MUST say so before the proposal and MUST take the red lane with a publisher's approval (EP-76, PF-72). Nothing is written to CKAN by the flow itself: the dataset appears on the reconcile after the approval (EP-62).
 - **EP-84** [H][P][A] — The installation MUST serve its catalogue for harvesters as one DCAT-AP 3.0 `dcat:Catalog` at `https://{host}/catalog.jsonld` and `https://{host}/catalog.ttl`, holding the record of EP-27 of every Endpoint whose audience is `public` and nothing of any other; both serializations MUST pass the SEMIC DCAT-AP 3.0 SHACL shapes pinned in the platform repository, in the fast CI lane (EP-78).
+- **EP-91** [H][P][A] — The open-data catalogue MUST also serve what it holds as DCAT-AP 3.0, so a CKAN harvester or a national portal can harvest the catalogue host itself: the whole catalogue at `https://data.{domain}/catalog.ttl` (and `.rdf`, `.jsonld`), paged with `hydra:nextPage`, and each dataset at `https://data.{domain}/dataset/{id}.ttl` (same serializations). Every page and every dataset MUST pass the SEMIC DCAT-AP 3.0.1 SHACL shapes, cardinalities and ranges, pinned in the deployment repository, in the fast CI lane on a record serialized inside the pinned catalogue image. The catalogue's title, publisher and contact MUST come from `global.branding` (Deployment/12), a dataset's `dct:identifier` MUST be the Endpoint's slug so a re-harvest updates rather than duplicates, and a record the Endpoint left without a contact point or a description MUST still pass, under the installation's contact and the dataset's title. EP-84's gateway feed stays the record of every public Endpoint; this one is the catalogue's copy of it, with the DataStore download added (T-3010).
 
 ## 16b. The filter preview and its side-by-side proof
 
@@ -198,6 +199,7 @@ Family **EP** (EP-01…EP-90). Owning chapter: [Architecture/04-context-spaces-a
 | EP-77 | [Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes](../Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
 | EP-89 | [Architecture/04-context-spaces-and-endpoints.md#stopping-an-endpoint](../Architecture/04-context-spaces-and-endpoints.md#stopping-an-endpoint) | [Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest) |
 | EP-90 | [API/02-endpoint-representations.md#2a-what-the-ngsi-ld-surface-answers](../API/02-endpoint-representations.md#2a-what-the-ngsi-ld-surface-answers) | [Testing/01-backend-tests.md](../Testing/01-backend-tests.md) |
+| EP-91 | [Architecture/21-open-data-catalogue.md#8-the-organizations-dcat-ap-feed](../Architecture/21-open-data-catalogue.md#8-the-organizations-dcat-ap-feed) | [Testing/05-deployment-and-performance-tests.md](../Testing/05-deployment-and-performance-tests.md) |
 
 ## Related
 
