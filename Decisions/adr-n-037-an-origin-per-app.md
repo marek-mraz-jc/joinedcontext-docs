@@ -7,7 +7,7 @@ title: "ADR-N-037: An Origin per App and an Egress Allow-List per App"
 
 Date: 2026-09-25  
 Status: Accepted  
-Decision Makers: product owner (decision of 2026-09-24, T-2477)
+Decision Makers: product owner (decision of 2026-09-24, T-2477; amendment §6 of 2026-09-26, T-3013)
 
 ## 1. Context
 
@@ -45,7 +45,7 @@ On 2026-09-24 the owner chose a host per App and an egress allow-list per App. T
 
 - **A CSP `sandbox` on the shared origin (option b of T-2477).** Each App would get an opaque origin, with no storage, no cookies and a token held by the SDK. It keeps one certificate. But it breaks every App that keeps state in storage, and it puts a bearer token in page JavaScript, which AP-23 forbids.
 - **Accept the risk for the MVP (option c).** The owner declined it. The attack is one line of script in a generated App.
-- **A wildcard certificate by DNS-01.** It needs a DNS API the zone does not have (T-2806).
+- **A wildcard certificate by DNS-01.** It needs a DNS API the zone does not have (T-2806). Taken on 2026-09-26 with a delegated zone, see §6.
 - **Egress by host name.** A NetworkPolicy matches addresses, not names. An App that must reach a name-addressed service behind a CDN waits for a platform egress proxy that enforces a per-App list of names. That is a known limit of this decision: until the proxy exists, `spec.egress` takes addresses only.
 
 ## 5. Consequences
@@ -56,6 +56,18 @@ On 2026-09-24 the owner chose a host per App and an egress allow-list per App. T
   - jcctl renders the same routes where it renders app routes;
   - the deployment removes the apex app routes, admits the apps namespace to the gateway and adds the security suite.
 - Publishing an App now waits for one HTTP-01 challenge, usually well under a minute.
+
+## 6. Amendment 2026-09-26: a Wildcard Certificate by DNS-01
+
+The owner ordered on 2026-09-26 that every App answer on its host the moment it is published, with no certificate to wait for (T-3013). A new host waited for one HTTP-01 challenge, and a host whose challenge failed served the ingress controller's default certificate. The parent zone still has no DNS API, so the App zone moves to a provider that has one.
+
+1. **The App zone is delegated.** The parent zone gets `NS` records for `apps.{domain}` that name the new provider's servers, and the delegated zone holds `*` `A` to the ingress address. Every App host keeps resolving, now from the delegated zone. A lone `_acme-challenge.apps.{domain}` record at the parent is never an option: any record under `apps.{domain}` creates that node, and `*.{domain}` then stops answering the App hosts (RFC 4592).
+2. **On dev the provider is Hetzner DNS**, through the Hetzner Cloud API. Hetzner scopes an API token to a project, not to a zone, so the zone lives in a Hetzner project that holds that zone and nothing else. Its token can change that zone alone.
+3. **One certificate `*.apps.{domain}`.** The namespaced Issuer `letsencrypt-dns01` in the APISIX namespace solves DNS-01 through Hetzner's cert-manager webhook (group `acme.hetzner.com`, solver `hetzner`). The token is a Secret supplied by `secretRef`, and it never appears in values, Git or a log. The Certificate `apisix-apps-wildcard` writes its key to the Secret `apisix-apps-wildcard-tls`, and the edge Ingress carries a rule and a TLS entry for `*.apps.{domain}`.
+4. **The reconciler reads the certificate.** When `apisix-apps-wildcard` is `Ready` and names `*.apps.{domain}`, an App's host is ready with no Ingress or certificate of its own. Without it, the reconciler keeps the per-host HTTP-01 path of §3.2. The per-host certificates issued earlier stay until the wildcard is proven on dev; one later change removes them.
+5. **Off by default.** `global.ingress.appsWildcard.enabled` turns it on. An installation without a DNS API keeps §3.2 unchanged.
+
+The wildcard's key serves every App host. It lives only in the APISIX namespace, where the ingress controller already reads the edge certificate's key. The separation between Apps does not change: the browser separates origins by host name, whichever certificate serves the host.
 
 ## Related
 
