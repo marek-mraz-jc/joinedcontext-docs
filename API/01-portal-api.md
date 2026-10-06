@@ -2738,14 +2738,17 @@ DELETE /api/v1/projects/{project}/spaces/{space}/views/{id}     delete it → 20
 - `config`: `q` is an NGSI-LD query of at most 4,096 characters, sent as the person's own `q`
   when the view opens; `sort` names at most 3 attributes; `hidden` and `width` name attributes;
   `colour` holds at most 20 rules, each a `q` and one of the colour tokens `neutral`, `info`,
-  `success`, `warning`, `danger`, evaluated in the page on the rows it shows; `settings` is the
+  `success`, `warning`, `danger`, evaluated in the page on the rows it shows (terms joined by `;`
+  and `|`, without parentheses; a rule the page cannot evaluate marks nothing and the editor says
+  so), the first matching rule marking the row with a swatch that names it; `settings` is the
   kind's own (the card fields of a gallery, the attribute a kanban groups by, the date attributes
   of a calendar or a timeline, the fields of a form). The whole `config` is at most 64 KiB.
 - Who sees and changes a view, by its `mode`: `personal` its owner alone, and to anyone else it
   does not exist (`404`); `collaborative` everyone who may read the space sees and changes it;
   `locked` everyone who may read the space sees it, and only its owner or a steward of the space
   (a caller with `update` on the `ContextSpace`) changes or deletes it (`403` for others).
-  Deleting a `collaborative` view is its owner's or a steward's.
+  Deleting a `collaborative` view, or changing any view's `mode`, is its owner's or a steward's:
+  a collaborator who made a shared view personal would take it from everyone else.
 - A project or a space the caller may not read is `404`, as in §27. Saving needs no more than
   reading: a view changes nothing in the space.
 - `version` counts up on every save. Send the version you read as `expectedVersion`: a save
