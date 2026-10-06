@@ -80,9 +80,9 @@ one thing to get right instead of two, and it is what the seed's own check asser
 
 ## 3. Entity ids
 
-Every id is `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}` with exactly four segments
-(PF-42). A colon inside `{localId}` would make a fifth segment and fail the check, so a territory
-is joined with a hyphen and never with a colon.
+Every id these pipelines mint is the `prefixed` shape `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}`
+(ADR-N-041, PF-44), with a territory joined by a hyphen inside `{localId}`, never a colon, so the
+id stays readable as its four parts.
 
 | space | one literal id |
 |---|---|

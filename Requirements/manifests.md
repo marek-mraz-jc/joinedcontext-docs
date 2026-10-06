@@ -50,7 +50,7 @@ Family **MF** (MF-01…MF-52). Owning chapter: [Architecture/06-configuration-as
 
 - **MF-20** [H][P][A] — The Portal UI MUST provide an import wizard supporting manifests, archives, and remote URLs, tagging imported objects with provenance annotations.
 - **MF-21** — Import workflows MUST execute schema validation, reference checks, Conftest gates, and plan generation before creating a lane-classified merge request (CC-63).
-- **MF-22** — Namespace mapping MUST be configured explicitly during import, rewriting target namespaces, typed references, and URN prefix segments (PF-22).
+- **MF-22** — Namespace mapping MUST be configured explicitly during import, rewriting target namespaces and typed references; entity URNs MUST be kept as written, because identity is the space and the URN (ADR-N-041, PF-22).
 - **MF-23** — Imports MUST enforce a user-selected conflict resolution policy (`fail`, `skip`, `replace`, `rename`).
 - **MF-24** — Manifest imports MUST reject plaintext secrets, unresolvable references, unsupported API versions, and unauthorized resource kinds.
 - **MF-25** — Bundles exported from external instances MUST be importable offline without network connectivity to the originating instance.

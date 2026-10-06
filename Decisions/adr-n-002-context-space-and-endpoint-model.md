@@ -73,6 +73,8 @@ We need an explicit, stable abstraction separating internal multi-tenancy from e
 
 ## 6. Addendum: URN authority segment and access surface
 
+> Superseded in part: the URN rule of this paragraph is replaced by [ADR-N-041](adr-n-041-entity-identity-is-space-and-urn.md) (identity is the space and the URN; the prefix is optional). The rest of this decision stands.
+
 The issuer segment of the entity URN is the Organization's **verified domain** (`urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}`), replacing the free-form issuer code of legacy ADR 001; the gateway enforces all four segments on writes (Architecture/03, PF-41…PF-44). Every space and endpoint also exposes `access`, the caller's effective grants as AuthZEN JSON, ODRL 2.2 and a UCAST grant AST (Architecture/04 §1b, EP-55…EP-60), so consumers and agents learn what they may read, write or delete without probing.
 
 ## Related

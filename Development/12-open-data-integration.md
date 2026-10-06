@@ -74,7 +74,7 @@ Each chosen dataset becomes five things in its project, in this order.
    (`unit` on the slot) and enums for every closed list. A reference to another entity is a
    relationship slot (`range` a class of the same model), so a school belongs to a district and a
    stop is served by several routes.
-3. **Entity ids** `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}`, with `{space}` rendered by
+3. **Entity ids** minted `prefixed`, `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}` (the default mint option, ADR-N-041), with `{space}` rendered by
    PF-84 and `{localId}` taken from the publisher's own stable key. An id built from a row number
    changes when the publisher reorders the file, and every relationship to it breaks.
 4. **A pipeline** that fetches, maps and writes through the space's Endpoint, declared with

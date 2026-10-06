@@ -39,7 +39,7 @@ Every Context Space is accessible to project owners via a stable, deterministic 
 https://{host}/cs/{space}/
 ```
 
-Where `{space}` is the Context Space name, identical to the `{space}` segment of the entity URN (`urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}`, Architecture/03; SP-01).
+Where `{space}` is the Context Space name (SP-01). It is the space of every entity under the path; an entity URN never names it, even when a prefixed URN happens to carry the same name (ADR-N-041, Architecture/03 §3).
 
 ### Permitted Child Paths
 

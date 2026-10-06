@@ -122,7 +122,7 @@ A red `main` comes before new work. Fix it forward: never revert without a task,
 
 1. No production data outside production. Real personal identifiers, production credentials and unredacted observation streams never enter a fixture, a test cluster or a CI run.
 2. Fixtures are committed and deterministic. The suites read them from `tests/*/fixtures/`, so two runs of the same commit compare.
-3. Every entity id a test mints follows `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}`, and the gateway refuses any other prefix with 400. A suite pointed at another deployment therefore takes that deployment's organization domain as an input.
+3. Every entity id a test mints is an NGSI-LD URN of the entity's type, prefixed `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}` where the code under test mints that shape; the gateway refuses an id that is no NGSI-LD URN with 400, and a test of identity writes the same URN into two spaces and proves them independent (ADR-N-041).
 4. No secret, live host or real person appears in a fixture or on a page. Secrets reach a workload by `secretRef` and are resolved by the reconciler.
 
 ---

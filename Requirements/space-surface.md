@@ -26,15 +26,9 @@ for the **SP-01…SP-22** family.
   URL on the platform host: `https://{host}/cs/{space}`. `{space}` MUST
   be the Context Space name of PF-09 (`^[a-z0-9-]+$`, unique in the
   Organization); no second identifier scheme for spaces may be minted.
-- **SP-02** — URL ↔ URN MUST be a pure function: the entity
-  `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}` (PF-42) resolves at
-  `/cs/{space}/ngsi-ld/v1/entities/{urn}`, and the ADR 001 resolver
-  (`https://id.…/{urn}`) is a string rewrite onto this scheme, no
-  lookup table.
-  > Note: SP-01 and SP-02 were written with the legacy Slovak segment names
-  > (`{Typ}:{Razidlo}:{Evidencia}:{Meno}`) and an "evidencia code from the
-  > organisation's data dictionary". PF-09, PF-10 and PF-42 are the rule, and
-  > `{Razidlo}` is the organization's verified domain.
+- **SP-02** — An entity's address MUST be `/cs/{space}/ngsi-ld/v1/entities/{urn}`: the space
+  from the path, the URN as written (ADR-N-041). There is no URN-only resolver; a URN without a
+  space names no single entity, and the same URN under two spaces is two entities.
 - **SP-03** — Standard trees MUST appear intact under the space prefix:
   `/cs/{space}/ngsi-ld/v1/…` is byte-for-byte the CIM 009 resource tree
   (a stock NGSI-LD client pointed at the space base works unmodified,
