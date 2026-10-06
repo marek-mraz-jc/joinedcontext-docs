@@ -1409,6 +1409,7 @@ riskiest file. The merge request is titled `rename the App shapes of {project} (
 
 - `202` with the Change, as an import answers.
 - `403` when the caller may not propose an App in the project, before anything is read.
+- `400` naming the App when a rewritten App does not pass the App door.
 - `409` when no App of the project carries an old name: there is nothing to propose.
 - An App already named in an open Change is proposed again in this one; the reviewer sees both.
 
