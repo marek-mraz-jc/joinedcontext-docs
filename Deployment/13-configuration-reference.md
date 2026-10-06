@@ -130,6 +130,7 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_PORTAL_PUBLIC_URL` | `http://localhost:8080` | no | The address a browser reaches this Portal at (`JC_PORTAL_PUBLIC_URL`, default `http://localhost:8080`). |
 | `JC_PORTAL_RELEASE` | — | no | `JC_PORTAL_RELEASE` — the installation's release name; a project's pod-backed Apps run in `{release}-{project}-apps`, bound to the ClusterRole `{release}-portal-apps` (AP-116). |
 | `JC_PORTAL_SERVICE_ACCOUNT` | — | no | `JC_PORTAL_SERVICE_ACCOUNT` — the Portal's ServiceAccount in `JC_PORTAL_APPS_NAMESPACE`, the subject of the RoleBinding in each project's apps namespace (AP-116). |
+| `JC_PORTAL_SERVICE_URL` | — | no | The Portal's own Service in the cluster (`JC_PORTAL_SERVICE_URL`), where an App pod asks `JC_ME_URL` for its caller's roles (AP-109, AP-134). |
 | `JC_PORTAL_SOPS_AGE_KEY_FILE` | — | a path to one | `JC_PORTAL_SOPS_AGE_KEY_FILE` names the age key file and chooses SOPS; otherwise `JC_PORTAL_OPENBAO_ADDR` and `JC_PORTAL_OPENBAO_ROLE` choose OpenBao, with `JC_PORTAL_OPENBAO_JWT_PATH` (default `/var/run/secrets/kubernetes.io/serviceaccount/token`) for the ServiceAccount token it logs in with. |
 | `JC_PORTAL_SYNC_INTERVAL` | `60` | no | How often the reconciler re-reads the configuration repository (`JC_PORTAL_SYNC_INTERVAL`, whole seconds, default `60`). |
 | `JC_SETUP_BACKUPS` | — | no | The databases are backed up to an object store (`JC_SETUP_BACKUPS`, the literal `true`). |
@@ -205,7 +206,7 @@ carries a credential — a run's ticket is minted per run and is not a stored se
 | `JC_BIND_ADDRESS` | `JC_BIND_ADDRESS` — where it listens, which is the port the Service routes to. |
 | `JC_BRANCH` | `JC_BRANCH` — the branch the run proposes its change on. |
 | `JC_ENDPOINT_URL` | `JC_ENDPOINT_URL` — the one Endpoint it may read, on the gateway's Service in the cluster (AP-134). |
-| `JC_ME_URL` | `JC_ME_URL` — the Portal route that answers the caller's roles in this App, called with the edge's `X-Access-Token` as the bearer (AP-109). |
+| `JC_ME_URL` | `JC_ME_URL` — the Portal route that answers the caller's roles in this App, on the Portal's Service in the cluster, called with the edge's `X-Access-Token` as the bearer (AP-109, AP-134). |
 | `JC_ORG_DOMAIN` | `JC_ORG_DOMAIN` — the organisation's domain, a variable of the runner's process. |
 | `JC_PATH_PREFIX` | `JC_PATH_PREFIX` — where the built application will be served, so the code it writes uses the right base path. |
 | `JC_PROXY_BASE` | `JC_PROXY_BASE` — the credential proxy, the one address a run may call out to. |

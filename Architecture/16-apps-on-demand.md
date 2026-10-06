@@ -478,7 +478,7 @@ A node pulls from the registry host at `https://{host}/v2/`, the path the distri
 
 ### Roles and a record form
 
-The edge hands the backend `X-Access-Token` and `X-Userinfo` (§5). To learn the person's application roles the backend calls `GET {JC_ME_URL}`, which is `/api/v1/projects/{project}/apps/{name}/me` on the Portal, with that token as `Authorization: Bearer`. The answer is the object the static host writes into `#jc-config` (§12, AP-95):
+The edge hands the backend `X-Access-Token` and `X-Userinfo` (§5). To learn the person's application roles the backend calls `GET {JC_ME_URL}`, which is `/api/v1/projects/{project}/apps/{name}/me` on the Portal's Service in the cluster (`JC_PORTAL_SERVICE_URL`), with that token as `Authorization: Bearer`. The pod's NetworkPolicy admits the Portal's pods on that port and nothing else of the Portal, and the Portal's admits App pods there (AP-134): on the public host the request would have to leave the pod for an address the policy never names, and every person would read as holding no role. The answer is the object the static host writes into `#jc-config` (§12, AP-95):
 
 ```json
 { "id": "5f0c…", "name": "Jana Kováčová", "email": "jana.kovacova@example.org", "roles": ["steward"] }
