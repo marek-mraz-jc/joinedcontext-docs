@@ -467,7 +467,7 @@ A run whose newest version's tests failed, or are still running in the sandbox, 
 
 Served on the Portal's separate internal listener (`JC_INTERNAL_BIND`, `joinedcontext-portal/src/config.rs`), which APISIX does not route and a NetworkPolicy opens to the agent proxy alone, so none of these calls is part of the public URL scheme. Authenticated via `Authorization: Bearer <proxy-token>`.
 
-There are five (`src/api/agent_runs.rs`, `internal_router`):
+There are six (`src/api/internal/agent_runs.rs`, `router`):
 
 | Route | What it is for |
 |---|---|
@@ -476,6 +476,7 @@ There are five (`src/api/agent_runs.rs`, `internal_router`):
 | `GET /internal/agent-runs/{id}/inbox` | what the person said, in `seq` order |
 | `POST /internal/agent-runs/{id}/mcp` | the operations registry: the same MCP dispatcher a person's client speaks to, entered as the person who started the run and narrowed by the run's profile (AG-64, AG-70) |
 | `GET /internal/agent-runs/{id}/diagnostics/{component}/{name}` | §7.1 |
+| `POST /internal/model-key` | §7.2: the model key's state, as the proxy last saw it (AG-96) |
 
 ### Receive Run Events from Proxy
 
@@ -509,6 +510,9 @@ repository and to no other, whatever the request names, so a run of one project 
 writes nothing of another project's repository nor of the organization's (AG-86, CC-87).
 Without `repository` the route reaches the configuration repository, as in layout 1.
 
+The context names the run's `kind` (`conversation`, `application`, `dashboard`, `analysis`), from
+which the proxy reads whose daily budget a call counts against (AG-97).
+
 ### Read What the Person Said
 
 The inbox is the one place a workspace reads from: the answers and the instructions of section 5,
@@ -537,6 +541,37 @@ the request's own ticket: a workspace cannot name another run's id (AG-52).
 ### 7.1 The diagnostics door
 
 The workspace asks the proxy for `/v1/diagnostics/{component}/{id}` with its `X-JC-Run` and `X-JC-Ticket` headers, the proxy asks the Portal's internal listener with its own bearer, and the Portal answers only for a resource of the run's project (AG-57). A `pipeline` name answers `200 OK` with the pipeline's counters (`received`, `sent`, `errors`, `bufferDepth`, as the runner reports them), `application/json`; a `change` id answers with the change's state, lane, plan and merge or apply error. `400` names a component the door does not know or an id that is not a name; `404` a resource outside the run's project. The body has passed the redaction of AG-56.
+
+### 7.2 The model key's state
+
+```http
+POST http://portal-internal:9090/internal/model-key HTTP/1.1
+Authorization: Bearer <proxy-jwt>
+Content-Type: application/json
+
+{ "state": "valid", "source": "probe", "limit": 10.0, "usage": 2.41, "remaining": 7.59 }
+```
+
+`state` is one of `valid`, `invalid`, `out_of_credit` and `unreachable`; `source` is `probe` or
+`call`; `limit`, `usage` and `remaining` are the provider's credits and are `null` or absent when
+the provider said nothing about them (a key without a limit has `limit: null`). Any other member is
+refused with `400`. Response: `204 No Content`. The body never carries the key (AG-96).
+
+### 7.3 A call past the daily budget
+
+The proxy answers a model call past a daily cap (AG-97) before it reaches the provider:
+
+```http
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/problem+json
+
+{
+  "type": "https://joinedcontext.com/errors/daily-budget",
+  "title": "Daily Budget Spent",
+  "status": 429,
+  "detail": "Today's model budget for the assistant is spent. It starts again at 00:00 UTC; an administrator can raise it."
+}
+```
 
 ## 8. Conversations
 
