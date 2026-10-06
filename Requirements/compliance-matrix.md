@@ -1018,6 +1018,7 @@ Generated 2026-10-06 from: `docs` b977d33, `conformance` 47f59e6, `deployment` 6
 | **PL-63** | [A] [S] | tested | ci-full, fast ci | portal `src/ops/pipeline_steps.rs::fields_are_every_key_once_in_name_order`, portal `tests/ops_pipeline_steps_tests.rs::a_sample_is_the_sources_first_records_with_their_fields`, portal `tests/ops_pipeline_steps_tests.rs::a_source_with_a_credential_a_stream_or_no_name_says_what_to_give_instead`, and 4 more |
 | **PL-64** | [S] | tested | ci-full, fast ci | deployment `tests/test_bystrica_seed.py::test_only_the_sole_writer_of_a_space_expires_and_its_policy_grants_the_sweep`, platform `crates/jc-core/tests/pipeline_expiry_tests.rs::a_pipeline_without_expiry_deletes_nothing_and_writes_none_back`, platform `crates/jc-core/tests/pipeline_expiry_tests.rs::a_window_in_hours_or_days_round_trips`, and 12 more |
 | **PL-65** | [H] | tested | fast ci | portal `ui/tests/pipeline_editor.test.tsx::writes an expiry the form holds, drops an emptied one, and says the window in words`, portal `ui/tests/pipelines_view.test.tsx::says which pipelines remove the entities their source stopped sending` |
+| **PL-66** | [P] | open |  |  |
 
 ### R — Access control and federation
 
