@@ -6,7 +6,7 @@ description: Normative requirements for data integration, transformation, and in
 
 # Pipeline Execution & Processing
 
-Family **PL** (PL-01…PL-66). Owning chapter: [Architecture/08-pipelines.md](../Architecture/08-pipelines.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
+Family **PL** (PL-01…PL-67). Owning chapter: [Architecture/08-pipelines.md](../Architecture/08-pipelines.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
 
 ## 1. Manifest Envelope and Native Payloads
 
@@ -128,6 +128,7 @@ An entity whose source dropped it stays in the space with its last value until s
 - **PL-64** [S] — A Pipeline MAY carry `spec.expiry: { after, types }`: `after` a whole number of hours or days (`12h`, `14d`) from `1h` to `365d`, `types` one to twenty distinct entity types. Without it nothing is ever deleted automatically. With it, the reconciler MUST run one sweep per hour on the project's runner, as the pipeline's ServiceAccount through its output Endpoint, that deletes (`deleteBatch`) every entity of those types in that Endpoint's space whose `modifiedAt`, or `createdAt` when it was never modified, is older than `after`, and no other entity; a disabled pipeline sweeps nothing. The Portal MUST refuse the proposal when the pipeline has more than one output, when another Pipeline of the project writes into the same space, when a type is not a class of the space's model, or when no Policy grants the account `deleteBatch` and `queryBatch` on those types in that space, naming the Policy to extend; the grant is never widened for the author.
 - **PL-65** [H] — The pipeline form MUST offer expiry off by default, with the window and the types, and say before saving what it deletes; the pipelines list and the pipeline page MUST state it in words ("Entities not updated for 14 days are removed") on every pipeline that has it.
 - **PL-66** [P] — The rendered stream MUST label each component by its place in the manifest (`input`, `step_{j}` for the `j`-th processor step, `compute`, `output`; what the platform adds keeps `processor_{at}`; an author's own label is kept), the metrics route MUST return the counters per label (`nodes`, API/01 §7), and the Pipeline Studio's flow MUST show each node's live received, sent and error counts from them, marking a node with errors since the runner started as failing, whenever no test result is on screen.
+- **PL-67** [P] — The pipeline test MUST return, for every step of `spec.steps`, a sample of what that step made of the message (at most 4 KiB, none for a step at or after a failure), and the Studio MUST show a step's own input and output when its node is opened, so a person sees where a record changed or stopped without reading the final output alone.
 
 ## Traceability
 
@@ -159,6 +160,7 @@ An entity whose source dropped it stays in the space with its last value until s
 | PL-58…PL-63 | [Architecture/08-pipelines.md#8-the-workbench-validation-and-the-log](../Architecture/08-pipelines.md#8-the-workbench-validation-and-the-log) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
 | PL-64…PL-65 | [Architecture/08-pipelines.md#stale-entity-expiry-pl-64-pl-65](../Architecture/08-pipelines.md#stale-entity-expiry-pl-64-pl-65) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
 | PL-66 | [API/01-portal-api.md#7-pipeline-runtime-metrics-pl-24-cc-35](../API/01-portal-api.md#7-pipeline-runtime-metrics-pl-24-cc-35) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
+| PL-67 | [API/01-portal-api.md#7a-testing-a-candidate-pipeline-pl-43-mf-38](../API/01-portal-api.md#7a-testing-a-candidate-pipeline-pl-43-mf-38) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
 
 ## Related
 
