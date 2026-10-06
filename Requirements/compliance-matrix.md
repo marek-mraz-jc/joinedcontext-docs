@@ -943,6 +943,7 @@ Generated 2026-09-25 from: `docs` d661561, `conformance` 47f59e6, `deployment` f
 | **PF-103** | [S] | tested | ci-full, fast ci | portal `src/api/mutate.rs::a_new_public_app_is_refused_while_the_organization_refuses_public_apps`, portal `tests/public_apps_policy_tests.rs::a_public_app_is_refused_before_a_change_exists_while_the_organization_refuses_them`, portal `tests/public_apps_policy_tests.rs::an_app_kept_to_its_project_is_proposed_while_public_apps_are_refused`, and 1 more |
 | **PF-105** | [S] | tested | ci-full, conformance, fast ci | conformance `tests/security/test_forge_side_door.py::test_pf51_the_protection_rule_pins_the_pusher_and_drops_an_approval_a_new_commit_invalidates`, deployment `tests/test_forge_identities.py::test_main_takes_only_the_portals_push_and_merge_never_over_an_outdated_base`, deployment `tests/test_forge_identities.py::test_the_seed_commits_as_the_portal_and_never_as_the_administrator`, and 4 more |
 | **PF-106** | [S] | tested | ci-full, fast ci | deployment `tests/test_forge_identities.py::test_each_token_is_minted_on_a_machine_user_that_administers_nothing`, deployment `tests/test_forge_identities.py::test_the_administrators_tokens_are_retired_after_their_readers_restart`, deployment `tests/test_forge_identities.py::test_the_applications_move_to_their_own_organization_and_machine_user`, and 5 more |
+| **PF-107** | [S] [H] | open |  |  |
 
 ### PL — Pipelines
 

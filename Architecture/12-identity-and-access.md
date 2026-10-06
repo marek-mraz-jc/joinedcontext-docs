@@ -113,6 +113,32 @@ spec:
   validity: { notAfter: "2026-12-31T23:59:59Z" }
 ```
 
+A right on one resource is a role whose rule names that resource and a binding of it, nothing more (PF-107). Managing the CKAN instance `open-data-2` of project `helsinki` is `ckan-admin-helsinki-open-data-2`, bound in that project (an instance is a project's manifest, and two projects may name theirs alike); the Access panel of the instance proposes both files in one red-lane Change, and adding or removing a subject edits `spec.subjects` of the one binding:
+
+```yaml
+# users/roles/ckan-admin-helsinki-open-data-2.yaml
+apiVersion: joinedcontext.com/v1alpha1
+kind: Role
+metadata: { name: ckan-admin-helsinki-open-data-2, namespace: org }
+spec:
+  rules:
+    - kinds: [CkanInstance]
+      verbs: [propose, approve, delete]
+      constraints:
+        - { field: metadata.name, in: [open-data-2] }   # this instance only; empty or missing is refused
+---
+# users/assignments/ckan-admin-helsinki-open-data-2.yaml
+apiVersion: joinedcontext.com/v1alpha1
+kind: RoleBinding
+metadata: { name: ckan-admin-helsinki-open-data-2, namespace: org }
+spec:
+  subjects: [{ group: ckan-editors }, { user: demo.steward@hel.fi }]
+  role: ckan-admin-helsinki-open-data-2
+  scope: { project: helsinki }
+```
+
+A binding carries no constraint of its own: the role is what narrows, so a person reading `users/assignments/` sees whom, and `users/roles/` what. `org-admin` changes every instance anyway; publishing an Endpoint *to* an instance stays the `publisher`'s right (PF-71).
+
 What a person may do inside one application is not a `RoleBinding`: an App declares its own roles and members, and the gateway holds them on the app's endpoint only ([16 §12](16-apps-on-demand.md#12-roles-of-an-application), ADR-N-027).
 
 PF-56. The roles every organization starts from, seeded into `users/roles/` by the forge bootstrap and extended by proposing further `Role` manifests (red lane, PF-52):
@@ -124,7 +150,7 @@ PF-56. The roles every organization starts from, seeded into `users/roles/` by t
 | `pipeline-editor` | `Pipeline`, `DataSource` | `propose` | the integration developer |
 | `endpoint-editor` | `Endpoint` | `propose` | the person who publishes data |
 | `app-editor` | `App` | `propose` | the person who builds applications |
-| `steward` | every project kind | `propose`, `approve` (`approve` on `Endpoint` only for `spec.audience` not in `[public]`) | the domain lead; approves the yellow lane |
+| `steward` | every project kind but `CkanInstance` (PF-107) | `propose`, `approve` (`approve` on `Endpoint` only for `spec.audience` not in `[public]`) | the domain lead; approves the yellow lane |
 | `publisher` | every project kind; `Endpoint` | `read`; `approve` on `Endpoint` for `spec.audience` in `[public]` | who may let data out to the public (PF-71) |
 | `org-admin` | every kind, `Role` and `RoleBinding` included | `propose`, `approve`, `delete` | the organization administrator; approves the red lane (CC-70) |
 | `build-lane` | `App`, constrained to `status.build` | `propose` | the build lane's `ServiceAccount`, `service-account-jc-build-lane`, and nobody else: it writes `status.build` of an App whose `spec` and `metadata` it leaves as they are on `main` (AP-73, [ADR-N-028 §5](../Decisions/adr-n-028-applications-build-on-the-forge.md#5-security-analysis)) |
