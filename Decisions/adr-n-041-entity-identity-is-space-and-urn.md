@@ -78,8 +78,10 @@ Pipeline's `output.id`, an App's served configuration, a Blueprint):
   type, else `urn:ngsi-ld:{Type}:{sourceId}` with the source id percent-encoded to RFC 8141;
 - `template`: a template over the record's fields, the output a valid URN or the record refused.
 
-A preview (CC-78) renders its own prefixed project and space names; the URNs inside stay as
-written, because the preview space is a different space. An import into another project
+A preview (CC-78) renders its own prefixed project and space names, and re-points a manifest
+reference written as a prefixed URN (a Pipeline's `targetEndpoint`, an Endpoint's `policyRef`) at
+the preview's own object; entity ids in data stay as written, because the preview space is a
+different space. An import into another project
 (MF-22) keeps every URN as written for the same reason.
 
 ### 3.5 What replaces the prefix checks
