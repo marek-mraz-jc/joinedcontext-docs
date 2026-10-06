@@ -62,6 +62,8 @@ Typed references (`{kind, name, namespace?}`) instead of paths or ids keep bundl
 | `SharedSpaceReference` | `projects/{p}/shares/` | Context Gateway | Cross-project or cross-instance mount of another Endpoint (EP-15, DS-17) |
 | `ContextSourceRegistration` | `.../spaces/{s}/registrations/` | Antares Broker | Where part of a space's data actually lives, so the broker can forward and merge; a hub space holds only these (MF-36, EP-70, PF-48) |
 | `CkanInstance` | `projects/{p}/ckan/` | `jcctl` publisher / Portal API | One open-data portal an Endpoint may publish to: base URL, default organization and the API token `secretRef` (EP-62, EP-67) |
+| `KnowledgeSource` | `projects/{p}/assistant/sources/` | `jc-assistant` crawl worker | One body of knowledge the assistant reads: start URLs or a `CkanInstance`, sitemap, include/exclude patterns, depth and page limits, PDF policy, schedule, languages and visibility (MF-51) |
+| `AssistantDeployment` | `projects/{p}/assistant/deployments/` | `jc-assistant` chat API | One place the assistant answers: channel, public id, prompt, sources, Endpoint MCP connectors, allowed origins, rate limit, budget, theme (MF-52) |
 | `UiSchema` | `portal/forms/{name}.uischema.yaml` | Portal UI | Form arrangement for one kind: order, widgets, help, grouping; `metadata.name` is `spec.for` lowercased (UI-02) |
 | `List`, `Bundle`, `Change`, `ChangeList` | not stored | all / import / resource API | Envelopes for download, import and write results (MF-05, MF-17, MF-12) |
 
@@ -86,7 +88,8 @@ A new kind therefore needs no second path: it declares the `PATH_TEMPLATE` it wo
 
 `jcctl schema export` writes one draft-07 schema per kind to `schemas/kinds/{Kind}.json`, and the documentation checks manifests against the schemas of one pinned platform tag, not against `main`. Every kind in the table above has a schema in the pinned tag; a kind whose `jc-core` type lands before its schema is listed here, checked structurally and against the kind table only, until the tag carries it:
 
-Nothing is on this list: the pinned tag carries a schema for every kind of the table above.
+- `KnowledgeSource` (MF-51, T-3051): its schema is in the platform's `schemas/kinds/` from T-3051 and reaches the pinned tag with the next `jc-core` release.
+- `AssistantDeployment` (MF-52, T-3051): the same.
 
 The list is checked as strictly as the manifests are: once the pinned tag carries a schema, the entry here is reported until it is removed.
 

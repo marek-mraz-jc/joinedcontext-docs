@@ -687,6 +687,8 @@ Generated 2026-09-25 from: `docs` d661561, `conformance` 47f59e6, `deployment` f
 | **MF-47** |  | tested | ci-full, fast ci | platform `crates/jcctl/tests/git_bundle_tests.rs::a_newer_layout_and_a_path_out_of_the_bundle_are_refused`, platform `crates/jcctl/tests/git_bundle_tests.rs::an_older_organization_is_migrated_on_import`, portal `src/api/import_git.rs::a_tags_file_is_read_as_refs`, and 3 more |
 | **MF-49** | [S] | tested | ci-full | platform `crates/jc-core/tests/sync_tests.rs::a_carried_model_stays_under_models_and_is_verified_like_every_file`, platform `crates/jcctl/tests/git_bundle_tests.rs::an_imported_organization_model_travels_with_the_project`, portal `tests/project_export_git_tests.rs::an_imported_organization_model_travels_with_the_project`, and 1 more |
 | **MF-50** | [S] | tested | ci-full, fast ci | portal `src/api/bundle_models.rs::a_landed_models_import_is_rewritten_and_nothing_else`, portal `tests/project_import_git_tests.rs::a_carried_model_the_organization_holds_is_mapped`, portal `tests/project_import_git_tests.rs::a_carried_model_that_differs_lands_in_the_project`, and 3 more |
+| **MF-51** | [S] | open |  |  |
+| **MF-52** | [S] | open |  |  |
 
 ### MIM — OASC interoperability
 

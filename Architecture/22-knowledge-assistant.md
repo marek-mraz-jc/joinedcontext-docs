@@ -22,36 +22,45 @@ The embedding model is loaded once and shared. Crawling waits for an embedding s
 
 ## 2. Two manifest kinds
 
-Both live in the organization repository and are proposed like every other manifest. The shapes below are the design; T-3051 declares the two kinds in [Development/04](../Development/04-manifest-kinds.md) and the platform's schemas, and adds `apiVersion: joinedcontext.com/v1alpha1` to these examples then, so until it lands no validator reads them as manifests anybody could apply:
+Both are project manifests, proposed like every other one (MF-51, MF-52). A project's administrator decides what its assistant reads and where it answers; `jcctl validate` resolves every reference inside the project before a Change exists.
 
 ```yaml
+apiVersion: joinedcontext.com/v1alpha1
 kind: KnowledgeSource
-metadata: { name: hel-fi-site, namespace: org }
+metadata: { name: bb-web, namespace: banskabystrica }
 spec:
-  kind: website                 # website | pdf | ckan
-  url: https://www.hel.fi/
-  sitemap: https://www.hel.fi/sitemap.xml
-  include: ["/en/**", "/fi/**"]
-  exclude: ["/**/print/**"]
-  visibility: public            # public | internal
+  source: website               # website | ckan
+  startUrls: [https://www.banskabystrica.sk/]
+  sitemap: true
+  include: ["/zivot-v-meste/**", "/samosprava/**"]
+  exclude: ["/**/tlac/**"]
+  maxDepth: 3
+  maxPages: 2000
+  pdf: { policy: include, maxBytes: 52428800, maxPages: 500 }
+  offDomainDocuments: false     # a PDF on another host is skipped unless this is true
   schedule: "0 3 * * *"
-  limits: { pages: 5000, documentBytes: 52428800, documentPages: 500 }
+  languages: [sk]
+  visibility: public            # public | internal
 ---
+apiVersion: joinedcontext.com/v1alpha1
 kind: AssistantDeployment
-metadata: { name: hel-public, namespace: org }
+metadata: { name: bb-public, namespace: banskabystrica }
 spec:
-  channel: public               # public | internal | ckan | platform
-  sources: [hel-fi-site, open-data]
+  publicId: bb-public
+  channel: public               # public | internal | ckan | iframe
+  systemPrompt: Odpovedaj stručne a vždy uveď zdroj.
+  sources: [bb-web]
   connectors:
-    endpoints: [{ name: helsinki-events, project: helsinki }]
-    external: [{ url: https://mcp.example.org/mcp, tools: [search_events] }]
-  model: { profile: assistant-default }
-  budget: { requestsPerMinute: 30, tokensPerDay: 2000000, tokensPerConversation: 40000 }
-  allowedOrigins: [https://www.hel.fi]
-  languages: [fi, en, sk, cs]
+    - { endpoint: mesto-verejne, tools: [query_entities], timeoutSeconds: 20 }
+  allowedOrigins: [https://www.banskabystrica.sk]
+  rateLimit: { requestsPerMinute: 60, perClientPerMinute: 10 }
+  budget: { tokensPerDay: 2000000, tokensPerConversation: 40000 }
+  theme: { primaryColor: "#0b5394", greeting: "Dobrý deň, s čím vám pomôžem?" }
+  languages: [sk, en]
+  sandbox: false
 ```
 
-A public deployment may name only public sources; the door refuses an internal one. An external connector or a new origin is a red-lane change, like an App's `spec.egress`.
+A `KnowledgeSource` of `source: ckan` names a `CkanInstance` of the project in `ckanInstanceRef` instead of `startUrls`. A deployment's `public`, `ckan` and `iframe` channels answer people nobody signed in: each MUST list its origins explicitly (no `*`, no path, `https` only) and carry a rate limit and a budget, and it may name only `visibility: public` sources. A connector names an Endpoint of the same project and the tools of its MCP surface the assistant may call.
 
 ## 3. Database sketch
 
