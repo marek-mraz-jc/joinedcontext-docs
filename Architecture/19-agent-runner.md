@@ -242,6 +242,33 @@ Every execution is governed by resource and financial boundaries the governing `
 
 Two caps are the proxy's own and no profile moves them: a request body over 4 MiB is refused on every route (`routes/body.rs`), and a single run event over 64 KiB is refused on `/v1/runs/events`.
 
+### 6.1 The model key and the daily budget (AG-96, AG-97)
+
+One key pays for every model call of the installation, so the proxy watches it and rations it. It
+is the only component that holds the key (AG-53), so it is the one that asks.
+
+- **Key health.** Every `JC_MODEL_PROBE_SECS` (900 by default, `0` turns it off) a proxy whose
+  provider is OpenRouter asks `GET {JC_MODEL_BASE}/key`, which costs no completion: `200` is
+  `valid` with the key's `limit` (`null` when it has none), `usage` and `remaining`, in the
+  provider's credits; `401` is `invalid`; `402` is `out_of_credit`; anything else, or no answer,
+  is `unreachable`. A model call the provider refuses with `401` or `402` reports the same state
+  at once, so a key that dies between two probes is seen on the next call. Each report goes to the
+  Portal's internal listener (`POST /internal/model-key`, API/04 §7); the Portal keeps the last one
+  as the gauges `jc_model_key_valid`, `jc_model_key_limit` and `jc_model_key_remaining`, and writes
+  a `model.key` activity event to the project `org` when the state changes or `remaining` first
+  falls below 20 % of `limit`. The alerts `ModelKeyInvalid` and `ModelKeyCreditLow` read those
+  gauges wherever the monitoring component runs.
+- **Daily caps.** Before it forwards a call the proxy checks the tokens spent today (UTC) by the
+  run's consumer — `assistant` for a `conversation`, `app-builder` for an `application`, `other`
+  for every other kind — and by the person who started the run, against
+  `JC_DAILY_TOKENS_ASSISTANT`, `JC_DAILY_TOKENS_APP_BUILDER`, `JC_DAILY_TOKENS_OTHER` and
+  `JC_DAILY_TOKENS_PER_PERSON` (`0` is no cap). A call past either cap is answered `429` with the
+  problem type `daily-budget` and a sentence the person can act on; the Portal shows it as said and
+  does not retry. Caps are in tokens because the proxy sees tokens on every call of every provider;
+  the usage frame carries `costUsd` too when the provider reports the call's cost.
+- **Ceiling.** The day's counts live in the proxy's memory: a restart or a second replica starts
+  them again from zero. The per-run `maxTokensPerRun` above still bounds any one run.
+
 ## 7. Attribution and Audit
 
 Every operation executed by the builder is recorded within the immutable platform audit trail:

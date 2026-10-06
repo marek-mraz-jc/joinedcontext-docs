@@ -105,6 +105,8 @@ Family **AG** (AG-01…AG-95). Owning chapters: [Architecture/07-agents-and-mcp.
 - **AG-50** [A][S] — The agent MUST NOT reach a network host that is not the proxy; package and documentation access MUST pass through the proxy's allow-listed package route with a per-run byte cap.
 - **AG-51** [A] — A run MUST stop at the step limit of AG-25 and MUST hand the last failing log to the user rather than retrying indefinitely.
 - **AG-52** [A][S] — Cancelling a run MUST stop the workspace, invalidate its ticket, and leave the commits already pushed untouched.
+- **AG-96** [A][S] — `jc-agent-proxy` MUST report the model key's state to the Portal within 15 minutes of a change: a probe of the provider's key endpoint that makes no completion (validity, limit, usage, remaining), and every model call the provider refuses with 401 (`invalid`) or 402 (`out_of_credit`). The Portal MUST expose the state as metrics and write an activity event when the key becomes invalid, runs out of credit, falls below 20 % of its limit or recovers. Neither MUST carry the key.
+- **AG-97** [A][S] — `jc-agent-proxy` MUST enforce daily model token caps, per consumer (assistant conversations, the app builder, everything else) and per person, before it forwards a call; a capped call MUST be refused with `429` and a `daily-budget` problem that says whose budget is spent and when it starts again, and the Portal MUST show that sentence instead of retrying. Every call's usage frame MUST carry the provider's cost when the provider reports one.
 
 ## 15. The Portal as the Builder of Static Applications
 
@@ -216,6 +218,7 @@ Decided in [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) (T-2691).
 | AG-79 | [Architecture/09-portal.md#10-operations-drafts-and-verdicts](../Architecture/09-portal.md#10-operations-drafts-and-verdicts) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | AG-82 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 | AG-86 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
+| AG-96…AG-97 | [Architecture/19-agent-runner.md#6-limits-and-cost-governance](../Architecture/19-agent-runner.md#6-limits-and-cost-governance) | [Testing/06-security-tests.md#5-agent-sandboxes-the-credential-proxy-and-prompt-injection](../Testing/06-security-tests.md#5-agent-sandboxes-the-credential-proxy-and-prompt-injection) |
 | AG-94…AG-95 | [ADR-N-038](../Decisions/adr-n-038-an-agent-run-reads-as-its-person.md) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 | AG-87…AG-93 | [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
