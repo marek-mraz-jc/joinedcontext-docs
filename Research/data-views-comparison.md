@@ -112,8 +112,70 @@ T-3097 onwards.
   stays Keycloak; secrets stay secretRef.
 - **Three API versions and paid-edition stubs that services still call (NocoDB).** One API, every
   feature whole or absent.
+- **A share password kept in plain text beside the hashed ones (NocoDB's legacy path).** A share
+  password is an Argon2 hash and nothing else (ADR-N-042 §3.1).
+- **A separate meta table per view kind (NocoDB) and one JSON blob for every field and view behind
+  a global lock (APITable).** One `data_views` row per view with a JSON `config`, and fields in
+  the LinkML model, changed by a Change.
 
-## 5. The owner's features against the filed tasks
+## 5. Details the feature tasks take from the tools
+
+What each tool does at the level of one feature, and what the platform's task takes from it. Paths
+are the tools' own source, read as in §1; a point marked *unverified* was not confirmed there.
+
+- **Field-level rights (T-3098, T-3108).** Baserow's enterprise `FieldPermissions` sets who may
+  write a field and whether it may appear in a form (`allow_in_forms`); APITable's `control` table
+  holds node, field and view roles alike (`ControlType` DATASHEET_FIELD, DATASHEET_VIEW); NocoDB
+  has a `PermissionKey` matrix over its roles. The platform's equivalent is the Policy's attribute
+  list: a field a person may not write is not offered as editable, and a public form offers only
+  the attributes its Endpoint's Policy grants `createEntity` on.
+- **Webhooks that survive a bad receiver (T-3110).** Baserow keeps a `failed_triggers` counter that
+  disables a webhook, a call log (`TableWebhookCall`) and a bounded queue per webhook; Grist retries
+  from a Redis-backed queue and fires only on watched columns and a condition formula
+  (`_grist_Triggers`). An NGSI-LD subscription already carries the watched attributes
+  (`watchedAttributes`), a condition (`q`) and its delivery record (`timesSent`, `timesFailed`,
+  `lastSuccess`, `lastFailure`, the notification `status`); the per-table view of T-3110 shows
+  those, never a second webhook store.
+- **Form options (T-3103).** NocoDB forms carry a success message, a redirect, a notify email,
+  "submit another" and `starts_at`/`expires_at`; APITable has `submitLimit` and anonymous filling;
+  Teable's `shareMeta.submit.requireLogin`; Baserow's conditional fields
+  (`show_when_matching_conditions` with nested groups) and prefill from `?prefill_<field>=`; Mathesar
+  creates linked records in one submit (`form_insert`). T-3103 takes the conditions, the prefill
+  parameters, an opening and closing date and the message or redirect; a nested linked record is a
+  second `createEntity` the form's Policy must also grant.
+- **Personal views and new fields (T-3104).** NocoDB does not add a new field to a personal or
+  locked view by itself (`View.ts`); Teable keeps personal views in the browser only
+  (`PersonalViewContext.tsx`). The platform stores personal views server-side (`data_views`), and a
+  field the view's `hidden` list does not name shows in a collaborative view; a locked view keeps
+  its column set until its owner or a steward changes it.
+- **Live updates and presence (T-3105).** Baserow broadcasts the row before and after a change,
+  skips the sender's socket and replays from a cursor after a reconnect (`ws/replay.py`); Teable and
+  Baserow both show who else is looking (`presence.py`, ShareDB presence). Presence is per window
+  and per space on the Portal's SSE; it is not data and is never written to the broker.
+- **Comments (T-3106).** Teable keeps comments as a rich-node tree with mention nodes, quote, reply
+  and reactions, and lets a person follow a record (`CommentSubscription`); NocoDB has reactions and
+  per-user notification preferences; Grist threads cell comments with `parentId` and `resolved`.
+  T-3106 takes threads, resolve, mentions and following a row; reactions are not asked for.
+- **History, undo and trash (T-3107).** Teable writes a before/after row per field change and moves
+  old rows to cold storage; its undo stack is per user, table and browser window (`x-window-id`);
+  Baserow's trash is soft and permanent after 72 hours; APITable caps undo at 50 steps. The
+  platform's history is NGSI-LD temporal; the undo journal is per session and window, and trash
+  keeps 30 days (ADR-N-042 §3.3).
+- **Sharing and embedding (T-3108).** Teable's share settings say whether a visitor may copy, sees
+  hidden fields, sees records or may edit (`shareMeta`), and an embed takes `embed`, `hideToolBar`
+  and `theme` parameters; Baserow adds `allow_public_export` and an iCal feed of a calendar view.
+  T-3108 takes "no hidden field ever" (the Endpoint's Policy decides, not a share flag), an export
+  toggle that only offers what the Endpoint serves, and the embed's toolbar and theme parameters; an
+  iCal feed of a calendar view is a representation the Endpoint would have to serve first.
+- **AI field (T-3111).** Teable's `aiConfig` names actions (summary, translation, extraction,
+  classification, tag, rating) and an `isAutoFill` flag; Baserow generates per row in singleton
+  tasks with `ai_auto_update` and pushes errors to the client. T-3111 takes named actions and an
+  explicit refill, never an automatic one, so a run spends only when a person asks (AG-97).
+- **Export in a spreadsheet's encoding (T-3109).** Teable streams CSV with a byte-order mark so
+  Excel reads UTF-8; Baserow's exports follow the view's filters. The Endpoint's CSV is what T-3109
+  offers, with the view's `q` passed to it.
+
+## 6. The owner's features against the filed tasks
 
 | Owner's feature | Task |
 |---|---|
@@ -132,9 +194,9 @@ T-3097 onwards.
 | snapshots, duplicate | built: Copies of projects and workspaces |
 | application builder, app-user login | built: Apps by conversation, Keycloak per App |
 | automations, n8n/Zapier/Make | built: subscriptions and pipelines; T-3110 adds the per-table view of them |
-| formulas, AI formula assistant | **gap** → §6 |
+| formulas, AI formula assistant | **gap** → §7 |
 
-## 6. Filed from this study
+## 7. Filed from this study
 
 - **Formula fields** (T-3133): a LinkML slot with `equals_expression` over the type's own attributes,
   edited in the grid's field dialog, computed by the space's derived pipeline and written as a
