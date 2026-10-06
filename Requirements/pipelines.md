@@ -74,7 +74,7 @@ Family **PL** (PL-01…PL-67). Owning chapter: [Architecture/08-pipelines.md](..
 
 ## 10. Derived pipelines and compute steps
 
-- **PL-31** — A Pipeline MAY declare `spec.source` with an `endpointRef` (read grant) and either `query` (scheduled: current or temporal query) or `trigger.subscription` (resident: NGSI-LD subscription delivered by the gateway to the runner); the reconciler MUST render the matching Bento input.
+- **PL-31** — A Pipeline MAY declare `spec.source` with an `endpointRef` (read grant) and either `query` (scheduled: current or temporal query) or `trigger.subscription` (resident: NGSI-LD subscription delivered by the gateway to the runner); the reconciler MUST render the matching Bento input. A `query` read MUST cover every page of the answer (NGSI-LD `count=true` for the total, then `offset` in pages of 1000) and hand the compute one list; an answer holding more than 50,000 entities, or a full first page whose total the endpoint does not state, MUST fail the read rather than pass a cut list on (T-3132).
 - **PL-32** — Derived output MUST be written through `spec.targetEndpoint` like any other pipeline (PL-18…PL-20); the target MAY be the same Context Space (new entities, or `output.mode: update-attrs` on the source entities) or another space, including one of another project or organization, if that owner's Endpoint grants the pipeline's ServiceAccount the write operations.
 - **PL-33** — `spec.compute.kind` MUST be one of `bloblang`, `mapping`, `wasm`, `container`; CI MUST warn when a heavier kind is used for logic expressible in a lighter one.
   > Note: The four kinds are enforced by the typed parse (`crates/jc-core/src/kinds/pipeline.rs`). The weight warning is not built.
