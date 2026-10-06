@@ -526,6 +526,11 @@ federation edge over the same data took the full chain. Both were moved to Red, 
 the address in the spec rather than the volume: what leaves the platform on a schedule nobody
 watches is reviewed like what leaves it once.
 
+An `AssistantDeployment` is Red when its `channel` is `public`, `ckan` or `iframe`, for the reason
+a public Endpoint is: it answers anyone, with what its connectors read, and every answer spends
+the installation's model budget (MF-52, AG-110). An `internal` one, and a `KnowledgeSource`, are
+Yellow: a source reaches the public only through a deployment that names it (T-3057).
+
 ### Sandboxes expire (CC-67, OPS-44, PF-19)
 
 Green-lane speed is safe only because nothing the lane creates is permanent. The namespace of a sandbox, and the Context Space inside it, carry one label and one optional annotation:
