@@ -103,7 +103,12 @@ the platform infers from the URN's segments.
 A Context Source Registration routes by its Endpoint and space, not by an `idPattern` anchored to
 a prefix; `idPattern` stays an optional filter (R33). `GET /entities/{id}` is answered from the
 addressed space and its registrations, never routed by URN segments (R34). A relationship's
-generated JSON Schema patterns `object` on the target's type only (DM-72). A declared subscription keeps its deterministic
+generated JSON Schema patterns `object` on the target's type only (DM-72).
+
+A hub space (EP-70) reads its members through the broker's CIM 009 distributed query, which
+merges entities of the same id from several registrations into one. The same URN in two member
+spaces therefore reads as one merged entity through the hub, as the standard defines it; each
+member space still holds its own entity, and a CKAN table of the hub has one row per URN. A declared subscription keeps its deterministic
 id (`urn:ngsi-ld:Subscription:{orgDomain}:{space}:{name}`, the `prefixed` shape) because the
 reconciler upserts it by that id.
 
