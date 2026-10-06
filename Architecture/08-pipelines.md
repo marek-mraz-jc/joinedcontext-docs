@@ -576,7 +576,20 @@ output:
 3. **Network Isolation:** Every Project Pipeline Runner deployment runs within its own network policy boundary (`components/pipeline-runner/networkpolicies.yaml`): the runner reaches the gateway on 8080, the Portal's internal listener on 9090, the ingress controller, DNS, and any public address on 443 with every private range excepted. Its NetworkPolicy opens no application port; the Portal reaches the streams API on 4195 through the Linkerd proxy's inbound port 4143, which `pipeline-runner-allow-linkerd` admits and the mesh's inbound policy governs. Egress is not narrowed to the hosts a pipeline declares.
 4. **Lint and test (PL-21, PL-22):** The platform repository's CI runs `bento lint` and `bento test` over the example pipelines in `examples/ingestion`. A project's `bento.yaml` never passes through that lane: the runner lints it in the pipeline test (PL-43), which returns the lint errors with their line numbers before the pipeline is proposed (§7). The organization repository's CI checks manifests (`jcctl validate`) and the author's role bindings, not Bento.
 5. **Deletes only by a grant the author wrote (PL-64):** a pipeline deletes nothing unless its manifest carries `expiry` and a Policy grants its account `deleteBatch` on the listed types in the one space it writes; the sweep goes through the output Endpoint like the writes, so the gateway judges and audits every delete.
-6. **Ids by the pipeline's mint option:** the output declares how ids are made (ADR-N-041 §3.4, PF-44): `prefixed` (default) mints `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}` over `JC_ORG_DOMAIN`, which the reconciler resolves from the project's Organization, never a literal; `keep` uses the source's own id as an NGSI-LD URN; `template` builds it from the record. Whatever the URN says, the pipeline writes only into the space of its output Endpoint ([Architecture/03 §3](03-domain-model.md#3-identity-and-urn-specification)).
+6. **Ids by the pipeline's mint option:** whatever its URN says, a pipeline writes only into the space of its output Endpoint ([Architecture/03 §3](03-domain-model.md#3-identity-and-urn-specification), PF-42). Its mapping mints the id itself, over `JC_ORG_DOMAIN` (which the reconciler resolves from the project's Organization, never a literal) for the prefixed shape, or the pipeline declares how and the renderer appends one last `mapping` processor that sets `root.id` (ADR-N-041 §3.4, PF-44):
+
+   ```yaml
+   output:
+     type: WeatherObserved
+     mode: upsert
+     id: { mint: keep, from: station_id }        # or prefixed / template
+   ```
+
+   - `prefixed`: `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}`, the local id the field `from` with every character outside `[A-Za-z0-9._~-]` turned into `-`;
+   - `keep`: the field `from` as it is when it already starts `urn:ngsi-ld:`, else `urn:ngsi-ld:{Type}:` followed by it;
+   - `template`: `template` with each `{field}` replaced by that field of the record (`urn:ngsi-ld:Station:{region}-{code}`), the literal text RFC 8141 characters only and the start `urn:ngsi-ld:{Type}:`.
+
+   `from` and the `{field}` names are record paths (`a.b_c`), checked before render. Without `id` nothing is appended and the author's mapping sets the id, as every pipeline before it did; the pipeline test (PL-43) refuses an output whose id is no NGSI-LD URN of its type.
 
 ## 6. External Feeds: the `DataSource` Kind (MF-35, PL-39)
 
