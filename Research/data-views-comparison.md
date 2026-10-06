@@ -114,6 +114,9 @@ T-3097 onwards.
   feature whole or absent.
 - **A share password kept in plain text beside the hashed ones (NocoDB's legacy path).** A share
   password is an Argon2 hash and nothing else (ADR-N-042 §3.1).
+- **A token's signing secret stored in plain text (Teable, `access-token.service.ts:169`).** The
+  platform mints no API token of its own: a workload is a Keycloak ServiceAccount client, and its
+  secret is a `secretRef`.
 - **A separate meta table per view kind (NocoDB) and one JSON blob for every field and view behind
   a global lock (APITable).** One `data_views` row per view with a JSON `config`, and fields in
   the LinkML model, changed by a Change.
@@ -132,12 +135,14 @@ are the tools' own source, read as in §1; a point marked *unverified* was not c
 - **Webhooks that survive a bad receiver (T-3110).** Baserow keeps a `failed_triggers` counter that
   disables a webhook, a call log (`TableWebhookCall`) and a bounded queue per webhook; Grist retries
   from a Redis-backed queue and fires only on watched columns and a condition formula
-  (`_grist_Triggers`). An NGSI-LD subscription already carries the watched attributes
+  (`_grist_Triggers`, `WebhookQueue.ts`); NocoDB's hooks carry filters, trigger fields, a call
+  log and a job queue (`Hook.ts`, `webhookHelpers.ts`). An NGSI-LD subscription already carries the watched attributes
   (`watchedAttributes`), a condition (`q`) and its delivery record (`timesSent`, `timesFailed`,
   `lastSuccess`, `lastFailure`, the notification `status`); the per-table view of T-3110 shows
   those, never a second webhook store.
-- **Form options (T-3103).** NocoDB forms carry a success message, a redirect, a notify email,
-  "submit another" and `starts_at`/`expires_at`; APITable has `submitLimit` and anonymous filling;
+- **Form options (T-3103).** NocoDB forms carry a success message, a redirect with a delay, a
+  notify email, "submit another" and `starts_at`/`expires_at` (`FormView.ts`); Baserow notifies
+  chosen users on submit and keeps per-view defaults for new rows (`ViewDefaultValue`); APITable has `submitLimit` and anonymous filling;
   Teable's `shareMeta.submit.requireLogin`; Baserow's conditional fields
   (`show_when_matching_conditions` with nested groups) and prefill from `?prefill_<field>=`; Mathesar
   creates linked records in one submit (`form_insert`). T-3103 takes the conditions, the prefill
@@ -155,15 +160,23 @@ are the tools' own source, read as in §1; a point marked *unverified* was not c
 - **Comments (T-3106).** Teable keeps comments as a rich-node tree with mention nodes, quote, reply
   and reactions, and lets a person follow a record (`CommentSubscription`); NocoDB has reactions and
   per-user notification preferences; Grist threads cell comments with `parentId` and `resolved`.
-  T-3106 takes threads, resolve, mentions and following a row; reactions are not asked for.
+  Baserow stores a per-user, per-row notification mode (`RowCommentsNotificationMode`) and
+  APITable a record subscription and date reminders (`datasheet_record_subscription`,
+  `datasheet_record_alarm`). T-3106 takes threads, resolve, mentions and following a row;
+  reactions and date reminders are not asked for.
 - **History, undo and trash (T-3107).** Teable writes a before/after row per field change and moves
   old rows to cold storage; its undo stack is per user, table and browser window (`x-window-id`);
-  Baserow's trash is soft and permanent after 72 hours; APITable caps undo at 50 steps. The
+  Teable's trash keeps a snapshot per deleted record and restores from it (`RecordTrash`);
+  Baserow's trash is soft and permanent after 72 hours; Grist thins whole-document snapshots by
+  age (`shouldKeepSnapshots`); APITable caps undo at 50 steps and can archive a record
+  (`archivedRecordIds`). The
   platform's history is NGSI-LD temporal; the undo journal is per session and window, and trash
   keeps 30 days (ADR-N-042 §3.3).
 - **Sharing and embedding (T-3108).** Teable's share settings say whether a visitor may copy, sees
   hidden fields, sees records or may edit (`shareMeta`), and an embed takes `embed`, `hideToolBar`
-  and `theme` parameters; Baserow adds `allow_public_export` and an iCal feed of a calendar view.
+  and `theme` parameters; Baserow adds `allow_public_export` and an iCal feed of a calendar view,
+  keeps a share password as a Django hash and hands the visitor a view token after it
+  (`api/views/utils.py`); NocoDB keeps it with bcrypt and never returns it (`View.ts`).
   T-3108 takes "no hidden field ever" (the Endpoint's Policy decides, not a share flag), an export
   toggle that only offers what the Endpoint serves, and the embed's toolbar and theme parameters; an
   iCal feed of a calendar view is a representation the Endpoint would have to serve first.
@@ -171,9 +184,16 @@ are the tools' own source, read as in §1; a point marked *unverified* was not c
   classification, tag, rating) and an `isAutoFill` flag; Baserow generates per row in singleton
   tasks with `ai_auto_update` and pushes errors to the client. T-3111 takes named actions and an
   explicit refill, never an automatic one, so a run spends only when a person asks (AG-97).
-- **Export in a spreadsheet's encoding (T-3109).** Teable streams CSV with a byte-order mark so
-  Excel reads UTF-8; Baserow's exports follow the view's filters. The Endpoint's CSV is what T-3109
-  offers, with the view's `q` passed to it.
+- **Import and export (T-3109).** Teable streams CSV with a byte-order mark so Excel reads
+  UTF-8; Baserow's exports follow the view's filters; NocoDB's import detects column types from
+  a CSV and guards against an xlsx bomb (`jobs/data-import/handlers`). The Endpoint's CSV is what T-3109
+  offers, with the view's `q` passed to it; an import that guesses types proposes them as a
+  model change, and a spreadsheet is unpacked with a size ceiling.
+- **API tokens (T-3110).** Baserow's database tokens grant create, read, update or delete per
+  database or per table (`TokenPermission`); Teable's personal access tokens carry scopes, an
+  optional space or base and an expiry, with the signing secret stored in plain text
+  (`access-token.service.ts:169`, see §4). The platform's equivalent is a ServiceAccount client
+  scoped by its Policy and audience, never a token the Portal mints and stores.
 
 ## 6. The owner's features against the filed tasks
 
