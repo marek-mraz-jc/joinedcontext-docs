@@ -1377,6 +1377,26 @@ POST /api/v1/projects/{project}/apps/{name}/rebuild    dispatches build.yml on t
 refused `403` without `propose` on `App`, `404` as above, `409` for an App that is not built on
 the forge, and `503` with the forge's reason when there is no forge or it refuses the dispatch.
 
+### 12b. Renaming the shapes of a project's Apps (AP-124)
+
+For one release `static` and `fullstack` are read as `ui` and `ui-rust`. The Apps page of a
+project that still holds one shows a notice with **Propose the rename**; the button calls
+
+```text
+POST /api/v1/projects/{project}/apps/rename-shapes
+```
+
+with no body. The Portal collects every App of the project whose `spec.kind` is an old name,
+writes each with the new one and nothing else changed, and proposes them as one Change in the
+caller's name, through the import door with `conflictPolicy: replace`: the same check, the same
+refusals per manifest (propose on `App`, AP-14a, the kind's invariants) and the lane of the
+riskiest file. The merge request is titled `rename the App shapes of {project} (AP-124)`.
+
+- `202` with the Change, as an import answers.
+- `403` when the caller may not propose an App in the project, before anything is read.
+- `409` when no App of the project carries an old name: there is nothing to propose.
+- An App already named in an open Change is proposed again in this one; the reviewer sees both.
+
 ## 13. Flows: running a blueprint (CC-24, CC-30, CC-31, CC-32, CC-59)
 
 A flow is one instantiation of a Blueprint. The gallery lists the blueprints an organisation
@@ -2630,9 +2650,13 @@ GET /api/v1/organization/limits     the catalog, its bounds and the values in fo
 ## 29. Size of a space (T-2889)
 
 How much a space holds, read from the broker that holds it: the entity count of the space's
-tenant (`GET /q/tenants/{space}` on the broker, the admin surface the Portal already reaches for
-registrations). The Portal keeps each answer for five minutes; these are dashboard numbers, not
-per-request work.
+tenant, asked with the conformant NGSI-LD count query every broker serves (CIM 009 6.3.13,
+T-2996): `GET /ngsi-ld/v1/entities?local=true&count=true&limit=0` with `NGSILD-Tenant: {space}`,
+read from `NGSILD-Results-Count`. `local=true` counts every type of the tenant's own entities and
+none of a registered source's. A `404` whose problem type is `NonexistentTenant` is a space never
+written to (`0`); any other `404`, an answer without a readable count, or a broker that does not
+answer is `503` with the reason, never a zero. The Portal keeps each answer for five minutes;
+these are dashboard numbers, not per-request work.
 
 ```text
 GET /api/v1/projects/{project}/spaces/{space}/usage     the space's entity count → 200
