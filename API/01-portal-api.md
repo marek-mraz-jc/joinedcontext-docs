@@ -2630,9 +2630,13 @@ GET /api/v1/organization/limits     the catalog, its bounds and the values in fo
 ## 29. Size of a space (T-2889)
 
 How much a space holds, read from the broker that holds it: the entity count of the space's
-tenant (`GET /q/tenants/{space}` on the broker, the admin surface the Portal already reaches for
-registrations). The Portal keeps each answer for five minutes; these are dashboard numbers, not
-per-request work.
+tenant, asked with the conformant NGSI-LD count query every broker serves (CIM 009 6.3.13,
+T-2996): `GET /ngsi-ld/v1/entities?local=true&count=true&limit=0` with `NGSILD-Tenant: {space}`,
+read from `NGSILD-Results-Count`. `local=true` counts every type of the tenant's own entities and
+none of a registered source's. A `404` whose problem type is `NonexistentTenant` is a space never
+written to (`0`); any other `404`, an answer without a readable count, or a broker that does not
+answer is `503` with the reason, never a zero. The Portal keeps each answer for five minutes;
+these are dashboard numbers, not per-request work.
 
 ```text
 GET /api/v1/projects/{project}/spaces/{space}/usage     the space's entity count → 200
