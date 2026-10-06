@@ -1343,7 +1343,8 @@ POST /api/v1/projects/{project}/apps/{name}/rebuild    dispatches build.yml on t
 
 ```json
 {
-  "repositoryUrl": "https://forge.example/user/oauth2/keycloak?redirect_to=%2Fjoinedcontext%2Fhelsinki_city-bikes",
+  "repositoryUrl": "https://forge.example/user/oauth2/keycloak?redirect_to=%2Fjoinedcontext-apps%2Fhelsinki_city-bikes",
+  "configurationUrl": "https://forge.example/user/oauth2/keycloak?redirect_to=%2Fjoinedcontext%2Fhelsinki",
   "run": { "status": "completed", "conclusion": "success", "commit": "3f1c…", "url": "https://forge.example/user/oauth2/keycloak?redirect_to=…" },
   "packageUrl": "https://forge.example/user/oauth2/keycloak?redirect_to=%2Fjoinedcontext%2F-%2Fpackages%2Fgeneric%2Fapp-city-bikes%2F3f1c…",
   "rebuild": { "allowed": false, "reason": "Rebuild needs propose on App in project helsinki" }
@@ -1352,12 +1353,20 @@ POST /api/v1/projects/{project}/apps/{name}/rebuild    dispatches build.yml on t
 
 - Every link carries the forge's sign-in, so a person without a forge session is offered the
   Keycloak button and lands on the page (PF-79, PF-81).
-- The repository is `{project}_{app}` of the organization of the configuration repository
-  (AP-75), derived from the names in the path and never read from the manifest's `url`.
+- The repository is `{project}_{app}` of the applications' organization (`{org}-apps`, PF-106;
+  the configuration's organization where the installation keeps none), derived from the names
+  in the path and never read from the manifest's `url` (AP-75).
+- `configurationUrl` is the project's configuration repository, the one its Changes merge into:
+  its own repository in layout 2, the organization repository otherwise (CC-87). It is `null`
+  for a caller the forge does not let read that repository: in layout 2 a person PF-87 does not
+  place in the project's readers, in layout 1 a person without a binding at the organization;
+  an organization administrator always has it (AP-103, T-3039).
+- `repositoryUrl` is `null` for a caller that is a `ServiceAccount`: the forge reads an App's
+  repository only to a signed-in person (PF-79, T-3030).
 - `run` is the newest run of the repository's workflows, or `null` before the first one;
   `packageUrl` names the package of `status.build.commit`, or is `null` while the App has no build.
 - An App without `spec.source.git` has no build here: `repositoryUrl`, `run` and `packageUrl`
-  are `null`, and `rebuild.reason` says the App is not built on the forge.
+  are `null` (`configurationUrl` still names the configuration repository), and `rebuild.reason` says the App is not built on the forge.
 - `rebuild.allowed` is `true` for a person holding `propose` on `App` in the project; otherwise
   `reason` says what is missing (PF-50, UI-44).
 - `404` for an App the caller may not read, the same answer as a name that does not exist
