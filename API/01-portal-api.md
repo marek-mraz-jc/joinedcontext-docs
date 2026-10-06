@@ -2826,6 +2826,28 @@ POST /live-notify/{key}                                            where the gat
   type's next change; the Portal runs one replica until the replicas share these events the way
   they share draft events.
 
+## 33. Data views published as a public link (ADR-N-042 §3.5, T-3108)
+
+Publishing a view of a space proposes a public Endpoint narrowed to the view: one entity type,
+the attributes the view shows (the rest are the Endpoint's `hiddenAttributes`), read operations
+only. The manifests are what `POST …/assistant/propose-endpoint` renders (§19) with
+`audience: public`, `entityTypes: [type]` and `hiddenAttributes`, proposed as one Change with the
+Policy it needs, reviewed like every Endpoint. Once merged and applied, the view is a page:
+
+```text
+GET /v/{slug}            the published view, read-only, no sign-in
+```
+
+- The page holds no data: every read it makes is an anonymous read of the Endpoint's NGSI-LD
+  surface (`/api/endpoint/{slug}/ngsi-ld/v1/…`), so the gateway enforces what the link shows and
+  rate-limits it as it does every anonymous read. The page shows the Endpoint's types, a type's
+  first 100 entities in key-value form, and the attributes they carry.
+- Revoking the link is deleting the Endpoint, a Change like its creation; the page then says the
+  view is not published.
+- Not yet: a password on a link needs the `data_views` record of §30 to hold its hash; an embed
+  needs the Endpoint to name the origins that may frame it. Until then a published view is
+  public to everyone and not framed by other sites.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
