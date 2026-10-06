@@ -106,8 +106,9 @@ of 2025 would read as a collapse in tourism.
 
 None of the six has a limit value or a published target of the city to cite. They are context
 indicators, as section 3 of [the Banská Bystrica indicators](11-banska-bystrica-kpis.md)
-defines them: the application shows the value, its unit, its window and the direction since the
-previous window, never a colour or a word that judges it.
+defines them: the application shows the value, its unit, its window and the formula, never a
+colour or a word that judges it. The entity holds one window, so no direction is shown: a
+previous value would be a second number this page does not define.
 
 ## 4. When a cube stops
 
