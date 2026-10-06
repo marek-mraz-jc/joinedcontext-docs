@@ -111,8 +111,8 @@ mismatch (RFC 9110 §13.1.1). The gateway SHALL enforce write policies
 with `q`/geo conditions as read → evaluate → conditional write, making
 TOCTOU a detectable 412 instead of a race. Standard: RFC 9110; filed as a
 candidate ETSI CR (per R44 rung 4). Modelling rule first: partition write
-authority by URN prefix (ADR 001) wherever possible, an id never
-changes, so prefix-partitioned grants need no condition at all
+authority by type, `scope` or an `idPattern` the policy names (ADR-N-041) wherever possible, an id never
+changes, so such grants need no condition at all
 (firewall-results §9.1 change 3). Genuinely mobile/stateful entities are
 the only R45 consumers.
 

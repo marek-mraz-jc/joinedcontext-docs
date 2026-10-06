@@ -302,7 +302,7 @@ them nowhere, which is what a Portal without a gateway can honestly do.
 Three rules make the manifest the truth without the reconciler owning the broker:
 
 - **The id is the manifest's.** A declared subscription is
-  `urn:ngsi-ld:Subscription:{orgDomain}:{space}:{name}` — the same URN shape as an entity, so a
+  `urn:ngsi-ld:Subscription:{orgDomain}:{space}:{name}` — the `prefixed` URN shape (ADR-N-041), so a
   file and a subscription are the same thing under two names, and re-running the reconciler
   updates rather than duplicates.
 - **A credential is a header on the hop, never a field in Git.** `notification.endpoint.secretRef`
@@ -596,7 +596,7 @@ flowchart LR
 ### Import (MF-20…MF-26)
 
 1. Upload or paste a URL; the server parses manifests, multi-document YAML, `List` objects and archives.
-2. Choose the target: an existing project or "new project from bundle". `metadata.namespace`, typed references and URN prefixes (`{orgDomain}`, `{space}`) are rewritten; the mapping table is shown.
+2. Choose the target: an existing project or "new project from bundle". `metadata.namespace` and typed references are rewritten, entity URNs are kept as written (ADR-N-041); the mapping table is shown.
 3. Choose the conflict policy: `fail` (default), `skip`, `replace`, `rename`.
 4. The server runs schema validation, reference resolution, Conftest gates and `jcctl plan`; the UI shows the diff and the lane it lands in.
 5. Confirm → one merge request. Green-lane bundles (for example a sandbox seed) are live in seconds; anything touching public endpoints, policies or federation edges waits for approval.

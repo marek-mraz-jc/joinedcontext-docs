@@ -276,48 +276,45 @@ than duplicates.
 
 ## 3. Identity and URN Specification
 
-All entity identifiers in the platform MUST conform to the deterministic URN scheme defined in ADR 001. Random UUIDs are prohibited outside the final local identifier segment to preserve prefix routing and indexing integrity (R34).
+An entity is identified by the pair **(Context Space, URN)** ([ADR-N-041](../Decisions/adr-n-041-entity-identity-is-space-and-urn.md), PF-10). The same URN may exist in several spaces and several projects; each is its own entity, and a write in one never reaches another. The space always comes from the address of the request, never from the URN (PF-42).
 
 ### URN Structure
 
 ```text
-urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}
+urn:ngsi-ld:{Type}:{nss}
 ```
 
 | Segment | Meaning | Constraints | Example |
 |---|---|---|---|
 | `urn:ngsi-ld:` | NGSI-LD URN prefix | fixed literal | `urn:ngsi-ld:` |
-| `{Type}` | entity type short name exactly as declared in the published Data Model (the JSON-LD term, not the expanded IRI) | `^[A-Z][A-Za-z0-9]{1,63}$`, PascalCase, Smart Data Models name where one exists | `AirQualityObserved` |
-| `{orgDomain}` | the Organization's **verified internet domain** (`Organization.spec.domain`), the same domain that backs its `did:web` identity | lowercase DNS name, dots allowed, no port or path | `hel.fi`, `vodarne-bb.sk` |
-| `{space}` | the Context Space name inside that Organization (`ContextSpace.metadata.name`) | `^[a-z0-9][a-z0-9-]{0,62}$` (PF-09) | `air-quality` |
-| `{localId}` | local identifier, unique within the space and type | `^[A-Za-z0-9._~-]{1,128}$` (RFC 8141 pchar subset without `:`) | `station-kallio-01` |
+| `{Type}` | entity type short name exactly as declared in the published Data Model (the JSON-LD term, not the expanded IRI) | `^[A-Z][A-Za-z0-9]{1,63}$`, equal to the entity's `type` | `AirQualityObserved` |
+| `{nss}` | the rest: any RFC 8141 namespace-specific string | non-empty, at most 256 characters | `hel.fi:air-quality:station-kallio-01`, `Helsinki-001` |
 
-Why these four segments: `{orgDomain}` is the only identifier an organisation already owns worldwide, so no registry of issuer codes is needed and two instances can never mint the same URN; `{space}` is unique inside the organisation (PF-09) and names the exact NGSI-LD tenant that owns the entity; `{Type}` matches the entity's `type`, so any URN says what it is, who minted it and where it lives without a lookup. The legacy scheme (`{Typ}:{Razidlo}:{Evidencia}:{Meno}`, ADR 001) had the same shape with a free-form issuer code; joinedcontext pins the issuer to the verified domain.
+The **prefixed** shape `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}` (the modernized ADR 001 scheme: the Organization's verified domain, the space name, a local id of `^[A-Za-z0-9._~-]{1,128}$`) is what the platform mints by default (§ Minting). It is a convention that keeps generated ids unique and readable, not a rule the platform reads: a URN in this shape names no space and grants nothing.
 
 ### Concrete URN examples
 
-- Sensor observation: `urn:ngsi-ld:AirQualityObserved:hel.fi:air-quality:station-kallio-01`
-- Traffic flow: `urn:ngsi-ld:TrafficFlowObserved:hel.fi:transport:detector-mannerheimintie`
-- Waste container of a utility company: `urn:ngsi-ld:WasteContainer:hsy.fi:waste:c-77492`
-- Policy entity (administrative space of the organisation): `urn:ngsi-ld:Policy:hel.fi:admin:public-air-quality`
-- Scope definition: `urn:ngsi-ld:ScopeDefinition:hel.fi:admin:geo-fi-hki-kallio`
+- Minted by a pipeline, prefixed: `urn:ngsi-ld:AirQualityObserved:hel.fi:air-quality:station-kallio-01`
+- Kept from a FIWARE source: `urn:ngsi-ld:WeatherObserved:Helsinki-001`
+- The same station copied into a KPI space keeps its URN: `(helsinki-kpi, urn:ngsi-ld:AirQualityObserved:hel.fi:air-quality:station-kallio-01)` is a second entity beside `(air-quality, …)`.
+- Policy entity (administrative space): `urn:ngsi-ld:Policy:hel.fi:admin:public-air-quality`
 
 ### Enforcement
 
-The scheme is enforced, not recommended:
-
-1. **Gateway admission (writes).** On `POST /entities`, `entityOperations/*`, `PATCH`/`PUT` with a body id, the Context Gateway parses the id and rejects with 400 (RFC 7807, `type: …/urn-scheme`) when: the URN has more or fewer than four NSS segments; `{Type}` differs from the entity's `type`; `{orgDomain}` is not the domain of the Organization that owns the target space; `{space}` is not the target Context Space of the request (the tenant the gateway resolved, SP-05); `{localId}` violates the charset. Writers cannot mint identifiers for another organisation or another space (R24, GW20).
-2. **Federated entities.** Entities returned through a Context Source Registration keep the foreign `{orgDomain}`; the gateway rejects a local write whose `{orgDomain}` is foreign, so remote data can be read and replicated (through a Mapping that mints local ids) but never impersonated.
-3. **Configuration time.** `jcctl` validates seed entities, Policy and ScopeDefinition ids, subscription and registration `idPattern`s against the scheme; CI fails the merge request otherwise. Blueprints and the LinkML Editor's example generator only produce conforming ids; a Bento pipeline mints its own with `"urn:ngsi-ld:%v:%v:%v:%v".format(…)` over `env("JC_ORG_DOMAIN")`, the variable the reconciler injects into every pipeline runner from the project's Organization, so a pipeline file never writes a domain of its own:
+1. **Gateway admission (writes).** On `POST /entities`, `entityOperations/*`, `PATCH`/`PUT` with a body id, the Context Gateway rejects with 400 (RFC 7807, `type: …/urn-scheme`) an id that is not an NGSI-LD entity URN or whose `{Type}` differs from the entity's `type` (PF-43). It does not read the rest of the URN: the target space is the tenant it resolved from the path or the Endpoint (SP-05), and the Policy of that space decides the write (PF-42).
+2. **Federated entities.** Entities read through a Context Source Registration keep their remote URN. A local copy is a write into a local space through a Mapping, judged by that space's Policy; the URN it carries gives it no other reach.
+3. **Configuration time.** `jcctl` validates seed entities, Policy and ScopeDefinition ids, subscription and registration `idPattern`s against the URN shape; CI fails the merge request otherwise.
+4. **Minting.** A writer declares its mint option (PF-44, ADR-N-041 §3.4): `prefixed` (default) over `env("JC_ORG_DOMAIN")`, the variable the reconciler injects into every pipeline runner from the project's Organization, so a pipeline file never writes a domain of its own; `keep`, the source's own id; or `template`:
 
    ```text
    let domain = env("JC_ORG_DOMAIN")   # injected by the reconciler from the Organization (PF-44)
    root.id = "urn:ngsi-ld:%v:%v:%v:%v".format("Device", $domain, "energie", this.device_id)
    ```
 
-   The domain travels as an environment variable rather than as a function the reconciler would register, because a pipeline file has to stay native Bento that runs unmodified under `bento lint` and `bento test` (PL-03), and stock Bloblang has no function registry a reconciler can extend without shipping a plugin and a forked runner binary.
-4. **Resolution.** `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}` resolves to `/cs/{space}/ngsi-ld/v1/entities/{urn}` on the instance that serves `{orgDomain}` (SP-02); another instance finds it through the organisation's `did:web` document, which lists its platform host.
-5. **Registrations.** Context Source Registrations anchor their `idPattern` to the full prefix `^urn:ngsi-ld:AirQualityObserved:hel\.fi:air-quality:.*$`, so federation queries route to the one authoritative space (R33, R34).
+   The domain travels as an environment variable rather than as a function the reconciler would register, because a pipeline file has to stay native Bento that runs unmodified under `bento lint` and `bento test` (PL-03).
+5. **Resolution.** An entity's address is `/cs/{space}/ngsi-ld/v1/entities/{urn}` (SP-02). There is no URN-only resolver.
+6. **Relationships.** A Relationship's `object` is a URN of the same space unless the relationship carries `targetSpace`, a Property naming the target space (ADR-N-041 §3.3); the target is read under that space's Policy.
+7. **Registrations.** A Context Source Registration routes by its Endpoint and space; its `idPattern` is an optional filter, not the routing key.
 
 Organizations declare the domain once (`Organization.spec.domain`); the reconciler verifies ownership by DNS TXT record or by the served `did:web` document before any space of that organisation can accept writes (PF-41). The Portal's reconciler records and reports the verification (T-2377), and the Context Gateway refuses writes when the owner switches the gate on (T-2572):
 

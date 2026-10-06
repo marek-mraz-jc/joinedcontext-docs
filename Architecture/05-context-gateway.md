@@ -176,7 +176,7 @@ against the same granted areas a read is filtered by.
 Two consequences are deliberate. A broker that publishes no `ETag` makes every `If-Match`
 answer `412` rather than being ignored, because a precondition the platform cannot evaluate
 must not pass. And a state-dependent grant costs one extra round trip per write, which is why
-GW16's advice stands: partition write authority by URN prefix (ADR 001) wherever possible, and
+GW16's advice stands: partition write authority by type, `scope` or an `idPattern` the policy names (ADR-N-041) wherever possible, and
 keep conditions for genuinely mobile entities.
 
 ---

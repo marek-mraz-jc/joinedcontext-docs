@@ -79,10 +79,9 @@ one or more manifests; *flow*, a blueprint instance as shown to [H] users.
   payload rendered as YAML, no proprietary DSL, no renamed members. A
   manifest stripped of its envelope MUST be a valid CIM 009 payload.
 - **CC-10** — Resource identifiers MUST be deterministic, derived from
-  the manifest path and city namespace per the ADR 001 URN scheme
-  (`urn:ngsi-ld:{Typ}:{Razidlo}:{Evidencia}:…`), so that re-applying a
-  manifest updates the same resource. Random identifiers are banned in
-  manifests (they break both idempotency and R34 prefix routing).
+  the manifest path and city namespace (the `prefixed` URN shape,
+  ADR-N-041), so that re-applying a manifest updates the same resource.
+  Random identifiers are banned in manifests (they break idempotency).
 - **CC-11** — Pipeline configurations (Bento, specifically the MIT fork
   `warpstreamlabs/bento`; `redpanda-data/connect` is disqualified on
   licensing, see stack verdict S5) MUST be stored in their
@@ -431,8 +430,8 @@ one or more manifests; *flow*, a blueprint instance as shown to [H] users.
 ## 12. Standardization statement
 
 - **Spec-native, no invention**: all live-state reads/writes are plain
-  CIM 009 operations (CC-16); URN discipline and prefix routing per
-  ADR 001 / R33–R34; scopes per ADR 004.
+  CIM 009 operations (CC-16); URN discipline per ADR-N-041 and routing
+  per R33–R34; scopes per ADR 004.
 - **Standards adopted at the edges**: RFC 2119 keywords; OIDC for every
   component (CC-40); JSON Schema for manifests, blueprint parameters and
   generated forms (CC-12, CC-24, CC-31); Git semantics (protected
@@ -453,7 +452,7 @@ Several related edits are held together, tried somewhere safe and brought back a
 
 - **CC-76** [H][P][A] — The plane MUST offer a *workspace*: a named branch of the Organization repository with a recorded owner, base revision, scope (a project, a space subtree or a list of resources) and TTL, into which every proposing operation can commit instead of opening a Change of its own; the registry of workspaces MUST be a database table beside the drafts, not a manifest on `main`. Amended by CC-87: a project workspace is a branch of the project repository.
 - **CC-77** [P] — A manifest in a workspace MUST keep the name it has in the main project; a workspace MUST NOT rename anything at rest.
-- **CC-78** [P] — A workspace MUST be rendered as a *preview* by the same loader, with a render prefix applied to every organization-unique identity (project namespace, Context Space name, the `{space}` segment of URNs) and slugs minted for the preview; a preview render that contains an unprefixed organization-unique name MUST fail. At most one preview runs per workspace and two on a node, with every pipeline paused until a person starts it.
+- **CC-78** [P] — A workspace MUST be rendered as a *preview* by the same loader, with a render prefix applied to every organization-unique identity (project namespace, Context Space name) and slugs minted for the preview; entity URNs stay as written, since the preview space is a different space (ADR-N-041); a preview render that contains an unprefixed organization-unique name MUST fail. At most one preview runs per workspace and two on a node, with every pipeline paused until a person starts it.
 - **CC-79** [H][A] — Bringing a workspace back MUST be one Change: the pull request of its branch, classified by the riskiest file, approved as any Change (CC-34, PF-50, PF-58, AG-11).
 - **CC-80** [P] — A conflict with the main project MUST be resolved inside the workspace by a person, per field, and the result MUST be checked again before it is proposed; no side wins by default.
 - **CC-81** [P] — An expired workspace MUST lose its preview namespaces and its branch; nothing of it remains in the main branch.

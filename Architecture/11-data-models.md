@@ -376,7 +376,7 @@ is: a single slot becomes many-to-one, a multivalued one many-to-many. The seeds
 the batch that turns the refusal on, so no seeded space stops publishing.
 
 **Generated artifacts (DM-72).** §2 renders each relationship into JSON Schema (`object`
-patterned on the target's URN prefix, `minItems`), SHACL (`sh:class`, `sh:nodeKind sh:IRI`,
+patterned on `urn:ngsi-ld:{TargetType}:`, the target's type and nothing of its space (ADR-N-041), `minItems`), SHACL (`sh:class`, `sh:nodeKind sh:IRI`,
 `sh:minCount`, `sh:maxCount 1`), the `@context` (`@type: @id`) and OWL (`owl:inverseOf`,
 `owl:FunctionalProperty` on a single end).
 

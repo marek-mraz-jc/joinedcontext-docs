@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-"""Every concrete entity URN in the documentation must satisfy PF-42 (ADR 001, T-0100).
+"""Every concrete entity URN in the documentation must satisfy PF-43 (ADR-N-041, T-0100, T-3080).
 
-`urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}` — exactly four segments, a PascalCase
-type, a dotted lowercase organization domain, a slug space and an RFC 8141 local id.
-Placeholders (`{Type}`, `{orgDomain}`, `…`, a trailing `"` or `+`) are skipped, so a
-template such as `urn:ngsi-ld:AirQualityObserved:banskabystrica.sk:ovzdusie:` inside a
-string concatenation is accepted, and so is a Bloblang `%v` in place of a segment: a
-pipeline mints its ids with `"urn:ngsi-ld:%v:%v:%v:%v".format(…)` (PF-44). A random UUID
-in an intermediate segment is not a placeholder: it fails the domain and space patterns
-and is reported.
+`urn:ngsi-ld:{Type}:{nss}` — a PascalCase type and an RFC 8141 namespace-specific string of at
+most 256 characters. Identity is the space and the URN, so the old four-segment shape is no longer
+required; but a URN written in the platform's `prefixed` shape (its second segment a dotted
+domain) must be a correct one, `{Type}:{orgDomain}:{space}:{localId}`, so a mistyped example of
+the shape the platform mints still goes red. Placeholders (`{Type}`, `{orgDomain}`, `…`, a
+trailing `"` or `+`) are skipped, and so is a Bloblang `%v` in place of a segment: a pipeline
+mints its ids with `"urn:ngsi-ld:%v:%v:%v:%v".format(…)` (PF-44).
 
     check-urns.py [docs-root]
     check-urns.py --selftest
@@ -26,6 +25,8 @@ TYPE = re.compile(r"^[A-Z][A-Za-z0-9]{1,63}$")
 DOMAIN = re.compile(r"^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$")
 SPACE = re.compile(r"^[a-z0-9][a-z0-9-]{0,62}$")
 LOCAL = re.compile(r"^[A-Za-z0-9._~-]{1,128}$")
+# RFC 8141: NSS = pchar *( pchar / "/" ), pchar = unreserved / pct-encoded / sub-delims / ":" / "@".
+NSS = re.compile(r"^(?:[A-Za-z0-9._~!$&'()*+,;=:@-]|%[0-9A-Fa-f]{2})(?:[A-Za-z0-9._~!$&'()*+,;=:@/-]|%[0-9A-Fa-f]{2}){0,255}$")
 # One Bloblang format verb stands for exactly one segment, so the four-segment rule still
 # holds over a template that fills some of them in (PF-44).
 FORMAT_VERB = "%v"
@@ -48,9 +49,15 @@ def problems_of(path: pathlib.Path, text: str) -> list[str]:
             def segment(index: int, pattern: re.Pattern[str]) -> bool:
                 return segs[index] == FORMAT_VERB or bool(pattern.match(segs[index]))
 
-            if len(segs) != 4 or not segment(0, TYPE) or not segment(1, DOMAIN) \
-               or not segment(2, SPACE) \
-               or not (trailing or segs[3] == FORMAT_VERB or LOCAL.match(segs[3])):
+            nss = ":".join(segs[1:])
+            prefixed = segs[1] == FORMAT_VERB or "." in segs[1]
+            if not segment(0, TYPE):
+                bad.append(f"{path}:{lineno}: {urn}")
+            elif prefixed:
+                if len(segs) != 4 or not segment(1, DOMAIN) or not segment(2, SPACE) \
+                   or not (trailing or segs[3] == FORMAT_VERB or LOCAL.match(segs[3])):
+                    bad.append(f"{path}:{lineno}: {urn}")
+            elif not NSS.match(nss):
                 bad.append(f"{path}:{lineno}: {urn}")
     return bad
 
@@ -75,14 +82,18 @@ def selftest() -> int:
         ("concatenation prefix", "prefix `urn:ngsi-ld:Device:banskabystrica.sk:doprava:` plus the id", None),
         ("scheme mentioned in prose", "the urn:ngsi-ld: scheme is normative", None),
         ("escaped dot in a regex", 'idPattern: "^urn:ngsi-ld:Device:banskabystrica\\\\.sk:doprava:depot-.*$"', None),
-        ("uuid in the domain segment", "urn:ngsi-ld:Device:8f14e45f-ceea-467a-9575-6f6c1f2e2b3d:doprava:d-1", "8f14e45f"),
-        ("uuid in the space segment", "urn:ngsi-ld:Device:banskabystrica.sk:8F14E45F-CEEA:d-1", "8F14E45F"),
-        ("three segments only", "urn:ngsi-ld:Device:banskabystrica.sk:d-1", "urn:ngsi-ld:Device"),
-        ("five segments", "urn:ngsi-ld:Device:banskabystrica.sk:doprava:zona:d-1", "zona"),
+        ("unprefixed FIWARE id (ADR-N-041)", "urn:ngsi-ld:WeatherObserved:Helsinki-001", None),
+        ("unprefixed id with colons", "urn:ngsi-ld:Device:depot:7", None),
+        ("uuid as the whole id", "urn:ngsi-ld:Device:8f14e45f-ceea-467a-9575-6f6c1f2e2b3d", None),
+        ("prefixed with a uuid space", "urn:ngsi-ld:Device:banskabystrica.sk:8F14E45F-CEEA:d-1", "8F14E45F"),
+        ("prefixed with five segments", "urn:ngsi-ld:Device:banskabystrica.sk:doprava:zona:d-1", "zona"),
+        ("prefixed with three segments", "urn:ngsi-ld:Device:banskabystrica.sk:d-1", "urn:ngsi-ld:Device"),
         ("lowercase type", "urn:ngsi-ld:device:banskabystrica.sk:doprava:d-1", "device"),
-        ("domain without a dot", "urn:ngsi-ld:Device:banskabystrica:doprava:d-1", "banskabystrica"),
-        ("uppercase space", "urn:ngsi-ld:Device:banskabystrica.sk:Doprava:d-1", "Doprava"),
-        ("forbidden character in the local id", "urn:ngsi-ld:Device:banskabystrica.sk:doprava:d#1", "d#1"),
+        ("one-letter type", "urn:ngsi-ld:X:abc", "urn:ngsi-ld:X"),
+        ("prefixed with an uppercase space", "urn:ngsi-ld:Device:banskabystrica.sk:Doprava:d-1", "Doprava"),
+        ("forbidden character in a prefixed local id", "urn:ngsi-ld:Device:banskabystrica.sk:doprava:d#1", "d#1"),
+        ("forbidden character in an unprefixed id", "urn:ngsi-ld:Device:d^1", "d^1"),
+        ("an id over 256 characters", "urn:ngsi-ld:Device:" + "a" * 257, "urn:ngsi-ld:Device"),
     ]
     failures: list[str] = []
     with tempfile.TemporaryDirectory() as tmp:
@@ -99,8 +110,8 @@ def selftest() -> int:
         print(f"FAIL {failure}", file=sys.stderr)
     if failures:
         return 1
-    print("ok: uuid segments, wrong segment counts, a lowercase type, a dotless domain and an "
-          "uppercase space all go red, templates and prose stay green")
+    print("ok: unprefixed NGSI-LD ids stay green; a bad type, a bad character, an overlong id and a "
+          "malformed prefixed id go red; templates and prose stay green")
     return 0
 
 
@@ -110,7 +121,7 @@ def main(argv: list[str]) -> int:
     root = pathlib.Path(argv[1]) if len(argv) > 1 else pathlib.Path(".")
     bad = check(root)
     if bad:
-        print("URNs violating PF-42 (urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}):")
+        print("URNs violating PF-43 (urn:ngsi-ld:{Type}:{nss}; a prefixed one as {Type}:{orgDomain}:{space}:{localId}):")
         print("\n".join(bad))
         return 1
     print("urns ok")

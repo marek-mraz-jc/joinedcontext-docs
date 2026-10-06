@@ -63,7 +63,7 @@ The ID range of each family is its lowest and highest live ID, not a count: a re
 | Application | **Addon** | External software components (for example Superset, Grafana, Agent Runner) deployed alongside core infrastructure. |
 | City Repository | **Org Repository (`org-repo`)** | The single Git repository representing an Organization's declarative state. |
 | User Application | **Portal** | The unified web interface consisting of Portal API (Rust) and Portal UI (React). |
-| Evidencia / Razidlo | **Evidencia / Razidlo** (Kept) | Retained from ADR 001 for deterministic URN naming: `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}`. |
+| Evidencia / Razidlo | **Evidencia / Razidlo** (Optional) | The ADR 001 shape survives as the optional `prefixed` mint option `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}`; identity is the space and the URN (ADR-N-041). |
 
 ## Related
 

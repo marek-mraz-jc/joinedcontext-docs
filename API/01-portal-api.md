@@ -906,9 +906,9 @@ POST /api/v1/projects/{project}/import?dryRun=All
 - `bundle.yaml` describes the bundle and is never imported as a resource. Its `project` and
   `revision` become `joinedcontext.com/imported-from` on every manifest that lands, so an imported
   object says where it came from (MF-20); an upload with no index is annotated `upload`.
-- Every manifest is remapped into the project: the namespace, the typed and string references
-  between the manifests, and the `{space}` segment of every `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}`
-  in the spec (MF-22). `targetNamespace` may only name the project itself, because the repository
+- Every manifest is remapped into the project: the namespace and the typed and string references
+  between the manifests (MF-22). Entity URNs in the spec are kept as written: identity is the
+  space and the URN (ADR-N-041). `targetNamespace` may only name the project itself, because the repository
   path of every kind starts `projects/{project}/`.
 - A Policy's `spec.assigner` lands as `did:web:{orgDomain}`, the placeholder the loader renders
   for the organisation that owns the file (CC-82): a Policy grants over a space of this project,

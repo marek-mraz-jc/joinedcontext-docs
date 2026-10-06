@@ -46,7 +46,7 @@ The platform migration executes in six ordered phases:
 
 ### URN Modernization Rule
 
-Legacy URNs conforming to the historical 4-segment format `{Typ}:{Razidlo}:{Evidencia}:{Meno}` must be converted to the authoritative URN scheme:
+Legacy URNs conforming to the historical 4-segment format `{Typ}:{Razidlo}:{Evidencia}:{Meno}` are converted to the platform's `prefixed` shape (optional since ADR-N-041: a migration may also keep a legacy id that already is an NGSI-LD URN):
 
 ```text
 urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}
