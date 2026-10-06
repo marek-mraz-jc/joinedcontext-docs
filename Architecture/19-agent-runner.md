@@ -249,8 +249,10 @@ is the only component that holds the key (AG-53), so it is the one that asks.
 
 - **Key health.** Every `JC_MODEL_PROBE_SECS` (900 by default, `0` turns it off) a proxy whose
   provider is OpenRouter asks `GET {JC_MODEL_BASE}/key`, which costs no completion: `200` is
-  `valid` with the key's `limit` (`null` when it has none), `usage` and `remaining`, in the
-  provider's credits; `401` is `invalid`; `402` is `out_of_credit`; anything else, or no answer,
+  `valid` with the key's `limit` (`null` when it has none) and `usage`, in the provider's
+  credits, and `remaining`, what is left to spend: the smaller of the key's remaining limit and
+  the account's balance (`GET {JC_MODEL_BASE}/credits`, `total_credits − total_usage`), because a
+  key with credit left under its limit stops all the same when the account is empty; `401` is `invalid`; `402` is `out_of_credit`; anything else, or no answer,
   is `unreachable`. A model call the provider refuses with `401` or `402` reports the same state
   at once, so a key that dies between two probes is seen on the next call. Each report goes to the
   Portal's internal listener (`POST /internal/model-key`, API/04 §7); the Portal keeps the last one
