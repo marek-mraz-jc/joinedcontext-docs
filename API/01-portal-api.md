@@ -2745,7 +2745,8 @@ DELETE /api/v1/projects/{project}/spaces/{space}/views/{id}     delete it → 20
   does not exist (`404`); `collaborative` everyone who may read the space sees and changes it;
   `locked` everyone who may read the space sees it, and only its owner or a steward of the space
   (a caller with `update` on the `ContextSpace`) changes or deletes it (`403` for others).
-  Deleting a `collaborative` view is its owner's or a steward's.
+  Deleting a `collaborative` view, or changing any view's `mode`, is its owner's or a steward's:
+  a collaborator who made a shared view personal would take it from everyone else.
 - A project or a space the caller may not read is `404`, as in §27. Saving needs no more than
   reading: a view changes nothing in the space.
 - `version` counts up on every save. Send the version you read as `expectedVersion`: a save
