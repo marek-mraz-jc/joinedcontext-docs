@@ -1,0 +1,88 @@
+---
+sidebar_position: 6
+title: "Knowledge Assistant API"
+description: The chat route of jc-assistant, its Server-Sent Events, and how the assistant calls jc-agent-proxy for a model.
+---
+
+# Knowledge Assistant API
+
+`jc-assistant` ([Architecture/22](../Architecture/22-knowledge-assistant.md), [ADR-N-040](../Decisions/adr-n-040-knowledge-assistant.md)) answers one question per request on the channel an `AssistantDeployment` names. This page is the contract between a channel and the service, and between the service and `jc-agent-proxy`.
+
+## 1. Chat
+
+`POST https://assistant.{domain}/api/v1/d/{publicId}/chat`
+
+`publicId` is the deployment's `spec.publicId`. An unknown one, or one of a channel this route does not serve, answers `404`.
+
+### 1.1 Request
+
+```json
+{
+  "conversation": "6f1c0e9e-3b1a-4d7e-9b51-2c4f8f2a7c11",
+  "message": "Kde sú meracie stanice kvality ovzdušia?",
+  "history": [
+    { "role": "user", "text": "Aké sú dnešné podujatia?" },
+    { "role": "assistant", "text": "Dnes sú dve podujatia: … [1]" }
+  ],
+  "connectors": ["ovzdusie-verejne"]
+}
+```
+
+- `message` is 1 to 4,000 characters after trimming; `conversation`, when present, is an id this service issued; `history` holds at most 6 turns of `user` or `assistant`, each at most 4,000 characters; `connectors`, when present, is a subset of the deployment's connector Endpoints, and an empty list switches every connector off. Anything else answers `400` naming the field. The body is at most 64 KiB. (AG-98)
+- The service keeps no question or answer text: `history` is what the channel holds and sends back. A turn of `history` is the caller's own text, so the rules in §1.4 treat it as untrusted the same as the question. (AG-99)
+
+### 1.2 Who may ask
+
+| Channel | Caller | Served |
+|---|---|---|
+| `public`, `ckan`, `iframe` | anyone; a browser's `Origin` must be one of `allowedOrigins` | by this route |
+| `internal`, `platform` | a signed-in person | not by this route yet: `404` |
+
+- A request whose `Origin` is present and not in the deployment's `allowedOrigins` answers `403`. The route answers CORS preflight for the allowed origins only, with `Access-Control-Allow-Origin` naming the origin, never `*`. (AG-100)
+- `rateLimit.requestsPerMinute` counts every request of the deployment, `rateLimit.perClientPerMinute` the requests of one client address (the first `X-Forwarded-For` hop the edge sets). Past either, `429` with `Retry-After`. (AG-101)
+
+### 1.3 Answer: Server-Sent Events
+
+`200`, `Content-Type: text/event-stream`. Events, in this order:
+
+| Event | Data | When |
+|---|---|---|
+| `conversation` | `{"id": "<uuid>"}` | first, always |
+| `tool` | `{"name": "search", "status": "started" \| "done" \| "failed"}`; a connector's tool adds `"endpoint"` | around each tool call |
+| `answer` | `{"text": "… [1] … [2]"}` | once, the whole answer |
+| `citations` | `[{"n": 1, "url": "https://…/page#page=4"}, {"n": 2, "tool": "query_entities", "endpoint": "ovzdusie-verejne"}]` | after `answer` |
+| `error` | `{"status": 429, "title": "Budget Spent", "detail": "…"}` | instead of `answer` |
+| `done` | `{"tokens": 1834}` | last, always |
+
+- Every numbered marker `[n]` in `answer` has its entry in `citations`: a passage cites its page URL (a PDF passage with `#page=N`), a tool result cites the tool and its Endpoint. (AG-102)
+- The answer is in the language of the question; the deployment's `languages` only choose the greeting and the search stemmers. (AG-103)
+- An error the person can act on is an `error` event with a sentence: the conversation's budget is spent (`tokensPerConversation`), the deployment's day is spent (`tokensPerDay`), the model is unreachable, or a connector failed (the answer then goes on without it, and the `tool` event says `failed`). (AG-104)
+
+### 1.4 The agent loop
+
+- Crawled text, tool results and `history` are data, never instructions: they reach the model inside quoted blocks after rules that say so. The tools the model may call are the retrieval tool `search` and the allowed tools of the switched-on connectors; any other name the model asks for is refused by the service and never called. (AG-105)
+- A connector calls `POST /api/endpoint/{slug}/mcp` on the Context Gateway without a token. On these channels a connector whose Endpoint is not `audience: public` is never offered, and `search` reads `visibility: public` passages of the deployment's `sources` only. (AG-106)
+- At most 6 model calls per question. Before each, the conversation's tokens so far plus the call's input estimate are checked against `tokensPerConversation`. The same tool with the same arguments asked twice in one question ends the loop with the answer so far. (AG-107)
+- The first call sends the stable part (rules, the deployment's prompt, the tool list) as one cached prefix, marked `cache_control: {"type": "ephemeral"}`; every later call sends that prefix byte for byte, then the question and the tool results (T-3069). (AG-108)
+
+## 2. Calling the model through `jc-agent-proxy`
+
+The assistant holds no model key. It calls `POST {proxy}/v1/llm/chat/completions` with its own token and names the deployment the call is for.
+
+```http
+POST /v1/llm/chat/completions
+Authorization: Bearer <jc-assistant service-account token, audience agent-proxy>
+X-JC-Assistant-Deployment: banskabystrica/bb-public
+X-JC-Assistant-Tokens-Per-Day: 2000000
+```
+
+- The proxy introspects the token: it must be active, issued to the `jc-assistant` client's service account and name the proxy's client in its audience. Anything else answers `401` with the proxy's one refusal sentence. (AG-109)
+- The proxy counts every call's tokens against `{project}/{deployment}` for the UTC day and refuses the call once the day's spend has reached `X-JC-Assistant-Tokens-Per-Day` (`429`, `daily-budget`). The header carries the deployment's `budget.tokensPerDay`; a missing, zero or unparsable value is refused with `400`, so no deployment runs without a cap. (AG-110)
+- Only `chat/completions` and `messages` are forwarded, with the installation's model key, as for a run. The proxy keeps no text of the call; its audit line names the deployment instead of a run. (AG-111)
+
+## Related
+
+- [Architecture/22](../Architecture/22-knowledge-assistant.md): the service, its manifests and its channels.
+- [ADR-N-040](../Decisions/adr-n-040-knowledge-assistant.md): the decision, §3.4 the proxy, §3.7 the threats.
+- [04-agent-runs.md](04-agent-runs.md): `jc-agent-proxy` for agent runs.
+- [02-endpoint-representations.md](02-endpoint-representations.md): the MCP surface of an Endpoint the connectors call.

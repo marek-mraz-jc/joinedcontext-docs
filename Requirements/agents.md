@@ -163,6 +163,25 @@ Family **AG** (AG-01…AG-95). Owning chapters: [Architecture/07-agents-and-mcp.
 
 - **AG-86** [A][S] — An agent workspace MUST clone the project repository only, with a credential scoped to that repository, and MUST touch the organization repository only through an organization-level operation with a Change of its own (CC-87, PF-87).
 
+## 23. The Knowledge Assistant
+
+The contract is [API/05-knowledge-assistant.md](../API/05-knowledge-assistant.md); the service is [Architecture/22](../Architecture/22-knowledge-assistant.md).
+
+- **AG-98** [H][S] — The chat route of `jc-assistant` MUST refuse with `400`, naming the field, a body over 64 KiB, a `message` that is empty or over 4,000 characters after trimming, a `conversation` the service did not issue, a `history` of more than 6 turns or a turn over 4,000 characters or of a role other than `user` or `assistant`, and a `connectors` list naming an Endpoint the deployment does not connect; an empty `connectors` list MUST switch every connector off.
+- **AG-99** [S] — `jc-assistant` MUST NOT store the text of a question, an answer or a `history` turn; a conversation row holds its id, deployment, token count and times only, and `history` MUST be treated as untrusted like the question.
+- **AG-100** [S] — On the `public`, `ckan` and `iframe` channels a request whose `Origin` is present and not in the deployment's `allowedOrigins` MUST be refused with `403`, and CORS MUST name the allowed origin, never `*`.
+- **AG-101** [S] — `jc-assistant` MUST enforce the deployment's `rateLimit.requestsPerMinute` over all its requests and `rateLimit.perClientPerMinute` per client address, answering `429` with `Retry-After` past either.
+- **AG-102** [H] — Every numbered marker `[n]` in an answer MUST have its citation: a passage its page URL (a PDF passage with `#page=N`), a tool result the tool and its Endpoint.
+- **AG-103** [H] — An answer MUST be in the language of the question.
+- **AG-104** [H] — A spent conversation budget, a spent day, an unreachable model and a failed connector MUST each reach the person as an `error` event (or, for a connector, a `failed` tool event and an answer without it) with a sentence that says which.
+- **AG-105** [S] — Crawled text, tool results and `history` MUST reach the model as quoted data after rules that say they are not instructions, and `jc-assistant` MUST call only `search` and the allowed tools of the switched-on connectors, refusing any other name the model asks for.
+- **AG-106** [S] — On the anonymous channels a connector MUST call its Endpoint's MCP surface without a token and only for an Endpoint with `audience: public`, and `search` MUST read only `visibility: public` passages of the deployment's `sources`.
+- **AG-107** [P][S] — `jc-assistant` MUST stop a question after 6 model calls, MUST check the conversation's tokens plus the next call's input estimate against `tokensPerConversation` before each call, and MUST end the loop when the model asks for the same tool with the same arguments twice.
+- **AG-108** [P] — Every model call of a question MUST send the same stable prefix (rules, the deployment's prompt, the tool list) byte for byte, marked once for the provider's prompt cache, before the question and the tool results (T-3069).
+- **AG-109** [S] — `jc-agent-proxy` MUST serve an assistant call only for an active token of the `jc-assistant` client's service account whose audience names the proxy, and MUST answer anything else with its one refusal sentence.
+- **AG-110** [S] — `jc-agent-proxy` MUST count an assistant call's tokens against its deployment's UTC day and refuse the call once the day's spend reaches `X-JC-Assistant-Tokens-Per-Day`; a missing, zero or unparsable cap MUST be refused with `400`.
+- **AG-111** [S] — `jc-agent-proxy` MUST forward an assistant call only to `chat/completions` or `messages` with the installation's model key, keep no text of it, and name the deployment in its audit line.
+
 ## Assistant paths
 
 Decided in [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) (T-2691).
@@ -219,6 +238,7 @@ Decided in [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) (T-2691).
 | AG-82 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 | AG-86 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 | AG-96…AG-97 | [Architecture/19-agent-runner.md#6-limits-and-cost-governance](../Architecture/19-agent-runner.md#6-limits-and-cost-governance) | [Testing/06-security-tests.md#5-agent-sandboxes-the-credential-proxy-and-prompt-injection](../Testing/06-security-tests.md#5-agent-sandboxes-the-credential-proxy-and-prompt-injection) |
+| AG-98…AG-111 | [Architecture/22-knowledge-assistant.md](../Architecture/22-knowledge-assistant.md) | [Testing/06-security-tests.md#5-agent-sandboxes-the-credential-proxy-and-prompt-injection](../Testing/06-security-tests.md#5-agent-sandboxes-the-credential-proxy-and-prompt-injection) |
 | AG-94…AG-95 | [ADR-N-038](../Decisions/adr-n-038-an-agent-run-reads-as-its-person.md) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 | AG-87…AG-93 | [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
