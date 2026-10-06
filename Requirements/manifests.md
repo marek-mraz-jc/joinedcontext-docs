@@ -6,7 +6,7 @@ description: Kubernetes-style resource envelope, resource API, and download, imp
 
 # Manifest Model, Import, Sync & Download
 
-Family **MF** (MF-01…MF-44). Owning chapter: [Architecture/06-configuration-as-code.md](../Architecture/06-configuration-as-code.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
+Family **MF** (MF-01…MF-52). Owning chapter: [Architecture/06-configuration-as-code.md](../Architecture/06-configuration-as-code.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
 
 ## 1. Resource Envelope
 
@@ -102,6 +102,8 @@ Family **MF** (MF-01…MF-44). Owning chapter: [Architecture/06-configuration-as
 - **MF-47** — An import from an older `.jc/layout` or an older `apiVersion` MUST run `jcctl migrate` and land the migrated tree as the Change; a newer one MUST be refused (CC-53).
 - **MF-49** [S] — A whole-project export (MF-45) MUST carry a copy of every organization model a space of the project imports, at the pinned version, and the `kind: Bundle` index MUST list each copy with its name, version, the SHA-256 of its LinkML source and its origin (organization, name); the bundle MUST hold schema files only, no secret, credential or entity data ([ADR-N-039](../Decisions/adr-n-039-organization-and-project-data-models.md)).
 - **MF-50** [S] — Importing a bundle (MF-46) MUST map each carried model onto a destination organization model of the same name whose published version of that major has a byte-identical source, or land it as a project model at `projects/{slug}/datamodels/{name}/` with `spec.origin` and rewrite the spaces' imports to it in the same Change; the preview MUST show which happens to each model, the import MUST NOT write into the destination's organization repository or replace an organization model, and a model neither mapped nor landed MUST refuse the import naming it.
+- **MF-51** [S] — `kind: KnowledgeSource` (project-scoped, `projects/{p}/assistant/sources/{name}.yaml`) MUST name either `source: website` with one to twenty absolute `https` `startUrls`, or `source: ckan` with a `ckanInstanceRef` and no `startUrls`; `include` and `exclude` are path patterns starting with `/`; `maxDepth` (1–10, default 3), `maxPages` (1–50,000, default 1,000), `pdf.maxBytes` (at most 200 MiB) and `pdf.maxPages` (at most 2,000) are bounded; a document on another host is skipped unless `offDomainDocuments` is true; `schedule` is a five-field cron expression; `visibility` is `public` or `internal`, default `internal`. `jcctl validate` MUST refuse a `ckanInstanceRef` no `CkanInstance` of the project declares (ADR-N-040).
+- **MF-52** [S] — `kind: AssistantDeployment` (project-scoped, `projects/{p}/assistant/deployments/{name}.yaml`) MUST carry a `publicId` that is a DNS label, a `channel` of `public`, `internal`, `ckan` or `iframe`, and at least one source or connector; every `allowedOrigins` entry MUST be `https://host[:port]` with no path, query or wildcard; a `public`, `ckan` or `iframe` deployment MUST list at least one origin and carry `rateLimit` and `budget`; a connector names an Endpoint and at least one tool, with `timeoutSeconds` 1–120. `jcctl validate` MUST refuse a source or Endpoint the project does not declare, and an `internal` source named by a deployment whose channel is not `internal`, each finding naming the field to change (ADR-N-040).
 
 ## Traceability
 
@@ -125,6 +127,7 @@ Family **MF** (MF-01…MF-44). Owning chapter: [Architecture/06-configuration-as
 | MF-44 | [Architecture/06-configuration-as-code.md#6-download-import-and-sync--defined-by-the-user-in-the-ui-cc-49cc-53-mf-16mf-34](../Architecture/06-configuration-as-code.md#6-download-import-and-sync-defined-by-the-user-in-the-ui-cc-49cc-53-mf-16mf-34) | [Testing/01-backend-tests.md#3-jcctl](../Testing/01-backend-tests.md#3-jcctl) |
 | MF-45…MF-47 | [Architecture/06-configuration-as-code.md#6-download-import-and-sync-defined-by-the-user-in-the-ui-cc-49cc-53-mf-16mf-34](../Architecture/06-configuration-as-code.md#6-download-import-and-sync-defined-by-the-user-in-the-ui-cc-49cc-53-mf-16mf-34) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
 | MF-49…MF-50 | [ADR-N-039](../Decisions/adr-n-039-organization-and-project-data-models.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
+| MF-51…MF-52 | [Architecture/22-knowledge-assistant.md#2-two-manifest-kinds](../Architecture/22-knowledge-assistant.md#2-two-manifest-kinds), [ADR-N-040](../Decisions/adr-n-040-knowledge-assistant.md) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
 
 ## Related
 
