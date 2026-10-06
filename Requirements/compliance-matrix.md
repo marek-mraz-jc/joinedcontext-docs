@@ -579,6 +579,11 @@ Generated 2026-10-06 from: `docs` b977d33, `conformance` 47f59e6, `deployment` 6
 | **EP-83** | [H] [S] | tested | ci-full, fast ci | portal `src/api/catalogue_draft.rs::the_draft_fills_what_the_model_and_the_organization_know_and_names_the_rest`, portal `src/api/catalogue_draft.rs::what_the_endpoint_already_declares_is_kept_as_it_is`, portal `src/api/catalogue_draft.rs::with_no_model_no_contact_and_no_catalogue_the_draft_is_the_licence_and_nothing_to_publish_to`, and 12 more |
 | **EP-84** | [H] [P] [A] | tested | ci-full | platform `crates/context-gateway/tests/catalog_feed_tests.rs::the_feed_lists_every_public_endpoint_and_nothing_else`, platform `crates/context-gateway/tests/catalog_feed_tests.rs::the_turtle_says_the_same_and_a_members_token_widens_nothing`, platform `crates/context-gateway/tests/catalog_feed_tests.rs::an_organization_that_publishes_nothing_answers_an_empty_catalogue`, and 1 more |
 | **EP-91** | [H] [P] [A] | tested | fast ci | deployment `tests/test_ckan_dcat.py::test_the_flag_lists_the_plugin_and_both_profiles_and_nothing_while_off`, deployment `tests/test_ckan_dcat.py::test_the_dataset_page_keeps_the_keys_the_theme_reads`, deployment `tests/test_ckan_dcat.py::test_the_profile_is_mounted_where_its_entry_point_imports_it`, and 6 more |
+| **EP-92** | [A] [S] | open |  |  |
+| **EP-93** | [A] [S] | open |  |  |
+| **EP-94** | [A] | open |  |  |
+| **EP-95** | [S] | open |  |  |
+| **EP-96** | [S] | open |  |  |
 | **EP-85** | [H] [S] | tested | ci-full, fast ci | platform `crates/context-gateway/src/handlers/preview.rs::the_page_query_encodes_the_type_and_the_ids_and_always_counts`, platform `crates/context-gateway/tests/filter_preview_tests.rs::a_draft_answers_what_the_same_filter_saved_answers`, platform `crates/context-gateway/tests/filter_preview_tests.rs::a_draft_cannot_serve_a_type_the_policy_does_not_grant`, and 4 more |
 | **EP-86** | [H] | built |  | `joinedcontext-portal/ui/src/pages/endpoints/FilterProof.tsx`, `joinedcontext-portal/ui/src/routes/EndpointsPage.tsx` |
 | **EP-70** | [S] | tested | ci-full, conformance, fast ci, live on dev | conformance `tests/etsi/temporal_federated.robot::EP-70 A Query On The Hub Answers Over The First Member`, conformance `tests/etsi/temporal_federated.robot::EP-70 The Same Hub Answers Over The Second Member`, conformance `tests/etsi/temporal_federated.robot::EP-70 A Partial Answer Is An Answer And Names What Did Not Reply`, and 6 more |
@@ -691,6 +696,7 @@ Generated 2026-10-06 from: `docs` b977d33, `conformance` 47f59e6, `deployment` 6
 | **MF-50** | [S] | tested | ci-full, fast ci | portal `src/api/bundle_models.rs::a_landed_models_import_is_rewritten_and_nothing_else`, portal `tests/project_import_git_tests.rs::a_carried_model_the_organization_holds_is_mapped`, portal `tests/project_import_git_tests.rs::a_carried_model_that_differs_lands_in_the_project`, and 3 more |
 | **MF-51** | [S] | open |  |  |
 | **MF-52** | [S] | open |  |  |
+| **MF-53** | [S] | open |  |  |
 
 ### MIM — OASC interoperability
 

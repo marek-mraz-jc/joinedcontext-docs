@@ -6,7 +6,7 @@ description: Universal ingress and egress multi-representation views, opaque slu
 
 # Endpoints & Representation Parity
 
-Family **EP** (EP-01…EP-91). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **EP** (EP-01…EP-96). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
 ## 1. Endpoint Identity and Opaque Slug
 
@@ -168,6 +168,16 @@ Family **EP** (EP-01…EP-91). Owning chapter: [Architecture/04-context-spaces-a
 
 - **EP-77** [P] — A SharedSpaceReference inside one Organization repository MUST name its source as `endpointRef: {project, name}` and the loader MUST resolve it to the slug of this environment; `endpointSlug` remains for a source in another instance, and exactly one of the two MUST be present. Resolving a name MUST NOT widen access: the source Endpoint's audience and Policy decide as with a slug (EP-15).
 
+## 21. Named MCP servers over chosen Endpoints
+
+Decided in [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) (T-3154).
+
+- **EP-92** [A][S] — The gateway MUST serve every `McpServer` (MF-53) at `https://{host}/api/mcp/{project}/{name}` (`org` for the organization's) as stateless Streamable HTTP, with the hub's catalogue (EP-87) narrowed to the server's members: `list_endpoints` and the `endpoint` enum MUST hold only the members the caller may read, and a member the caller may not read MUST appear in no answer; an `endpoint` outside that list MUST be refused with the bytes of an unknown slug (SP-20).
+- **EP-93** [A][S] — Every member call of a named server MUST run exactly as a call to that member's own MCP URL runs: that Endpoint's PDP with the caller's token, its projection and its rate limit; the server MUST hold no identity or grant of its own, and for every member and tool its answer MUST be a subset of what the member's own URL answers the same caller.
+- **EP-94** [A] — On `query_entities`, `list_types` and `describe_schema` of a named server `endpoint` MUST be optional: absent, the call MUST run once per member the caller may read, in parallel, and answer `structuredContent.results` as one entry per member `{endpoint, space, entities, total, nextCursor}` in the order of `spec.members`, `limit` and paging per member (`cursor` an object keyed by member slug); no filter, join, sort or count MUST be computed across members, and the same URN in two members' spaces MUST stay two entities. Every tool that writes, subscribes or asks an elicitation MUST require `endpoint`.
+- **EP-95** [S] — A named server MUST answer a member the caller may read that fails (deadline, unavailable, refused operation) as `partial: true` with `failed: [{endpoint, reason}]` beside the members that answered; each member call MUST have at most ten seconds and the whole call fifteen; a call MUST spend one request of the server's per-subject bucket and one of each member's own bucket it touches; and each member call MUST write the audit line a call to that member's URL writes, with the server's address beside it.
+- **EP-96** [S] — A named server MUST be its own RFC 8707 resource with protected-resource metadata (RFC 9728) under `/api/mcp/{project}/{name}/.well-known/oauth-protected-resource` and a Keycloak client `mcp-{project}-{name}` the reconciler renders (public, PKCE S256, no secret, dynamic registration off); a token whose audience is the server MUST reach its members only, a token for one Endpoint or for the hub MUST be refused there, and a public server MUST answer an anonymous caller with each member's public grants alone.
+
 ## Traceability
 
 | Requirement Range | Architecture Section | Test Family |
@@ -179,6 +189,7 @@ Family **EP** (EP-01…EP-91). Owning chapter: [Architecture/04-context-spaces-a
 | EP-17…EP-20 | [Architecture/05-context-gateway.md#3-cache-architecture--revocation-propagation-r40-r48](../Architecture/05-context-gateway.md#3-cache-architecture--revocation-propagation-r40-r48) | [Testing/01-backend-tests.md#6-what-the-requirements-ask-for-and-is-not-built-yet](../Testing/01-backend-tests.md#6-what-the-requirements-ask-for-and-is-not-built-yet) |
 | EP-21…EP-23 | [Architecture/04-context-spaces-and-endpoints.md#2-tenancy-without-client-headers-sp-05sp-09](../Architecture/04-context-spaces-and-endpoints.md#2-tenancy-without-client-headers-sp-05sp-09) | [Testing/01-backend-tests.md#2-the-context-gateway-harness](../Testing/01-backend-tests.md#2-the-context-gateway-harness) |
 | EP-24…EP-26 | [Architecture/07-agents-and-mcp.md#1-dual-mcp-surfaces](../Architecture/07-agents-and-mcp.md#1-dual-mcp-surfaces) | [Testing/02-conformance-tests.md#4-model-context-protocol](../Testing/02-conformance-tests.md#4-model-context-protocol) |
+| EP-92…EP-96 | [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | EP-87…EP-88 | [Architecture/07-agents-and-mcp.md#1-dual-mcp-surfaces](../Architecture/07-agents-and-mcp.md#1-dual-mcp-surfaces) | [Testing/02-conformance-tests.md#4-model-context-protocol](../Testing/02-conformance-tests.md#4-model-context-protocol) |
 | EP-27…EP-28 | [Architecture/04-context-spaces-and-endpoints.md#3-the-endpoint-model](../Architecture/04-context-spaces-and-endpoints.md#3-the-endpoint-model) | [Testing/05-deployment-and-performance-tests.md#5-the-k6-budgets](../Testing/05-deployment-and-performance-tests.md#5-the-k6-budgets) |
 | EP-29…EP-40 | [Architecture/04-context-spaces-and-endpoints.md#4-multi-representation-translation-engine](../Architecture/04-context-spaces-and-endpoints.md#4-multi-representation-translation-engine) | [Testing/02-conformance-tests.md#2-ogc-api---features-part-1](../Testing/02-conformance-tests.md#2-ogc-api---features-part-1) |
