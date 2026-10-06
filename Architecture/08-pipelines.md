@@ -640,7 +640,14 @@ starts with `${! … }` is refused the same way. A cluster Service by name stays
 NetworkPolicy and the mesh decide those. A typed connection URL names no runner variable but
 `JC_GATEWAY_HOST`, `JC_GATEWAY_URL`, `JC_TOKEN_URL` and `JC_ORG_DOMAIN`, and a sample URL holds no
 `$` at all: the runner fills `${…}` from an environment that holds every project's credentials
-(PL-16). A literal `$` is written `%24`. A public name that resolves to loopback is not caught at
+(PL-16). A literal `${` is written `%24{`; a `$` without a brace is left alone, as the runner
+leaves it. The other strings of a typed connection (headers, topics, the open message) follow the
+URL's rule. A step, an inline mapping or a `bento.yaml` processor names as `${NAME}` only
+`JC_GATEWAY_URL`, `JC_GATEWAY_HOST`, `JC_TOKEN_URL`, `JC_ORG_DOMAIN`, the `JC_SPACE` names, the
+`envVar` of its own pipeline's `secretRefs`, and the credential aliases `JC_CLIENT_ID` and
+`JC_CLIENT_SECRET`, which the reconciler rewrites into the stream's own project's pipeline client
+before the stream reaches the runner (T-3163). No `secretRef` takes an `envVar` that starts with
+`JC_`, the runner's own prefix. A public name that resolves to loopback is not caught at
 admission; one runner per project is the boundary for that.
 
 ### What each type becomes
