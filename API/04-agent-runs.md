@@ -553,7 +553,8 @@ Content-Type: application/json
 ```
 
 `state` is one of `valid`, `invalid`, `out_of_credit` and `unreachable`; `source` is `probe` or
-`call`; `limit`, `usage` and `remaining` are the provider's credits and are `null` or absent when
+`call`; `limit`, `usage` and `remaining` are the provider's credits, `remaining` being what is
+left to spend (the smaller of the key's remaining limit and the account's balance), and are `null` or absent when
 the provider said nothing about them (a key without a limit has `limit: null`). Any other member is
 refused with `400`. Response: `204 No Content`. The body never carries the key (AG-96).
 
