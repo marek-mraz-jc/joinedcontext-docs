@@ -630,6 +630,19 @@ The file lives at `projects/{project}/datasources/{name}.yaml` and is served at
 block is present and it is the one `spec.type` names; a manifest with two, or with none, is
 refused by the schema.
 
+Every URL a person types is checked before it reaches the runner, because one runner pod serves
+every project and its stream API and token sidecar answer on loopback, where no NetworkPolicy or
+mesh rule sees the call (PL-07, T-3162). A connection URL, a string inside `spec.input`, a sample
+URL of a pipeline test and every string of a step or a `bento.yaml` processor are refused when a
+host in them is loopback, unspecified, link-local, private or carrier-grade NAT, `localhost`, a
+numeric form other than a dotted quad, or taken from the message (`${! … }`); a step's `url` that
+starts with `${! … }` is refused the same way. A cluster Service by name stays allowed: the
+NetworkPolicy and the mesh decide those. A typed connection URL names no runner variable but
+`JC_GATEWAY_HOST`, `JC_GATEWAY_URL`, `JC_TOKEN_URL` and `JC_ORG_DOMAIN`, and a sample URL holds no
+`$` at all: the runner fills `${…}` from an environment that holds every project's credentials
+(PL-16). A literal `$` is written `%24`. A public name that resolves to loopback is not caught at
+admission; one runner per project is the boundary for that.
+
 ### What each type becomes
 
 The reconciler renders the connection into the Bento input the runner speaks. Bento's own field
