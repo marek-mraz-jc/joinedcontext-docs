@@ -2692,6 +2692,71 @@ GET /api/v1/projects/{project}/spaces/{space}/usage     the space's entity count
   with the person's token, so it narrows as the person's grants do.
 - The storage size in bytes is not answered yet: the broker has no surface for it (T-2890).
 
+## 30. Data views of a space (ADR-N-042, T-3104, T-3099)
+
+A saved way of looking at one entity type of a space: which attributes show, the filter, the
+order, the grouping and the colours, and the view kind (grid, gallery, kanban, calendar, timeline,
+form). The view is the Portal's own record in its database (`data_views`); the rows it shows are
+the space's entities, read with the person's own session, so a view narrows what the person may
+read and never widens it (ADR-N-042 §3.2).
+
+```text
+GET    /api/v1/projects/{project}/spaces/{space}/views          the views this caller sees → 200
+POST   /api/v1/projects/{project}/spaces/{space}/views          save a new one → 201
+GET    /api/v1/projects/{project}/spaces/{space}/views/{id}     one view → 200
+PUT    /api/v1/projects/{project}/spaces/{space}/views/{id}     rename it, change its mode or settings → 200
+DELETE /api/v1/projects/{project}/spaces/{space}/views/{id}     delete it → 204
+```
+
+```json
+{
+  "id": "7f1c2a9e-4b1d-4a57-9a0e-2f6d1c3b8e01",
+  "type": "BikeHireDockingStation",
+  "kind": "grid",
+  "mode": "collaborative",
+  "title": "Stations short of bikes",
+  "owner": "jana.kovacova",
+  "config": {
+    "q": "availableBikeNumber<3",
+    "sort": [{ "attr": "availableBikeNumber", "desc": false }],
+    "group": "status",
+    "hidden": ["dateLastReported"],
+    "width": { "name": 240 },
+    "colour": [{ "when": "availableBikeNumber==0", "colour": "danger" }],
+    "settings": {}
+  },
+  "version": 3,
+  "createdAt": "2026-10-06T19:00:00Z",
+  "updatedAt": "2026-10-06T19:05:00Z"
+}
+```
+
+- The body of `POST` is `type`, `kind`, `mode`, `title` and `config`; of `PUT` the same without
+  `type`, plus `expectedVersion`. Unknown keys are `400`. `type` is an NGSI-LD type name
+  (`^[A-Za-z][A-Za-z0-9_-]*$`), `kind` one of `grid`, `gallery`, `kanban`, `calendar`, `timeline`,
+  `form`, `mode` one of `personal`, `collaborative`, `locked`, `title` 1 to 120 characters.
+- `config`: `q` is an NGSI-LD query of at most 4,096 characters, sent as the person's own `q`
+  when the view opens; `sort` names at most 3 attributes; `hidden` and `width` name attributes;
+  `colour` holds at most 20 rules, each a `q` and one of the colour tokens `neutral`, `info`,
+  `success`, `warning`, `danger`, evaluated in the page on the rows it shows; `settings` is the
+  kind's own (the card fields of a gallery, the attribute a kanban groups by, the date attributes
+  of a calendar or a timeline, the fields of a form). The whole `config` is at most 64 KiB.
+- Who sees and changes a view, by its `mode`: `personal` its owner alone, and to anyone else it
+  does not exist (`404`); `collaborative` everyone who may read the space sees and changes it;
+  `locked` everyone who may read the space sees it, and only its owner or a steward of the space
+  (a caller with `update` on the `ContextSpace`) changes or deletes it (`403` for others).
+  Deleting a `collaborative` view is its owner's or a steward's.
+- A project or a space the caller may not read is `404`, as in §27. Saving needs no more than
+  reading: a view changes nothing in the space.
+- `version` counts up on every save. Send the version you read as `expectedVersion`: a save
+  against a newer view is `409` with the current version, never an overwrite of another window's
+  change. Duplicating a view is a `POST` of its settings under a new title; renaming is a `PUT`.
+- A person keeps at most 200 views per space; the 201st is `409` with the limit in the problem.
+- `sort` orders the rows the grid has loaded, and the grid says so; it is not sent to the broker.
+  `group` names an enum attribute: each
+  group's count is the gateway's own `count=true` answer for `q` plus that value, read with the
+  person's session, so the counts narrow as their grants do and are never the page's tally.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
