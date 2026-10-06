@@ -402,8 +402,10 @@ fails (a division by zero), the formula has no value and the attribute is left a
 `formulas-{class}` in lower case, proposed by the Portal with the field in a Change of its own: a
 `scheduled` pipeline every five minutes, its source the space's Endpoint queried for the class with
 the slots the formulas read, its compute the compiled Bloblang, its output `update-attrs` through the
-same Endpoint, written by the project's `pipelines` ServiceAccount under a Policy that grants it
-`queryEntity` and `updateAttrs` on the class and only the formula slots (PL-18). Each computed
+same Endpoint, written by the project's `pipelines` ServiceAccount under two Policies: one grants it
+`queryEntity` on the slots the formulas read, the other `upsertBatch` on the formula slots alone,
+because the runner writes every stream as an upsert with `options=update`, which merges the
+attributes it names and nothing else (PL-18). Each computed
 attribute carries `computedBy`, the pipeline's URN (PL-36); the entity it reads is the one it writes,
 so the pipeline names no other source. A project without a `pipelines` ServiceAccount cannot run
 one, and the field dialog says so instead of proposing.
