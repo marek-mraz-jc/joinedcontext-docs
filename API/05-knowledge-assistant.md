@@ -72,6 +72,26 @@ A tool result longer than 20,000 characters reaches the model cut. On a deployme
 
 - An answer built on a script's output cites the tool result the script read (AG-102). The script itself is the model's text and runs only in the sandbox (AG-112).
 
+### 1.6 The widget
+
+`GET https://assistant.{domain}/d/{publicId}/widget` is the chat a site places in an iframe:
+
+```html
+<iframe src="https://assistant.{domain}/d/{publicId}/widget" title="Assistant" width="400" height="600"></iframe>
+```
+
+The page loads `/d/widget.js` and `/d/widget.css` from the same host and nothing else; it sets no
+cookie and keeps the conversation and its last turns in the page alone. It shows the deployment's
+greeting and colour, a switch per connector, each answer with its citations as links, a script and
+its output when there was one, and every `error` event as the sentence it carries. It is keyboard
+operable and announces answers to a screen reader.
+
+- The widget page MUST answer only for a deployment of the `public`, `ckan` or
+  `iframe` channel, with `Content-Security-Policy: frame-ancestors` naming exactly the deployment's
+  `allowedOrigins` and allowing scripts, styles and requests from its own host alone; it MUST set
+  no cookie. The chat route MUST accept the widget's own origin (`JC_ASSISTANT_PUBLIC_ORIGIN`)
+  beside the deployment's, and every limit stays the server's (AG-100, AG-101, AG-110, AG-114).
+
 ## 2. Calling the model through `jc-agent-proxy`
 
 The assistant holds no model key. It calls `POST {proxy}/v1/llm/chat/completions` with its own token and names the deployment the call is for.
