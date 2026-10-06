@@ -2866,6 +2866,7 @@ GET  /api/v1/projects/{project}/knowledge/sources/{source}/passages?page=|docume
 POST /api/v1/projects/{project}/knowledge/sources/{source}/inclusion       include or exclude pages, subtrees, documents
 POST /api/v1/projects/{project}/knowledge/sources/{source}/recrawl         queue a crawl now
 GET  /api/v1/projects/{project}/knowledge/deployments/{deployment}/usage   requests and tokens per day, 30 days
+POST /api/v1/projects/{project}/knowledge/deployments/{deployment}/chat    ask the assistant as the signed-in person
 ```
 
 - The read routes answer only a caller who may read `KnowledgeSource` in the project (the usage
@@ -2876,6 +2877,10 @@ GET  /api/v1/projects/{project}/knowledge/deployments/{deployment}/usage   reque
   most 500 ids. Excluding removes the passages of what it names at once, so no answer cites it
   again; the choice holds over every later crawl, whatever the source's include and exclude
   patterns say. Including again indexes it at the next crawl. The answer counts what changed.
+- `chat` answers a caller who may read `AssistantDeployment` in the project, anyone else `404`,
+  with the Server-Sent Events of API/05 §1.3; the body is API/05 §1.1. The Portal passes the
+  person's own access token on for an `internal` deployment's connectors and keeps no copy
+  ([API/05 §1.7](05-knowledge-assistant.md#17-in-the-portal), AG-115).
 - `recrawl` answers `202` with the queued job, or `409` when one is already queued or running.
 - A source the manifests declare and `jc-assistant` has not crawled yet is listed with
   `state: "not-crawled"`; a page, a document or a source of another project is `404`.

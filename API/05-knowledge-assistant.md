@@ -36,7 +36,7 @@ description: The chat route of jc-assistant, its Server-Sent Events, and how the
 | Channel | Caller | Served |
 |---|---|---|
 | `public`, `ckan`, `iframe` | anyone; a browser's `Origin` must be one of `allowedOrigins` | by this route |
-| `internal`, `platform` | a signed-in person | not by this route yet: `404` |
+| `internal` | a signed-in person, in the Portal | through the Portal (§1.7); `404` here |
 
 - A request whose `Origin` is present and not in the deployment's `allowedOrigins` answers `403`. The route answers CORS preflight for the allowed origins only, with `Access-Control-Allow-Origin` naming the origin, never `*`. (AG-100)
 - `rateLimit.requestsPerMinute` counts every request of the deployment, `rateLimit.perClientPerMinute` the requests of one client address (the first `X-Forwarded-For` hop the edge sets). Past either, `429` with `Retry-After`. (AG-101)
@@ -91,6 +91,31 @@ operable and announces answers to a screen reader.
   `allowedOrigins` and allowing scripts, styles and requests from its own host alone; it MUST set
   no cookie. The chat route MUST accept the widget's own origin (`JC_ASSISTANT_PUBLIC_ORIGIN`)
   beside the deployment's, and every limit stays the server's (AG-100, AG-101, AG-110, AG-114).
+
+### 1.7 In the Portal
+
+A signed-in person asks through the Portal, `POST /api/v1/projects/{project}/knowledge/deployments/{deployment}/chat`
+(API/01 §34), with the body of §1.1 and the events of §1.3. The Portal checks the person's
+permission and asks `jc-assistant` on its internal path:
+
+```http
+POST /internal/v1/projects/{project}/knowledge/deployments/{deployment}/chat
+Authorization: Bearer <the Portal's service-account token>
+X-JC-Person: <the person's username>
+X-JC-Person-Token: <the person's access token, when the request carried one>
+```
+
+- The internal path answers the Portal's service account alone, as §3 does, and serves a
+  deployment of any channel by its name. An `internal` deployment searches its sources' `public`
+  and `internal` passages; a `public`, `ckan` or `iframe` one answers exactly as it answers a
+  visitor (§1.4), so its administrators try what the public will get. (AG-115)
+- A connector of an `internal` deployment whose Endpoint is not `audience: public` is called
+  with the person's token, so the gateway decides as it decides for the person; without one it is
+  not offered. A public Endpoint is called without a token on every channel. The person's token
+  lives for the one question: it is never stored, logged or sent anywhere but the gateway. (AG-115)
+- The deployment's `budget` caps the Portal's questions as the public ones (AG-110); an internal
+  deployment without a `budget` answers an `error` event saying an administrator sets one. Its
+  `rateLimit`, when it has one, counts per person. (AG-101, AG-115)
 
 ## 2. Calling the model through `jc-agent-proxy`
 
