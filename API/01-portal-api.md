@@ -596,6 +596,21 @@ GET /api/v1/projects/{project}/pipelines/{name}/metrics    counters of one runni
   failed: a runner that is down is an operational fact, not a manifest error.
 - The body carries counters only. Runner logs, stream configuration and secret values are never
   part of it (PL-17).
+- `nodes` carries the same counters per component of the stream, by the Bento `label` the
+  reconciler writes (PL-66): `input` for the sources, `step_{j}` for the manifest's `j`-th
+  processor step, `compute` for its compute step, `output` for the writes, and
+  `processor_{at}` for what the platform adds around them. A label the author wrote stays the
+  author's. The Studio paints each node of the flow with its own entry, so the step a message
+  stops at is the one shown failing, live and not only in a test:
+
+  ```json
+  "nodes": {
+    "input":   { "received": 1200, "sent": 1200 },
+    "step_0":  { "received": 1200, "sent": 1180, "errors": 20 },
+    "compute": { "received": 1180, "sent": 1180 },
+    "output":  { "received": 1180, "sent": 1180 }
+  }
+  ```
 
 ### 7a. Testing a candidate pipeline (PL-43, MF-38)
 
