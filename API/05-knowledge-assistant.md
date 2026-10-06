@@ -49,6 +49,7 @@ description: The chat route of jc-assistant, its Server-Sent Events, and how the
 |---|---|---|
 | `conversation` | `{"id": "<uuid>"}` | first, always |
 | `tool` | `{"name": "search", "status": "started" \| "done" \| "failed"}`; a connector's tool adds `"endpoint"` | around each tool call |
+| `script` | `{"code": "…", "output": "…"}`, or `"error"` in place of `"output"` | after a `run_script` call (§1.5) |
 | `answer` | `{"text": "… [1] … [2]"}` | once, the whole answer |
 | `citations` | `[{"n": 1, "url": "https://…/page#page=4"}, {"n": 2, "tool": "query_entities", "endpoint": "ovzdusie-verejne"}]` | after `answer` |
 | `error` | `{"status": 429, "title": "Budget Spent", "detail": "…"}` | instead of `answer` |
@@ -64,6 +65,12 @@ description: The chat route of jc-assistant, its Server-Sent Events, and how the
 - A connector calls `POST /api/endpoint/{slug}/mcp` on the Context Gateway without a token. On these channels a connector whose Endpoint is not `audience: public` is never offered, and `search` reads `visibility: public` passages of the deployment's `sources` only. (AG-106)
 - At most 6 model calls per question. Before each, the conversation's tokens so far plus the call's input estimate are checked against `tokensPerConversation`. The same tool with the same arguments asked twice in one question ends the loop with the answer so far. (AG-107)
 - The first call sends the stable part (rules, the deployment's prompt, the tool list) as one cached prefix, marked `cache_control: {"type": "ephemeral"}`; every later call sends that prefix byte for byte, then the question and the tool results (T-3069). (AG-108)
+
+### 1.5 Scripts over a large tool result
+
+A tool result longer than 20,000 characters reaches the model cut. On a deployment with `sandbox: true` the model is offered `run_script` as well: `{"result": n, "code": "…"}`, JavaScript whose body receives the whole result `n` (at most 256 KiB) as `data` and returns what the model reads. `jc-assistant` runs it in `jc-functions` with no network, no file system, no clock and no environment, under its time, memory and output caps, and streams the code and its output to the person as a `script` event.
+
+- An answer built on a script's output cites the tool result the script read (AG-102). The script itself is the model's text and runs only in the sandbox (AG-112).
 
 ## 2. Calling the model through `jc-agent-proxy`
 
