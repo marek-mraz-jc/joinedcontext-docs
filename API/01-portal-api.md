@@ -2876,11 +2876,13 @@ POST   /api/v1/notifications/{id}/read                                mark one o
 }
 ```
 
-- `POST` takes `urn` (an NGSI-LD URN, PF-43) and `text` (1 to 4,000 characters); unknown keys are
-  `400`. A mention is `@` followed by a person's identifier as the RoleBindings and Groups name
+- `POST` takes `urn` (an NGSI-LD URN, PF-43) and `text` (1 to 4,000 characters); a URN or text
+  outside that is `400`, an unknown key `422`. A mention is `@` after the start or a character that
+  is not part of a word, followed by a person's identifier as the RoleBindings and Groups name
   them (`demo.editor@hel.fi`). A mention counts only for a person a binding in force lets read the
-  project; each such person gets one notification, the author none. Mentions of anyone else are
-  kept in the text and listed in the answer's `unknownMentions`, notified to nobody.
+  space, by name or through a `Group`'s members, exactly as §27 decides it for a caller; each such
+  person gets one notification, the author none. Mentions of anyone else are kept in the text and
+  listed in the answer's `unknownMentions`, notified to nobody.
 - A comment is its author's: only they `DELETE` it (another caller's `id` is `404`); nobody edits
   one. Removing a comment removes its notifications.
 - A notification names the space, the URN, the comment, its author and the first 200 characters;
