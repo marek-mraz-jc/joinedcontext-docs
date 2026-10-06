@@ -135,6 +135,15 @@ spec:
   subjects: [{ group: ckan-editors }, { user: demo.steward@hel.fi }]
   role: ckan-admin-helsinki-open-data-2
   scope: { project: helsinki }
+---
+# users/groups/ckan-editors.yaml
+apiVersion: joinedcontext.com/v1alpha1
+kind: Group
+metadata: { name: ckan-editors, namespace: org }
+spec:
+  description: The people who look after the open-data-2 catalogue
+  members:
+    - { user: demo.steward@hel.fi }
 ```
 
 A binding carries no constraint of its own: the role is what narrows, so a person reading `users/assignments/` sees whom, and `users/roles/` what. `org-admin` changes every instance anyway; publishing an Endpoint *to* an instance stays the `publisher`'s right (PF-71).

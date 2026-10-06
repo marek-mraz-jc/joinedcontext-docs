@@ -22,10 +22,9 @@ The embedding model is loaded once and shared. Crawling waits for an embedding s
 
 ## 2. Two manifest kinds
 
-Both live in the organization repository and are proposed like every other manifest (T-3051):
+Both live in the organization repository and are proposed like every other manifest. The shapes below are the design; T-3051 declares the two kinds in [Development/04](../Development/04-manifest-kinds.md) and the platform's schemas, and adds `apiVersion: joinedcontext.com/v1alpha1` to these examples then, so until it lands no validator reads them as manifests anybody could apply:
 
 ```yaml
-apiVersion: joinedcontext.com/v1alpha1
 kind: KnowledgeSource
 metadata: { name: hel-fi-site, namespace: org }
 spec:
@@ -38,7 +37,6 @@ spec:
   schedule: "0 3 * * *"
   limits: { pages: 5000, documentBytes: 52428800, documentPages: 500 }
 ---
-apiVersion: joinedcontext.com/v1alpha1
 kind: AssistantDeployment
 metadata: { name: hel-public, namespace: org }
 spec:
