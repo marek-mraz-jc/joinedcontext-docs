@@ -166,6 +166,7 @@ The credential holder of a builder run (`jc-agent-proxy`): a workspace reaches t
 | `JC_PORTAL_BASE` | `http://portal:8080` | no | The Portal as the proxy reaches it inside the cluster (`JC_PORTAL_BASE`, default `http://portal:8080`), where it reads a run's plan and posts its callbacks. |
 | `JC_PORTAL_CLIENT_ID` | `portal-api` | no | The Portal's Keycloak client (`JC_PORTAL_CLIENT_ID`, default `portal-api`): the one caller whose service-account token may hand this proxy a person's token for a run (`POST /internal/runs/{run}/identity`, ADR-N-038, AG-52, AG-94). |
 | `JC_PROXY_BIND` | `0.0.0.0:8080` | no | The address to listen on (`JC_PROXY_BIND`, default `0.0.0.0:8080`). |
+| `JC_PROXY_FUNCTIONS_IDENTITY` | `jc-functions` | no | The `jc-functions` workload's ServiceAccount (`JC_PROXY_FUNCTIONS_IDENTITY`, default `jc-functions`): with mesh identity required, the one workload a run's data credential is honoured from (ADR-N-038 decision 6). |
 | `JC_REQUIRE_MESH_IDENTITY` | — | no | Whether a caller must arrive through the mesh with a Linkerd identity (`JC_REQUIRE_MESH_IDENTITY`, the string `true` to require it; default off). |
 
 ## 4. Functions runtime
@@ -174,6 +175,7 @@ The QuickJS runtime a generated application's functions run in (`jc-functions`).
 
 | Variable | Default | Secret | What it is |
 |---|---|---|---|
+| `JC_AGENT_PROXY_URL` | — | no | `JC_AGENT_PROXY_URL` — the agent proxy an editing agent's own call goes through (`via: "proxy"`, ADR-N-038 decision 6), scheme and authority only for the same reason. Optional: without it such a call answers `503`. |
 | `JC_FUNCTIONS_AUDIENCE` | `jc-functions` | no | `JC_FUNCTIONS_AUDIENCE` — the audience that token must carry, default `jc-functions`. |
 | `JC_FUNCTIONS_BIND` | `0.0.0.0:8080` | no | `JC_FUNCTIONS_BIND` — the address to listen on, default `0.0.0.0:8080`. |
 | `JC_FUNCTIONS_CALLER` | — | no | `JC_FUNCTIONS_CALLER` — the one client whose token may invoke a function, which is the Portal (SDK-23). Required. |
