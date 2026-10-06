@@ -247,7 +247,7 @@ spec:
 - **Direct writers** reach the platform only through the gateway (`/cs/{space}/ngsi-ld/v1` for members, or an Endpoint with write grants); the broker, the database and the message bus have no external listener. MQTT devices go through the broker's MQTT bridge, which authenticates them with the same ServiceAccount credentials (username = account, password = api key) and applies the same Policy set.
 - **Rotation and revocation** are Portal actions: *Rotate* issues a new key with an overlap window (default 24 h) and shows both as active until the old one is dropped; *Revoke* is immediate at the gateway (the PDP's principal cache is invalidated by the Portal API event). Expiring keys notify the owner 14 and 3 days ahead; unused keys (90 days) are flagged.
 - **Delegation** (`spec.delegation: token-exchange`, absent by default) marks the one kind of account whose tokens may carry a person as their subject: a token its client obtained by exchanging a person's own (RFC 8693) is decided as that person, never with the account's roles, and a person-subject token from any other account is `403` (ADR-N-038, AG-95). The realm enables the exchange on that client alone.
-- **Pipeline runners** are ServiceAccounts rendered by the reconciler from the `Pipeline` manifest (`oauth-client`, roles from `spec.access`), so a pipeline's identity appears on the same page as everything else.
+- **Pipelines** each run as their own principal `pl-{pipeline}`, a ServiceAccount the reconciler derives from the `Pipeline` manifest with the Policies of its outputs and sources (PL-19, PL-20, below), so a pipeline's identity appears on the same page as everything else.
 - **Autonomous agents** are ServiceAccounts with `roles` restricted to the lanes they may use (AG-xx) and short-lived OAuth 2.1 tokens.
 - **The Portal's reconciler** holds the platform-owned account. Its Keycloak client is `portal-reconciler`, separate from the login client on purpose, with `manage-users` and `query-groups` in `realm-management` and nothing else, so the client people log in with cannot write anybody into a group.
 
@@ -283,6 +283,23 @@ client_assertion=<contents of the projected token file>
 ```
 
 The answer is an ordinary access token whose `azp` is the account's client, so the gateway and the Portal map it as they map every other account. Checked against Keycloak 26.6.4 on 2026-09-25: a token of another ServiceAccount, another audience, an expired token and one signed by another key are each refused with `invalid_client`. A projected token is not single-use, so the same file answers until it expires; its `expirationSeconds` is the window a copied token is worth, and the kubelet rewrites the file before that.
+
+### One principal per pipeline (PL-19, PL-20)
+
+One runner pod runs every resident stream, and a pod has one Kubernetes ServiceAccount, so a pipeline's identity cannot be its pod's. It is an object instead (owner decision 2026-10-06, T-1508, option a2):
+
+| what | name | made by |
+|---|---|---|
+| the principal, a ServiceAccount nobody writes | `pl-{pipeline}` in the pipeline's project | derived from the `Pipeline` by jc-core, read the same way by the gateway (from the loaded repository) and the Portal (from its mirror) |
+| its Kubernetes ServiceAccount, no pod | `pl-{project}-{pipeline}` in the runner's namespace (a name past 63 characters ends in 10 hex digits of its SHA-256) | the Portal's reconciler, which also deletes it with its Pipeline |
+| its Keycloak client, federated to that ServiceAccount's subject | `{project}-pl-{pipeline}` | the workload-client wave of PF-47, exactly as for a hand-written account |
+| its Policies | `pl-{pipeline}-w-{n}` per output, `pl-{pipeline}-r` for an Endpoint source | derived with the principal (PL-20) |
+
+Keycloak finds a federated client by its assertion's subject, so the subjects must differ per pipeline: that is why each pipeline has a ServiceAccount object of its own rather than all of them sharing the runner's. The runner holds no client secret and no token file of them. A **token sidecar** in the runner pod answers Bento's OAuth 2 `token_url` on `127.0.0.1`: the stream sends its pipeline as the client id (`{project}/{pipeline}`), the sidecar asks the Kubernetes API for a token of `pl-{project}-{pipeline}` (`POST /api/v1/namespaces/{runner}/serviceaccounts/pl-{project}-{pipeline}/token`, audience the realm issuer, 600 s), presents it as the client assertion of the request above and hands Bento Keycloak's answer as it came. Its RBAC is `create` on `serviceaccounts/token` in the runner's namespace and nothing else, and that namespace holds no ServiceAccount but the runner's and the pipelines'.
+
+The ceiling is the shared process: a stream that runs code of its own in the runner (none does; mappings are Bloblang) could ask the sidecar for another pipeline's token. What the split buys is attribution and narrowing: every write carries its pipeline's `azp`, the gateway decides it with that pipeline's Policies alone, and the audit names the pipeline. A project that needs isolation from another gets a runner of its own later (option c).
+
+The switch is the runner's: until its deployment sets `JC_PIPELINE_IDENTITY=pipeline` (after the federated mechanism is seen working on dev, T-2868), the Portal renders streams with the project's `pipelines` account as before, and the derived principals, clients and Policies exist unused.
 
 ### What the gateway checks in a token
 
