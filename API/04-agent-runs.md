@@ -412,8 +412,8 @@ Content-Type: application/json
 {
   "version": 2,
   "pages": [
-    { "label": "Overview", "text": "Stations 5 Bikes available 24 …", "rows": [] },
-    { "label": "Stations", "text": "Kaivopuisto 7 Laivasillankatu 2 …", "rows": [5] }
+    { "label": "Overview", "text": "Stations 5 Bikes available 24 …", "rows": [], "h1": 1 },
+    { "label": "Stations", "text": "Kaivopuisto 7 Laivasillankatu 2 …", "rows": [5], "h1": 1 }
   ],
   "failedRequests": [
     { "path": "/functions/summary", "status": 500 }
@@ -423,7 +423,7 @@ Content-Type: application/json
 
 Response: `204 No Content`
 
-The observation is appended as a `preview_observation` event with `reportedBy`, and the run's verification reads it (SDK-28). `version` is the `v` of the preview URL the frame loaded, at least 1; `pages` holds 1 to 20 pages, each `label` at most 120 characters, `text` at most 20,000 characters and `rows` at most 50 counts; `failedRequests` holds at most 50 entries, each `path` at most 256 characters and `status` between 400 and 599. Every field is untrusted text the frame wrote. A value outside those bounds answers `400 Bad Request`, a body with any other field `422 Unprocessable Entity`, a second observation of the same version `409 Conflict`, and a run that has ended `409 Conflict`.
+The observation is appended as a `preview_observation` event with `reportedBy`, and the run's verification reads it (SDK-28). `version` is the `v` of the preview URL the frame loaded, at least 1; `pages` holds 1 to 20 pages, each `label` at most 120 characters, `text` at most 20,000 characters, `rows` at most 50 counts and the optional `h1`, the number of level-1 headings the page shows (`<h1>` or `role="heading"` with `aria-level="1"`), at most 50 (an SDK older than T-3060 sends none); `failedRequests` holds at most 50 entries, each `path` at most 256 characters and `status` between 400 and 599. Every field is untrusted text the frame wrote. A value outside those bounds answers `400 Bad Request`, a body with any other field `422 Unprocessable Entity`, a second observation of the same version `409 Conflict`, and a run that has ended `409 Conflict`.
 
 ## 6. Cancel and Publish Actions
 
