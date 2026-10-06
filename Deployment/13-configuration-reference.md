@@ -123,7 +123,7 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_PORTAL_OPENBAO_JWT_PATH` | `/var/run/secrets/kubernetes.io/serviceaccount/token` | no | `JC_PORTAL_SOPS_AGE_KEY_FILE` names the age key file and chooses SOPS; otherwise `JC_PORTAL_OPENBAO_ADDR` and `JC_PORTAL_OPENBAO_ROLE` choose OpenBao, with `JC_PORTAL_OPENBAO_JWT_PATH` (default `/var/run/secrets/kubernetes.io/serviceaccount/token`) for the ServiceAccount token it logs in with. |
 | `JC_PORTAL_OPENBAO_ROLE` | — | no | `JC_PORTAL_SOPS_AGE_KEY_FILE` names the age key file and chooses SOPS; otherwise `JC_PORTAL_OPENBAO_ADDR` and `JC_PORTAL_OPENBAO_ROLE` choose OpenBao, with `JC_PORTAL_OPENBAO_JWT_PATH` (default `/var/run/secrets/kubernetes.io/serviceaccount/token`) for the ServiceAccount token it logs in with. |
 | `JC_PORTAL_ORGANIZATION_BOUNDS_FILE` | — | no | The operator's bounds on what an Organization may set (`JC_PORTAL_ORGANIZATION_BOUNDS_FILE`, the file the deployment renders `portal.organizationBounds` into; PF-97, ADR-N-035). |
-| `JC_PORTAL_ORG_DOMAIN` | — | no | The organization's domain, the third segment of every URN this instance mints in the `prefixed` shape (`JC_PORTAL_ORG_DOMAIN`; `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}`, ADR-N-041). |
+| `JC_PORTAL_ORG_DOMAIN` | — | no | The organization's domain, the third segment of every URN this instance writes (`JC_PORTAL_ORG_DOMAIN`; `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}`). |
 | `JC_PORTAL_PIPELINE_RUNNER_CLIENT_ID` | — | no | The Keycloak client the project's pipeline runner holds (`JC_PORTAL_PIPELINE_RUNNER_CLIENT_ID`), which is the only caller `POST /internal/pipeline-tests/{id}` answers (AG-52, T-2271). |
 | `JC_PORTAL_PIPELINE_RUNNER_URL` | — | no | Base URL of a project's Bento pipeline runner with `{project}` still in it, e.g. `http://pipeline-runner.{project}-pipeline-runner.svc.cluster.local:4195` (`JC_PORTAL_PIPELINE_RUNNER_URL`). |
 | `JC_PORTAL_PIPELINE_TEST_CAPTURE_URL` | — | no | Where a pipeline test's harness posts what it produced (PL-43): the Portal's internal listener as the project's runner reaches it, e.g. `http://portal-internal:9090` (`JC_PORTAL_PIPELINE_TEST_CAPTURE_URL`). |
@@ -144,6 +144,10 @@ The credential holder of a builder run (`jc-agent-proxy`): a workspace reaches t
 
 | Variable | Default | Secret | What it is |
 |---|---|---|---|
+| `JC_DAILY_TOKENS_APP_BUILDER` | — | yes | Daily model token caps (AG-97): `JC_DAILY_TOKENS_ASSISTANT`, `JC_DAILY_TOKENS_APP_BUILDER`, `JC_DAILY_TOKENS_OTHER` and `JC_DAILY_TOKENS_PER_PERSON`; absent or `0` is no cap. |
+| `JC_DAILY_TOKENS_ASSISTANT` | — | yes | Daily model token caps (AG-97): `JC_DAILY_TOKENS_ASSISTANT`, `JC_DAILY_TOKENS_APP_BUILDER`, `JC_DAILY_TOKENS_OTHER` and `JC_DAILY_TOKENS_PER_PERSON`; absent or `0` is no cap. |
+| `JC_DAILY_TOKENS_OTHER` | — | yes | Daily model token caps (AG-97): `JC_DAILY_TOKENS_ASSISTANT`, `JC_DAILY_TOKENS_APP_BUILDER`, `JC_DAILY_TOKENS_OTHER` and `JC_DAILY_TOKENS_PER_PERSON`; absent or `0` is no cap. |
+| `JC_DAILY_TOKENS_PER_PERSON` | — | yes | Daily model token caps (AG-97): `JC_DAILY_TOKENS_ASSISTANT`, `JC_DAILY_TOKENS_APP_BUILDER`, `JC_DAILY_TOKENS_OTHER` and `JC_DAILY_TOKENS_PER_PERSON`; absent or `0` is no cap. |
 | `JC_FORGE_BASE` | `http://gitea-http:3000` | no | The forge as the proxy reaches it inside the cluster (`JC_FORGE_BASE`, default `http://gitea-http:3000`), where a run's branch and its merge request are written. |
 | `JC_FORGE_REPO` | `joinedcontext/configuration` | no | The configuration repository a run proposes its change to (`JC_FORGE_REPO`, default `joinedcontext/configuration`), as `owner/name`. |
 | `JC_FORGE_TOKEN` | — | yes | The forge token the proxy writes a run's branch with, read from the file named by `JC_FORGE_TOKEN_FILE` or from `JC_FORGE_TOKEN`. |
@@ -152,6 +156,7 @@ The credential holder of a builder run (`jc-agent-proxy`): a workspace reaches t
 | `JC_MODEL_BASE` | `https://api.anthropic.com` | no | The model API the proxy forwards a run's completions to (`JC_MODEL_BASE`, default `https://api.anthropic.com`). |
 | `JC_MODEL_KEY` | — | yes | The key for that API, read from the file named by `JC_MODEL_KEY_FILE` or from `JC_MODEL_KEY`. |
 | `JC_MODEL_KEY_FILE` | — | a path to one | The key for that API, read from the file named by `JC_MODEL_KEY_FILE` or from `JC_MODEL_KEY`. |
+| `JC_MODEL_PROBE_SECS` | — | no | Seconds between two probes of the model key (`JC_MODEL_PROBE_SECS`, default 900; `0` turns the probe off, AG-96). |
 | `JC_MODEL_PROVIDER` | `anthropic` | no | Which provider's protocol `model_base` speaks (`JC_MODEL_PROVIDER`, default `anthropic`). |
 | `JC_OIDC_CLIENT_ID` | `agent-proxy` | no | The proxy's own Keycloak client (`JC_OIDC_CLIENT_ID`, default `agent-proxy`), whose token the Portal's internal listener accepts (AG-52). |
 | `JC_OIDC_CLIENT_SECRET` | — | yes | That client's secret, read from the file named by `JC_OIDC_CLIENT_SECRET_FILE` or, when no file is named, from `JC_OIDC_CLIENT_SECRET` itself. |
