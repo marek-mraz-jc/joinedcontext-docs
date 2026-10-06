@@ -2738,14 +2738,17 @@ DELETE /api/v1/projects/{project}/spaces/{space}/views/{id}     delete it → 20
 - `config`: `q` is an NGSI-LD query of at most 4,096 characters, sent as the person's own `q`
   when the view opens; `sort` names at most 3 attributes; `hidden` and `width` name attributes;
   `colour` holds at most 20 rules, each a `q` and one of the colour tokens `neutral`, `info`,
-  `success`, `warning`, `danger`, evaluated in the page on the rows it shows; `settings` is the
+  `success`, `warning`, `danger`, evaluated in the page on the rows it shows (terms joined by `;`
+  and `|`, without parentheses; a rule the page cannot evaluate marks nothing and the editor says
+  so), the first matching rule marking the row with a swatch that names it; `settings` is the
   kind's own (the card fields of a gallery, the attribute a kanban groups by, the date attributes
   of a calendar or a timeline, the fields of a form). The whole `config` is at most 64 KiB.
 - Who sees and changes a view, by its `mode`: `personal` its owner alone, and to anyone else it
   does not exist (`404`); `collaborative` everyone who may read the space sees and changes it;
   `locked` everyone who may read the space sees it, and only its owner or a steward of the space
   (a caller with `update` on the `ContextSpace`) changes or deletes it (`403` for others).
-  Deleting a `collaborative` view is its owner's or a steward's.
+  Deleting a `collaborative` view, or changing any view's `mode`, is its owner's or a steward's:
+  a collaborator who made a shared view personal would take it from everyone else.
 - A project or a space the caller may not read is `404`, as in §27. Saving needs no more than
   reading: a view changes nothing in the space.
 - `version` counts up on every save. Send the version you read as `expectedVersion`: a save
@@ -2756,6 +2759,42 @@ DELETE /api/v1/projects/{project}/spaces/{space}/views/{id}     delete it → 20
   `group` names an enum attribute: each
   group's count is the gateway's own `count=true` answer for `q` plus that value, read with the
   person's session, so the counts narrow as their grants do and are never the page's tally.
+
+## 31. Trash of a space's entities (ADR-N-042 §3.3, T-3107)
+
+What a person deleted from a data view, kept for them for 30 days so they can put it back. The
+entity itself is deleted from the space through the gateway with the person's session, as any
+delete, and the Endpoint's Policy decides it; the Portal keeps only the person's own copy of what
+the entity was, in its database (`entity_trash`), and restoring is the person's own create through
+the gateway, refused like any write their grants no longer allow.
+
+```text
+GET    /api/v1/projects/{project}/spaces/{space}/trash               this caller's deleted entities, newest first → 200
+POST   /api/v1/projects/{project}/spaces/{space}/trash               keep the copy of one entity about to be deleted → 201
+DELETE /api/v1/projects/{project}/spaces/{space}/trash/{id}          forget a copy: restored, or the delete was refused → 204
+```
+
+```json
+{
+  "id": 42,
+  "urn": "urn:ngsi-ld:BikeHireDockingStation:hel.fi:bikes:7",
+  "type": "BikeHireDockingStation",
+  "entity": { "id": "urn:ngsi-ld:BikeHireDockingStation:hel.fi:bikes:7", "type": "BikeHireDockingStation", "name": { "type": "Property", "value": "Station 7" } },
+  "deletedAt": "2026-10-06T19:20:00Z",
+  "expiresAt": "2026-11-05T19:20:00Z"
+}
+```
+
+- The body of `POST` is `entity`: the NGSI-LD entity as the person read it, normalized, with `id`
+  an NGSI-LD URN (PF-43) and `type` an NGSI-LD type name; at most 256 KiB. Unknown keys are `400`.
+- The order is the client's: read the entity, `POST` its copy, delete it through the gateway; a
+  delete the gateway refuses is followed by a `DELETE` of the copy. A restore is a create of
+  `entity` through the gateway, then a `DELETE` of the copy.
+- Each copy is its keeper's alone: another caller's `id` is `404`, and the list shows only the
+  caller's own. A copy grants nothing: restoring it is the keeper's own write, so a copy of an
+  entity the keeper never could write is refused at the gateway like any other create.
+- A project or a space the caller may not read is `404`, as in §27. A person keeps at most 1,000
+  copies per space; the oldest goes first. A copy older than 30 days is gone.
 
 ## Related
 
