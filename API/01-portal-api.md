@@ -2868,9 +2868,10 @@ POST /api/v1/projects/{project}/knowledge/sources/{source}/recrawl         queue
 GET  /api/v1/projects/{project}/knowledge/deployments/{deployment}/usage   requests and tokens per day, 30 days
 ```
 
-- The read routes answer only a caller who may read `KnowledgeSource` in the project, and
-  `inclusion` and `recrawl` only one who may write it; anyone else gets `403` naming the
-  permission, and nothing reaches `jc-assistant` (AG-113).
+- The read routes answer only a caller who may read `KnowledgeSource` in the project (the usage
+  route `AssistantDeployment`), anyone else `404` like every project route; `inclusion` and
+  `recrawl` need `propose` on `KnowledgeSource` and answer `403` naming it. Nothing reaches
+  `jc-assistant` for a refused caller (AG-113).
 - `inclusion` takes `{"pages": [id…], "documents": [id…], "subtree": bool, "included": bool}`, at
   most 500 ids. Excluding removes the passages of what it names at once, so no answer cites it
   again; the choice holds over every later crawl, whatever the source's include and exclude
