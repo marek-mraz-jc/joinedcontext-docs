@@ -1361,8 +1361,8 @@ POST /api/v1/projects/{project}/apps/{name}/rebuild    dispatches build.yml on t
   for a caller the forge does not let read that repository: in layout 2 a person PF-87 does not
   place in the project's readers, in layout 1 a person without a binding at the organization;
   an organization administrator always has it (AP-103, T-3039).
-- `repositoryUrl` is `null` for a caller that is a `ServiceAccount`: the forge reads an App's
-  repository only to a signed-in person (PF-79, T-3030).
+- `repositoryUrl` is there for every caller who may read the App: the applications'
+  organization reads every App's repository to every signed-in person (PF-79, T-3030).
 - `run` is the newest run of the repository's workflows, or `null` before the first one;
   `packageUrl` names the package of `status.build.commit`, or is `null` while the App has no build.
 - An App without `spec.source.git` has no build here: `repositoryUrl`, `run` and `packageUrl`
