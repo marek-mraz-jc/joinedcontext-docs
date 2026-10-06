@@ -5,9 +5,9 @@ title: "Data Models & the LinkML Editor"
 
 # Data Models & the LinkML Editor
 
-Family **DM** (DM-01…DM-79). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **DM** (DM-01…DM-80). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
-This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-79**. Consumer classes per `00-index.md`.
+This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-80**. Consumer classes per `00-index.md`.
 
 ## 1. Source of truth and artifacts
 
@@ -138,6 +138,7 @@ The owner, 2026-09-24: "write more tasks to validate everything" (T-2796). A wri
 - **DM-77** [S][H] — A person with `propose` on `DataModel` in a project MUST be able to propose sharing a published model with the organization as a red-lane Change that copies its source byte for byte (every `class_uri` and `slot_uri`) into the organization repository with `spec.origin` (`project`, `space`, `name`, `version`, `commit`); only a person whose organization-scope binding grants `approve` on `DataModel` MAY approve it, with the typed name, a project-scope approval MUST be refused `403`, and an agent run, MCP or a bearer caller MUST NOT approve it (PF-58); a name held by an organization model of another origin MUST be refused `409` naming it, and a promotion from the same origin MUST propose that model's next version (DM-22).
 - **DM-78** — After a promotion merges, the promoting space's model MUST stay unchanged, and the Portal MUST offer the project a Change that replaces the space model's own classes by an import of the organization model at the promoted version, keeping class names and IRIs; an organization model MUST be edited only by Changes to the organization repository.
 - **DM-79** [H] — The Data models page MUST show "Organization models" and "This project's models" as two sections, every model picker MUST show each entry's level, and `GET /api/v1/organization/datamodels` MUST answer `level` (`organization` or `project`) for every model (DM-63).
+- **DM-80** [S] — A slot MAY carry an `equals_expression` over slots of its own class in the subset of [Architecture/08 §3](../Architecture/08-pipelines.md#formula-fields-a-slot-computed-from-its-entity-dm-80-t-3133); the Portal MUST compile it to Bloblang only from that subset's tokens, MUST refuse a reference to a slot outside the class, to a Relationship or a GeoProperty, and a cycle between formula slots naming every slot on it, and MUST propose the class's `formulas-{class}` derived pipeline and the Policy that lets the project's `pipelines` ServiceAccount write exactly the formula slots; the grid MUST show a formula slot read-only.
 
 ## Traceability
 
@@ -163,6 +164,7 @@ The owner, 2026-09-24: "write more tasks to validate everything" (T-2796). A wri
 | DM-64…DM-73 | Relationships, strict like foreign keys | [11-data-models.md](../Architecture/11-data-models.md#12-relationships-between-classes-dm-64dm-73) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-74 | Stored data held to its model | [API/01 §27](../API/01-portal-api.md#27-data-quality-of-a-space-dm-74) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | DM-75…DM-79 | Organization and project models, shared upwards by an administrator | [ADR-N-039](../Decisions/adr-n-039-organization-and-project-data-models.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| DM-80 | Formula fields computed by a derived pipeline | [08-pipelines.md §3](../Architecture/08-pipelines.md#formula-fields-a-slot-computed-from-its-entity-dm-80-t-3133) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
 ## Related
 
