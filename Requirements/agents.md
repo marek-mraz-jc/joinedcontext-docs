@@ -182,6 +182,7 @@ The contract is [API/05-knowledge-assistant.md](../API/05-knowledge-assistant.md
 - **AG-110** [S] — `jc-agent-proxy` MUST count an assistant call's tokens against its deployment's UTC day and refuse the call once the day's spend reaches `X-JC-Assistant-Tokens-Per-Day`; a missing, zero or unparsable cap MUST be refused with `400`.
 - **AG-111** [S] — `jc-agent-proxy` MUST forward an assistant call only to `chat/completions` or `messages` with the installation's model key, keep no text of it, and name the deployment in its audit line.
 - **AG-112** [S] — A script the knowledge assistant's model writes MUST run only in `jc-functions` with no network, file system, timer or environment, within its time, memory and output caps, only on a deployment with `sandbox: true`, only over a tool result of the same question, and its code and output MUST be shown to the person.
+- **AG-113** [H][S] — The Portal's knowledge administration routes MUST answer only a caller who may read `KnowledgeSource` in the project, and `inclusion` and `recrawl` only one who may write it, before `jc-assistant` is asked; `jc-assistant` MUST answer its internal administration paths only to the Portal's service account, and an excluded page or document MUST lose its passages at once and stay excluded over later crawls.
 
 ## Assistant paths
 
@@ -239,7 +240,7 @@ Decided in [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) (T-2691).
 | AG-82 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 | AG-86 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 | AG-96…AG-97 | [Architecture/19-agent-runner.md#6-limits-and-cost-governance](../Architecture/19-agent-runner.md#6-limits-and-cost-governance) | [Testing/06-security-tests.md#5-agent-sandboxes-the-credential-proxy-and-prompt-injection](../Testing/06-security-tests.md#5-agent-sandboxes-the-credential-proxy-and-prompt-injection) |
-| AG-98…AG-112 | [Architecture/22-knowledge-assistant.md](../Architecture/22-knowledge-assistant.md) | [Testing/06-security-tests.md#5-agent-sandboxes-the-credential-proxy-and-prompt-injection](../Testing/06-security-tests.md#5-agent-sandboxes-the-credential-proxy-and-prompt-injection) |
+| AG-98…AG-113 | [Architecture/22-knowledge-assistant.md](../Architecture/22-knowledge-assistant.md) | [Testing/06-security-tests.md#5-agent-sandboxes-the-credential-proxy-and-prompt-injection](../Testing/06-security-tests.md#5-agent-sandboxes-the-credential-proxy-and-prompt-injection) |
 | AG-94…AG-95 | [ADR-N-038](../Decisions/adr-n-038-an-agent-run-reads-as-its-person.md) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 | AG-87…AG-93 | [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 

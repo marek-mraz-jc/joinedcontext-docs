@@ -87,6 +87,24 @@ X-JC-Assistant-Tokens-Per-Day: 2000000
 - The proxy counts every call's tokens against `{project}/{deployment}` for the UTC day and refuses the call once the day's spend has reached `X-JC-Assistant-Tokens-Per-Day` (`429`, `daily-budget`). The header carries the deployment's `budget.tokensPerDay`; a missing, zero or unparsable value is refused with `400`, so no deployment runs without a cap. (AG-110)
 - Only `chat/completions` and `messages` are forwarded, with the installation's model key, as for a run. The proxy keeps no text of the call; its audit line names the deployment instead of a run. (AG-111)
 
+## 3. Administration for the Portal
+
+`jc-assistant` answers the Portal's administration routes (API/01 §34) on its internal paths,
+`/internal/v1/projects/{project}/…` with the same shapes, on the cluster network only: the edge
+routes `/api/v1/d/*` alone. Each call carries the Portal's service-account token, which the
+service introspects with its own client: active, issued to the Portal's client, its audience
+naming `jc-assistant`. Anything else is `401`.
+
+| Field of a page | Meaning |
+|---|---|
+| `id`, `url`, `depth`, `parentId` | its place in the tree |
+| `status` | `pending`, `fetched`, `failed`, `skipped` |
+| `included` | whether its passages are indexed; `excludedBy` says `pattern` or `administrator` when not |
+| `language`, `fetchedAt`, `children`, `documents`, `passages` | what it holds |
+
+A document carries `id`, `url`, `pageId`, `mime`, `bytes`, `pages`, `offDomain`, `status`,
+`included`, `excludedBy` and `passages`. A passage carries `ordinal`, `text`, `lang` and `url`.
+
 ## Related
 
 - [Architecture/22](../Architecture/22-knowledge-assistant.md): the service, its manifests and its channels.

@@ -2848,6 +2848,37 @@ GET /v/{slug}            the published view, read-only, no sign-in
   needs the Endpoint to name the origins that may frame it. Until then a published view is
   public to everyone and not framed by other sites.
 
+## 34. Knowledge assistant administration (T-3057, MF-51, MF-52)
+
+A project's `KnowledgeSource` and `AssistantDeployment` manifests are resources like every other
+(`/api/v1/projects/{project}/knowledgesources`, `…/assistantdeployments`), proposed as Changes; a
+public, `ckan` or `iframe` deployment is a Red change (Architecture/06 §4). What a source holds
+once crawled lives in `jc-assistant`'s database, and these routes read and steer it. The Portal
+checks the caller's permission on the project and asks `jc-assistant` with its own service
+token ([API/05 §3](05-knowledge-assistant.md#3-administration-for-the-portal)).
+
+```text
+GET  /api/v1/projects/{project}/knowledge/sources                          every source with what it holds
+GET  /api/v1/projects/{project}/knowledge/sources/{source}/pages?parent=   one level of the page tree; no parent: the roots
+GET  /api/v1/projects/{project}/knowledge/sources/{source}/documents       the documents (PDFs) the pages link
+GET  /api/v1/projects/{project}/knowledge/sources/{source}/pages/{page}/links
+GET  /api/v1/projects/{project}/knowledge/sources/{source}/passages?page=|document=
+POST /api/v1/projects/{project}/knowledge/sources/{source}/inclusion       include or exclude pages, subtrees, documents
+POST /api/v1/projects/{project}/knowledge/sources/{source}/recrawl         queue a crawl now
+GET  /api/v1/projects/{project}/knowledge/deployments/{deployment}/usage   requests and tokens per day, 30 days
+```
+
+- The read routes answer only a caller who may read `KnowledgeSource` in the project, and
+  `inclusion` and `recrawl` only one who may write it; anyone else gets `403` naming the
+  permission, and nothing reaches `jc-assistant` (AG-113).
+- `inclusion` takes `{"pages": [id…], "documents": [id…], "subtree": bool, "included": bool}`, at
+  most 500 ids. Excluding removes the passages of what it names at once, so no answer cites it
+  again; the choice holds over every later crawl, whatever the source's include and exclude
+  patterns say. Including again indexes it at the next crawl. The answer counts what changed.
+- `recrawl` answers `202` with the queued job, or `409` when one is already queued or running.
+- A source the manifests declare and `jc-assistant` has not crawled yet is listed with
+  `state: "not-crawled"`; a page, a document or a source of another project is `404`.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
