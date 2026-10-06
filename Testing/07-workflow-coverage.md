@@ -387,14 +387,14 @@ The owed cells name open tasks, and `gate_workflows` holds their count: it may s
 
 ## 6. Assistant evals
 
-The assistant cell names the tool; the evals show the assistant reaches for it when a person asks in words (TS-26, T-2733). Each workflow of §3 has one conversation in `tests/assistant_evals/<workflow>.yaml` of `joinedcontext-portal`:
+The assistant cell names the tool; the evals show the assistant reaches for it when a person asks in words (TS-26, T-2733). Each workflow of §3 has one conversation in `tests/assistant_evals/<workflow>.yaml` of `joinedcontext-portal`, and a workflow with cases the one conversation cannot cover has more in `<workflow>--<case>.yaml` (owner decision 2026-10-06, T-2742: the `datamodel` workflow keeps a conversation per relationship cardinality and one for a relationship asked without its inverse); the matrix stays one row per workflow:
 
 - `says`: the steward's message, then the answers to the questions the run asks, in order.
-- `expect.calls`: the tools the run calls, each with the fields its input must carry. A change opens the kind's draft with `change_resource` and the person proposes it (AG-77); a kind with its own create form is opened with `jc_ui_navigate`.
+- `expect.calls`: the tools the run calls, each with the fields its input must carry; an expected list matches when each of its items is carried by some item of the call's list. A change opens the kind's draft with `change_resource` and the person proposes it (AG-77); a kind with its own create form is opened with `jc_ui_navigate`.
 - `expect.outcome`: `change`, `form`, `answer`, or `person-only` with `why`.
 - `refusal`: what a viewer asks; a viewer may not propose an App, so the conversation itself answers 403 (AG-70).
 
-The nightly batch runs `ui/e2e/live/assistant-evals.spec.ts` on `dev` with the real model and real logins: at most 10 conversations a night, the never recorded first, announced in `AI_shared_folder.md`, drafts named `eval-…` removed after. A run that makes every expected call is written to `tests/assistant_evals/recordings/<workflow>.json`: its events, without what the tools answered. `tests/assistant_evals_tests.rs` rebuilds the model's answers from those events and plays them against every build, with no spend, and fails when a workflow has no conversation, when a recording shows a call that failed on `dev`, or when the build no longer makes the call. A recording is refreshed by a live run, never written by hand; the count of workflows still unrecorded may only fall.
+The nightly batch runs `ui/e2e/live/assistant-evals.spec.ts` on `dev` with the real model and real logins: at most 10 conversations a night, the never recorded first, announced in `AI_shared_folder.md`, drafts named `eval-…` removed after. A run that makes every expected call is written to `tests/assistant_evals/recordings/<file>.json`, named as its conversation's file: its events, without what the tools answered. `tests/assistant_evals_tests.rs` rebuilds the model's answers from those events and plays them against every build, with no spend, and fails when a workflow has no conversation, when a recording shows a call that failed on `dev`, or when the build no longer makes the call. A recording is refreshed by a live run, never written by hand; the count of workflow conversations still unrecorded may only fall, and so may the count of case conversations, each from the day the first case was written.
 
 ## Related
 
