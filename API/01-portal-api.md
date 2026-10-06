@@ -2818,8 +2818,10 @@ POST /live-notify/{key}                                            where the gat
   no token. `key` is an HMAC of the space and type under a secret only this Portal holds, so a key
   names one subscription and cannot be made up; an unknown key is `404`. A body larger than 1 MiB
   is `413`. A forged notification can only make a view read again.
-- One Portal process passes on what it receives. With several replicas a notification reaches the
-  views of the replica that received it, which is the one whose URL the subscription carries.
+- The process that receives a notification passes it on to its own views. With several replicas
+  the edge hands each notification to one of them, so a view on another replica hears it on that
+  type's next change; the Portal runs one replica until the replicas share these events the way
+  they share draft events.
 
 ## Related
 
