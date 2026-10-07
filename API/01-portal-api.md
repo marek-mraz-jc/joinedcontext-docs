@@ -2950,8 +2950,13 @@ POST   /api/v1/notifications/{id}/read                                mark one o
 - A notification names the space, the URN, the comment, its author and the first 200 characters;
   `GET /notifications` answers the caller's own (matched by their username and their e-mail, lower
   case), at most 100, newest first, with `unread` counted. The Portal sends no e-mail of its own.
-- A project or a space the caller may not read is `404`, as in §27; a URN is never checked
-  against the space, so a comment says nothing about whether an entity exists. At most 1,000
+- A project or a space the caller may not read is `404`, as in §27. Listing or adding the
+  comments of an entity first reads that entity on the space surface
+  (`/cs/{space}/ngsi-ld/v1/entities/{urn}`) with the caller's own token: an entity their Policy
+  hides, or one that is not there, is the same `404`, so a comment shows nobody what their
+  Policy hides and still says nothing about whether an entity exists. A request that carries no
+  token of the caller's (a Portal cookie session) is `404` with that reason (T-3284). A mention
+  is the author's own disclosure to a reader of the space, as an e-mail would be. At most 1,000
   comments per entity.
 
 ## Related
