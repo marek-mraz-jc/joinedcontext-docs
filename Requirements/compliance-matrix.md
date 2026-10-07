@@ -1049,6 +1049,7 @@ Generated 2026-10-06 from: `docs` 2ac73dd, `conformance` a0da9d9, `deployment` 5
 | **PL-66** | [P] | built |  | `joinedcontext-portal/src/reconciler/streams.rs`, `joinedcontext-portal/ui/src/pages/pipelines/PipelineFlow.tsx`, `joinedcontext-portal/ui/src/pages/pipelines/PipelineStudio.tsx` |
 | **PL-67** | [P] | tested | fast ci | portal `ui/tests/pipeline_flow_steps.test.tsx::shows a step what the step before it made, and what it made itself`, portal `ui/tests/pipeline_flow_steps.test.tsx::says nothing for a step the messages never reached, and keeps the old view without stages` |
 | **PL-68** | [H][A] | open |  |  |
+| **PL-69** | [H] | open |  |  |
 
 ### R — Access control and federation
 
