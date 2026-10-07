@@ -1455,7 +1455,9 @@ POST /api/v1/projects/{project}/apps/{name}/rebuild    dispatches build.yml on t
 {
   "repositoryUrl": "https://forge.example/user/oauth2/keycloak?redirect_to=%2Fjoinedcontext-apps%2Fhelsinki_city-bikes",
   "configurationUrl": "https://forge.example/user/oauth2/keycloak?redirect_to=%2Fjoinedcontext%2Fhelsinki",
-  "run": { "status": "completed", "conclusion": "success", "commit": "3f1c…", "url": "https://forge.example/user/oauth2/keycloak?redirect_to=…" },
+  "run": { "status": "completed", "conclusion": "success", "commit": "3f1c…", "url": "https://forge.example/user/oauth2/keycloak?redirect_to=…",
+           "number": 8, "startedAt": "2026-10-07T10:00:00Z", "completedAt": "2026-10-07T10:03:05Z" },
+  "typicalSeconds": 185,
   "packageUrl": "https://forge.example/user/oauth2/keycloak?redirect_to=%2Fjoinedcontext%2F-%2Fpackages%2Fgeneric%2Fapp-city-bikes%2F3f1c…",
   "rebuild": { "allowed": false, "reason": "Rebuild needs propose on App in project helsinki" }
 }
@@ -1475,6 +1477,12 @@ POST /api/v1/projects/{project}/apps/{name}/rebuild    dispatches build.yml on t
   organization reads every App's repository to every signed-in person (PF-79, T-3030).
 - `run` is the newest run of the repository's workflows, or `null` before the first one;
   `packageUrl` names the package of `status.build.commit`, or is `null` while the App has no build.
+- `run.number` is the run's number in its repository, and `startedAt`/`completedAt` are present
+  once a runner took it and once it completed. A client that pressed Rebuild tells its run from
+  the one before by the number (T-3245).
+- `typicalSeconds` is how long the newest finished successful run of the last five took: the
+  estimate a running build is shown against. It is absent before the first success, so there
+  is no estimate rather than a guess (T-3245).
 - An App without `spec.source.git` has no build here: `repositoryUrl`, `run` and `packageUrl`
   are `null` (`configurationUrl` still names the configuration repository), and `rebuild.reason` says the App is not built on the forge.
 - `rebuild.allowed` is `true` for a person holding `propose` on `App` in the project; otherwise
