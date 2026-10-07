@@ -1197,6 +1197,12 @@ POST /api/v1/tools/infer-schema  a sample file (multipart, ≤ 10 MiB: CSV, XLSX
                                  → a draft LinkML model and the editor operations that build it
 ```
 
+The same draft from an address instead of a file is the operation `jc_model_infer` with `url`
+(`POST /api/v1/projects/{project}/ops/jc_model_infer`, `{"url": "https://…", "name": "…"}`): the
+address is fetched once on the project's runner, as a DataSource Check fetches it (MF-39), with
+`propose` on `DataSource`; a feed that fails answers `422` at `/url` with the runner's reason, a
+missing runner `503` (DM-54, T-3250).
+
 The source of a model is a file of the repository, read and saved through one route scoped to it
 (DM-56, Architecture/11 §6.8): `GET` answers the text at the manifest's `spec.linkml`, `PUT` with
 the new text answers `202` and a `Change` whose commit carries the source, the manifest and the
