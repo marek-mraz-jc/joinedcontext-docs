@@ -1981,6 +1981,10 @@ POST /api/v1/projects/{project}/assistant/propose-endpoint
 - `audience` defaults to `project-list`; `project-list` needs at least one project in
   `allowedProjects`; `representations` defaults to `ngsi-ld` and `geojson`; every name is a
   DNS-1123 label and every attribute an identifier, or the answer is `400`.
+- `access` names what the new endpoint's Policy grants: absent, `retrieveOps` (a share); `read`,
+  `update` or `full`, the operations of AP-132 for an endpoint an app proposes; `create`,
+  `createEntity` and nothing else, for a public form (§33, T-3103), which needs exactly one type in
+  `entityTypes`.
 - The slug is minted here and is read-only in the form; a slug in the request is ignored.
 - `lane` is what the Endpoint's Change would be classified as (§5): `red` for `public`.
 - Nothing is written. A run publishes this body as the `output` of a `tool` event named
@@ -2743,6 +2747,14 @@ DELETE /api/v1/projects/{project}/spaces/{space}/views/{id}     delete it → 20
   so), the first matching rule marking the row with a swatch that names it; `settings` is the
   kind's own (the card fields of a gallery, the attribute a kanban groups by, the date attributes
   of a calendar or a timeline, the fields of a form). The whole `config` is at most 64 KiB.
+- A form's `settings` (T-3103): `fields`, the attributes it asks for in their order, each
+  `{attr, label?, help?, required?}`, where a missing `label` or `help` is the model slot's own and
+  `required` can only add to what the model requires; `conditions`, each `{attr, when: {attr,
+  equals}}`, which shows `attr` only while the answer to the other field equals the value (a hidden
+  field is not sent); `prefill: true` takes `?{attr}=value` from the page's URL for the fields it
+  names, never for an attribute the form does not ask for. A submission creates one entity through
+  the space surface with the person's session, under `urn:ngsi-ld:{type}:{uuid}` (ADR-N-041), so the
+  Policy decides it like any write.
 - Who sees and changes a view, by its `mode`: `personal` its owner alone, and to anyone else it
   does not exist (`404`); `collaborative` everyone who may read the space sees and changes it;
   `locked` everyone who may read the space sees it, and only its owner or a steward of the space
@@ -2843,6 +2855,13 @@ served by the Portal's interface like its other pages, not an API route.
   first 100 entities in key-value form, and the attributes they carry.
 - Revoking the link is deleting the Endpoint, a Change like its creation; the page then says the
   view is not published.
+- A form view publishes the same way with `access: "create"` (§19): the Endpoint's Policy grants the
+  `public` role `createEntity` on the one type, and the link is the page `/f/{slug}`. The page asks
+  for the type's attributes the Endpoint's published schema lists, required where the schema
+  requires them, labelled and helped from the schema, prefilled from `?{attr}=value`, and its submit
+  is one anonymous `POST /api/endpoint/{slug}/ngsi-ld/v1/entities`: the gateway decides it and
+  rate-limits it as every anonymous call. The form view's own labels and conditions stay with the
+  signed-in form for now; the public page reads nothing from the Portal's database.
 - Not yet: a password on a link needs the `data_views` record of §30 to hold its hash; an embed
   needs the Endpoint to name the origins that may frame it. Until then a published view is
   public to everyone and not framed by other sites.
