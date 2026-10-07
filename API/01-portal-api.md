@@ -2959,6 +2959,48 @@ POST   /api/v1/notifications/{id}/read                                mark one o
   is the author's own disclosure to a reader of the space, as an e-mail would be. At most 1,000
   comments per entity.
 
+## 36. A type's attributes in a space's data model (T-3223, DM-61, PL-59)
+
+What a pipeline editor's output node maps a record's fields onto: the attributes an entity type
+has in the data model the space pins (`spec.dataModelRef`), read from the same compiled schema the
+runner's validation stage checks every record against. Reading the space is all it needs; a person
+who may not read it gets the space's 404 and learns nothing of its model.
+
+```text
+GET /api/v1/projects/{project}/spaces/{space}/types/{type}/attributes   the type and its attributes → 200
+```
+
+```json
+{
+  "model": "bb-air-quality",
+  "version": "1.0.0",
+  "type": "AirQualityObserved",
+  "description": "One air-quality station in the city and the latest hourly means it reported.",
+  "attributes": [
+    { "name": "dateObserved", "kind": "Property", "valueType": "string", "format": "date-time", "required": true,
+      "description": "The end of the latest hour a reading of the entity covers." },
+    { "name": "pm10", "kind": "Property", "valueType": "number", "required": false, "minimum": 0,
+      "description": "Particulate matter up to 10 µm.", "unit": { "code": "GQ", "ucum": "ug/m3" } },
+    { "name": "refDevice", "kind": "Relationship", "valueType": "string", "required": false,
+      "relationship": { "target": "Device", "many": false } }
+  ]
+}
+```
+
+- Required attributes come first, then by name; `id` and `type` are the entity's own and are not
+  listed. `kind` is the NGSI-LD attribute kind the slot declares; `unit.code` is the UN/CEFACT code a
+  quantity's `unitCode` carries; `values` lists a coded slot's permitted values; `relationship`
+  names the type a Relationship points at.
+- `404` with the reason for a type the model does not declare ("… is not a class of the space's data
+  model …") and for a space that names no model this Portal compiled.
+- The pipeline test (`POST /api/v1/projects/{project}/pipelines/test`, §7a) holds a pipeline's output
+  to the same model: before the sample is read, an output whose type is not a class of the model its
+  Endpoint's space pins is an error finding at `spec.output.type` (or `spec.outputs[i].type`); on the
+  sample, every output record is checked per attribute (missing required `sh:minCount`, wrong type
+  `sh:datatype`, an attribute the class does not declare `sh:closed`, a quantity in another unit
+  `ngsi-ld:unitCode`). A red verdict holds the draft back from proposal in strict mode (PF-57); the
+  draft itself is saved with the report.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
