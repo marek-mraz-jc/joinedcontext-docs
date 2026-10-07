@@ -128,6 +128,8 @@ PATCH  /api/v1/projects/{project}/{plural}/{name}     application/merge-patch+js
                                                       application/apply-patch+yaml → 202 + Change
 DELETE /api/v1/projects/{project}/{plural}/{name}     → 202 + Change (explicit deletion lane)
 POST   /api/v1/projects/{project}/{plural}?dryRun=All validate + plan, no change created
+DELETE /api/v1/projects/{project}/{plural}/{name}?dryRun=All
+                                                      the removal's plan and `goesWith`, no change created
 GET    /api/v1/projects                                 the projects this caller may read
 GET    /api/v1/blueprints                               the Blueprint catalogue of the organization
 GET    /api/v1/endpoints                                every Endpoint of every project, each with its project: administrators of the organization only (PF-61)
@@ -346,6 +348,21 @@ same manifest needs under `strict` (PF-57):
 }
 ```
 
+The dry run of a `DELETE` adds `goesWith`, what leaves with the resource once its removal is
+approved, so the person sees it before typing the name (T-3247). Each entry is `what` and `count`,
+and `names` (`Kind/name`) when they are resources:
+
+| `what` | Kind | Comes back with a restore |
+|---|---|---|
+| `entities` | ContextSpace | yes: the broker keeps them, and they are served again once the space is restored |
+| `rejectedRecords` | Pipeline | no: the reconciler drops a removed pipeline's refused records (PL-61) |
+| `runs` | Pipeline | no: and its run history (PL-62) |
+| `grants` | App | yes: the endpoint and the policies the App was given leave in the same change |
+| `bindings` | Group | yes: the role bindings that name it, edited or removed in the same change (PF-95) |
+
+A count the store cannot give is left out rather than guessed; `goesWith` is absent when nothing
+leaves with the resource.
+
 Under `strict`, a `POST`, `PUT` or `PATCH` that carries no `draft` and whose manifest has no
 fresh green verdict is refused after the manifest's own checks and before anything reaches the
 forge, with the gate's own document (`reason` is `verdict_absent`, `verdict_failed` or `stale`;
@@ -437,6 +454,7 @@ view of those merge requests, so that an approver never has to open the forge to
 ```text
 GET  /api/v1/projects/{project}/changes                  open proposals, newest first
 GET  /api/v1/projects/{project}/changes/history          merged and rejected ones, newest first, paged
+POST /api/v1/projects/{project}/changes/{id}/restore     propose again what a merged removal took
 GET  /api/v1/projects/{project}/changes/{id}             one proposal with its plan diff
 POST /api/v1/projects/{project}/changes/{id}/approve     review + merge
 POST /api/v1/projects/{project}/changes/{id}/reject      review "request changes" + close
@@ -534,6 +552,14 @@ can hold fewer items than that, none at all included, and still carry `next`.
   "next": 2
 }
 ```
+
+`POST …/changes/{id}/restore` brings back what a merged change removed (T-3247). It reads every
+file the change deleted under `projects/{project}/` at the commit its branch was cut from, and
+proposes them again as one new Change (`202`, `PendingApproval`). An approver decides that Change
+like any other. It needs `propose` on every kind it brings back (`403` names the kind). A change
+that is not merged, that removed nothing, or whose resource is in the project again answers `409`
+in words. What the reconciler dropped with the resource, a pipeline's refused records and runs,
+does not come back.
 
 Approving a change records a `change.merged` activity event naming the change, its resource and the
 approver ([§14](#14-activity-ui-31-ops-48-ops-49)), so the project's activity says what went live and
