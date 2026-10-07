@@ -1984,8 +1984,9 @@ POST /api/v1/projects/{project}/assistant/propose-endpoint
 - `access` names what the new endpoint's Policy grants: absent, `retrieveOps` (a share); `read`,
   `update` or `full`, the operations of AP-132 for an endpoint an app proposes; `create`,
   `createEntity` and nothing else, for a public form (§33, T-3103), which needs exactly one type in
-  `entityTypes`, names in `writeAttributes` the fields the form asks for (the Policy's
-  `propertyNames` and `relationshipNames`, so any other attribute is refused, T-3172) and may set
+  `entityTypes`, names in `writeAttributes` the properties and in `writeRelationships` the
+  relationships the form asks for (the Policy's `propertyNames` and `relationshipNames`, at least
+  one name, so any other attribute is refused, T-3172) and may set
   `createsPerDay` (default 200, at most 10,000), which the Endpoint carries as `spec.creates`
   `{mintIds: true, perDay}` (EP-97).
 - The slug is minted here and is read-only in the form; a slug in the request is ignored.
