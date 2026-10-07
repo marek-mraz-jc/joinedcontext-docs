@@ -103,8 +103,14 @@ session cookie of the Portal, a per-IP rate limit on the APISIX route, origins c
 The SDK's `EntityGrid` with its edit mode, relation and enum pickers, `EntityHistory` (temporal),
 `GridMap`, `EntityCompare` and `filters.ts`; the template's `EntityForm`; the Portal's
 `PortalEntityGrid` on the space and Explore pages; the Activity SSE; the DataModel editor and its
-Change flow for fields. Import is the existing upload path (a file profiled into a DataSource and a
-Pipeline); export is the Endpoint's representations (CSV, XLSX, GeoJSON, …); API docs are the
+Change flow for fields. Import of a file into a type is a wizard in the view (T-3109): the person
+maps the file's columns (CSV, XLSX, JSON or XML, read in the browser) to the type's slots, every row
+is checked against the slots' ranges, required slots and enums before anything is sent, and the
+valid rows are created in batches through the gateway with the person's session, like any edit
+(§3.3), never overwriting an entity that exists; the rows refused, by the check or by the gateway,
+are reported and can be downloaded. A recurring feed stays the upload path (a file profiled into a
+DataSource and a Pipeline). Export is the Endpoint's representations (CSV, XLSX, JSON, GeoJSON, …)
+narrowed to the view's `q` and the type's fields; API docs are the
 Endpoint's OpenAPI; webhooks are NGSI-LD subscriptions; automations are pipelines. The AI field
 runs as an agent run under the daily caps of AG-97 and writes through the gateway.
 

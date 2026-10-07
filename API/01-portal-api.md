@@ -2910,6 +2910,50 @@ POST /api/v1/projects/{project}/knowledge/deployments/{deployment}/chat    ask t
 - A source the manifests declare and `jc-assistant` has not crawled yet is listed with
   `state: "not-crawled"`; a page, a document or a source of another project is `404`.
 
+## 35. Comments on a space's entities, mentions and notifications (ADR-N-042 §3.1, T-3106)
+
+A person who may read a space comments on one of its entities and names colleagues with
+`@identifier`. Comments and notifications are the Portal's records (`entity_comments`,
+`notifications`), referring to the entity by `(project, space, urn)` (ADR-N-041); commenting
+changes no data and needs no write grant, only a read of the space (§27).
+
+```text
+GET    /api/v1/projects/{project}/spaces/{space}/comments?urn={urn}   the comments on one entity, oldest first → 200
+POST   /api/v1/projects/{project}/spaces/{space}/comments             comment on one entity → 201
+DELETE /api/v1/projects/{project}/spaces/{space}/comments/{id}        remove one's own comment → 204
+GET    /api/v1/notifications                                          the caller's notifications, newest first → 200
+POST   /api/v1/notifications/{id}/read                                mark one of the caller's notifications read → 204
+```
+
+```json
+{
+  "id": 7,
+  "urn": "urn:ngsi-ld:BikeHireDockingStation:hel.fi:bikes:7",
+  "author": "demo.steward@hel.fi",
+  "authorName": "Demo Steward",
+  "text": "@demo.editor@hel.fi the count looks stale since Monday",
+  "mentions": ["demo.editor@hel.fi"],
+  "createdAt": "2026-10-06T19:20:00Z",
+  "mine": true
+}
+```
+
+- `POST` takes `urn` (an NGSI-LD URN, PF-43) and `text` (1 to 4,000 characters); a URN or text
+  outside that is `400`, an unknown key `422`. A mention is `@` after the start or a character that
+  is not part of a word, followed by a person's identifier as the RoleBindings and Groups name
+  them (`demo.editor@hel.fi`). A mention counts only for a person a binding in force lets read the
+  space, by name or through a `Group`'s members, exactly as §27 decides it for a caller; each such
+  person gets one notification, the author none. Mentions of anyone else are kept in the text and
+  listed in the answer's `unknownMentions`, notified to nobody.
+- A comment is its author's: only they `DELETE` it (another caller's `id` is `404`); nobody edits
+  one. Removing a comment removes its notifications.
+- A notification names the space, the URN, the comment, its author and the first 200 characters;
+  `GET /notifications` answers the caller's own (matched by their username and their e-mail, lower
+  case), at most 100, newest first, with `unread` counted. The Portal sends no e-mail of its own.
+- A project or a space the caller may not read is `404`, as in §27; a URN is never checked
+  against the space, so a comment says nothing about whether an entity exists. At most 1,000
+  comments per entity.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.

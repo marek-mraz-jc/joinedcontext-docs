@@ -372,6 +372,44 @@ pub extern "C" fn process(ptr: *const u8, len: usize) -> *const u8 {
 
 In the design, golden tests live beside the module (`compute/tests/` for the Rust logic, `tests/*.yaml` for `bento test` end to end), so the same input page always yields the same entities.
 
+### Formula fields: a slot computed from its entity (DM-80, T-3133)
+
+A formula field is a slot of a class whose LinkML `equals_expression` computes its value from other
+slots of the same entity: `{availableBikeNumber} / {capacity} * 100`. The value is a Property of the
+entity, written by a derived pipeline, so every door (the gateway, MCP, CKAN, an export) reads it,
+not only the grid that defined it (ADR-N-042 §3.1).
+
+**The expression.** A subset of LinkML's expression language, compiled to Bloblang, the one language
+the runner already evaluates; nothing else runs:
+
+| Part | Written | Compiled |
+|---|---|---|
+| a slot of the same class | `{capacity}` | the slot's `value`, or no value |
+| numbers and quoted text | `100`, `'kWh'` | the literal |
+| arithmetic and joining text | `+ - * / %` and unary `-` | the same operators |
+| comparison and logic | `== != < <= > >=`, `and`, `or`, `not` | `== != < <= > >=`, `&&`, `\|\|`, `!` |
+| functions | `abs(x)`, `round(x)`, `min(a, b)`, `max(a, b)` | `.abs()`, `.round()`, a choice of the two |
+| grouping | `( … )` | the same |
+
+A reference names a slot of the class itself and no other: no other class, space, entity, function,
+environment variable or Bloblang of its own reaches the compiled text, because the compiler builds it
+from these tokens alone and refuses any other character. A reference to a Relationship or a
+GeoProperty is refused (neither is a value to compute with). Formula fields may use one another; a
+cycle is refused naming every slot on it. When a referenced slot has no value, or the arithmetic
+fails (a division by zero), the formula has no value and the attribute is left as it was.
+
+**The pipeline.** The formulas of one class in one space are one derived pipeline,
+`formulas-{class}` in lower case, proposed by the Portal with the field in a Change of its own: a
+`scheduled` pipeline every five minutes, its source the space's Endpoint queried for the class with
+the slots the formulas read, its compute the compiled Bloblang, its output `update-attrs` through the
+same Endpoint, written by the project's `pipelines` ServiceAccount under two Policies: one grants it
+`queryEntity` on the slots the formulas read, the other `upsertBatch` on the formula slots alone,
+because the runner writes every stream as an upsert with `options=update`, which merges the
+attributes it names and nothing else (PL-18). Each computed
+attribute carries `computedBy`, the pipeline's URN (PL-36); the entity it reads is the one it writes,
+so the pipeline names no other source. A project without a `pipelines` ServiceAccount cannot run
+one, and the field dialog says so instead of proposing.
+
 ### KPI pipelines: one indicator per run (PL-45, PL-46)
 
 An indicator is the smallest derived pipeline: read one page of one type, fold it into one number, write one `KeyPerformanceIndicator` entity into the project's `{project}-kpi` space ([Architecture/03 §2](03-domain-model.md#key-performance-indicator), PF-54). The studio offers it as the `kpi` preset: a `scheduled` pipeline whose source is an endpoint query and whose compute is whatever the author writes, Bloblang for arithmetic, a script when a library is needed. Both variants below compute the same indicator, the average number of available bikes over every `BikeHireDockingStation` of the `helsinki` space, and write the same entity; the runner does not care which one produced it.

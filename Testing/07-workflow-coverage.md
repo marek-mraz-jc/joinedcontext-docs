@@ -113,6 +113,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | `retire` | `joinedcontext-portal/src/api/delete.rs` | `tests/resource_delete_tests.rs` | `ui/tests/resource_delete.test.tsx` | `ui/e2e/live/change.spec.ts` › "the assistant opens a change or a removal on the kind's page, and the person proposes it" | `jc_resource_delete` |
 | `refused-no-permission` | `joinedcontext-portal/src/permissions.rs` | `tests/permissions_tests.rs` | `ui/tests/permission_guard.test.tsx` | `ui/e2e/live/viewer-refused.spec.ts` › "a viewer is refused with a reason on every page, and at the door" | `jc_space_propose` |
 | `refused-red-verdict` | `joinedcontext-portal/src/ops/verdict.rs` | `tests/edge_verdict_gate_tests.rs` | `ui/tests/propose_checked.test.ts` | `ui/e2e/live/verdict-gate.spec.ts` › "the verdict gate: unchecked refuses, a check opens it, an edit closes it again" | `jc_space_propose` |
+| `comments` | `joinedcontext-portal/src/api/entity_comments.rs` | `tests/entity_comments_tests.rs` | `ui/tests/comments.test.tsx` | `ui/e2e/live/space-comments.spec.ts` › "a person comments with a mention, the colleague is notified, and the comment leaves with its notification" | person only: a person's note on an entity and the colleagues it names; mentioning someone is a person speaking to a person, so no assistant comments, mentions or reads another's notifications on their behalf (API/01 §35, ADR-N-042 §3.1) |
 
 ### 3.8 Data models (`datamodel`)
 
@@ -366,6 +367,7 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 | `POST /api/v1/projects/{project}/pipelines/{name}/rejected/retry` | `pipeline/retry-rejected` |
 | `POST /api/v1/projects/{project}/serviceaccounts/{name}/keys` | `serviceaccount/mint-key` |
 | `DELETE /api/v1/projects/{project}/serviceaccounts/{name}/keys/{keyId}` | `serviceaccount/revoke-key` |
+| `DELETE /api/v1/projects/{project}/spaces/{space}/comments/{id}` | `space/comments` |
 | `POST /api/v1/projects/{project}/serviceaccounts/{name}/keys/{keyId}/rotate` | `serviceaccount/rotate-key` |
 | `POST /api/v1/projects/{project}/syncsources/{name}/detach` | `syncsource/detach` |
 | `POST /api/v1/projects/{project}/syncsources/{name}/pause` | `syncsource/pause` |
@@ -380,6 +382,8 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 | `PUT /api/v1/projects/{project}/{plural}/{name}` | `space/edit`, `datasource/edit`, `pipeline/edit`, `endpoint/edit`, `policy/edit`, `groups/edit`, `organization/edit-settings` |
 | `DELETE /api/v1/projects/{project}/{plural}/{name}` | `space/retire`, `datamodel/retire`, `datasource/retire`, `pipeline/retire`, `endpoint/retire`, `policy/retire`, `subscription/retire`, `syncsource/retire`, `dashboard/retire`, `serviceaccount/retire`, `groups/retire` |
 | `PATCH /api/v1/projects/{project}/{plural}/{name}` | `space/edit`, `endpoint/edit` |
+| `POST /api/v1/notifications/{id}/read` | `space/comments` |
+| `POST /api/v1/projects/{project}/spaces/{space}/comments` | `space/comments` |
 | `POST /api/v1/tools/generate` | `datamodel/validate` |
 | `POST /api/v1/tools/import-sdm` | `datamodel/import-smart-data-model` |
 | `POST /api/v1/tools/infer-schema` | `datamodel/infer-from-sample` |
