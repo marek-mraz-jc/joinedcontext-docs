@@ -13,7 +13,7 @@ This document provides end-to-end traceability cross-referencing requirement fam
 |---|---|---|---|---|
 | **R1–R43** | Access Control & Federation | `access-control.md` | Context Gateway (PEP + in-process PDP), Context Broker (Antares) | TTF Robot Conformance Suite, Gateway Rewriter Property Tests, Integration Tests |
 | **MIM0–MIM10** | OASC Interoperability | `access-control.md` (Part II) | Context Gateway, Data Models, DCAT-AP Catalog, OGC Features Translator | MIM0 API checks, Schema validation, Conformance ATS |
-| **GW1–GW34** | Gateway Firewall Rules | `gateway-firewall.md` | Context Gateway (PEP), APISIX Data Plane, Antares RLS | Gateway Property Tests (`proptest`), Adversarial Bleed Corpus |
+| **GW1–GW35** | Gateway Firewall Rules | `gateway-firewall.md` | Context Gateway (PEP), APISIX Data Plane, Antares RLS | Gateway Property Tests (`proptest`), Adversarial Bleed Corpus |
 | **R44–R60** | Policy Firewall Extensions | `policy-firewall.md` | Context Gateway (the conditional-write flow); the ETag validator and the status-list verifier are designed, not built | Conditional-write tests; the revocation reaper has none yet |
 | **I1–I4** | Identity & Credentials | `policy-firewall.md` | Keycloak (I1, I4); VCVerifier and the Trusted Issuers Registry (I2, I3) are designed and deployed nowhere | Keycloak OIDC and token-verification tests; no OID4VP test exists |
 | **CC-01–CC-90** | Configuration-as-Code & Reconciler | `city-as-code.md` | Gitea (Org Repo), `jcctl` Reconciler, Minijinja Engine | `jcctl plan`/`apply` Idempotency Tests, Conftest Rego Gates |

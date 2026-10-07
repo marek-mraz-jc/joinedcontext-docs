@@ -10,7 +10,7 @@ Date: 2026-08-16
 Scope: The declarative configuration plane of a federated digital twin: the
 versioned city repository, the reconciler, blueprints, the end-user
 application, roles, and the MCP/automation surface. This layer configures
-the platform that R1–R43 (access control), GW1–GW34 (gateway rules) and
+the platform that R1–R43 (access control), GW1–GW35 (gateway rules) and
 I1–I4 (identity) secure; it does not redefine any of them.
 Related: `access-control.md` (Part I R1–R43, Part II MIM0–MIM10),
 `gateway-firewall.md`, `policy-firewall.md`,
