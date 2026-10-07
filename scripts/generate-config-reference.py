@@ -254,9 +254,9 @@ def better(block: str, against: tuple[str, bool] | None, name: str, configuratio
 def opens_with(text: str, name: str) -> bool:
     """Whether this text is about the variable rather than mentioning it in passing.
 
-    `\`JC_SPACE\`, \`JC_SPACE_2\`, … are the space segment of each output` is written about
-    the variable; `\`env("JC_SPACE")\` yields the name` is written about a parser that happens
-    to use it as an example.
+    "`JC_SPACE`, `JC_SPACE_2`, … are the space segment of each output" is written about the
+    variable; "`env("JC_SPACE")` yields the name" is written about a parser that happens to use
+    it as an example.
     """
     return text.lstrip("`").startswith(name)
 
