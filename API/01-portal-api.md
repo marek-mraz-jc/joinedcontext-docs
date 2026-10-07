@@ -2642,6 +2642,15 @@ GET /api/v1/projects/{project}/spaces/{space}/quality     the last run's report 
   ],
   "freshness": [
     { "pipeline": "bikes-feed", "type": "BikeHireDockingStation", "newest": "2026-09-25T01:58:00Z", "targetSeconds": 600, "state": "fresh", "paused": false }
+  ],
+  "types": [
+    {
+      "type": "BikeHireDockingStation", "count": 1200, "newest": "2026-09-25T01:58:00Z",
+      "attributes": [
+        { "name": "totalSlotNumber", "present": 1200, "min": 2, "max": 400, "outliers": 1, "outlierExamples": ["urn:ngsi-ld:BikeHireDockingStation:hel.fi:bikes:031"] },
+        { "name": "name", "present": 1188, "outliers": 0, "outlierExamples": [] }
+      ]
+    }
   ]
 }
 ```
@@ -2660,9 +2669,15 @@ GET /api/v1/projects/{project}/spaces/{space}/quality     the last run's report 
   and that row is `untargeted`. `state` is `empty`
   when the space holds no entity of the type, `stale` when the newest is older than the target,
   `fresh` otherwise.
-- A project the caller may not read, or a space they may not read, is `404`. `examples` are
-  empty for a caller without `read` on `Entity` in the space; the counts are the same for
-  everyone who reads the space.
+- `types` has one row per entity type the run read (T-3252): `count` entities, the `newest`
+  `modifiedAt`, and every attribute an entity of the type carries with `present`, the entities
+  that carry it (completeness is `present / count`), most complete first. A numeric attribute also
+  has `min` and `max` and `outliers`, the values outside the Tukey fences (1.5 interquartile
+  ranges below the first or above the third quartile), counted only from eight numbers up, with at
+  most five `outlierExamples` ids.
+- A project the caller may not read, or a space they may not read, is `404`. `examples`,
+  `outlierExamples`, `min` and `max` are absent or empty for a caller without `read` on `Entity`
+  in the space; the counts are the same for everyone who reads the space.
 
 ## 28. Organization limits (PF-96…PF-102, ADR-N-035)
 
