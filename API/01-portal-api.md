@@ -2432,6 +2432,7 @@ PATCH  /api/v1/organization/people/{id}                     edit the name, the e
 POST   /api/v1/organization/people/{id}/disable             disable and end every session → 200
 POST   /api/v1/organization/people/{id}/enable              enable → 200
 POST   /api/v1/organization/people/{id}/reset-password      send a password reset → 202, or 200 with a temporary password
+POST   /api/v1/organization/people/{id}/resend-invitation   send a pending invitation again → 202, or 200 with a temporary password
 POST   /api/v1/organization/people/{id}/remove-second-factor  remove every OTP and WebAuthn credential → 204
 POST   /api/v1/organization/people/{id}/sign-out            end every session → 204
 DELETE /api/v1/organization/people/{id}                     remove → 202 with the Change, or 204
@@ -2455,7 +2456,8 @@ the following page, when there is one:
       "requiredActions": [],
       "createdAt": "2026-09-24T09:12:40Z",
       "lastSeen": "2026-09-25T07:02:11Z",
-      "pendingDeletion": null
+      "pendingDeletion": null,
+      "invitationExpires": null
     }
   ],
   "next": 50
@@ -2465,6 +2467,9 @@ the following page, when there is one:
 - `lastSeen` is the last access of the person's newest open session, `null` when none is open. The
   realm keeps no login history the Portal's client may read, so there is no "last login".
 - `pendingDeletion` names the Change a deletion waits for, `null` otherwise.
+- `invitationExpires` is when the link of the last invitation the Portal sent stops working, while
+  the person still has `requiredActions` left; `null` once they are done, or when the Portal has
+  no database to remember the sending in (PF-108).
 
 `GET {id}` answers the person with where they are granted something, each item naming the
 manifest that grants it (PF-94):
@@ -2482,12 +2487,18 @@ manifest that grants it (PF-94):
 }
 ```
 
-Creating takes the e-mail, the name and the language, and nothing else
-(`deny_unknown_fields`):
+Creating takes the e-mail, the name, the language and the project the invitation leads into, and
+nothing else (`deny_unknown_fields`):
 
 ```json
-{ "email": "jana.kovacova@example.org", "firstName": "Jana", "lastName": "Kováčová", "locale": "sk" }
+{ "email": "jana.kovacova@example.org", "firstName": "Jana", "lastName": "Kováčová", "locale": "sk", "project": "helsinki" }
 ```
+
+`project` is optional and names a project of the organization (`404` otherwise): the e-mail's link
+ends, once the person has set their password, on `/projects/{project}/home?welcome=1`, where the
+project's home page greets them with the first step of the role they hold there (PF-108). It
+grants nothing: the Portal proposes the person's role as a `RoleBinding` through the one propose
+function, and the role holds once that Change is approved, like any other grant (PF-95).
 
 The e-mail is also the username, the name members and subjects name the person by (PF-04). The
 realm sends its execute-actions e-mail, `VERIFY_EMAIL` and `UPDATE_PASSWORD` (PF-92), and the
@@ -2496,6 +2507,12 @@ Portal sets a temporary password with `UPDATE_PASSWORD` required instead and ans
 `{ "person": {…}, "emailSent": false, "temporaryPassword": "…" }`. A password reset works the same
 way: `202` when the e-mail went, `200` with `temporaryPassword` when it could not. The Portal never
 stores, logs or returns that password again, and nothing else ever carries it.
+
+`resend-invitation` sends the execute-actions e-mail again for the steps the person has not taken,
+with a fresh link of the organization's `invitationHours`, and answers like a password reset. A
+person with no step left is `409`: there is nothing to accept. It needs `create` on Person and
+every right the person holds. Revoking an invitation is `DELETE` on a person who has not accepted
+it: a person no manifest names yet is deleted at once, and the link stops working with them.
 
 `PATCH` takes any of `firstName`, `lastName`, `email` and `locale`. A changed e-mail is set
 unverified and `VERIFY_EMAIL` is required again.
