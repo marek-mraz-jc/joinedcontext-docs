@@ -1516,6 +1516,27 @@ riskiest file. The merge request is titled `rename the App shapes of {project} (
 - `409` when no App of the project carries an old name: there is nothing to propose.
 - An App already named in an open Change is proposed again in this one; the reviewer sees both.
 
+### 12a. The App templates (AP-141)
+
+```text
+GET /api/v1/app-templates      every template, by name, for any signed-in person
+```
+
+```json
+{ "templates": [{
+  "name": "kpi-dashboard",
+  "title": "KPI dashboard",
+  "purpose": "Show managers how the organization's indicators stand…",
+  "audience": "managers",
+  "access": "Read-only; the indicators may be public.",
+  "dataNeeds": [{ "types": ["KeyPerformanceIndicator"], "attrs": ["kpiValue", "target"], "operations": ["queryEntity"] }]
+}] }
+```
+
+The templates are the samples of SDK-24, compiled into the Portal. A run started with a prompt
+that contains `(template: {name})` adapts that template, whatever else the prompt says; a name no
+template has is ignored and the prompt's words choose, as before.
+
 ## 13. Flows: running a blueprint (CC-24, CC-30, CC-31, CC-32, CC-59)
 
 A flow is one instantiation of a Blueprint. The gallery lists the blueprints an organisation
