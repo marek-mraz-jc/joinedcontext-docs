@@ -10,7 +10,7 @@ Date: 2026-08-07
 Scope: The rule/verdict model of the NGSI-LD gateway ("firewall") and its enforcement in the Antares broker. Complements `access-control.md` (R1–R43: architecture, policy model, federation); this document specifies the rule chain, the three verdicts, and the request-intersection algebra.
 Related: ADR 002 (Policy entity), ADR 004 (Scopes), ADR 006 (privilege bleed), `AntaresBroker/docs/src/storage.md` (shared-schema tenancy and the row-level-security belt).
 
-Family **GW** (GW1…GW34). Owning chapter: [Architecture/05-context-gateway.md](../Architecture/05-context-gateway.md). Verified by: [Testing/01-backend-tests.md](../Testing/01-backend-tests.md).
+Family **GW** (GW1…GW35). Owning chapter: [Architecture/05-context-gateway.md](../Architecture/05-context-gateway.md). Verified by: [Testing/01-backend-tests.md](../Testing/01-backend-tests.md).
 
 Keywords MUST / SHOULD / MAY per RFC 2119.
 
@@ -68,6 +68,7 @@ How "what the caller asked for" meets "what the caller is granted":
 - **GW33** [gateway, conformance] — The NGSI-LD read surface of an Endpoint answers as ETSI GS CIM 009 specifies. A grant narrows the result set of a well-formed read (GW10–GW12); it MUST NOT change a status code the specification fixes, and no deviation from it is recorded as accepted. Concretely: a query naming no selector (an `id` list or `idPattern` alone, 5.7.2.4) is `400 BadRequestData` even when the caller's grants would have selected a type for it. A client of ours that relied on the narrowing names its type instead; the conformance suite, not the client, fixes the surface.
 - **GW19** — Deletes are writes: same containment rules as GW16.
 - **GW34** [S] — A grant that names one of the five CIM 009 Table 4.20-2 operation groups (`federationOps`, `associationOps`, `updateOps`, `retrieveOps`, `redirectionOps`) MUST be evaluated as exactly the operations that table lists for it and as no others, and a name that is neither a Table 4.20-1 operation nor one of those groups MUST be refused when the `Policy` is validated rather than ignored (R8, Architecture/03 §Policy).
+- **GW35** [S] — The gateway MUST accept only the NGSI-LD core context from a caller: a request whose body carries any other `@context` (inline, by URL, or embedded below the entity) or whose `Link` header names any other JSON-LD context MUST be refused with `400` and a reason before the broker is asked, on every route and every operation, and no such header reaches the broker. Every decision the gateway takes (a grant's types and attribute names, a form's fields, a hidden attribute) is on the names the core context expands, so a caller's context could otherwise have the broker write or answer other IRIs under a permitted name (T-3287). This narrows R15 for a client that brings its own context.
 
 ## 5. Tenants, pinning and chaining
 
@@ -152,7 +153,7 @@ ends the evaluation with DENY, whatever the group's other grants say (GW4).
 | GW31 | [Architecture/05-context-gateway.md#2-reads-vs-writes-enforcement-gw15gw19](../Architecture/05-context-gateway.md#2-reads-vs-writes-enforcement-gw15gw19) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | GW33 | [Architecture/05-context-gateway.md#2-reads-vs-writes-enforcement-gw15gw19](../Architecture/05-context-gateway.md#2-reads-vs-writes-enforcement-gw15gw19) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | GW32 | [Architecture/05-context-gateway.md#2-reads-vs-writes-enforcement-gw15gw19](../Architecture/05-context-gateway.md#2-reads-vs-writes-enforcement-gw15gw19) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
-| GW34 | [Architecture/05-context-gateway.md#2-reads-vs-writes-enforcement-gw15gw19](../Architecture/05-context-gateway.md#2-reads-vs-writes-enforcement-gw15gw19) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
+| GW34–GW35 | [Architecture/05-context-gateway.md#2-reads-vs-writes-enforcement-gw15gw19](../Architecture/05-context-gateway.md#2-reads-vs-writes-enforcement-gw15gw19) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 
 ## Related
 

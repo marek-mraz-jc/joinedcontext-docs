@@ -141,7 +141,7 @@ Entities returned by the broker pass through the response projection stage:
 
 ## 2. Reads vs. Writes Enforcement (GW15–GW19)
 
-The gateway enforces fundamentally different validation semantics for read versus write operations:
+The gateway enforces fundamentally different validation semantics for read versus write operations. Both start from the same names: only the NGSI-LD core context is accepted from a caller, so a body with another `@context` or a `Link` naming another context is refused with `400` before anything is decided, and the broker expands exactly the names the gateway authorised (GW35, T-3287). The ETSI TTF cases that bring the test suite's own context therefore answer `400` through the gateway where the broker alone accepts them.
 
 | Dimension | Read Operations (`queryEntity`, `retrieveEntity`) | Write Operations (`createEntity`, `updateEntity`, `deleteEntity`) |
 |---|---|---|
