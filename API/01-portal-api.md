@@ -696,7 +696,8 @@ PUT /api/v1/preferences      replaces them whole; answers 200 with what is now s
   "locale": "sk",
   "defaultProject": "air-quality",
   "dashboardLayouts": { "air-quality-overview": { "collapsedLegend": true } },
-  "advancedMode": false
+  "advancedMode": false,
+  "firstRunDismissed": false
 }
 ```
 
@@ -709,6 +710,10 @@ PUT /api/v1/preferences      replaces them whole; answers 200 with what is now s
 - `advancedMode` shows the form fields a `UiSchema` marks `advanced` (CC-29): the commit message,
   the branch, the target revision. Absent means off. It changes what a form shows, never what a
   write may do.
+- `firstRunDismissed` hides the five-step first-run checklist on the project home page (create a
+  space, connect a data source, run a pipeline, see the data, share it); the help menu shows it
+  again by clearing it. Absent means shown. Each step ticks itself from the project's own state,
+  never from this record (T-3233).
 - `503` with `problem+json` when the Portal runs without a preferences database. The UI then works
   from browser defaults; nothing else depends on this tier (UI-09).
 
