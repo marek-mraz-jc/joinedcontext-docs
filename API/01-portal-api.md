@@ -436,6 +436,7 @@ view of those merge requests, so that an approver never has to open the forge to
 
 ```text
 GET  /api/v1/projects/{project}/changes                  open proposals, newest first
+GET  /api/v1/projects/{project}/changes/history          merged and rejected ones, newest first, paged
 GET  /api/v1/projects/{project}/changes/{id}             one proposal with its plan diff
 POST /api/v1/projects/{project}/changes/{id}/approve     review + merge
 POST /api/v1/projects/{project}/changes/{id}/reject      review "request changes" + close
@@ -493,6 +494,50 @@ It also lists `files`, every file of the merge request (`path`, `kind`, `operati
 each manifest among them carries `fields`: its own field-level diff, base against head, redacted the
 same way, so an approver reads what each file of a bundle changes and not only the headline
 manifest's. A native file (a LinkML source, a `bento.yaml`) carries no `fields`.
+
+`GET …/changes/history` lists the closed changes, most recently closed first, with the read rule of
+the open list: a project no binding covers is `404`, and a change to a kind the caller does not read
+is not listed (PF-59, R20). Each item is a `Change` whose `status.phase` is `Merged` or `Rejected`
+and whose `summary` names the resource; `plan` counts and the diff are not carried, since the
+default branch already holds what a merged change made. `decision` says who decided it, as the
+Portal wrote it on the forge: the approver of the merge commit, or the rejecter and the reason of
+the rejection. A change merged or closed in the forge itself carries no `decision`.
+
+| Parameter | Meaning |
+|---|---|
+| `page` | the page, from 1; `next` of the previous answer, present while the forge holds older ones |
+| `kind` | one kind only, any case, as `Endpoint` |
+| `name` | resource names containing this, any case |
+
+An unknown parameter or `page=0` is `400`. A page reads 20 closed merge requests of the forge, so it
+can hold fewer items than that, none at all included, and still carry `next`.
+
+```json
+{
+  "apiVersion": "joinedcontext.com/v1alpha1",
+  "kind": "ChangeList",
+  "items": [
+    {
+      "apiVersion": "joinedcontext.com/v1alpha1",
+      "kind": "Change",
+      "metadata": { "name": "chg-0000019b", "namespace": "helsinki" },
+      "status": { "lane": "yellow", "repository": "helsinki", "phase": "Rejected",
+                  "mergeRequest": "https://git.example.fi/hel/helsinki/pulls/411",
+                  "plan": { "create": 0, "update": 0, "delete": 0 } },
+      "summary": { "key": "change.summary.update", "params": { "kind": "Endpoint", "name": "public-air", "fields": 0 } },
+      "author": { "name": "Aino Virtanen", "email": "aino.virtanen@example.org" },
+      "createdAt": "2026-09-05T08:02:10Z",
+      "fileCount": 1,
+      "decision": { "by": "mikko.approver@example.org", "at": "2026-09-05T11:40:00Z", "reason": "the URL is the old one" }
+    }
+  ],
+  "next": 2
+}
+```
+
+Approving a change records a `change.merged` activity event naming the change, its resource and the
+approver ([§14](#14-activity-ui-31-ops-48-ops-49)), so the project's activity says what went live and
+links to it, beside the reconciler's `config.applied` for the commit.
 
 Approval rules, enforced by the API and not only by the UI:
 
