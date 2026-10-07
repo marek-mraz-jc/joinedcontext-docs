@@ -12,7 +12,7 @@ description: The chat route of jc-assistant, its Server-Sent Events, and how the
 
 `POST https://assistant.{domain}/api/v1/d/{publicId}/chat`
 
-`publicId` is the deployment's `spec.publicId`. An unknown one, or one of a channel this route does not serve, answers `404`.
+`publicId` is the deployment's `spec.publicId`, unique across the organization. An unknown one, one of a channel this route does not serve, or one two deployments declare, answers `404`: no load order decides which project answers on an address (MF-52, T-3283).
 
 ### 1.1 Request
 
