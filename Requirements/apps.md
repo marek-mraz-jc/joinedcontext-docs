@@ -257,7 +257,7 @@ The owner's rule of 2026-09-23: every App of the Portal must work and read data 
 | AP-42…AP-45 | Applications Security Invariants | [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) | [06-security-tests.md](../Testing/06-security-tests.md) |
 | AP-46…AP-50 | Generated Source and Preview Isolation | [19-agent-runner.md](../Architecture/19-agent-runner.md) | [06-security-tests.md](../Testing/06-security-tests.md) |
 | AP-51…AP-55 | Run Lifecycle and Governance | [19-agent-runner.md](../Architecture/19-agent-runner.md) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
-| AP-56…AP-60 | The Code Pass | [19-agent-runner.md §1.2](../Architecture/19-agent-runner.md#12-the-kit-pass-a-static-application-in-one-model-call) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| AP-56…AP-60 | The Code Pass | [19-agent-runner.md §1.2](../Architecture/19-agent-runner.md#12-the-static-path-code-on-the-app-sdk) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | AP-61…AP-63 | Forms that write | [16-apps-on-demand.md §8](../Architecture/16-apps-on-demand.md#8-forms-that-write-through-the-endpoint) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | AP-64…AP-67 | Applications, SDK, Artifacts & Basemaps | [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | AP-68…AP-71 | Durability, Resumption & Draft Governance | [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |

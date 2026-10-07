@@ -62,6 +62,6 @@ The owner's direction (2026-09-14): generated applications should work like Base
 
 - [Architecture/20-app-sdk](../Architecture/20-app-sdk.md) — the SDK, the generated project, the code pass and the preview.
 - [Requirements/app-sdk](../Requirements/app-sdk.md) — SDK-01…SDK-26.
-- [Architecture/19-agent-runner §1.2](../Architecture/19-agent-runner.md#12-the-kit-pass-a-static-application-in-one-model-call) — the spec pass this decision retires.
+- [Architecture/19-agent-runner §1.2](../Architecture/19-agent-runner.md#12-the-static-path-code-on-the-app-sdk) — the spec pass this decision retires.
 - [Architecture/16-apps-on-demand](../Architecture/16-apps-on-demand.md) — what an application is and how it is published.
 - [ADR-N-020](adr-n-020-agent-runner-and-credential-proxy.md) — the credential-free proxy the model call still goes through.
