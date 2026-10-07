@@ -610,6 +610,7 @@ Generated 2026-10-06 from: `docs` 2ac73dd, `conformance` a0da9d9, `deployment` 5
 | **EP-94** | [A] | built |  | `joinedcontext-platform/crates/context-gateway/src/app.rs`, `joinedcontext-platform/crates/context-gateway/src/mcp/server.rs` |
 | **EP-95** | [S] | built |  | `joinedcontext-platform/crates/context-gateway/src/mcp/server.rs` |
 | **EP-96** | [S] | tested | ci-full, fast ci | platform `crates/context-gateway/src/mcp/server.rs::the_audience_admits_by_project_and_only_public_admits_nobody`, platform `crates/context-gateway/src/mcp/server.rs::a_server_is_its_own_resource_and_client`, platform `crates/context-gateway/src/mcp/server.rs::the_read_tools_take_endpoint_as_an_option_and_a_cursor_per_member`, and 11 more |
+| **EP-97** | [S] | open |  |  |
 
 ### GW — Gateway firewall
 
