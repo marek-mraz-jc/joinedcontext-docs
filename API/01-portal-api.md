@@ -3135,6 +3135,42 @@ GET /api/v1/projects/{project}/spaces/{space}/types/{type}/attributes   the type
   `ngsi-ld:unitCode`). A red verdict holds the draft back from proposal in strict mode (PF-57); the
   draft itself is saved with the report.
 
+## 37. Feedback from any page (T-3272)
+
+A person tells the platform's owners what got in their way, from the page where it happened. A
+feedback is untrusted text: it reaches the work board as a proposed task, blocked until a person
+has read it, and never as work an agent takes by itself.
+
+```text
+POST /api/v1/feedback                                  a signed-in person's feedback → 202 {"id": 7}
+GET  /api/v1/organization/feedback?after=0             administrators: the feedback after an id, oldest first, at most 100
+GET  /api/v1/organization/feedback/{id}/screenshot     administrators: its screenshot, image/png; 404 without one
+```
+
+```json
+{ "text": "The Approve button stays grey after I type the name", "page": "/projects/helsinki/approvals/chg-0000001c",
+  "screenshot": "data:image/png;base64,iVBORw0KGgo…" }
+```
+
+- `text` is 1 to 2 000 characters once trimmed. Before it is kept, e-mail addresses, phone
+  numbers and words shaped like a credential are replaced by `[removed]`, so the task the board
+  receives carries no personal data and no secret the person pasted by mistake.
+- `page` is the Portal address the person was on. Its query and fragment are dropped, since
+  they can carry a name or a filter value. It starts with `/` and is at most 500 characters.
+- `screenshot` is present only when the person ticked it: a PNG `data:` URL of at most 2 MB.
+  The Portal paints over every input field of the page in the image before it is sent (a
+  password, a token, a person's name typed into a form). The person also chooses what the
+  browser shares.
+- Nobody is named: the feedback keeps no author, no e-mail and no IP address. The Portal's
+  version (`APP_VERSION`) is attached by the server. A person sends at most 10 an hour, and the
+  11th is `429` with `Retry-After`.
+- An unknown member is `400`; a page that does not start with `/`, an empty or oversized text,
+  or a screenshot that is not a PNG is `400` naming the field.
+- The list is for administrators of the organization (PF-03), `403` for anyone else, and each
+  item is `{id, createdAt, page, version, text, screenshot}`, `screenshot` a boolean.
+  `scripts/feedback-to-tasks.mjs` in the Portal repository turns one page of it into task files,
+  `status: blocked` and `group: feedback`, each saying the text is untrusted input to read first.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
