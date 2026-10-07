@@ -1981,6 +1981,14 @@ POST /api/v1/projects/{project}/assistant/propose-endpoint
 - `audience` defaults to `project-list`; `project-list` needs at least one project in
   `allowedProjects`; `representations` defaults to `ngsi-ld` and `geojson`; every name is a
   DNS-1123 label and every attribute an identifier, or the answer is `400`.
+- `access` names what the new endpoint's Policy grants: absent, `retrieveOps` (a share); `read`,
+  `update` or `full`, the operations of AP-132 for an endpoint an app proposes; `create`,
+  `createEntity` and nothing else, for a public form (§33, T-3103), which needs exactly one type in
+  `entityTypes`, names in `writeAttributes` the properties and in `writeRelationships` the
+  relationships the form asks for (the Policy's `propertyNames` and `relationshipNames`, at least
+  one name, so any other attribute is refused, T-3172) and may set
+  `createsPerDay` (default 200, at most 10,000), which the Endpoint carries as `spec.creates`
+  `{mintIds: true, perDay}` (EP-97).
 - The slug is minted here and is read-only in the form; a slug in the request is ignored.
 - `lane` is what the Endpoint's Change would be classified as (§5): `red` for `public`.
 - Nothing is written. A run publishes this body as the `output` of a `tool` event named
@@ -2743,6 +2751,14 @@ DELETE /api/v1/projects/{project}/spaces/{space}/views/{id}     delete it → 20
   so), the first matching rule marking the row with a swatch that names it; `settings` is the
   kind's own (the card fields of a gallery, the attribute a kanban groups by, the date attributes
   of a calendar or a timeline, the fields of a form). The whole `config` is at most 64 KiB.
+- A form's `settings` (T-3103): `fields`, the attributes it asks for in their order, each
+  `{attr, label?, help?, required?}`, where a missing `label` or `help` is the model slot's own and
+  `required` can only add to what the model requires; `conditions`, each `{attr, when: {attr,
+  equals}}`, which shows `attr` only while the answer to the other field equals the value (a hidden
+  field is not sent); `prefill: true` takes `?{attr}=value` from the page's URL for the fields it
+  names, never for an attribute the form does not ask for. A submission creates one entity through
+  the space surface with the person's session, under `urn:ngsi-ld:{type}:{uuid}` (ADR-N-041), so the
+  Policy decides it like any write.
 - Who sees and changes a view, by its `mode`: `personal` its owner alone, and to anyone else it
   does not exist (`404`); `collaborative` everyone who may read the space sees and changes it;
   `locked` everyone who may read the space sees it, and only its owner or a steward of the space
@@ -2805,7 +2821,7 @@ notification on to the views that show that space and type.
 
 ```text
 GET  /api/v1/projects/{project}/spaces/{space}/live?type={type}    the changes of one type, as server-sent events → 200
-POST /live-notify/{key}                                            where the gateway delivers the subscription's notifications → 204
+POST /live-notify/{liveKey}                                        where the gateway delivers the subscription's notifications → 204
 ```
 
 - `GET …/live` follows the space's read rule (`404` for a space the caller may not read) and needs
@@ -2817,8 +2833,8 @@ POST /live-notify/{key}                                            where the gat
   (`notification.format: keyValues` of `id`, `type` and the changed attributes is what the broker
   sends; the Portal keeps the names) and expires 24 hours after it was written; a view opened
   after half of that writes it again. Nothing else removes it.
-- `POST /live-notify/{key}` is outside `/api/v1`: the broker that calls it through the gateway holds
-  no token. `key` is an HMAC of the space and type under a secret only this Portal holds, so a key
+- `POST /live-notify/{liveKey}` is outside `/api/v1`: the broker that calls it through the gateway holds
+  no token. `liveKey` is an HMAC of the space and type under a secret only this Portal holds, so a key
   names one subscription and cannot be made up; an unknown key is `404`. A body larger than 1 MiB
   is `413`. A forged notification can only make a view read again.
 - The process that receives a notification passes it on to its own views. With several replicas
@@ -2834,9 +2850,8 @@ only. The manifests are what `POST …/assistant/propose-endpoint` renders (§19
 `audience: public`, `entityTypes: [type]` and `hiddenAttributes`, proposed as one Change with the
 Policy it needs, reviewed like every Endpoint. Once merged and applied, the view is a page:
 
-```text
-GET /v/{slug}            the published view, read-only, no sign-in
-```
+The page `/v/{slug}` (`slug` is the Endpoint's) is the published view: read-only, no sign-in,
+served by the Portal's interface like its other pages, not an API route.
 
 - The page holds no data: every read it makes is an anonymous read of the Endpoint's NGSI-LD
   surface (`/api/endpoint/{slug}/ngsi-ld/v1/…`), so the gateway enforces what the link shows and
@@ -2844,11 +2859,58 @@ GET /v/{slug}            the published view, read-only, no sign-in
   first 100 entities in key-value form, and the attributes they carry.
 - Revoking the link is deleting the Endpoint, a Change like its creation; the page then says the
   view is not published.
+- A form view publishes the same way with `access: "create"` (§19): the Endpoint's Policy grants the
+  `public` role `createEntity` on the one type, and the link is the page `/f/{slug}`. The page asks
+  for the type's attributes the Endpoint's published schema lists, required where the schema
+  requires them, labelled and helped from the schema, prefilled from `?{attr}=value`, and its submit
+  is one anonymous `POST /api/endpoint/{slug}/ngsi-ld/v1/entities`: the gateway decides it and
+  rate-limits it as every anonymous call. The Policy grants only the form's fields, the gateway
+  mints the entity's id and stops at the form's daily count (EP-97); the page carries a field a
+  person never sees and a script fills, sent as an attribute the Policy does not grant, so such a
+  submission is refused; and the page says that what is sent is public data of the space. The form view's own labels and conditions stay with the
+  signed-in form for now; the public page reads nothing from the Portal's database.
 - Not yet: a password on a link needs the `data_views` record of §30 to hold its hash; an embed
   needs the Endpoint to name the origins that may frame it. Until then a published view is
   public to everyone and not framed by other sites.
 
-## 34. Comments on a space's entities, mentions and notifications (ADR-N-042 §3.1, T-3106)
+## 34. Knowledge assistant administration (T-3057, MF-51, MF-52)
+
+A project's `KnowledgeSource` and `AssistantDeployment` manifests are resources like every other
+(`/api/v1/projects/{project}/knowledgesources`, `…/assistantdeployments`), proposed as Changes; a
+public, `ckan` or `iframe` deployment is a Red change (Architecture/06 §4). What a source holds
+once crawled lives in `jc-assistant`'s database, and these routes read and steer it. The Portal
+checks the caller's permission on the project and asks `jc-assistant` with its own service
+token ([API/05 §3](05-knowledge-assistant.md#3-administration-for-the-portal)).
+
+```text
+GET  /api/v1/projects/{project}/knowledge/sources                          every source with what it holds
+GET  /api/v1/projects/{project}/knowledge/sources/{source}/pages?parent=   one level of the page tree; no parent: the roots
+GET  /api/v1/projects/{project}/knowledge/sources/{source}/documents       the documents (PDFs) the pages link
+GET  /api/v1/projects/{project}/knowledge/sources/{source}/pages/{page}/links
+GET  /api/v1/projects/{project}/knowledge/sources/{source}/passages?page=|document=
+POST /api/v1/projects/{project}/knowledge/sources/{source}/inclusion       include or exclude pages, subtrees, documents
+POST /api/v1/projects/{project}/knowledge/sources/{source}/recrawl         queue a crawl now
+GET  /api/v1/projects/{project}/knowledge/deployments/{deployment}/usage   requests and tokens per day, 30 days
+POST /api/v1/projects/{project}/knowledge/deployments/{deployment}/chat    ask the assistant as the signed-in person
+```
+
+- The read routes answer only a caller who may read `KnowledgeSource` in the project (the usage
+  route `AssistantDeployment`), anyone else `404` like every project route; `inclusion` and
+  `recrawl` need `propose` on `KnowledgeSource` and answer `403` naming it. Nothing reaches
+  `jc-assistant` for a refused caller (AG-113).
+- `inclusion` takes `{"pages": [id…], "documents": [id…], "subtree": bool, "included": bool}`, at
+  most 500 ids. Excluding removes the passages of what it names at once, so no answer cites it
+  again; the choice holds over every later crawl, whatever the source's include and exclude
+  patterns say. Including again indexes it at the next crawl. The answer counts what changed.
+- `chat` answers a caller who may read `AssistantDeployment` in the project, anyone else `404`,
+  with the Server-Sent Events of API/05 §1.3; the body is API/05 §1.1. The Portal passes the
+  person's own access token on for an `internal` deployment's connectors and keeps no copy
+  ([API/05 §1.7](05-knowledge-assistant.md#17-in-the-portal), AG-115).
+- `recrawl` answers `202` with the queued job, or `409` when one is already queued or running.
+- A source the manifests declare and `jc-assistant` has not crawled yet is listed with
+  `state: "not-crawled"`; a page, a document or a source of another project is `404`.
+
+## 35. Comments on a space's entities, mentions and notifications (ADR-N-042 §3.1, T-3106)
 
 A person who may read a space comments on one of its entities and names colleagues with
 `@identifier`. Comments and notifications are the Portal's records (`entity_comments`,

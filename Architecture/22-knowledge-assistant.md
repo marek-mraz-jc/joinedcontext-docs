@@ -95,7 +95,7 @@ The widget is a small script that opens an iframe at `https://assistant.{domain}
 ## 5. An answer, end to end
 
 1. The channel posts the question with the deployment and the conversation.
-2. `jc-assistant` asks `jc-agent-proxy` for a completion as its ServiceAccount, naming the deployment and the conversation; the proxy checks the deployment's budget and calls the model.
+2. `jc-assistant` asks `jc-agent-proxy` for a completion as its ServiceAccount, naming the deployment; the proxy checks the deployment's day and calls the model, and the assistant checks the conversation's budget before each call ([API/05](../API/05-knowledge-assistant.md) §2).
 3. The model calls `search` (retrieval), an Endpoint's MCP tool, or an allowed external tool. Tool results are passed back as quoted data. A result over 20,000 characters goes to `jc-functions` with the model's short filter script, and only the script's output returns.
 4. The answer streams back with numbered citations to the source URLs.
 
@@ -103,12 +103,14 @@ The widget is a small script that opens an iframe at `https://assistant.{domain}
 
 | Part | Budget |
 |---|---|
-| Embedding model and ONNX Runtime | 350 MB |
-| Tokenizer | 25 MB |
+| Embedding model in ONNX Runtime (int8, measured T-3053) | 165 MB |
+| Tokenizer (XLM-R, 250,000 pieces, measured T-3053) | 290 MB |
 | PDF extraction, one document at a time | 250 MB |
 | Crawl fetches, concurrency 4 | 80 MB |
 | Web server, agent loop, MCP clients, pool | 120 MB |
-| Headroom | 175 MB |
+| Headroom | 95 MB |
+
+The worker measured 490 MB resting with the model loaded and 679 MB at the peak of loading it (T-3053). The tokenizer is the large part: its piece table and trie, not its file, which is 17 MB. One embedding runs at a time and one text per call, so embedding adds nothing measurable.
 
 T-3059 measures it on dev with a 500-page PDF and twenty concurrent chats.
 
@@ -119,6 +121,7 @@ ADR-N-040 §3.7 holds the table: prompt injection from crawled text, SSRF throug
 ## Related
 
 - [ADR-N-040](../Decisions/adr-n-040-knowledge-assistant.md): the decision and the verified versions.
+- [API/05-knowledge-assistant.md](../API/05-knowledge-assistant.md): the chat route and the assistant's calls to the proxy (AG-98…AG-111).
 - [19-agent-runner.md](19-agent-runner.md): `jc-agent-proxy`, through which every model call goes.
 - [21-open-data-catalogue.md](21-open-data-catalogue.md): the CKAN catalogue the `ckan` channel and source use.
 - [04-context-spaces-and-endpoints.md](04-context-spaces-and-endpoints.md): the Endpoints whose MCP surface the connectors call.

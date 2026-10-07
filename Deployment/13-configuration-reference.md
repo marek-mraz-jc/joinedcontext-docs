@@ -117,6 +117,7 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_PORTAL_JOURNEY_USERS` | — | no | The usernames the Portal's own live journeys sign in as, the only people whose runs may carry `X-JC-Run-Origin: journey` (`JC_PORTAL_JOURNEY_USERS`, comma-separated; default none, so no one can mark a run; AG-93, T-2816). |
 | `JC_PORTAL_KEYCLOAK_ADMIN_CLIENT_ID` | — | no | The client the reconciler manages the realm's groups with: a `ServiceAccount` client holding `manage-users` and `query-groups` of `realm-management` and nothing else (`JC_PORTAL_KEYCLOAK_ADMIN_CLIENT_ID` and `JC_PORTAL_KEYCLOAK_ADMIN_CLIENT_SECRET`, a secret, both together or neither; PF-63). |
 | `JC_PORTAL_KEYCLOAK_ADMIN_CLIENT_SECRET` | — | yes | The client the reconciler manages the realm's groups with: a `ServiceAccount` client holding `manage-users` and `query-groups` of `realm-management` and nothing else (`JC_PORTAL_KEYCLOAK_ADMIN_CLIENT_ID` and `JC_PORTAL_KEYCLOAK_ADMIN_CLIENT_SECRET`, a secret, both together or neither; PF-63). |
+| `JC_PORTAL_KNOWLEDGE_URL` | — | no | Base URL of the knowledge assistant `jc-assistant` (`JC_PORTAL_KNOWLEDGE_URL`), e.g. `http://jc-assistant.jc-system.svc.cluster.local:8080`, whose administration paths the knowledge routes ask with the Portal's own token (API/01 §34, T-3057). |
 | `JC_PORTAL_MODEL_TOOLS_URL` | — | no | Base URL of the stateless Model Tools service (`JC_PORTAL_MODEL_TOOLS_URL`), e.g. `http://model-tools.tools.svc.cluster.local:8080`. |
 | `JC_PORTAL_NAMESPACE` | — | no | `JC_AGENTS_NAMESPACE` and `JC_AGENT_PROXY_BASE` are set together or not at all; `JC_PORTAL_NAMESPACE` (default: the workspaces' own namespace), `JC_INTERNAL_BIND` (default `0.0.0.0:9090`), `JC_AGENT_RUN_TTL` (whole seconds, default `1200`) and `JC_AGENT_APPROVAL_TTL` (whole seconds a run waits for its change's approval, default `604800`) tune the rest. |
 | `JC_PORTAL_OPENBAO_ADDR` | — | no | `JC_PORTAL_SOPS_AGE_KEY_FILE` names the age key file and chooses SOPS; otherwise `JC_PORTAL_OPENBAO_ADDR` and `JC_PORTAL_OPENBAO_ROLE` choose OpenBao, with `JC_PORTAL_OPENBAO_JWT_PATH` (default `/var/run/secrets/kubernetes.io/serviceaccount/token`) for the ServiceAccount token it logs in with. |
@@ -124,6 +125,8 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_PORTAL_OPENBAO_ROLE` | — | no | `JC_PORTAL_SOPS_AGE_KEY_FILE` names the age key file and chooses SOPS; otherwise `JC_PORTAL_OPENBAO_ADDR` and `JC_PORTAL_OPENBAO_ROLE` choose OpenBao, with `JC_PORTAL_OPENBAO_JWT_PATH` (default `/var/run/secrets/kubernetes.io/serviceaccount/token`) for the ServiceAccount token it logs in with. |
 | `JC_PORTAL_ORGANIZATION_BOUNDS_FILE` | — | no | The operator's bounds on what an Organization may set (`JC_PORTAL_ORGANIZATION_BOUNDS_FILE`, the file the deployment renders `portal.organizationBounds` into; PF-97, ADR-N-035). |
 | `JC_PORTAL_ORG_DOMAIN` | — | no | The organization's domain, the third segment of every URN this instance writes (`JC_PORTAL_ORG_DOMAIN`; `urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}`). |
+| `JC_PORTAL_PIPELINE_IDENTITY` | — | no | Whether every stream presents its own pipeline's identity through the runner's token sidecar (`JC_PORTAL_PIPELINE_IDENTITY=pipeline`) rather than its project's `pipelines` account (`project`, the default), PL-19. |
+| `JC_PORTAL_PIPELINE_NAMESPACE` | — | no | The namespace the pipelines' own Kubernetes ServiceAccounts live in (`JC_PORTAL_PIPELINE_NAMESPACE`, `{instance}-pipeline-identities`): set, the reconciler keeps one there per Pipeline and gives each derived account its federated client (PL-19, T-1508). |
 | `JC_PORTAL_PIPELINE_RUNNER_CLIENT_ID` | — | no | The Keycloak client the project's pipeline runner holds (`JC_PORTAL_PIPELINE_RUNNER_CLIENT_ID`), which is the only caller `POST /internal/pipeline-tests/{id}` answers (AG-52, T-2271). |
 | `JC_PORTAL_PIPELINE_RUNNER_URL` | — | no | Base URL of a project's Bento pipeline runner with `{project}` still in it, e.g. `http://pipeline-runner.{project}-pipeline-runner.svc.cluster.local:4195` (`JC_PORTAL_PIPELINE_RUNNER_URL`). |
 | `JC_PORTAL_PIPELINE_TEST_CAPTURE_URL` | — | no | Where a pipeline test's harness posts what it produced (PL-43): the Portal's internal listener as the project's runner reaches it, e.g. `http://portal-internal:9090` (`JC_PORTAL_PIPELINE_TEST_CAPTURE_URL`). |
@@ -144,6 +147,7 @@ The credential holder of a builder run (`jc-agent-proxy`): a workspace reaches t
 
 | Variable | Default | Secret | What it is |
 |---|---|---|---|
+| `JC_ASSISTANT_CLIENT_ID` | `jc-assistant` | no | The knowledge assistant's Keycloak client (`JC_ASSISTANT_CLIENT_ID`, default `jc-assistant`): its service account's token buys model calls for an `AssistantDeployment`, counted against that deployment's day (AG-109, AG-110). |
 | `JC_DAILY_TOKENS_APP_BUILDER` | — | yes | Daily model token caps (AG-97): `JC_DAILY_TOKENS_ASSISTANT`, `JC_DAILY_TOKENS_APP_BUILDER`, `JC_DAILY_TOKENS_OTHER` and `JC_DAILY_TOKENS_PER_PERSON`; absent or `0` is no cap. |
 | `JC_DAILY_TOKENS_ASSISTANT` | — | yes | Daily model token caps (AG-97): `JC_DAILY_TOKENS_ASSISTANT`, `JC_DAILY_TOKENS_APP_BUILDER`, `JC_DAILY_TOKENS_OTHER` and `JC_DAILY_TOKENS_PER_PERSON`; absent or `0` is no cap. |
 | `JC_DAILY_TOKENS_OTHER` | — | yes | Daily model token caps (AG-97): `JC_DAILY_TOKENS_ASSISTANT`, `JC_DAILY_TOKENS_APP_BUILDER`, `JC_DAILY_TOKENS_OTHER` and `JC_DAILY_TOKENS_PER_PERSON`; absent or `0` is no cap. |
@@ -176,6 +180,7 @@ The QuickJS runtime a generated application's functions run in (`jc-functions`).
 | Variable | Default | Secret | What it is |
 |---|---|---|---|
 | `JC_AGENT_PROXY_URL` | — | no | `JC_AGENT_PROXY_URL` — the agent proxy an editing agent's own call goes through (`via: "proxy"`, ADR-N-038 decision 6), scheme and authority only for the same reason. Optional: without it such a call answers `503`. |
+| `JC_FUNCTIONS_ASSISTANT_CALLER` | — | no | The knowledge assistant's client (`JC_FUNCTIONS_ASSISTANT_CALLER`), whose token may run a script with no network and nothing else; `None` admits no such caller. |
 | `JC_FUNCTIONS_AUDIENCE` | `jc-functions` | no | `JC_FUNCTIONS_AUDIENCE` — the audience that token must carry, default `jc-functions`. |
 | `JC_FUNCTIONS_BIND` | `0.0.0.0:8080` | no | `JC_FUNCTIONS_BIND` — the address to listen on, default `0.0.0.0:8080`. |
 | `JC_FUNCTIONS_CALLER` | — | no | `JC_FUNCTIONS_CALLER` — the one client whose token may invoke a function, which is the Portal (SDK-23). Required. |

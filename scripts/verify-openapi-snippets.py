@@ -29,7 +29,9 @@ PARAM = re.compile(r"\{([^}/]+)\}")
 # gateway makes after rewriting, and that is a documented route too
 # `/apps` is the static apps host: the Portal serves a published app under the platform host
 # without a hostname of its own (AP-12, AP-14, Architecture/16 §5)
-ALLOWED_PREFIXES = ("/api/v1", "/api/endpoint", "/apps", "/cs", "/ngsi-ld/v1",
+# `/live-notify` is where the broker delivers a space's subscription notifications through the
+# gateway; it holds no token, so it cannot sit under `/api/v1` (API/01 §32, T-3105)
+ALLOWED_PREFIXES = ("/api/v1", "/api/endpoint", "/apps", "/cs", "/ngsi-ld/v1", "/live-notify",
                     "/healthz", "/livez", "/readyz", "/.well-known")
 # The published specification is the Portal's own (utoipa over its axum router), so only the
 # Portal's surface is looked up in it. `/api/endpoint`, `/cs`, `/ngsi-ld/v1` and `/apps` are

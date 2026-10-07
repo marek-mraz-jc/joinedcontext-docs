@@ -91,6 +91,8 @@ When a tool result is too large for the model (1,000 events), the model writes a
 
 The model is loaded once at start. The crawl worker and the chat API share it; a burst of crawling waits for embedding slots, so it never starves a chat answer.
 
+Measured 2026-10-06 (T-3053): the tokenizer estimate was wrong by an order of magnitude. XLM-R's 250,000-piece table and trie take 290 MB once loaded; the int8 model in ONNX Runtime 165 MB; the worker rests at 490 MB. fastembed was dropped for `tokenizers` and `ort` directly (it held a second tokenizer copy, 713 MB), and each text is embedded alone, because the int8 export scales its activations per input. [Architecture/22 §6](../Architecture/22-knowledge-assistant.md#6-memory) carries the current table.
+
 ## 4. Alternatives Considered
 
 - **ParadeDB `pg_search` for BM25.** The cluster's image does not carry it. Adding it means a custom Postgres image or a CloudNativePG image-volume extension, plus a legal review of AGPL-3.0 for an image the platform distributes. Postgres full-text search with `pgvector` and RRF needs neither. The decision is reopened only by T-3053's eval numbers.

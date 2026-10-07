@@ -185,7 +185,7 @@ The module loader resolves an import only to a key of `files`; the runtime impor
 
 ## 4. The first run and the editing agent
 
-The Portal drives both phases in process, the way it drives the spec pass of [19 §1.2](19-agent-runner.md#12-the-kit-pass-a-static-application-in-one-model-call): every model call goes through `jc-agent-proxy` with the run's ticket, model output is untrusted text, and the run's events stream to the page.
+The Portal drives both phases in process, the way it drove the retired spec pass of [19 §1.2](19-agent-runner.md#12-the-static-path-code-on-the-app-sdk): every model call goes through `jc-agent-proxy` with the run's ticket, model output is untrusted text, and the run's events stream to the page.
 
 ### 4.1 First run: one shot with every file
 
