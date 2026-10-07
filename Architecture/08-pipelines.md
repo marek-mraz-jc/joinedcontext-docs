@@ -886,6 +886,8 @@ The workbench ([ADR-N-034](../Decisions/adr-n-034-pipeline-workbench.md), PL-58)
 | Validation | `jc_pipeline_validate` | one verdict per record (at most 100) against the model of the space the pipeline writes into, or of a space named directly: each rule broken by its SHACL component and path (PL-59); a space that names no model answers 409 |
 | Target and save | `jc_pipeline_propose` | the Change the person sends, naming the target space |
 
+A new pipeline can start from a recipe (T-3258): CSV file to entities (daily at 03:00 UTC), poll an API (every 15 minutes), harvest a CKAN dataset (daily at 04:00 UTC) or a KPI aggregation (the average of one attribute every 15 minutes). A recipe asks only for its source and where it writes and fills the form; the steps above sample the source, draft the mapping from its first record and test it before anything is proposed.
+
 Under the validation the page compares the mapped records with what the target space holds now (PL-70): it reads the entities of those ids through the space surface with the person's own session, a hundred ids a read, and labels each record created, updated or unchanged. Only the attributes a record writes are compared, because the pipeline upserts, and an attribute is written whole, so a part of it the record leaves out (a `unitCode`) is shown as removed. Nothing is written, and nobody sees more of the space than they may read.
 
 ### What the stage checks (PL-59, PL-60)
