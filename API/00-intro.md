@@ -94,13 +94,52 @@ Errors are returned strictly as `application/problem+json` documents:
 ```json
 {
   "type": "https://joinedcontext.com/errors/forbidden",
-  "title": "Forbidden",
+  "title": "Access Denied by Policy",
   "status": 403,
-  "detail": "the write touches an attribute outside the grant: operatorPhone"
+  "detail": "the write touches an attribute outside the grant: operatorPhone",
+  "hint": "Ask a project owner or an organization administrator for the role this needs."
 }
 ```
 
-`type` is always `https://joinedcontext.com/errors/{slug}` (`crates/jc-core/src/error.rs`). `detail` and `instance` are present when there is something safe to say, and never carry an upstream URL, a tenant, a broker error body or a policy name. One extension member exists: `requestId`, written on a `500` so a report can be matched to a log line, and on nothing else. A `400` from the Portal may carry `errors`, one entry per violation, so a form can mark every bad field in one pass.
+`type` is always `https://joinedcontext.com/errors/{slug}` (`crates/jc-core/src/error.rs`). `detail` and `instance` are present when there is something safe to say, and never carry an upstream URL, a tenant, a broker error body or a policy name. A `400` from the Portal may carry `errors`, one entry per violation, so a form can mark every bad field in one pass.
+
+The extension members (T-3243):
+
+| Member | When | What |
+|---|---|---|
+| `hint` | every problem whose type is in the table below | what the caller does about it, one English sentence; the Portal shows its own translation by the slug |
+| `field` | a validation that names one member or parameter | the member, as the request wrote it (`metadata.name`, `id`) |
+| `code` | the NGSI-LD surface, where `type` is the ETSI one (CIM 009 5.5.2) | the joinedcontext slug the gateway refused with |
+| `requestId` | a `500` | the reference a report is matched to a log line by |
+
+A problem type is one of these slugs; `ProblemDetails::new` with any other fails the platform's catalogue test, and a status without a type of its own answers with the generic one for its class:
+
+| Slug | Status | What to do |
+|---|---|---|
+| `bad-request` | 400 | Correct the request as the detail says and send it again. |
+| `invalid-body` | 400 | Send a JSON body of the documented shape; the detail names what is wrong. |
+| `urn-scheme` | 400 | Use an entity id of the form `urn:ngsi-ld:{Type}:{id}`. |
+| `unauthorized` | 401 | Sign in again, or send a valid bearer token for this audience. |
+| `forbidden` | 403 | Ask a project owner or an organization administrator for the role this needs. |
+| `domain-not-verified` | 403 | Verify the domain in the organization settings first. |
+| `resource-not-found` | 404 | Check the name in the address; it does not exist or is not shared with you. |
+| `method-not-allowed` | 405 | Use one of the methods the `Allow` header lists. |
+| `read-only-view` | 405 | This view only reads; write through the endpoint it is built on. |
+| `conflict` | 409 | Read the resource again and repeat the change on its current state. |
+| `precondition-failed` | 412 | Read the entity again and send its current version in `If-Match`. |
+| `payload-too-large` | 413 | Send less at once: split the request or the file. |
+| `unsupported-media-type` | 415 | Send the body as `application/json` or `application/ld+json`. |
+| `too-many-requests` | 429 | Wait the seconds `Retry-After` names, then try again. |
+| `daily-budget` | 429 | Today's allowance is used up; try again tomorrow or ask an administrator to raise it. |
+| `egress-budget-spent` | 429 | This run's outbound allowance is used up; start a new run or ask an administrator to raise it. |
+| `internal-error` | 500 | Try again; if it happens again, report the `requestId`. |
+| `subscription-not-routable` | 501 | This deployment cannot deliver to that address; use an HTTP(S) receiver the platform reaches. |
+| `federation-identity-unavailable` | 501 | This deployment has no federation identity; ask an administrator to configure one. |
+| `broker-failure` | 5xx | The context broker failed this request; try again in a minute, and report the `requestId` if it repeats. |
+| `upstream-unavailable` | 502, 503 | A service behind the platform did not answer; try again in a minute. |
+| `upstream-redirect` | 502 | The service behind the platform answered with a redirect it may not follow; ask its owner for the final address. |
+| `service-unavailable` | 503 | The platform is not ready for this yet; try again in a minute. |
+| `delivery-timeout` | 504 | The receiver did not answer in time; check that it is reachable and try again. |
 
 ### Existence Masking
 
