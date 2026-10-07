@@ -484,6 +484,7 @@ Generated 2026-10-06 from: `docs` 2ac73dd, `conformance` a0da9d9, `deployment` 5
 | **DM-77** | [S] [H] | tested | ci-full, fast ci | portal `src/change.rs::an_organization_data_model_is_red_and_a_projects_is_not`, portal `tests/datamodel_share_tests.rs::a_project_member_proposes_a_red_change_that_copies_the_source_byte_for_byte`, portal `tests/datamodel_share_tests.rs::a_draft_a_stranger_and_a_model_importing_a_project_model_are_refused_before_any_write`, and 7 more |
 | **DM-78** |  | tested | ci-full, fast ci | portal `tests/datamodel_share_tests.rs::every_member_reads_the_organization_copy_and_its_origin`, portal `ui/tests/model_share.test.tsx::imports the copy in place of what it defines, keeping the rest and every IRI`, portal `ui/tests/model_share.test.tsx::drops a section the copy empties and leaves a source importing it already alone`, and 2 more |
 | **DM-79** | [H] | tested | ci-full, fast ci | portal `tests/organization_datamodels_tests.rs::organization_models_are_every_members_and_carry_their_level`, portal `ui/tests/models_list_page.test.tsx::shows two sections, the organization's read-only with the name a model imports it by`, portal `ui/tests/models_list_page.test.tsx::says the organization shares none when the list holds no organization model`, and 3 more |
+| **DM-80** | [S] | open |  |  |
 
 ### DS — Data space connector
 
