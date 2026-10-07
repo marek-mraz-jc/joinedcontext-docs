@@ -1313,6 +1313,7 @@ Generated 2026-10-07 from: `docs` 28176ac, `conformance` 1ed0cc8, `deployment` f
 | **UI-90** | [H] | open |  |  |
 | **UI-91** | [H] | open |  |  |
 | **UI-92** | [H] | open |  |  |
+| **UI-93** | [H] | tested | ci-full, fast ci | platform `crates/jc-core/tests/dashboard_tests.rs::a_chart_widget_names_its_endpoint_its_type_and_its_property`, portal `ui/tests/explore_chart.test.tsx`, portal `ui/tests/chart_widgets.test.tsx` |
 
 ## Related
 
