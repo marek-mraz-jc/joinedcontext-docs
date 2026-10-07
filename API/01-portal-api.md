@@ -2805,7 +2805,7 @@ notification on to the views that show that space and type.
 
 ```text
 GET  /api/v1/projects/{project}/spaces/{space}/live?type={type}    the changes of one type, as server-sent events → 200
-POST /live-notify/{key}                                            where the gateway delivers the subscription's notifications → 204
+POST /live-notify/{liveKey}                                        where the gateway delivers the subscription's notifications → 204
 ```
 
 - `GET …/live` follows the space's read rule (`404` for a space the caller may not read) and needs
@@ -2817,8 +2817,8 @@ POST /live-notify/{key}                                            where the gat
   (`notification.format: keyValues` of `id`, `type` and the changed attributes is what the broker
   sends; the Portal keeps the names) and expires 24 hours after it was written; a view opened
   after half of that writes it again. Nothing else removes it.
-- `POST /live-notify/{key}` is outside `/api/v1`: the broker that calls it through the gateway holds
-  no token. `key` is an HMAC of the space and type under a secret only this Portal holds, so a key
+- `POST /live-notify/{liveKey}` is outside `/api/v1`: the broker that calls it through the gateway holds
+  no token. `liveKey` is an HMAC of the space and type under a secret only this Portal holds, so a key
   names one subscription and cannot be made up; an unknown key is `404`. A body larger than 1 MiB
   is `413`. A forged notification can only make a view read again.
 - The process that receives a notification passes it on to its own views. With several replicas
@@ -2834,9 +2834,8 @@ only. The manifests are what `POST …/assistant/propose-endpoint` renders (§19
 `audience: public`, `entityTypes: [type]` and `hiddenAttributes`, proposed as one Change with the
 Policy it needs, reviewed like every Endpoint. Once merged and applied, the view is a page:
 
-```text
-GET /v/{slug}            the published view, read-only, no sign-in
-```
+The page `/v/{slug}` (`slug` is the Endpoint's) is the published view: read-only, no sign-in,
+served by the Portal's interface like its other pages, not an API route.
 
 - The page holds no data: every read it makes is an anonymous read of the Endpoint's NGSI-LD
   surface (`/api/endpoint/{slug}/ngsi-ld/v1/…`), so the gateway enforces what the link shows and

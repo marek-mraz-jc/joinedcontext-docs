@@ -99,7 +99,7 @@ A signed-in person asks through the Portal, `POST /api/v1/projects/{project}/kno
 permission and asks `jc-assistant` on its internal path:
 
 ```http
-POST /internal/v1/projects/{project}/knowledge/deployments/{deployment}/chat
+POST {assistant}/internal/v1/projects/{project}/knowledge/deployments/{deployment}/chat
 Authorization: Bearer <the Portal's service-account token>
 X-JC-Person: <the person's username>
 X-JC-Person-Token: <the person's access token, when the request carried one>
@@ -122,7 +122,7 @@ X-JC-Person-Token: <the person's access token, when the request carried one>
 The assistant holds no model key. It calls `POST {proxy}/v1/llm/chat/completions` with its own token and names the deployment the call is for.
 
 ```http
-POST /v1/llm/chat/completions
+POST {proxy}/v1/llm/chat/completions
 Authorization: Bearer <jc-assistant service-account token, audience agent-proxy>
 X-JC-Assistant-Deployment: banskabystrica/bb-public
 X-JC-Assistant-Tokens-Per-Day: 2000000
