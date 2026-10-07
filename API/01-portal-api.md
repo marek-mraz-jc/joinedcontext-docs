@@ -1984,7 +1984,11 @@ POST /api/v1/projects/{project}/assistant/propose-endpoint
 - `access` names what the new endpoint's Policy grants: absent, `retrieveOps` (a share); `read`,
   `update` or `full`, the operations of AP-132 for an endpoint an app proposes; `create`,
   `createEntity` and nothing else, for a public form (§33, T-3103), which needs exactly one type in
-  `entityTypes`.
+  `entityTypes`, names in `writeAttributes` the properties and in `writeRelationships` the
+  relationships the form asks for (the Policy's `propertyNames` and `relationshipNames`, at least
+  one name, so any other attribute is refused, T-3172) and may set
+  `createsPerDay` (default 200, at most 10,000), which the Endpoint carries as `spec.creates`
+  `{mintIds: true, perDay}` (EP-97).
 - The slug is minted here and is read-only in the form; a slug in the request is ignored.
 - `lane` is what the Endpoint's Change would be classified as (§5): `red` for `public`.
 - Nothing is written. A run publishes this body as the `output` of a `tool` event named
@@ -2860,7 +2864,10 @@ served by the Portal's interface like its other pages, not an API route.
   for the type's attributes the Endpoint's published schema lists, required where the schema
   requires them, labelled and helped from the schema, prefilled from `?{attr}=value`, and its submit
   is one anonymous `POST /api/endpoint/{slug}/ngsi-ld/v1/entities`: the gateway decides it and
-  rate-limits it as every anonymous call. The form view's own labels and conditions stay with the
+  rate-limits it as every anonymous call. The Policy grants only the form's fields, the gateway
+  mints the entity's id and stops at the form's daily count (EP-97); the page carries a field a
+  person never sees and a script fills, sent as an attribute the Policy does not grant, so such a
+  submission is refused; and the page says that what is sent is public data of the space. The form view's own labels and conditions stay with the
   signed-in form for now; the public page reads nothing from the Portal's database.
 - Not yet: a password on a link needs the `data_views` record of §30 to hold its hash; an embed
   needs the Endpoint to name the origins that may frame it. Until then a published view is
