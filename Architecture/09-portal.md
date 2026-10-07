@@ -299,7 +299,8 @@ The vocabulary is closed because a filter over free text is not a filter:
 | `kind` | Emitted by | When |
 |---|---|---|
 | `config.applied`, `config.drifted` | reconciler | an apply, a difference between Git and the cluster |
-| `config.planned`, `change.merged` | reconciler | a plan; a merge request became the desired state. Accepted, not emitted yet |
+| `config.planned` | reconciler | a plan. Accepted, not emitted yet |
+| `change.merged` | portal | a person approved a Change and the forge merged it: `details` names the `change`, `resourceKind`, `name`, `operation`, `approvedBy` and the `object` an object page filters on (T-3292) |
 | `pipeline.throughput` | pipeline | one minute of messages, as a count |
 | `pipeline.error` | pipeline | a mapping or output failure, with the failing sample redacted |
 | `pipeline.restarted` | pipeline | the runner restarted a stream |

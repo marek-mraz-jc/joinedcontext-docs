@@ -436,6 +436,7 @@ view of those merge requests, so that an approver never has to open the forge to
 
 ```text
 GET  /api/v1/projects/{project}/changes                  open proposals, newest first
+GET  /api/v1/projects/{project}/changes/history          merged and rejected ones, newest first, paged
 GET  /api/v1/projects/{project}/changes/{id}             one proposal with its plan diff
 POST /api/v1/projects/{project}/changes/{id}/approve     review + merge
 POST /api/v1/projects/{project}/changes/{id}/reject      review "request changes" + close
@@ -493,6 +494,50 @@ It also lists `files`, every file of the merge request (`path`, `kind`, `operati
 each manifest among them carries `fields`: its own field-level diff, base against head, redacted the
 same way, so an approver reads what each file of a bundle changes and not only the headline
 manifest's. A native file (a LinkML source, a `bento.yaml`) carries no `fields`.
+
+`GET …/changes/history` lists the closed changes, most recently closed first, with the read rule of
+the open list: a project no binding covers is `404`, and a change to a kind the caller does not read
+is not listed (PF-59, R20). Each item is a `Change` whose `status.phase` is `Merged` or `Rejected`
+and whose `summary` names the resource; `plan` counts and the diff are not carried, since the
+default branch already holds what a merged change made. `decision` says who decided it, as the
+Portal wrote it on the forge: the approver of the merge commit, or the rejecter and the reason of
+the rejection. A change merged or closed in the forge itself carries no `decision`.
+
+| Parameter | Meaning |
+|---|---|
+| `page` | the page, from 1; `next` of the previous answer, present while the forge holds older ones |
+| `kind` | one kind only, any case, as `Endpoint` |
+| `name` | resource names containing this, any case |
+
+An unknown parameter or `page=0` is `400`. A page reads 20 closed merge requests of the forge, so it
+can hold fewer items than that, none at all included, and still carry `next`.
+
+```json
+{
+  "apiVersion": "joinedcontext.com/v1alpha1",
+  "kind": "ChangeList",
+  "items": [
+    {
+      "apiVersion": "joinedcontext.com/v1alpha1",
+      "kind": "Change",
+      "metadata": { "name": "chg-0000019b", "namespace": "helsinki" },
+      "status": { "lane": "yellow", "repository": "helsinki", "phase": "Rejected",
+                  "mergeRequest": "https://git.example.fi/hel/helsinki/pulls/411",
+                  "plan": { "create": 0, "update": 0, "delete": 0 } },
+      "summary": { "key": "change.summary.update", "params": { "kind": "Endpoint", "name": "public-air", "fields": 0 } },
+      "author": { "name": "Aino Virtanen", "email": "aino.virtanen@example.org" },
+      "createdAt": "2026-09-05T08:02:10Z",
+      "fileCount": 1,
+      "decision": { "by": "mikko.approver@example.org", "at": "2026-09-05T11:40:00Z", "reason": "the URL is the old one" }
+    }
+  ],
+  "next": 2
+}
+```
+
+Approving a change records a `change.merged` activity event naming the change, its resource and the
+approver ([§14](#14-activity-ui-31-ops-48-ops-49)), so the project's activity says what went live and
+links to it, beside the reconciler's `config.applied` for the commit.
 
 Approval rules, enforced by the API and not only by the UI:
 
@@ -651,7 +696,8 @@ PUT /api/v1/preferences      replaces them whole; answers 200 with what is now s
   "locale": "sk",
   "defaultProject": "air-quality",
   "dashboardLayouts": { "air-quality-overview": { "collapsedLegend": true } },
-  "advancedMode": false
+  "advancedMode": false,
+  "firstRunDismissed": false
 }
 ```
 
@@ -664,6 +710,10 @@ PUT /api/v1/preferences      replaces them whole; answers 200 with what is now s
 - `advancedMode` shows the form fields a `UiSchema` marks `advanced` (CC-29): the commit message,
   the branch, the target revision. Absent means off. It changes what a form shows, never what a
   write may do.
+- `firstRunDismissed` hides the five-step first-run checklist on the project home page (create a
+  space, connect a data source, run a pipeline, see the data, share it); the help menu shows it
+  again by clearing it. Absent means shown. Each step ticks itself from the project's own state,
+  never from this record (T-3233).
 - `503` with `problem+json` when the Portal runs without a preferences database. The UI then works
   from browser defaults; nothing else depends on this tier (UI-09).
 
@@ -2950,9 +3000,56 @@ POST   /api/v1/notifications/{id}/read                                mark one o
 - A notification names the space, the URN, the comment, its author and the first 200 characters;
   `GET /notifications` answers the caller's own (matched by their username and their e-mail, lower
   case), at most 100, newest first, with `unread` counted. The Portal sends no e-mail of its own.
-- A project or a space the caller may not read is `404`, as in §27; a URN is never checked
-  against the space, so a comment says nothing about whether an entity exists. At most 1,000
+- A project or a space the caller may not read is `404`, as in §27. Listing or adding the
+  comments of an entity first reads that entity on the space surface
+  (`/cs/{space}/ngsi-ld/v1/entities/{urn}`) with the caller's own token: an entity their Policy
+  hides, or one that is not there, is the same `404`, so a comment shows nobody what their
+  Policy hides and still says nothing about whether an entity exists. A request that carries no
+  token of the caller's (a Portal cookie session) is `404` with that reason (T-3284). A mention
+  is the author's own disclosure to a reader of the space, as an e-mail would be. At most 1,000
   comments per entity.
+
+## 36. A type's attributes in a space's data model (T-3223, DM-61, PL-59)
+
+What a pipeline editor's output node maps a record's fields onto: the attributes an entity type
+has in the data model the space pins (`spec.dataModelRef`), read from the same compiled schema the
+runner's validation stage checks every record against. Reading the space is all it needs; a person
+who may not read it gets the space's 404 and learns nothing of its model.
+
+```text
+GET /api/v1/projects/{project}/spaces/{space}/types/{type}/attributes   the type and its attributes → 200
+```
+
+```json
+{
+  "model": "bb-air-quality",
+  "version": "1.0.0",
+  "type": "AirQualityObserved",
+  "description": "One air-quality station in the city and the latest hourly means it reported.",
+  "attributes": [
+    { "name": "dateObserved", "kind": "Property", "valueType": "string", "format": "date-time", "required": true,
+      "description": "The end of the latest hour a reading of the entity covers." },
+    { "name": "pm10", "kind": "Property", "valueType": "number", "required": false, "minimum": 0,
+      "description": "Particulate matter up to 10 µm.", "unit": { "code": "GQ", "ucum": "ug/m3" } },
+    { "name": "refDevice", "kind": "Relationship", "valueType": "string", "required": false,
+      "relationship": { "target": "Device", "many": false } }
+  ]
+}
+```
+
+- Required attributes come first, then by name; `id` and `type` are the entity's own and are not
+  listed. `kind` is the NGSI-LD attribute kind the slot declares; `unit.code` is the UN/CEFACT code a
+  quantity's `unitCode` carries; `values` lists a coded slot's permitted values; `relationship`
+  names the type a Relationship points at.
+- `404` with the reason for a type the model does not declare ("… is not a class of the space's data
+  model …") and for a space that names no model this Portal compiled.
+- The pipeline test (`POST /api/v1/projects/{project}/pipelines/test`, §7a) holds a pipeline's output
+  to the same model: before the sample is read, an output whose type is not a class of the model its
+  Endpoint's space pins is an error finding at `spec.output.type` (or `spec.outputs[i].type`); on the
+  sample, every output record is checked per attribute (missing required `sh:minCount`, wrong type
+  `sh:datatype`, an attribute the class does not declare `sh:closed`, a quantity in another unit
+  `ngsi-ld:unitCode`). A red verdict holds the draft back from proposal in strict mode (PF-57); the
+  draft itself is saved with the report.
 
 ## Related
 
