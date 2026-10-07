@@ -3135,6 +3135,52 @@ GET /api/v1/projects/{project}/spaces/{space}/types/{type}/attributes   the type
   `ngsi-ld:unitCode`). A red verdict holds the draft back from proposal in strict mode (PF-57); the
   draft itself is saved with the report.
 
+## 37. Alerts a person chooses (T-3261, PL-71)
+
+A person who may read a pipeline, or a space, chooses to be told when something goes wrong with
+it. The Portal keeps the choice, opens one incident when a signal starts and closes it when the
+signal clears, and leaves one notice per subscriber for each: no storm of repeats while it lasts.
+
+```text
+GET    /api/v1/alerts                       the caller's alert subscriptions → 200
+PUT    /api/v1/alerts                       subscribe, or change the subscription of the same target → 200
+DELETE /api/v1/alerts/{id}                  stop one of the caller's subscriptions → 204
+POST   /api/v1/alerts/{id}/mute             mute one for a while, or unmute it → 200
+GET    /api/v1/alerts/notices               the caller's notices, newest first → 200
+POST   /api/v1/alerts/notices/{id}/read     mark one read → 204
+```
+
+```json
+{
+  "id": 3,
+  "project": "helsinki",
+  "scope": "space",
+  "target": "bikes",
+  "events": ["failure", "stale", "zero"],
+  "delivery": "portal",
+  "mutedUntil": null
+}
+```
+
+- `scope` is `pipeline` (`target` the pipeline's name), `space` (the space's name: every pipeline
+  whose output Endpoint writes into it) or `type` (`{space}/{Type}`: the pipelines writing that type
+  there). `events` is one or more of `failure` (the pipeline's phase is `Error`), `zero` (its
+  `StreamWriting` condition is `False`: it wrote nothing while erring, or stalled) and `stale` (the
+  daily quality run found its newest entity older than the freshness target, DM-74). One
+  subscription per caller and target: a second `PUT` changes it. An unknown key is `422`, an
+  unknown scope or event `400`.
+- `delivery` is `portal` (a notice when the incident opens and one when it closes) or `digest` (one
+  notice a day, after 07:00 UTC, naming the incidents opened in the last day). `email` is refused
+  with `400` and its reason while the Portal has no mail relay (T-3261).
+- Subscribing needs `read` on the pipeline (`pipeline`) or on the space (`space`, `type`); a target
+  the caller may not read is `404`, as in §27. The notices list is filtered with the caller's grants
+  when it is read, so a notice of a target they lost access to is not shown.
+- `POST …/mute` takes `{ "for": "1h" | "1d" | "7d" | "forever" }`, or `{ "for": null }` to unmute; a
+  muted subscription gets no notice until then. Every notice carries the `subscription` it came from,
+  so the Portal offers "Mute" beside each one.
+- A notice names the project, the pipeline, the event, whether it `opened` or `recovered`, and when;
+  at most 200 per caller are kept, the oldest dropped first; `unread` is counted.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.

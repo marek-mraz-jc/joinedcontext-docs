@@ -1055,6 +1055,7 @@ Generated 2026-10-07 from: `docs` 28176ac, `conformance` 1ed0cc8, `deployment` f
 | **PL-68** | [H] [A] | tested | ci-full, fast ci | portal `ui/e2e/pipeline_flow.spec.ts::builds a pipeline by dragging nodes and drawing a wire, and its test run is green`, portal `ui/tests/pipeline_graph.test.ts::moves a node one place and nothing past either end`, portal `ui/tests/pipeline_graph.test.ts::names what a node still lacks, and nothing for a node that has it` |
 | **PL-69** | [H] | open |  |  |
 | **PL-70** | [H][S] | open |  |  |
+| **PL-71** | [H][S] | open |  |  |
 
 ### R — Access control and federation
 
