@@ -296,7 +296,7 @@ The platform supports both interactive conversations and unattended background w
 |---|---|---|---|---|
 | `conversation` | User via assistant panel or API | No (continuous conversational turns) | Terminal state or idle completion | None (may trigger work runs or UI navigation) |
 | `application` | User via wizard or Assistant page | Optional (`unattended: false` interviews; `unattended: true` skips) | `awaitingApproval` with live application preview | `kind: App` manifest via change flow |
-| `dashboard` | User via Assistant page or API | Skipped (`unattended: true`) | `awaitingApproval` with kit preview | `kind: Dashboard` manifest via change flow |
+| `dashboard` | User via Assistant page or API | Skipped (`unattended: true`) | `awaitingApproval` with the preview of its code | publishing not available yet (the run says so) |
 | `analysis` | User via Assistant page or API | Skipped (`unattended: true`) | `awaitingApproval` with kit preview and `report.md` | None (never published; client-side kit export) |
 
 ### 10.1 Interactive Conversations
@@ -316,7 +316,7 @@ To continue an ended conversation, the client starts a new conversation run spec
 Work runs (`kind` of `application`, `dashboard`, or `analysis`) execute automated development and analytical tasks without requiring step-by-step supervision (UI-55, AG-69). Standard run creation accepts an optional `unattended: boolean` parameter, which defaults to `false` for applications and is mandatory `true` for dashboard and analysis tasks:
 
 - **Application (`kind: "application"`):** When `unattended: true` is set, the run skips the interactive questionnaire phase. If architectural choices arise, the agent selects sensible defaults, logs the assumption as a `thought` event, produces a functional application preview, and concludes in `awaitingApproval`. Publication transitions the draft `App` manifest into Git via pull request (AP-20).
-- **Dashboard (`kind: "dashboard"`):** Always unattended (`unattended: true`). The agent inspects available context space endpoints, derives layer configurations, and generates a kit specification. It concludes in `awaitingApproval` with an interactive kit preview and submits a `kind: Dashboard` manifest to the GitOps change queue.
+- **Dashboard (`kind: "dashboard"`):** Always unattended (`unattended: true`). A dashboard is the read-only application (T-3159, AP-56): the code pass of §1.2 writes it on the App SDK template like an application, with the request framed as figures, charts and a filtered table, and no form or write. A dashboard whose data needs ask for a write is refused when the run is created. It concludes in `awaitingApproval` with the preview of its code; publishing a dashboard run is not available yet and answers so.
 - **Analysis (`kind: "analysis"`):** Always unattended (`unattended: true`). The agent queries live context space data, computes statistical aggregations, and renders a kit dashboard accompanied by an in-depth markdown summary (`report.md`) preserved directly on the run record. Analysis runs are never published to Git manifests; their findings and visualizations are exported client-side via in-browser export artifacts (AP-66).
 
 All work runs strictly enforce profile token allowances, wall-clock timeouts, rate caps, and egress proxy allow-lists (AG-41, AG-65).
