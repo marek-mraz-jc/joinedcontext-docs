@@ -299,7 +299,7 @@ Keycloak finds a federated client by its assertion's subject, so the subjects mu
 
 The ceiling is the shared runner. A stream whose DataSource URL or mapping calls the token service could name another pipeline, as any stream already reaches the runner's own stream API on `127.0.0.1:4195`. That takes an approved Change, and T-3162 closes the typed-URL path at admission. What the split buys is attribution and narrowing: every write carries its pipeline's `azp`, the gateway decides it with that pipeline's Policies alone, and the audit names the pipeline. A project that needs isolation from another gets a runner of its own later (option c).
 
-The switch is the deployment's: until it sets the Portal's pipeline-identity setting to `pipeline` (named here when the Portal half of T-1508 ships) and the runner's `JC_PIPELINE_TOKEN_URL` (after the federated mechanism is seen working on dev, T-2868), the Portal renders streams with the project's `pipelines` account as before, and the derived principals and Policies exist unused.
+The switch is the deployment's: until it sets the Portal's `JC_PORTAL_PIPELINE_IDENTITY=pipeline` and the runner's `JC_PIPELINE_TOKEN_URL` (after the federated mechanism is seen working on dev, T-2868), the Portal renders streams with the project's `pipelines` account as before, and the derived principals and Policies exist unused.
 
 ### What the gateway checks in a token
 
