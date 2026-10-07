@@ -306,6 +306,14 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | `propose-endpoint` | `joinedcontext-portal/src/agents/share.rs` | `tests/assistant_share_tests.rs` | `ui/tests/assistant_endpoints.test.tsx` | `ui/e2e/live/share.spec.ts` › "an endpoint proposed and approved through the UI: Live, the hidden attribute absent, the viewer refused on the organization one" | `jc_endpoint_propose` |
 | `refused-no-permission` | `joinedcontext-portal/src/agents/access.rs` | `tests/attack_assistant_tests.rs` | `ui/tests/assistant_permissions.test.tsx` | `ui/e2e/live/viewer-refused.spec.ts` › "a viewer is refused with a reason on every page, and at the door" | `jc_resource_propose` |
 
+### 3.24 Knowledge assistant (`knowledge`)
+
+| step | unit | API | mocked UI | live journey | assistant |
+|---|---|---|---|---|---|
+| `leave-out` | `joinedcontext-platform/crates/assistant/src/chat/admin.rs` | `tests/knowledge_api_tests.rs` | `ui/tests/knowledge_pages.test.tsx` | `ui/e2e/live/knowledge.spec.ts` › "taking back a page already in the answers changes nothing, and a viewer may not leave one out" | person only: leaving a page or a document out of every answer is an administrator's judgement of what the city's assistant may cite; an agent would decide that for them (AG-11, AG-113) |
+| `recrawl` | `joinedcontext-platform/crates/assistant/src/chat/admin.rs` | `tests/knowledge_api_tests.rs` | `ui/tests/knowledge_pages.test.tsx` | `ui/e2e/live/knowledge.spec.ts` › "a viewer may not queue a crawl, and a steward's crawl now is queued once" | person only: a crawl now reaches out to a city's website ahead of its schedule; the administrator who changed the site decides when, not an agent (AG-113) |
+| `ask` | `joinedcontext-platform/crates/assistant/src/chat/mod.rs` | `tests/knowledge_api_tests.rs` | `ui/tests/knowledge_pages.test.tsx` | `ui/e2e/live/knowledge.spec.ts` › "a question outside the contract and an unknown assistant are refused before anything is spent" | person only: the assistant reads as the signed-in person with their own token (AG-115); an agent holds no person's token to pass on, so it never asks on someone's behalf |
+
 ## 4. Routes
 
 Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), with the steps that send it. A route the table leaves out, or that no step claims and no `none:` explains, turns `gate_workflows` red.
@@ -350,6 +358,9 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 | `POST /api/v1/projects/{project}/duplicate` | `project/copy` |
 | `POST /api/v1/projects/{project}/flows` | `change/blueprint` |
 | `POST /api/v1/projects/{project}/import` | `import/upload`, `import/from-git` |
+| `POST /api/v1/projects/{project}/knowledge/deployments/{deployment}/chat` | `knowledge/ask` |
+| `POST /api/v1/projects/{project}/knowledge/sources/{source}/inclusion` | `knowledge/leave-out` |
+| `POST /api/v1/projects/{project}/knowledge/sources/{source}/recrawl` | `knowledge/recrawl` |
 | `POST /api/v1/projects/{project}/ops/{name}` | none: the registry's door runs every operation by name, and each operation is claimed by the step whose tool it is |
 | `POST /api/v1/projects/{project}/pipelines/test` | `pipeline/test` |
 | `POST /api/v1/projects/{project}/pipelines/{name}/rejected/retry` | `pipeline/retry-rejected` |
