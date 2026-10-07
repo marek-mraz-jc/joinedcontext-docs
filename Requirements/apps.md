@@ -5,9 +5,9 @@ title: "Apps on Demand"
 
 # Apps on Demand
 
-Family **AP** (AP-01…AP-87, AP-90…AP-140). Owning chapters: [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) and [19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
+Family **AP** (AP-01…AP-87, AP-90…AP-141). Owning chapters: [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) and [19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
 
-Requirement family **AP-01…AP-87, AP-90…AP-140** for AI-generated, purpose-built applications that consume context data through a dedicated, least-privilege Endpoint. Architecture in [Architecture/16-apps-on-demand](../Architecture/16-apps-on-demand.md) and [Architecture/19-agent-runner](../Architecture/19-agent-runner.md).
+Requirement family **AP-01…AP-87, AP-90…AP-141** for AI-generated, purpose-built applications that consume context data through a dedicated, least-privilege Endpoint. Architecture in [Architecture/16-apps-on-demand](../Architecture/16-apps-on-demand.md) and [Architecture/19-agent-runner](../Architecture/19-agent-runner.md).
 
 ## 1. Manifest and source
 
@@ -244,6 +244,7 @@ The owner's rule of 2026-09-23: every App of the Portal must work and read data 
 ## 26. What an App Lacks Before It Is Published
 
 - **AP-140** [H][S] — Publishing an App (AP-20) MUST first list what it lacks, each item with a link to where it is fixed: a title, a description, a licence (the `joinedcontext.com/licence` annotation, else the installation's `licenseDefault`), who may open it, the last check (AP-136, and the build's accessibility run), and a contact (the `joinedcontext.com/contact` annotation, else the installation's contact address); a missing item is a warning publishing may go on with. A privacy problem MUST hold the publication: a `private` App, or a `public` App whose data needs write, read a space no `public` Endpoint publishes, or name an attribute that is a person's own data (an e-mail, a telephone, a date of birth, a national id, an IBAN, a passport, a given or family name) (T-3267).
+- **AP-141** [H] — The Apps page MUST offer the gallery of App templates (the samples of SDK-24, `GET /api/v1/app-templates`), each with what it is for, for whom, who may read what it shows and the types it reads; "create from this" MUST ask only which of the project's Endpoints the App reads and start the ordinary build run (AP-44), whose prompt names the template as `(template: {name})`, which the run adapts over every keyword match, so the App runs as a preview before anyone edits it (T-3263).
 
 ## Traceability
 
@@ -278,6 +279,7 @@ The owner's rule of 2026-09-23: every App of the Portal must work and read data 
 | AP-138 | Every published App is coloured, with a chart and, for located data, a map | [20-app-sdk.md#2-the-template-application](../Architecture/20-app-sdk.md#2-the-template-application) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | AP-139 | An App's Endpoint evaluates its own grants alone | [16-apps-on-demand.md §12](../Architecture/16-apps-on-demand.md#12-roles-of-an-application) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | AP-140 | What an App lacks before it is published | [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| AP-141 | The gallery of App templates | [20-app-sdk.md#2-the-template-application](../Architecture/20-app-sdk.md#2-the-template-application) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | AP-100…AP-104 | The workflow file, the package registry and the host's fetch | [20-app-sdk.md#60-where-the-build-runs](../Architecture/20-app-sdk.md#60-where-the-build-runs) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | AP-130…AP-131 | A build pod per App and a build cache of its own | [20-app-sdk.md#60-where-the-build-runs](../Architecture/20-app-sdk.md#60-where-the-build-runs), [ADR-N-028](../Decisions/adr-n-028-applications-build-on-the-forge.md) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | AP-132 | Access presets of Build an app | [19-agent-runner.md#1-what-runs-where](../Architecture/19-agent-runner.md#1-what-runs-where) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
