@@ -2931,8 +2931,8 @@ POST   /api/v1/notifications/{id}/read                                mark one o
   "urn": "urn:ngsi-ld:BikeHireDockingStation:hel.fi:bikes:7",
   "author": "demo.steward@hel.fi",
   "authorName": "Demo Steward",
-  "text": "@demo.editor@hel.fi the count looks stale since Monday",
-  "mentions": ["demo.editor@hel.fi"],
+  "text": "@demo.editor@example.org the count looks stale since Monday",
+  "mentions": ["demo.editor@example.org"],
   "createdAt": "2026-10-06T19:20:00Z",
   "mine": true
 }
@@ -2941,7 +2941,7 @@ POST   /api/v1/notifications/{id}/read                                mark one o
 - `POST` takes `urn` (an NGSI-LD URN, PF-43) and `text` (1 to 4,000 characters); a URN or text
   outside that is `400`, an unknown key `422`. A mention is `@` after the start or a character that
   is not part of a word, followed by a person's identifier as the RoleBindings and Groups name
-  them (`demo.editor@hel.fi`). A mention counts only for a person a binding in force lets read the
+  them (`demo.editor@example.org`). A mention counts only for a person a binding in force lets read the
   space, by name or through a `Group`'s members, exactly as §27 decides it for a caller; each such
   person gets one notification, the author none. Mentions of anyone else are kept in the text and
   listed in the answer's `unknownMentions`, notified to nobody.
