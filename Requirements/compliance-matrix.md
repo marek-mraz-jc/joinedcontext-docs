@@ -156,6 +156,7 @@ Generated 2026-10-06 from: `docs` 2ac73dd, `conformance` a0da9d9, `deployment` 5
 | **AG-113** | [H] [S] | tested | ci-full, fast ci | platform `crates/assistant/tests/admin_tests.rs::only_the_portals_service_account_is_answered`, platform `crates/assistant/tests/admin_tests.rs::the_inventory_reads_level_by_level`, platform `crates/assistant/tests/admin_tests.rs::an_administrators_exclusion_removes_passages_and_outlives_the_next_crawl`, and 10 more |
 | **AG-114** | [S] | tested | ci-full, conformance, fast ci | conformance `e2e/journeys/32-assistant-widget.spec.ts::the widget answers with its sources at ${name} width, by keyboard alone (AG-114)`, conformance `e2e/journeys/32-assistant-widget.spec.ts::a page on another site is refused before anything is spent (AG-100, AG-114)`, conformance `e2e/journeys/32-assistant-widget.spec.ts::the catalogue offers its assistant, which opens by keyboard and frames the assistant host (AG-114)`, and 3 more |
 | **AG-115** | [S] | open |  |  |
+| **AG-116** | [S] | open |  |  |
 | **AG-87** | [H] | tested | ci-full, fast ci | portal `src/agents/paths.rs::every_path_says_its_steps_with_tools_it_may_call`, portal `src/agents/paths.rs::every_path_has_an_id_that_reads_back_and_a_first_question`, portal `src/agents/paths.rs::a_path_reads_everywhere_and_changes_only_what_it_is_for`, and 40 more |
 | **AG-88** | [A] | built |  | `joinedcontext-portal/src/agents/oneshot/conversation.rs` |
 | **AG-89** | [A] [S] | tested | fast ci | portal `src/ops/pipeline_steps.rs::fields_are_every_key_once_in_name_order` |
