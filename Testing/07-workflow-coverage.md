@@ -315,6 +315,12 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | `recrawl` | `joinedcontext-platform/crates/assistant/src/chat/admin.rs` | `tests/knowledge_api_tests.rs` | `ui/tests/knowledge_pages.test.tsx` | `ui/e2e/live/knowledge.spec.ts` › "a viewer may not queue a crawl, and a steward's crawl now is queued once" | person only: a crawl now reaches out to a city's website ahead of its schedule; the administrator who changed the site decides when, not an agent (AG-113) |
 | `ask` | `joinedcontext-platform/crates/assistant/src/chat/mod.rs` | `tests/knowledge_api_tests.rs` | `ui/tests/knowledge_pages.test.tsx` | `ui/e2e/live/knowledge.spec.ts` › "a question outside the contract and an unknown assistant are refused before anything is spent" | person only: the assistant reads as the signed-in person with their own token (AG-115); an agent holds no person's token to pass on, so it never asks on someone's behalf |
 
+### 3.25 Finding and coming back (`navigation`)
+
+| step | unit | API | mocked UI | live journey | assistant |
+|---|---|---|---|---|---|
+| `find-and-return` | `ui/src/navigation/places.ts` | `tests/preferences_db_tests.rs` | `ui/tests/navigation_ease.test.tsx` | `ui/e2e/live/navigation.spec.ts` › "Ctrl+K and a name reach a pipeline; its link opens the same page for a colleague" | person only: finding a page with the keyboard, starring it and sending its link are a person's own way around the Portal; the assistant reaches data through its own tools |
+
 ## 4. Routes
 
 Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), with the steps that send it. A route the table leaves out, or that no step claims and no `none:` explains, turns `gate_workflows` red.
@@ -334,6 +340,7 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 | `POST /api/v1/organization/people/{id}/reset-password` | `people/reset-password` |
 | `POST /api/v1/organization/people/{id}/sign-out` | `people/sign-out-everywhere` |
 | `PUT /api/v1/preferences` | none: a person's own language, theme and last project, stored for them and never a workflow step |
+| `POST /api/v1/preferences/recent` | `navigation/find-and-return` |
 | `POST /api/v1/projects` | `project/create` |
 | `DELETE /api/v1/projects/{project}` | `project/retire` |
 | `POST /api/v1/projects/{project}/agent-runs` | `app/build-by-conversation` |

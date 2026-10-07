@@ -539,6 +539,39 @@ Keycloak holds identity only: who a person is and how they sign in (I4). No role
 
 Replacing the Keycloak admin console: realm settings, identity providers, clients and authentication flows stay there. People are provisioned on the People tab (ADR-N-031); a binding or a group may still name a person before their first login, which the Members and Groups tabs show as "not signed in yet".
 
+## 15. Finding and coming back
+
+A person new to the Portal should reach anything they may read with two keystrokes and a name,
+and come back to yesterday's work in one click (UI-88…UI-92).
+
+- **The palette.** Ctrl/Cmd+K opens one box over the person's recent and starred pages, the
+  actions, the project's pages, the projects they may read and the project's spaces, Endpoints,
+  pipelines, apps, models and entity types. It reads the same list endpoints the pages read, so
+  it can offer nothing the caller may not read, and reads them only while it is open. With nothing
+  typed the recent pages come first; with a name typed, what has that name comes before the
+  actions, so Enter opens it. A URN opens the entity in the explorer (`?entityId=`), other text
+  the explorer's search (`?q=`). A second Ctrl/Cmd+K closes the palette and opens the assistant
+  with the text in its composer; the person still presses Send.
+- **Recent and starred.** `PageHeader`, on every page, records an item page among the person's
+  last ten and carries a star and a copy-link control. Both lists live in the person's own
+  preferences (API/01 §8), so they follow the person to another browser; the UI drops a page of
+  a project the person no longer reads before showing it.
+- **Addresses.** `/projects/{project}/{plural}/{name}` is every item's address: spaces,
+  Endpoints and apps have a page there, every other kind redirects to its form. The copied link is
+  the address with its query and without `lang`, so the receiver reads it in their own language.
+  The breadcrumb reads organization › project › section › item. A page's tab is a query
+  parameter (`?tab=`, a space's `?view=`) pushed as a history entry, and the explorer replaces
+  its own `space`, `endpoint`, `type`, `q` and `entityId` as they change; a page writing its own
+  query is no assistant hand-off, so it is not mounted afresh. The router restores the scroll
+  position on back and forward.
+- **Recent, reported once.** An opened page is not a write: the tab collects the pages and sends
+  them in one `POST /api/v1/preferences/recent` when it is hidden or closed, which the Portal
+  merges into the stored list; a star is written at once.
+- **Shortcuts.** Ctrl/Cmd+S, N, T, J, K, Escape and "?" act on what the page offers: a page marks
+  its New, Save and Test buttons with `data-shortcut`, the rows of its lists are the links
+  `RecordLink` renders, and "?" lists only the shortcuts with a target on the page. A letter never
+  acts while the focus is in a text field.
+
 ## Related
 
 - [01-overview](../Architecture/01-overview.md) — where this chapter sits in the whole.

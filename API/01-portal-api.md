@@ -723,7 +723,9 @@ PUT /api/v1/preferences      replaces them whole; answers 200 with what is now s
   "defaultProject": "air-quality",
   "dashboardLayouts": { "air-quality-overview": { "collapsedLegend": true } },
   "advancedMode": false,
-  "firstRunDismissed": false
+  "firstRunDismissed": false,
+  "recent": [{ "path": "/projects/air-quality/pipelines/shmu/edit", "title": "shmu · air-quality" }],
+  "favourites": [{ "path": "/projects/air-quality/explore?type=AirQualityObserved", "title": "Explore data · air-quality" }]
 }
 ```
 
@@ -740,6 +742,16 @@ PUT /api/v1/preferences      replaces them whole; answers 200 with what is now s
   space, connect a data source, run a pipeline, see the data, share it); the help menu shows it
   again by clearing it. Absent means shown. Each step ticks itself from the project's own state,
   never from this record (T-3233).
+- `recent` holds the last ten item pages the person opened, newest first, and `favourites` up to
+  fifty pages they starred (UI-90). Each place is a `path` inside the Portal, with its query and
+  without `lang`, and the `title` the page had: a path that is not one of this Portal's (`//host`,
+  a scheme, a backslash, a control character) or longer than 512 characters, an empty title or one
+  over 200 characters, an eleventh recent page or a fifty-first star is a `400`. The UI filters
+  both to the projects the caller may read before showing them.
+- `POST /api/v1/preferences/recent` with `{ "places": [Place, …] }` (1 to 10, newest first) puts
+  those pages at the top of the caller's `recent`, each path once, the newest ten kept, and leaves
+  every other field as stored; it answers `200` with what is now saved. The browser sends it when
+  its tab is hidden, so opening a page is no write of its own (UI-90).
 - `503` with `problem+json` when the Portal runs without a preferences database. The UI then works
   from browser defaults; nothing else depends on this tier (UI-09).
 
@@ -1443,7 +1455,9 @@ POST /api/v1/projects/{project}/apps/{name}/rebuild    dispatches build.yml on t
 {
   "repositoryUrl": "https://forge.example/user/oauth2/keycloak?redirect_to=%2Fjoinedcontext-apps%2Fhelsinki_city-bikes",
   "configurationUrl": "https://forge.example/user/oauth2/keycloak?redirect_to=%2Fjoinedcontext%2Fhelsinki",
-  "run": { "status": "completed", "conclusion": "success", "commit": "3f1c…", "url": "https://forge.example/user/oauth2/keycloak?redirect_to=…" },
+  "run": { "status": "completed", "conclusion": "success", "commit": "3f1c…", "url": "https://forge.example/user/oauth2/keycloak?redirect_to=…",
+           "number": 8, "startedAt": "2026-10-07T10:00:00Z", "completedAt": "2026-10-07T10:03:05Z" },
+  "typicalSeconds": 185,
   "packageUrl": "https://forge.example/user/oauth2/keycloak?redirect_to=%2Fjoinedcontext%2F-%2Fpackages%2Fgeneric%2Fapp-city-bikes%2F3f1c…",
   "rebuild": { "allowed": false, "reason": "Rebuild needs propose on App in project helsinki" }
 }
@@ -1463,6 +1477,12 @@ POST /api/v1/projects/{project}/apps/{name}/rebuild    dispatches build.yml on t
   organization reads every App's repository to every signed-in person (PF-79, T-3030).
 - `run` is the newest run of the repository's workflows, or `null` before the first one;
   `packageUrl` names the package of `status.build.commit`, or is `null` while the App has no build.
+- `run.number` is the run's number in its repository, and `startedAt`/`completedAt` are present
+  once a runner took it and once it completed. A client that pressed Rebuild tells its run from
+  the one before by the number (T-3245).
+- `typicalSeconds` is how long the newest finished successful run of the last five took: the
+  estimate a running build is shown against. It is absent before the first success, so there
+  is no estimate rather than a guess (T-3245).
 - An App without `spec.source.git` has no build here: `repositoryUrl`, `run` and `packageUrl`
   are `null` (`configurationUrl` still names the configuration repository), and `rebuild.reason` says the App is not built on the forge.
 - `rebuild.allowed` is `true` for a person holding `propose` on `App` in the project; otherwise
@@ -2420,6 +2440,7 @@ PATCH  /api/v1/organization/people/{id}                     edit the name, the e
 POST   /api/v1/organization/people/{id}/disable             disable and end every session → 200
 POST   /api/v1/organization/people/{id}/enable              enable → 200
 POST   /api/v1/organization/people/{id}/reset-password      send a password reset → 202, or 200 with a temporary password
+POST   /api/v1/organization/people/{id}/resend-invitation   send a pending invitation again → 202, or 200 with a temporary password
 POST   /api/v1/organization/people/{id}/remove-second-factor  remove every OTP and WebAuthn credential → 204
 POST   /api/v1/organization/people/{id}/sign-out            end every session → 204
 DELETE /api/v1/organization/people/{id}                     remove → 202 with the Change, or 204
@@ -2443,7 +2464,8 @@ the following page, when there is one:
       "requiredActions": [],
       "createdAt": "2026-09-24T09:12:40Z",
       "lastSeen": "2026-09-25T07:02:11Z",
-      "pendingDeletion": null
+      "pendingDeletion": null,
+      "invitationExpires": null
     }
   ],
   "next": 50
@@ -2453,6 +2475,9 @@ the following page, when there is one:
 - `lastSeen` is the last access of the person's newest open session, `null` when none is open. The
   realm keeps no login history the Portal's client may read, so there is no "last login".
 - `pendingDeletion` names the Change a deletion waits for, `null` otherwise.
+- `invitationExpires` is when the link of the last invitation the Portal sent stops working, while
+  the person still has `requiredActions` left; `null` once they are done, or when the Portal has
+  no database to remember the sending in (PF-108).
 
 `GET {id}` answers the person with where they are granted something, each item naming the
 manifest that grants it (PF-94):
@@ -2470,12 +2495,18 @@ manifest that grants it (PF-94):
 }
 ```
 
-Creating takes the e-mail, the name and the language, and nothing else
-(`deny_unknown_fields`):
+Creating takes the e-mail, the name, the language and the project the invitation leads into, and
+nothing else (`deny_unknown_fields`):
 
 ```json
-{ "email": "jana.kovacova@example.org", "firstName": "Jana", "lastName": "Kováčová", "locale": "sk" }
+{ "email": "jana.kovacova@example.org", "firstName": "Jana", "lastName": "Kováčová", "locale": "sk", "project": "helsinki" }
 ```
+
+`project` is optional and names a project of the organization (`404` otherwise): the e-mail's link
+ends, once the person has set their password, on `/projects/{project}/home?welcome=1`, where the
+project's home page greets them with the first step of the role they hold there (PF-108). It
+grants nothing: the Portal proposes the person's role as a `RoleBinding` through the one propose
+function, and the role holds once that Change is approved, like any other grant (PF-95).
 
 The e-mail is also the username, the name members and subjects name the person by (PF-04). The
 realm sends its execute-actions e-mail, `VERIFY_EMAIL` and `UPDATE_PASSWORD` (PF-92), and the
@@ -2484,6 +2515,12 @@ Portal sets a temporary password with `UPDATE_PASSWORD` required instead and ans
 `{ "person": {…}, "emailSent": false, "temporaryPassword": "…" }`. A password reset works the same
 way: `202` when the e-mail went, `200` with `temporaryPassword` when it could not. The Portal never
 stores, logs or returns that password again, and nothing else ever carries it.
+
+`resend-invitation` sends the execute-actions e-mail again for the steps the person has not taken,
+with a fresh link of the organization's `invitationHours`, and answers like a password reset. A
+person with no step left is `409`: there is nothing to accept. It needs `create` on Person and
+every right the person holds. Revoking an invitation is `DELETE` on a person who has not accepted
+it: a person no manifest names yet is deleted at once, and the link stops working with them.
 
 `PATCH` takes any of `firstName`, `lastName`, `email` and `locale`. A changed e-mail is set
 unverified and `VERIFY_EMAIL` is required again.

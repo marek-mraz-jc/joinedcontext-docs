@@ -6,7 +6,7 @@ description: Normative requirements for the Portal API and React 19 single-page 
 
 # Portal & User Interface
 
-Family **UI** (UI-01…UI-87; UI-43 is unassigned). Owning chapters: [Architecture/09-portal.md](../Architecture/09-portal.md) and [Architecture/19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
+Family **UI** (UI-01…UI-92; UI-43 is unassigned). Owning chapters: [Architecture/09-portal.md](../Architecture/09-portal.md) and [Architecture/19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
 
 ## 1. Schema-Driven Forms and UI Schemas
 
@@ -156,6 +156,14 @@ One spreadsheet-like component reads, filters, compares and edits NGSI-LD entiti
 - **UI-84** [H] — Every form field that names an existing resource (data model, type, space, Endpoint, pipeline, group, person, role, project) MUST be a picker over what exists and the caller may read, searchable, showing owner and version, offering "create new" where the kind allows (ADR-N-033).
 - **UI-85** [H] — A guard test MUST fail when a form schema references a kind that has no picker (ADR-N-033).
 
+## 25. Finding and Coming Back
+
+- **UI-88** [H] — Ctrl/Cmd+K on every page of a project MUST open one palette that finds, by name and without regard to accents, the person's recent and starred pages, actions (create a pipeline, invite a person for an administrator, the project's settings, ask the assistant), the project's pages, the projects the person may read, and the project's spaces, Endpoints, pipelines, apps, data models and entity types; a typed URN MUST offer that entity in the explorer and any other text the explorer's search; it MUST be worked by keyboard alone (arrows, Enter, Escape) and list only what the lists the pages read return for the caller; a second Ctrl/Cmd+K MUST open the assistant with what was typed, sending nothing (T-3238).
+- **UI-89** [H] — Every page in a project MUST carry a breadcrumb of organization › project › section › item, each part a link (the organization a link for an administrator, its name otherwise); the tab title MUST name the page (UI-15); a page's tab (a space's view, a model's, a knowledge source's and Approvals' tabs) and the explorer's space, Endpoint, type, search and entity MUST live in the address, so back, forward, reload and a sent link restore them, and back and forward MUST restore the scroll position (T-3239).
+- **UI-90** [H] — The Portal MUST remember the last ten item pages a person opened and keep up to fifty pages they starred, in their own preferences (`recent`, `favourites`, API/01 §8), show both at the top of the palette, and never show a page of a project the person can no longer read (T-3240).
+- **UI-91** [H] — Every item MUST have the stable address `/projects/{project}/{plural}/{name}`, which opens its page or, for a kind without one, its form; every page that names itself MUST offer a copy-link control that copies its address with its query and without `lang`; an address the receiver may not read MUST answer as an address that does not exist, never revealing that it does (PF-59) (T-3241).
+- **UI-92** [H] — The Portal MUST offer one shortcut set: Ctrl/Cmd+K the palette, Ctrl/Cmd+S saves the form in hand, N creates on a list page, T runs a mapping's test, J and K walk a list's rows, Escape closes the dialog or the assistant panel, and "?" lists those that work on the current page; a letter MUST never act while the focus is in a text field (T-3242).
+
 ## Traceability
 
 | Requirement Range | Architecture Section | Test Family |
@@ -189,6 +197,7 @@ One spreadsheet-like component reads, filters, compares and edits NGSI-LD entiti
 | UI-86 | [Architecture/09-portal.md#13-the-entity-grid](../Architecture/09-portal.md#13-the-entity-grid) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | UI-75…UI-85 | [Architecture/09-portal.md#14-organization-and-project-management](../Architecture/09-portal.md#14-organization-and-project-management) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-twice](../Testing/03-frontend-and-e2e-tests.md#2-playwright-twice) |
 | UI-87 | [Architecture/09-portal.md#14-organization-and-project-management](../Architecture/09-portal.md#14-organization-and-project-management) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-twice](../Testing/03-frontend-and-e2e-tests.md#2-playwright-twice) |
+| UI-88…UI-92 | [Architecture/09-portal.md#15-finding-and-coming-back](../Architecture/09-portal.md#15-finding-and-coming-back) | [Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest) |
 
 ## Related
 
