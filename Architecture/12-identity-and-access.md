@@ -291,7 +291,7 @@ One runner pod runs every resident stream, and a pod has one Kubernetes ServiceA
 | what | name | made by |
 |---|---|---|
 | the principal, a ServiceAccount nobody writes | `pl-{pipeline}` in the pipeline's project | derived from the `Pipeline` by jc-core, read the same way by the gateway (from the loaded repository) and the Portal (from its mirror) |
-| its Kubernetes ServiceAccount, no pod | `pl-{project}-{pipeline}` in `{instance}-pipeline-identities`, a namespace that holds the pipelines' ServiceAccounts and nothing else (a name past 63 characters ends in 10 hex digits of its SHA-256) | the Portal's reconciler, which also deletes it with its Pipeline |
+| its Kubernetes ServiceAccount, no pod | `pl-{project}-{pipeline}` in `{instance}-pipeline-identities`, a namespace that holds the pipelines' ServiceAccounts and nothing else (a name past 63 characters ends in 10 hex digits of its SHA-256) | the Portal's reconciler, which also deletes it with its Pipeline, in the namespace `JC_PORTAL_PIPELINE_NAMESPACE` names; the deployment's `identities` part grants it `serviceaccounts` there and nowhere else |
 | its Keycloak client, federated to that ServiceAccount's subject | `{project}-pl-{pipeline}` | the workload-client wave of PF-47, exactly as for a hand-written account |
 | its Policies | `pl-{pipeline}-w-{n}` per output, `pl-{pipeline}-r` for an Endpoint source | derived with the principal (PL-20) |
 
@@ -299,7 +299,7 @@ Keycloak finds a federated client by its assertion's subject, so the subjects mu
 
 The ceiling is the shared runner. A stream whose DataSource URL or mapping calls the token service could name another pipeline, as any stream already reaches the runner's own stream API on `127.0.0.1:4195`. That takes an approved Change, and T-3162 closes the typed-URL path at admission. What the split buys is attribution and narrowing: every write carries its pipeline's `azp`, the gateway decides it with that pipeline's Policies alone, and the audit names the pipeline. A project that needs isolation from another gets a runner of its own later (option c).
 
-The switch is the deployment's: until it sets the Portal's `JC_PORTAL_PIPELINE_IDENTITY=pipeline` and the runner's `JC_PIPELINE_TOKEN_URL` (after the federated mechanism is seen working on dev, T-2868), the Portal renders streams with the project's `pipelines` account as before, and the derived principals and Policies exist unused.
+The switch is the deployment's: until it sets the Portal's `JC_PORTAL_PIPELINE_IDENTITY=pipeline` (refused at start-up without `JC_PORTAL_PIPELINE_NAMESPACE`) and the runner's `JC_PIPELINE_TOKEN_URL` (after the federated mechanism is seen working on dev, T-2868), the Portal renders streams with the project's `pipelines` account as before, and the derived principals and Policies exist unused.
 
 ### What the gateway checks in a token
 
