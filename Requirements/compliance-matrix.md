@@ -1050,6 +1050,8 @@ Generated 2026-10-07 from: `docs` 34b9956, `conformance` 1ed0cc8, `deployment` e
 | **PL-66** | [P] | built |  | `joinedcontext-portal/src/reconciler/streams.rs`, `joinedcontext-portal/ui/src/pages/pipelines/PipelineFlow.tsx`, `joinedcontext-portal/ui/src/pages/pipelines/PipelineStudio.tsx` |
 | **PL-67** | [P] | tested | fast ci | portal `ui/tests/pipeline_flow_steps.test.tsx::shows a step what the step before it made, and what it made itself`, portal `ui/tests/pipeline_flow_steps.test.tsx::says nothing for a step the messages never reached, and keeps the old view without stages` |
 | **PL-68** | [H] [A] | tested | ci-full, fast ci | portal `ui/e2e/pipeline_flow.spec.ts::builds a pipeline by dragging nodes and drawing a wire, and its test run is green`, portal `ui/tests/pipeline_graph.test.ts::moves a node one place and nothing past either end`, portal `ui/tests/pipeline_graph.test.ts::names what a node still lacks, and nothing for a node that has it` |
+| **PL-69** | [H] | open |  |  |
+| **PL-70** | [H][S] | open |  |  |
 
 ### R — Access control and federation
 
