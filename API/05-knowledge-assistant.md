@@ -53,11 +53,12 @@ description: The chat route of jc-assistant, its Server-Sent Events, and how the
 | `tool` | `{"name": "search", "status": "started" \| "done" \| "failed"}`; a connector's tool adds `"endpoint"` | around each tool call |
 | `script` | `{"code": "…", "output": "…"}`, or `"error"` in place of `"output"` | after a `run_script` call (§1.5) |
 | `answer` | `{"text": "… [1] … [2]"}` | once, the whole answer |
-| `citations` | `[{"n": 1, "url": "https://…/page#page=4"}, {"n": 2, "tool": "query_entities", "endpoint": "ovzdusie-verejne"}]` | after `answer` |
+| `citations` | `[{"n": 1, "url": "https://…/page#page=4", "title": "Ovzdušie"}, {"n": 2, "tool": "query_entities", "endpoint": "ovzdusie-verejne", "url": "https://…/dataset/ovzdusie", "title": "Kvalita ovzdušia"}]` | after `answer` |
 | `error` | `{"status": 429, "title": "Budget Spent", "detail": "…"}` | instead of `answer` |
 | `done` | `{"tokens": 1834}` | last, always |
 
 - Every numbered marker `[n]` in `answer` has its entry in `citations`: a passage cites its page URL (a PDF passage with `#page=N`), a tool result cites the tool and its Endpoint. (AG-102)
+- `title` is the first heading of the cited page or document, when it opens with one. A tool result's citation also carries the `url` and `title` of the page the deployment's sources hold about its Endpoint (the catalogue's or its dataset's, found by the Endpoint's address), when one exists. Both come from the deployment's own sources, public ones alone on a public channel. A channel shows the title and never the tool's name. (AG-117)
 - The answer is in the language of the question; the deployment's `languages` only choose the greeting and the search stemmers. (AG-103)
 - An error the person can act on is an `error` event with a sentence: the conversation's budget is spent (`tokensPerConversation`), the deployment's day is spent (`tokensPerDay`), the model is unreachable, or a connector failed (the answer then goes on without it, and the `tool` event says `failed`). (AG-104)
 
@@ -84,7 +85,8 @@ A tool result longer than 20,000 characters reaches the model cut. On a deployme
 
 The page loads `/d/widget.js` and `/d/widget.css` from the same host and nothing else; it sets no
 cookie and keeps the conversation and its last turns in the page alone. It shows the deployment's
-greeting and colour, a switch per connector, each answer with its citations as links, a script and
+greeting and colour, a switch per connector, each answer formatted from a safe part of Markdown with
+its markers as superscript links to its sources, listed once per address by title (AG-117), a script and
 its output when there was one, and every `error` event as the sentence it carries. It is keyboard
 operable and announces answers to a screen reader.
 
