@@ -3244,6 +3244,9 @@ GET  /api/v1/organization/feedback/{id}/screenshot     administrators: its scree
   receives carries no personal data and no secret the person pasted by mistake.
 - `page` is the Portal address the person was on. Its query and fragment are dropped, since
   they can carry a name or a filter value. It starts with `/` and is at most 500 characters.
+  A part of the path holding anything but `A-Z a-z 0-9 _ . ~ % -`, or an e-mail address
+  (`@`, `%40`), is kept as `_`: the page is one line wherever it is written, the board's task
+  file included, and carries no address.
 - `screenshot` is present only when the person ticked it: a PNG `data:` URL of at most 2 MB.
   The Portal paints over every input field of the page in the image before it is sent (a
   password, a token, a person's name typed into a form). The person also chooses what the
