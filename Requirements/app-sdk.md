@@ -66,6 +66,13 @@ path in this platform's own tree.
 - **SDK-38** [S] — Before a run offers publication, the Portal MUST run the application's interface and function tests on each version that builds, as the build lane runs them (AP-80, AP-82), in a sandbox where model-written code runs alone: a Kubernetes `Job` in the installation's app-tests namespace with no service-account token, no network in or out, the restricted Pod Security Standard, a read-only root file system and at most 1 CPU, 1 GiB of memory and 120 seconds. Each failing test's file, name and message MUST go back to the model as a verification pass, counted with those of SDK-28; every result MUST be a `tests` event on the conversation (AP-51); and `publish` MUST answer `409` naming the failing tests while the newest version's tests fail or still run. An installation without the sandbox MUST say so on the run, and the lane's check (SDK-24) stays the gate.
 - **SDK-37** [S] — A function MUST receive in `request.user` the same `{id, name, email, roles}` the page was served, set by the static host from AP-92 and never from the caller's body or headers (SDK-21, AP-95).
 
+## 7. The App Shell and the Entity Panel
+
+Every App looks and behaves alike: one shell, and every entity it shows opens the same panel (T-3370, T-3371).
+
+- **SDK-39** [H] — The SDK MUST give every App one shell, `<AppShell>`: the App's title, the language switch (en, fi, sk, cs, sv where the App has it), light and dark from the reader's system, and the loading, empty and error states in the same words and look for every App; the template and the samples MUST use it, and an App MUST NOT draw its own header or states beside it.
+- **SDK-40** [H][S] — An entity the App shows on a map, in a table, on a chart or on a card MUST open the SDK's `<EntityPanel>` on a click or on Enter, listing the entity's attributes with the labels of the App's schema. **Edit** MUST appear only when the signed-in reader may write that entity, as `can()` answers from the reader's access document (SDK-07, SDK-36), and MUST check the change with `?dryRun=All` before writing it through the App's own Endpoint with the reader's token and the CSRF header, showing a conflict (`409`) and a refusal (`403`) in words; on a `public` App, or without the right, the panel MUST instead link to the entity's page in the Portal, which applies the reader's own rights. The panel MUST never widen what the App may write (AP-140) and MUST close on Escape with the focus back on what opened it, its controls reachable by keyboard and named for a screen reader, in the App's four languages.
+
 ## Traceability
 
 | Requirement Range | Architecture Section | Test Family |
@@ -82,6 +89,7 @@ path in this platform's own tree.
 | SDK-21…SDK-24 | [Architecture/20-app-sdk.md#3-functions-and-their-runtime](../Architecture/20-app-sdk.md#3-functions-and-their-runtime) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
 | SDK-29…SDK-30 | [Architecture/20-app-sdk.md#8-the-entity-grid](../Architecture/20-app-sdk.md#8-the-entity-grid) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | SDK-35…SDK-37 | [Architecture/20-app-sdk.md#11-the-data-client](../Architecture/20-app-sdk.md#11-the-data-client) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
+| SDK-39…SDK-40 | [Architecture/20-app-sdk.md](../Architecture/20-app-sdk.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md), [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
 
 ## Related
 
