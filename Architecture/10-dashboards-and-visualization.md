@@ -49,6 +49,15 @@ spec:
           endpointRef: ep-air-quality
           entityId: "urn:ngsi-ld:AirQualityObserved:hel.fi:air-quality:station-01"
           property: pm10
+        - widgetType: bar-chart
+          endpointRef: ep-air-quality
+          entityType: AirQualityObserved
+          property: airQualityLevel
+          q: 'pm10>0'
+        - widgetType: histogram
+          endpointRef: ep-air-quality
+          entityType: AirQualityObserved
+          property: pm10
         - widgetType: grid
           endpointRef: ep-air-quality
           entityType: AirQualityObserved
@@ -68,8 +77,16 @@ application render, configured by the same object (UI-71, SDK-30): `endpointRef`
 say what it reads and `grid` is `EntityGridConfig` without its `source` and `type`, which those two
 fields decide. The grid pages and filters at the endpoint, opens an attribute's metadata and its
 history, and takes a correction where that endpoint's Policy allows one — a dashboard never widens
-what the grant permits. `spec.pages[].widgets[].entityType` and `spec.pages[].widgets[].grid` are
-absent on every other widget type.
+what the grant permits. `spec.pages[].widgets[].grid` is absent on every other widget type.
+
+A `bar-chart` counts the entities of `entityType` that hold each value of `property` (a text, an
+enumeration or a boolean), and a `histogram` spreads a number `property` over ten equal bins; both
+read the type's entities through `endpointRef` with `q`, the explorer's filter when the chart came
+from there (UI-93), at most 5 000 entities, and say so when there are more. A `temporal-chart`
+draws one entity's `property` over time from the endpoint's temporal representation. Every chart
+states the attribute's unit (its `unitCode`, read in words) on the value axis and the reader's time
+zone on the time axis. `entityType` is on a `grid`, a `bar-chart` and a `histogram` only, `q` on the
+last two only, and a chart names its `endpointRef` and `property`.
 
 ### `kind: Layer`
 
@@ -100,7 +117,7 @@ spec:
     - temperature
 ```
 
-Both kinds are typed in `jc-core` and validated wherever a manifest is written or loaded (MF-09, `schemas/kinds/Dashboard.json`, `schemas/kinds/Layer.json`): a dashboard has at least one page and every page names a layer or a widget; a `grid` widget names its Endpoint and a PascalCase entity type, and its `grid` object is checked by the same rules the SDK's `parseGridConfig` applies; a layer names its Endpoint by `metadata.name`, a PascalCase entity type, ordered `domain`/`range` pairs and non-empty popup properties; `visibility` defaults to `private`, `style` to `circle`, `visible` to `true`. Whether a `visibility: public` dashboard reads only through `audience: public` Endpoints (UI-19) is checked by the Portal, which sees both manifests, and again by the dashboard view before it asks for data.
+Both kinds are typed in `jc-core` and validated wherever a manifest is written or loaded (MF-09, `schemas/kinds/Dashboard.json`, `schemas/kinds/Layer.json`): a dashboard has at least one page and every page names a layer or a widget; a `grid` widget names its Endpoint and a PascalCase entity type, and its `grid` object is checked by the same rules the SDK's `parseGridConfig` applies; a `bar-chart` or `histogram` names its Endpoint, a PascalCase entity type and a property, and its `q` is at most 1 024 characters; a layer names its Endpoint by `metadata.name`, a PascalCase entity type, ordered `domain`/`range` pairs and non-empty popup properties; `visibility` defaults to `private`, `style` to `circle`, `visible` to `true`. Whether a `visibility: public` dashboard reads only through `audience: public` Endpoints (UI-19) is checked by the Portal, which sees both manifests, and again by the dashboard view before it asks for data.
 
 ---
 

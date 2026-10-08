@@ -1314,6 +1314,7 @@ Generated 2026-10-08 from: `docs` 1465ab6, `conformance` 6767761, `deployment` 0
 | **UI-90** | [H] | tested | ci-full | portal `tests/preferences_db_tests.rs::recent_pages_are_merged_without_touching_the_rest` |
 | **UI-91** | [H] | tested | fast ci | portal `ui/tests/form_route.test.tsx::opens a kind with no page of its own on its form at the item's bare address` |
 | **UI-92** | [H] | tested | live on dev | portal `ui/e2e/live/navigation.spec.ts::Ctrl+K and a name reach a pipeline; its link opens the same page for a colleague` |
+| **UI-93** | [H] | tested | ci-full, fast ci | platform `crates/jc-core/tests/dashboard_tests.rs::a_chart_widget_names_its_endpoint_its_type_and_its_property`, portal `ui/tests/explore_chart.test.tsx`, portal `ui/tests/chart_widgets.test.tsx` |
 
 ## Related
 

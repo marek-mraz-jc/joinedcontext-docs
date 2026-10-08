@@ -163,6 +163,7 @@ One spreadsheet-like component reads, filters, compares and edits NGSI-LD entiti
 - **UI-90** [H] — The Portal MUST remember the last ten item pages a person opened and keep up to fifty pages they starred, in their own preferences (`recent`, `favourites`, API/01 §8), show both at the top of the palette, and never show a page of a project the person can no longer read (T-3240).
 - **UI-91** [H] — Every item MUST have the stable address `/projects/{project}/{plural}/{name}`, which opens its page or, for a kind without one, its form; every page that names itself MUST offer a copy-link control that copies its address with its query and without `lang`; an address the receiver may not read MUST answer as an address that does not exist, never revealing that it does (PF-59) (T-3241).
 - **UI-92** [H] — The Portal MUST offer one shortcut set: Ctrl/Cmd+K the palette, Ctrl/Cmd+S saves the form in hand, N creates on a list page, T runs a mapping's test, J and K walk a list's rows, Escape closes the dialog or the assistant panel, and "?" lists those that work on the current page; a letter MUST never act while the focus is in a text field (T-3242).
+- **UI-93** [H] — The data explorer MUST chart one attribute of the type it shows in one step: it suggests a time series for an attribute that carries `observedAt` (one entity's history), a bar chart of how many entities hold each value for a text or enumerated attribute, and a histogram for a number, and states the unit on the value axis and the reader's time zone on the time axis. The chart MUST be saved as a widget (`temporal-chart`, `bar-chart`, `histogram`) to an existing dashboard of the project or to a new one, proposed like any other change, and read through the same Endpoint with the view's filter, so the dashboard never shows more than the grant permits.
 
 ## Traceability
 
@@ -198,6 +199,7 @@ One spreadsheet-like component reads, filters, compares and edits NGSI-LD entiti
 | UI-75…UI-85 | [Architecture/09-portal.md#14-organization-and-project-management](../Architecture/09-portal.md#14-organization-and-project-management) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-twice](../Testing/03-frontend-and-e2e-tests.md#2-playwright-twice) |
 | UI-87 | [Architecture/09-portal.md#14-organization-and-project-management](../Architecture/09-portal.md#14-organization-and-project-management) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-twice](../Testing/03-frontend-and-e2e-tests.md#2-playwright-twice) |
 | UI-88…UI-92 | [Architecture/09-portal.md#15-finding-and-coming-back](../Architecture/09-portal.md#15-finding-and-coming-back) | [Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest) |
+| UI-93 | [Architecture/10-dashboards-and-visualization.md](../Architecture/10-dashboards-and-visualization.md) | [Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest) |
 
 ## Related
 
