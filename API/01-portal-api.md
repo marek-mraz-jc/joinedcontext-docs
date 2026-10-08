@@ -1533,6 +1533,13 @@ GET /api/v1/app-templates      every template, by name, for any signed-in person
 }] }
 ```
 
+```text
+GET /api/v1/app-templates/{name}/screenshot/{width}   a PNG of the template at 1440 or 375 px; 404 otherwise
+GET /templates/{name}/                                its live demo on its fixtures, outside /api/v1
+```
+
+The demo is one bundle of every sample (`sdk/vite.demos.config.ts`), served with its own
+Content Security Policy: `connect-src 'none'`, `form-action 'none'`, `frame-ancestors 'self'`.
 The templates are the samples of SDK-24, compiled into the Portal. A run started with a prompt
 that contains `(template: {name})` adapts that template, whatever else the prompt says; a name no
 template has is ignored and the prompt's words choose, as before.
