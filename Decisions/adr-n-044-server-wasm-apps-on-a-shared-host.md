@@ -50,8 +50,11 @@ the caller's token.
 ### 2.3 One App, one database schema, one role
 
 A dedicated Postgres cluster `apps-db` (CNPG, separate from the platform's database) holds one
-schema `app_<id>` and one NOLOGIN role `app_<id>` per App. The reconciler creates both and runs the
-App's declared migrations at publish; an App never runs DDL at run time.
+schema `app_<id>` and two NOLOGIN roles per App: `app_<id>`, which the App runs as, and
+`app_<id>_owner`, which owns the schema. The reconciler creates them and runs the App's declared
+migrations at publish as the App's own owner, never as a role several Apps share. An App never runs
+DDL at run time. A migration defines tables, indexes, views and constraints, and no function,
+procedure, `DO` block, trigger or rule.
 
 The host keeps one pool per shard. Every call runs in a transaction that first runs
 `select set_config('role', 'app_<id>', true), set_config('jc.app_id', '<id>', true)`. These are
@@ -104,6 +107,8 @@ the App's id.
 | A blob key escapes its prefix | the host normalizes and refuses | RustFS: the shard's key is refused outside `apps/<shard>/*` |
 | A component swapped in the store after the build | the digest is checked before compiling | the build records the digest; the store's write key is not the host's |
 | A component reaches a credential | WASI offers no environment, file system or socket | the credentials are mounted into the host process only |
+| A view or function in one App's migration reads another App's tables | migrations run as the App's own owner | Postgres: that owner has no right on another App's schema |
+| SQL inside an App's own function switches role within its shard | the reconciler refuses functions, `DO` blocks, triggers and rules in migrations (T-3358) | the host refuses `set_config` in the App's statements, quoted or escaped, and the built-ins that run a query given as text |
 | One App exhausts the host | memory, wall time, fuel and concurrency caps per request and per App | the pod's own resource limits |
 | An App calls an arbitrary host | outgoing HTTP is allowed to the gateway alone | NetworkPolicy egress |
 
