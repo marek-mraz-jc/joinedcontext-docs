@@ -455,6 +455,7 @@ view of those merge requests, so that an approver never has to open the forge to
 GET  /api/v1/projects/{project}/changes                  open proposals, newest first
 GET  /api/v1/projects/{project}/changes/history          merged and rejected ones, newest first, paged
 POST /api/v1/projects/{project}/changes/{id}/restore     propose again what a merged removal took
+POST /api/v1/projects/{project}/changes/{id}/undo        propose again what a merged update altered
 GET  /api/v1/projects/{project}/changes/{id}             one proposal with its plan diff
 POST /api/v1/projects/{project}/changes/{id}/approve     review + merge
 POST /api/v1/projects/{project}/changes/{id}/reject      review "request changes" + close
@@ -526,6 +527,8 @@ the rejection. A change merged or closed in the forge itself carries no `decisio
 | `page` | the page, from 1; `next` of the previous answer, present while the forge holds older ones |
 | `kind` | one kind only, any case, as `Endpoint` |
 | `name` | resource names containing this, any case |
+| `author` | changes whose author's name or e-mail contains this, any case (T-3274) |
+| `since`, `until` | changes decided on or after, on or before this day, `YYYY-MM-DD`; another form is `400` (T-3274) |
 
 An unknown parameter or `page=0` is `400`. A page reads 20 closed merge requests of the forge, so it
 can hold fewer items than that, none at all included, and still carry `next`.
@@ -560,6 +563,16 @@ like any other. It needs `propose` on every kind it brings back (`403` names the
 that is not merged, that removed nothing, or whose resource is in the project again answers `409`
 in words. What the reconciler dropped with the resource, a pipeline's refused records and runs,
 does not come back.
+
+`POST …/changes/{id}/undo` puts back what a merged change modified (T-3274): every file it changed
+under `projects/{project}/`, read at the commit its branch was cut from, proposed as one new Change
+(`202`). It answers `409` while any of those files holds something other than what the change wrote,
+so an undo never drops a later change; a change that is not merged or that modified nothing is `409`
+too (a removal is restored, a creation removed). It needs `propose` on every kind it puts back.
+
+The page of one change reads its "before" at the commit its branch was cut from once the change is
+closed (`merge_base`): after a merge the default branch already holds what it made, so a merged
+change's `planFields` say what it changed and not nothing.
 
 Approving a change records a `change.merged` activity event naming the change, its resource and the
 approver ([§14](#14-activity-ui-31-ops-48-ops-49)), so the project's activity says what went live and

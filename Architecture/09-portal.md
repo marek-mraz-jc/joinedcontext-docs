@@ -586,6 +586,21 @@ and come back to yesterday's work in one click (UI-88…UI-92).
 - **Before publishing an App** (AP-140) the publish dialog lists what it lacks with a link to
   each fix and holds a privacy problem.
 
+## 17. Collaborating
+
+- **The inbox** (UI-94) lists, per project the person reads, the changes `approvalStanding` says
+  they may decide, and decides them in place through the same calls as a change's page
+  (`useDecision`); the header's inbox adds their count to the unread mentions.
+- **History in words** (UI-95): a closed change's "before" is read at its merge base, so its
+  `planFields` are what it changed; the history says the change and each field as sentences and
+  offers Undo for a merged update (`POST …/changes/{id}/undo`) beside Restore for a removal.
+- **Policies in words** (UI-96) are built from the same values as the YAML, on the list and live in
+  the form. A simulator of what another person may do (T-3311) must ask the gateway's own
+  evaluator rather than repeat it.
+- **Sharing** (EP-100) is a Policy per target project, so its end is that Policy's validity, which
+  the gateway already enforces, and stopping it ends the Policy with the project's removal.
+- **Settings** (UI-97) are indexed with the form's own help texts and searched in place.
+
 ## Related
 
 - [01-overview](../Architecture/01-overview.md) — where this chapter sits in the whole.

@@ -6,7 +6,7 @@ description: Normative requirements for the Portal API and React 19 single-page 
 
 # Portal & User Interface
 
-Family **UI** (UI-01…UI-92; UI-43 is unassigned). Owning chapters: [Architecture/09-portal.md](../Architecture/09-portal.md) and [Architecture/19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
+Family **UI** (UI-01…UI-97; UI-43 is unassigned). Owning chapters: [Architecture/09-portal.md](../Architecture/09-portal.md) and [Architecture/19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
 
 ## 1. Schema-Driven Forms and UI Schemas
 
@@ -165,6 +165,13 @@ One spreadsheet-like component reads, filters, compares and edits NGSI-LD entiti
 - **UI-92** [H] — The Portal MUST offer one shortcut set: Ctrl/Cmd+K the palette, Ctrl/Cmd+S saves the form in hand, N creates on a list page, T runs a mapping's test, J and K walk a list's rows, Escape closes the dialog or the assistant panel, and "?" lists those that work on the current page; a letter MUST never act while the focus is in a text field (T-3242).
 - **UI-93** [H] — The data explorer MUST chart one attribute of the type it shows in one step: it suggests a time series for an attribute that carries `observedAt` (one entity's history), a bar chart of how many entities hold each value for a text or enumerated attribute, and a histogram for a number, and states the unit on the value axis and the reader's time zone on the time axis. The chart MUST be saved as a widget (`temporal-chart`, `bar-chart`, `histogram`) to an existing dashboard of the project or to a new one, proposed like any other change, and read through the same Endpoint with the view's filter, so the dashboard never shows more than the grant permits.
 
+## 26. Collaborating
+
+- **UI-94** [H] — An inbox at `/projects/{project}/inbox` MUST list every change of every project the person reads that they may decide (CC-34, PF-58), each with its diff on demand and decided there: Approve, with the Red lane's typed name (CC-19), and Reject, with a reason; and the comments that mention them; the header's inbox MUST count both and lead there (T-3273).
+- **UI-95** [H] — The history of changes MUST say each change as a sentence (who created, changed or removed what; a change not merged was proposed), list each field it changed as a sentence on demand, filter by kind, name, person and day, and offer Undo on a merged update and Restore on a merged removal (API/01 §5) (T-3274).
+- **UI-96** [H] — Every Policy MUST read as a sentence of who may (or may not) do what, to which types and attributes, in which space, under which filters and for how long, on the Policies page and live in its form beside the YAML view (T-3276).
+- **UI-97** [H] — Project settings MUST offer a search over every setting by what it is called or what it changes, each result naming its tab, and its danger tab MUST say how the project is handed over (binding someone to its administrator role) beside its deletion (T-3277).
+
 ## Traceability
 
 | Requirement Range | Architecture Section | Test Family |
@@ -199,6 +206,7 @@ One spreadsheet-like component reads, filters, compares and edits NGSI-LD entiti
 | UI-75…UI-85 | [Architecture/09-portal.md#14-organization-and-project-management](../Architecture/09-portal.md#14-organization-and-project-management) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-twice](../Testing/03-frontend-and-e2e-tests.md#2-playwright-twice) |
 | UI-87 | [Architecture/09-portal.md#14-organization-and-project-management](../Architecture/09-portal.md#14-organization-and-project-management) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-twice](../Testing/03-frontend-and-e2e-tests.md#2-playwright-twice) |
 | UI-88…UI-92 | [Architecture/09-portal.md#15-finding-and-coming-back](../Architecture/09-portal.md#15-finding-and-coming-back) | [Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest) |
+| UI-94…UI-97 | [Architecture/09-portal.md#17-collaborating](../Architecture/09-portal.md#17-collaborating) | [Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest) |
 | UI-93 | [Architecture/10-dashboards-and-visualization.md](../Architecture/10-dashboards-and-visualization.md) | [Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest) |
 
 ## Related
