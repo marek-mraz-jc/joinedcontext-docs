@@ -39,7 +39,9 @@ description: The chat route of jc-assistant, its Server-Sent Events, and how the
 | `internal` | a signed-in person, in the Portal | through the Portal (§1.7); `404` here |
 
 - A request whose `Origin` is present and not in the deployment's `allowedOrigins` answers `403`. The route answers CORS preflight for the allowed origins only, with `Access-Control-Allow-Origin` naming the origin, never `*`. (AG-100)
-- `rateLimit.requestsPerMinute` counts every request of the deployment, `rateLimit.perClientPerMinute` the requests of one client address (the first `X-Forwarded-For` hop the edge sets). Past either, `429` with `Retry-After`. (AG-101)
+- `rateLimit.requestsPerMinute` counts every request of the deployment, `rateLimit.perClientPerMinute` the requests of one client address: `X-Forwarded-For` read from the right, past the cluster's own private, loopback and link-local proxy hops, to the address the edge appended, so an address a caller writes in front changes nothing (T-3059). Past either, `429` with `Retry-After`. (AG-101)
+- The service answers at most 32 questions at once across its deployments; a question past that is refused, never queued: `503` with `Retry-After: 5` and nothing spent (T-3059).
+- One model reply may carry at most 4 tool calls and each call's arguments at most 4,096 characters as JSON; a call past either is answered to the model with a refusal instead of being run (T-3059).
 
 ### 1.3 Answer: Server-Sent Events
 
