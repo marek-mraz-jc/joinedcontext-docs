@@ -155,6 +155,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | `test` | `joinedcontext-portal/src/api/pipeline_test.rs` | `tests/pipeline_test_tests.rs` | `ui/tests/pipeline_test_functions.test.ts` | `ui/e2e/live/load.spec.ts` › "a data source and a pipeline, checked, tested, proposed and approved through the UI; entities in Explore" | `jc_pipeline_test` |
 | `target` | `joinedcontext-portal/src/ops/feed_shape.rs` | `tests/pipeline_metrics_tests.rs` | `ui/tests/pipeline_runs.test.tsx` | `ui/e2e/live/assistant-paths.spec.ts` › "Integrate a pipeline from a CSV and its feed stays within its budgets (T-2695, T-2697)" | `jc_pipeline_metrics` |
 | `retry-rejected` | `joinedcontext-portal/src/api/internal/pipeline_rejected.rs` | `tests/pipeline_rejected_api_tests.rs` | `ui/tests/pipeline_rejected.test.tsx` | `ui/e2e/live/pipeline-workbench.spec.ts` › "a pipeline built in the workbench writes only what the model takes" | person only: a person replays the records they picked on the pipeline page once the fix merged; the assistant changes the mapping with `jc_pipeline_propose` (PL-61) |
+| `alerts` | `joinedcontext-portal/src/api/alerts.rs` | `tests/alerts_api_tests.rs` | `ui/tests/alert_dialog.test.tsx` | `ui/e2e/live/pipeline-alerts.spec.ts` › "a person subscribes to a pipeline's alerts, mutes them for a day and stops them" | person only: what a person wants to be told and how loudly is their own choice, so no assistant subscribes, mutes or reads a person's alerts on their behalf (API/01 §37, PL-71) |
 | `edit` | `joinedcontext-portal/src/api/mutate.rs` | `tests/resource_mutate_tests.rs` | `ui/tests/pipeline_editor.test.tsx` | `ui/e2e/live/parity.spec.ts` › "Pipeline hel-news: the form, the REST route, the registry and the assistant plan the same change" | `jc_pipeline_propose` |
 | `retire` | `joinedcontext-portal/src/api/delete.rs` | `tests/resource_delete_tests.rs` | `ui/tests/resource_delete.test.tsx` | `ui/e2e/live/change.spec.ts` › "the assistant opens a change or a removal on the kind's page, and the person proposes it" | `jc_resource_delete` |
 | `refused-no-permission` | `joinedcontext-portal/src/permissions.rs` | `tests/permissions_tests.rs` | `ui/tests/pipelines_view.test.tsx` | `ui/e2e/live/viewer-refused.spec.ts` › "a viewer is refused with a reason on every page, and at the door" | `jc_pipeline_propose` |
@@ -372,6 +373,10 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 | `POST /api/v1/projects/{project}/ops/{name}` | none: the registry's door runs every operation by name, and each operation is claimed by the step whose tool it is |
 | `POST /api/v1/projects/{project}/pipelines/test` | `pipeline/test` |
 | `POST /api/v1/projects/{project}/pipelines/{name}/rejected/retry` | `pipeline/retry-rejected` |
+| `PUT /api/v1/alerts` | `pipeline/alerts` |
+| `DELETE /api/v1/alerts/{id}` | `pipeline/alerts` |
+| `POST /api/v1/alerts/{id}/mute` | `pipeline/alerts` |
+| `POST /api/v1/alerts/notices/{id}/read` | `pipeline/alerts` |
 | `POST /api/v1/projects/{project}/serviceaccounts/{name}/keys` | `serviceaccount/mint-key` |
 | `DELETE /api/v1/projects/{project}/serviceaccounts/{name}/keys/{keyId}` | `serviceaccount/revoke-key` |
 | `DELETE /api/v1/projects/{project}/spaces/{space}/comments/{id}` | `space/comments` |
