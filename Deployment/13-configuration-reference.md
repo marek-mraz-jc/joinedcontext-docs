@@ -88,7 +88,9 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_OIDC_ISSUER` | — | no | The realm humans sign in against: `JC_OIDC_ISSUER`, `JC_OIDC_CLIENT_ID` and `JC_OIDC_CLIENT_SECRET` (a secret), all three together or none, plus the optional `JC_OIDC_CA_FILE` for a realm behind a private CA. |
 | `JC_PORTAL_AGENT_PROXY_CLIENT_ID` | — | no | The Keycloak client `jc-agent-proxy` holds (`JC_PORTAL_AGENT_PROXY_CLIENT_ID`), which is the only caller the run callbacks on the internal listener answer (AG-52, T-2271). |
 | `JC_PORTAL_APISIX_NAMESPACE` | `apisix` | no | `JC_PORTAL_APISIX_NAMESPACE` — the namespace the installation runs APISIX in, the only one whose pods reach an app pod; default `apisix`. |
+| `JC_PORTAL_APPS_BUCKET` | `apps` | no | The bucket of `components/` and `apps/`, `JC_PORTAL_APPS_BUCKET`, default `apps`. |
 | `JC_PORTAL_APPS_CACHE_DIR` | — | no | Where this replica keeps the builds it fetched from the package registry, one `{name}/{hex}` directory per build (`JC_PORTAL_APPS_CACHE_DIR`, AP-102); it must be writable, and `{apps_dir}` need not be. |
+| `JC_PORTAL_APPS_DB_URL` | — | no | The apps database and bucket of the `wasm` Apps (AP-149, AP-151); `None` without `JC_PORTAL_APPS_DB_URL`. |
 | `JC_PORTAL_APPS_DIR` | — | no | Root of the built app bundles, one directory per app (`JC_PORTAL_APPS_DIR`). |
 | `JC_PORTAL_APPS_NAMESPACE` | — | no | Where an App's four Kubernetes objects are applied (`JC_PORTAL_APPS_NAMESPACE` with `JC_PORTAL_ORG_DOMAIN`; AP-13, AP-18, T-0411). |
 | `JC_PORTAL_APPS_PULL_SECRET_NAME` | — | no | `JC_PORTAL_APPS_PULL_SECRET_NAME` — the name of the `dockerconfigjson` Secret in the apps namespace a node pulls app images with (a forge token that reads packages only). |
@@ -138,6 +140,7 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_PORTAL_SERVICE_URL` | — | no | The Portal's own Service in the cluster (`JC_PORTAL_SERVICE_URL`), where an App pod asks `JC_ME_URL` for its caller's roles (AP-109, AP-134). |
 | `JC_PORTAL_SOPS_AGE_KEY_FILE` | — | a path to one | `JC_PORTAL_SOPS_AGE_KEY_FILE` names the age key file and chooses SOPS; otherwise `JC_PORTAL_OPENBAO_ADDR` and `JC_PORTAL_OPENBAO_ROLE` choose OpenBao, with `JC_PORTAL_OPENBAO_JWT_PATH` (default `/var/run/secrets/kubernetes.io/serviceaccount/token`) for the ServiceAccount token it logs in with. |
 | `JC_PORTAL_SYNC_INTERVAL` | `60` | no | How often the reconciler re-reads the configuration repository (`JC_PORTAL_SYNC_INTERVAL`, whole seconds, default `60`). |
+| `JC_PORTAL_WASM_SHARDS` | — | no | How many shards the WASM host runs, `JC_PORTAL_WASM_SHARDS`, default 2. |
 | `JC_SETUP_BACKUPS` | — | no | The databases are backed up to an object store (`JC_SETUP_BACKUPS`, the literal `true`). |
 | `JC_SETUP_LOGIN_THEME` | — | no | The realm's login theme (`JC_SETUP_LOGIN_THEME`); unset or blank says nothing about it. |
 | `JC_SETUP_SMTP` | — | no | The realm sends mail (`JC_SETUP_SMTP`, the literal `true`). |
