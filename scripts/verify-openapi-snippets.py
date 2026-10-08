@@ -31,8 +31,10 @@ PARAM = re.compile(r"\{([^}/]+)\}")
 # without a hostname of its own (AP-12, AP-14, Architecture/16 §5)
 # `/live-notify` is where the broker delivers a space's subscription notifications through the
 # gateway; it holds no token, so it cannot sit under `/api/v1` (API/01 §32, T-3105)
+# `/templates` is the live demo of each App template on its fixtures, served by the Portal with a
+# Content Security Policy of its own and no data, so it stays out of `/api/v1` (AP-141, T-3306)
 ALLOWED_PREFIXES = ("/api/v1", "/api/endpoint", "/apps", "/cs", "/ngsi-ld/v1", "/live-notify",
-                    "/healthz", "/livez", "/readyz", "/.well-known")
+                    "/templates", "/healthz", "/livez", "/readyz", "/.well-known")
 # The published specification is the Portal's own (utoipa over its axum router), so only the
 # Portal's surface is looked up in it. `/api/endpoint`, `/cs`, `/ngsi-ld/v1` and `/apps` are
 # the gateway's and the apps host's, documented here and served elsewhere; holding them to a
@@ -214,6 +216,8 @@ GET    /api/endpoint/{endpointSlug}/ngsi-ld/v1/entities   entities
 """
     cases: list[tuple[str, str, str | None, dict | None]] = [
         ("documented routes", page, None, None),
+        ("an App template's live demo", page.replace("GET    /api/v1/projects/{project}/{plural}            list",
+                                                   "GET    /templates/{name}/            demo"), None, None),
         ("group path", page.replace("/api/v1/projects/{project}/{plural}            list",
                                     "/apis/joinedcontext.com/v1alpha1/spaces   list"), "uses a group path", None),
         ("route outside the scheme", page.replace("GET    /api/v1/projects", "GET    /internal/projects"),
