@@ -141,6 +141,7 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_PORTAL_SOPS_AGE_KEY_FILE` | — | a path to one | `JC_PORTAL_SOPS_AGE_KEY_FILE` names the age key file and chooses SOPS; otherwise `JC_PORTAL_OPENBAO_ADDR` and `JC_PORTAL_OPENBAO_ROLE` choose OpenBao, with `JC_PORTAL_OPENBAO_JWT_PATH` (default `/var/run/secrets/kubernetes.io/serviceaccount/token`) for the ServiceAccount token it logs in with. |
 | `JC_PORTAL_SYNC_INTERVAL` | `60` | no | How often the reconciler re-reads the configuration repository (`JC_PORTAL_SYNC_INTERVAL`, whole seconds, default `60`). |
 | `JC_PORTAL_WASM_SHARDS` | — | no | How many shards the WASM host runs, `JC_PORTAL_WASM_SHARDS`, default 2. |
+| `JC_PORTAL_WASM_HOST_NAMESPACE` | — | no | The namespace the WASM host's shards run in, `JC_PORTAL_WASM_HOST_NAMESPACE`, where the reconciler writes each shard's placement and store key (AP-157, AP-158). |
 | `JC_SETUP_BACKUPS` | — | no | The databases are backed up to an object store (`JC_SETUP_BACKUPS`, the literal `true`). |
 | `JC_SETUP_LOGIN_THEME` | — | no | The realm's login theme (`JC_SETUP_LOGIN_THEME`); unset or blank says nothing about it. |
 | `JC_SETUP_SMTP` | — | no | The realm sends mail (`JC_SETUP_SMTP`, the literal `true`). |
