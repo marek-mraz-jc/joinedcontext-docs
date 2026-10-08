@@ -89,7 +89,7 @@ A new kind therefore needs no second path: it declares the `PATH_TEMPLATE` it wo
 
 `jcctl schema export` writes one draft-07 schema per kind to `schemas/kinds/{Kind}.json`, and the documentation checks manifests against the schemas of one pinned platform tag, not against `main`. Every kind in the table above has a schema in the pinned tag; a kind whose `jc-core` type lands before its schema is listed here, checked structurally and against the kind table only, until the tag carries it:
 
-- `McpServer` (MF-53): decided in ADR-N-043; its `jc-core` type and schema land with the gateway's build (T-3155).
+None today: `McpServer` (MF-53) left the list once the pinned platform carried its schema (T-3313).
 
 The list is checked as strictly as the manifests are: once the pinned tag carries a schema, the entry here is reported until it is removed.
 
