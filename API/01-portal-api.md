@@ -3308,6 +3308,41 @@ GET  /api/v1/organization/feedback/{id}/screenshot     administrators: its scree
   `scripts/feedback-to-tasks.mjs` in the Portal repository turns one page of it into task files,
   `status: blocked` and `group: feedback`, each saying the text is untrusted input to read first.
 
+## 39. Trying a Policy on a person (T-3311, EP-103)
+
+An organization administrator picks a person, a group, a role, a service account or the public,
+one Endpoint, an action and optionally a type, and reads what the gateway would decide and which
+Policy decided it. The Portal does not evaluate anything itself: it resolves the chosen subject and
+asks the gateway's `access/simulate` ([API/02 §7b](02-endpoint-representations.md)), which runs the
+same admission and evaluator as every real call.
+
+```text
+POST /api/v1/projects/{project}/endpoints/{name}/access/simulate   → 200
+```
+
+```json
+{"subject": {"kind": "person", "id": "8c0e…"},
+ "action": "retrieveEntity", "type": "AirQualityObserved"}
+```
+
+- `subject.kind` is `person` (`id`: the Keycloak user id), `group` or `role` (`name`: a member of
+  it with no person of their own), `serviceAccount` (`name`: a ServiceAccount of the project) or
+  `public`. For a person the Portal reads their groups and realm roles through the Keycloak admin
+  API it uses for People (PF-108), the same names their token carries.
+- `action` is a CIM 009 operation name; `type` is optional. An unknown member, an unknown kind, or
+  an action that is not an operation is `400` naming it; an unknown Endpoint or person is `404`.
+- The answer is the gateway's, with the subject as resolved:
+  `{"decision", "reason", "policy"?, "assigner"?, "subject": {"user"?, "groups", "roles",
+  "serviceAccount"?}}`, `reason` one of `policy_grant_matched`, `prohibited`, `no_grant`,
+  `not_admitted`.
+- For organization administrators only (`403` for anyone else): it reveals what another person may
+  do. The Portal calls the gateway with its own service-account token (audience
+  `context-gateway-simulate`), never with the administrator's, and records an `access.simulated`
+  activity event naming the administrator and the simulated subject, the Endpoint, the action, the
+  type and the decision. `503` when no gateway or no Keycloak admin client is configured.
+- The Policies page has a "Try a person" panel that asks this route and shows the decision with
+  the Policy that decided it, linked to that Policy.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.

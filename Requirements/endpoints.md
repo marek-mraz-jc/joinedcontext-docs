@@ -6,7 +6,7 @@ description: Universal ingress and egress multi-representation views, opaque slu
 
 # Endpoints & Representation Parity
 
-Family **EP** (EP-01…EP-102). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **EP** (EP-01…EP-103). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
 ## 1. Endpoint Identity and Opaque Slug
 
@@ -186,6 +186,7 @@ Decided in [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) (T-3154).
 - **EP-100** [H][S] — An Endpoint's page MUST share it with another project in one guided Change: the project added to `allowedProjects`, one Policy granting that project's group the reads of the chosen types (and the group drafted empty when none exists), and an optional end as that Policy's `validity.to`, which the gateway enforces; it MUST preview the entities through the Endpoint's projection without its hidden attributes, list each project it is shared with and until when, and stop a share in one Change that removes the project and ends its Policy at once, so no other Endpoint of the space keeps reading for it (T-3275).
 - **EP-101** [S] — A public form's Endpoint MAY name in `spec.creates.embedOrigins` at most 20 sites that may frame its page `/f/{slug}`, each an `https` origin (scheme, host and an optional port; no path, query, fragment or wildcard). The Portal MUST answer that page with `frame-ancestors 'self'` and exactly those origins, and without `X-Frame-Options` only while the list holds one; an absent or empty list lets nothing but the Portal frame it, and every other page and route keeps its own framing rule (T-3266).
 - **EP-102** [S] [H] — The public form page MUST send no credentials on any request, so it is the same for a signed-in person, a visitor and a site that frames it. With `?test=1` its submit MUST check the entry against the Endpoint's published schema and ask the gateway's `access/check` whether an anonymous caller may `createEntity` of that type, say what the answer would be, and write nothing (T-3266).
+- **EP-103** [S] [H] — The gateway MUST answer `POST /api/endpoint/{slug}/access/simulate` with the decision `access/check` would give a named subject (a person with their groups and realm roles, a member of a group or role, a ServiceAccount, or the public) on that Endpoint, from the same admission and the same evaluator, and MUST name the Policy or prohibition that decided; it MUST answer only the Portal's own client's service-account token and refuse every other caller. The Portal MUST offer it on the Policies page to organization administrators only, MUST resolve a person's groups and roles itself, and MUST record each simulation naming the administrator and the simulated subject (T-3311).
 
 ## Traceability
 
@@ -223,6 +224,7 @@ Decided in [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) (T-3154).
 | EP-91 | [Architecture/21-open-data-catalogue.md#8-the-organizations-dcat-ap-feed](../Architecture/21-open-data-catalogue.md#8-the-organizations-dcat-ap-feed) | [Testing/05-deployment-and-performance-tests.md](../Testing/05-deployment-and-performance-tests.md) |
 | EP-98…EP-100 | [Architecture/09-portal.md#16-trying-and-documenting-an-endpoint](../Architecture/09-portal.md#16-trying-and-documenting-an-endpoint) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | EP-101…EP-102 | [API/01-portal-api.md#33-data-views-published-as-a-public-link-adr-n-042-35-t-3108](../API/01-portal-api.md#33-data-views-published-as-a-public-link-adr-n-042-35-t-3108) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
+| EP-103 | [API/02-endpoint-representations.md#7b-access-surface-access](../API/02-endpoint-representations.md#7b-access-surface-access) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 
 ## Related
 

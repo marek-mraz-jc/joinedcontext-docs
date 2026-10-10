@@ -703,6 +703,43 @@ Content-Type: application/json
 A prohibition covering the action ends it, whatever any permission says, and answers
 `{"decision": false}`.
 
+`POST …/access/simulate` answers the same question for someone else (EP-103, T-3311): the decision
+`access/check` would give a named subject on this Endpoint, from the same admission and the same
+evaluator, so the two cannot disagree. It answers the Portal's own client alone: a token minted for the
+audience `context-gateway-simulate` (which no data path accepts), whose `azp` is the client the
+deployment names (`portal-api` by default) and whose user is that
+client's service account, so a person's token of the same client is refused. Any other token is
+`403`, a missing one `401`. The Portal
+decides who may ask (an organization administrator) and writes the audit record naming both
+subjects; the gateway logs the call with the simulated subject beside the Portal's account.
+
+The body is the `access/check` request with a `subject`, at most 64 KiB. `subject` holds exactly one
+of three shapes: a person (`user`, with the `groups` and realm `roles` the Portal resolved for
+them), a member of `groups` or `roles` with no person (`user` absent: no Policy written for one
+person applies), or a `serviceAccount` by its Keycloak client id (`{project}-{name}`). An empty
+`subject` is the public caller. An unknown member, a `serviceAccount` beside a person, or a missing
+`action.name` is a `400` saying which.
+
+```http
+POST /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/access/simulate
+Authorization: Bearer <the Portal's service-account token>
+Content-Type: application/json
+
+{"subject": {"user": "demo.viewer", "groups": ["helsinki"], "roles": ["viewer"]},
+ "action": {"name": "retrieveEntity"}, "resource": {"type": "AirQualityObserved"}}
+```
+
+```json
+{"decision": true,
+ "context": {"reason": "policy_grant_matched", "policy": "public-air", "assigner": "did:web:hel.fi"}}
+```
+
+Unlike `access/check`, the answer names why in every case, because its reader is an administrator
+who may read every Policy: `policy_grant_matched` with the granting `policy`, `prohibited` with the
+refusing `policy`, `no_grant` when no Policy grants the action on the type, and `not_admitted` when
+the Endpoint's audience refuses the subject before any Policy is read (EP-14). `policy` is the
+Policy's manifest name.
+
 The other three representations:
 
 ```http
