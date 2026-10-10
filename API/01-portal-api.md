@@ -1492,6 +1492,8 @@ build is and asks for another one through two routes:
 ```text
 GET  /api/v1/projects/{project}/apps/{name}/build      the repository, the latest run, the package
 POST /api/v1/projects/{project}/apps/{name}/rebuild    dispatches build.yml on the default branch
+GET  /api/v1/projects/{project}/apps/{name}/builds     the successful builds, newest first
+POST /api/v1/projects/{project}/apps/{name}/restore    opens a merge request back to one build
 ```
 
 `GET …/build` answers `200` for a person who may read the App:
@@ -1539,6 +1541,32 @@ POST /api/v1/projects/{project}/apps/{name}/rebuild    dispatches build.yml on t
 `build.yml` on the repository's default branch; the run then appears in `GET …/build`. It is
 refused `403` without `propose` on `App`, `404` as above, `409` for an App that is not built on
 the forge, and `503` with the forge's reason when there is no forge or it refuses the dispatch.
+
+`GET …/builds` answers `200` for a person who may read the App with the successful runs of the
+repository's workflows, one per commit, newest first, and whether Restore is offered (AP-171):
+
+```json
+{
+  "builds": [
+    { "commit": "3f1c…", "number": 8, "completedAt": "2026-10-07T10:03:05Z", "current": true },
+    { "commit": "9a2b…", "number": 6, "completedAt": "2026-10-05T08:12:40Z", "current": false }
+  ],
+  "restore": { "allowed": true },
+  "dataNote": "Restore brings back the App's source only; its schema, files and data stay as they are."
+}
+```
+
+`current` marks the build `status.build.commit` names. An App that is not built on the forge
+answers an empty `builds` and `restore.reason` saying so; `404` and `503` as for `…/build`.
+
+`POST …/restore` takes `{ "commit": "9a2b…" }` and answers `201` with
+`{ "branch": "restore/9a2b3c4-1759831960", "pullRequestUrl": "…" }` once the forge opened the
+merge request into the default branch; the build lane builds the restored source after it is
+merged, and only the lane writes `status.build` (AP-73). It is refused `403` without `propose` on
+`App`, `404` as above, `409` for an App not built on the forge, for a commit that is not one of
+the listed builds, for the current build, for a build whose files equal the default branch, and
+for a build holding a file that is not UTF-8 text (the forge's change API takes text), naming
+the file; `503` when the forge refuses.
 
 ### 12b. Renaming the shapes of a project's Apps (AP-124)
 
