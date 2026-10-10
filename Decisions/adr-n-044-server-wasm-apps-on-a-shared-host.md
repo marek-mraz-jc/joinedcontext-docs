@@ -44,10 +44,13 @@ The host offers the WIT package `jc:app@0.1.0`:
 - `blob`: `get`, `put`, `list`, `delete` and `presign` under the App's own prefix.
 
 A component never sees a connection string, a password or an object-store key. WASI gives it no
-environment, no file system and no sockets; its only outgoing HTTP is to the Context Gateway, with
-the caller's token. Without an environment a component cannot learn where the gateway runs, so it
-addresses it by the fixed origin `http://gateway` (the SDK's `gateway` module); the host sends such
-a call to the gateway it is configured with and refuses every other origin.
+environment, no file system and no sockets; its only outgoing HTTP is to its own App's Endpoint on the
+Context Gateway, with the caller's token. Without an environment a component cannot learn where the
+gateway runs, so it addresses it by the fixed origin `http://gateway` (the SDK's `gateway` module):
+`http://gateway/api/endpoint/<slug>/…` with its own Endpoint's slug, or for short
+`http://gateway/ngsi-ld/v1/…` and the Endpoint's schema `http://gateway/schema/…`. The host sends
+such a call to `/api/endpoint/<slug>/…` of the gateway it is configured with, the slug its placement
+records, and refuses every other origin, path and Endpoint (AP-147).
 
 ### 2.3 One App, one database schema, one role
 
@@ -118,7 +121,7 @@ the App's id.
 | A view or function in one App's migration reads another App's tables | migrations run as the App's own owner | Postgres: that owner has no right on another App's schema |
 | SQL inside an App's own function switches role within its shard | the reconciler refuses functions, `DO` blocks, triggers and rules in migrations (T-3358) | the host refuses `set_config` in the App's statements, quoted or escaped, and the built-ins that run a query given as text |
 | One App exhausts the host | memory, wall time, fuel and concurrency caps per request and per App | the pod's own resource limits |
-| An App calls an arbitrary host | outgoing HTTP is allowed to the gateway alone | NetworkPolicy egress |
+| An App calls an arbitrary host, or another Endpoint with its caller's token | outgoing HTTP is allowed to the App's own Endpoint on the gateway alone | NetworkPolicy egress; the gateway's Policies for the caller |
 
 Every denied SQL or blob call is logged with the App's id and alerted on; access is logged per
 App, reads sampled. Tests prove each layer on its own: with the host's checks switched off,
