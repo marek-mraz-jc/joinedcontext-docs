@@ -308,7 +308,7 @@ A `wasm` App's job runs with no person behind it (AP-154), so it gets a principa
 | what | name | made by |
 |---|---|---|
 | the principal, a ServiceAccount nobody writes | `appjob-{name}` in the App's project (a ServiceAccount manifest of that prefix is refused; `app-` was not free, `app-builder` is a hand-written account) | derived from the App by jc-core |
-| its Kubernetes ServiceAccount, no pod | `appjob-{project}-{name}` in `JC_PORTAL_APP_IDENTITY_NAMESPACE`, a namespace that holds these alone | the Portal's reconciler, which deletes it with the App's last job or the App |
+| its Kubernetes ServiceAccount, no pod | `appjob-{project}-{name}` in the Apps' job identities namespace the deployment configures, a namespace that holds these alone (the Portal's setting for it lands with T-3539) | the Portal's reconciler, which deletes it with the App's last job or the App |
 | its Keycloak client, federated to that subject | `{project}-appjob-{name}`, one audience: the slug of the App's own Endpoint | the workload-client wave of PF-47 |
 | its grants | none of its own: through the App's Endpoint it holds the Endpoint's caller role, so the Policies the reconciler derived from the App's data needs that name no role (AP-05, AP-96) | the App reconciler, unchanged |
 
