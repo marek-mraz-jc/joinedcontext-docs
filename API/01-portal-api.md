@@ -138,6 +138,8 @@ POST   /api/v1/projects                                 open a project → 202 +
 GET    /api/v1/projects/{project}                       the project and `status.usage`: what it holds of each quota (PF-73, PF-75)
 DELETE /api/v1/projects/{project}                       delete a project → 202 + red-lane Change over everything it holds (PF-77, PF-78)
 POST   /api/v1/projects/{project}/duplicate             duplicate a project into a new slug → 202 + Change: its registry entry and the caller's steward binding (PF-89)
+GET    /api/v1/projects/{project}/registry              the project's registry entry: repository, pinned ref, parameter values, the declarations at that ref and the repository's tags (PF-86, CC-88)
+PUT    /api/v1/projects/{project}/registry              pin another ref or set other parameter values → 202 + red-lane Change on the organization repository (PF-86, CC-88)
 GET    /api/v1/projects/{project}/permissions/me        the caller's effective rules here (PF-51, PF-61)
 GET    /api/v1/projects/{project}/apps/{name}/me        the caller's roles in one published App, for a fullstack backend (AP-109)
 ```
@@ -178,6 +180,32 @@ adopted, and a failed `Change` removes the copy again, as opening does (CC-85). 
 read: the copy's teams and bindings are its own and grant nothing in the origin (PF-83), and its
 ids render from the new slug (PF-79). Layout 1 answers `409`, because a project there has no
 repository to copy; its duplicate is an import of its export under the new name (MF-45).
+
+`GET /api/v1/projects/{project}/registry` answers what the registry entry `projects/{project}.yaml`
+of the organization repository says this deployment runs: `{repository, ref, parameters,
+declarations, tags}`. `declarations` are the `spec.parameters` of the project's own `project.yaml`
+at the pinned ref, so the parameter form shows the knobs of the release that runs; `tags` are the
+project repository's tags with their commits, newest first, the releases a pin may name (CC-88).
+An external repository (CC-89) answers no tags and its declarations as the last checkout read
+them. It is held to `read` on the project; a caller without it gets `404`, and layout 1, where a
+project has no registry entry, answers `409`.
+
+`PUT /api/v1/projects/{project}/registry` takes `{ref?, parameters?}`, at least one of them, and
+proposes the edited registry entry as one red-lane `Change` on the organization repository: the
+only door that repoints what a project runs (PF-86). `ref` is a tag, a branch or a commit of the
+project repository, and the Portal reads `project.yaml` there before proposing, so a ref the
+repository does not hold, or one without a `project.yaml`, is `400` naming the ref.
+`parameters`, when given, is the whole set of this deployment's values and replaces the entry's
+(an empty object returns every knob to its default); each value is checked against the
+declarations of `project.yaml` at the ref the entry will pin, and an undeclared name, a value that
+does not fit or a declared parameter left with neither value nor default is `400` naming it. A
+parameter of type `secret` takes a secret's name, never its value (CC-88). The `Change` carries
+only `projects/{project}.yaml`, on the branch `portal/registry-{project}`; a second repoint while
+one is open is `409` naming it, and a body that changes nothing is `409`. It is held to `propose`
+on `Project` for this project, and it applies only through the organization's red-lane approval
+(PF-58); once merged, the checkouts fetch the new ref and the next render runs it (CC-86, CC-90).
+For an external repository the ref is not read before proposing; a ref the checkouts cannot fetch
+renders at the last fetched ref and says so on the entry's status (CC-86).
 
 `GET /api/v1/endpoints` is the organization-level Endpoints page (PF-61), an administration view:
 an administrator of the organization (`approve` and `delete` on `RoleBinding` at organization
