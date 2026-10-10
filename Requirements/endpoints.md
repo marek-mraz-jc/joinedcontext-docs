@@ -50,7 +50,7 @@ Family **EP** (EP-01…EP-100). Owning chapter: [Architecture/04-context-spaces-
 ## 6. Tenancy Stripping and Internal Hop
 
 - **EP-21** — Incoming client requests to Endpoint paths MUST NOT include the `NGSILD-Tenant` header, and any client-supplied tenant header MUST be stripped at the gateway PEP (SP-07, GW20).
-- **EP-22** — The Context Gateway MUST resolve the target Context Space from the in-memory slug mapping and inject `NGSILD-Tenant: {space}` exclusively on the internal hop (SP-07).
+- **EP-22** — The Context Gateway MUST resolve the target Context Space from the in-memory slug mapping and inject `NGSILD-Tenant: {space}` exclusively on the internal hop (SP-07). The tenant is the gateway's, never the caller's: a space nobody has written to yet, for which the broker answers `404 NonexistentTenant`, MUST read as the empty space it is, so a query of entities (`GET /entities`, `POST /entityOperations/query`), a temporal query and a listing of types or attributes MUST answer `200` with the empty result, and a retrieval of one entity, temporal entity, type or attribute `404 ResourceNotFound`, as for any other space (GW12, GW33). This applies only after the Endpoint and its Policy admitted the caller; a refusal stays a refusal.
 - **EP-23** — If an endpoint slug is invalid or deactivated, the gateway MUST return HTTP 404 Not Found without disclosing whether the underlying space exists (R20, SP-06).
 
 ## 7. Endpoint-Level MCP Façade

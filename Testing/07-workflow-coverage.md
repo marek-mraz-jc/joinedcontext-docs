@@ -89,6 +89,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | `create` | `joinedcontext-portal/src/api/projects.rs` | `tests/projects_api_tests.rs` | `ui/tests/new_project.test.tsx` | `ui/e2e/live/readiness-project.spec.ts` › "a project is opened, duplicated where it can be, and deleted" | `jc_project_create` |
 | `read` | `joinedcontext-portal/src/api/export.rs` | `tests/project_read_tests.rs` | `ui/tests/page_project_settings.test.tsx` | `ui/e2e/live/walk.spec.ts` › "every page opens cleanly for the steward" | `jc_project_get` |
 | `copy` | `joinedcontext-portal/src/api/import.rs` | `tests/project_duplicate_tests.rs` | `ui/tests/project_duplicate_import.test.tsx` | `ui/e2e/live/readiness-project.spec.ts` › "a project is opened, duplicated where it can be, and deleted" | person only: copying a whole repository of the forge under a new slug is a person's decision in the Portal, not a tool a run holds (PF-89) |
+| `pin-release` | `joinedcontext-portal/src/api/projects.rs` | `tests/project_registry_tests.rs` | `ui/tests/project_release.test.tsx` | `ui/e2e/live/project-repos.spec.ts` › "3. a pinned tag holds what dev serves until the pin moves (PF-86, CC-90)" | person only: repointing what a project runs, or its parameter values, is the organization's red-lane decision a person proposes in the Portal, not a tool a run holds (PF-86, PF-58) |
 | `retire` | `joinedcontext-portal/src/api/delete.rs` | `tests/delete_not_there_tests.rs` | `ui/tests/project_settings.test.tsx` | `ui/e2e/live/readiness-project.spec.ts` › "a project is opened, duplicated where it can be, and deleted" | person only: deleting a project removes its repository and every resource in it, and no agent may take that act (AG-11) |
 | `refused-no-permission` | `joinedcontext-portal/src/api/delete.rs` | `tests/attack_cross_project_tests.rs` | `ui/tests/project_settings.test.tsx` | `ui/e2e/live/project-settings.spec.ts` › "an old Access link lands on Members, and a viewer meets Delete project refused" | `jc_project_delete` |
 
@@ -373,6 +374,7 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 | `POST /api/v1/projects/{project}/ops/{name}` | none: the registry's door runs every operation by name, and each operation is claimed by the step whose tool it is |
 | `POST /api/v1/projects/{project}/pipelines/test` | `pipeline/test` |
 | `POST /api/v1/projects/{project}/pipelines/{name}/rejected/retry` | `pipeline/retry-rejected` |
+| `PUT /api/v1/projects/{project}/registry` | `project/pin-release` |
 | `PUT /api/v1/alerts` | `pipeline/alerts` |
 | `DELETE /api/v1/alerts/{id}` | `pipeline/alerts` |
 | `POST /api/v1/alerts/{id}/mute` | `pipeline/alerts` |

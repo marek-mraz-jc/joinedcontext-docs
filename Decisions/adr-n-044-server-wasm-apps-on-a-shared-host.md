@@ -45,9 +45,12 @@ The host offers the WIT package `jc:app@0.1.0`:
 
 A component never sees a connection string, a password or an object-store key. WASI gives it no
 environment, no file system and no sockets; its only outgoing HTTP is to its own App's Endpoint on the
-Context Gateway, with the caller's token: it asks for `http://gateway/ngsi-ld/v1/…` (or the Endpoint's
-schema, `http://gateway/schema/…`) and the host sends that to `/api/endpoint/<slug>/…`, the slug its
-placement records (AP-147).
+Context Gateway, with the caller's token. Without an environment a component cannot learn where the
+gateway runs, so it addresses it by the fixed origin `http://gateway` (the SDK's `gateway` module):
+`http://gateway/api/endpoint/<slug>/…` with its own Endpoint's slug, or for short
+`http://gateway/ngsi-ld/v1/…` and the Endpoint's schema `http://gateway/schema/…`. The host sends
+such a call to `/api/endpoint/<slug>/…` of the gateway it is configured with, the slug its placement
+records, and refuses every other origin, path and Endpoint (AP-147).
 
 ### 2.3 One App, one database schema, one role
 
