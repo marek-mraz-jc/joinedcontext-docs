@@ -301,6 +301,19 @@ The ceiling is the shared runner. A stream whose DataSource URL or mapping calls
 
 The switch is the deployment's: until it sets the Portal's `JC_PORTAL_PIPELINE_IDENTITY=pipeline` (refused at start-up without `JC_PORTAL_PIPELINE_NAMESPACE`) and the runner's `JC_PIPELINE_TOKEN_URL` (after the federated mechanism is seen working on dev, T-2868), the Portal renders streams with the project's `pipelines` account as before, and the derived principals and Policies exist unused.
 
+### One principal per App with jobs (AP-159)
+
+A `wasm` App's job runs with no person behind it (AP-154), so it gets a principal the same way a pipeline does, with one difference: its grants are not derived, they are the App's own.
+
+| what | name | made by |
+|---|---|---|
+| the principal, a ServiceAccount nobody writes | `appjob-{name}` in the App's project (a ServiceAccount manifest of that prefix is refused; `app-` was not free, `app-builder` is a hand-written account) | derived from the App by jc-core |
+| its Kubernetes ServiceAccount, no pod | `appjob-{project}-{name}` in `JC_PORTAL_APP_IDENTITY_NAMESPACE`, a namespace that holds these alone | the Portal's reconciler, which deletes it with the App's last job or the App |
+| its Keycloak client, federated to that subject | `{project}-appjob-{name}`, one audience: the slug of the App's own Endpoint | the workload-client wave of PF-47 |
+| its grants | none of its own: through the App's Endpoint it holds the Endpoint's caller role, so the Policies the reconciler derived from the App's data needs that name no role (AP-05, AP-96) | the App reconciler, unchanged |
+
+Each shard runs a token service beside it, as the pipeline runner does, whose RBAC is `create` on `serviceaccounts/token` in that namespace and nothing else. For a due job the host asks it for a token of `{project}/{name}`; the service mints the TokenRequest (audience the realm issuer, 600 s), presents it as the client assertion and answers Keycloak's access token. The host adds that token to the run's calls to `http://gateway/…`, which reach the App's own Endpoint alone (AP-147), and never hands it to the component. A run that gets no token fails with a sentence that says so, and AP-155 counts it.
+
 ### What the gateway checks in a token
 
 Three claims decide, and the gateway reads nothing else about who is calling ([PF-45](../Requirements/platform.md), [PF-46](../Requirements/platform.md)):
