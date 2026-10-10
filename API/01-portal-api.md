@@ -2161,7 +2161,8 @@ POST /api/v1/projects/{project}/assistant/propose-endpoint
   relationships the form asks for (the Policy's `propertyNames` and `relationshipNames`, at least
   one name, so any other attribute is refused, T-3172) and may set
   `createsPerDay` (default 200, at most 10,000), which the Endpoint carries as `spec.creates`
-  `{mintIds: true, perDay}` (EP-97).
+  `{mintIds: true, perDay}` (EP-97), and `embedOrigins`, the sites that may frame the form, which
+  it carries as `spec.creates.embedOrigins` (EP-101).
 - The slug is minted here and is read-only in the form; a slug in the request is ignored.
 - `lane` is what the Endpoint's Change would be classified as (§5): `red` for `public`.
 - Nothing is written. A run publishes this body as the `output` of a `tool` event named
@@ -3074,9 +3075,23 @@ served by the Portal's interface like its other pages, not an API route.
   person never sees and a script fills, sent as an attribute the Policy does not grant, so such a
   submission is refused; and the page says that what is sent is public data of the space. The form view's own labels and conditions stay with the
   signed-in form for now; the public page reads nothing from the Portal's database.
-- Not yet: a password on a link needs the `data_views` record of §30 to hold its hash; an embed
-  needs the Endpoint to name the origins that may frame it. Until then a published view is
-  public to everyone and not framed by other sites.
+- The public form page sends no credentials on any request, its reads included: a signed-in
+  person, a visitor and a site that frames it all get the anonymous page (EP-102).
+- Embedding a form (EP-101): the sites named in the Endpoint's `spec.creates.embedOrigins` may
+  frame `/f/{slug}`, which the Portal answers with `Content-Security-Policy: frame-ancestors 'self'
+  <origins>` and, while the list holds one, no `X-Frame-Options`; with no list only the Portal
+  frames it. The share panel gives two snippets: an `<iframe>` of the page, and
+  `<script src="https://{portal}/f/embed.js" data-jc-form="{slug}" async>`, which inserts the same
+  frame and sizes it to the form from the page's `{"type": "jc-form-height", "height": n}`
+  message (the only message the page sends, to its parent).
+- Testing a form (EP-102): `/f/{slug}?test=1` is the same page whose submit writes nothing. It
+  checks the entry against the published schema, then asks
+  `POST /api/endpoint/{slug}/access/check` `{"action": {"name": "createEntity"}, "resource": {"type":
+  …}}` anonymously, and says whether the gateway would take it. The share panel previews the page
+  this way in a frame of its own (`sandbox="allow-scripts allow-forms allow-same-origin"`), so a
+  steward sees what a visitor sees and can try a submission without filling the space.
+- Not yet: a password on a link needs the `data_views` record of §30 to hold its hash. Until then
+  a published view is public to everyone; a view other than a form is not framed by other sites.
 
 ## 34. Knowledge assistant administration (T-3057, MF-51, MF-52)
 

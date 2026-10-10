@@ -6,7 +6,7 @@ description: Universal ingress and egress multi-representation views, opaque slu
 
 # Endpoints & Representation Parity
 
-Family **EP** (EP-01…EP-100). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **EP** (EP-01…EP-102). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
 ## 1. Endpoint Identity and Opaque Slug
 
@@ -184,6 +184,8 @@ Decided in [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) (T-3154).
 - **EP-98** [H][S] — An Endpoint's page MUST offer a playground of the reads the caller's own grants allow on it (EP-55): the entities of a type, how many of a type, one entity by its id, the types it holds, each parameter a field, sent with the person's session and answered pretty-printed, and the same call as curl, Python and JavaScript; the code of a closed Endpoint MUST name a token from the environment and never carry one (T-3264).
 - **EP-99** [H] — `GET /api/endpoint/{slug}/openapi.json` MUST answer an OpenAPI 3.1 document of the Endpoint's NGSI-LD read surface, generated from its definition and its newest model major on every request, projected to the caller like the JSON Schema it embeds (EP-47): `GET /ngsi-ld/v1/entities` with `type` limited to the types the caller may see, `GET /ngsi-ld/v1/entities/{entityId}` and `GET /ngsi-ld/v1/types`, each type a schema in `components`. The Portal MUST render it as a docs page with an example request per path, at `/d/{slug}` without signing in for a `public` Endpoint and on the Endpoint's page for anyone who may read it (T-3265).
 - **EP-100** [H][S] — An Endpoint's page MUST share it with another project in one guided Change: the project added to `allowedProjects`, one Policy granting that project's group the reads of the chosen types (and the group drafted empty when none exists), and an optional end as that Policy's `validity.to`, which the gateway enforces; it MUST preview the entities through the Endpoint's projection without its hidden attributes, list each project it is shared with and until when, and stop a share in one Change that removes the project and ends its Policy at once, so no other Endpoint of the space keeps reading for it (T-3275).
+- **EP-101** [S] — A public form's Endpoint MAY name in `spec.creates.embedOrigins` at most 20 sites that may frame its page `/f/{slug}`, each an `https` origin (scheme, host and an optional port; no path, query, fragment or wildcard). The Portal MUST answer that page with `frame-ancestors 'self'` and exactly those origins, and without `X-Frame-Options` only while the list holds one; an absent or empty list lets nothing but the Portal frame it, and every other page and route keeps its own framing rule (T-3266).
+- **EP-102** [S] [H] — The public form page MUST send no credentials on any request, so it is the same for a signed-in person, a visitor and a site that frames it. With `?test=1` its submit MUST check the entry against the Endpoint's published schema and ask the gateway's `access/check` whether an anonymous caller may `createEntity` of that type, say what the answer would be, and write nothing (T-3266).
 
 ## Traceability
 
@@ -220,6 +222,7 @@ Decided in [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) (T-3154).
 | EP-90 | [API/02-endpoint-representations.md#2a-what-the-ngsi-ld-surface-answers](../API/02-endpoint-representations.md#2a-what-the-ngsi-ld-surface-answers) | [Testing/01-backend-tests.md](../Testing/01-backend-tests.md) |
 | EP-91 | [Architecture/21-open-data-catalogue.md#8-the-organizations-dcat-ap-feed](../Architecture/21-open-data-catalogue.md#8-the-organizations-dcat-ap-feed) | [Testing/05-deployment-and-performance-tests.md](../Testing/05-deployment-and-performance-tests.md) |
 | EP-98…EP-100 | [Architecture/09-portal.md#16-trying-and-documenting-an-endpoint](../Architecture/09-portal.md#16-trying-and-documenting-an-endpoint) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| EP-101…EP-102 | [API/01-portal-api.md#33-data-views-published-as-a-public-link-adr-n-042-35-t-3108](../API/01-portal-api.md#33-data-views-published-as-a-public-link-adr-n-042-35-t-3108) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 
 ## Related
 
