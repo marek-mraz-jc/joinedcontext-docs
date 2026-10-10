@@ -162,6 +162,35 @@ role, and RustFS still refuses a shard's key on another shard's prefix.
 own schema and storage prefix. Work that must keep running between requests, hold a connection
 or keep state in memory stays a `ui-rust` App (AP-125), outside this host.
 
+## 8. Measured: 10 000 Apps on two shards (T-3345)
+
+The 10 000-App load test (platform `crates/wasm-host/load/`, workflow `wasm-host-10k`) provisions
+10 000 Apps across two shards, each App with its own role, schema, seeded table, storage prefix
+and component, and serves a long-tail mix to them. Run 38063077577 on a GitHub-hosted runner,
+2026-10-10: 30 minutes at 5.5 requests a second, shards at 1 CPU and 1 GiB each, apps-db at 1 CPU
+and 768 MiB, a cap of 700 compiled components per shard.
+
+| measured | value |
+|---|---|
+| requests answered / failed | 11 501 / 0 |
+| OOM kills, restarts | none |
+| shard RSS idle, peak | 21 MiB, 892.6 MiB (700 components kept) |
+| one compiled component | about 1.25 MiB of shard memory |
+| cache hit rate | 80 % (9 187 hits, 2 314 misses) |
+| cold request (compile) p50 / p99 | 888 ms / 1.47 s |
+| warm request p50 / p99 | 1.8 ms / 5.0 ms |
+| apps-db for 10 000 schemas | 912 MB on disk, 50 413 catalog rows, 264 MiB peak RSS |
+| store | 20 000 objects, 3.1 GB |
+
+Decided (worker-4, owner may override): a shard keeps at most 600 compiled components
+(`JC_WASM_CACHED_COMPONENTS`), because the host's default of 2000 would reach the 1 GiB limit near
+800 and be OOM-killed, and 600 leaves about 270 MiB for compiles in flight and running instances;
+options: raise the memory limit with the cap, keep 700 (130 MiB of headroom), or 600 (chosen). A
+cap past the memory limit fails the deployment's test before it reaches a cluster.
+
+The run used one runner, not a cluster node, and a synthetic App; the numbers bound a shard's
+memory and show the catalogue holds 10 000 schemas, and a production node's latencies will differ.
+
 ## Related
 
 - [ADR-N-036](adr-n-036-three-app-shapes.md) — the App shapes this adds a server shape beside.
