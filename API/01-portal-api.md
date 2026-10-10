@@ -869,7 +869,9 @@ A listed key carries what an operator decides on and nothing that opens a door:
 - `credential` MUST name an `api-key` credential of the manifest; an `oauth-client` credential is
   provisioned in Keycloak by the reconciler and has no key here (`400`).
 - `expiresAt` defaults to the credential's `expiresAt` in the manifest; without either the key does
-  not expire. It MUST NOT be in the past (`400`).
+  not expire. It MUST NOT be in the past (`400`), and MUST NOT be later than the credential's own
+  `expiresAt` when the manifest declares one (`400`, naming that expiry): the manifest's expiry was
+  reviewed, so a key asked for in the Portal may end sooner, never later (T-3255).
 - Rotation (PF-38) mints a successor with the same credential and expiry and moves the old key's
   expiry to `now + overlap`, `{ "overlapHours": 24 }` in the body, default 24, at most 168; an old key
   that already expires sooner keeps its earlier expiry. Both keys are listed while both work.
