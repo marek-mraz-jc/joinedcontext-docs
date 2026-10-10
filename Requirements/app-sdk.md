@@ -5,7 +5,7 @@ title: "App SDK (SDK)"
 
 # App SDK
 
-Family **SDK** (SDK-01…SDK-30, SDK-35…SDK-38). Owning chapter: [Architecture/20-app-sdk.md](../Architecture/20-app-sdk.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
+Family **SDK** (SDK-01…SDK-30, SDK-35…SDK-45). Owning chapter: [Architecture/20-app-sdk.md](../Architecture/20-app-sdk.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
 
 Generated `static` applications are code written against one platform package, `@joinedcontext/sdk` ([ADR-N-022](../Decisions/adr-n-022-generated-applications-are-code-on-the-app-sdk.md)). This family defines the package, the template application a generation run starts from (interface, serverless functions and tests), the runtime that executes functions, the one-shot first run, the editing agent that follows and the preview that shows the result. The application rules of [apps.md](apps.md) still hold; this family says how a generated application meets them.
 
@@ -73,6 +73,16 @@ Every App looks and behaves alike: one shell, and every entity it shows opens th
 - **SDK-39** [H] — The SDK MUST give every App one shell, `<AppShell>`: the App's title, the language switch (en, fi, sk, cs, sv where the App has it), light and dark from the reader's system, and the loading, empty and error states in the same words and look for every App; the template and the samples MUST use it, and an App MUST NOT draw its own header or states beside it.
 - **SDK-40** [H][S] — An entity the App shows on a map, in a table, on a chart or on a card MUST open the SDK's `<EntityPanel>` on a click or on Enter, listing the entity's attributes with the labels of the App's schema. **Edit** MUST appear only when the signed-in reader may write that entity, as `can()` answers from the reader's access document (SDK-07, SDK-36), and MUST check the change against the App's schema and show the person what it changes, writing it only after they confirm (the data surface has no dry run for an entity write; `?dryRun=All` and PF-57 are a manifest's), through the App's own Endpoint with the reader's token and the CSRF header, showing a conflict (`409`) and a refusal (`403`) in words; on a `public` App, or without the right, the panel MUST instead link to the entity's page in the Portal, which applies the reader's own rights: the explorer of the App's project at `{portal}/explore?space={space}&entityId={id}`, where `portal` is the Portal's address of that project (`https://{portal host}/projects/{project}`), which the static host MUST write into the served configuration beside `slug` and `space` (no token, no person). The panel MUST never widen what the App may write (AP-140) and MUST close on Escape with the focus back on what opened it, its controls reachable by keyboard and named for a screen reader, in the App's four languages.
 
+## 8. One Client per Platform Service
+
+ADR-N-045: an App reaches each platform service of AP-160 through one typed client, in TypeScript for the interface and its functions and in Rust for a `wasm` component, so a model or a person glues services together and writes no transport, token or URL (T-3582).
+
+- **SDK-41** [A] — `jc()` MUST offer one module per service of AP-160: `identity` (`me()`, `access()`, `can()`), `data` (`entities`, `temporal`, `schema()`), `files` (`put`, `get`, `list`, `remove`, `url`), `email` (`send`), `jobs` (`list`) and `ai` (`complete`), with the signatures of [API/06](../API/06-app-services.md); the top-level calls of SDK-01 MUST stay the same functions as their `identity` and `data` modules, never a second implementation (ADR-N-045).
+- **SDK-42** [A] — `jc-app-sdk` MUST offer the same six modules to a `wasm` component over `jc:app@0.2.0`: `identity`, `data` (today's `gateway`), `files` (today's `blob`), `email`, `jobs` and `ai`, each a thin wrapper of one host interface; the 0.1.0 names `gateway` and `blob` MUST stay as re-exports while a published component imports `jc:app@0.1.0` (AP-147).
+- **SDK-43** [H] — A refused service call MUST throw `ServiceRefusedError` in TypeScript and return `Error::Refused` in Rust, carrying the service, the `layer` (`organization`, `project` or `app`) or the quota's name and its reset time, so a generated control can say "e-mail is switched off for this project" instead of failing (AP-164, AP-165).
+- **SDK-44** [A] — `stubTransport` and `fakeContext` MUST answer every module of SDK-41 from fixtures, with a switch that refuses a named service at a named layer, so an App's tests prove both the call and its refusal without a network (SDK-24).
+- **SDK-45** [A] — A module of a service the App does not list in `spec.services` MUST still type-check and MUST refuse at run time with `layer: app`, and `sdk/API.md` MUST say for each module which service it needs, so the builder adds the service to the manifest when it writes the call (SDK-09, AP-161).
+
 ## Traceability
 
 | Requirement Range | Architecture Section | Test Family |
@@ -90,6 +100,7 @@ Every App looks and behaves alike: one shell, and every entity it shows opens th
 | SDK-29…SDK-30 | [Architecture/20-app-sdk.md#8-the-entity-grid](../Architecture/20-app-sdk.md#8-the-entity-grid) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | SDK-35…SDK-37 | [Architecture/20-app-sdk.md#11-the-data-client](../Architecture/20-app-sdk.md#11-the-data-client) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
 | SDK-39…SDK-40 | [Architecture/20-app-sdk.md](../Architecture/20-app-sdk.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md), [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
+| SDK-41…SDK-45 | [Architecture/20-app-sdk.md#9-one-client-per-platform-service](../Architecture/20-app-sdk.md#9-one-client-per-platform-service), [ADR-N-045](../Decisions/adr-n-045-platform-services-for-apps.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md), [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
 
 ## Related
 

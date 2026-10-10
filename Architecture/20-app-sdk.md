@@ -302,9 +302,13 @@ The entity grid of Architecture/09 §13 is an export of the SDK, not a Portal pa
 
 An application `spec.json` and a Dashboard place it as a view, `kind: "grid"`, with that same object (SDK-30).
 
+## 9. One client per platform service
+
+`jc()` groups what an App calls by the platform service behind it (SDK-41): `identity` and `data` are the calls of §1.1 under their service names, the same functions; `files`, `email`, `jobs` and `ai` are new. Every module travels as §1.2 says, on the App's own host or through the preview's frame, so a module adds no transport and no address. A module of a service the App does not list still type-checks and is refused when called, naming the layer, which is what lets the builder add the service to `spec.services` when it writes the call instead of discovering it at publish (SDK-45). `jc-app-sdk` gives a `wasm` component the same six modules over the host's interfaces (SDK-42). Signatures: [API/06](../API/06-app-services.md).
+
 ## Related
 
-- [Requirements/app-sdk](../Requirements/app-sdk.md) — the normative contract, SDK-01…SDK-26.
+- [Requirements/app-sdk](../Requirements/app-sdk.md) — the normative contract, SDK-01…SDK-45.
 - [ADR-N-022](../Decisions/adr-n-022-generated-applications-are-code-on-the-app-sdk.md) — why applications are code, and why functions run in QuickJS.
 - [ADR-N-028](../Decisions/adr-n-028-applications-build-on-the-forge.md) — why applications build on the forge, and ADR-N-026 for the three shapes of a static application.
 - [11-data-models](11-data-models.md) — Model Tools, which renders `jc-types.ts` from LinkML.
