@@ -371,6 +371,8 @@ start (section 8, "Start or Continue") and refused the same way. The `message` e
 page read from it as `page`: `{route, page, kind, name, sub, tab}`, names only. The run answers
 about the newest page it was told. On any other kind of run `pageContext` answers `400 Bad Request`.
 
+A message on an application run MAY carry `scope`, the `src` a `jc-select` of the preview named (Architecture/20 §5, SDK-46): `{file}:{line}` with `file` an interface file under `src/` ending in `.tsx` and `line` from 1. The `message` event carries it, and the editing agent writes that file only for this instruction. Any other shape, a path outside `src/` and a `scope` on a `conversation` answer `400 Bad Request`.
+
 ### Calling a Function
 
 The page that frames a code run's preview forwards the SDK's `/functions/{fn}` requests here (Architecture/20 §3, SDK-23):
