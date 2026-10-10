@@ -282,6 +282,8 @@ client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer
 client_assertion=<contents of the projected token file>
 ```
 
+The platform's own workload clients take the same path (T-2868): a client of `components/*/keycloak-clients.yaml` with `federated: { release, serviceAccount }` is rendered `federated-jwt` for that account's subject in the release's namespace, no secret is generated for it, and its pod mounts the projected token above (600 s). The Portal reads `JC_OIDC_CLIENT_ASSERTION_FILE` for `portal-api` on every token request, the code exchange of a login included. `portal-reconciler` lives in the same pod, so it trusts a ServiceAccount of its own, `portal-reconciler`, which runs no pod: the Portal mints a 600 s token of it per request (`JC_PORTAL_KEYCLOAK_ADMIN_CLIENT_SERVICE_ACCOUNT`, TokenRequest, `create` on `serviceaccounts/token` of that one name).
+
 The answer is an ordinary access token whose `azp` is the account's client, so the gateway and the Portal map it as they map every other account. Checked against Keycloak 26.6.4 on 2026-09-25: a token of another ServiceAccount, another audience, an expired token and one signed by another key are each refused with `invalid_client`. A projected token is not single-use, so the same file answers until it expires; its `expirationSeconds` is the window a copied token is worth, and the kubelet rewrites the file before that.
 
 ### One principal per pipeline (PL-19, PL-20)
