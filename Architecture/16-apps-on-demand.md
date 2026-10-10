@@ -495,6 +495,27 @@ A record form posts to the backend, which writes through the app's endpoint with
 
 A `fullstack` application a run generates still commits under `projects/{project}/apps/{name}/` of the configuration repository ([20-app-sdk §6.1](20-app-sdk.md#61-one-repository-per-application)), where no per-application workflow runs. The reference applications are the ones this section builds; a generated one builds the same way once its run commits to a repository of its own.
 
+## 14. Platform services for Apps
+
+An App names the services it uses in `spec.services`, from a closed set of six: `identity`, `data`, `files`, `email`, `jobs` and `ai` (AP-160). The first two are every App's: its Keycloak client says who is signed in and its Endpoint carries its data. The other four stay off until the App lists them, because each one sends something out of the platform, stores something or costs money (AP-161).
+
+Whether a listed service is on is decided in three layers, the organization's `spec.policies.apps.services`, the project's `spec.apps.services` and the App's own list, each only narrowing the one above, and the same three layers carry the per-App quotas (AP-163, AP-165). The Portal checks every layer on every call, not only at publish, so an administrator who switches e-mail off for a project stops the project's published Apps at their next call, and the refusal names the layer that did it (AP-164).
+
+```mermaid
+sequenceDiagram
+    participant B as Browser on {name}.apps.{domain}
+    participant E as Edge (APISIX)
+    participant P as Portal service API
+    participant S as SMTP relay, model proxy or object store
+    B->>E: POST /api/services/email/send (session cookie, CSRF)
+    E->>P: same request with the person's token
+    P->>P: App lists email? project and organization allow it? quota left?
+    P->>S: send with the platform's credential (secretRef)
+    P-->>B: 202, or 403 layer / 429 quota
+```
+
+The credential behind each service, the SMTP account, the model key and the object store's keys, is a `secretRef` the Portal resolves; an App never holds one (AP-167). A `wasm` component reaches the same services through host interfaces of `jc:app@0.2.0` instead of the routes, and the host asks the Portal the same three questions. The routes, the client signatures and the refusals are in [API/06](../API/06-app-services.md); why the platform offers services at all, rather than letting an App bring its own keys, is [ADR-N-045](../Decisions/adr-n-045-platform-services-for-apps.md).
+
 ## Related
 
 - [AP-01…AP-41](../Requirements/apps.md) — referenced above.
