@@ -69,6 +69,18 @@ The owner ordered on 2026-09-26 that every App answer on its host the moment it 
 
 The wildcard's key serves every App host. It lives only in the APISIX namespace, where the ingress controller already reads the edge certificate's key. The separation between Apps does not change: the browser separates origins by host name, whichever certificate serves the host.
 
+## 7. Amendment 2026-10-10: Hostnames on the Organization's Own Domain
+
+A city wants an App on a name of its own, such as `bikes.hel.fi`, as Base44 and Lovable offer (T-3574, gap 4.4). Decided by worker-1, owner may override (T-3610):
+
+1. **The App lists its hostnames.** `spec.hostnames` holds at most three DNS names, each the Organization's own `spec.domain` or a name under it. The domain is the one PF-41 already verifies, so no second list of domains and no second challenge exist. A name under the installation's own domain is refused, because that zone is the platform's.
+2. **One App per name.** A hostname another App holds is refused, so a name never serves two origins and the separation of §3 holds on it.
+3. **Routed only while verified.** The reconciler routes a hostname only while the Organization's domain is `verified` (PF-41). A domain that lapses loses its App routes, Ingress and certificate at the next pass, so nobody serves an App on a name the Organization no longer proves it holds.
+4. **The same routes, its own login.** Each hostname gets the App's two routes bound to it alone, with the login of the client `app-{name}` redirecting back to that hostname, and the session cookie host-only there (AP-29). The client accepts each routed hostname as a redirect URI and web origin.
+5. **A certificate per hostname, by HTTP-01.** The wildcard of §6 names `*.apps.{domain}` only, so each hostname gets its own Ingress and certificate from `letsencrypt-prod`, made once when it is routed and deleted when it is removed. The Organization points the name at the edge (a `CNAME` to `{name}.apps.{domain}`); until it does, the challenge fails and the App keeps answering on its own host.
+
+Options were a list of verified domains on the Organization, each with its own challenge, and a name under any domain with a TXT record per App. The first adds a second verification for what PF-41 already proves; the second lets an App claim a name without the Organization's say.
+
 ## Related
 
 - [Requirements/apps](../Requirements/apps.md) — AP-133…AP-135, AP-12, AP-26, AP-29, AP-112.
