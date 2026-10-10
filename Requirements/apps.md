@@ -290,6 +290,10 @@ ADR-N-045 decides that an App declares the platform services it uses and calls o
 - **AP-169** [S] — `ai` MUST call a model of the organization's `spec.policies.agents` through the Portal with the organization's model key, the one its assistant uses, counted against the App's `aiTokensPerDay`, and MUST be refused with the reason when the organization has no model key; prompts and answers MUST NOT be logged (ADR-N-045).
 - **AP-170** [S] — `files` MUST store an App's objects under its own prefix `apps/<shard>/<id>/` (AP-145) whatever its kind: a `wasm` App through `jc:app/blob`, every other App through `/api/services/files/` on its own host, each object at most 25 MiB, the total held to `filesMiB` (ADR-N-045).
 
+## 30. Restoring an Earlier Build
+
+- **AP-171** [S] — **Restore** on the App page MUST list the App's successful builds on the forge, newest first, one per commit, and restore one of them by opening a merge request on the App's own repository that brings its default branch back to that build's commit: a branch `restore/{short commit}-{time}` from the default branch with one commit that writes back every file of the build's commit and removes every file it did not hold. The Portal MUST NOT write `status.build`, whose one writer stays the build lane (AP-73); merging the request builds the restored source and the lane sets its digest. Restore MUST need `propose` on `App`, as Rebuild does (AP-103), MUST refuse with `409` a commit that is not a successful build of this App's repository, the current build, or a commit whose tree equals the default branch, and MUST NOT roll back data: the App's schema, its files and its Endpoint's space stay as they are, and the page says so.
+
 ## Traceability
 
 | Requirements | Section | Architecture | Tests |
@@ -335,6 +339,7 @@ ADR-N-045 decides that an App declares the platform services it uses and calls o
 | AP-157…AP-159 | A shard's placement, its store key and an App's job identity, written by the reconciler | [16-apps-on-demand.md §7](../Architecture/16-apps-on-demand.md#7-runtime-and-isolation), [ADR-N-044](../Decisions/adr-n-044-server-wasm-apps-on-a-shared-host.md) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
 | AP-152…AP-156 | One App shape: functions, the static interface, an optional WebAssembly part that answers requests or runs jobs; the ADR-N-044 amendment | [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md), [20-app-sdk.md](../Architecture/20-app-sdk.md) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md), [06-security-tests.md](../Testing/06-security-tests.md) |
 | AP-160…AP-170 | Platform services for Apps: the closed `services` list, three layers that switch them, quotas, and no credential in an App | [16-apps-on-demand.md §14](../Architecture/16-apps-on-demand.md#14-platform-services-for-apps), [ADR-N-045](../Decisions/adr-n-045-platform-services-for-apps.md) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
+| AP-171 | Restoring an earlier build as a merge request on the App's repository | [../API/01-portal-api.md#12a-the-build-of-an-application-ap-100-ap-103-adr-n-028](../API/01-portal-api.md#12a-the-build-of-an-application-ap-100-ap-103-adr-n-028) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
 
 ## Related
 
