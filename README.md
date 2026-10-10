@@ -77,6 +77,11 @@ a private key or a person's e-mail anywhere in the corpus — an example uses a 
 domain and a placeholder, and a page that needs a real value names where it is read from
 instead of printing it.
 
+A screenshot in the User Guide is one the Portal's live journeys took, in English and Slovak at
+1280 px, published into `User-Guide/img/{en,sk}/` by the Portal's `scripts/publish-guide-shots.sh`.
+`scripts/check-guide-shots.py` refuses an image from anywhere else, a shot that does not exist,
+one without its twin in the other language or without alt text, and a shot no page shows.
+
 ## 7. Working here
 
 Read `STYLE.md` before writing a page, and run the checkers before pushing: they are cheap and
