@@ -84,7 +84,7 @@ type FileInfo = { path: string; size: number; contentType: string; modifiedAt: s
 type JobStatus = {
   name: string;
   schedule: string;
-  nextRun: string;
+  nextRun?: string; // absent for a schedule that names no minute within a year
   lastRun?: { at: string; ok: boolean; message?: string };
 };
 type Message = { role: "system" | "user" | "assistant"; content: string };
