@@ -42,7 +42,7 @@ A service is on for an App only when it is on at every layer, each layer narrowi
 
 | Layer | Field | Default when absent |
 |---|---|---|
-| Organization | `spec.policies.apps.services`, quotas under `spec.limits.apps` | `identity`, `data`, `files`, `jobs`; no quota above the platform's |
+| Organization | `spec.policies.apps.services`, quotas under `spec.limits.apps` | `identity`, `data`, `files`, `jobs`; the catalog's quotas, 100 emails and 200000 model tokens a day and 512 MiB per App ([ADR-N-035](../Decisions/adr-n-035-organization-policies-and-limits.md)) |
 | Project | `spec.apps.services`, quotas under `spec.apps.limits` | the organization's list and quotas |
 | App | `spec.services`, quotas under `spec.limits` | `identity` and `data`; the project's quotas |
 
