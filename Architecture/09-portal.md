@@ -539,6 +539,10 @@ Keycloak holds identity only: who a person is and how they sign in (I4). No role
 
 Replacing the Keycloak admin console: realm settings, identity providers, clients and authentication flows stay there. People are provisioned on the People tab (ADR-N-031); a binding or a group may still name a person before their first login, which the Members and Groups tabs show as "not signed in yet".
 
+### 14.7 The sample project
+
+A person new to the platform sees every feature populated at once without creating anything: a project whose `metadata.labels` hold `joinedcontext.com/sample: "true"` is the sample (on `dev`, `banskabystrica`, the city's real open data that every signed-in person reads through the `viewers` binding). `GET /api/v1/projects` answers `sample: true` for it, beside the projects the caller may read and no others. The Portal marks it **Sample** in the project switcher and on its home page, and the first-run checklist of every other project offers **Try with sample data**, which opens it. Nothing is copied, no Change is proposed and no pipeline is started: what the person may do there is what their grants already say, read-only for a newcomer. The label grants nothing; a sample the person may not read is not offered (PF-109, T-3234).
+
 ## 15. Finding and coming back
 
 A person new to the Portal should reach anything they may read with two keystrokes and a name,
