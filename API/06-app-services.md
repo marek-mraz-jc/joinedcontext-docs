@@ -42,7 +42,7 @@ A service is on for an App only when it is on at every layer, each layer narrowi
 
 | Layer | Field | Default when absent |
 |---|---|---|
-| Organization | `spec.policies.apps.services`, quotas under `spec.limits.apps` | `identity`, `data`, `files`, `jobs`; no quota above the platform's |
+| Organization | `spec.policies.apps.services`, quotas under `spec.limits.apps` | `identity`, `data`, `files`, `jobs`; the catalog's quotas, 100 emails and 200000 model tokens a day and 512 MiB per App ([ADR-N-035](../Decisions/adr-n-035-organization-policies-and-limits.md)) |
 | Project | `spec.apps.services`, quotas under `spec.apps.limits` | the organization's list and quotas |
 | App | `spec.services`, quotas under `spec.limits` | `identity` and `data`; the project's quotas |
 
@@ -72,8 +72,11 @@ A refusal is an `application/problem+json`:
 | `403` | `/service-off` | `service`, `layer` | the service is off at `organization`, `project` or `app` (AP-164) |
 | `403` | `/recipient-refused` | `to` | a recipient is not a person of the organization (AP-168) |
 | `413` | `/file-too-large` | `limit` | an object over 25 MiB (AP-170) |
-| `429` | `/quota` | `service`, `quota`, `resetAt` | a quota is used up (AP-165) |
+| `429` | `/quota` | `service`, `quota`, `resetAt` | a quota is used up (AP-165); `filesMiB` names no `resetAt`, it frees when the App deletes |
+| `502` | `/no-json` | `service` | `ai.complete` asked for a `schema` and the answer is no JSON value of it |
 | `503` | `/no-model-key` | `service` | the organization has no model key (AP-169) |
+
+An `ai` call reaches the model through `jc-agent-proxy` as the Portal's own service account with `X-JC-App: {project}/{app}`; the proxy adds the organization's key and the App never holds one (AP-147). The model is the `app-builder` profile's, or the first of the organization's `spec.policies.agents.models` when that list leaves it out. The Portal counts the tokens against `aiTokensPerDay` and holds each answer to what the day has left; `maxTokens` is 1 to 4096, 1024 when absent. Neither a prompt nor an answer is logged.
 
 ## 4. TypeScript client
 
@@ -84,7 +87,7 @@ type FileInfo = { path: string; size: number; contentType: string; modifiedAt: s
 type JobStatus = {
   name: string;
   schedule: string;
-  nextRun: string;
+  nextRun?: string; // absent for a schedule that names no minute within a year
   lastRun?: { at: string; ok: boolean; message?: string };
 };
 type Message = { role: "system" | "user" | "assistant"; content: string };
