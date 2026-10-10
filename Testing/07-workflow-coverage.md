@@ -184,6 +184,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | `retire` | `joinedcontext-portal/src/api/delete.rs` | `tests/resource_delete_tests.rs` | `ui/tests/resource_delete.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "9d. a grant on the walk's space is approved, then removed from the policies page" | `jc_resource_delete` |
 | `refused-no-permission` | `joinedcontext-portal/src/agents/grant.rs` | `tests/attack_grant_escalation_tests.rs` | `ui/tests/roles_matrix.test.tsx` | `ui/e2e/live/roles-refusals.spec.ts` › "a person without the role is refused an approval, in the page and at the door" | `jc_resource_propose` |
 | `refused-red-verdict` | `joinedcontext-portal/src/agents/grant.rs` | `tests/access_escalation_tests.rs` | `ui/tests/access_forms.test.tsx` | `ui/e2e/live/roles-refusals.spec.ts` › "a grant wider than the proposer's own rights is refused, and a narrower control is not" | `jc_resource_propose` |
+| `try-a-person` | `joinedcontext-platform/crates/context-gateway/src/handlers/access.rs` | `tests/access_simulate_tests.rs` | `ui/tests/policies_try_a_person.test.tsx` | `ui/e2e/live/try-a-person.spec.ts` › "Try a person agrees with what the gateway does for demo.viewer" | person only: weighing another person's rights is an organization administrator's own question, recorded with both subjects (EP-103); no assistant tool reveals another person's access |
 
 ### 3.13 Subscriptions (`subscription`)
 
