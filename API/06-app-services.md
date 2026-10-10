@@ -31,7 +31,7 @@ spec:
 | `data` | yes | the App's Endpoint compiled from `dataNeeds` (AP-05) | the Endpoint's own limits (AP-17) |
 | `files` | no | objects under the App's prefix `apps/<shard>/<id>/` (AP-170) | `filesMiB` |
 | `email` | no | a message to people of the organization (AP-168) | `emailsPerDay` |
-| `jobs` | no | the schedules of a `wasm` App, `spec.server.jobs[]` (AP-154, AP-162) | at most 10 jobs |
+| `jobs` | with `spec.server.jobs[]` | the schedules of a `wasm` App; declaring jobs lists the service (AP-154, AP-162) | at most 10 jobs |
 | `ai` | no | a completion from a model of the organization's list (AP-169) | `aiTokensPerDay` |
 
 A name outside the six is refused like any unknown field: `spec.services[2]: unknown service "sms"; expected one of identity, data, files, email, jobs, ai`.

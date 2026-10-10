@@ -28,7 +28,7 @@ The graph queries behind the table are recorded in T-3582.
 
 ### 2.1 One closed list in the App's manifest
 
-`spec.services` lists what the App uses, each name once, from `identity`, `data`, `files`, `email`, `jobs` and `ai`; any other name is refused like an unknown field (AP-160). `identity` and `data` are every App's whether listed or not, because an App without a Keycloak client or an Endpoint does not exist on this platform (AP-161). The other four are off until listed: each sends something out (`email`), stores something (`files`), runs without a person (`jobs`) or costs money per call (`ai`). `jobs` is the existing `spec.server.jobs[]` and stays a `wasm` App's (AP-162).
+`spec.services` lists what the App uses, each name once, from `identity`, `data`, `files`, `email`, `jobs` and `ai`; any other name is refused like an unknown field (AP-160). `identity` and `data` are every App's whether listed or not, because an App without a Keycloak client or an Endpoint does not exist on this platform (AP-161). The other four are off until listed: each sends something out (`email`), stores something (`files`), runs without a person (`jobs`) or costs money per call (`ai`). `jobs` is the existing `spec.server.jobs[]` and stays a `wasm` App's; declaring jobs lists the service, so no manifest written before this decision changes (AP-162).
 
 An App's own SQL schema (`spec.storage.sql`, AP-148) is not a service in this list: it is part of the `wasm` shape, provisioned per App and reached only by its component.
 
