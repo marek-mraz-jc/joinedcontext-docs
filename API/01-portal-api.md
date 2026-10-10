@@ -185,9 +185,8 @@ repository to copy; its duplicate is an import of its export under the new name 
 of the organization repository says this deployment runs: `{repository, ref, parameters,
 declarations, tags}`. `declarations` are the `spec.parameters` of the project's own `project.yaml`
 at the pinned ref, so the parameter form shows the knobs of the release that runs; `tags` are the
-project repository's tags with their commits, newest first, the releases a pin may name (CC-88).
-An external repository (CC-89) answers no tags and its declarations as the last checkout read
-them. It is held to `read` on the project; a caller without it gets `404`, and layout 1, where a
+project repository's tags with their commits, as the forge lists them: the releases a pin may
+name (CC-88). An external repository (CC-89) answers no tags and no declarations. It is held to `read` on the project; a caller without it gets `404`, and layout 1, where a
 project has no registry entry, answers `409`.
 
 `PUT /api/v1/projects/{project}/registry` takes `{ref?, parameters?}`, at least one of them, and
@@ -200,9 +199,12 @@ repository does not hold, or one without a `project.yaml`, is `400` naming the r
 declarations of `project.yaml` at the ref the entry will pin, and an undeclared name, a value that
 does not fit or a declared parameter left with neither value nor default is `400` naming it. A
 parameter of type `secret` takes a secret's name, never its value (CC-88). The `Change` carries
-only `projects/{project}.yaml`, on the branch `portal/registry-{project}`; a second repoint while
+only `projects/{project}.yaml`, on the branch `portal/update-project-{project}-registry`, and the
+organization's change list shows it as the `Project` it changes; a second repoint while
 one is open is `409` naming it, and a body that changes nothing is `409`. It is held to `propose`
-on `Project` for this project, and it applies only through the organization's red-lane approval
+on `Project` at the organization, the rule that edits the project's title there, because the entry
+is the organization's manifest of the project: a steward of the project alone gets `403`. It
+applies only through the organization's red-lane approval
 (PF-58); once merged, the checkouts fetch the new ref and the next render runs it (CC-86, CC-90).
 For an external repository the ref is not read before proposing; a ref the checkouts cannot fetch
 renders at the last fetched ref and says so on the entry's status (CC-86).
