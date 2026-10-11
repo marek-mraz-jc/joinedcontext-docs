@@ -81,10 +81,11 @@ INJECTED = re.compile(r'"name"\s*:\s*"((?:JC|PORTAL)_[A-Z0-9_]+)"')
 MENTION = re.compile(r"(?:JC|PORTAL)_[A-Z0-9_]+")
 DEFAULT = re.compile(r"default `([^`]+)`")
 # The shapes of a name that holds, or points at, a credential.
-SECRET = re.compile(r"(SECRET|TOKEN|_KEY$|_KEY_|PASSWORD|DATABASE_URL)")
+SECRET = re.compile(r"(SECRET|TOKEN|_KEY$|_KEY_|PASSWORD|DATABASE_URL|SMTP_URL)")
 # `JC_OIDC_TOKEN_URL` holds the address a token is asked for, not a token. An address is
-# never the secret, whatever word its name contains — `JC_PORTAL_DATABASE_URL` excepted,
-# because that one carries the password inside it.
+# never the secret, whatever word its name contains — `JC_PORTAL_DATABASE_URL` and
+# `JC_PORTAL_SMTP_URL` excepted, because those carry the password inside them.
+CREDENTIAL_URLS = {"JC_PORTAL_DATABASE_URL", "JC_PORTAL_SMTP_URL"}
 ADDRESS = re.compile(r"_URL$")
 # `JC_PORTAL_APPS_PULL_SECRET_NAME` names a Kubernetes Secret; the name is not the credential.
 NAME_OF = re.compile(r"_NAME$")
@@ -125,7 +126,7 @@ class Variable:
         # holds `TOKEN` and a default is a flag about a token (`JC_TRUST_EDGE_TOKEN`), not one.
         if self.default != "—":
             return "no"
-        if ADDRESS.search(self.name) and self.name != "JC_PORTAL_DATABASE_URL":
+        if ADDRESS.search(self.name) and self.name not in CREDENTIAL_URLS:
             return "no"
         if NAME_OF.search(self.name):
             return "no"
@@ -261,18 +262,20 @@ def opens_with(text: str, name: str) -> bool:
     return text.lstrip("`").startswith(name)
 
 
-def rank(block: str, name: str, configuration: bool) -> tuple[int, int, int]:
+def rank(block: str, name: str, configuration: bool) -> tuple[int, int, int, int]:
     """How well a doc block explains a variable.
 
     A configuration module first — that is the file whose job is to say what a variable does,
     and every other mention is a use of the value. Then a block written about this variable:
-    one that opens with it, or that gives it a bullet of its own. Then the shortest, which is
-    a field's own comment rather than a function's.
+    one that opens with it, or that gives it a bullet of its own. Then one whose first
+    sentence names it: "The address mail is sent from (`JC_PORTAL_MAIL_FROM`). Required with
+    `JC_PORTAL_SMTP_URL`." is about the sender, however short. Then the shortest, which is a
+    field's own comment rather than a function's.
     """
     text = " ".join(block.split())
     first = SENTENCE.split(text)[0] if text else ""
     about = opens_with(first, name) or any(opens_with(b, name) for b in bullets(block))
-    return (0 if configuration else 1, 0 if about else 1, len(text))
+    return (0 if configuration else 1, 0 if about else 1, 0 if name in first else 1, len(text))
 
 
 def scan(code_dir: pathlib.Path) -> tuple[dict[str, Variable], dict[str, Variable], list[str]]:
@@ -526,11 +529,18 @@ SELFTEST_SOURCE = '''
 pub bind: SocketAddr,
 /// The token it writes with (`JC_DEMO_TOKEN`), read from `JC_DEMO_TOKEN_FILE`.
 pub token: String,
+/// The relay it sends through (`JC_DEMO_RELAY_URL`), which is a longer comment than the next
+/// one, as a field's comment that explains its forms is.
+pub relay: String,
+/// The sender (`JC_DEMO_FROM`). Required with `JC_DEMO_RELAY_URL`.
+pub from: String,
 
 fn from_env(lookup: impl Fn(&str) -> Option<String>) {
     let bind = lookup("JC_DEMO_BIND");
     let token = lookup("JC_DEMO_TOKEN");
     let file = lookup("JC_DEMO_TOKEN_FILE");
+    let relay = lookup("JC_DEMO_RELAY_URL");
+    let from = lookup("JC_DEMO_FROM");
     let injected = json!({ "name": "JC_DEMO_INJECTED", "value": "x" });
     tracing::warn!("JC_DEMO_TOKEN is unset, carrying on");
 }
@@ -558,12 +568,20 @@ def selftest() -> int:
         if missing:
             problems.append(f"the empty trees were reported missing: {missing}")
         names = set(variables)
-        if names != {"JC_DEMO_BIND", "JC_DEMO_TOKEN", "JC_DEMO_TOKEN_FILE"}:
+        if names != {
+            "JC_DEMO_BIND",
+            "JC_DEMO_TOKEN",
+            "JC_DEMO_TOKEN_FILE",
+            "JC_DEMO_RELAY_URL",
+            "JC_DEMO_FROM",
+        }:
             problems.append(f"the scanner read {sorted(names)}")
         if "JC_DEMO_BIND" in names and variables["JC_DEMO_BIND"].default != "`0.0.0.0:8080`":
             problems.append("the default was not read out of the rustdoc")
         if "JC_DEMO_TOKEN" in names and variables["JC_DEMO_TOKEN"].secret != "yes":
             problems.append("a token was not called a secret")
+        if Variable("JC_PORTAL_SMTP_URL").secret != "yes":
+            problems.append("a relay URL with its password inside was not called a secret")
         if Variable("JC_DEMO_PULL_SECRET_NAME").secret != "no":
             problems.append("the name of a Secret was called a secret")
         if (
@@ -573,6 +591,11 @@ def selftest() -> int:
             problems.append("a secret file was not called a path to a secret")
         if "JC_DEMO_BIND" in names and "JC_DEMO_BIND" not in variables["JC_DEMO_BIND"].sentence:
             problems.append(f"the sentence was {variables['JC_DEMO_BIND'].sentence!r}")
+
+        # a shorter comment that names the variable only in a later sentence is about another one
+        relay = variables.get("JC_DEMO_RELAY_URL")
+        if relay and not relay.sentence.startswith("The relay it sends through"):
+            problems.append(f"JC_DEMO_RELAY_URL was described as {relay.sentence!r}")
 
         if set(written) != {"JC_DEMO_INJECTED", *INJECTED_INTO_A_RUN}:
             problems.append(f"the injected set was {sorted(written)}")
