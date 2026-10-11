@@ -5,9 +5,9 @@ title: "Apps on Demand"
 
 # Apps on Demand
 
-Family **AP** (AP-01…AP-87, AP-90…AP-171). Owning chapters: [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) and [19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
+Family **AP** (AP-01…AP-87, AP-90…AP-172). Owning chapters: [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) and [19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
 
-Requirement family **AP-01…AP-87, AP-90…AP-171** for AI-generated, purpose-built applications that consume context data through a dedicated, least-privilege Endpoint. Architecture in [Architecture/16-apps-on-demand](../Architecture/16-apps-on-demand.md) and [Architecture/19-agent-runner](../Architecture/19-agent-runner.md).
+Requirement family **AP-01…AP-87, AP-90…AP-172** for AI-generated, purpose-built applications that consume context data through a dedicated, least-privilege Endpoint. Architecture in [Architecture/16-apps-on-demand](../Architecture/16-apps-on-demand.md) and [Architecture/19-agent-runner](../Architecture/19-agent-runner.md).
 
 ## 1. Manifest and source
 
@@ -294,6 +294,10 @@ ADR-N-045 decides that an App declares the platform services it uses and calls o
 
 - **AP-171** [S] — **Restore** on the App page MUST list the App's successful builds on the forge, newest first, one per commit, and restore one of them by opening a merge request on the App's own repository that brings its default branch back to that build's commit: a branch `restore/{short commit}-{time}` from the default branch with one commit that writes back every file of the build's commit and removes every file it did not hold. The Portal MUST NOT write `status.build`, whose one writer stays the build lane (AP-73); merging the request builds the restored source and the lane sets its digest. Restore MUST need `propose` on `App`, as Rebuild does (AP-103), MUST refuse with `409` a commit that is not a successful build of this App's repository, the current build, or a commit whose tree equals the default branch, and MUST NOT roll back data: the App's schema, its files and its Endpoint's space stay as they are, and the page says so.
 
+## 31. An App on the Organization's Own Domain
+
+- **AP-172** [S] — An App MAY list in `spec.hostnames` at most three lowercase DNS names, each its Organization's `spec.domain` or a name under it and none under the installation's own domain; every write door MUST refuse any other name, a name another App holds, and a name while the Organization's domain is not `verified` (PF-41). The reconciler MUST route a listed hostname only while that domain is `verified`, exactly as the App's own host (AP-133): the same two routes bound to the hostname alone, the login of `app-{name}` redirecting back to it with a host-only cookie there (AP-29), the hostname a redirect URI and web origin of the client (AP-111), and an Ingress and certificate of its own by HTTP-01 through `letsencrypt-prod`, created once and deleted when the hostname is removed, the domain lapses or the App is retired (ADR-N-037 §7).
+
 ## Traceability
 
 | Requirements | Section | Architecture | Tests |
@@ -340,6 +344,7 @@ ADR-N-045 decides that an App declares the platform services it uses and calls o
 | AP-152…AP-156 | One App shape: functions, the static interface, an optional WebAssembly part that answers requests or runs jobs; the ADR-N-044 amendment | [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md), [20-app-sdk.md](../Architecture/20-app-sdk.md) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md), [06-security-tests.md](../Testing/06-security-tests.md) |
 | AP-160…AP-170 | Platform services for Apps: the closed `services` list, three layers that switch them, quotas, and no credential in an App | [16-apps-on-demand.md §14](../Architecture/16-apps-on-demand.md#14-platform-services-for-apps), [ADR-N-045](../Decisions/adr-n-045-platform-services-for-apps.md) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
 | AP-171 | Restoring an earlier build as a merge request on the App's repository | [../API/01-portal-api.md#12a-the-build-of-an-application-ap-100-ap-103-adr-n-028](../API/01-portal-api.md#12a-the-build-of-an-application-ap-100-ap-103-adr-n-028) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
+| AP-172 | An App on a hostname of its Organization's verified domain | [ADR-N-037 §7](../Decisions/adr-n-037-an-origin-per-app.md#7-amendment-2026-10-10-hostnames-on-the-organizations-own-domain) | [06-security-tests.md](../Testing/06-security-tests.md) |
 
 ## Related
 
