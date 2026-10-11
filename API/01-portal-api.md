@@ -1359,6 +1359,7 @@ class names and IRIs stay as they were and no entity id changes.
   "docs": "# AirQualityObserved\n\n| Attribute | NGSI-LD kind | Range |\n",
   "shacl": "@prefix sh: <http://www.w3.org/ns/shacl#> .",
   "owl": "@prefix owl: <http://www.w3.org/2002/07/owl#> .",
+  "brokerSchema": { "id": "https://example.org/aq", "name": "aq", "classes": { "AirQualityObserved": { "name": "AirQualityObserved", "slots": ["temperature"] } }, "slots": { "temperature": { "name": "temperature", "range": "string" } } },
   "example": { "id": "urn:ngsi-ld:AirQualityObserved:hel.fi:air-quality:sensor-01", "type": "AirQualityObserved" },
   "generatorVersion": "linkml-1.8.0",
   "errors": []
@@ -1417,7 +1418,12 @@ The editor's operations (DM-13) are `addClass`, `removeClass`, `renameClass`, `s
 - `jsonSchema`, `context`, `docs` and `example` are the four artifacts DM-02 commits beside the
   source, and `jcctl model generate` writes exactly these (see [API/03 §4](03-jcctl.md)); `shacl`
   and `owl` are rendered in the same run for the artifact store (DM-44), and so is `qb`, the RDF
-  Data Cube in Turtle, present only when the model declares a Data Structure Definition (DM-60). `docs` is one Markdown
+  Data Cube in Turtle, present only when the model declares a Data Structure Definition (DM-60).
+  `brokerSchema` is the model with its imports merged, in the LinkML subset the broker reads at
+  `PUT /q/schemas/{tenant}` (Antares `linkml-model`): every class lists all its slots, every slot
+  is top-level, a class's narrowing of a slot is its `slot_usage`, a range is a class, an enum or a
+  built-in type. The Portal's reconciler writes it to the tenant of every Context Space whose
+  `dataModelRef` names the model ([Architecture 11 §6.5](../Architecture/11-data-models.md)). `docs` is one Markdown
   page for the whole model, not a directory, and `example` is one entity in the key-value form the
   JSON Schema describes, validated against that schema and against the `@context` before it is
   answered (DM-21). An import answers with the catalogue's own example instead of a generated one:

@@ -577,12 +577,13 @@ Preview never touches the broker; publishing does not either, the reconciler doe
 
 ### 6.5 Model Tools, the one non-Rust runtime component
 
-LinkML and schema-automator are Python and have no Rust implementation. They run as **Model Tools**: a versioned OCI image (`linkml`, `schema-automator`, `pysmartdatamodels`, the `ngsi_ld_kind` post-processor) that is invoked in two places only:
+LinkML and schema-automator are Python and have no Rust implementation. They run as **Model Tools**: a versioned OCI image (`linkml`, `schema-automator`, `pysmartdatamodels`, the `ngsi_ld_kind` post-processor) that is invoked in three places only:
 
 | Caller | How | Why |
 |---|---|---|
 | Gitea Actions (CI) | container step, `jcctl model generate` shells out to it | authoritative generation; generated artifacts committed to the repository must match (CI fails on diff) |
 | Portal API (preview) | short-lived HTTP call to a stateless `model-tools` Deployment (2 replicas, 256 MiB, no persistent state, no network egress except the Smart Data Models allowlist) | sub-second live preview in the editor |
+| Portal reconciler | the same HTTP call, `POST /generate` with the Context Space's `dataModelRef` source and its imports, once per space and run | `brokerSchema`, written to the space's broker tenant at `PUT /q/schemas/{tenant}` when it changed, so the broker's views read value types, relationship targets and kinds from the model (T-3703); a refusal (`503` when the broker has no `ANTARES_SCHEMA_MAX_BYTES`, `413`, `400`) or a model that does not compile is the space's `ViewWritten` condition |
 
 Model Tools holds no credentials, reads no platform state and writes nothing; its only inputs are the LinkML document and, for imports, a Smart Data Models model reference. This keeps the "custom code is Rust/TypeScript" rule intact for everything that has state or authority; Model Tools is a pure function packaged as a tool. If a Rust LinkML generator reaches parity later, it replaces the image without any manifest change.
 
@@ -592,7 +593,7 @@ The image is `ghcr.io/marek-mraz-jc/joinedcontext-platform/model-tools`, built f
 |---|---|---|
 | `GET /healthz` | — | `{"status", "generatorVersion"}`, which is what a readiness probe reads |
 | `GET /catalog?refresh=&subject=` | — | the Smart Data Models index, cached with a daily refresh (DM-12); `subject=` fills that subject's attribute names |
-| `POST /generate` | `{"source", "imports"?}` | the artifact set of one LinkML document; `imports` maps each `org.{name}.v{major}` or `project.{name}.v{major}` the document imports, directly or through another import, to that model's LinkML (at most 32, DM-76), and an import left out is an `errors` entry naming it, never a file Model Tools looks for |
+| `POST /generate` | `{"source", "imports"?}` | the artifact set of one LinkML document, `brokerSchema` included (the model in the broker's LinkML subset, [API/01 §11](../API/01-portal-api.md)); `imports` maps each `org.{name}.v{major}` or `project.{name}.v{major}` the document imports, directly or through another import, to that model's LinkML (at most 32, DM-76), and an import left out is an `errors` entry naming it, never a file Model Tools looks for |
 | `POST /import-sdm` | `{"model"}` | the same set, plus the LinkML an import produced |
 | `POST /infer-schema` | `{"file", "format"}`, the sample base64 in JSON | a draft model from one sample: `linkml`, `operations`, `detectedTypes`, `matches`, `untyped`, `rows` (§6.7, DM-54, DM-55) |
 
