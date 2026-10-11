@@ -226,7 +226,7 @@ There is no run of the W3C JSON-LD 1.1 test suite here. The `@context` documents
 
 `tests/dsp/` runs the Eclipse Dataspace Protocol test kit, pinned by digest, against the connector addon as the system under test ([DS-05](../Requirements/data-space.md)). `check_dsp_results.py` decides the verdict, because the runtime exits `0` even when every case failed. The lane is `workflow_dispatch` with the connector's DSP URL, its base URL and its `did:web` participant id as inputs.
 
-The platform half of the protocol is covered in the gateway crate rather than here: `crates/context-gateway/tests/odrl_compiler_tests.rs` asserts that an accepted agreement yields exactly the grants the ODRL mapper predicts and that an agreement cannot exceed the endpoint's ceiling, and the dataspace token files assert what a foreign token may reach.
+The platform half of the protocol is covered in the gateway crate rather than here: the dataspace token files assert what a foreign token may reach, and a participant reaches the broker as its DID alone (T-3800). Compiling an accepted agreement into Policies, with the tests that it never exceeds the endpoint's ceiling, is T-3927; the gateway's unused compiler and its tests were deleted (T-3650).
 
 ## Related
 
