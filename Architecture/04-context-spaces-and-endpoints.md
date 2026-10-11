@@ -502,7 +502,7 @@ The standards an Endpoint serves (EP-104). "Default" is what an Endpoint whose m
 | Model Context Protocol | `mcp` | `mcp` | always, `spec.mcp: false` turns it off (EP-24) | what the Policy grants |
 | GeoJSON | `geojson` | `file.geojson`, `ogc/features/` items | always (EP-10) | none |
 | CSV, XLSX, JSON, ZIP | `csv`, `xlsx`, `json`, `zip` | `file.csv`, `file.xlsx`, `file.json`, `file.zip` | on | none |
-| OGC API - Features, Parts 1 to 5 | `ogc-features` | `ogc/features/` | on | Part 4, what the Policy grants |
+| OGC API - Features, Parts 1 to 5 | `ogc-features` | `ogc/features/` | on | none: every non-safe method answers `405` (EP-39) |
 | OData v4 | `odata` | `odata/v4/` | on | what the Policy grants |
 | OGC SensorThings API 1.1 | `sta` | `sta/v1.1/` | off: listed in `spec.enabledRepresentations` only | none (EP-13) |
 
