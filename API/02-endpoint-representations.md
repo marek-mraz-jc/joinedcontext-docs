@@ -27,6 +27,7 @@ flowchart LR
     GW --> R5["/ogc/features/... (OGC API - Features)"]
     GW --> R6["/sta/v1.1/... (OGC SensorThings API)"]
     GW --> R7["/mcp (Model Context Protocol)"]
+    GW --> R8["/ws (WebSocket notifications)"]
 ```
 
 ---
@@ -825,6 +826,12 @@ Three answers are worth knowing before writing a client:
 
 Unauthenticated access follows the Endpoint's audience: a `public` Endpoint answers `tools/list` and every read tool with no token, everything else answers `401` with `WWW-Authenticate: Bearer resource_metadata="https://{host}/api/endpoint/{endpointSlug}/.well-known/oauth-protected-resource"` (AG-32).
 
+## 8a. WebSocket (`ws`)
+
+Path: `wss://{host}/api/endpoint/{endpointSlug}/ws`
+
+One connection carries NGSI-LD Subscriptions made over the socket and the Notifications they produce, in the TS 104 243 `{metadata, body}` envelope (EP-106). The gateway authenticates the upgrade like any request and forwards it to the broker view's `/x/views/{view}/ws`, so a notification carries only what the caller's grant reads. Messages, limits, resume and client examples are on their own page: [API/07](07-websocket.md).
+
 ## 9. The Endpoints a token reaches (`GET /api/endpoints`)
 
 Path: `/api/endpoints`, on the gateway's host, outside any one Endpoint.
@@ -860,8 +867,36 @@ curl -sS "https://{host}/api/endpoints?limit=2" -H "authorization: Bearer $TOKEN
 
 `limit` is 1 to 100 (default 50); `cursor` is the previous page's `nextCursor`. Any other parameter, or a value outside those, is `400`. `types` are the entity types this caller may read there, not every type the Endpoint serves. The list is computed from the token on every request, so a revoked grant is gone on the next call. Each call spends one request of the hub's per-subject bucket (EP-87) and writes one audit line naming the principal and the count.
 
+## 10. In the open data portal
+
+A published Endpoint (`spec.publish.ckan`) is one CKAN dataset with one resource per surface it serves (EP-108). Each surface resource says in its description how to use it, so a person who finds the dataset can start without reading this page:
+
+| Resource | Format | Usage description names |
+|---|---|---|
+| NGSI-LD API | `NGSI-LD` | a `curl` request for the first entities of a type |
+| WebSocket | `WebSocket` | the `websocat` line of [API/07 §5](07-websocket.md#5-examples) and a link to that page |
+| MCP | `MCP` | the client entry (`url`, `transport: http`) for an MCP client |
+| OGC API - Features | `OGCFEAT` | QGIS: Layer, Add Layer, Add WFS / OGC API - Features Layer, the landing URL |
+| OData v4 | `OData` | Excel: Data, Get Data, From OData Feed; Power BI: Get data, OData feed; the service URL |
+| GeoJSON, CSV, XLSX, JSON, ZIP | their own | that the file is generated on each download from live data |
+| Schema index and artifacts | `JSON`, `LinkML`, `SHACL`, … | the model version and the sha256 (EP-68) |
+
+Publishing widens discovery and never data: every URL is the Endpoint's own, answers under its Policy, and carries no token (EP-110). A restricted Endpoint's resources are links a person without a grant cannot open.
+
+What the catalogue keeps current (EP-109):
+
+| Resource kind | What CKAN holds | How it stays current |
+|---|---|---|
+| DataStore table (`spec.publish.ckan.datastore`) | a copy of the rows, one table per entity type | row by row on each change (`refresh: onChange`) or on each reconcile (`onReconcile`), deletions included (EP-65) |
+| File resource (`file.*`) | a link to the live download | the file is built on each request; `metadata_modified` moves on the next publication run after the data changed |
+| API resource (NGSI-LD, WebSocket, MCP, OGC, OData) | a link | always live; CKAN holds no copy |
+| Schema artifact | a link and the sha256 of its model version | a new model version adds new artifacts with their own hashes (EP-68) |
+
+A surface the Endpoint stops serving, by `spec.disabledRepresentations` or an explicit list, loses its resource in the same run (EP-108).
+
 ## Related
 
 - [SP-03](../Requirements/space-surface.md) — referenced above.
 - [00-intro](00-intro.md) — all API surfaces.
+- [07-websocket](07-websocket.md) — live updates over one WebSocket.
 - [04-context-spaces-and-endpoints](../Architecture/04-context-spaces-and-endpoints.md) — the model behind the endpoints.
