@@ -58,7 +58,7 @@ The browser calls its own host, `https://{name}.apps.{domain}/`, with the sessio
 | `GET /api/services/files/{path}` | files | | `200` the object, its stored content type |
 | `PUT /api/services/files/{path}` | files | the object, at most 25 MiB | `201` `FileInfo` |
 | `DELETE /api/services/files/{path}` | files | | `204` |
-| `POST /api/services/files/{path}:url` | files | `{ "method": "GET" }` or `"PUT"` | `200` `{ "url", "expiresAt" }`, at most five minutes ahead (AP-145) |
+| `POST /api/services/files/{path}:url` | files | `{ "method": "GET" }`, or `{ "method": "PUT", "size": <bytes> }` | `200` `{ "url", "expiresAt" }`, at most five minutes ahead (AP-145); a PUT URL signs `Content-Length: size`, so the store refuses a body of another length (AP-170) |
 | `POST /api/services/email/send` | email | `{ "to": ["<person id>"] or "me", "subject", "text", "html"? }` | `202` `{ "id" }` |
 | `GET /api/services/jobs` | jobs | | `200` `[JobStatus]` |
 | `POST /api/services/ai/complete` | ai | `{ "messages": [{ "role", "content" }], "maxTokens"?, "schema"? }` | `200` `{ "text", "json"?, "tokens": { "in", "out" } }` |
@@ -71,12 +71,12 @@ A refusal is an `application/problem+json`:
 |---|---|---|---|
 | `403` | `/service-off` | `service`, `layer` | the service is off at `organization`, `project` or `app` (AP-164) |
 | `403` | `/recipient-refused` | `to` | a recipient is not a person of the organization (AP-168) |
-| `413` | `/file-too-large` | `limit` | an object over 25 MiB (AP-170) |
-| `429` | `/quota` | `service`, `quota`, `resetAt` | a quota is used up (AP-165); `filesMiB` names no `resetAt`, it frees when the App deletes |
+| `413` | `/file-too-large` | `limit` | an object over 25 MiB, or a PUT URL asked for one (AP-170) |
+| `429` | `/quota` | `service`, `quota`, `resetAt` | a quota is used up (AP-165), or a PUT URL's `size` is more than `filesMiB` has left; `filesMiB` names no `resetAt`, it frees when the App deletes |
 | `502` | `/no-json` | `service` | `ai.complete` asked for a `schema` and the answer is no JSON value of it |
 | `503` | `/no-model-key` | `service` | the organization has no model key (AP-169) |
 
-An `ai` call reaches the model through `jc-agent-proxy` as the Portal's own service account with `X-JC-App: {project}/{app}`; the proxy adds the organization's key and the App never holds one (AP-147). The model is the `app-builder` profile's, or the first of the organization's `spec.policies.agents.models` when that list leaves it out. The Portal counts the tokens against `aiTokensPerDay` and holds each answer to what the day has left; `maxTokens` is 1 to 4096, 1024 when absent. Neither a prompt nor an answer is logged.
+An `ai` call reaches the model through `jc-agent-proxy` as the Portal's own service account with `X-JC-App: {project}/{app}`; the proxy adds the organization's key and the App never holds one (AP-147). The model is the `app-builder` profile's, or the first of the organization's `spec.policies.agents.models` when that list leaves it out. The Portal counts the tokens against `aiTokensPerDay`: before the call it reserves the prompt's estimated tokens (one per four bytes of the messages as sent, rounded up) plus the answer's ceiling, in the same statement that checks the day, so parallel calls cannot pass it together; a prompt larger than what is left is answered `429` `/quota` without reaching the model. The answer is held to what the day has left after the prompt, and the reservation is settled to the model's own count, or released when the call fails. `maxTokens` is 1 to 4096, 1024 when absent. Neither a prompt nor an answer is logged.
 
 ## 4. TypeScript client
 
@@ -100,7 +100,7 @@ interface Services {
     get(path: string): Promise<Blob>;
     list(prefix?: string): Promise<FileInfo[]>;
     remove(path: string): Promise<void>;
-    url(path: string, opts?: { method?: "GET" | "PUT" }): Promise<{ url: string; expiresAt: string }>;
+    url(path: string, opts?: { method?: "GET" } | { method: "PUT"; size: number }): Promise<{ url: string; expiresAt: string }>;
   };
   email: { send(msg: { to: string[] | "me"; subject: string; text: string; html?: string }): Promise<{ id: string }> };
   jobs: { list(): Promise<JobStatus[]> };
