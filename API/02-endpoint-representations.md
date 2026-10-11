@@ -721,7 +721,10 @@ A prohibition covering the action ends it, whatever any permission says, and ans
 
 `POST …/access/simulate` answers the same question for someone else (EP-103, T-3311): the decision
 `access/check` would give a named subject on this Endpoint, from the same admission and the same
-evaluator, so the two cannot disagree. It answers the Portal's own client alone: a token minted for the
+decider, so the two cannot disagree. Through a view the broker's engine decides: the gateway asks the
+view's `access/explain` (Antares `addons/joinedcontext-policy/README.md` section 4) under the `x-jc-*`
+headers the subject's own token would pin (T-3881); an Endpoint no view serves keeps the gateway's
+evaluator. It answers the Portal's own client alone: a token minted for the
 audience `context-gateway-simulate` (which no data path accepts), whose `azp` is the client the
 deployment names (`portal-api` by default) and whose user is that
 client's service account, so a person's token of the same client is refused. Any other token is
@@ -754,7 +757,9 @@ Unlike `access/check`, the answer names why in every case, because its reader is
 who may read every Policy: `policy_grant_matched` with the granting `policy`, `prohibited` with the
 refusing `policy`, `no_grant` when no Policy grants the action on the type, and `not_admitted` when
 the Endpoint's audience refuses the subject before any Policy is read (EP-14). `policy` is the
-Policy's manifest name.
+Policy's manifest name: the engine's `{project}/{name}` and `{project}/{name}@{endpoint}` ids are
+answered as `{name}`, and an id of any other shape is left out. A broker that does not know the
+view, or fails, is the answer itself (its `404`, the gateway's `502`), never a decision.
 
 The other three representations:
 
