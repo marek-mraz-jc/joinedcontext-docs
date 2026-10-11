@@ -483,7 +483,8 @@ The MCP façade is an encoder like the others: a tool call is turned into the NG
 
 | Field | Effect | When absent |
 |---|---|---|
-| `spec.enabledRepresentations` | The child paths this Endpoint serves beyond `ngsi-ld`, `geojson` and `mcp`, which every Endpoint serves whether or not it lists them (EP-10, EP-24, T-2939). A path that is not served answers `404`, the same answer an unknown slug gets (EP-23). | At least one is required. |
+| `spec.enabledRepresentations` | The representations this Endpoint serves, beside `ngsi-ld`, `geojson` and `mcp`, which every Endpoint serves whether or not it lists them (EP-10, EP-24, T-2939). A listed manifest serves exactly that, and is the only way to serve SensorThings (`sta`). A path that is not served answers `404`, the same answer an unknown slug gets (EP-23). | Every standard but `sta`, less `spec.disabledRepresentations` (EP-104, T-3829). |
+| `spec.disabledRepresentations` | The standards an Endpoint with no `spec.enabledRepresentations` switches off, one by one (EP-104). Refused beside `spec.enabledRepresentations`, and for `ngsi-ld`, `geojson` and `mcp` (`spec.mcp: false` turns MCP off). | Nothing is switched off. |
 | `spec.mcp` | `false` turns off the Endpoint's MCP instance, the one child path that is on without being listed: every Endpoint, public or internal, serves `mcp` by default, gated by its own Policy like every other path (EP-24, T-2901). `false` beside `mcp` in `spec.enabledRepresentations` is refused. | `true`: the Endpoint serves `mcp`. |
 | `spec.rateLimits.requestsPerMinute`, `spec.rateLimits.burst` | Token bucket per consumer IP or authenticated identity, advertised in `RateLimit-*` headers (EP-20). Set only by choice: no door writes one the person did not ask for. | No limit: the gateway counts nothing and sends no `RateLimit-*` fields. The edge's anti-flood bucket still protects the node. |
 | `spec.creates.mintIds`, `spec.creates.perDay` | For anonymous creation, a public form's Endpoint (EP-97, T-3172): the gateway mints the id of every entity created through the Endpoint (`urn:ngsi-ld:{type}:{uuid}`, the body's `id` ignored, the minted one in `Location`) and answers `429` past `perDay` creates in one UTC day. Counted per gateway replica. | The caller's id is kept and nothing is counted beyond `spec.rateLimits`. |
@@ -492,6 +493,18 @@ The MCP façade is an encoder like the others: a tool call is turned into the NG
 | `spec.fileLimits.maxFileRows`, `spec.fileLimits.maxFileBytes` | Ceiling of one `file.*` download; the gateway refuses with `413` rather than truncating, because a short file is indistinguishable from a complete one (EP-44). Both bind every format the endpoint serves, the workbook included. Beside them the gateway keeps a ceiling of its own on what one download may read from the broker before it is refused (64 MiB of entity JSON, T-0810): the row ceiling says how many entities a download holds, not how large they are, and the enforcement point is shared. | 100 000 rows and 64 MiB. |
 | `spec.projection.hiddenAttributes` | Attribute names this Endpoint never serves, in any representation. Intersected with the caller's policy projection, so it only ever narrows what the Policy already allows (EP-61). | The policy projection alone decides. |
 | `spec.viewMappingRef` | A `Mapping` whose **target** model this Endpoint serves. The gateway translates every entity through the Mapping's compiled IR and rewrites `attrs`, `q` and `geoQ` back through its inverse, so the whole surface speaks the target model (EP-54, DM-51). A view Endpoint is **read only**: every method but `GET`, `HEAD` and `OPTIONS` answers `405` with an `Allow` header. | The space's own model is served. |
+
+The standards an Endpoint serves (EP-104). "Default" is what an Endpoint whose manifest omits `spec.enabledRepresentations` serves, public or internal alike; every child path answers only what the Endpoint's Policy grants the caller, so a standard switched on widens the formats and never the data or the writes.
+
+| Standard | `Representation` | Child path | Default | Writes |
+|---|---|---|---|---|
+| NGSI-LD (ETSI GS CIM 009, TS 104 175) | `ngsi-ld` | `ngsi-ld/v1/` | always (EP-10) | what the Policy grants |
+| Model Context Protocol | `mcp` | `mcp` | always, `spec.mcp: false` turns it off (EP-24) | what the Policy grants |
+| GeoJSON | `geojson` | `file.geojson`, `ogc/features/` items | always (EP-10) | none |
+| CSV, XLSX, JSON, ZIP | `csv`, `xlsx`, `json`, `zip` | `file.csv`, `file.xlsx`, `file.json`, `file.zip` | on | none |
+| OGC API - Features, Parts 1 to 5 | `ogc-features` | `ogc/features/` | on | Part 4, what the Policy grants |
+| OData v4 | `odata` | `odata/v4/` | on | what the Policy grants |
+| OGC SensorThings API 1.1 | `sta` | `sta/v1.1/` | off: listed in `spec.enabledRepresentations` only | none (EP-13) |
 
 `hiddenAttributes` is a publication decision, not an authorization one: the Policy set stays the single place where access is granted, and the Endpoint can subtract from it when the same space is published twice with different amounts of detail. Because the subtraction happens in the projection every representation shares, a hidden attribute is missing from the CSV, the GeoJSON, the MCP tool result and the schema surface alike (EP-47).
 

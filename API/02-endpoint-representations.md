@@ -209,7 +209,9 @@ Path: `/api/endpoint/{endpointSlug}/file.csv` (also `file.geojson`, `file.json`,
 `file.zip`; EP-41…EP-45)
 
 Which of them an Endpoint answers is `spec.enabledRepresentations`, plus `ngsi-ld`, `geojson` and
-`mcp`, which every Endpoint serves whether or not it lists them (EP-10, EP-24); the set a manifest may name
+`mcp`, which every Endpoint serves whether or not it lists them (EP-10, EP-24); a manifest that omits the
+list serves every standard but SensorThings, less `spec.disabledRepresentations` (EP-104, the matrix in
+[Architecture/04](../Architecture/04-context-spaces-and-endpoints.md#configuring-one-endpoint)); the set a manifest may name
 is the `Representation` enum of the Endpoint kind (`crates/jc-core/src/kinds/endpoint.rs`), which is
 what the published `schemas/kinds/Endpoint.json` validates a manifest against. `json` is one of
 them, so an administrator can enable it, and §4a says what it answers.
