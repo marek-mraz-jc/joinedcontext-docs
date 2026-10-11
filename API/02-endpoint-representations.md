@@ -825,6 +825,41 @@ Three answers are worth knowing before writing a client:
 
 Unauthenticated access follows the Endpoint's audience: a `public` Endpoint answers `tools/list` and every read tool with no token, everything else answers `401` with `WWW-Authenticate: Bearer resource_metadata="https://{host}/api/endpoint/{endpointSlug}/.well-known/oauth-protected-resource"` (AG-32).
 
+## 9. The Endpoints a token reaches (`GET /api/endpoints`)
+
+Path: `/api/endpoints`, on the gateway's host, outside any one Endpoint.
+
+The REST twin of the hub's `list_endpoints` ([EP-105](../Requirements/endpoints.md), [ADR-N-025 §4a](../Decisions/adr-n-025-one-mcp-connector-several-endpoints.md)): the Endpoints this token reaches and may read something through, whatever they serve. A person's token, a hub token with `endpoint:` scopes, and a ServiceAccount's `client_credentials` token each get the list their token opens (EP-88). Without a token the answer is `401`; nothing is listed anonymously, and a `public` Endpoint's own URL still answers without one.
+
+```bash
+curl -sS "https://{host}/api/endpoints?limit=2" -H "authorization: Bearer $TOKEN"
+```
+
+```json
+{
+  "endpoints": [
+    {
+      "slug": "k4y7pq2mzt6vhx3nbwrs5cjd8f",
+      "title": { "en": "Air quality" },
+      "space": "ovzdusie",
+      "types": ["AirQualityObserved"],
+      "representations": ["ngsi-ld", "mcp", "ogc-features"],
+      "surfaces": {
+        "ngsi-ld": "https://{host}/api/endpoint/k4y7pq2mzt6vhx3nbwrs5cjd8f/ngsi-ld/v1/",
+        "mcp": "https://{host}/api/endpoint/k4y7pq2mzt6vhx3nbwrs5cjd8f/mcp",
+        "ogc-features": "https://{host}/api/endpoint/k4y7pq2mzt6vhx3nbwrs5cjd8f/ogc/features/"
+      },
+      "mcp": "https://{host}/api/endpoint/k4y7pq2mzt6vhx3nbwrs5cjd8f/mcp",
+      "schema": "https://{host}/api/endpoint/k4y7pq2mzt6vhx3nbwrs5cjd8f/schema/v1/model.linkml.yaml"
+    }
+  ],
+  "total": 5,
+  "nextCursor": 2
+}
+```
+
+`limit` is 1 to 100 (default 50); `cursor` is the previous page's `nextCursor`. Any other parameter, or a value outside those, is `400`. `types` are the entity types this caller may read there, not every type the Endpoint serves. The list is computed from the token on every request, so a revoked grant is gone on the next call. Each call spends one request of the hub's per-subject bucket (EP-87) and writes one audit line naming the principal and the count.
+
 ## Related
 
 - [SP-03](../Requirements/space-surface.md) — referenced above.
