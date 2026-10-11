@@ -3403,7 +3403,8 @@ POST /api/v1/projects/{project}/endpoints/{name}/preview   → 200
   names none, and the Endpoint then serves the classes its Policies grant), `hiddenAttributes`,
   `type` (required), `id` (at most 100), `limit` (1 to 100, default 50) and `offset` (default 0).
   An unknown member is `400`; a refused draft is `400` naming the member at fault. A `temporalQ`
-  is `400`: a broker view has no member for it (G6, T-3801).
+  is `400`: a projection's window narrows the permits in the space's rule document (G6, T-3812),
+  which the preview does not replace, so a draft's window would be left out.
 - The answer is `{"count": 42, "entities": [ … ]}`: the total under the draft and the page, the
   entities normalized as `application/json` returns them.
 - The draft replaces the saved projection and hidden attributes only; the Endpoint's Policies,
