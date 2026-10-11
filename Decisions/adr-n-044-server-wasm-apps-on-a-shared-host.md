@@ -48,7 +48,8 @@ environment, no file system and no sockets; its only outgoing HTTP is to its own
 Context Gateway, with the caller's token. Without an environment a component cannot learn where the
 gateway runs, so it addresses it by the fixed origin `http://gateway` (the SDK's `gateway` module):
 `http://gateway/api/endpoint/<slug>/…` with its own Endpoint's slug, or for short
-`http://gateway/ngsi-ld/v1/…` and the Endpoint's schema `http://gateway/schema/…`. The host sends
+`http://gateway/ngsi-ld/v1/…`, its OGC API - Features surface `http://gateway/ogc/features/…`
+(T-3751, read-only at the gateway) and the Endpoint's schema `http://gateway/schema/…`. The host sends
 such a call to `/api/endpoint/<slug>/…` of the gateway it is configured with, the slug its placement
 records, and refuses every other origin, path and Endpoint (AP-147).
 
