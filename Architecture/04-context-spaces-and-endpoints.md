@@ -503,7 +503,7 @@ The standards an Endpoint serves (EP-104). "Default" is what an Endpoint whose m
 | GeoJSON | `geojson` | `file.geojson`, `ogc/features/` items | always (EP-10) | none |
 | CSV, XLSX, JSON, ZIP | `csv`, `xlsx`, `json`, `zip` | `file.csv`, `file.xlsx`, `file.json`, `file.zip` | on | none |
 | OGC API - Features, Parts 1 to 5 | `ogc-features` | `ogc/features/` | on | none: every non-safe method answers `405` (EP-39) |
-| OData v4 | `odata` | `odata/v4/` | on | what the Policy grants |
+| OData v4 | `odata` | `odata/v4/` | on | none yet: every non-safe method answers `405` until the gateway applies the Endpoint's write guards to it (T-3939); then what the Policy grants |
 | WebSocket notifications (TS 104 243 envelope, Antares ADR-0026) | `websocket` | `ws` | on | Subscriptions of the connection only, as the Policy grants `create_subscription`; never context data (EP-106) |
 | OGC SensorThings API 1.1 | `sta` | `sta/v1.1/` | off: listed in `spec.enabledRepresentations` only | none (EP-13) |
 
