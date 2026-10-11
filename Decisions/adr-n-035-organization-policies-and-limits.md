@@ -60,6 +60,10 @@ An organization that wants a lower rate for the web, a shorter invitation, a cap
 | Projects | `spec.projects.quota.*` (PF-73's dimensions) | no limit | the operator's per-dimension ceiling | Portal verdict (PF-74), reconciler, agent runner, gateway |
 | Projects | `spec.projects.nameCooldownDays` | 30 | 0 … 365 | Portal, `POST /api/v1/projects` (PF-78) |
 | Applications | `spec.policies.apps.public` | `allowed` (`allowed` or `refused`) | — | Portal verdict on every door (AP-120) |
+| Applications | `spec.policies.apps.services` | `identity`, `data`, `files`, `jobs` | the six services of AP-160 | the Portal, on every service call (AP-163, ADR-N-045) |
+| Applications | `spec.limits.apps.emailsPerDay` | 100 per App | the operator's ceiling | the Portal's `email` service (AP-165) |
+| Applications | `spec.limits.apps.aiTokensPerDay` | 200000 per App | the operator's ceiling | the Portal's `ai` service (AP-165) |
+| Applications | `spec.limits.apps.filesMiB` | 512 per App | the operator's ceiling | the Portal's `files` service (AP-165) |
 | Edge | `spec.limits.edge.requestsPerMinute.web` | 300 per address | 3000 | the edge: APISIX routes and the composed edge file (ADR-N-030) |
 | Edge | `spec.limits.edge.requestsPerMinute.api` | 1200 per token | 12000 | the edge |
 | Edge | `spec.limits.edge.requestsPerMinute.dataRead` | 1200 per token | 12000 | the edge, context-space routes, `GET` and `HEAD` |
