@@ -156,7 +156,7 @@ Every refusal is `application/problem+json` (RFC 7807) with a `type` under
 | unknown slug, representation not enabled on the endpoint, path outside the NGSI-LD resource tree | 404 | `resource-not-found` |
 | a read of one entity the policy refuses (indistinguishable from a miss, [R20](../Requirements/policy-firewall.md)) | 404 | `resource-not-found` |
 | no token on an endpoint whose audience is not `public`, or a token whose `aud` does not name this endpoint | 401 | `unauthorized` |
-| the operation, type, attribute, scope or area is outside every grant | 403 | `forbidden`; through the broker's view `urn:antares:error:AccessDenied`, the broker's own type, since ETSI Table 6.3.2-1 names no access-denied error |
+| the operation, type, attribute, scope or area is outside every grant | 403 | `forbidden`; through the broker's view `urn:antares:error:AccessDenied`, the broker's own type, since ETSI Table 6.3.2-1 names no access-denied error, with `code: forbidden` and its `hint` added by the gateway |
 | a method the view does not serve on this resource (a merge through a view that grants none) | 405 | the broker's problem document, with `Allow` |
 | a verified token whose `azp` names no `ServiceAccount` in the repository, or an account whose project the endpoint's audience excludes | 403 | `forbidden` |
 | a write whose entity id is not an NGSI-LD URN of this organization and this space | 400 | `urn-scheme` |
