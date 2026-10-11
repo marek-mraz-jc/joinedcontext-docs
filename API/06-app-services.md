@@ -128,18 +128,18 @@ await jc().email.send({ to: [steward.id], subject: "New road defect", text: shot
 
 ## 5. Rust client
 
-`jc-app-sdk` for a `wasm` component, over the host interfaces of `jc:app@0.2.0` (SDK-42). Each call goes to the host, which applies the same layers and quotas as the routes above; a component holds no address, key or password (AP-147).
+`jc-app-sdk` for a `wasm` component, over the host interfaces of `jc:app@0.1.1` (SDK-42). Each call goes to the host, which applies the same layers and quotas as the routes above; a component holds no address, key or password (AP-147). The version adds interfaces and changes none, so a component built against `jc:app@0.1.0` links on the same host unchanged. The host calls the routes above as the request's person, on the App's own host and with that person's token, which the component never sees; `email` and `ai` called from a job have no person and answer `rejected`.
 
 | Module | Functions | Host interface |
 |---|---|---|
-| `identity` | `caller() -> Option<Caller>` | the request's person, which the host passes as a value of the request (new: today the host strips `Authorization` and `Cookie` and passes nothing in their place) |
+| `identity` | `caller() -> Option<Caller>`: `id`, `name`, `email`, the App's `roles`; `None` for an anonymous visitor and in a job | `jc:app/identity`: the person the Portal verified for this request (`GET /api/v1/projects/{project}/apps/{name}/me`), never a token |
 | `data` (0.1.0: `gateway`) | `get`, `get_json` today, `post`, `patch`, `delete` added, on `http://gateway/…` | `wasi:http` to the App's own Endpoint |
 | `files` (0.1.0: `blob`) | `get`, `put`, `list`, `delete`, `presign` | `jc:app/blob` |
 | `email` | `send(&Email) -> Result<String, Error>` | `jc:app/email` |
 | `jobs` | `job!(name, fn)`, exporting `fn() -> Result<(), String>` under the name `spec.server.jobs[].export` names | the host's scheduler (AP-154) |
 | `ai` | `complete(&Completion) -> Result<Answer, Error>` | `jc:app/ai` |
 
-`Error::Refused { service, layer, quota, reset_at }` carries the same members as the problem above (SDK-43).
+`email` and `ai` answer `Error::Refused(Refusal { service, layer, quota, reset_at })` with the same members as the `/service-off` and `/quota` problems above (SDK-43), `Error::Rejected(detail)` for every other refusal of the Portal, and `Error::Unavailable(why)` when the host reaches no Portal (`JC_WASM_PORTAL_URL` unset) or it does not answer. `ai`'s `schema` and its answer's `json` are JSON text.
 
 ## Related
 

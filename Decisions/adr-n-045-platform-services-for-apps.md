@@ -44,7 +44,7 @@ A lower layer may only narrow: a project naming a service its organization does 
 
 ### 2.3 The platform holds every credential
 
-The SMTP account, the model key and the object store's keys are `secretRef`s the Portal resolves; no App, function or component ever holds one (AP-167). A browser calls `/api/services/{service}/…` on its own App host with the person's session, as it already calls its Endpoint (AP-133); a function calls the same routes with its caller's token; a component calls host interfaces of `jc:app@0.2.0`, and the host asks the Portal the same three questions.
+The SMTP account, the model key and the object store's keys are `secretRef`s the Portal resolves; no App, function or component ever holds one (AP-167). A browser calls `/api/services/{service}/…` on its own App host with the person's session, as it already calls its Endpoint (AP-133); a function calls the same routes with its caller's token; a component calls host interfaces of `jc:app@0.1.1`, and the host asks the Portal the same three questions.
 
 - **email** sends only to people of the App's organization, named by id, or to the person signed in, never to an address typed into the App, so a public form cannot make the platform a relay (AP-168). The relay is the one T-3309 configures for alerts; one mailer serves both.
 - **ai** calls a model the organization's agents may use, with the organization's model key, counted against the App's daily tokens; prompts and answers are not logged (AP-169).
@@ -78,7 +78,7 @@ The SMTP account, the model key and the object store's keys are `secretRef`s the
 
 - `AppSpec` gains `services`, `OrganizationSpec` gains `policies.apps.services` and `limits.apps`, `ProjectSpec` gains `apps`; the schema refuses an unknown service name.
 - The Portal gains a service API under `/api/services/`, routed on every App host, and one mailer (with T-3309).
-- `jc:app` moves to `0.2.0` with `email`, `ai` and an identity value per request; `jc-app-sdk` follows.
+- `jc:app` moves to `0.1.1` with `email`, `ai` and `identity`, the request's person; `jc-app-sdk` follows. Decided (worker-2, T-3622, owner may override): `0.1.1` rather than `0.2.0`, because the version only adds interfaces, and the host's linker satisfies a `0.1.0` import with a `0.1.1` interface, so every published component keeps linking against one implementation; a `0.2.0` would have needed the host to link `sql` and `blob` twice.
 - Implementation tasks: T-3583 (e-mail), T-3584 (the SDK modules for identity, files, jobs and ai), T-3585 (the builder's pack and catalogue of services), T-3586 (the settings screens of the three layers).
 
 ## 6. Requirements
