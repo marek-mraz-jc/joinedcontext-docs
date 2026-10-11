@@ -86,6 +86,20 @@ operation of the CIM 009 Table 4.20-1 vocabulary, which is the operation the cal
 `Policy` grants have to cover; the vocabulary itself is listed in
 [03-domain-model](../Architecture/03-domain-model.md).
 
+**The broker's view answers (T-3643).** The gateway sends the request to the context broker's
+view of the Endpoint: `/api/endpoint/{endpointSlug}/ngsi-ld/v1/{rest}` to the view
+`{endpointSlug}`, `/cs/{space}/ngsi-ld/v1/{rest}` to the view `cs-{space}`, with the caller's
+query as sent. The broker's policy engine decides and narrows the request under the caller the
+gateway verified, which the gateway pins in `x-jc-subject`, `x-jc-groups`, `x-jc-roles` and
+`x-jc-client`; the caller's token and cookie do not reach the broker. The gateway keeps what is
+no grant decision: the audience and the token, the rate limit and a form's daily creates, the
+identifier (`urn-scheme`), the media type and the core `@context`, the types of the space's
+model and the units and relationships it declares, the caps on `lastN` (1000) and `joinLevel`
+(3), and the masking of a broker failure (`crates/context-gateway/src/app.rs`). Five kinds of
+request stay on the gateway's own decision until a view serves them: a write carrying
+`If-Match` (T-3789), a Subscription, an Endpoint with a view mapping, a caller under a dataspace
+agreement, and an Endpoint whose projection has a `temporalQ`.
+
 **The base URL answers ([EP-90](../Requirements/endpoints.md)).** `GET /api/endpoint/{endpointSlug}/ngsi-ld/v1/` is the access URL the DCAT record and the catalogue give a person, so it answers `200` with an entry document rather than `404`. The document is the gateway's own and names only what this caller may read:
 
 ```json
@@ -108,7 +122,7 @@ anything reads them, whatever the client sent ([GW20](../Requirements/gateway-fi
 |---|---|---|
 | `NGSILD-Tenant` | request | the context space of the resolved endpoint, pinned by the gateway for the internal hop only; no answer of either surface carries it back ([SP-05](../Requirements/space-surface.md)) |
 | `NGSILD-Results-Restricted: true` | request | the caller asks to be told when an answer was narrowed ([R22](../Requirements/access-control.md)) |
-| `NGSILD-Results-Restricted: true` | response | the answer was narrowed by policy, sent **only** in answer to the request header above; a caller who did not ask reads the answer as what it is ([R22](../Requirements/access-control.md), [GW12](../Requirements/gateway-firewall.md)) |
+| `NGSILD-Results-Restricted: true` | response | the answer was narrowed by policy, sent **only** in answer to the request header above; a caller who did not ask reads the answer as what it is ([R22](../Requirements/access-control.md), [GW12](../Requirements/gateway-firewall.md)). Through the broker's view the broker marks it as `Antares-Results-Restricted` and the gateway answers it under this name |
 | `NGSILD-Warning` | response | what the caller has to know to read the answer they got: which entity types this request was not allowed to select on, because it filters or orders on an attribute they do not serve on this endpoint. Sent to every caller, and it names only types the caller may read ([MP-02](../Requirements/model-projections.md), [R9](../Requirements/access-control.md)) |
 | `NGSILD-Results-Count` | response | the broker's count of the matching entities, forwarded only when the gateway dropped none of them; an answer the gateway narrowed carries no count, because the difference is the number of entities withheld ([R22](../Requirements/access-control.md)) |
 | `Link: <…/schema/v{major}/model.schema.json>; rel="describedby"; type="application/schema+json"` | response | where the shapes of what was just answered are, one pair per model major the endpoint publishes: the JSON Schema and, as a second `Link`, `model.shacl.ttl` with `type="text/turtle"`. On every data response of every representation — the NGSI-LD tree, `file.*`, the OGC items and the SensorThings sets — and on no refusal, because a `404` that named a schema would tell a caller who was refused that the endpoint exists ([EP-50](../Requirements/endpoints.md), [EP-03](../Requirements/endpoints.md)). The link is the same for every caller of one endpoint, so it changes no `Vary`; what the document behind it holds is projected to the grant when it is fetched ([EP-47](../Requirements/endpoints.md)) |
@@ -142,7 +156,8 @@ Every refusal is `application/problem+json` (RFC 7807) with a `type` under
 | unknown slug, representation not enabled on the endpoint, path outside the NGSI-LD resource tree | 404 | `resource-not-found` |
 | a read of one entity the policy refuses (indistinguishable from a miss, [R20](../Requirements/policy-firewall.md)) | 404 | `resource-not-found` |
 | no token on an endpoint whose audience is not `public`, or a token whose `aud` does not name this endpoint | 401 | `unauthorized` |
-| the operation, type, attribute, scope or area is outside every grant | 403 | `forbidden` |
+| the operation, type, attribute, scope or area is outside every grant | 403 | `forbidden`; through the broker's view `urn:antares:error:AccessDenied`, the broker's own type, since ETSI Table 6.3.2-1 names no access-denied error |
+| a method the view does not serve on this resource (a merge through a view that grants none) | 405 | the broker's problem document, with `Allow` |
 | a verified token whose `azp` names no `ServiceAccount` in the repository, or an account whose project the endpoint's audience excludes | 403 | `forbidden` |
 | a write whose entity id is not an NGSI-LD URN of this organization and this space | 400 | `urn-scheme` |
 | a write method on a read-only representation (`file.*`, OGC, STA) | 405 | `method-not-allowed`, with `Allow: GET, HEAD, OPTIONS` |
