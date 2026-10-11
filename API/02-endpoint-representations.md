@@ -339,118 +339,44 @@ narrows (EP-47).
 
 Base Path: `/api/endpoint/{endpointSlug}/ogc/features`
 
-Implements OGC 17-069r4 (Part 1: Core), 18-058r1 (Part 2: CRS by reference) and the CQL2 basic conformance classes of Part 3 for GIS clients (QGIS, ArcGIS Pro, GDAL/OGR `OAPIF` driver, Leaflet/MapLibre plugins). Requirements EP-29…EP-40.
+The surface is the broker's: the gateway forwards every request to the `antares-ogc` surface of
+the Endpoint's view, `/x/views/{endpointSlug}/ogc/features{rest}`, with the caller's path and query
+as sent and the tenant and the verified caller pinned, as for the NGSI-LD surface (T-3643,
+T-3752, Antares ADR-0029). The broker builds the documents from the Tenant's LinkML schema
+intersected with the view, lowers `filter` (CQL2 text or JSON) into the view's NGSI-LD query where
+`q` and `geoQ` say it exactly and evaluates the rest over the view's answer, and its policy
+engine decides; a filter only narrows. Antares `docs/src/ogc.md` is the normative description of
+the resource tree, the parameters, the conformance classes and the payload. Requirements
+EP-29…EP-40.
 
-### Resource tree
+What the gateway keeps:
 
-| Method + path | Maps to | Notes |
-|---|---|---|
-| `GET /` | — | Landing page: `links` to `api`, `conformance`, `collections`; title/description from the endpoint manifest |
-| `GET /api` | DataModel JSON Schemas | Per-endpoint OpenAPI 3.0.3 document (`application/vnd.oai.openapi+json;version=3.0`) |
-| `GET /conformance` | — | Exactly the five classes of EP-30: Part 1 `conf/core`, `conf/oas30`, `conf/geojson`, Part 2 `conf/crs`, Part 3 `conf/basic-cql2` |
-| `GET /collections` | the endpoint's model types, narrowed to the grant, plus one sampled page | One collection per entity type that carries a geometry |
-| `GET /collections/{type}` | the same sample for that one type | `extent.spatial` is computed from a sampled page on every request; the gateway caches no extent, so the `maxAgeSeconds` EP-32 describes is a property of a cache that does not exist |
-| `GET /collections/{type}/items` | `GET /ngsi-ld/v1/entities?type=…` | `bbox`→`georel`/`geometry`/`coordinates`, `datetime`→`timerel`/`timeAt`, `filter`→ the same three plus `q`, `limit`, `next`→`offset` |
-| `GET /collections/{type}/items/{urn}` | `GET /ngsi-ld/v1/entities?type=…&id={urn}&limit=1` | 404 for forbidden, missing, or carrying no geometry (R20) |
-| any other path under the tree | — | 404 |
-| `OPTIONS` | — | 204 + `Allow: GET, HEAD, OPTIONS` |
-| any other method | — | 405 + `Allow: GET, HEAD, OPTIONS` |
+| Concern | Behaviour |
+|---|---|
+| admission | the Endpoint's audience and the caller's token, as on every representation; an unknown slug is `404` |
+| writes | none (EP-39): `OPTIONS` is `204` and any other method `405`, both with `Allow: GET, HEAD, OPTIONS`; the broker is not asked |
+| links | every `href` and `Link`, `Location` and `Content-Location` the broker names under its own address is moved under `{publicUrl}/api/endpoint/{endpointSlug}/ogc/features` |
+| narrowing marker | the broker's `antares-results-restricted` reaches a caller who asked (`NGSILD-Results-Restricted: true`) as `NGSILD-Results-Restricted` (R22) |
+| broker failure | a `5xx` is the gateway's `broker-failure` document; the broker's text stays in the log (T-2260) |
+| no view | an Endpoint no view serves (a view of another model, a projection with `temporalQ`, a caller under a data-space agreement) answers `501` `ogc-view-unavailable`; read it through the NGSI-LD surface |
 
 ### Example: items query
 
 ```http
-GET /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/ogc/features/collections/AirQualityObserved/items?bbox=19.10,48.70,19.20,48.76&datetime=2026-09-01T00:00:00Z/..&filter=pm10%20%3E%2050&filter-lang=cql2-text&limit=2
+GET /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/ogc/features/collections/AirQualityObserved/items?bbox=19.10,48.70,19.20,48.76&filter=pm10%20%3E%2050&limit=2
 Accept: application/geo+json
-Accept-Language: sk
 ```
 
-is rewritten by the gateway (after grant intersection) into one NGSI-LD query of the entities
-resource — the parameters of clause 5.7.2, never an `entityOperations/query` body:
+reaches the broker as
 
 ```http
-GET /ngsi-ld/v1/entities?type=AirQualityObserved&limit=2&offset=0&georel=intersects&geometry=Polygon&coordinates=[[[19.10,48.70],[19.20,48.70],[19.20,48.76],[19.10,48.76],[19.10,48.70]]]&timerel=after&timeAt=2026-09-01T00:00:00Z&timeproperty=observedAt&q=pm10>50
+GET /x/views/zt4qm7ge2xdv6ksb3ncf5arw2y/ogc/features/collections/AirQualityObserved/items?bbox=19.10,48.70,19.20,48.76&filter=pm10%20%3E%2050&limit=2
 NGSILD-Tenant: air-quality
+x-jc-roles: public
 ```
 
-The tenant is pinned by the gateway and is the space of the resolved endpoint, whatever the client
-sent (§2a). Each grant's own residual is conjoined with the caller's `q` before it is sent, so the
-line above is the caller's half of a query the PDP has already narrowed.
-
-and answered as
-
-```json
-{
-  "type": "FeatureCollection",
-  "numberReturned": 2,
-  "timeStamp": "2026-09-05T12:00:00Z",
-  "features": [
-    {
-      "type": "Feature",
-      "id": "urn:ngsi-ld:AirQualityObserved:hel.fi:air-quality:st-01",
-      "geometry": {"type": "Point", "coordinates": [19.145, 48.735]},
-      "properties": {
-        "pm10": 63.2,
-        "name": "Kallio", "refDevice": "urn:ngsi-ld:Device:hel.fi:air-quality:dev-01"
-      },
-      "links": [
-        {"rel": "self", "type": "application/geo+json", "href": "…/collections/AirQualityObserved/items/urn:ngsi-ld:AirQualityObserved:hel.fi:air-quality:st-01"},
-        {"rel": "alternate", "type": "application/ld+json", "href": "https://{host}/api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/ngsi-ld/v1/entities/urn:ngsi-ld:AirQualityObserved:hel.fi:air-quality:st-01"}
-      ]
-    }
-  ],
-  "links": [
-    {"rel": "self", "type": "application/geo+json", "href": "…/items?bbox=…&limit=2"},
-    {"rel": "collection", "type": "application/json", "href": "…/collections/AirQualityObserved"},
-    {"rel": "next", "type": "application/geo+json", "href": "…/items?bbox=…&limit=2&next=b2Zmc2V0PTI"}
-  ]
-}
-```
-
-The collection carries `numberReturned` and no `numberMatched`: counting what this caller may see
-costs a second query on every page, so the `next` link is offered on the only evidence a page
-carries — a full page may have another behind it — and the last page is simply empty
-(`translators/ogc.rs`, EP-36). A feature carries no `rel="describedby"` link either; **T-2381**
-tracks EP-50.
-
-### Property flattening (EP-37)
-
-| NGSI-LD | GeoJSON `properties` | Served today |
-|---|---|---|
-| `Property.value` | `{name}` | yes |
-| `Relationship.object` | `{name}` (URN string) | yes |
-| primary `GeoProperty` | `geometry` | yes |
-| other `GeoProperty` | `{name}` as a GeoJSON geometry object | yes |
-| an attribute with neither `value` nor `object` | `{name}`, as it stands | yes |
-| `Property.unitCode` | `{name}_unitCode` | no — **T-2380** |
-| `Property.observedAt` | `{name}_observedAt` | no — **T-2380** |
-| `LanguageProperty` | value for `Accept-Language`, fallback to the model's default locale | no — the language map lands whole, **T-2380** |
-
-The four rows marked yes are `translators/geojson.rs`; the OGC surface and `file.geojson` share
-that one function, so what a GIS client sees on one it sees on the other.
-
-### CQL2 subset (EP-35)
-
-Comparison operators, `LIKE`, `BETWEEN`, `IN`, `IS NULL`, `AND/OR/NOT`, `T_AFTER/T_BEFORE/T_DURING` on `observedAt`, `S_INTERSECTS/S_WITHIN` with one geometry literal. Everything else → `400` with `"detail": "CQL2 operator ACCENTI is not supported by this endpoint"`. Predicates are never dropped.
-
-`filter-lang` is `cql2-text` and nothing else; another value is a `400` on that parameter rather than a guess at the grammar.
-
-`NOT` is honoured by inverting the operator it negates, because NGSI-LD has no negation of an expression: `NOT a > 5` is `a<=5`, `NOT S_INTERSECTS` is `georel=disjoint`, `NOT T_AFTER` is `before`. Three have no NGSI-LD inverse — `NOT LIKE`, `NOT S_WITHIN` and `NOT T_DURING` — and are refused by name, because an approximated negation returns more than the caller asked for.
-
-NGSI-LD carries one `geoQ` and one `temporalQ` per query, so a spatial or temporal predicate is only expressible on the top-level `AND` spine. One inside an `OR`, a second of the same kind, or one sent beside the `bbox` or `datetime` parameter that means the same thing is a `400` naming it. A caller writes the whole spatial condition in `bbox` or in `filter`, never half in each.
-
-The compiled filter is a query and never data: it is intersected with the caller's grants by the PDP exactly as a hand-written NGSI-LD `q` is, and reaches the broker as one parenthesised term beside each policy's own residual ([GW10](../Requirements/gateway-firewall.md), [R13](../Requirements/policy-firewall.md)). A filter can only narrow an answer.
-
-### Error mapping
-
-| Situation | Status | Body |
-|---|---|---|
-| unknown collection (type without geometry or not granted) | 404 | RFC 7807 |
-| unsupported CQL2 / bad `bbox` / bad `datetime` | 400 | RFC 7807 with `parameter` |
-| `filter-lang` other than `cql2-text` | 400 | RFC 7807 with `parameter` |
-| `bbox` and a spatial `filter` predicate together, or `datetime` and a temporal one | 400 | RFC 7807 with `parameter` |
-| unsupported `crs` | 400 | RFC 7807, `Content-Crs` list in `detail` |
-| write method | 405 | `Allow: GET, HEAD, OPTIONS` |
-| rate limit | 429 | `RateLimit-*` headers (EP-20) |
+and the broker answers a `FeatureCollection` whose links name
+`https://{host}/api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/ogc/features/…`.
 
 ---
 

@@ -70,14 +70,14 @@ Family **EP** (EP-01…EP-103). Owning chapter: [Architecture/04-context-spaces-
 
 - **EP-29** [P] — OGC API Features MUST be served at `/api/endpoint/{endpointSlug}/ogc/features/` conforming to the standard Part 1 Core resource hierarchy.
   > Note: See architectural mapping in [Architecture/04-context-spaces-and-endpoints.md#4-multi-representation-translation-engine](../Architecture/04-context-spaces-and-endpoints.md#4-multi-representation-translation-engine).
-- **EP-30** [P] — Conformance classes claimed MUST be exactly Part 1 Core, OpenAPI 3.0, GeoJSON, Part 2 CRS and basic CQL2 filtering on the OGC representation, and the NGSI-LD temporal API (query and retrieve the temporal evolution of entities, clamped by GW26) on the `ngsi-ld` representation, so reading is proven for current values and history alike.
+- **EP-30** [P] — Conformance classes claimed MUST be exactly those the broker's OGC surface of the Endpoint's view serves (Part 1 Core, OpenAPI 3.0, GeoJSON, Part 2 CRS, Part 3 Filtering with each CQL2 class it evaluates; Antares `docs/src/ogc.md`) on the OGC representation, and the NGSI-LD temporal API (query and retrieve the temporal evolution of entities, clamped by GW26) on the `ngsi-ld` representation, so reading is proven for current values and history alike.
 - **EP-31** [P] — Each collection identifier MUST equal the NGSI-LD entity type short name, exposing only types that declare at least one `GeoProperty` (DM-05).
 - **EP-32** [P] — Each collection MUST advertise spatial and temporal extents, coordinate reference systems, and multilingual descriptions in the requested locale.
 - **EP-33** [P] — Feature identifiers MUST equal the entity URN, returning HTTP 404 for nonexistent or forbidden resources (R20).
-- **EP-34** [P] — OGC query parameters (`bbox`, `datetime`, `limit`, `filter`) MUST map directly to NGSI-LD query AST constraints and intersect with caller grants (GW10–GW11).
-- **EP-35** [P] — The supported CQL2 subset MUST cover basic comparison, logical, temporal, and spatial operators, rejecting unsupported constructs with HTTP 400.
+- **EP-34** [P] — OGC query parameters (`bbox`, `datetime`, `limit`, `filter`) MUST map to NGSI-LD query constraints where NGSI-LD expresses them and otherwise be evaluated over the view's answer, so they only narrow what the caller's grants admit (GW10–GW11).
+- **EP-35** [P] — CQL2 MUST be accepted in text and JSON and cover comparison, logical, temporal, spatial and array operators; an invalid filter or a name that is no queryable is HTTP 400, a construct the broker does not evaluate HTTP 501.
 - **EP-36** [P] — Feature pagination MUST use `limit` and an opaque `next` link encoding the NGSI-LD offset, reporting total matches via post-filtered counts (R47).
-- **EP-37** [P] — Feature properties MUST contain flattened, policy-projected NGSI-LD attributes with unit codes, observation timestamps, and primary geometries separated (R9).
+- **EP-37** [P] — Feature properties MUST contain the policy-projected NGSI-LD attributes of the view, with the primary geometry separated (R9).
 - **EP-38** [P] — Every feature MUST carry alternate links pointing to its canonical NGSI-LD entity and describedby links pointing to versioned schemas.
 - **EP-39** — Write operations through the OGC Features representation MUST NOT exist, returning HTTP 405 Method Not Allowed on all non-safe methods.
 - **EP-40** [P] — The endpoint's OpenAPI 3.0 document MUST be generated dynamically per endpoint and validate against the official OGC conformance test suite (TS-07).
