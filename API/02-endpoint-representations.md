@@ -665,8 +665,8 @@ The body is the `access/check` request with a `subject`, at most 64 KiB. `subjec
 of three shapes: a person (`user`, with the `groups` and realm `roles` the Portal resolved for
 them), a member of `groups` or `roles` with no person (`user` absent: no Policy written for one
 person applies), or a `serviceAccount` by its Keycloak client id (`{project}-{name}`). An empty
-`subject` is the public caller. An unknown member, a `serviceAccount` beside a person, or a missing
-`action.name` is a `400` saying which.
+`subject` is the public caller. An unknown member, a `serviceAccount` beside a person, an
+`action` without a `name`, or a `resource` without an `action` is a `400` saying which.
 
 ```http
 POST /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/access/simulate
@@ -687,6 +687,21 @@ who may read every Policy: `policy_grant_matched` with the granting `policy`, `p
 refusing `policy`, `no_grant` when no Policy grants the action on the type, and `not_admitted` when
 the Endpoint's audience refuses the subject before any Policy is read (EP-14). `policy` is the
 Policy's manifest name.
+
+With no `action`, the question is everything the subject is granted here (T-3792, the Portal's
+Access explorer): the answer is the AuthZEN document of `GET /access` as a token of theirs would
+read it, with `admitted: true` and `policies`, the manifest names of the Policies in force for the
+subject, permissions and prohibitions alike. A subject the audience refuses gets
+`{"admitted": false}` and nothing else. The document lists only the types a grant names (EP-59).
+
+```json
+{"admitted": true, "policies": ["ovzdusie-writes"],
+ "subject": {"type": "user", "id": "ada"},
+ "resource": {"type": "endpoint", "id": "p9d2wc5kzn8mth4rqvb7xj3sfy", "space": "ovzdusie"},
+ "permissions": [{"resource": {"type": "AirQualityObserved"}, "actions": ["updateAttrs"],
+                  "attributes": "*"}],
+ "prohibitions": []}
+```
 
 The other three representations:
 
