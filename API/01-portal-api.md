@@ -3466,14 +3466,18 @@ DELETE /api/v1/organization/people/{id}/consents/{client}          → 204
   its manifest, then `ngsi-ld`, `geojson` and, unless `spec.mcp` is `false`, `mcp`). The page
   builds each surface's URL under `/api/endpoint/{slug}` and the hub's at `/api/mcp`.
 - `mcpServers` names the project's McpServers (ADR-N-043) with a member among the rows.
+- The page is Project settings → Access explorer, `/projects/{project}/settings/explorer`, with
+  the principal in the query (`?kind=serviceAccount&name=etl`, a person by `name=` their id).
 - `consents`, for a person only, are the person's Keycloak consents (`clientId`,
   `grantedClientScopes`, `createdDate`, `lastUpdatedDate`): the hub, Endpoint MCP clients and Apps
   they connected. `DELETE …/consents/{client}` revokes one, which in Keycloak also ends that
   client's offline sessions of the person; it changes no grant and no Change is opened, because
   the grant stays where a Policy, group or role binding put it.
-- Who may ask: organization administrators only; anybody else is `403`. Each explore is recorded
-  as an `access.explored` activity event naming the administrator and the subject, and each revoke
-  as `access.consent-revoked`. No token or secret is ever part of an answer.
+- Who may ask: organization administrators only; anybody else is `403`. Who may revoke: whoever
+  may sign the person out (`disable` on Person and every right the person holds, §24). Each explore
+  is recorded as an `access.explored` activity event naming the administrator and the subject,
+  each revoke as a `person.changed` event naming the client. No token or secret is ever part of an
+  answer.
 - `503` when the Portal has no gateway address, no realm admin client or no Keycloak client to
   ask the gateway with, or one of them did not answer.
 
