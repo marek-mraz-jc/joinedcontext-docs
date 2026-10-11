@@ -95,10 +95,12 @@ gateway verified, which the gateway pins in `x-jc-subject`, `x-jc-groups`, `x-jc
 no grant decision: the audience and the token, the rate limit and a form's daily creates, the
 identifier (`urn-scheme`), the media type and the core `@context`, the types of the space's
 model and the units and relationships it declares, the caps on `lastN` (1000) and `joinLevel`
-(3), and the masking of a broker failure (`crates/context-gateway/src/app.rs`). Five kinds of
-request stay on the gateway's own decision until a view serves them: a write carrying
-`If-Match` (T-3789), a Subscription, an Endpoint with a view mapping, a caller under a dataspace
-agreement, and an Endpoint whose projection has a `temporalQ`.
+(3), and the masking of a broker failure (`crates/context-gateway/src/app.rs`). An Endpoint
+with a view mapping is its view too: the broker reads it in the target model and answers a write
+`405` with `Allow`, and the gateway judges no write body against the source model first (T-3799).
+Four kinds of request stay on the gateway's own decision until a view serves them: a write
+carrying `If-Match` (T-3789), a Subscription (T-3653), a caller under a dataspace agreement
+(T-3800), and an Endpoint whose projection has a `temporalQ` (T-3801).
 
 **The base URL answers ([EP-90](../Requirements/endpoints.md)).** `GET /api/endpoint/{endpointSlug}/ngsi-ld/v1/` is the access URL the DCAT record and the catalogue give a person, so it answers `200` with an entry document rather than `404`. The document is the gateway's own and names only what this caller may read:
 
