@@ -6,7 +6,7 @@ description: Universal ingress and egress multi-representation views, opaque slu
 
 # Endpoints & Representation Parity
 
-Family **EP** (EP-01…EP-104). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **EP** (EP-01…EP-105). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
 ## 1. Endpoint Identity and Opaque Slug
 
@@ -60,7 +60,7 @@ Family **EP** (EP-01…EP-104). Owning chapter: [Architecture/04-context-spaces-
 - **EP-25** [A] — The tool list advertised by the Endpoint MCP instance MUST be dynamically rendered from the active Policy grants attached to the Endpoint and caller token (SP-15).
 - **EP-26** [A] — Tool calls executed through the Endpoint MCP instance MUST forward the caller's verified OAuth 2.1 bearer token through the gateway PEP without ambient privileges.
 - **EP-87** [A] — The gateway MUST serve a hub at `/api/mcp` ([ADR-N-025](../Decisions/adr-n-025-one-mcp-connector-several-endpoints.md)) whose `list_endpoints` answers only the Endpoints the token may read through it, and whose every data tool takes one required `endpoint` from that list and runs as a call to that Endpoint's own MCP (EP-24, EP-25): that Endpoint's PDP with the caller's token, its projection, its rate limit and its elicitation. A hub call MUST also spend one request of a per-subject bucket shared by every Endpoint, so a burst cannot be spread across Endpoints. `endpoint` is one string, never a list, and no tool, filter, join or subscription of the hub reads more than one Endpoint in a call. The per-Endpoint URL stays.
-- **EP-88** [S] — A hub token MUST reach only the Endpoints its `endpoint:{slug}` scopes name, chosen by the person at connect time, or the one Endpoint its audience names (PF-45, PF-46); a token with no `endpoint:` scope reaches none. An `endpoint` outside that set MUST be refused with the same bytes as an unknown slug (SP-20). The allow-list narrows and never grants: each call is still decided by the Endpoint's own Policy.
+- **EP-88** [S] — A hub token MUST reach only the Endpoints its `endpoint:{slug}` scopes name, chosen by the person at connect time, or the one Endpoint its audience names (PF-45, PF-46); a token with no `endpoint:` scope reaches none. An `endpoint` outside that set MUST be refused with the same bytes as an unknown slug (SP-20). The allow-list narrows and never grants: each call is still decided by the Endpoint's own Policy. A ServiceAccount's `client_credentials` token has no consent screen and carries no `endpoint:` scope: it reaches through the hub the Endpoints its audiences name, one per Endpoint its roles scope (PF-47), and no other.
 
 ## 8. Discovery and Performance Budgets
 
@@ -188,6 +188,7 @@ Decided in [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) (T-3154).
 - **EP-101** [S] — A public form's Endpoint MAY name in `spec.creates.embedOrigins` at most 20 sites that may frame its page `/f/{slug}`, each an `https` origin (scheme, host and an optional port; no path, query, fragment or wildcard). The Portal MUST answer that page with `frame-ancestors 'self'` and exactly those origins, and without `X-Frame-Options` only while the list holds one; an absent or empty list lets nothing but the Portal frame it, and every other page and route keeps its own framing rule (T-3266).
 - **EP-102** [S] [H] — The public form page MUST send no credentials on any request, so it is the same for a signed-in person, a visitor and a site that frames it. With `?test=1` its submit MUST check the entry against the Endpoint's published schema and ask the gateway's `access/check` whether an anonymous caller may `createEntity` of that type, say what the answer would be, and write nothing (T-3266).
 - **EP-103** [S] [H] — The gateway MUST answer `POST /api/endpoint/{slug}/access/simulate` with the decision `access/check` would give a named subject (a person with their groups and realm roles, a member of a group or role, a ServiceAccount, or the public) on that Endpoint, from the same admission and the same evaluator, and MUST name the Policy or prohibition that decided; it MUST answer only the Portal's own client's service-account token and refuse every other caller. The Portal MUST offer it on the Policies page to organization administrators only, MUST resolve a person's groups and roles itself, and MUST record each simulation naming the administrator and the simulated subject (T-3311).
+- **EP-105** [A][S] — The gateway MUST answer `GET /api/endpoints` with the Endpoints the caller's token reaches and may read something through, every representation included: per Endpoint its slug, title, context space, the entity types this caller may read, its representations with the URL of each, and the link to its newest LinkML model; paged by `limit` (1 to 100, default 50) and `cursor`, with `total` and `nextCursor`. It is computed per request by the same function as the hub's `list_endpoints` (EP-87) from the same token rules (EP-88), answers `401` without a token, spends the hub's per-subject bucket, and writes one audit line per call. An Endpoint absent from the list is one the token can never reach, and its absence is all the caller learns of it (SP-20).
 
 ## Traceability
 
@@ -227,6 +228,7 @@ Decided in [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) (T-3154).
 | EP-98…EP-100 | [Architecture/09-portal.md#16-trying-and-documenting-an-endpoint](../Architecture/09-portal.md#16-trying-and-documenting-an-endpoint) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | EP-101…EP-102 | [API/01-portal-api.md#33-data-views-published-as-a-public-link-adr-n-042-35-t-3108](../API/01-portal-api.md#33-data-views-published-as-a-public-link-adr-n-042-35-t-3108) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | EP-103 | [API/02-endpoint-representations.md#7b-access-surface-access](../API/02-endpoint-representations.md#7b-access-surface-access) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
+| EP-105 | [API/02-endpoint-representations.md#9-the-endpoints-a-token-reaches-get-apiendpoints](../API/02-endpoint-representations.md#9-the-endpoints-a-token-reaches-get-apiendpoints) | [Testing/02-conformance-tests.md#4-model-context-protocol](../Testing/02-conformance-tests.md#4-model-context-protocol) |
 
 ## Related
 
