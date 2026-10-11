@@ -56,6 +56,7 @@ classDiagram
         +String slug
         +Audience audience
         +List~Representation~ enabledRepresentations
+        +List~Representation~ disabledRepresentations
         +RateLimitConfig rateLimits
     }
 

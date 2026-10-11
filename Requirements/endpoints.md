@@ -6,7 +6,7 @@ description: Universal ingress and egress multi-representation views, opaque slu
 
 # Endpoints & Representation Parity
 
-Family **EP** (EP-01…EP-103). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **EP** (EP-01…EP-104). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
 ## 1. Endpoint Identity and Opaque Slug
 
@@ -21,8 +21,9 @@ Family **EP** (EP-01…EP-103). Owning chapter: [Architecture/04-context-spaces-
 
 ## 2. Fixed Child Set and Representation Parity
 
-- **EP-05** [P][A] — Every Endpoint MUST expose exclusively the standardized child paths: `ngsi-ld/v1/`, `mcp`, `file.{ext}`, `ogc/features/`, `sta/v1.1/`, `schema/`, and `.well-known/oauth-protected-resource`.
+- **EP-05** [P][A] — Every Endpoint MUST expose exclusively the standardized child paths: `ngsi-ld/v1/`, `mcp`, `file.{ext}`, `ogc/features/`, `odata/v4/`, `sta/v1.1/`, `schema/`, and `.well-known/oauth-protected-resource`; which of the representations behind them it serves is EP-104.
 - **EP-06** — Every representation served under an Endpoint MUST be evaluated against the exact same Policy decision produced by the Policy Enforcement Point (PEP).
+- **EP-104** [A][S] — An Endpoint, public or internal, whose manifest omits `spec.enabledRepresentations` MUST serve every representation of the Endpoint kind's `Representation` enum except `sta`: `ngsi-ld`, `mcp`, `geojson`, `csv`, `xlsx`, `json`, `zip`, `ogc-features` and `odata`, less those `spec.disabledRepresentations` names; SensorThings is served only where `spec.enabledRepresentations` lists `sta`. A manifest that lists `spec.enabledRepresentations` MUST serve exactly what it served before this default existed (the list, plus EP-10 and EP-24). `spec.disabledRepresentations` MUST be refused beside `spec.enabledRepresentations`, when it names `ngsi-ld`, `geojson` or `mcp` (EP-10; `spec.mcp: false` is how MCP is turned off, EP-24) and when it names one representation twice, and an unknown name in either list MUST be refused. Serving a representation grants nothing: every read and write on every child path is the Endpoint's own Policy decision for the caller (EP-06), so a caller with no grant is refused on each one, and a representation that can write writes only what the Policy grants.
 - **EP-07** — Attribute projection (R9), scope filtering (R13), geo filtering (GW11), and temporal clamping (GW11) MUST apply identically across all enabled representation child paths.
 
 ## 3. Representation Translation Mappings
@@ -124,7 +125,7 @@ Family **EP** (EP-01…EP-103). Owning chapter: [Architecture/04-context-spaces-
 - **EP-62** [H] — An Endpoint MAY declare `spec.publish.ckan` with the target instance reference, the CKAN organization slug, an optional dataset name and an optional CKAN licence id; the reconciler MUST create or update exactly one CKAN dataset per declaring Endpoint and MUST remove it through the explicit-deletion path when the block is withdrawn (CC-19).
 - **EP-63** [H] — The dataset's metadata MUST be taken from the DCAT-AP record the Endpoint already serves (EP-27), so the catalogue entry and the endpoint's own description cannot disagree.
   > Note: The licence is the one exception. A record whose Endpoint declares no `spec.catalog.license` names none, so `spec.publish.ckan.license` states the licence the organization chose, and a `dct:license` in the record, when it carries one, wins (EP-78). Title and description are taken in the language of the Endpoint's space (`ContextSpace.spec.defaultLocale`), so a Slovak body's dataset is not published under its English title (T-2465).
-- **EP-64** [H] — The reconciler MUST register one CKAN resource per enabled representation, each pointing at that representation's own URL under the Endpoint, and MUST remove a resource whose representation is no longer enabled (EP-05).
+- **EP-64** [H] — The reconciler MUST register one CKAN resource per served representation (EP-104), each pointing at that representation's own URL under the Endpoint, and MUST remove a resource whose representation is no longer served (EP-05).
 - **EP-65** [H] — An Endpoint MAY declare `spec.publish.ckan.datastore` to mirror rows into the CKAN DataStore; the mirror MUST be filled through the Endpoint's own tabular representation and refreshed by the Endpoint's subscription rather than by a full reload (EP-44).
 - **EP-66** [S] — The publisher MUST read data and metadata exclusively through the Endpoint, authenticated as a ServiceAccount whose grants are the Endpoint's own, so a catalogue entry can never carry a class, attribute or row the Endpoint's policy set forbids (EP-06, PF-34).
 - **EP-67** [S] — The CKAN API token MUST be resolved from a `secretRef` at reconcile time and MUST NOT appear in Git, in a manifest, in the published dataset or in any log line (CC-06).
@@ -193,6 +194,7 @@ Decided in [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) (T-3154).
 | Requirement Range | Architecture Section | Test Family |
 |---|---|---|
 | EP-01…EP-04 | [Architecture/04-context-spaces-and-endpoints.md#3-the-endpoint-model](../Architecture/04-context-spaces-and-endpoints.md#3-the-endpoint-model) | [Testing/01-backend-tests.md#2-the-context-gateway-harness](../Testing/01-backend-tests.md#2-the-context-gateway-harness) |
+| EP-104 | [Architecture/04-context-spaces-and-endpoints.md#configuring-one-endpoint](../Architecture/04-context-spaces-and-endpoints.md#configuring-one-endpoint) | [Testing/01-backend-tests.md#2-the-context-gateway-harness](../Testing/01-backend-tests.md#2-the-context-gateway-harness) |
 | EP-05…EP-07 | [Architecture/04-context-spaces-and-endpoints.md#4-multi-representation-translation-engine](../Architecture/04-context-spaces-and-endpoints.md#4-multi-representation-translation-engine) | [Testing/01-backend-tests.md#2-the-context-gateway-harness](../Testing/01-backend-tests.md#2-the-context-gateway-harness) |
 | EP-08…EP-13 | [Architecture/04-context-spaces-and-endpoints.md#4-multi-representation-translation-engine](../Architecture/04-context-spaces-and-endpoints.md#4-multi-representation-translation-engine) | [Testing/01-backend-tests.md#2-the-context-gateway-harness](../Testing/01-backend-tests.md#2-the-context-gateway-harness) |
 | EP-14…EP-16 | [Architecture/04-context-spaces-and-endpoints.md#3-the-endpoint-model](../Architecture/04-context-spaces-and-endpoints.md#3-the-endpoint-model) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
