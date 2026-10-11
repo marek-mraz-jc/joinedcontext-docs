@@ -3421,6 +3421,62 @@ POST /api/v1/projects/{project}/endpoints/{name}/preview   → 200
 - `503` when the Portal has no broker address or admin token, or has not compiled the Endpoint's
   view yet; a broker that refuses the page answers through the route with its status.
 
+
+## 41. What a principal reaches (T-3792, EP-103, EP-59)
+
+The Access explorer (Access → Explorer): everything one person, group member, realm-role holder or
+ServiceAccount reaches in a project, one row per Endpoint. The Portal decides nothing itself: for
+each of the project's Endpoints it asks the gateway's `access/simulate` with no action
+([API/02 §7b](02-endpoint-representations.md)) for the resolved subject, exactly as §39 asks one
+decision, and keeps the Endpoints whose answer is admitted and grants or prohibits something.
+
+```text
+POST /api/v1/projects/{project}/access/explore                     → 200
+DELETE /api/v1/organization/people/{id}/consents/{client}          → 204
+```
+
+```json
+{"subject": {"kind": "serviceAccount", "name": "etl"}}
+```
+
+```json
+{"subject": {"serviceAccount": "ovzdusie-etl", "groups": [], "roles": []},
+ "endpoints": [{"name": "air", "slug": "zt4qm7ge2xdv6ksb3ncf5arw2y", "title": "Air quality",
+                "space": "ovzdusie", "representations": ["ngsi-ld", "geojson", "mcp"],
+                "policies": ["public-air"],
+                "permissions": [{"resource": {"type": "AirQualityObserved"},
+                                 "actions": ["queryEntity", "retrieveEntity"],
+                                 "attributes": ["pm10", "pm25"],
+                                 "constraints": {"geoQ": {"geometry": "Polygon", "coordinates": [[[17.0, 48.1], [17.2, 48.1], [17.2, 48.2], [17.0, 48.1]]], "georel": "within"}}}],
+                "prohibitions": []}],
+ "mcpServers": ["city-air"],
+ "consents": []}
+```
+
+- The body's `subject` is §39's: `person` with `id`, `group` or `role` with `name`,
+  `serviceAccount` with the project's ServiceAccount `name`, or `public`. An unknown member or
+  kind is `400`; a person the realm does not hold, or a ServiceAccount of another project, is
+  `404`.
+- `endpoints` lists the Endpoints the subject reaches, in name order, and only those: an Endpoint
+  whose audience refuses the subject, or that grants them nothing, is absent, with its name and
+  existence (EP-59, SP-20). Each row carries the gateway's AuthZEN `permissions` and
+  `prohibitions` as the gateway answered them (types, actions, attributes, and the view
+  restriction as `constraints` `q`, `scopeQ`, `geoQ`, `temporalQ`), `policies` naming the Policies
+  in force for the subject, and `representations`, the surfaces the Endpoint serves (the list of
+  its manifest, then `ngsi-ld`, `geojson` and, unless `spec.mcp` is `false`, `mcp`). The page
+  builds each surface's URL under `/api/endpoint/{slug}` and the hub's at `/api/mcp`.
+- `mcpServers` names the project's McpServers (ADR-N-043) with a member among the rows.
+- `consents`, for a person only, are the person's Keycloak consents (`clientId`,
+  `grantedClientScopes`, `createdDate`, `lastUpdatedDate`): the hub, Endpoint MCP clients and Apps
+  they connected. `DELETE …/consents/{client}` revokes one, which in Keycloak also ends that
+  client's offline sessions of the person; it changes no grant and no Change is opened, because
+  the grant stays where a Policy, group or role binding put it.
+- Who may ask: organization administrators only; anybody else is `403`. Each explore is recorded
+  as an `access.explored` activity event naming the administrator and the subject, and each revoke
+  as `access.consent-revoked`. No token or secret is ever part of an answer.
+- `503` when the Portal has no gateway address, no realm admin client or no Keycloak client to
+  ask the gateway with, or one of them did not answer.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
