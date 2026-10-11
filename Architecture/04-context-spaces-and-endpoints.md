@@ -504,6 +504,7 @@ The standards an Endpoint serves (EP-104). "Default" is what an Endpoint whose m
 | CSV, XLSX, JSON, ZIP | `csv`, `xlsx`, `json`, `zip` | `file.csv`, `file.xlsx`, `file.json`, `file.zip` | on | none |
 | OGC API - Features, Parts 1 to 5 | `ogc-features` | `ogc/features/` | on | none: every non-safe method answers `405` (EP-39) |
 | OData v4 | `odata` | `odata/v4/` | on | what the Policy grants |
+| WebSocket notifications (TS 104 243 envelope, Antares ADR-0026) | `websocket` | `ws` | on | Subscriptions of the connection only, as the Policy grants `create_subscription`; never context data (EP-106) |
 | OGC SensorThings API 1.1 | `sta` | `sta/v1.1/` | off: listed in `spec.enabledRepresentations` only | none (EP-13) |
 
 `hiddenAttributes` is a publication decision, not an authorization one: the Policy set stays the single place where access is granted, and the Endpoint can subtract from it when the same space is published twice with different amounts of detail. Because the subtraction happens in the projection every representation shares, a hidden attribute is missing from the CSV, the GeoJSON, the MCP tool result and the schema surface alike (EP-47).
@@ -807,7 +808,7 @@ spec:
 | In CKAN | From | Rule |
 |---|---|---|
 | One dataset (`package`) | the endpoint's DCAT-AP record (EP-27) | title, description, keywords, spatial and temporal coverage, publisher, contact and licence come from there, title and description in the language of the endpoint's space; the reconciler writes no metadata of its own, except the licence `publish.ckan.license` names when the record carries none (EP-63) |
-| One resource per representation | `spec.enabledRepresentations` | the resource URL is that representation's own URL under the endpoint, so a download always passes the gateway and its policy set (EP-64) |
+| One resource per served surface | the representations the Endpoint serves (EP-104), WebSocket and OData included | the resource URL is that surface's own URL under the endpoint, so a download always passes the gateway and its policy set (EP-64); each carries a usage description and a surface no longer served loses its resource in the same run (EP-108, [API/02 §10](../API/02-endpoint-representations.md#10-in-the-open-data-portal)) |
 | One resource for the schema | the schema surface (§1a) | `schema/index.json`, which lists `model.schema.json`, the SHACL and the rest per model version, so a consumer can validate what it downloaded without the publisher knowing which versions exist |
 | One resource per schema artifact | the record's schema distributions (§3a) | every formalism the endpoint serves — LinkML, JSON Schema, `@context`, SHACL, OWL, RDF, the generated documentation — becomes a resource of its own, carrying the sha256 the record declares in CKAN's `hash` field so a download can be checked without asking the endpoint again (EP-68) |
 | The dataset's visibility | `spec.audience` | a `public` endpoint becomes a public dataset, anything narrower a private dataset of the organization; the mapping is closed by default, so an audience the publisher does not recognise is private (EP-69, PF-45) |
