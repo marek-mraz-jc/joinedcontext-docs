@@ -369,6 +369,7 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 | `POST /api/v1/projects/{project}/drift/{space}/{id}/adopt` | `change/drift-adopt` |
 | `POST /api/v1/projects/{project}/drift/{space}/{id}/revert` | `change/drift-revert` |
 | `POST /api/v1/projects/{project}/duplicate` | `project/copy` |
+| `POST /api/v1/projects/{project}/endpoints/{name}/preview` | `endpoint/edit` |
 | `POST /api/v1/projects/{project}/flows` | `change/blueprint` |
 | `POST /api/v1/projects/{project}/import` | `import/upload`, `import/from-git` |
 | `POST /api/v1/projects/{project}/knowledge/deployments/{deployment}/chat` | `knowledge/ask` |

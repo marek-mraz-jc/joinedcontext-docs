@@ -3377,6 +3377,50 @@ POST /api/v1/projects/{project}/endpoints/{name}/access/simulate   → 200
 - The Policies page has a "Try a person" panel that asks this route and shows the decision with
   the Policy that decided it, linked to that Policy.
 
+## 40. Previewing an Endpoint's filter (T-3802, EP-85)
+
+The filter editor's left side ([EP-86](../Requirements/endpoints.md)): one page of what the
+Endpoint would serve if its filter were the draft in the body. The Portal compiles the draft into
+the Endpoint's candidate broker view exactly as it compiles the saved filter (the view the
+reconciler writes, T-3640), with the draft in place of the saved `ModelProjection` and
+`hiddenAttributes`, and asks the broker's view preview (`POST /q/views/{id}/preview`, Antares
+`docs/src/admin-api.md`) to run the page through it. Nothing is stored and the broker's views are
+not reloaded.
+
+```text
+POST /api/v1/projects/{project}/endpoints/{name}/preview   → 200
+```
+
+```json
+{"projection": {"classes": [{"name": "Event", "slots": ["name", "startDate", "location"]}],
+                "filter": {"q": "endDate>=\"2026-09-25T00:00:00Z\""}},
+ "hiddenAttributes": ["source"],
+ "type": "Event", "id": ["urn:ngsi-ld:Event:agent-123"], "limit": 50, "offset": 0}
+```
+
+- The body has the members of [API/02 §7c](02-endpoint-representations.md): `projection`
+  (`classes` and an optional `filter`, validated like a `ModelProjection`, MP-01; `null` or absent
+  names none, and the Endpoint then serves the classes its Policies grant), `hiddenAttributes`,
+  `type` (required), `id` (at most 100), `limit` (1 to 100, default 50) and `offset` (default 0).
+  An unknown member is `400`; a refused draft is `400` naming the member at fault. A `temporalQ`
+  is `400`: a projection's window narrows the permits in the space's rule document (G6, T-3812),
+  which the preview does not replace, so a draft's window would be left out.
+- The answer is `{"count": 42, "entities": [ … ]}`: the total under the draft and the page, the
+  entities normalized as `application/json` returns them.
+- The draft replaces the saved projection and hidden attributes only; the Endpoint's Policies,
+  audience and view mapping stay as saved, so the preview never serves what the Policies do not
+  grant, and the same draft saved answers the same entities through an ordinary read.
+- Who may ask: a person who may read the Endpoint's Context Space (SP-06, SP-11). Anybody else
+  gets the `404` an unknown Endpoint gets, because a draft can name a class or an attribute the
+  saved projection does not publish yet. A workload token is `403`: the preview is a person's
+  editor.
+- Whose reading it is: on a `public` Endpoint the anonymous caller's (`x-jc-roles: public`), on
+  the others the person's own (`x-jc-subject`, `x-jc-groups`, `x-jc-roles`), the subject headers
+  the gateway sends on every hop (EP-14, EP-16). The broker's policy engine decides the page as it
+  decides that person's read.
+- `503` when the Portal has no broker address or admin token, or has not compiled the Endpoint's
+  view yet; a broker that refuses the page answers through the route with its status.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.

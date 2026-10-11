@@ -801,6 +801,10 @@ the AuthZEN document. Types the caller may not see are absent.
 
 ## 7c. Filter preview (`preview`)
 
+The Portal's preview ([API/01 §40](01-portal-api.md), T-3802) replaces this route: it compiles the
+draft into the Endpoint's broker view and asks the broker. The gateway route below answers until the
+gateway's NGSI-LD pipeline goes (T-3644).
+
 Path: `POST /api/endpoint/{endpointSlug}/preview` ([EP-85](../Requirements/endpoints.md)). It answers
 one page of what the Endpoint would serve if its filter were the draft in the body, which is how the
 Portal's filter editor shows its left side while the person edits ([EP-86](../Requirements/endpoints.md)).
