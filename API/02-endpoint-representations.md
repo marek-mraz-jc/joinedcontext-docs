@@ -87,6 +87,24 @@ operation of the CIM 009 Table 4.20-1 vocabulary, which is the operation the cal
 `Policy` grants have to cover; the vocabulary itself is listed in
 [03-domain-model](../Architecture/03-domain-model.md).
 
+**The broker's view answers (T-3643).** The gateway sends the request to the context broker's
+view of the Endpoint: `/api/endpoint/{endpointSlug}/ngsi-ld/v1/{rest}` to the view
+`{endpointSlug}`, `/cs/{space}/ngsi-ld/v1/{rest}` to the view `cs-{space}`, with the caller's
+query as sent. The broker's policy engine decides and narrows the request under the caller the
+gateway verified, which the gateway pins in `x-jc-subject`, `x-jc-groups`, `x-jc-roles` and
+`x-jc-client`; a caller under a data-space agreement is its participant's DID alone, in `x-jc-did`
+(DS-02: no role, no account, never the public caller); the caller's token and cookie do not reach
+the broker. The gateway keeps what is
+no grant decision: the audience and the token, the rate limit and a form's daily creates, the
+identifier (`urn-scheme`), the media type and the core `@context`, the types of the space's
+model and the units and relationships it declares, the caps on `lastN` (1000) and `joinLevel`
+(3), and the masking of a broker failure (`crates/context-gateway/src/app.rs`). An Endpoint
+with a view mapping is its view too: the broker reads it in the target model and answers a write
+`405` with `Allow`, and the gateway judges no write body against the source model first (T-3799).
+Three kinds of request stay on the gateway's own decision until a view serves them: a write
+carrying `If-Match` (T-3789), a Subscription (T-3653), and an Endpoint whose projection has a
+`temporalQ` (T-3801).
+
 **The base URL answers ([EP-90](../Requirements/endpoints.md)).** `GET /api/endpoint/{endpointSlug}/ngsi-ld/v1/` is the access URL the DCAT record and the catalogue give a person, so it answers `200` with an entry document rather than `404`. The document is the gateway's own and names only what this caller may read:
 
 ```json
@@ -109,7 +127,7 @@ anything reads them, whatever the client sent ([GW20](../Requirements/gateway-fi
 |---|---|---|
 | `NGSILD-Tenant` | request | the context space of the resolved endpoint, pinned by the gateway for the internal hop only; no answer of either surface carries it back ([SP-05](../Requirements/space-surface.md)) |
 | `NGSILD-Results-Restricted: true` | request | the caller asks to be told when an answer was narrowed ([R22](../Requirements/access-control.md)) |
-| `NGSILD-Results-Restricted: true` | response | the answer was narrowed by policy, sent **only** in answer to the request header above; a caller who did not ask reads the answer as what it is ([R22](../Requirements/access-control.md), [GW12](../Requirements/gateway-firewall.md)) |
+| `NGSILD-Results-Restricted: true` | response | the answer was narrowed by policy, sent **only** in answer to the request header above; a caller who did not ask reads the answer as what it is ([R22](../Requirements/access-control.md), [GW12](../Requirements/gateway-firewall.md)). Through the broker's view the broker marks it as `Antares-Results-Restricted` and the gateway answers it under this name |
 | `NGSILD-Warning` | response | what the caller has to know to read the answer they got: which entity types this request was not allowed to select on, because it filters or orders on an attribute they do not serve on this endpoint. Sent to every caller, and it names only types the caller may read ([MP-02](../Requirements/model-projections.md), [R9](../Requirements/access-control.md)) |
 | `NGSILD-Results-Count` | response | the broker's count of the matching entities, forwarded only when the gateway dropped none of them; an answer the gateway narrowed carries no count, because the difference is the number of entities withheld ([R22](../Requirements/access-control.md)) |
 | `Link: <…/schema/v{major}/model.schema.json>; rel="describedby"; type="application/schema+json"` | response | where the shapes of what was just answered are, one pair per model major the endpoint publishes: the JSON Schema and, as a second `Link`, `model.shacl.ttl` with `type="text/turtle"`. On every data response of every representation — the NGSI-LD tree, `file.*`, the OGC items and the SensorThings sets — and on no refusal, because a `404` that named a schema would tell a caller who was refused that the endpoint exists ([EP-50](../Requirements/endpoints.md), [EP-03](../Requirements/endpoints.md)). The link is the same for every caller of one endpoint, so it changes no `Vary`; what the document behind it holds is projected to the grant when it is fetched ([EP-47](../Requirements/endpoints.md)) |
@@ -143,7 +161,8 @@ Every refusal is `application/problem+json` (RFC 7807) with a `type` under
 | unknown slug, representation not enabled on the endpoint, path outside the NGSI-LD resource tree | 404 | `resource-not-found` |
 | a read of one entity the policy refuses (indistinguishable from a miss, [R20](../Requirements/policy-firewall.md)) | 404 | `resource-not-found` |
 | no token on an endpoint whose audience is not `public`, or a token whose `aud` does not name this endpoint | 401 | `unauthorized` |
-| the operation, type, attribute, scope or area is outside every grant | 403 | `forbidden` |
+| the operation, type, attribute, scope or area is outside every grant | 403 | `forbidden`; through the broker's view `urn:antares:error:AccessDenied`, the broker's own type, since ETSI Table 6.3.2-1 names no access-denied error, with `code: forbidden` and its `hint` added by the gateway |
+| a method the view does not serve on this resource (a merge through a view that grants none) | 405 | the broker's problem document, with `Allow` |
 | a verified token whose `azp` names no `ServiceAccount` in the repository, or an account whose project the endpoint's audience excludes | 403 | `forbidden` |
 | a write whose entity id is not an NGSI-LD URN of this organization and this space | 400 | `urn-scheme` |
 | a write method on a read-only representation (`file.*`, OGC, STA) | 405 | `method-not-allowed`, with `Allow: GET, HEAD, OPTIONS` |
@@ -646,8 +665,8 @@ The body is the `access/check` request with a `subject`, at most 64 KiB. `subjec
 of three shapes: a person (`user`, with the `groups` and realm `roles` the Portal resolved for
 them), a member of `groups` or `roles` with no person (`user` absent: no Policy written for one
 person applies), or a `serviceAccount` by its Keycloak client id (`{project}-{name}`). An empty
-`subject` is the public caller. An unknown member, a `serviceAccount` beside a person, or a missing
-`action.name` is a `400` saying which.
+`subject` is the public caller. An unknown member, a `serviceAccount` beside a person, an
+`action` without a `name`, or a `resource` without an `action` is a `400` saying which.
 
 ```http
 POST /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/access/simulate
@@ -668,6 +687,21 @@ who may read every Policy: `policy_grant_matched` with the granting `policy`, `p
 refusing `policy`, `no_grant` when no Policy grants the action on the type, and `not_admitted` when
 the Endpoint's audience refuses the subject before any Policy is read (EP-14). `policy` is the
 Policy's manifest name.
+
+With no `action`, the question is everything the subject is granted here (T-3792, the Portal's
+Access explorer): the answer is the AuthZEN document of `GET /access` as a token of theirs would
+read it, with `admitted: true` and `policies`, the manifest names of the Policies in force for the
+subject, permissions and prohibitions alike. A subject the audience refuses gets
+`{"admitted": false}` and nothing else. The document lists only the types a grant names (EP-59).
+
+```json
+{"admitted": true, "policies": ["ovzdusie-writes"],
+ "subject": {"type": "user", "id": "ada"},
+ "resource": {"type": "endpoint", "id": "p9d2wc5kzn8mth4rqvb7xj3sfy", "space": "ovzdusie"},
+ "permissions": [{"resource": {"type": "AirQualityObserved"}, "actions": ["updateAttrs"],
+                  "attributes": "*"}],
+ "prohibitions": []}
+```
 
 The other three representations:
 
@@ -785,10 +819,12 @@ Exposes the endpoint as an autonomous tool server for AI agents ([SP-14](../Requ
 
 One `POST` carries one JSON-RPC message, one response comes back, and nothing is kept between calls: the next `tools/list` already reflects a grant that changed a second ago (SP-19). A notification, a message with no `id`, is answered `202` with an empty body.
 
+**The broker's MCP surface (T-3647).** The gateway verifies the caller, applies the Endpoint's rate limit and the domain gate on a write, and forwards each request to the broker's MCP surface of the Endpoint's view (`/x/views/{endpointSlug}/mcp`; `/cs/{space}/mcp` to `cs-{space}`) under the verified caller. The tools, their input schemas, paging and write confirmation are the broker's (Antares `docs/src/mcp.md`): `type` is a list, `cursor` is the opaque `nextCursor` of the previous answer passed back unchanged (no cursor on a first page), `batch_upsert` replaces `upsert_entity`, and a write is confirmed by the person through the 2026-07-28 multi round-trip request (`InputRequiredResult`, then the same call with `inputResponses` and `requestState`). The gateway still answers `describe_access`, `describe_schema` and the `access://` and `schema://` resources itself, added to the broker's `tools/list` and `resources/list`; it caps `joinLevel` at 3 and `lastN` at 1000 as on the NGSI-LD surface, and asks the broker with `Accept: application/json, text/event-stream` whatever the client sent. An Endpoint with a view mapping, a caller holding a data-space agreement and a space that federates registrations stay on the gateway's own tools until the hub forwards too (T-3808).
+
 ```bash
 curl -sS -X POST "https://{host}/api/endpoint/{endpointSlug}/mcp" \
   -H 'content-type: application/json' \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"query_entities","arguments":{"type":"AirQualityObserved","limit":2}}}'
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"query_entities","arguments":{"type":["AirQualityObserved"],"limit":2}}}'
 ```
 
 ```json
@@ -821,7 +857,7 @@ Three answers are worth knowing before writing a client:
 - A tool the caller may not use is **absent from `tools/list`**, and calling it by name answers `unknown tool`, the same words a tool nobody defined gets (SP-20).
 - A refusal by the policy comes back as a tool error (`isError: true`) with the status and the problem document's own words, never as an empty result an agent would read as "there is nothing there".
 - An argument that is not in the tool's schema, and any attempt to pass `space`, `tenant`, `contextspace`, `slug` or `endpoint`, is refused before a broker request exists (AG-05, AG-31).
-- A tool that writes something outliving the conversation — `create_subscription` — answers the first call with an **elicitation** and creates nothing: `{"status": "input_required", "structuredContent": {"elicitation": {"elicitationId": "eli-…", "mode": "form", "schema": …, "message": …, "expiresIn": 600}}}`. The client shows it to the person and repeats the same call with `params.elicitation = {"elicitationId": "eli-…", "action": "accept"}`. The id is minted by the server, is one-shot, belongs to the token's subject and is bound to these arguments ([AG-08](../Requirements/agents.md), [Architecture/07 §3](../Architecture/07-agents-and-mcp.md#3-human-in-the-loop-elicitation--confirmation-flow)). A value outside its schema is refused the same way: a `type` that is not an NGSI-LD type name is a tool error naming the parameter, never an empty result a caller would read as "there is nothing there" (AG-21). The refusal names the parameter and the rule it broke — the pattern, the length, the formalisms `format` accepts — and never repeats the value that was sent: a tool result is read by a model, so a refusal that quotes the argument carries whatever was typed into the next prompt ([GW31](../Requirements/gateway-firewall.md), [AG-21](../Requirements/agents.md)).
+- A tool that writes answers the first call with an `InputRequiredResult` and writes nothing; the client asks the person and repeats the same call with `inputResponses` and the `requestState` it was given, which is sealed to the view, the caller, the tool and these arguments, expires after ten minutes and is spent once ([AG-08](../Requirements/agents.md), Antares `docs/src/mcp.md` §3). On the gateway's own tools (the fallbacks above) the older `params.elicitation` round trip stays until T-3648 ([Architecture/07 §3](../Architecture/07-agents-and-mcp.md#3-human-in-the-loop-elicitation--confirmation-flow)). A value outside its schema is refused the same way: a `type` that is not an NGSI-LD type name is a tool error naming the parameter, never an empty result a caller would read as "there is nothing there" (AG-21). The refusal names the parameter and the rule it broke — the pattern, the length, the formalisms `format` accepts — and never repeats the value that was sent: a tool result is read by a model, so a refusal that quotes the argument carries whatever was typed into the next prompt ([GW31](../Requirements/gateway-firewall.md), [AG-21](../Requirements/agents.md)).
 - **`structuredContent` is an object, never a bare list** (MCP's own rule and the tool's output schema): the entities sit under `entities`, and `restricted: true` sits beside them when the policy narrowed the answer (AG-13, R22). The marker says that something was removed, never what. Unlike the REST header it is not opt-in: a tool result is read by a model, which has no way to ask for it first, and the field is what AG-13 makes the agent's own signal.
 
 Unauthenticated access follows the Endpoint's audience: a `public` Endpoint answers `tools/list` and every read tool with no token, everything else answers `401` with `WWW-Authenticate: Bearer resource_metadata="https://{host}/api/endpoint/{endpointSlug}/.well-known/oauth-protected-resource"` (AG-32).
