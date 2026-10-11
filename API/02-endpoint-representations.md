@@ -652,6 +652,22 @@ representations chosen by `Accept`, read in the order the caller wrote them: `ap
 surface does not serve is answered with the AuthZEN document rather than a `406`: the caller asked
 what they may do, and there is always an answer to that.
 
+Who answers (plan 5.6, **T-3649**): the gateway admits the caller as on the data paths (`404` for an
+unknown slug, `401`/`403` from the audience) and then reads the Endpoint's broker view, `GET
+/x/views/{view}/access` and `POST /x/views/{view}/access/check`, under the tenant and the verified
+caller (`x-jc-*`) and nothing else of the request. The broker writes the document and decides the
+check from the rule table its engine enforces with, so the description cannot drift from the
+enforcement (EP-60). The gateway adds what belongs to the Endpoint and not to the grants: the
+`resource` (slug and space), `limits`, the licence's duties on every ODRL permission (EP-79) and the
+ODRL `uid` on its own public access URL, over the rules with those duties; it writes the Turtle from
+that ODRL document. Through a view, `actions` lists only the operations the view serves, and a
+Policy with no `information` is one entry of type `"*"`. An answer the gateway cannot read, or a
+broker failure, is `502`/`5xx` `broker-failure` naming nothing the broker said; the broker's own
+refusal (`404` for a view it does not hold) is passed on. An Endpoint no view serves yet (a
+`viewMapping`, a projection with `temporalQ`) and a caller under a data-space agreement keep the
+gateway's own document and check until their gaps close. The MCP `describe_access` tool and the
+`access://{slug}` resource read the same document.
+
 The default, `application/json`, is the AuthZEN permissions document: one entry per entity type the caller may touch, and nothing about the types it may not (EP-59, [R20](../Requirements/policy-firewall.md)).
 
 ```http
