@@ -826,21 +826,21 @@ gives, so the author's processors branch on it the same way (`unarchive: { forma
 a member into one message per row). The poll is refused, its reason logged at ERROR by the
 runner and nothing passed to the author's steps, when the server ignores `Range`, the directory does not fit the 64 KiB read or lists another
 number of entries than the archive says, a named member is missing, a member is larger than
-`maxBytes` packed or unpacked, stored with a method other than none or deflate, deflated with
-a packed size whose 1032-fold (the most deflate expands) exceeds `maxBytes`, or inflates to
+`maxBytes` packed or unpacked, stored with a method other than none or deflate, or inflates to
 another size than the directory declares. A Zip64 archive (a member or offset past 4 GiB) is
 refused for the same reason.
 
 `members` holds at most 20 names of letters, digits, `.`, `_`, `-` and `/`, so a name never
 becomes code in the rendered mapping; the connection's `verb` is `GET`, and its headers, its
 `authorization` and its TLS block apply to every request. The directory's sizes may lie and
-Bento's inflater has no output limit, so the bound is taken from the packed size, which the
-ranged read enforces: a deflated member of `c` packed bytes inflates to at most `1032·c`, and
-a member is read only when that is within `maxBytes`. A deflate bomb behind a lying directory
-is refused before a byte of it is fetched. The price is a ceiling on packed size: 32 KiB per
-member at the default `maxBytes`, 254 KiB at its 256 MiB maximum, which takes the small tables
-of a GTFS feed (`agency`, `routes`, `stops`) and not `shapes.txt`. A member past it waits for
-an inflater with an output limit in the runner (T-3953).
+Bloblang's `decompress` has no output limit, so the runner inflates a deflated member with its
+own module for Bento's `wasm` processor (`/streams/inflate.wasm` from the runner's ConfigMap,
+built from joinedcontext-platform `tools/bento-inflate`). The module allocates the size the
+directory declares, once, and stops there: a deflate bomb behind a lying directory is refused
+having produced at most that many bytes, and the memory a member costs is its packed bytes plus
+its declared size. Measured in the runner's Bento 1.22.0 (peak RSS) on HSL's `hsl.zip`: agency
+alone 144 MB, agency, routes, stops and `shapes.txt` (21.8 MB) 217 MB; a 204 kB member whose
+directory says 100 bytes and whose data inflates to 200 MiB is refused at 144 MB (T-3953).
 
 ### Any input the runner ships (PL-50)
 
