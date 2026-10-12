@@ -41,6 +41,8 @@ classDiagram
         +Boolean isSandbox
         +Duration ttl
         +MissingUnitCode missingUnitCode
+        +List~RetentionRule~ retention
+        +List~QualityRule~ quality
     }
 
     class DataModel {
@@ -56,6 +58,7 @@ classDiagram
         +String slug
         +Audience audience
         +List~Representation~ enabledRepresentations
+        +List~Representation~ disabledRepresentations
         +RateLimitConfig rateLimits
     }
 

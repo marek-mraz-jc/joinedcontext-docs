@@ -38,7 +38,7 @@ Typed references (`{kind, name, namespace?}`) instead of paths or ids keep bundl
 |---|---|---|---|
 | `Organization` | Root `org.yaml` | Portal / Keycloak | Organization root settings, branding, default locales |
 | `Project` | `projects/{p}/project.yaml`; in layout 2 also the registry entry `projects/{p}.yaml` of the organization repository | Portal API | Project container and team governance boundary; the registry entry names its repository, ref and parameter values (PF-86) |
-| `ContextSpace` | `projects/{p}/spaces/{s}/` | Antares Broker | Context space tenant, storage, and persistence rules |
+| `ContextSpace` | `projects/{p}/spaces/{s}/` | Antares Broker | Context space tenant, storage, and persistence rules; `spec.brokerRef` names its `ContextBroker`, the organization's default when absent (PF-111) |
 | `DataModel` | `.../spaces/{s}/datamodels/` | Gateway / Broker | LinkML schema definition & compiled JSON-LD contexts |
 | `Policy` | `.../spaces/{s}/policies/` | Context Gateway | PEP access control policy (ADR 002) |
 | `Endpoint` | `.../spaces/{s}/endpoints/` | Context Gateway | Multi-representation public/shared access facade |
@@ -55,6 +55,7 @@ Typed references (`{kind, name, namespace?}`) instead of paths or ids keep bundl
 | `AgentProfile` | `agentprofiles/{name}.yaml` | Portal agent runner / `jc-agent-proxy` | One agent runtime profile: role (`steward` or `builder`), image digest, model, limits, egress allow-list and tools (AG-47, AG-48) |
 | `ServiceAccount` | `projects/{p}/access/serviceaccounts/` | Keycloak / Gateway | Workload identity with audience-bound tokens and scoped roles (PF-45) |
 | `Environment` | `environments/{name}.yaml` | every loader (`JC_ENVIRONMENT`) | The overlay one environment renders the repository with: org domain, hosts, digests, secret backend, flags (CC-73…CC-75) |
+| `ContextBroker` | `brokers/{name}.yaml` | Portal reconciler → Antares release | One broker instance of the organization: image digest, size preset, storage class, features; exactly one is the default, and a space names its broker by `spec.brokerRef` (PF-110, PF-111, ADR-N-047) |
 | `Group` | `users/groups/{name}.yaml` | reconciler → Keycloak | One named set of people by e-mail; the reconciler is the only writer of the Keycloak group it manages and reports drift (PF-62, PF-63) |
 | `Role` | `users/roles/{name}.yaml` or `projects/{p}/roles/{name}.yaml` (PF-68) | `jcctl` roles / Keycloak | One named set of verbs on kinds, with constraints; compiled into CODEOWNERS, `policies/roles.json` and the organization repository's Rego gate (PF-51, CC-41) |
 | `RoleBinding` | `users/assignments/{name}.yaml` | `jcctl` roles / Keycloak | Assignment of one `Role` to a subject over a scope, with a validity window (PF-52, CC-42) |
