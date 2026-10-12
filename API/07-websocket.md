@@ -81,7 +81,7 @@ websocat -H "Authorization: Bearer $TOKEN" "wss://{host}/api/endpoint/{endpointS
 
 The first line you type after the connection opens is the subscription. The answers arrive on standard output:
 
-```json
+```text
 {"metadata":{"x-op":"x-welcome","x-connection":"k3v…","x-resume-token":"…"}}
 {"metadata":{"x-op":"x-result","x-id":"s1","x-status":201},"body":{"id":"urn:ngsi-ld:Subscription:…","type":"Subscription"}}
 {"metadata":{"x-op":"x-notification","x-seq":1,"x-subscription":"urn:ngsi-ld:Subscription:…","Content-Type":"application/json"},"body":{"id":"urn:ngsi-ld:Notification:…","type":"Notification","subscriptionId":"urn:ngsi-ld:Subscription:…","notifiedAt":"2026-10-11T12:00:00Z","data":[{"id":"urn:ngsi-ld:AirQualityObserved:station-01","type":"AirQualityObserved","pm10":{"type":"Property","value":21}}]}}
