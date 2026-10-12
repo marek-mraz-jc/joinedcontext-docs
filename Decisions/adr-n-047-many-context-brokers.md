@@ -1,9 +1,9 @@
 ---
-sidebar_position: 47
-title: "ADR-N-046: Many Context Brokers, One Space on One Broker"
+sidebar_position: 48
+title: "ADR-N-047: Many Context Brokers, One Space on One Broker"
 ---
 
-# ADR-N-046: Many Context Brokers, One Space on One Broker
+# ADR-N-047: Many Context Brokers, One Space on One Broker
 
 Date: 2026-10-12  
 Status: Accepted  
@@ -30,7 +30,7 @@ Nothing above keys the broker by space. The gateway already resolves a space for
 
 An organization-scoped kind names each broker instance, one file per broker at `brokers/{name}.yaml` of the organization repository:
 
-```yaml
+```yaml excerpt
 apiVersion: joinedcontext.com/v1alpha1
 kind: ContextBroker
 metadata:
