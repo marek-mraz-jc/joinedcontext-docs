@@ -114,7 +114,7 @@ ws.onmessage = (event) => {
 };
 ```
 
-In Python, with the `websockets` package (version 13 or later), reconnecting and resuming after every close:
+In Python, with the `websockets` package (version 14 or later), reconnecting and resuming after every close:
 
 ```python
 import asyncio, json, os, websockets
