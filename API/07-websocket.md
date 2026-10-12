@@ -56,12 +56,12 @@ A notification carries only the attributes your grant reads. A change to an attr
 | Limit | Value | When exceeded |
 |---|---|---|
 | Connections per caller (token subject, or client address when anonymous) | 10 | the upgrade answers `429` |
-| Connections per Endpoint's space | 1 000 | the upgrade answers `503` |
+| Connections per Endpoint's space | 1 000 (an installation may set fewer) | the upgrade answers `503` |
 | Subscriptions per connection | 64 (an installation may set fewer) | `x-result` with `x-status: 400` |
 | Message you send | 64 KiB (16 KiB per frame) | the connection closes with code `1009` |
 | Message the server sends | 1 MiB | the notification is not sent and the Subscription records a failed delivery |
 | Idle time (no message and no Subscription) | 60 s | `x-closing: idle` |
-| Unread notifications queued | 256 | `x-gap`, then `x-closing: overflow` |
+| Unread notifications queued | 256 (an installation may set fewer) | `x-gap`, then `x-closing: overflow` |
 | Connection lifetime | 300 s with a token, 24 h anonymous | `x-closing: lifetime`; reconnect and resume |
 
 The 64 KiB bound applies only to what you send. A notification, which may fold up to 256 changed entities into one message, may be up to 1 MiB.
