@@ -752,6 +752,41 @@ GET /api/v1/projects/{project}/pipelines/{name}/metrics    counters of one runni
   }
   ```
 
+Rates per node come from a second route, which the Studio polls every five seconds while its tab
+is visible (PL-68):
+
+```text
+GET /api/v1/projects/{project}/pipelines/{name}/stats      counts per node over 1, 5 and 15 minutes
+```
+
+```json
+{
+  "pipeline": "hfp-vehicles",
+  "scrapedAt": "2026-10-12T08:15:05Z",
+  "coveredSeconds": 900,
+  "nodes": {
+    "input":  { "1m": { "received": 1200, "sent": 1200, "errors": 0 }, "5m": { "received": 6010, "sent": 6010, "errors": 0 }, "15m": { "received": 18050, "sent": 18050, "errors": 0 } },
+    "step_0": { "1m": { "received": 1200, "sent": 1180, "errors": 20 }, "5m": { "received": 6010, "sent": 5990, "errors": 20 }, "15m": { "received": 18050, "sent": 18030, "errors": 20 } }
+  }
+}
+```
+
+- Each request scrapes the runner as `…/metrics` does and keeps the reading in the Portal's
+  memory for 15 minutes, per pipeline; a reading younger than two seconds is reused, so many open
+  tabs cost the runner one scrape. A window's count is what the counters grew by across the
+  readings inside it; a counter that went down (the runner restarted) counts from zero. Errors
+  and other counters the runner does not export stay absent, not zero.
+- `coveredSeconds` is the age of the oldest sample kept. A window longer than it holds what was
+  seen so far, so the first answer after a Portal restart has every window at zero and
+  `coveredSeconds: 0`. The Portal keeps no history beyond that; Prometheus does (OPS-16).
+- Same rights, same `404` and same `503` as `…/metrics`: a runner that is down is `503`, never a
+  body of zeros, and the Studio shows "stats unavailable".
+- The body carries counts only. The Studio shows received and sent of the last minute on each
+  node and paints a node, and the wire into it, red while it has errors in the last five
+  minutes. A click on a failing node shows its last error from `…/rejected`, the newest record
+  of that step: the message and the time, never the record, whose values the rejected list
+  shows masked to the same readers (PL-52, PL-61).
+
 ### 7a. Testing a candidate pipeline (PL-43, MF-38)
 
 ```text
@@ -2960,10 +2995,13 @@ GET /api/v1/projects/{project}/spaces/{space}/usage     the space's entity count
 ```
 
 ```json
-{ "entities": 14232, "observedAt": "2026-09-25T11:40:00Z" }
+{ "entities": 14232, "broker": "main", "observedAt": "2026-09-25T11:40:00Z" }
 ```
 
 - A space the broker has no tenant for yet holds nothing: `entities` is `0`.
+- `broker` names the `ContextBroker` the space lives on (PF-111, §43); the count is asked of that
+  broker. A space whose `brokerRef` names no broker, or whose broker has no address, is `503`
+  naming the broker or the `brokerRef`, never counted on `main`.
 - Without a broker address (`JC_PORTAL_BROKER_URL`), or while the broker does not answer, the
   answer is `503` with the reason. The page shows the reason, never a zero.
 - A project or a space the caller may not read is `404`, as in §27. The count is the space's,
@@ -3555,6 +3593,42 @@ not read is `404`, as is a template id the project does not hold.
   ]
 }
 ```
+
+## 43. Brokers (T-3990, PF-116, ADR-N-047)
+
+Administration → Brokers: every context broker of the organization, the spaces on it, its version,
+health and load. The Portal asks each broker itself; the browser never reaches a broker.
+
+```text
+GET /api/v1/organization/brokers                                   → 200
+```
+
+```json
+{"items": [
+  {"name": "main", "declared": true, "default": true, "size": "small",
+   "features": ["temporal", "ogc", "odata", "mcp", "csr"],
+   "health": "up", "version": "0.14.2", "reason": null,
+   "spaces": ["ovzdusie/air", "doprava/stops"], "entities": 14232,
+   "observedAt": "2026-10-12T08:00:00Z"},
+  {"name": "canary", "declared": true, "default": false, "size": "small", "features": [],
+   "health": "down", "version": null,
+   "reason": "the broker did not answer; try again in a minute",
+   "spaces": [], "entities": 0, "observedAt": "2026-10-12T08:00:00Z"}
+]}
+```
+
+- `items` lists the `ContextBroker` manifests in name order; an organization that declares none
+  has one row, the implicit `main`, with `declared: false` and no `size` or `features`.
+- `health` is `up` when the broker's `GET /q/health` answers `200`, `down` when it answers
+  anything else or nothing within five seconds, and `unknown` when the Portal has no address for
+  it (`JC_PORTAL_BROKER_URL` for `main`, `JC_PORTAL_BROKER_URL_TEMPLATE` for the others);
+  `reason` says why in a sentence for `down` and `unknown`. `version` is that answer's `version`.
+- `spaces` names the spaces living on the broker as `project/space` (PF-111), and `entities`,
+  the load, sums their entity counts as §29 reads them; a space whose count is unavailable adds
+  nothing and the row keeps the reason.
+- A space's page names its broker from §29's `broker`.
+- Who may read: organization administrators only; anybody else is `403`. No address or token is
+  part of the answer.
 
 ## Related
 
