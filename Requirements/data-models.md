@@ -28,6 +28,7 @@ This chapter specifies how data models are authored, imported, generated, versio
 - **DM-10** — Fetching MUST be performed server-side by Model Tools with an allowlist restricted to the Smart Data Models organisation; the browser MUST NOT fetch third-party schemas directly.
 - **DM-11** — An imported model MUST keep every upstream slot; slots the user does not use MUST be marked `deprecated: true` rather than removed, so payloads of federation partners still validate.
 - **DM-12** — The catalogue index MUST be cached by Model Tools with a daily refresh and an explicit "refresh now" action; catalogue unavailability MUST degrade to the cached index, never block editing.
+- **DM-81** [H] — The Portal MUST let a person upload a CSV into the current Context Space or a new one (T-3840): it MUST rank the Smart Data Models types of the city subjects against the file's columns and offer the best two above a threshold with their score and column mapping, or the file's own inferred model; propose the space, model, Endpoint and a write Policy for that person through `jc_space_complete` with `upload: true`, the chosen Smart Data Models type passed as its LinkML; and, once the change is live, write the rows through the space's Endpoint by upsert with the person's session, a re-upload updating the same entities. The file MUST be refused above 50 MB before it is read, the rejected rows MUST download as CSV with formula cells made inert, and a person who may not propose the space MUST NOT be offered the upload.
 
 ## 3. Authoring (secondary path)
 
@@ -186,6 +187,7 @@ The decision and its reasons are in [ADR-N-046](../Decisions/adr-n-046-data-life
 | DM-75…DM-79 | Organization and project models, shared upwards by an administrator | [ADR-N-039](../Decisions/adr-n-039-organization-and-project-data-models.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | DM-82…DM-96 | Data lifecycle and quality | [ADR-N-046](../Decisions/adr-n-046-data-lifecycle-and-quality.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | DM-80 | Formula fields computed by a derived pipeline | [08-pipelines.md §3](../Architecture/08-pipelines.md#formula-fields-a-slot-computed-from-its-entity-dm-80-t-3133) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| DM-81 | Upload a CSV into a space, ranked against Smart Data Models | [09-portal.md](../Architecture/09-portal.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
 ## Related
 
