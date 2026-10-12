@@ -258,25 +258,44 @@ spec:
     - targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:ep-air-write
 ```
 
-It renders as a Bento `switch` output (Bento 1.22.0, the runner's pin). Each route is a case whose `check` is its `when` and whose output carries the route's steps as its own `processors`. The default lane is the last case and has no `check`:
+The runner writes records in batches of up to 1000 archived into one JSON array, so it picks the route per record before the batching (Bento 1.22.0, the runner's pin). After `spec.steps` the records are split one per message; a `mutation` sets `meta jc_route` to the name of the first route whose `when` holds, or to nothing; a `switch` processor runs each route's steps on its records; `group_by_value` keeps every batch to one route; and a `switch` output writes each batch through its route's outputs, the default lane last:
 
 ```yaml
+pipeline:
+  processors:
+    - label: step_0
+      mapping: root = this
+    - mapping: root = if this.type() == "array" { this } else { [this] }
+    - unarchive: { format: json_array }
+    - label: route_pick
+      mutation: |
+        meta jc_route = if (
+        this.temperature.value > 30
+        ) { "hot" } else { "" }
+    - label: route_steps
+      switch:
+        - check: meta("jc_route") == "hot"
+          processors:
+            - label: route_0_0
+              mapping: root = this.merge({"alertLevel": {"type": "Property", "value": "high"}})
+    - group_by_value: { value: '${! meta("jc_route") }' }
+    - <the batching: one array of up to 1000 records per message>
 output:
+  label: routes
   switch:
     strict_mode: true
     retry_until_success: false
     cases:
-      - check: this.temperature.value > 30
+      - check: meta("jc_route") == "hot"
         output:
-          label: route_hot
-          processors:
-            - label: route_hot_0
-              mapping: root = this.merge({"alertLevel": {"type": "Property", "value": "high"}})
+          label: route_0
           <the upsert through ep-alerts-write, PL-47>
-      - output: <the upsert through ep-air-write>
+      - output:
+          label: output
+          <the upsert through ep-air-write>
 ```
 
-A route with two outputs renders them as a `fan_out_fail_fast` broker, as `spec.outputs` does. `retry_until_success: false` hands a failed write back to the input as a nack, the same fail-fast rule as the brokers above (T-2983), and `strict_mode: true` makes a message that reaches no case an error instead of a silent drop; the default case makes that unreachable.
+A route's components are labelled by its place, `route_{i}` and `route_{i}_{j}`, because a Bento label takes no hyphen and a route name may hold one. A route with two outputs renders them as a `fan_out_fail_fast` broker, as `spec.outputs` does. `retry_until_success: false` hands a failed write back to the input as a nack, the same fail-fast rule as the brokers above (T-2983), and `strict_mode: true` makes a batch that reaches no case an error instead of a silent drop; the default case makes that unreachable. The validation stage (PL-60) stays before the batch split, so it checks each record once, when every output writes into one space.
 
 The rules, checked by jc-core before a Change is proposed:
 
