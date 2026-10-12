@@ -303,6 +303,23 @@ The ceiling is the shared runner. A stream whose DataSource URL or mapping calls
 
 The switch is the deployment's: until it sets the Portal's `JC_PORTAL_PIPELINE_IDENTITY=pipeline` (refused at start-up without `JC_PORTAL_PIPELINE_NAMESPACE`) and the runner's `JC_PIPELINE_TOKEN_URL` (after the federated mechanism is seen working on dev, T-2868), the Portal renders streams with the project's `pipelines` account as before, and the derived principals and Policies exist unused.
 
+### A device by its own key pair (PF-47, T-4015)
+
+A device outside the cluster, such as a camera that publishes to an MQTT edge broker (ADR-N-048), has no projected token to present. Its account declares the public half of a key pair the device holds, in its `oauth-client` credential:
+
+```yaml
+credentials:
+  - kind: oauth-client
+    name: main
+    jwks:
+      keys:
+        - { kty: EC, crv: P-256, kid: cam-north-2026, x: "…", y: "…" }
+```
+
+The Portal's reconciler writes the account's client `{project}-{name}` with `clientAuthenticatorType: client-jwt` and the attributes `use.jwks.string: true` and `jwks.string`. The client allows `client_credentials` only, and its audience mappers are those of a bound account. The device signs a client assertion with its private key (RFC 7523, `ES256` or `RS256`) and gets a short-lived access token for the audiences its roles name. No secret exists in Git, Keycloak, OpenBao or the Portal.
+
+The manifest refuses any private member of a JWK (`d`, `p`, `q`, `dp`, `dq`, `qi`) and any symmetric key (`kty: oct`). It allows at most five keys, each with a `kid`, and refuses `jwks` beside `workload`. The keys are rotated by adding the new one and later removing the old one; removing the credential or the account deletes the client.
+
 ### One principal per App with jobs (AP-159)
 
 A `wasm` App's job runs with no person behind it (AP-154), so it gets a principal the same way a pipeline does, with one difference: its grants are not derived, they are the App's own.
