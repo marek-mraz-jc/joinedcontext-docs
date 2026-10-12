@@ -122,6 +122,7 @@ A problem type is one of these slugs; `ProblemDetails::new` with any other fails
 | `unauthorized` | 401 | Sign in again, or send a valid bearer token for this audience. |
 | `forbidden` | 403 | Ask a project owner or an organization administrator for the role this needs. |
 | `domain-not-verified` | 403 | Verify the domain in the organization settings first. |
+| `origin-refused` | 403 | Open the WebSocket from a page on the platform's own origin, or from a client that sends no `Origin`. |
 | `resource-not-found` | 404 | Check the name in the address; it does not exist or is not shared with you. |
 | `method-not-allowed` | 405 | Use one of the methods the `Allow` header lists. |
 | `read-only-view` | 405 | This view only reads; write through the endpoint it is built on. |
@@ -132,10 +133,15 @@ A problem type is one of these slugs; `ProblemDetails::new` with any other fails
 | `too-many-requests` | 429 | Wait the seconds `Retry-After` names, then try again. |
 | `daily-budget` | 429 | Today's allowance is used up; try again tomorrow or ask an administrator to raise it. |
 | `egress-budget-spent` | 429 | This run's outbound allowance is used up; start a new run or ask an administrator to raise it. |
+| `too-many-connections` | 429, 503 | Close a WebSocket you no longer read, or wait a minute, then connect again. |
 | `internal-error` | 500 | Try again; if it happens again, report the `requestId`. |
 | `subscription-not-routable` | 501 | This deployment cannot deliver to that address; use an HTTP(S) receiver the platform reaches. |
 | `federation-identity-unavailable` | 501 | This deployment has no federation identity; ask an administrator to configure one. |
+| `ogc-view-unavailable` | 501 | Read this endpoint through its NGSI-LD surface; its OGC surface needs a broker view it does not have. |
+| `odata-view-unavailable` | 501 | Read this endpoint through its NGSI-LD surface; its OData surface needs a broker view it does not have. |
+| `odata-batch-unavailable` | 501 | Send each OData write as a request of its own; `$batch` is not served through an endpoint. |
 | `broker-failure` | 5xx | The context broker failed this request; try again in a minute, and report the `requestId` if it repeats. |
+| `broker-unavailable` | 502 | The context broker did not open the WebSocket; try again in a minute. |
 | `upstream-unavailable` | 502, 503 | A service behind the platform did not answer; try again in a minute. |
 | `upstream-redirect` | 502 | The service behind the platform answered with a redirect it may not follow; ask its owner for the final address. |
 | `service-unavailable` | 503 | The platform is not ready for this yet; try again in a minute. |
