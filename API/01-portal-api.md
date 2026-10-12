@@ -3542,7 +3542,7 @@ not read is `404`, as is a template id the project does not hold.
       "spec": {
         "class": "resident",
         "sources": [{}],
-        "steps": [{ "kind": "bloblang", "bloblang": "root.id = \"urn:ngsi-ld:AirQualityObserved:\" + this.id" }],
+        "steps": [{ "kind": "bloblang", "bloblang": "root.type = \"AirQualityObserved\"" }],
         "outputs": [{ "type": "AirQualityObserved", "mode": "upsert" }]
       },
       "createdBy": "Jana Kováčová",
