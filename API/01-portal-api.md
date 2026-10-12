@@ -769,6 +769,7 @@ rejected sink; the Portal keeps the newest 20 per node in memory, each at most 8
 ```json
 {
   "pipeline": "aq-mqtt-ingest",
+  "withheld": false,
   "nodes": {
     "input":  [{ "at": "2026-10-12T09:00:01Z", "record": { "id": "SK0263A", "pm10": 21.4 } }],
     "step_0": [{ "at": "2026-10-12T09:00:01Z", "record": { "id": "urn:ngsi-ld:AirQualityObserved:SK0263A", "pm10": 21.4 } }]
@@ -781,6 +782,10 @@ rejected sink; the Portal keeps the newest 20 per node in memory, each at most 8
 - A sample shows no more than the pipeline's target Endpoint serves: the attributes its
   `projection.hiddenAttributes` hides are taken out, and every key of the secret list (MF-24)
   is masked, wherever it sits in the record.
+- Before the mapping a record carries the source's own field names, so a hidden attribute is
+  not recognisable there (Linked Events' organizer contact becomes `contactPoint` only in the
+  mapping). When any target Endpoint hides an attribute, or a target cannot be read, `nodes`
+  holds `output` alone and `withheld` is `true`; the Studio says so on the earlier steps.
 - An empty `nodes` is a stream that has not run since the runner started, or a Portal that
   restarted; it is not an error.
 
