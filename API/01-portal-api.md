@@ -745,17 +745,21 @@ GET /api/v1/projects/{project}/pipelines/{name}/stats      counts per node over 
 }
 ```
 
-- Each request scrapes the runner as `…/metrics` does and keeps the sample in the Portal's memory
-  for 15 minutes, per pipeline. A window's count is the newest counter minus the oldest sample
-  inside that window; a counter that went down (the runner restarted) counts from zero.
+- Each request scrapes the runner as `…/metrics` does and keeps the reading in the Portal's
+  memory for 15 minutes, per pipeline; a reading younger than two seconds is reused, so many open
+  tabs cost the runner one scrape. A window's count is what the counters grew by across the
+  readings inside it; a counter that went down (the runner restarted) counts from zero. Errors
+  and other counters the runner does not export stay absent, not zero.
 - `coveredSeconds` is the age of the oldest sample kept. A window longer than it holds what was
   seen so far, so the first answer after a Portal restart has every window at zero and
   `coveredSeconds: 0`. The Portal keeps no history beyond that; Prometheus does (OPS-16).
 - Same rights, same `404` and same `503` as `…/metrics`: a runner that is down is `503`, never a
   body of zeros, and the Studio shows "stats unavailable".
-- The body carries counts only. A click on a failing node shows its last error from
-  `…/rejected?limit=1`: the message and the step, never the record, whose values the Rejected
-  panel shows masked to the same readers (PL-52, PL-61).
+- The body carries counts only. The Studio shows received and sent of the last minute on each
+  node and paints a node, and the wire into it, red while it has errors in the last five
+  minutes. A click on a failing node shows its last error from `…/rejected`, the newest record
+  of that step: the message and the time, never the record, whose values the rejected list
+  shows masked to the same readers (PL-52, PL-61).
 
 ### 7a. Testing a candidate pipeline (PL-43, MF-38)
 
