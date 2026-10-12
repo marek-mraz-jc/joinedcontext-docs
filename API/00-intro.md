@@ -146,6 +146,7 @@ A problem type is one of these slugs; `ProblemDetails::new` with any other fails
 | `upstream-unavailable` | 502, 503 | A service behind the platform did not answer; try again in a minute. |
 | `upstream-redirect` | 502 | The service behind the platform answered with a redirect it may not follow; ask its owner for the final address. |
 | `service-unavailable` | 503 | The platform is not ready for this yet; try again in a minute. |
+| `space-moving` | 503 | The space is moving to another broker and takes no writes; send the write again after the seconds `Retry-After` names. |
 | `delivery-timeout` | 504 | The receiver did not answer in time; check that it is reachable and try again. |
 
 ### Existence Masking
