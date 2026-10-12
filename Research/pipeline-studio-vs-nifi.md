@@ -11,7 +11,7 @@ CIVITAS/CORE moved data with Apache NiFi and its canvas; joinedcontext replaced 
 ## 1. Method
 
 - Capabilities come from the CIVITAS/CORE pipeline-engine pages and the legacy pipeline editor documentation. `D2` is `civitas-core-docs_v2/Architecture/Pipeline_Engine/` (adr027 sits under `civitas-core-docs_v2/Architecture/`), `LEG` is `civitas-core-platform/portal-frontend/src/app/(main)/datasets/[datasetId]/data-flow/pipeline-editor/DOCUMENTATION.md`. The legacy editor had a categorised palette, a canvas and an inspector panel per node; the NiFi pages name the rest at architecture level. Neither describes templates.
-- Portal cells cite a file of `joinedcontext-portal` (`PF` is `ui/src/components/PipelineFlow.tsx`).
+- Portal cells cite a file of `joinedcontext-portal` (`PF` is `ui/src/pages/pipelines/PipelineFlow.tsx`).
 - The walks run in Playwright against the Portal UI with its API stubbed (`ui/e2e/pipeline_studio_walk.spec.ts`, 3 walks and 3 edge cases, green). They prove what the UI sends, not what the cluster does: the same walks on `dev`, with build times, are T-3967.
 
 ## 2. Capability table
