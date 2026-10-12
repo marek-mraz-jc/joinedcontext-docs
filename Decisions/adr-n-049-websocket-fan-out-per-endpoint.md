@@ -32,9 +32,9 @@ What already exists and is reused:
 
 The gateway serves an Endpoint's WebSocket itself. It opens **one** broker subscription per Endpoint, keeps the Endpoint's live entities in memory, and matches the clients' filters there through an index. It cuts each delivery to the caller's own grant before the filter sees it.
 
-1. **One upstream per Endpoint and gateway replica.** The gateway opens one WebSocket to the broker view `/x/views/{slug}/ws` the first time a client connects to an Endpoint's `/ws`. The upstream carries one `x-subscribe`: every entity type the Endpoint's Policies grant, `notification.attributes` set to the union of the attributes they grant less the Endpoint's hidden ones (EP-61), and `format: normalized`. The broker therefore sends each change once per Endpoint, already cut to that Endpoint ("only cars").
-   - The upstream runs under the reserved caller role `endpoint-fanout:{project}/{name}` and no user, client or group. The reconciler compiles one permit for that role into the tenant's rule document. The permit reads exactly the union above and nothing else, and has no write operation.
-   - The gateway sets that role only on its own upstream. It strips every client `x-jc-*` header before anything reads it (EP-21), so no client can claim the role.
+1. **One upstream per Endpoint and gateway replica.** The gateway opens one WebSocket to the broker view `/x/views/{slug}/ws` the first time a client connects to an Endpoint's `/ws`. The upstream carries one `x-subscribe` for every entity type the view serves, in `format: normalized`. The view is the union of the types and attributes the Endpoint's permits grant, less its hidden attributes (EP-61, [ADR-N-042](adr-n-042-data-views.md)). The broker therefore sends each change once per Endpoint, already cut to that Endpoint ("only cars").
+   - The upstream runs under the gateway's own account, `x-jc-client: context-gateway` (T-3767), which already reads the tenant for the gateway's own hops. The reconciler adds Create Subscription (clause 5.8.1) to that account's permit. On a view the rule document lists, which is then decided by its listed policies alone, the reconciler also adds the account to that view's list, so the upstream reads what the view serves and nothing beyond it.
+   - No client can speak as that account. The gateway sets `x-jc-*` only from a verified token and strips every client copy first (`tenancy::strip_client_headers`), and the account's Keycloak client is the gateway's own.
    - The upstream closes 60 s after the Endpoint's last client leaves.
    - It reconnects with `x-resume` when the broker ends it with `x-closing: lifetime`, and with backoff (1 s doubling to 30 s) on a drop.
    - An `x-gap`, or a resume that fails, reloads the snapshot (item 2), and every client of the Endpoint then receives `x-gap`.
@@ -83,8 +83,8 @@ The gateway serves an Endpoint's WebSocket itself. It opens **one** broker subsc
 |---|---|
 | A caller receives an entity or attribute its grant does not read | Item 7: `grants::shown` and projection run per connection before the filter; the test subscribes a caller without the grant with a filter on a hidden attribute and asserts that nothing arrives, and asserts that a caller with a narrower grant gets the narrower projection. |
 | A filter on a hidden attribute leaks it by timing | Filters run on the projected entity, so the hidden attribute is absent for them (item 7.3). |
-| A client claims the fan-out role | The gateway strips `x-jc-*` from every client request (EP-21); the role is set only on the upstream it opens itself, and the broker is reachable from the gateway and the Portal only (NetworkPolicy). |
-| The upstream's wide read leaks through a bug in matching | The upstream's grant is at most the union of the Endpoint's grants, which the Endpoint already serves to some caller; projection per caller is the same code REST answers with. |
+| A client speaks as the gateway's account | The gateway strips `x-jc-*` from every client request and sets `x-jc-client: context-gateway` only on its own hops; the broker is reachable from the gateway and the Portal only (NetworkPolicy). |
+| The upstream's wide read leaks through a bug in matching | The upstream reads through the Endpoint's view, so it holds at most what the Endpoint already serves to some caller; the cut per caller is the same code REST answers with. A view's temporal window (T-3632) narrows the bound permits, not the gateway's account: a live change is newer than any window's start, and a snapshot read at the upstream's start goes through the window like a REST read. |
 | A revoked grant keeps streaming | Grant views are re-resolved on every policy reload (R48), so a revoked grant stops the next delivery, and the caller's connection still ends at its token's lifetime (API/07 §1). |
 | A token in a URL | Unchanged: refused with `400` (EP-107). |
 | Memory exhaustion by many filters or entities | The caps of item 8, the entity bound of item 2 and the 4,096-cell geo ceiling bound the memory per Endpoint. |
@@ -103,7 +103,7 @@ The gateway serves an Endpoint's WebSocket itself. It opens **one** broker subsc
 ## 5. Consequences
 
 - **The gateway** owns the WebSocket session: the upstream per Endpoint, the entity table, the filter index, the per-connection queues, `x-seq`, and `x-resume` (T-4133). The ADR-0026 relay code in `handlers/ws.rs` goes away.
-- **The reconciler** compiles the `endpoint-fanout:{project}/{name}` permit for each Endpoint that serves `websocket` into the tenant rule document.
+- **The reconciler** adds clause 5.8.1 to the gateway account's permit, and adds `@context-gateway` to each listed view of an Endpoint that serves `websocket`.
 - **The broker** is unchanged: it serves one view socket per Endpoint and replica with ADR-0026 as it stands.
 - **[API/07](../API/07-websocket.md)**: a socket's Subscriptions are no longer listed over REST, a resume holds within one replica, and the measured sockets per replica go into §3.
 - **The conformance repository** gains the `ws-fanout` rig and the 20-socket dev smoke (EP-115).
