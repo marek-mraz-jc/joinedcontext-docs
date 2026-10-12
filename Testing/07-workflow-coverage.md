@@ -426,6 +426,7 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 | `POST /api/v1/webhooks/gitea` | none: Gitea calls it with its signature after a push to a project repository; no person or agent sends it |
 | `POST /api/v1/webhooks/sync/{project}/{name}` | `syncsource/webhook` |
 | `POST /api/v1/feedback` | `feedback/send-and-read` |
+| `POST /api/v1/projects/{project}/spaces/{space}/retention/preview` | `space/edit` |
 | `POST /api/v1/projects/{project}/spaces/{space}/trash` | `space/trash` |
 | `DELETE /api/v1/projects/{project}/spaces/{space}/trash/{id}` | `space/trash` |
 | `POST /api/v1/projects/{project}/spaces/{space}/views` | `space/views` |
