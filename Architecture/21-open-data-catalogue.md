@@ -22,7 +22,7 @@ The slug comes from `spec.publish.ckan.organization`, and from the instance's `o
 |---|---|---|
 | Organization | `spec.publish.ckan.organization`, else `organizationDefault` | a DNS label, one per project; created, when CKAN has none, with the `CkanInstance`'s own `metadata.title`, else the branding `organisation` name, else the slug |
 | Dataset | `spec.publish.ckan.name`, else the Endpoint's own name | one dataset per Endpoint; the name is what the dataset URL shows, so a rename is a new URL |
-| Resource | the representation's own title | one resource per enabled representation, plus the schema index and one resource per schema artifact |
+| Resource | the representation's own title | one resource per served surface with its usage description (EP-108), plus the schema index and one resource per schema artifact; what each kind keeps current is [API/02 §10](../API/02-endpoint-representations.md#10-in-the-open-data-portal) (EP-109) |
 | DataStore table | the entity type (`AirQualityObserved`) | one table per entity type the Endpoint serves, keyed by `entity_id`; a resource of the dataset named by the type |
 
 CKAN groups are not used. A group is a second taxonomy that has to be maintained by hand beside the first, and the two drift; the keywords of the DCAT-AP record carry the subject of a dataset, and the organization carries its owner.

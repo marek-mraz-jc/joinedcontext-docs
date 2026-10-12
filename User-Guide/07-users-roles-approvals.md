@@ -111,6 +111,34 @@ You should see the two columns side by side, and the file the entity is declared
 
 Type into the assistant composer: `Check for configuration drift in the helsinki space`. The assistant checks the current synchronization status and provides a direct link to open the resolution dialog.
 
+## 5. See What Someone Can Access
+
+The Access explorer answers one question for an organization administrator: what does this person, group, role or service account reach, and what may it do there? The gateway decides every row, the same way it decides a real call, and an Endpoint the principal cannot reach is not listed at all.
+
+### Look Up a Principal
+
+1. Open **Project settings → Access explorer** (`/projects/helsinki/settings/explorer`). Only organization administrators see the tab.
+2. In **Who**, pick a person, a member of a group, a holder of a realm role, a ServiceAccount or the public, then choose the one you mean.
+3. Click **Show access**. The address now names the principal (`?kind=serviceAccount&name=etl`), so you can send the link to a colleague who administers the organization too.
+
+You should see one row per Endpoint the principal reaches, with its Context Space and the surfaces it serves (NGSI-LD, OGC Features, MCP and the others). If no Endpoint admits them, the page says **Reaches nothing**.
+
+### Read One Endpoint
+
+Open a row. It lists:
+
+- **Granted through**: the Policies in force for the principal; each opens the Policy, where a change to the grant is proposed and reviewed.
+- **May** and **May not**: per entity type, the operations, the attributes, and any restriction of the view as an NGSI-LD `q`, `scopeQ` or `geoQ`. A `geoQ` is drawn as its shape.
+- **Copy … URL**: one button per surface, to hand the principal the exact address.
+
+### Connect One MCP Client to All of It
+
+Under **One MCP connector for all of it**, **Connect all** copies the hub's address (`/api/mcp`). One connector there covers every Endpoint in the list; the Endpoint is named on each call. The named MCP servers that include these Endpoints are listed below it.
+
+### Revoke a Connected Client
+
+For a person, **Connected clients** lists the clients they consented to (the hub, an Endpoint's MCP client, an App) with when each was last used. Click **Revoke** and confirm: the client loses its connection and offline sessions and has to ask again. Revoking changes no grant; to take access away, change the Policy, group or role binding the row names.
+
 ## Related
 
 - [06-dashboards.md](./06-dashboards.md): configuring operational map views and widgets.
