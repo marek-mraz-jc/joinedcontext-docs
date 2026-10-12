@@ -144,7 +144,7 @@ The owner, 2026-09-24: "write more tasks to validate everything" (T-2796). A wri
 
 The decision and its reasons are in [ADR-N-046](../Decisions/adr-n-046-data-lifecycle-and-quality.md).
 
-- **DM-81** [S] — A ContextSpace MAY declare `spec.retention`, at most one rule per entity type of its model, each with an optional `current` and an optional `history` ISO 8601 duration from one minute to ten years; the platform MUST NOT delete data of a type that has no rule in its space through retention.
+- **DM-81** [S] — A ContextSpace MAY declare `spec.retention`, at most one rule per entity type of its model, each with an optional `current` and an optional `history` ISO 8601 duration of days, hours, minutes and seconds (`PT5M`, `PT8H`, `P30D`, `P1DT12H`) from one minute to 3650 days; the platform MUST NOT delete data of a type that has no rule in its space through retention.
 - **DM-82** — The broker MUST remove, at least once a minute, every Entity of a ruled type not modified for the rule's `current` that carries no `expiresAt` of its own, so the clock restarts on every create, update, upsert and append; an `expiresAt` sent by the writer MUST win (TS 104 175 4.22).
 - **DM-83** [P] — The broker MUST delete the temporal instances of a ruled type in its tenant that are older than the rule's `history`, in bounded batches, at least once a minute while any rule is under an hour, and count each deletion in `antares_retention_deleted_total{tenant,type,kind}`.
 - **DM-84** [S][H] — The Portal MUST let only the space's owner role set or shorten a retention rule, MUST show the count the broker reports a shortening will delete and ask for confirmation before saving it, and MUST show every rule of a space with its deletion counts.
