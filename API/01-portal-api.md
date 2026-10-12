@@ -3591,7 +3591,7 @@ GET /api/v1/organization/brokers                                   → 200
 - Who may read: organization administrators only; anybody else is `403`. No address or token is
   part of the answer.
 
-## 44. Moving a space to another broker (T-4000, PF-115, ADR-N-046 §2.6)
+## 44. Moving a space to another broker (T-4000, PF-115, ADR-N-047 §2.6)
 
 One job moves one space, with its history, from the broker it lives on to another `ContextBroker`
 of the organization. Editing `brokerRef` by hand is refused for a space that holds entities
