@@ -124,6 +124,8 @@ A rule's `name` is a DNS-1123 label (at most 63 lowercase letters, digits and `-
 
 One compiler in the Portal turns model and rules into the artifact both the stage and the gateway read, so a person, the runner and the gateway reach the same verdict on the same entity (PL-59's rule, extended).
 
+Decided (worker-3, owner may override, 2026-10-12, T-3902): the space's rules are judged by one Rust evaluator, `jc_core::quality`, which the gateway calls on every write and the Portal calls for the rejected list; the Portal compiles the rejecting rules into the stage's Bloblang, and the record the stage refuses is judged again by that evaluator before it is listed. The gateway reads the rules from the space manifest it already loads, so no second artifact carries them. The model's own constraints on the write path (DM-86) follow in T-4011, which moves the Portal's model check into the platform. The `maxAge` sweep runs in the broker's maintenance job beside the retention sweep (T-4018): the Portal's own client has no write grant on a space and cannot see an entity once it is quarantined.
+
 Evaluation is bounded: at most 64 rules per space, patterns compiled with a linear-time engine under a 64 KiB size limit, no network and no store access on the write path (DM-92).
 
 ### 2.6 Three outcomes
