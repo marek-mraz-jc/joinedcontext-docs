@@ -59,6 +59,7 @@ projects/
     dashboards/{name}.yaml              # kind: Dashboard and kind: Layer
     datasources/{name}.yaml             # kind: DataSource (MF-35)
     dataspace/agreements/{name}.yaml    # kind: DataAgreement
+    mqttbrokers/{name}.yaml             # kind: MqttBroker (MF-54)
     pipelines/{name}/
       pipeline.yaml                     # kind: Pipeline
       bento.yaml                        # native, unwrapped Bento stream configuration
@@ -236,6 +237,7 @@ Rules that make bundles portable: identity is `(group, kind, namespace, name)` a
 | `Endpoint` | `projects/{p}/spaces/{s}/endpoints/` | `schema/kinds/Endpoint.json` | Gateway in-memory table & APISIX Standalone ConfigMap (reloaded from Git) |
 | `ModelProjection` | `projects/{p}/spaces/{s}/projections/` | `schema/kinds/ModelProjection.json` | Context Gateway (R9 projection and the `schema/` surface of every Endpoint that references it, MP-01…MP-03) |
 | `DataSource` | `projects/{p}/datasources/` | `schema/kinds/DataSource.json` | Bento input of every Pipeline that references it (MF-35, PL-39) |
+| `MqttBroker` | `projects/{p}/mqttbrokers/` | `schema/kinds/MqttBroker.json` | RMQTT release, Keycloak audience client and Traefik TCP route per broker; device CONNECT checked by the gateway (MF-54, PL-74…PL-77, ADR-N-048) |
 | `Pipeline` | `projects/{p}/pipelines/{n}/pipeline.yaml` | `schema/kinds/Pipeline.json` | Kubernetes Bento Runner (ConfigMap / CronJob) |
 | `Dashboard` | `projects/{p}/dashboards/` | `schema/kinds/Dashboard.json` | Portal API Database Mirror |
 | `Layer` | `projects/{p}/dashboards/` | `schema/kinds/Layer.json` | Portal API Database Mirror |
