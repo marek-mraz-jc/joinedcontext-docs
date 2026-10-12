@@ -114,7 +114,7 @@ spec:
 
 A rule's `outcome` overrides the default. An attribute the entity does not carry passes every rule but the model's `required`.
 
-A rule's `name` is a DNS-1123 label (at most 63 lowercase letters, digits and `-`), unique in the space, because it labels the metric and names the rule in a refusal. `entityType` is a class of the space's model and `attribute` one of its slots. A `range` rule sets `min`, `max` or both (`min` ≤ `max`) and nothing else; an `area` rule sets `bbox` as four numbers inside WGS 84 with min ≤ max on each axis; a `freshness` rule sets `maxAhead`, `maxAge` or both, durations `PnDTnHnMnS` from one second to 3650 days. `outcome` is `reject`, `flag` or `quarantine`; on a `freshness` rule with both durations it applies to both.
+A rule's `name` is a DNS-1123 label (at most 63 lowercase letters, digits and `-`), unique in the space, because it labels the metric and names the rule in a refusal. `entityType` is a class of the space's model and `attribute` one of its slots. A `range` rule sets `min`, `max` or both (`min` ≤ `max`) and nothing else; an `area` rule sets `bbox` as four numbers inside WGS 84 with min ≤ max on each axis; a `freshness` rule sets `maxAhead`, `maxAge` or both, durations `PnDTnHnMnS` from one second to 3650 days. `outcome` is `reject`, `flag` or `quarantine`; a rule with a `maxAge` names `quarantine` or none, because the sweep finds a stale entity after its write and has nothing to refuse or flag, so on a `freshness` rule with both durations a named `quarantine` applies to both and no outcome leaves each its default.
 
 ### 2.5 Where the rules run
 
