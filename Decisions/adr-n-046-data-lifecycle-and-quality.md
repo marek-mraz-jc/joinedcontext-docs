@@ -128,7 +128,7 @@ Evaluation is bounded: at most 64 rules per space, patterns compiled with a line
 
 ### 2.6 Three outcomes
 
-- **reject**: the write is refused with `400` and an RFC 7807 problem of type `https://joinedcontext.com/problems/quality-rule` naming the rule and the attribute, never the value (DM-88). A pipeline's record goes to its rejected list.
+- **reject**: the write is refused with `400` and an RFC 7807 problem of type `https://joinedcontext.com/errors/quality-rule` ([API/00 §4](../API/00-intro.md); on the NGSI-LD surface the ETSI `BadRequestData` with `code` `quality-rule`) naming the rule and the attribute, never the value (DM-88). A pipeline's record goes to its rejected list.
 - **flag**: the entity is stored; the attribute carries a sub-Property `qualityFlags` listing the broken rules' names. A later write that passes stores no flag (DM-89).
 - **quarantine**: the entity is stored with the Properties `quarantinedAt` (DateTime) and `quarantineRules` (names). Every permit the Portal compiles into the space's rule document for a role other than the space's `owner` and `steward` gets the condition `!quarantinedAt` added to its `q`, so the broker's engine hides a quarantined entity from every public and member Endpoint, while the owner's and steward's views still show it (DM-90). The sweep lifts the mark when the rule holds again.
 
