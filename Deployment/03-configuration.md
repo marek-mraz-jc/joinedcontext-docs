@@ -142,7 +142,7 @@ values; the binary refuses to start rather than run half-configured.
 | Variable | From | Meaning |
 |---|---|---|
 | `JC_GATEWAY_BROKER_URL` | the broker service | scheme and authority of the broker it forwards to; required |
-| `JC_GATEWAY_BROKER_URL_TEMPLATE` | `http://context-broker-{broker}.{namespace}.svc:9090` | the address of every `ContextBroker` but `main`, `{broker}` in the authority; unset refuses a space on another broker instead of sending it to `main` (ADR-N-046) |
+| `JC_GATEWAY_BROKER_URL_TEMPLATE` | `http://context-broker-{broker}.{namespace}.svc:9090` | the address of every `ContextBroker` but `main`, `{broker}` in the authority; unset refuses a space on another broker instead of sending it to `main` (ADR-N-047) |
 | `JC_GATEWAY_ORG_DOMAIN` | `global.orgDomain` | the org-domain segment of every entity URN, checked on every write ([PF-42](../Requirements/platform.md)); required |
 | `JC_GATEWAY_PUBLIC_URL` | `https://{global.domain}` | makes `https://{host}/api/endpoint/{slug}` an accepted token audience next to the bare slug ([PF-45](../Requirements/platform.md)) |
 | `JC_OIDC_ISSUER` | `https://idm.{global.domain}/realms/{global.instanceSlug}` | the `iss` every token must carry |

@@ -37,7 +37,7 @@ dataspace/
 agentprofiles/
   {name}.yaml                           # kind: AgentProfile (AG-47)
 brokers/
-  {name}.yaml                           # kind: ContextBroker, one broker instance (PF-110, ADR-N-046)
+  {name}.yaml                           # kind: ContextBroker, one broker instance (PF-110, ADR-N-047)
 blueprints/
   {name}/blueprint.yaml                 # kind: Blueprint: version, riskClass, allowedRoles,
                                         # parameter schema, templates
@@ -246,7 +246,7 @@ Rules that make bundles portable: identity is `(group, kind, namespace, name)` a
 | `Mapping` | `projects/{p}/spaces/{s}/datamodels/mappings/` | `schema/kinds/Mapping.json` | Model Tools (validate, compile → `generated/*.blobl`); Bento via `Pipeline.spec.mappingRef` (DM-33…DM-42) |
 | `ServiceAccount` | `projects/{p}/access/serviceaccounts/` | `schema/kinds/ServiceAccount.json` | Keycloak client / Portal API key table (hashes only); Policy entities for grants (PF-34…PF-40) |
 | `Environment` | `environments/` (org level) | `schema/kinds/Environment.json` | Merged by every loader before validation; red lane (CC-73…CC-75) |
-| `ContextBroker` | `brokers/` (org level) | `schema/kinds/ContextBroker.json` | Portal reconciler: one Antares release, database and Keycloak client per broker; spaces name it by `spec.brokerRef` (PF-110, PF-111, ADR-N-046) |
+| `ContextBroker` | `brokers/` (org level) | `schema/kinds/ContextBroker.json` | Portal reconciler: one Antares release, database and Keycloak client per broker; spaces name it by `spec.brokerRef` (PF-110, PF-111, ADR-N-047) |
 | `Group` | `users/groups/` (org level) | `schema/kinds/Group.json` | Keycloak groups the reconciler manages, members pruned to the manifest (PF-62, PF-63) |
 | `Role` | `users/roles/` (org level) or `projects/{p}/roles/` (PF-68) | `schema/kinds/Role.json` | Portal permission check; `policies/roles.json` in the organization repository (PF-49, PF-51) |
 | `RoleBinding` | `users/assignments/` (org level) | `schema/kinds/RoleBinding.json` | Portal permission check; forge `CODEOWNERS` and team permissions (PF-51) |
@@ -522,7 +522,7 @@ itself: no field of the manifest can make the change smaller, so `classify`
 |---|---|
 | `ServiceAccount`, `Role`, `RoleBinding`, `Group`, `Policy`, `ScopeDefinition` | they hand out access, and a membership is the binding that names it (PF-52, PF-62) |
 | `Organization`, `Project` | they create the scope every other grant is written against |
-| `ContextBroker` | it deploys a broker with its own database, Keycloak client and share of the node, and decides where every space without a `brokerRef` lives (PF-110, ADR-N-046) |
+| `ContextBroker` | it deploys a broker with its own database, Keycloak client and share of the node, and decides where every space without a `brokerRef` lives (PF-110, ADR-N-047) |
 | `Environment` | one file decides the domain of every URN, the image every workload runs and where a `secretRef` is resolved, for a whole environment at once (CC-73, CC-75) |
 | `ContextSourceRegistration`, `SharedSpaceReference`, `DataSpaceParticipant`, `DataOffer`, `DataAgreement` | they reach another organization with the data of this one (MF-36, DS-17) |
 | `Subscription` | a standing egress: `spec.notification.endpoint.uri` is an address the platform posts to and `spec.notification.attributes`, empty meaning every granted attribute, says what it posts, for every matching entity, until somebody stops it |
