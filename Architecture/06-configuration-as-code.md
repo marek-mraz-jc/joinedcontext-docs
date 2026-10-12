@@ -520,6 +520,7 @@ itself: no field of the manifest can make the change smaller, so `classify`
 |---|---|
 | `ServiceAccount`, `Role`, `RoleBinding`, `Group`, `Policy`, `ScopeDefinition` | they hand out access, and a membership is the binding that names it (PF-52, PF-62) |
 | `Organization`, `Project` | they create the scope every other grant is written against |
+| `ContextBroker` | it deploys a broker with its own database, Keycloak client and share of the node, and decides where every space without a `brokerRef` lives (PF-110, ADR-N-046) |
 | `Environment` | one file decides the domain of every URN, the image every workload runs and where a `secretRef` is resolved, for a whole environment at once (CC-73, CC-75) |
 | `ContextSourceRegistration`, `SharedSpaceReference`, `DataSpaceParticipant`, `DataOffer`, `DataAgreement` | they reach another organization with the data of this one (MF-36, DS-17) |
 | `Subscription` | a standing egress: `spec.notification.endpoint.uri` is an address the platform posts to and `spec.notification.attributes`, empty meaning every granted attribute, says what it posts, for every matching entity, until somebody stops it |
