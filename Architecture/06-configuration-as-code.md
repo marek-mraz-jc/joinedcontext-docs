@@ -36,6 +36,8 @@ dataspace/
   participant.yaml                      # kind: DataSpaceParticipant, the organization's DID
 agentprofiles/
   {name}.yaml                           # kind: AgentProfile (AG-47)
+brokers/
+  {name}.yaml                           # kind: ContextBroker, one broker instance (PF-110, ADR-N-046)
 blueprints/
   {name}/blueprint.yaml                 # kind: Blueprint: version, riskClass, allowedRoles,
                                         # parameter schema, templates
@@ -242,6 +244,7 @@ Rules that make bundles portable: identity is `(group, kind, namespace, name)` a
 | `Mapping` | `projects/{p}/spaces/{s}/datamodels/mappings/` | `schema/kinds/Mapping.json` | Model Tools (validate, compile → `generated/*.blobl`); Bento via `Pipeline.spec.mappingRef` (DM-33…DM-42) |
 | `ServiceAccount` | `projects/{p}/access/serviceaccounts/` | `schema/kinds/ServiceAccount.json` | Keycloak client / Portal API key table (hashes only); Policy entities for grants (PF-34…PF-40) |
 | `Environment` | `environments/` (org level) | `schema/kinds/Environment.json` | Merged by every loader before validation; red lane (CC-73…CC-75) |
+| `ContextBroker` | `brokers/` (org level) | `schema/kinds/ContextBroker.json` | Portal reconciler: one Antares release, database and Keycloak client per broker; spaces name it by `spec.brokerRef` (PF-110, PF-111, ADR-N-046) |
 | `Group` | `users/groups/` (org level) | `schema/kinds/Group.json` | Keycloak groups the reconciler manages, members pruned to the manifest (PF-62, PF-63) |
 | `Role` | `users/roles/` (org level) or `projects/{p}/roles/` (PF-68) | `schema/kinds/Role.json` | Portal permission check; `policies/roles.json` in the organization repository (PF-49, PF-51) |
 | `RoleBinding` | `users/assignments/` (org level) | `schema/kinds/RoleBinding.json` | Portal permission check; forge `CODEOWNERS` and team permissions (PF-51) |
@@ -438,8 +441,8 @@ In layout 2 every loader starts by assembling. It reads the organization checkou
 To resolve inter-resource dependencies without complex dependency DAG graphs, `jcctl` reconciles resources in six discrete synchronization waves (research verdict P4: ordering by waves and health, never a free-form DAG):
 
 ```text
-Wave 0: Organizations, Projects, DataSpaceParticipant (repository roots)
-        | (Health check: project namespaces, quotas and the participant DID exist)
+Wave 0: Organizations, Projects, DataSpaceParticipant, ContextBrokers (repository roots)
+        | (Health check: project namespaces, quotas, the participant DID and every broker exist)
         v
 Wave 1: ContextSpaces, DataModels, Identity Groups & Roles
         | (Health check: Tenants ready, LinkML compiled)
@@ -464,7 +467,7 @@ that targets it and a `ScopeDefinition` exists before the `Policy` that names it
 
 | Wave | Kinds, in convergence order |
 |---|---|
-| 0 | `Organization`, `Group`, `Role`, `RoleBinding`, `Project`, `DataSpaceParticipant` |
+| 0 | `Organization`, `Group`, `Role`, `RoleBinding`, `Project`, `DataSpaceParticipant`, `AgentProfile`, `ContextBroker` |
 | 1 | `ContextSpace`, `DataModel`, `Mapping`, `ServiceAccount` |
 | 2 | `ScopeDefinition`, `Policy` |
 | 3 | `CkanInstance`, `Endpoint` |
