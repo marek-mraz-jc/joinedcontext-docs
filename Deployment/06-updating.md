@@ -119,10 +119,37 @@ Starting with version `v0.9`, manifest `metadata.title` (as well as user-authore
 - **Deliberate Translations:** Where formal multilingual presentation is needed (such as an open-data portal distribution), manifests may define an optional `translations` map beside `title` (for example, `translations: { en: "...", sk: "..." }`). This map is never shown in default Portal creation forms.
 - **Text Rendering:** Titles are user-provided text. They are strictly rendered as text, never evaluated as markup.
 
+## 5. Update an Installation to a Release
+
+A release is a tag `v<major>.<minor>.<patch>` of `joinedcontext-deployment` that carries its notes, `releases/<version>.md`. `just release-notes <version>` writes them, and nobody types them. The front matter lists every image as `repository:tag@digest`, read from `components/*/images.yaml`, and the version-specific steps queued in `releases/next.yaml`. The body lists the subjects of the commits since the previous tag. Commit the file, then tag that commit.
+
+One command takes an installation to a release:
+
+```bash
+# What would change, the version jump and the steps. Changes nothing.
+just upgrade production v1.2.0 --check
+
+# The update.
+just upgrade production v1.2.0
+```
+
+In order, stopping at the first refusal:
+
+1. The tag exists and carries its notes.
+2. The cluster answers, and the command reads the version it runs from the ConfigMap `jc-release`. Every node has at least `--min-free-gib` free (default 5).
+3. Each CloudNativePG cluster takes a `Backup` now (the method its `spec.backup` configures), and the command waits until the backup completes. A cluster with no backup configured refuses the run. Pass `--i-have-a-backup` only when you hold one yourself; the command logs who passed it and when.
+4. The command checks the release out into a temporary git worktree with your `deployment/` copied in, so your checkout never moves, and shows `helmfile diff`.
+5. `helmfile sync` runs, the command waits for the rollouts, runs the release's steps in order, then runs `scripts/smoke.sh` against the installation's domain (from the `apisix-edge` Certificate, or `--domain`).
+6. Green: the command writes the version into `jc-release`. Red: it rolls back every helm release that advanced to its previous revision and leaves a release new in this version installed. It then names the backup to restore if the old version refuses the migrated schema ([07-backup-restore](07-backup-restore.md) §3 step 2). It deletes no data.
+
+The `dev` cluster is applied by its deployer with `just dev-apply` and takes `--check` only.
+
+CIVITAS/CORE updates an installation by hand (`civitas-core-docs_v2/Deployment/09-updating.md`): a Velero backup taken by hand, `git pull`, `global.yaml` reviewed by eye, then `helmfile diff` and `helmfile apply`. Its "Version Specific Update Process" section is empty and it has no rollback. Here the backup is taken and checked before anything changes, a release's steps travel with its tag, and a red smoke test rolls the releases back.
+
 ## Related
 
 - [00-intro](00-intro.md) — which component is which before upgrading them in order.
-- [07-backup-restore](07-backup-restore.md) — the backup to take before step 2.
+- [07-backup-restore](07-backup-restore.md) — the backup to take before step 2, and the restore a rollback may need.
 - [03-configuration](03-configuration.md) — the values an upgrade may change.
 - [09-troubleshooting](09-troubleshooting.md) — what to read when a rollout does not become Ready.
 - [01-runbooks](../Operations/01-runbooks.md) — what to do when it breaks.
