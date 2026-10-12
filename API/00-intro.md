@@ -131,6 +131,7 @@ A problem type is one of these slugs; `ProblemDetails::new` with any other fails
 | `precondition-failed` | 412 | Read the entity again and send its current version in `If-Match`. |
 | `payload-too-large` | 413 | Send less at once: split the request or the file. |
 | `unsupported-media-type` | 415 | Send the body as `application/json` or `application/ld+json`. |
+| `upgrade-required` | 426 | This address is a WebSocket: open it with the subprotocol `ngsi-ld-ws` and send an `x-subscribe` message; the answer names an example and the guide. |
 | `too-many-requests` | 429 | Wait the seconds `Retry-After` names, then try again. |
 | `daily-budget` | 429 | Today's allowance is used up; try again tomorrow or ask an administrator to raise it. |
 | `egress-budget-spent` | 429 | This run's outbound allowance is used up; start a new run or ask an administrator to raise it. |

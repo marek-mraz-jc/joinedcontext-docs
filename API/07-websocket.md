@@ -26,6 +26,8 @@ Decided (worker-7, owner may override): the subprotocol form, because it keeps t
 
 A token in the query string is refused with `400`. A browser page opens the socket only from an origin the installation allows; any other `Origin` answers `403` (a client without an `Origin` header, such as websocat or Python, is not affected). Without a valid token, an Endpoint that is not public answers the upgrade `401` with the same `WWW-Authenticate` header as its REST surface.
 
+A plain `GET` of the address without an upgrade (a browser tab, `curl`) answers `426 Upgrade Required` with `Upgrade: websocket` and `Link: <https://{host}/docs/API/07-websocket>; rel="help"`: an HTML page for a browser (`Accept: text/html`) and a problem+json (`upgrade-required`) otherwise, naming the address, the subprotocol, whether a token is needed, one `x-subscribe` message for a type the Endpoint serves and a websocat line (T-4064). The Endpoint's DCAT record lists the WebSocket distribution with a one-sentence `dct:description` in the Endpoint's languages, `foaf:page` and `dct:conformsTo` both naming this page.
+
 The connection's identity is fixed when it opens. It ends after 300 seconds, the lifetime of an access token. Reconnect with a fresh token and resume (§4).
 
 ## 2. Messages
