@@ -3591,6 +3591,53 @@ GET /api/v1/organization/brokers                                   → 200
 - Who may read: organization administrators only; anybody else is `403`. No address or token is
   part of the answer.
 
+## 44. Moving a space to another broker (T-4000, PF-115, ADR-N-046 §2.6)
+
+One job moves one space, with its history, from the broker it lives on to another `ContextBroker`
+of the organization. Editing `brokerRef` by hand is refused for a space that holds entities
+(§43's admission); this is the way.
+
+```text
+POST /api/v1/projects/{project}/spaces/{space}/move                → 202
+GET  /api/v1/projects/{project}/spaces/{space}/move                → 200
+```
+
+```json
+{"to": "canary"}
+```
+
+```json
+{"space": "ovzdusie/air", "from": "main", "to": "canary", "state": "done", "reason": null,
+ "source": {"entities": 14232, "attrInstances": 90311, "sha256": "4f0c…"},
+ "target": {"entities": 14232, "attrInstances": 90311, "sha256": "4f0c…"},
+ "startedAt": "2026-10-12T08:00:00Z", "endedAt": "2026-10-12T08:03:12Z"}
+```
+
+- The job, in order: commits the annotation `joinedcontext.com/moving-to: {to}` on the space's
+  `ContextSpace` as the Portal (state `holding`); waits until the gateway's scrape reports
+  `jc_gateway_space_held{space="{tenant}"} 1`, at most ten minutes; streams the source broker's
+  `GET /q/tenants/{tenant}/export` into the target's `POST /q/tenants/{tenant}/import`
+  (`copying`); reads `GET /q/tenants/{tenant}/digest` on both (`comparing`); then commits
+  `spec.brokerRef: {to}` and removes the annotation in one commit (`switching`), and is `done`.
+- `failed` with `reason` when any step does not finish: the annotation is removed so the space
+  is read-write again on its source broker, and a target that took part of the copy is purged
+  (it held nothing before: the import refuses a tenant that does). A digest that differs fails
+  with both digests in the answer.
+- The source keeps its copy of the tenant after a move. Nothing routes to it; an operator purges
+  it with the broker's `DELETE /q/tenants/{tenant}` once the move is checked.
+- A broker refuses the export of a tenant holding Subscriptions, registrations or snapshots
+  (`409`, Antares ADR-0030 §5): the job fails with the broker's counts, and the space stays.
+- `400` for a `to` that names no `ContextBroker`, or the broker the space already lives on.
+  `409` while another move of the same space runs. `503` when the Portal has no address for
+  either broker, no broker admin token, no gateway address or no forge.
+- `GET …/move` answers the last move of the space since the Portal started, `404` when there was
+  none. A Portal that restarts mid-move forgets the job; the annotation stays, the space stays
+  read-only, and starting the move again to the same broker resumes from the hold. A target left
+  holding part of a copy refuses the import, and the job fails saying so.
+- Who may move: organization administrators only; anybody else is `403`. Each start and end is
+  an activity event `space.moved` naming the administrator, the brokers and the outcome. No
+  address or token is part of an answer.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
