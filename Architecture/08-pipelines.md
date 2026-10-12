@@ -698,7 +698,7 @@ names are used wherever they exist, so an author reading the generated `bento.ya
 | `spec.type` | Bento input | Rendered from |
 |---|---|---|
 | `mqtt` | `mqtt` | `urls`, `topics`, `qos`, `cleanSession`, `username`, `passwordRef`; `client_id` is `jc-{project}-{pipeline}` |
-| `http` | `http_client` | `url`, `verb`, `headers`, `authorization`, `timeout`; how often it is fetched stays with the pipeline's class and `spec.period` (section 1) |
+| `http` | `http_client` | `url`, `verb`, `headers`, `authorization`, `timeout`; how often it is fetched stays with the pipeline's class and `spec.period` (section 1); with `archive`, the ranged zip read below (PL-72) |
 | `websocket` | `websocket` | `url`, `openMessage` |
 | `gtfs-rt` | `http_client` plus a `protobuf` processor | `url` and `feed`; the GTFS-realtime descriptor set ships in the runner image, so no pipeline carries one |
 | any other input of the runner | that input, verbatim | `spec.input`, the input's own document (PL-50, below) |
@@ -748,6 +748,42 @@ where it was: in the secret store, resolved by the reconciler, never in the mani
 MF-35). An API key in a vendor header is the common shape of an open-data feed, and without this
 field such a feed could only be declared by writing the key into `headers` as a value, which is
 exactly what MF-35 forbids.
+
+### A zip archive: named members only (PL-72)
+
+A static GTFS feed is one zip: Helsinki's `hsl.zip` is 79 MB and inflates to 1.25 GB, a
+gigabyte of it `stop_times.txt`. Bento's `unarchive` inflates every member into memory, so a
+pipeline that wants `stops.txt` from it would hold the gigabyte it never reads, on the one runner
+every project shares. An `http` connection names the members it wants instead:
+
+```yaml
+  http:
+    url: "https://infopalvelut.storage.hsldev.com/gtfs/hsl.zip"
+    archive:
+      format: zip                 # the only format
+      members: [agency.txt, routes.txt, stops.txt]
+      maxBytes: 33554432          # per member, packed and unpacked; 32 MiB when absent, at most 256 MiB
+```
+
+The runner then reads the archive by HTTP `Range`, never whole: the last 64 KiB (the end of
+central directory record and the directory), then each named member's local header and
+compressed bytes, one request per member. Every member arrives as one message holding the
+member's bytes, with metadata `archive_filename` its name, the name Bento's own `unarchive`
+gives, so the author's processors branch on it the same way (`unarchive: { format: csv }` turns
+a member into one message per row). The poll is refused, with the reason in the pipeline's log,
+when the server ignores `Range`, the directory does not fit the 64 KiB read or lists another
+number of entries than the archive says, a named member is missing, a member is larger than
+`maxBytes` packed or unpacked, stored with a method other than none or deflate, or inflates to
+another size than the directory declares. A Zip64 archive (a member or offset past 4 GiB) is
+refused for the same reason.
+
+`members` holds at most 20 names of letters, digits, `.`, `_`, `-` and `/`, so a name never
+becomes code in the rendered mapping; the connection's `verb` is `GET`, and its headers, its
+`authorization` and its TLS block apply to every request. The bound is what the directory
+declares: the inflater itself has no output limit, so a server that lies about a member's size
+can make the runner inflate more than `maxBytes` before the size check refuses it. That is the
+trust any `http` connection already places in its server, whose response body the runner reads
+whole.
 
 ### Any input the runner ships (PL-50)
 
