@@ -140,7 +140,7 @@ Decided (worker-3, owner may override): quarantine is a mark plus a narrower per
 
 - The gateway, the runner's stage and the sweep count every check in `jc_quality_checks_total{space,type,rule,outcome}` with `outcome` = `pass`, `reject`, `flag` or `quarantine` (DM-93).
 - The Portal's space quality page (API/01 §27, extended) shows per type and rule the checks and pass rate over 24 hours and 7 days, the stale and quarantined counts, the latest rejected writes by rule and attribute without values, and the retention deletions, to whoever may read the space (DM-94).
-- `jcctl publish` adds W3C DQV measurements to each dataset of the DCAT-AP record: `dqv:hasQualityMeasurement` for the pass rate and for the freshness (age of the newest `observedAt`), and the CKAN dataset shows them (DM-95).
+- `jcctl publish` adds W3C DQV measurements to each dataset of the DCAT-AP record: `dqv:hasQualityMeasurement` for the space's pass rate over seven days and for the freshness (age of the newest change when the daily quality run read the space), and the CKAN dataset shows them as the extras `quality_pass_rate` and `quality_freshness_seconds`, since ckanext-dcat maps only `dqv:hasQualityAnnotation` (DM-95).
 
 ### 2.8 Deletion is data loss
 

@@ -158,7 +158,7 @@ The decision and its reasons are in [ADR-N-046](../Decisions/adr-n-046-data-life
 - **DM-92** [P][S] — Rule evaluation on the write path MUST use no network and no store access, MUST compile every pattern with a linear-time engine under a 64 KiB size limit, and MUST refuse a space manifest with more than 64 quality rules.
 - **DM-93** — The gateway, the pipeline's validation stage and the sweep MUST count every check in `jc_quality_checks_total`, labelled by space, type, rule and outcome, the outcome being `pass`, `reject`, `flag` or `quarantine`.
 - **DM-94** [H][S] — The space quality page MUST show, to whoever may read the space, per type and rule the checks and the pass rate over 24 hours and 7 days, the stale and quarantined counts, the latest rejected writes by rule and attribute without values, and the retention deletions (API/01 §27).
-- **DM-95** — `jcctl publish` MUST add to each dataset of the DCAT-AP record a `dqv:hasQualityMeasurement` for the pass rate and one for the freshness (age of the newest `observedAt`), and the CKAN dataset MUST show both.
+- **DM-95** — `jcctl publish` MUST add to each dataset of the DCAT-AP record a `dqv:hasQualityMeasurement` for the pass rate of its space's quality checks over seven days and one for the freshness (the age of the newest change when the daily quality run read the space, API/01 §27), and the CKAN dataset MUST show both.
 - **DM-96** [S] — Every automatic removal of context data MUST be declared in a manifest of the space or of a pipeline (PL-64), MUST apply only to the space that declares it, and MUST be logged per sweep with its counts and never with values.
 
 ## Traceability
