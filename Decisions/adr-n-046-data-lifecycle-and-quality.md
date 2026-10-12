@@ -64,11 +64,11 @@ spec:
 - A type without a rule, and a space without `spec.retention`, loses nothing to retention. Deletion is opt-in per space and per type (DM-81).
 - Decided (worker-3, owner may override): the rule lives on the Space, because retention is an operational choice of the place that holds the data. The same organization model (DM-75) is imported by several spaces that keep data for different lengths; a LinkML annotation on the class would force one length on all of them. A new kind was rejected as one more file for two numbers.
 
-### 2.2 Current state expires through NGSI-LD `expiresAt`, stamped by the broker
+### 2.2 Current state expires in the broker, by `modifiedAt`
 
-The Portal's reconciler pushes each space's rules to the broker (`PUT /q/retention/{tenant}`, admin token, like the views and rule documents of ADR-N-042). On every create, update, upsert and append of a ruled type that carries no `expiresAt` of its own, the broker stamps `expiresAt` = time of the write + `current`, so a bus that keeps reporting keeps living and one that stops disappears `current` after its last report. An `expiresAt` the writer sends wins (DM-82). The broker's existing expiry removes the entity; nothing new deletes current state.
+The Portal's reconciler pushes each space's rules to the broker (`PUT /q/retention/{tenant}`, admin token, like the views and rule documents of ADR-N-042). Once a minute the broker removes, per tenant and ruled type, the entities whose `modifiedAt` is older than `current` and that carry no `expiresAt` of their own, so a bus that keeps reporting keeps living and one that stops disappears `current` after its last report (at most a minute later). An `expiresAt` the writer sends wins and the broker's existing expiry handles it (DM-82).
 
-Decided (worker-3, owner may override): the broker stamps, not the pipeline and not the gateway, because every write path ends in the broker (Endpoints, pipelines through Endpoints, the Portal), and a stamp made anywhere earlier misses the path that forgot it. A pipeline that knows better (an alert's end of validity) writes its own `expiresAt`.
+Decided (worker-3, owner may override): the broker removes, not the pipeline and not the gateway, because every write path ends in the broker (Endpoints, pipelines through Endpoints, the Portal), and a stamp made anywhere earlier misses the path that forgot it. Decided (worker-3, T-3900): a sweep by `modifiedAt` rather than an `expiresAt` stamped at write time, because one bounded maintenance query covers every write path (create, update, upsert, append, batch, merge) where a stamp needs a hook in each, and the price is a lag of at most one sweep. A pipeline that knows better (an alert's end of validity) writes its own `expiresAt`.
 
 PL-64 stays: it is a pipeline's hourly sweep in hours and days, run under the pipeline's own account. A space that wants minutes uses `spec.retention`; T-3904 moves Helsinki's vehicles from the `vehicles-reaper` pipeline to a space rule.
 
@@ -154,6 +154,7 @@ Every automatic removal, current state or history, is declared in a manifest of 
 
 - **Retention on the DataModel class** (a LinkML annotation): one length for every space importing the model; rejected (2.1).
 - **A new `RetentionPolicy` kind**: one more file and reconciler for a list of two durations; rejected.
+- **The broker stamps `expiresAt` at write time**: needs a hook in every write path of both stores; rejected for the sweep by `modifiedAt` (2.2).
 - **The gateway stamps `expiresAt`**: misses writes that do not cross the gateway's write path (the Portal's own writes, a future internal writer); rejected for the broker (2.2).
 - **Quarantine as a separate tenant**: a delete and a create per entity, history split in two; rejected (2.6).
 - **Great Expectations or Soda as the rule engine**: both check tables in batch after the fact (Python, a warehouse connection); the platform needs a verdict on each NGSI-LD write in the gateway and the runner. Their check kinds (ranges, patterns, freshness) shaped the three kinds here.
@@ -161,7 +162,7 @@ Every automatic removal, current state or history, is declared in a manifest of 
 
 ## 5. Consequences
 
-- T-3900 (Antares): a retention table per tenant and type under `/q/retention/{tenant}`, the `expiresAt` stamp, the history sweep and its metric.
+- T-3900 (Antares): a retention table per tenant and type under `/q/retention/{tenant}`, the current-state sweep by `modifiedAt`, the history sweep and its metric.
 - T-3901 (jc-core, Portal): `spec.retention` with its form, confirmation and the reconciler push.
 - T-3902 (Portal compiler, gateway, runner stage, sweep): `spec.quality`, the model constraints on API writes (DM-27), the three outcomes, the metric.
 - T-3903 (Portal, jcctl): the quality page and the DQV measurements.
@@ -170,7 +171,7 @@ Every automatic removal, current state or history, is declared in a manifest of 
 
 ## 6. Requirements
 
-- DM-81…DM-95: retention, the stamp, the history sweep, the rules, the outcomes, the sweep, the bounds, the metric, the page, DQV, and deletion as declared data loss.
+- DM-81…DM-95: retention, the current-state sweep, the history sweep, the rules, the outcomes, the sweep, the bounds, the metric, the page, DQV, and deletion as declared data loss.
 
 ## Related
 
