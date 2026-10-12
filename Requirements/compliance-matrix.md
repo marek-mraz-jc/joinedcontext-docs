@@ -824,7 +824,7 @@ Generated 2026-10-12 from: `docs` bc9c0a6, `conformance` 2c6f70d, `deployment` 9
 | **MIM3-R7** | [H] [P] | open |  |  |
 | **MIM3-R8** | [H] | open |  |  |
 | **MIM3-R9** | [P] [A] | open |  |  |
-| **MIM3-R10** | [P] [A] | built |  | `joinedcontext-platform/crates/context-gateway/src/federation/odrl_compiler.rs`, `joinedcontext-platform/crates/context-gateway/src/handlers/access_odrl.rs` |
+| **MIM3-R10** | [P] [A] | built |  | `joinedcontext-platform/crates/context-gateway/src/handlers/view_access/odrl.rs`, `joinedcontext-portal/src/reconciler/agreements.rs` |
 | **MIM3-R11** | [A] | open |  |  |
 | **MIM3-R12** | [P] [A] | open |  |  |
 | **MIM4-R1** | [H] | open |  |  |
@@ -1192,7 +1192,7 @@ Generated 2026-10-12 from: `docs` bc9c0a6, `conformance` 2c6f70d, `deployment` 9
 | **R53** |  | open |  |  |
 | **R54** |  | open |  |  |
 | **R55** |  | open |  |  |
-| **R56** |  | built |  | `joinedcontext-platform/crates/context-gateway/src/handlers/access_ucast.rs` |
+| **R56** |  | built |  | `joinedcontext-platform/crates/context-gateway/src/handlers/view_access.rs` |
 | **R57** |  | open |  |  |
 | **R58** |  | open |  |  |
 | **R59** |  | open |  |  |
