@@ -1273,7 +1273,8 @@ reaches a third-party host itself and Model Tools needs no ingress:
 
 ```text
 GET  /api/v1/tools/sdm-catalog   the Smart Data Models catalogue index: subjects, their models
-                                 and each model's attribute names (?refresh=true refills the cache)
+                                 and each model's attribute names (?refresh=true refills the cache,
+                                 ?subject=dataModel.X fills that subject's attribute names first)
 POST /api/v1/tools/generate      LinkML source  → JSON Schema, @context, SHACL, OWL, example
 POST /api/v1/tools/import-sdm    a Smart Data Models model id → the same artifacts as LinkML
 POST /api/v1/tools/infer-schema  a sample file (multipart, ≤ 10 MiB: CSV, XLSX, JSON, PDF)
@@ -1419,12 +1420,15 @@ The editor's operations (DM-13) are `addClass`, `removeClass`, `renameClass`, `s
   daily; `?refresh=true` asks for a refresh now, and an index Model Tools could not refresh is
   answered from the cache with `stale: true` rather than withheld (DM-12). The index carries no
   URLs: a model is named by its catalogue identifier, and fetching it is `import-sdm`.
-- `refresh` is the only parameter the route takes, and the only thing a caller may steer: which
-  catalogue is fetched is Model Tools' own allowlist (DM-10), never the request
-  (`joinedcontext-portal/src/tools/model_tools.rs`). The index is passed through as Model Tools
-  wrote it, so `attributes` is there for every model whose schema that build read and `[]` for the
-  rest; the wizard narrows by subject and searches by attribute in the browser, over the one index
-  it already holds.
+- `refresh` and `subject` are the two parameters the route takes, and the only things a caller may
+  steer: which catalogue is fetched is Model Tools' own allowlist (DM-10), never the request
+  (`joinedcontext-portal/src/tools/model_tools.rs`). `subject` (comma-separated, at most 8) names
+  subjects of the index whose model attribute names Model Tools fills before it answers, once per
+  replica; a name the index does not list fetches nothing. The CSV upload (T-3840) fills the city
+  subjects it ranks a file against this way. The index is passed through as Model Tools wrote it,
+  so `attributes` is there for every model whose schema that replica read and `[]` for the rest;
+  the wizard narrows by subject and searches by attribute in the browser, over the one index it
+  already holds.
 - `linkml` is the LinkML source itself. `import-sdm` answers with it, because an import produces
   the document the editor then edits, and its `annotations` carry `spec.source.repository`,
   `spec.source.path` and `spec.source.commit` so the import is reproducible and its provenance
