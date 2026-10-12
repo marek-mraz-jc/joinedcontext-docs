@@ -3634,9 +3634,9 @@ GET  /api/v1/projects/{project}/spaces/{space}/move                → 200
   none. A Portal that restarts mid-move forgets the job; the annotation stays, the space stays
   read-only, and starting the move again to the same broker resumes from the hold. A target left
   holding part of a copy refuses the import, and the job fails saying so.
-- Who may move: organization administrators only; anybody else is `403`. Each start and end is
-  an activity event `space.moved` naming the administrator, the brokers and the outcome. No
-  address or token is part of an answer.
+- Who may move: organization administrators only; anybody else is `403`. The job's commits are
+  the Portal's and name the administrator who started it. No address or token is part of an
+  answer.
 
 ## Related
 
