@@ -739,10 +739,21 @@ For `spec.federation.identity`:
 
 - **`serviceAccount`** — the direct-read mode where the hub broker reads member tenants directly
   within the same project.
-- **`caller`** — requires RFC 8693 token exchange to rewrite the caller's bearer token for the
-  member space. Until token exchange is implemented, any request over a space with a registration
-  specifying `caller` identity is refused by the gateway with `501 Not Implemented` and an
-  RFC 7807 problem document, and nothing is forwarded.
+- **`caller`** — the member decides with the caller's own identity (PF-113). For a read over a
+  space with such a registration the gateway exchanges the token the caller presented (RFC 8693,
+  Keycloak standard token exchange V2, as its own client) for one whose only audiences are the
+  broker clients of the brokers those members live on (PF-114), and sends it as `Authorization`
+  on this one hop to the hub's broker; the registration carries
+  `{"key": "Authorization", "value": "urn:ngsi-ld:request"}`, so the hub's broker hands it to the
+  member's Endpoint and nowhere else. The member's gateway admits it on an Endpoint whose space
+  lives on a broker the token names, and that Endpoint's Policy decides on the person, so an
+  attribute the member hides stays hidden. The caller's original token still never reaches a
+  broker (K36), and the exchanged one is never logged. An exchange the realm refuses answers
+  `502`, a realm that does not answer `503`, both with the problem type
+  `federation-exchange-failed`; nothing is then forwarded, and the gateway never falls back to
+  its own account or to the caller's original token. A member registered by an address outside
+  this platform keeps `serviceAccount` or an `authSecretRef`: no exchanged token leaves the
+  platform.
 
 ### The federation graph (UI-27, UI-28)
 

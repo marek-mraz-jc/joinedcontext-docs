@@ -258,25 +258,44 @@ spec:
     - targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:ep-air-write
 ```
 
-It renders as a Bento `switch` output (Bento 1.22.0, the runner's pin). Each route is a case whose `check` is its `when` and whose output carries the route's steps as its own `processors`. The default lane is the last case and has no `check`:
+The runner writes records in batches of up to 1000 archived into one JSON array, so it picks the route per record before the batching (Bento 1.22.0, the runner's pin). After `spec.steps` the records are split one per message; a `mutation` sets `meta jc_route` to the name of the first route whose `when` holds, or to nothing; a `switch` processor runs each route's steps on its records; `group_by_value` keeps every batch to one route; and a `switch` output writes each batch through its route's outputs, the default lane last:
 
 ```yaml
+pipeline:
+  processors:
+    - label: step_0
+      mapping: root = this
+    - mapping: root = if this.type() == "array" { this } else { [this] }
+    - unarchive: { format: json_array }
+    - label: route_pick
+      mutation: |
+        meta jc_route = if (
+        this.temperature.value > 30
+        ) { "hot" } else { "" }
+    - label: route_steps
+      switch:
+        - check: meta("jc_route") == "hot"
+          processors:
+            - label: route_0_0
+              mapping: root = this.merge({"alertLevel": {"type": "Property", "value": "high"}})
+    - group_by_value: { value: '${! meta("jc_route") }' }
+    - <the batching: one array of up to 1000 records per message>
 output:
+  label: routes
   switch:
     strict_mode: true
     retry_until_success: false
     cases:
-      - check: this.temperature.value > 30
+      - check: meta("jc_route") == "hot"
         output:
-          label: route_hot
-          processors:
-            - label: route_hot_0
-              mapping: root = this.merge({"alertLevel": {"type": "Property", "value": "high"}})
+          label: route_0
           <the upsert through ep-alerts-write, PL-47>
-      - output: <the upsert through ep-air-write>
+      - output:
+          label: output
+          <the upsert through ep-air-write>
 ```
 
-A route with two outputs renders them as a `fan_out_fail_fast` broker, as `spec.outputs` does. `retry_until_success: false` hands a failed write back to the input as a nack, the same fail-fast rule as the brokers above (T-2983), and `strict_mode: true` makes a message that reaches no case an error instead of a silent drop; the default case makes that unreachable.
+A route's components are labelled by its place, `route_{i}` and `route_{i}_{j}`, because a Bento label takes no hyphen and a route name may hold one. A route with two outputs renders them as a `fan_out_fail_fast` broker, as `spec.outputs` does. `retry_until_success: false` hands a failed write back to the input as a nack, the same fail-fast rule as the brokers above (T-2983), and `strict_mode: true` makes a batch that reaches no case an error instead of a silent drop; the default case makes that unreachable. The validation stage (PL-60) stays before the batch split, so it checks each record once, when every output writes into one space.
 
 The rules, checked by jc-core before a Change is proposed:
 
@@ -1005,7 +1024,7 @@ flowchart LR
   sink -->|drop on error| portal[(Portal: rejected list, runs, log)]
 ```
 
-The output is a `switch`: a record the stage refused goes only to the outcome sink, a valid one fans out to the gateway upsert and the sink. The sink is an `http_client` to the Portal's internal outcome route with the runner's own client credential, wrapped in `drop_on` so a Portal that does not answer loses a log line and never holds back a write. Each line carries the pipeline, the run, the record id, the step, the outcome (`sent`, `rejected`, `failed`) and a message; a refused record also carries the record, which the Portal masks before it stores it. A run is one tick of the pipeline's clock, or one UTC hour for a source that never ends. A clocked stream also reports each tick to the same route before it reads, as a report with no records, so every pass is a run: one that found nothing new, or deleted through its own step as a reaper does, shows with its counts at zero instead of looking like a pipeline that stopped (T-3001). The report runs in a `branch` whose failure a `catch` clears, so a Portal that does not answer never costs the tick its read, and the runner's counters leave the report out like the sink.
+The output is a `switch`: a record the stage refused goes only to the outcome sink, a valid one fans out to the gateway upsert and the sink. The sink is an `http_client` to the Portal's internal outcome route with the runner's own client credential, behind a `fallback` to `drop`, so a Portal that does not answer loses a log line and never holds back a write. Bento's `drop_on` would do the same but sends one message at a time and waits for each answer, which held a stream of single records, such as the HSL positions, to one round trip per record until its MQTT input backed up and lost the connection (T-4036). Each line carries the pipeline, the run, the record id, the step, the outcome (`sent`, `rejected`, `failed`) and a message; a refused record also carries the record, which the Portal masks before it stores it. A run is one tick of the pipeline's clock, or one UTC hour for a source that never ends. A clocked stream also reports each tick to the same route before it reads, as a report with no records, so every pass is a run: one that found nothing new, or deleted through its own step as a reaper does, shows with its counts at zero instead of looking like a pipeline that stopped (T-3001). The report runs in a `branch` whose failure a `catch` clears, so a Portal that does not answer never costs the tick its read, and the runner's counters leave the report out like the sink.
 
 The Portal keeps the newest 1000 rejected records and the newest 5000 log lines per pipeline, and the counts per run. `GET /api/v1/projects/{project}/pipelines/{name}/rejected` and `GET …/runs` answer them with read on the pipeline, each rejected record naming the `run` whose log holds its line, so the list opens that run (T-3252); each run also counts what its written records did: `created` for an id the pipeline never wrote before, `updated` for a record whose hash (xxhash64 of the record as JSON, which the outcome sink sends beside the ids) differs from the last one kept for that entity, `unchanged` for the same hash, `null` all three for a stream rendered before the sink sent hashes (T-3304); the runs page shows each run's duration (first to last outcome), its written count against the run before, and flags a run that wrote nothing after one that wrote (T-3260); "Retry after fix", which needs `propose` on `Pipeline` because it writes, replays the kept records once through the pipeline's current stream on the runner (the §7 harness with the real output): a record that passes now is written, one that still fails comes back with its rule.
 

@@ -114,7 +114,7 @@ spec:
 
 A rule's `outcome` overrides the default. An attribute the entity does not carry passes every rule but the model's `required`.
 
-A rule's `name` is a DNS-1123 label (at most 63 lowercase letters, digits and `-`), unique in the space, because it labels the metric and names the rule in a refusal. `entityType` is a class of the space's model and `attribute` one of its slots. A `range` rule sets `min`, `max` or both (`min` ≤ `max`) and nothing else; an `area` rule sets `bbox` as four numbers inside WGS 84 with min ≤ max on each axis; a `freshness` rule sets `maxAhead`, `maxAge` or both, durations `PnDTnHnMnS` from one second to 3650 days. `outcome` is `reject`, `flag` or `quarantine`; on a `freshness` rule with both durations it applies to both.
+A rule's `name` is a DNS-1123 label (at most 63 lowercase letters, digits and `-`), unique in the space, because it labels the metric and names the rule in a refusal. `entityType` is a class of the space's model and `attribute` one of its slots. A `range` rule sets `min`, `max` or both (`min` ≤ `max`) and nothing else; an `area` rule sets `bbox` as four numbers inside WGS 84 with min ≤ max on each axis; a `freshness` rule sets `maxAhead`, `maxAge` or both, durations `PnDTnHnMnS` from one second to 3650 days. `outcome` is `reject`, `flag` or `quarantine`; a rule with a `maxAge` names `quarantine` or none, because the sweep finds a stale entity after its write and has nothing to refuse or flag, so on a `freshness` rule with both durations a named `quarantine` applies to both and no outcome leaves each its default.
 
 ### 2.5 Where the rules run
 
@@ -125,6 +125,8 @@ A rule's `name` is a DNS-1123 label (at most 63 lowercase letters, digits and `-
 Decided (worker-7, owner may override): the broker runs the sweep, because the Portal's client holds no write grant on a space and, once an Entity is quarantined, no permit it could hold shows it; options: give the Portal's client a write grant on every space (wider than it needs), or the broker job (chosen). A `maxAge` rule's sweep outcome is always `quarantine`: a stored Entity cannot be rejected, and a flag on a stale attribute says nothing its `observedAt` does not.
 
 One compiler in the Portal turns model and rules into the artifact both the stage and the gateway read, so a person, the runner and the gateway reach the same verdict on the same entity (PL-59's rule, extended).
+
+Decided (worker-3, owner may override, 2026-10-12, T-3902): the space's rules are judged by one Rust evaluator, `jc_core::quality`, which the gateway calls on every write and the Portal calls for the rejected list; the Portal compiles the rejecting rules into the stage's Bloblang, and the record the stage refuses is judged again by that evaluator before it is listed. The gateway reads the rules from the space manifest it already loads, so no second artifact carries them. The model's own constraints on the write path (DM-86) follow in T-4011, which moves the Portal's model check into the platform. The `maxAge` sweep runs in the broker's maintenance job beside the retention sweep (T-4018): the Portal's own client has no write grant on a space and cannot see an entity once it is quarantined.
 
 Evaluation is bounded: at most 64 rules per space, patterns compiled with a linear-time engine under a 64 KiB size limit, no network and no store access on the write path (DM-92).
 
@@ -140,7 +142,7 @@ Decided (worker-3, owner may override): quarantine is a mark plus a narrower per
 
 - The gateway, the runner's stage and the sweep count every check in `jc_quality_checks_total{space,type,rule,outcome}` with `outcome` = `pass`, `reject`, `flag` or `quarantine` (DM-93).
 - The Portal's space quality page (API/01 §27, extended) shows per type and rule the checks and pass rate over 24 hours and 7 days, the stale and quarantined counts, the latest rejected writes by rule and attribute without values, and the retention deletions, to whoever may read the space (DM-94).
-- `jcctl publish` adds W3C DQV measurements to each dataset of the DCAT-AP record: `dqv:hasQualityMeasurement` for the pass rate and for the freshness (age of the newest `observedAt`), and the CKAN dataset shows them (DM-95).
+- `jcctl publish` adds W3C DQV measurements to each dataset of the DCAT-AP record: `dqv:hasQualityMeasurement` for the space's pass rate over seven days and for the freshness (age of the newest change when the daily quality run read the space), and the CKAN dataset shows them as the extras `quality_pass_rate` and `quality_freshness_seconds`, since ckanext-dcat maps only `dqv:hasQualityAnnotation` (DM-95).
 
 ### 2.8 Deletion is data loss
 
