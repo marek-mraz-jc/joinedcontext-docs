@@ -3703,9 +3703,9 @@ GET /api/v1/projects/{project}/mqttbrokers/{name}/measured          → 200
   something else than its HTTP API, or the instance runs without the service mesh (the broker then
   serves no HTTP API at all, ADR-N-048 §2.8). A number is never shown in that case, and never
   zero for "unknown".
-- Who may read: whoever may read the project's MqttBroker manifests; anybody else is `403`, and a
-  broker the project does not declare is `404`. No token, topic or client address is part of the
-  answer.
+- Who may read: whoever may read the project's MqttBroker manifests. Anybody else gets `404`, the
+  same answer as a broker the project does not declare (PF-59). No token, topic or client address
+  is part of the answer.
 
 ## Related
 
