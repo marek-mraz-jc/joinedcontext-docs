@@ -2915,6 +2915,48 @@ GET /api/v1/projects/{project}/spaces/{space}/quality     the last run's report 
   `outlierExamples`, `min` and `max` are absent or empty for a caller without `read` on `Entity`
   in the space; the counts are the same for everyone who reads the space.
 
+### 27.1 Checks on write (DM-94)
+
+Every write through an Endpoint is held to the space's `spec.quality` rules, and the gateway
+counts each check in `jc_quality_checks_total{space,type,rule,outcome}` (ADR-N-046 2.7). Every
+Portal replica reads the gateway's counters once an hour and on a request at most once a minute,
+and keeps the readings for eight days; a window's count is what the counters grew by inside it.
+
+```text
+GET /api/v1/projects/{project}/spaces/{space}/quality/checks     the space's checks → 200
+```
+
+```json
+{
+  "at": "2026-10-12T08:00:00Z",
+  "windows": { "24h": "2026-10-11T08:00:00Z", "7d": "2026-10-10T09:00:00Z" },
+  "rules": [
+    {
+      "type": "AirQualityObserved", "rule": "pm10-plausible", "attribute": "pm10",
+      "24h": { "pass": 1180, "reject": 0, "flag": 20, "quarantine": 0, "passRate": 0.9833 },
+      "7d": { "pass": 8200, "reject": 0, "flag": 140, "quarantine": 0, "passRate": 0.9832 },
+      "lastRejected": null
+    }
+  ]
+}
+```
+
+- `at` is the newest reading, `null` while there is none (no gateway address, or it never
+  answered); `rules` is then empty and the page says the checks are unknown, never "all pass".
+- `windows` names where each window starts: the oldest reading inside it, later than 24 hours or
+  7 days ago while the replica has not held its readings that long. A counter that went down
+  between two readings (the gateway restarted) counts from zero.
+- `rules` has one row per rule of the space's `spec.quality` and per type and rule the counters
+  name, ordered by type and rule. `attribute` comes from the manifest, empty for a rule no longer
+  declared. `passRate` is `pass` over all four, `null` when nothing was checked in the window.
+- `lastRejected` is the reading at which the rule's `reject` counter last grew, `null` when it
+  did not in seven days: the latest rejected write by rule and attribute, never its value.
+- The retention deletions sit beside the checks (DM-85, DM-96): `GET /api/v1/projects/{project}/spaces/{space}/retention/deleted`
+  answers what the broker's sweeps deleted of the space since the broker started, per class and
+  kind (`entity`, `history`), and `POST …/retention/preview` with a draft `retention` answers
+  what a shorter one would delete now; `503` when the broker does not answer.
+- Whoever reads the space reads its checks; a project or space the caller may not read is `404`.
+
 ## 28. Organization limits (PF-96…PF-102, ADR-N-035)
 
 What Organization settings shows for every policy and limit (PF-102): the catalog of ADR-N-035
