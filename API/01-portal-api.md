@@ -752,6 +752,38 @@ GET /api/v1/projects/{project}/pipelines/{name}/metrics    counters of one runni
   }
   ```
 
+### 7b. The last messages through each step (T-3974, PL-66)
+
+```text
+GET /api/v1/projects/{project}/pipelines/{name}/samples    what last crossed each node of a running stream
+```
+
+The runner taps the stream after its source (`input`), after each step (`step_{j}`, `compute`)
+and before the write (`output`), the labels of `nodes` above. A tap is a branch whose answer is
+thrown away and whose failure is caught, so the Portal being away costs the stream nothing. It
+sends the first 20 messages after the runner starts and then one in a hundred, to the internal
+`POST /internal/pipelines/{project}/{name}/samples` the runner authenticates to like its
+rejected sink; the Portal keeps the newest 20 per node in memory, each at most 8 KiB of JSON
+(a larger one is kept as a note that it was too large), for 24 hours.
+
+```json
+{
+  "pipeline": "aq-mqtt-ingest",
+  "nodes": {
+    "input":  [{ "at": "2026-10-12T09:00:01Z", "record": { "id": "SK0263A", "pm10": 21.4 } }],
+    "step_0": [{ "at": "2026-10-12T09:00:01Z", "record": { "id": "urn:ngsi-ld:AirQualityObserved:SK0263A", "pm10": 21.4 } }]
+  }
+}
+```
+
+- Reading needs `read` on `Pipeline` in the project; another project's pipeline, or one the
+  caller may not read, is `404`.
+- A sample shows no more than the pipeline's target Endpoint serves: the attributes its
+  `projection.hiddenAttributes` hides are taken out, and every key of the secret list (MF-24)
+  is masked, wherever it sits in the record.
+- An empty `nodes` is a stream that has not run since the runner started, or a Portal that
+  restarted; it is not an error.
+
 ### 7a. Testing a candidate pipeline (PL-43, MF-38)
 
 ```text
