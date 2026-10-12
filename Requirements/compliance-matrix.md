@@ -1103,6 +1103,7 @@ Generated 2026-10-11 from: `docs` 2f5fa38, `conformance` 042afcc, `deployment` a
 | **PL-70** | [H] [S] | tested | fast ci | portal `ui/tests/space_changes.test.tsx::classifies each record by id, comparing only what the record writes`, portal `ui/tests/space_changes.test.tsx::reads the space with GET only and shows the counts and each entity's change`, portal `ui/tests/space_changes.test.tsx::says why the space could not be read`, and 1 more |
 | **PL-71** | [H] [S] | tested | ci-full, fast ci | portal `src/alerts.rs::a_subscription_covers_its_pipeline_its_space_and_its_type_there`, portal `src/alerts.rs::an_incident_opens_once_and_closes_when_its_signal_clears`, portal `src/alerts.rs::a_subscription_is_checked_and_e_mail_is_refused_with_its_reason`, and 8 more |
 | **PL-72** | [H] [S] | open |  |  |
+| **PL-73** | [H] [S] | open |  |  |
 
 ### R — Access control and federation
 

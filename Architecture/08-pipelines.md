@@ -231,9 +231,62 @@ output:
 
 Every broker in front of the writes fails fast, the outcome sink's `fan_out_sequential_fail_fast` (PL-62) included: a write that fails after its own retries is nacked back to the input, which replays it. The plain patterns retry inside the broker without heeding a stop, so a stream whose target failed could be neither replaced nor deleted until the runner restarted (T-2983). One source renders as its own input with no `broker`, and one output as its own output, so a `v1alpha1` Pipeline — `source`, `compute`, `output` and `targetEndpoint` — reads as `sources: [source]`, `steps: [compute]`, `outputs: [{ targetEndpoint, mode }]` and renders the same bytes it rendered before (PL-54). It keeps running unchanged, and the Portal writes it back as `v1alpha2` the first time somebody edits it.
 
-A conditional path is a step: `branch`, `switch` and `workflow` carry their own processors in their configuration, so the manifest never stores edges. The studio lets a person draw a wire, and each wire only sets the order: a wire into a step moves that step behind the node it starts from, the last step feeds every output, and a wire the runner cannot run (into a source, out of an output, from a middle step into an output) is refused with the reason (PL-56). Admission reads the pipeline's grant once per source (read) and once per output (write), and each source's secrets keep their own names (PL-55).
+A conditional path inside one lane is a step: `branch`, `switch` and `workflow` carry their own processors in their configuration. A path that ends at its own outputs is a route (PL-73, below). The manifest stores no edges either way. The studio lets a person draw a wire, and each wire only sets the order: a wire into a step moves that step behind the node it starts from, the last step feeds every output, and a wire the runner cannot run (into a source, out of an output, from a middle step into an output) is refused with the reason (PL-56). Admission reads the pipeline's grant once per source (read) and once per output (write), and each source's secrets keep their own names (PL-55).
 
 The studio draws the same list: a lane with the sources on the left, the steps in order, the outputs on the right; a palette of the runner's processors inserts a step between two nodes, a selected node shows its own Bento block as YAML, and the test trace paints each step by its processor index (PL-56). The palette is searchable, each node says its state before a test (configured, missing input, error), a double-click opens its form, every graph edit can be undone and redone, the canvas zooms and fits, and a list view holds the same nodes with move up, move down and remove for a keyboard or a screen reader; positions are computed from the order and never stored (PL-68).
+
+### Routes by condition (PL-73)
+
+A route sends the messages its condition holds for to its own steps and outputs: readings over 30 °C to the alert space, the rest to the store. `spec.routes` lists at most 8 routes, each with a `name`, a `when` (a Bloblang query), its own `steps` and at least one output. Every message runs `spec.steps` first, then takes the first route whose `when` is true; a message no route takes is written through `spec.outputs`, the default lane.
+
+```yaml excerpt
+spec:
+  sources:
+    - dataSourceRef: { kind: DataSource, name: air-sensors }
+  steps:
+    - kind: bloblang
+      bloblang: root = this
+  routes:
+    - name: hot
+      when: this.temperature.value > 30
+      steps:
+        - kind: bloblang
+          bloblang: root = this.merge({"alertLevel": {"type": "Property", "value": "high"}})
+      outputs:
+        - targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki-alerts:ep-alerts-write
+  outputs:
+    - targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:ep-air-write
+```
+
+It renders as a Bento `switch` output (Bento 1.22.0, the runner's pin). Each route is a case whose `check` is its `when` and whose output carries the route's steps as its own `processors`. The default lane is the last case and has no `check`:
+
+```yaml
+output:
+  switch:
+    strict_mode: true
+    retry_until_success: false
+    cases:
+      - check: this.temperature.value > 30
+        output:
+          label: route_hot
+          processors:
+            - label: route_hot_0
+              mapping: root = this.merge({"alertLevel": {"type": "Property", "value": "high"}})
+          <the upsert through ep-alerts-write, PL-47>
+      - output: <the upsert through ep-air-write>
+```
+
+A route with two outputs renders them as a `fan_out_fail_fast` broker, as `spec.outputs` does. `retry_until_success: false` hands a failed write back to the input as a nack, the same fail-fast rule as the brokers above (T-2983), and `strict_mode: true` makes a message that reaches no case an error instead of a silent drop; the default case makes that unreachable.
+
+The rules, checked by jc-core before a Change is proposed:
+
+- `name` is a DNS label, unique among the routes; `routes` holds at most 8.
+- `when` passes the same author-Bloblang check as a `bloblang` step: no `env()`, no `file()`, nothing the runner refuses in a mapping. It runs inside the runner, which has no shell and no exec.
+- A route's `steps` hold no `switch` processor, so routing is one level deep, and no `container` step, which runs only as a Job.
+- A route has at least one output, and every route output is checked against the pipeline's grant like the outputs of `spec.outputs` (PL-55): a route cannot write where the pipeline may not.
+- `routes` needs `apiVersion: joinedcontext.com/v1alpha2`; a `v1alpha1` Pipeline has none.
+
+The studio draws a route as a wire from a step, or from the sources, to a second next node; the condition is edited on that wire, and deleting the last wire into a route's first node removes the route. Changing a condition replaces the stream the same way any edit does: Bento's graceful shutdown finishes the messages in flight before the new stream reads (PL-53).
 
 ### Stale-entity expiry (PL-64, PL-65)
 
