@@ -34,6 +34,7 @@ The enforcement point in front of every broker surface (`context-gateway`).
 | `JC_GATEWAY_EGRESS_CA_BUNDLE` | — | no | A PEM file of extra trust anchors the notification egress trusts on top of the public roots (`JC_GATEWAY_EGRESS_CA_BUNDLE`), for subscribers behind the installation's own CA (R46). |
 | `JC_GATEWAY_EGRESS_PRIVATE_HOSTS` | — | no | Hosts inside the platform's own networks a notification may still be delivered to (`JC_GATEWAY_EGRESS_PRIVATE_HOSTS`, comma-separated); empty refuses them all (T-1302). |
 | `JC_GATEWAY_EGRESS_URL` | — | no | The base a rewritten `notification.endpoint.uri` carries (`JC_GATEWAY_EGRESS_URL`), which is the address the broker dials to deliver; the public URL when the deployment names none. |
+| `JC_GATEWAY_INTERNAL_BIND` | — | no | The internal listener, for the MQTT brokers' CONNECT checks only (`JC_GATEWAY_INTERNAL_BIND`, e.g. `0.0.0.0:8082`); absent serves none (ADR-N-048). |
 | `JC_GATEWAY_ORG_DOMAIN` | — | no | The organization's verified domain, the middle segment of every entity URN (`JC_GATEWAY_ORG_DOMAIN`). |
 | `JC_GATEWAY_PREVIEWS_DIR` | `/tmp/jc-previews` | no | Where the previews are written (`JC_GATEWAY_PREVIEWS_DIR`, default `/tmp/jc-previews`), a scratch directory the pod owns. |
 | `JC_GATEWAY_PREVIEWS_URL` | — | no | The Portal's list of running workspace previews (`JC_GATEWAY_PREVIEWS_URL`, its internal listener's `/internal/previews`); absent serves `main` alone (CC-78). |
