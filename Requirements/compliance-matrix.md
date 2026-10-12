@@ -34,14 +34,14 @@ Generated 2026-10-11 from: `docs` 2f5fa38, `conformance` 042afcc, `deployment` a
 | **MIM** — OASC interoperability | 76 | 1 | 6 | 69 | 0 |
 | **MP** — Model projections | 3 | 3 | 0 | 0 | 0 |
 | **OPS** — Operations and reliability | 51 | 45 | 2 | 4 | 1 |
-| **PF** — Platform invariants | 109 | 91 | 8 | 10 | 3 |
+| **PF** — Platform invariants | 116 | 91 | 8 | 17 | 10 |
 | **PL** — Pipelines | 71 | 53 | 12 | 6 | 2 |
 | **R** — Access control and federation | 60 | 24 | 9 | 27 | 0 |
 | **SDK** — App SDK | 42 | 34 | 3 | 5 | 1 |
 | **SP** — Context-space surface | 22 | 19 | 1 | 2 | 0 |
 | **TS** — Testing and quality | 26 | 16 | 5 | 5 | 0 |
 | **UI** — Portal and user interface | 95 | 70 | 14 | 11 | 5 |
-| **Total** | 1233 | 916 | 108 | 209 | 40 |
+| **Total** | 1240 | 916 | 108 | 216 | 47 |
 
 ## 3. Requirement to test
 
@@ -1015,6 +1015,13 @@ Generated 2026-10-11 from: `docs` 2f5fa38, `conformance` 042afcc, `deployment` a
 | **PF-95** | [S] | tested | ci-full | portal `tests/group_delete_tests.rs::a_group_leaves_every_binding_and_access_entry_in_the_same_change`, portal `tests/group_delete_tests.rs::a_reference_in_a_projects_own_repository_refuses_the_deletion_naming_it`, portal `tests/group_delete_tests.rs::deleting_a_group_needs_the_rights_its_cascade_needs`, and 1 more |
 | **PF-108** | [S] [H] | tested | ci-full, fast ci | deployment `tests/test_portal_invitation_client.py::test_the_invitation_returns_through_the_portals_public_client_without_widening_it`, portal `tests/people_tests.rs::an_invitation_into_a_project_links_to_its_home_and_says_when_it_expires`, portal `tests/people_tests.rs::a_pending_invitation_is_sent_again_and_an_accepted_one_is_not`, and 14 more |
 | **PF-109** | [S] [H] | tested | ci-full, fast ci | deployment `tests/test_sample_project_seed.py::test_banskabystrica_alone_is_the_sample`, deployment `tests/test_sample_project_seed.py::test_the_sample_is_read_by_every_signed_in_person`, portal `tests/projects_api_tests.rs::the_labelled_project_is_listed_as_the_sample_to_those_who_may_read_it`, and 21 more |
+| **PF-110** | [S] | open |  |  |
+| **PF-111** | [S] | open |  |  |
+| **PF-112** | [S] | open |  |  |
+| **PF-113** | [S] | open |  |  |
+| **PF-114** | [S] | open |  |  |
+| **PF-115** | [S] | open |  |  |
+| **PF-116** | [S] [H] | open |  |  |
 | **PF-96** | [S] | tested | ci-full, fast ci | platform `crates/jc-core/tests/org_settings_tests.rs::an_absent_entry_is_its_default_and_a_set_one_is_the_organizations`, platform `crates/jc-core/tests/org_settings_tests.rs::an_unknown_field_or_value_is_refused`, platform `crates/jc-core/tests/org_settings_tests.rs::a_security_floor_and_the_built_in_ranges_hold_without_an_operator_file`, and 6 more |
 | **PF-97** | [S] | tested | ci-full, fast ci | deployment `tests/test_portal_organization_bounds.py::test_the_portal_reads_the_operators_bounds_from_a_mounted_file`, deployment `tests/test_portal_organization_bounds.py::test_the_bounds_the_operator_sets_are_the_file_the_portal_reads`, platform `crates/jc-core/tests/org_settings_tests.rs::an_absent_entry_is_its_default_and_a_set_one_is_the_organizations`, and 12 more |
 | **PF-98** | [S] | open |  |  |
