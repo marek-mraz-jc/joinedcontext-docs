@@ -1,9 +1,9 @@
 ---
-sidebar_position: 47
-title: "ADR-N-046: MQTT Edge Brokers per Project, RMQTT as Is, Keycloak Tokens Checked by the Gateway"
+sidebar_position: 49
+title: "ADR-N-048: MQTT Edge Brokers per Project, RMQTT as Is, Keycloak Tokens Checked by the Gateway"
 ---
 
-# ADR-N-046: MQTT Edge Brokers per Project, RMQTT as Is, Keycloak Tokens Checked by the Gateway
+# ADR-N-048: MQTT Edge Brokers per Project, RMQTT as Is, Keycloak Tokens Checked by the Gateway
 
 Date: 2026-10-12  
 Status: Accepted  
