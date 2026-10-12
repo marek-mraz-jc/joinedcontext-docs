@@ -3421,7 +3421,6 @@ POST /api/v1/projects/{project}/endpoints/{name}/preview   → 200
 - `503` when the Portal has no broker address or admin token, or has not compiled the Endpoint's
   view yet; a broker that refuses the page answers through the route with its status.
 
-
 ## 41. What a principal reaches (T-3792, EP-103, EP-59)
 
 The Access explorer (Access → Explorer): everything one person, group member, realm-role holder or
