@@ -770,8 +770,8 @@ central directory record and the directory), then each named member's local head
 compressed bytes, one request per member. Every member arrives as one message holding the
 member's bytes, with metadata `archive_filename` its name, the name Bento's own `unarchive`
 gives, so the author's processors branch on it the same way (`unarchive: { format: csv }` turns
-a member into one message per row). The poll is refused, with the reason in the pipeline's log,
-when the server ignores `Range`, the directory does not fit the 64 KiB read or lists another
+a member into one message per row). The poll is refused, its reason logged at ERROR by the
+runner and nothing passed to the author's steps, when the server ignores `Range`, the directory does not fit the 64 KiB read or lists another
 number of entries than the archive says, a named member is missing, a member is larger than
 `maxBytes` packed or unpacked, stored with a method other than none or deflate, or inflates to
 another size than the directory declares. A Zip64 archive (a member or offset past 4 GiB) is
