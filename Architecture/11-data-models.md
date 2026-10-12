@@ -866,7 +866,7 @@ Everything comes out of one Model Tools run with one recorded generator version,
 
 - `/cs/{space}/schema/v{n}/…`, the full model for project members, is SP-04's child path and is not routed yet; a member reads the full model through an Endpoint of the space that grants it.
 - `/api/endpoint/{slug}/schema/v{n}/…`, the **granted projection** (EP-46…EP-52): types, slots and enum values the endpoint's policies do not allow are absent from every format, computed from the same policy decision as data requests. A partner who only sees three attributes sees a SHACL shape with three property shapes.
-- **MCP**: `describe_schema(entityType, format)` returns any of the formats, and the same files are MCP resources `schema://{slug}/v{n}/{artifact}`, so an agent can hand the SHACL to its own validator or load the LinkML into its own tooling without scraping HTTP.
+- **MCP**: `describe_schema(format)` returns any of the formats (with `entityType`, the LinkML description of each named class, Architecture/07), and the same files are MCP resources `schema://{slug}/v{n}/{artifact}`, so an agent can hand the SHACL to its own validator or load the LinkML into its own tooling without scraping HTTP.
 - Every data response links back: `Link: rel="describedby"` to the JSON Schema and the SHACL of each returned type; the DCAT-AP record lists the artifacts as `dct:conformsTo` and as distributions.
 
 ### 8.3 Where it is stored: the artifact store (RustFS)
