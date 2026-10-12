@@ -49,6 +49,7 @@ flowchart LR
 | **Shared Endpoint Surface** | `https://{host}/api/endpoint/{endpointSlug}/...`| Multi-representation data consumption (GeoJSON, CSV, OGC, MCP) | Dashboards, external users, QGIS, agents |
 | **Portal MCP** | `https://{host}/api/v1/mcp` | The management API as agent tools: proposing manifests, opening changes, reading a project | AI agents (Claude Code, OpenHands) |
 | **Endpoint and space MCP** | `https://{host}/api/endpoint/{endpointSlug}/mcp`, `https://{host}/cs/{space}/mcp` | The context data of one endpoint or space as agent tools, under the same Policy as every other read | AI agents |
+| **Public documentation** | `https://portal.{host}/docs/API/{page}`, `https://portal.{host}/docs/User-Guide/{page}` | The pages of this API chapter and of the User Guide, readable with no account, so a citizen can use a public Endpoint (T-4063). `{page}` is the file name without `.md`; the apex `https://{host}/docs/...` redirects there. No other chapter (Operations, Deployment, Architecture) is served there | Citizens, external developers |
 
 ---
 
