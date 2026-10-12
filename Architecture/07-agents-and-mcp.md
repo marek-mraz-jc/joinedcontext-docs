@@ -61,24 +61,24 @@ The catalogue is the CIM 009 read surface, one tool per operation, so an agent c
 
 A tool's arguments and its handler are functions of the Endpoint the URL names, never of a server-wide "current endpoint": the façade keeps no such state (SP-19), so one connector may later serve several Endpoints and let the agent name which one it reads without anything built today having to change. [ADR-N-025](../Decisions/adr-n-025-one-mcp-connector-several-endpoints.md) (accepted) is that connector: a hub at `/api/mcp` whose tools take a required `endpoint` argument, each call run as that Endpoint's own call, bounded by the token's `endpoint:{slug}` scopes and a per-subject bucket across Endpoints (EP-87, EP-88). §7 says how a connector reaches it.
 
-Since T-3647 an Endpoint's `/mcp` is the broker's MCP surface of its view, and the broker's catalogue is normative (Antares `docs/src/mcp.md`: the same operations, `list_types` and `list_attributes` split into `list_type_details` and `list_attribute_details`, `get_attribute_value`, the write tools, `type` as a list, an opaque `cursor`); the gateway keeps `describe_access` and `describe_schema` and their resources ([API/02 §8](../API/02-endpoint-representations.md#8-model-context-protocol-mcp)). The table is the gateway's own tool set, which the hub (until T-3808) and the fallbacks of §8 still serve.
+Since T-3647 an Endpoint's `/mcp` is the broker's MCP surface of its view, and the broker's catalogue is normative (Antares `docs/src/mcp.md`: the same operations, `list_types` and `list_attributes` split into `list_type_details` and `list_attribute_details`, `get_attribute_value`, the write tools, `type` as a list, an opaque `cursor`); the gateway keeps `describe_access` and `describe_schema` and their resources ([API/02 §8](../API/02-endpoint-representations.md#8-model-context-protocol-mcp)). Since T-4115 the hub and the named servers list the same tools under the same names and argument shapes, plus `endpoint` and `list_endpoints` (EP-112), and hand a call on as it came; their table is a copy of the broker's in `crates/context-gateway/src/mcp/tools.rs`, pinned by a unit test. The rows below are those tools by CIM 009 operation; the broker's other write tools (`create_entity`, `merge_entity`, `replace_entity`, `delete_entity`, the attribute writes, `batch_create`, `batch_update`, `batch_merge`, `batch_delete`, `update_subscription`, `delete_subscription`) are listed the same way wherever the grant holds their operation.
 
 | CIM 009 operation | REST | Tool | Annotations | Arguments |
 |---|---|---|---|---|
 | Query Entities | `GET /entities` | `query_entities` | `readOnlyHint: true` | every selector and representation argument of the table below |
-| Query Entities (POST) | `POST /entityOperations/query` | `batch_query` | `readOnlyHint: true` | the same, as the Query body; `id` is the `ids` list |
+| Query Entities (POST) | `POST /entityOperations/query` | `batch_query` | `readOnlyHint: true` | the same, as the Query body; `type` is required |
 | Retrieve Entity | `GET /entities/{id}` | `get_entity` | `readOnlyHint: true` | `id`, plus the projection and representation arguments |
 | Query Temporal Evolution | `GET /temporal/entities` | `query_temporal` | `readOnlyHint: true` | the selector table, plus the temporal grammar |
 | Query Temporal Evolution (POST) | `POST /temporal/entityOperations/query` | `batch_query_temporal` | `readOnlyHint: true` | the same, as the Query body; the grant operation is `queryTemporal`, and the body is narrowed like the entity batch's |
 | Retrieve Temporal Evolution | `GET /temporal/entities/{id}` | `retrieve_temporal` | `readOnlyHint: true` | `id`, the projection arguments, and the temporal grammar |
-| Retrieve Available Entity Types | `GET /types` | `list_types` | `readOnlyHint: true` | `details` |
+| Retrieve Available Entity Types | `GET /types` | `list_types` | `readOnlyHint: true` | none; `list_type_details` is the details form (`retrieveEntityTypeDetails`) |
 | Retrieve Entity Type Information | `GET /types/{type}` | `get_type` | `readOnlyHint: true` | `type`; the grant operation is `retrieveEntityTypeInfo`, not the `retrieveEntityTypeDetails` the list takes |
-| Retrieve Available Attributes | `GET /attributes` | `list_attributes` | `readOnlyHint: true` | `details` |
+| Retrieve Available Attributes | `GET /attributes` | `list_attributes` | `readOnlyHint: true` | none; `list_attribute_details` is the details form (`retrieveAttrTypeDetails`) |
 | Retrieve Attribute Information | `GET /attributes/{attrId}` | `get_attribute` | `readOnlyHint: true` | `attrId`; the grant operation is `retrieveAttrTypeInfo` |
 | Query Subscriptions | `GET /subscriptions` | `list_subscriptions` | `readOnlyHint: true` | `limit`, `cursor`, `count` |
 | Retrieve Subscription | `GET /subscriptions/{id}` | `get_subscription` | `readOnlyHint: true` | `id` |
 | Create Subscription | `POST /subscriptions` | `create_subscription` | `destructiveHint: true` | `subscription` (JSON object), Yellow lane, elicitation before it is created (§3) |
-| Upsert Entity | `POST /entities` | `upsert_entity` | `destructiveHint: true` | `entity` (JSON object), requires an explicit write grant |
+| Batch Upsert | `POST /entityOperations/upsert` | `batch_upsert` | `destructiveHint: true` | `entities` (at most 100), `options`; requires an explicit write grant, and the person confirms it (Antares `docs/src/mcp.md` §3) |
 | Effective grants (EP-55) | `GET /access` | `describe_access` | `readOnlyHint: true` | `format` (`permissions` default, `odrl`, `grant-ast`) |
 | Schema surface (EP-46) | `GET /schema/...` | `describe_schema` | `readOnlyHint: true` | `entityType`, `format`, `version` |
 
@@ -121,7 +121,7 @@ broker request is built (AG-31).
 | `entityMap` | boolean | keeps a federated entity map for paging; only on an Endpoint that federates |
 | `local` | boolean | a local-only answer |
 | `limit`, `cursor`, `count` | integer 1…1000; integer ≥ 0; boolean | paging; the structured result carries `total` and `nextCursor` |
-| `details` | boolean | on `list_types` and `list_attributes`: each row's members |
+| `details` | boolean | on REST `/types` and `/attributes`: each row's members; an MCP surface has `list_type_details` and `list_attribute_details` instead (EP-112) |
 
 Representation arguments, on every tool that returns entities, `get_entity` and `retrieve_temporal`
 included:
