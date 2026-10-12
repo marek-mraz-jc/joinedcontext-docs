@@ -486,6 +486,7 @@ GET  /api/v1/projects/{project}/changes                  open proposals, newest 
 GET  /api/v1/projects/{project}/changes/history          merged and rejected ones, newest first, paged
 POST /api/v1/projects/{project}/changes/{id}/restore     propose again what a merged removal took
 POST /api/v1/projects/{project}/changes/{id}/undo        propose again what a merged update altered
+GET  /api/v1/projects/{project}/changes/{id}/manifests   the manifests a merged change wrote
 GET  /api/v1/projects/{project}/changes/{id}             one proposal with its plan diff
 POST /api/v1/projects/{project}/changes/{id}/approve     review + merge
 POST /api/v1/projects/{project}/changes/{id}/reject      review "request changes" + close
@@ -599,6 +600,31 @@ under `projects/{project}/`, read at the commit its branch was cut from, propose
 (`202`). It answers `409` while any of those files holds something other than what the change wrote,
 so an undo never drops a later change; a change that is not merged or that modified nothing is `409`
 too (a removal is restored, a creation removed). It needs `propose` on every kind it puts back.
+
+`GET …/changes/{id}/manifests` answers the manifests a merged change wrote, each read at the
+change's own last commit, as a `List` of resources (T-3975). It is how a resource's editor offers
+"Restore this version": the person loads one into the form, checks it and proposes it as a new
+Change, so nothing is written by this read and the restore goes through Check and approval like any
+edit. It carries what Git holds, so a `secretRef` and never a value. A manifest of a kind the caller
+does not read is left out, as is a native file (a LinkML source, a `bento.yaml`) and a file the
+change deleted. A change the caller may not read is `404`; one that is not merged is `409`, since
+what it proposed never was a version of the resource.
+
+```json
+{
+  "apiVersion": "joinedcontext.com/v1alpha1",
+  "kind": "List",
+  "metadata": {},
+  "items": [
+    {
+      "apiVersion": "joinedcontext.com/v1alpha1",
+      "kind": "Pipeline",
+      "metadata": { "name": "aq-mqtt-ingest", "namespace": "banskabystrica" },
+      "spec": { "class": "resident", "secretRefs": [{ "name": "mqtt-credentials", "key": "password", "envVar": "MQTT_PASSWORD" }] }
+    }
+  ]
+}
+```
 
 The page of one change reads its "before" at the commit its branch was cut from once the change is
 closed (`merge_base`): after a merge the default branch already holds what it made, so a merged
