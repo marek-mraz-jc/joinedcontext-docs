@@ -62,7 +62,7 @@ Every component resolves the broker from the space it already resolved:
 - The gateway keeps a map from space to broker address, built from the `ContextBroker` manifests and the spaces' `brokerRef` in the same cache as the Endpoints. `JC_GATEWAY_BROKER_URL` stays only as the address of the implicit `main`.
 - The Portal's view writer, space usage counter and registrations look the broker up per space in the mirror; `JC_PORTAL_BROKER_URL` becomes the implicit `main`'s address, the same way.
 - APISIX routes nothing to a broker directly: every data path goes through the gateway, so the edge does not change.
-- The MCP hub lists the Endpoints of every broker the caller may reach, each labelled with its broker; a call runs as that Endpoint's own call, on that Endpoint's broker (ADR-N-025 §2, ADR-N-043).
+- The MCP hub lists the Endpoints of every broker the caller may reach, each labelled with its broker (`broker` in each `list_endpoints` entry and in `GET /api/endpoints`); a call runs as that Endpoint's own call, on that Endpoint's broker (ADR-N-025 §2, ADR-N-043).
 
 After the build, no caller reads a single broker address. The check is a code-graph query in the build task (T-3842), its result pasted there.
 
@@ -77,7 +77,7 @@ Each `ContextBroker` gets its own CNPG database and credentials (`secretRef`), i
 ### 2.6 Upgrades and moves
 
 - `just upgrade` (T-3794) takes a broker name and upgrades one instance at a time. A non-default broker goes first as the canary; the default follows when the canary's smoke is green.
-- Moving a space to another broker is an explicit job, never a side effect of editing `brokerRef`: the space goes read-only (writes answer `503` with `Retry-After`), the job exports it, imports it on the target, compares the entity count and a hash over (URN, `modifiedAt`) read from both sides, switches `brokerRef`, and ends read-only. A mismatch leaves the space on the source broker, read-write, and the job failed with both counts.
+- Moving a space to another broker is an explicit job, never a side effect of editing `brokerRef`: the space goes read-only (writes answer `503` with `Retry-After`), the job exports it, imports it on the target, compares the entity count and a hash over (URN, `modifiedAt`) read from both sides, switches `brokerRef`, and ends read-only. A mismatch leaves the space on the source broker, read-write, and the job failed with both counts. The job holds the space read-only by committing the annotation `joinedcontext.com/moving-to: {broker}` on its `ContextSpace` and removes it when it ends. While the annotation is set, the gateway answers every request that could write the space with `503`, problem type `space-moving` and `Retry-After: 30`, and lets reads through: `GET`, `HEAD`, and `POST` to `entityOperations/query`. An MCP call is answered `503` as well, because a `tools/call` may write.
 - A `ContextBroker` that a space names cannot be deleted; the refusal lists the spaces.
 
 ### 2.7 Sizing
