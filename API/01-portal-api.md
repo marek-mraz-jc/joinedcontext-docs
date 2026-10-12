@@ -3667,6 +3667,46 @@ GET /api/v1/organization/brokers                                   → 200
 - Who may read: organization administrators only; anybody else is `403`. No address or token is
   part of the answer.
 
+## 44. What an MQTT broker measures (T-4043, MF-54, ADR-N-048 §2.8)
+
+The MQTT brokers page shows, per broker, the devices connected now, the messages per second and
+when each account connected. The Portal reads the broker's own HTTP API inside the cluster; the
+browser never reaches a broker, and nothing here is typed by anyone.
+
+```text
+GET /api/v1/projects/{project}/mqttbrokers/{name}/measured          → 200
+```
+
+```json
+{"measured": true, "observedAt": "2026-10-12T08:47:05Z", "messagesPerSecond": 2.0,
+ "publishers": 1, "reason": null,
+ "accounts": [{"serviceAccount": "cam-west", "connected": 1, "since": "2026-10-12T08:46:51Z"},
+              {"serviceAccount": "cam-east", "connected": 0, "since": null}]}
+```
+
+```json
+{"measured": false, "observedAt": "2026-10-12T08:47:05Z", "messagesPerSecond": null,
+ "publishers": null, "reason": "the broker did not answer; try again in a minute",
+ "accounts": []}
+```
+
+- `messagesPerSecond` is RMQTT's `messages.publish` counter of the two newest samples of
+  `GET /api/v1/metrics/history/sum` (one every five seconds), their difference over the time
+  between them; `null` while the broker holds fewer than two samples.
+- `accounts` lists every ServiceAccount the broker's roles name, in name order. `connected` counts
+  the broker's connected clients (`GET /api/v1/clients`) whose `username` is the account's
+  Keycloak client `{project}-{serviceAccount}`; `since` is the newest `connected_at` among them,
+  and `null` when none is connected: sessions are clean (§2.2), so the broker keeps nothing of a
+  client that left. `publishers` sums `connected` over the accounts of roles with `publish`
+  filters. The pipeline runner and any other client is neither counted nor named.
+- `measured: false` with a `reason` when the broker did not answer within five seconds, answered
+  something else than its HTTP API, or the instance runs without the service mesh (the broker then
+  serves no HTTP API at all, ADR-N-048 §2.8). A number is never shown in that case, and never
+  zero for "unknown".
+- Who may read: whoever may read the project's MqttBroker manifests; anybody else is `403`, and a
+  broker the project does not declare is `404`. No token, topic or client address is part of the
+  answer.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
