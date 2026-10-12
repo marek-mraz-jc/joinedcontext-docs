@@ -3506,7 +3506,6 @@ DELETE /api/v1/organization/people/{id}/consents/{client}          → 204
 - `503` when the Portal has no gateway address, no realm admin client or no Keycloak client to
   ask the gateway with, or one of them did not answer.
 
-
 ## 42. Pipeline templates of a project (T-3976, PL-52)
 
 A pipeline a person saved to start the next one from, offered in the pipeline gallery beside the
