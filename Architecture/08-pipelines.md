@@ -231,9 +231,81 @@ output:
 
 Every broker in front of the writes fails fast, the outcome sink's `fan_out_sequential_fail_fast` (PL-62) included: a write that fails after its own retries is nacked back to the input, which replays it. The plain patterns retry inside the broker without heeding a stop, so a stream whose target failed could be neither replaced nor deleted until the runner restarted (T-2983). One source renders as its own input with no `broker`, and one output as its own output, so a `v1alpha1` Pipeline — `source`, `compute`, `output` and `targetEndpoint` — reads as `sources: [source]`, `steps: [compute]`, `outputs: [{ targetEndpoint, mode }]` and renders the same bytes it rendered before (PL-54). It keeps running unchanged, and the Portal writes it back as `v1alpha2` the first time somebody edits it.
 
-A conditional path is a step: `branch`, `switch` and `workflow` carry their own processors in their configuration, so the manifest never stores edges. The studio lets a person draw a wire, and each wire only sets the order: a wire into a step moves that step behind the node it starts from, the last step feeds every output, and a wire the runner cannot run (into a source, out of an output, from a middle step into an output) is refused with the reason (PL-56). Admission reads the pipeline's grant once per source (read) and once per output (write), and each source's secrets keep their own names (PL-55).
+A conditional path inside one lane is a step: `branch`, `switch` and `workflow` carry their own processors in their configuration. A path that ends at its own outputs is a route (PL-73, below). The manifest stores no edges either way. The studio lets a person draw a wire, and each wire only sets the order: a wire into a step moves that step behind the node it starts from, the last step feeds every output, and a wire the runner cannot run (into a source, out of an output, from a middle step into an output) is refused with the reason (PL-56). Admission reads the pipeline's grant once per source (read) and once per output (write), and each source's secrets keep their own names (PL-55).
 
 The studio draws the same list: a lane with the sources on the left, the steps in order, the outputs on the right; a palette of the runner's processors inserts a step between two nodes, a selected node shows its own Bento block as YAML, and the test trace paints each step by its processor index (PL-56). The palette is searchable, each node says its state before a test (configured, missing input, error), a double-click opens its form, every graph edit can be undone and redone, the canvas zooms and fits, and a list view holds the same nodes with move up, move down and remove for a keyboard or a screen reader; positions are computed from the order and never stored (PL-68).
+
+### Routes by condition (PL-73)
+
+A route sends the messages its condition holds for to its own steps and outputs: readings over 30 °C to the alert space, the rest to the store. `spec.routes` lists at most 8 routes, each with a `name`, a `when` (a Bloblang query), its own `steps` and at least one output. Every message runs `spec.steps` first, then takes the first route whose `when` is true; a message no route takes is written through `spec.outputs`, the default lane.
+
+```yaml excerpt
+spec:
+  sources:
+    - dataSourceRef: { kind: DataSource, name: air-sensors }
+  steps:
+    - kind: bloblang
+      bloblang: root = this
+  routes:
+    - name: hot
+      when: this.temperature.value > 30
+      steps:
+        - kind: bloblang
+          bloblang: root = this.merge({"alertLevel": {"type": "Property", "value": "high"}})
+      outputs:
+        - targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki-alerts:ep-alerts-write
+  outputs:
+    - targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:ep-air-write
+```
+
+The runner writes records in batches of up to 1000 archived into one JSON array, so it picks the route per record before the batching (Bento 1.22.0, the runner's pin). After `spec.steps` the records are split one per message; a `mutation` sets `meta jc_route` to the name of the first route whose `when` holds, or to nothing; a `switch` processor runs each route's steps on its records; `group_by_value` keeps every batch to one route; and a `switch` output writes each batch through its route's outputs, the default lane last:
+
+```yaml
+pipeline:
+  processors:
+    - label: step_0
+      mapping: root = this
+    - mapping: root = if this.type() == "array" { this } else { [this] }
+    - unarchive: { format: json_array }
+    - label: route_pick
+      mutation: |
+        meta jc_route = if (
+        this.temperature.value > 30
+        ) { "hot" } else { "" }
+    - label: route_steps
+      switch:
+        - check: meta("jc_route") == "hot"
+          processors:
+            - label: route_0_0
+              mapping: root = this.merge({"alertLevel": {"type": "Property", "value": "high"}})
+    - group_by_value: { value: '${! meta("jc_route") }' }
+    - <the batching: one array of up to 1000 records per message>
+output:
+  label: routes
+  switch:
+    strict_mode: true
+    retry_until_success: false
+    cases:
+      - check: meta("jc_route") == "hot"
+        output:
+          label: route_0
+          <the upsert through ep-alerts-write, PL-47>
+      - output:
+          label: output
+          <the upsert through ep-air-write>
+```
+
+A route's components are labelled by its place, `route_{i}` and `route_{i}_{j}`, because a Bento label takes no hyphen and a route name may hold one. A route with two outputs renders them as a `fan_out_fail_fast` broker, as `spec.outputs` does. `retry_until_success: false` hands a failed write back to the input as a nack, the same fail-fast rule as the brokers above (T-2983), and `strict_mode: true` makes a batch that reaches no case an error instead of a silent drop; the default case makes that unreachable. The validation stage (PL-60) stays before the batch split, so it checks each record once, when every output writes into one space.
+
+The rules, checked by jc-core before a Change is proposed:
+
+- `name` is a DNS label, unique among the routes; `routes` holds at most 8.
+- `when` passes the same author-Bloblang check as a `bloblang` step: no `env()`, no `file()`, nothing the runner refuses in a mapping. It runs inside the runner, which has no shell and no exec.
+- A route's `steps` hold no `switch` processor, so routing is one level deep, and no `container` step, which runs only as a Job.
+- A route has at least one output, and every route output is checked against the pipeline's grant like the outputs of `spec.outputs` (PL-55): a route cannot write where the pipeline may not.
+- `routes` needs `apiVersion: joinedcontext.com/v1alpha2`; a `v1alpha1` Pipeline has none.
+
+The studio draws a route as a wire from a step, or from the sources, to a second next node; the condition is edited on that wire, and deleting the last wire into a route's first node removes the route. Changing a condition replaces the stream the same way any edit does: Bento's graceful shutdown finishes the messages in flight before the new stream reads (PL-53).
 
 ### Stale-entity expiry (PL-64, PL-65)
 
@@ -698,7 +770,7 @@ names are used wherever they exist, so an author reading the generated `bento.ya
 | `spec.type` | Bento input | Rendered from |
 |---|---|---|
 | `mqtt` | `mqtt` | `urls`, `topics`, `qos`, `cleanSession`, `username`, `passwordRef`; `client_id` is `jc-{project}-{pipeline}` |
-| `http` | `http_client` | `url`, `verb`, `headers`, `authorization`, `timeout`; how often it is fetched stays with the pipeline's class and `spec.period` (section 1) |
+| `http` | `http_client` | `url`, `verb`, `headers`, `authorization`, `timeout`; how often it is fetched stays with the pipeline's class and `spec.period` (section 1); with `archive`, the ranged zip read below (PL-72) |
 | `websocket` | `websocket` | `url`, `openMessage` |
 | `gtfs-rt` | `http_client` plus a `protobuf` processor | `url` and `feed`; the GTFS-realtime descriptor set ships in the runner image, so no pipeline carries one |
 | any other input of the runner | that input, verbatim | `spec.input`, the input's own document (PL-50, below) |
@@ -748,6 +820,46 @@ where it was: in the secret store, resolved by the reconciler, never in the mani
 MF-35). An API key in a vendor header is the common shape of an open-data feed, and without this
 field such a feed could only be declared by writing the key into `headers` as a value, which is
 exactly what MF-35 forbids.
+
+### A zip archive: named members only (PL-72)
+
+A static GTFS feed is one zip: Helsinki's `hsl.zip` is 79 MB and inflates to 1.25 GB, a
+gigabyte of it `stop_times.txt`. Bento's `unarchive` inflates every member into memory, so a
+pipeline that wants `stops.txt` from it would hold the gigabyte it never reads, on the one runner
+every project shares. An `http` connection names the members it wants instead:
+
+```yaml
+  http:
+    url: "https://infopalvelut.storage.hsldev.com/gtfs/hsl.zip"
+    archive:
+      format: zip                 # the only format
+      members: [agency.txt, routes.txt, stops.txt]
+      maxBytes: 33554432          # per member, packed and unpacked; 32 MiB when absent, at most 256 MiB
+```
+
+The runner then reads the archive by HTTP `Range`, never whole: the last 64 KiB (the end of
+central directory record and the directory), then each named member's local header and
+compressed bytes, one request per member. Every member arrives as one message holding the
+member's bytes, with metadata `archive_filename` its name, the name Bento's own `unarchive`
+gives, so the author's processors branch on it the same way (`unarchive: { format: csv }` turns
+a member into one message per row). The poll is refused, its reason logged at ERROR by the
+runner and nothing passed to the author's steps, when the server ignores `Range`, the directory does not fit the 64 KiB read or lists another
+number of entries than the archive says, a named member is missing, a member is larger than
+`maxBytes` packed or unpacked, stored with a method other than none or deflate, or inflates to
+another size than the directory declares. A Zip64 archive (a member or offset past 4 GiB) is
+refused for the same reason.
+
+`members` holds at most 20 names of letters, digits, `.`, `_`, `-` and `/`, so a name never
+becomes code in the rendered mapping; the connection's `verb` is `GET`, and its headers, its
+`authorization` and its TLS block apply to every request. The directory's sizes may lie and
+Bloblang's `decompress` has no output limit, so the runner inflates a deflated member with its
+own module for Bento's `wasm` processor (`/streams/inflate.wasm` from the runner's ConfigMap,
+built from joinedcontext-platform `tools/bento-inflate`). The module allocates the size the
+directory declares, once, and stops there: a deflate bomb behind a lying directory is refused
+having produced at most that many bytes, and the memory a member costs is its packed bytes plus
+its declared size. Measured in the runner's Bento 1.22.0 (peak RSS) on HSL's `hsl.zip`: agency
+alone 144 MB, agency, routes, stops and `shapes.txt` (21.8 MB) 217 MB; a 204 kB member whose
+directory says 100 bytes and whose data inflates to 200 MiB is refused at 144 MB (T-3953).
 
 ### Any input the runner ships (PL-50)
 
@@ -912,7 +1024,7 @@ flowchart LR
   sink -->|drop on error| portal[(Portal: rejected list, runs, log)]
 ```
 
-The output is a `switch`: a record the stage refused goes only to the outcome sink, a valid one fans out to the gateway upsert and the sink. The sink is an `http_client` to the Portal's internal outcome route with the runner's own client credential, wrapped in `drop_on` so a Portal that does not answer loses a log line and never holds back a write. Each line carries the pipeline, the run, the record id, the step, the outcome (`sent`, `rejected`, `failed`) and a message; a refused record also carries the record, which the Portal masks before it stores it. A run is one tick of the pipeline's clock, or one UTC hour for a source that never ends. A clocked stream also reports each tick to the same route before it reads, as a report with no records, so every pass is a run: one that found nothing new, or deleted through its own step as a reaper does, shows with its counts at zero instead of looking like a pipeline that stopped (T-3001). The report runs in a `branch` whose failure a `catch` clears, so a Portal that does not answer never costs the tick its read, and the runner's counters leave the report out like the sink.
+The output is a `switch`: a record the stage refused goes only to the outcome sink, a valid one fans out to the gateway upsert and the sink. The sink is an `http_client` to the Portal's internal outcome route with the runner's own client credential, behind a `fallback` to `drop`, so a Portal that does not answer loses a log line and never holds back a write. Bento's `drop_on` would do the same but sends one message at a time and waits for each answer, which held a stream of single records, such as the HSL positions, to one round trip per record until its MQTT input backed up and lost the connection (T-4036). Each line carries the pipeline, the run, the record id, the step, the outcome (`sent`, `rejected`, `failed`) and a message; a refused record also carries the record, which the Portal masks before it stores it. A run is one tick of the pipeline's clock, or one UTC hour for a source that never ends. A clocked stream also reports each tick to the same route before it reads, as a report with no records, so every pass is a run: one that found nothing new, or deleted through its own step as a reaper does, shows with its counts at zero instead of looking like a pipeline that stopped (T-3001). The report runs in a `branch` whose failure a `catch` clears, so a Portal that does not answer never costs the tick its read, and the runner's counters leave the report out like the sink.
 
 The Portal keeps the newest 1000 rejected records and the newest 5000 log lines per pipeline, and the counts per run. `GET /api/v1/projects/{project}/pipelines/{name}/rejected` and `GET …/runs` answer them with read on the pipeline, each rejected record naming the `run` whose log holds its line, so the list opens that run (T-3252); each run also counts what its written records did: `created` for an id the pipeline never wrote before, `updated` for a record whose hash (xxhash64 of the record as JSON, which the outcome sink sends beside the ids) differs from the last one kept for that entity, `unchanged` for the same hash, `null` all three for a stream rendered before the sink sent hashes (T-3304); the runs page shows each run's duration (first to last outcome), its written count against the run before, and flags a run that wrote nothing after one that wrote (T-3260); "Retry after fix", which needs `propose` on `Pipeline` because it writes, replays the kept records once through the pipeline's current stream on the runner (the §7 harness with the real output): a record that passes now is written, one that still fails comes back with its rule.
 

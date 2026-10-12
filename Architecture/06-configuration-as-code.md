@@ -36,6 +36,8 @@ dataspace/
   participant.yaml                      # kind: DataSpaceParticipant, the organization's DID
 agentprofiles/
   {name}.yaml                           # kind: AgentProfile (AG-47)
+brokers/
+  {name}.yaml                           # kind: ContextBroker, one broker instance (PF-110, ADR-N-047)
 blueprints/
   {name}/blueprint.yaml                 # kind: Blueprint: version, riskClass, allowedRoles,
                                         # parameter schema, templates
@@ -57,6 +59,7 @@ projects/
     dashboards/{name}.yaml              # kind: Dashboard and kind: Layer
     datasources/{name}.yaml             # kind: DataSource (MF-35)
     dataspace/agreements/{name}.yaml    # kind: DataAgreement
+    mqttbrokers/{name}.yaml             # kind: MqttBroker (MF-54)
     pipelines/{name}/
       pipeline.yaml                     # kind: Pipeline
       bento.yaml                        # native, unwrapped Bento stream configuration
@@ -234,6 +237,7 @@ Rules that make bundles portable: identity is `(group, kind, namespace, name)` a
 | `Endpoint` | `projects/{p}/spaces/{s}/endpoints/` | `schema/kinds/Endpoint.json` | Gateway in-memory table & APISIX Standalone ConfigMap (reloaded from Git) |
 | `ModelProjection` | `projects/{p}/spaces/{s}/projections/` | `schema/kinds/ModelProjection.json` | Context Gateway (R9 projection and the `schema/` surface of every Endpoint that references it, MP-01…MP-03) |
 | `DataSource` | `projects/{p}/datasources/` | `schema/kinds/DataSource.json` | Bento input of every Pipeline that references it (MF-35, PL-39) |
+| `MqttBroker` | `projects/{p}/mqttbrokers/` | `schema/kinds/MqttBroker.json` | RMQTT release, Keycloak audience client and Traefik TCP route per broker; device CONNECT checked by the gateway (MF-54, PL-74…PL-77, ADR-N-048) |
 | `Pipeline` | `projects/{p}/pipelines/{n}/pipeline.yaml` | `schema/kinds/Pipeline.json` | Kubernetes Bento Runner (ConfigMap / CronJob) |
 | `Dashboard` | `projects/{p}/dashboards/` | `schema/kinds/Dashboard.json` | Portal API Database Mirror |
 | `Layer` | `projects/{p}/dashboards/` | `schema/kinds/Layer.json` | Portal API Database Mirror |
@@ -242,6 +246,7 @@ Rules that make bundles portable: identity is `(group, kind, namespace, name)` a
 | `Mapping` | `projects/{p}/spaces/{s}/datamodels/mappings/` | `schema/kinds/Mapping.json` | Model Tools (validate, compile → `generated/*.blobl`); Bento via `Pipeline.spec.mappingRef` (DM-33…DM-42) |
 | `ServiceAccount` | `projects/{p}/access/serviceaccounts/` | `schema/kinds/ServiceAccount.json` | Keycloak client / Portal API key table (hashes only); Policy entities for grants (PF-34…PF-40) |
 | `Environment` | `environments/` (org level) | `schema/kinds/Environment.json` | Merged by every loader before validation; red lane (CC-73…CC-75) |
+| `ContextBroker` | `brokers/` (org level) | `schema/kinds/ContextBroker.json` | Portal reconciler: one Antares release, database and Keycloak client per broker; spaces name it by `spec.brokerRef` (PF-110, PF-111, ADR-N-047) |
 | `Group` | `users/groups/` (org level) | `schema/kinds/Group.json` | Keycloak groups the reconciler manages, members pruned to the manifest (PF-62, PF-63) |
 | `Role` | `users/roles/` (org level) or `projects/{p}/roles/` (PF-68) | `schema/kinds/Role.json` | Portal permission check; `policies/roles.json` in the organization repository (PF-49, PF-51) |
 | `RoleBinding` | `users/assignments/` (org level) | `schema/kinds/RoleBinding.json` | Portal permission check; forge `CODEOWNERS` and team permissions (PF-51) |
@@ -438,8 +443,8 @@ In layout 2 every loader starts by assembling. It reads the organization checkou
 To resolve inter-resource dependencies without complex dependency DAG graphs, `jcctl` reconciles resources in six discrete synchronization waves (research verdict P4: ordering by waves and health, never a free-form DAG):
 
 ```text
-Wave 0: Organizations, Projects, DataSpaceParticipant (repository roots)
-        | (Health check: project namespaces, quotas and the participant DID exist)
+Wave 0: Organizations, Projects, DataSpaceParticipant, ContextBrokers (repository roots)
+        | (Health check: project namespaces, quotas, the participant DID and every broker exist)
         v
 Wave 1: ContextSpaces, DataModels, Identity Groups & Roles
         | (Health check: Tenants ready, LinkML compiled)
@@ -464,7 +469,7 @@ that targets it and a `ScopeDefinition` exists before the `Policy` that names it
 
 | Wave | Kinds, in convergence order |
 |---|---|
-| 0 | `Organization`, `Group`, `Role`, `RoleBinding`, `Project`, `DataSpaceParticipant` |
+| 0 | `Organization`, `Group`, `Role`, `RoleBinding`, `Project`, `DataSpaceParticipant`, `AgentProfile`, `ContextBroker` |
 | 1 | `ContextSpace`, `DataModel`, `Mapping`, `ServiceAccount` |
 | 2 | `ScopeDefinition`, `Policy` |
 | 3 | `CkanInstance`, `Endpoint` |
@@ -517,6 +522,7 @@ itself: no field of the manifest can make the change smaller, so `classify`
 |---|---|
 | `ServiceAccount`, `Role`, `RoleBinding`, `Group`, `Policy`, `ScopeDefinition` | they hand out access, and a membership is the binding that names it (PF-52, PF-62) |
 | `Organization`, `Project` | they create the scope every other grant is written against |
+| `ContextBroker` | it deploys a broker with its own database, Keycloak client and share of the node, and decides where every space without a `brokerRef` lives (PF-110, ADR-N-047) |
 | `Environment` | one file decides the domain of every URN, the image every workload runs and where a `secretRef` is resolved, for a whole environment at once (CC-73, CC-75) |
 | `ContextSourceRegistration`, `SharedSpaceReference`, `DataSpaceParticipant`, `DataOffer`, `DataAgreement` | they reach another organization with the data of this one (MF-36, DS-17) |
 | `Subscription` | a standing egress: `spec.notification.endpoint.uri` is an address the platform posts to and `spec.notification.attributes`, empty meaning every granted attribute, says what it posts, for every matching entity, until somebody stops it |

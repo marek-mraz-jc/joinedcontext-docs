@@ -64,6 +64,12 @@ Which Endpoints a hub token reaches:
 
 In each case the Endpoint's PDP decides the call with that token as it does today. The allow-list narrows, it never grants.
 
+### 4a. A machine's token (addendum, 2026-10-11, T-3793)
+
+A `ServiceAccount` asks for its token with `client_credentials`: there is no consent screen to pick `endpoint:` scopes on. It needs none. Its derived client already carries one audience mapper per Endpoint on a space its roles scope (PF-47, [Architecture/12](../Architecture/12-identity-and-access.md)), and a token that names an Endpoint's audience reaches that Endpoint through the hub. A token naming five such audiences therefore lists and calls those five, and a sixth slug answers as an unknown one (SP-20). The scopes stay what a person picks; a machine's reach is its grants, rendered as audiences by the reconciler, with no second list to drift.
+
+A client that does not speak MCP (an SDK, a script, a city's ETL) asks the same question at `GET /api/endpoints` (EP-105): the same function as `list_endpoints`, the same token rules and the same per-subject bucket, over every representation rather than only the MCP ones, as JSON instead of a tool result.
+
 ## 5. Alternatives Considered
 
 | Alternative | Why not |
@@ -91,11 +97,12 @@ Proposed 2026-09-21, accepted by the owner on 2026-09-25 as proposed: the connec
 - `Requirements/endpoints.md`, **EP-87**: the gateway MUST serve a hub at `/api/mcp` whose `list_endpoints` answers only the Endpoints the token may read through it, and whose every data tool takes one required `endpoint` from that list and runs as a call to that Endpoint's own MCP (EP-24, EP-25).
 - `Requirements/endpoints.md`, **EP-88** [S]: a hub token MUST reach only the Endpoints its `endpoint:{slug}` scopes name, or the one Endpoint its audience names (PF-45, PF-46).
 - `Requirements/agents.md`, AG-05 extended as SP-14.
+- `Requirements/endpoints.md`, EP-88 extended for a ServiceAccount's token and **EP-105** for `GET /api/endpoints` (§4a, 2026-10-11).
 
 ## Related
 
 - [ADR-N-021](adr-n-021-one-operation-registry-behind-ui-api-assistant-and-mcp.md) — the Portal's Configuration MCP, which this does not touch.
 - [Architecture/07-agents-and-mcp.md](../Architecture/07-agents-and-mcp.md) — §1 and §2, the Data MCP and its catalogue; §7, connecting from a phone.
 - [Requirements/space-surface.md](../Requirements/space-surface.md) — SP-14…SP-20.
-- [Requirements/endpoints.md](../Requirements/endpoints.md) — EP-24, EP-25, EP-87, EP-88.
+- [Requirements/endpoints.md](../Requirements/endpoints.md) — EP-24, EP-25, EP-87, EP-88, EP-105.
 - [Requirements/agents.md](../Requirements/agents.md) — AG-04, AG-05.

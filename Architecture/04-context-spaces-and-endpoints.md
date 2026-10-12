@@ -483,7 +483,8 @@ The MCP façade is an encoder like the others: a tool call is turned into the NG
 
 | Field | Effect | When absent |
 |---|---|---|
-| `spec.enabledRepresentations` | The child paths this Endpoint serves beyond `ngsi-ld`, `geojson` and `mcp`, which every Endpoint serves whether or not it lists them (EP-10, EP-24, T-2939). A path that is not served answers `404`, the same answer an unknown slug gets (EP-23). | At least one is required. |
+| `spec.enabledRepresentations` | The representations this Endpoint serves, beside `ngsi-ld`, `geojson` and `mcp`, which every Endpoint serves whether or not it lists them (EP-10, EP-24, T-2939). A listed manifest serves exactly that, and is the only way to serve SensorThings (`sta`). A path that is not served answers `404`, the same answer an unknown slug gets (EP-23). | Every standard but `sta`, less `spec.disabledRepresentations` (EP-104, T-3829). |
+| `spec.disabledRepresentations` | The standards an Endpoint with no `spec.enabledRepresentations` switches off, one by one (EP-104). Refused beside `spec.enabledRepresentations`, and for `ngsi-ld`, `geojson` and `mcp` (`spec.mcp: false` turns MCP off). | Nothing is switched off. |
 | `spec.mcp` | `false` turns off the Endpoint's MCP instance, the one child path that is on without being listed: every Endpoint, public or internal, serves `mcp` by default, gated by its own Policy like every other path (EP-24, T-2901). `false` beside `mcp` in `spec.enabledRepresentations` is refused. | `true`: the Endpoint serves `mcp`. |
 | `spec.rateLimits.requestsPerMinute`, `spec.rateLimits.burst` | Token bucket per consumer IP or authenticated identity, advertised in `RateLimit-*` headers (EP-20). Set only by choice: no door writes one the person did not ask for. | No limit: the gateway counts nothing and sends no `RateLimit-*` fields. The edge's anti-flood bucket still protects the node. |
 | `spec.creates.mintIds`, `spec.creates.perDay` | For anonymous creation, a public form's Endpoint (EP-97, T-3172): the gateway mints the id of every entity created through the Endpoint (`urn:ngsi-ld:{type}:{uuid}`, the body's `id` ignored, the minted one in `Location`) and answers `429` past `perDay` creates in one UTC day. Counted per gateway replica. | The caller's id is kept and nothing is counted beyond `spec.rateLimits`. |
@@ -492,6 +493,19 @@ The MCP façade is an encoder like the others: a tool call is turned into the NG
 | `spec.fileLimits.maxFileRows`, `spec.fileLimits.maxFileBytes` | Ceiling of one `file.*` download; the gateway refuses with `413` rather than truncating, because a short file is indistinguishable from a complete one (EP-44). Both bind every format the endpoint serves, the workbook included. Beside them the gateway keeps a ceiling of its own on what one download may read from the broker before it is refused (64 MiB of entity JSON, T-0810): the row ceiling says how many entities a download holds, not how large they are, and the enforcement point is shared. | 100 000 rows and 64 MiB. |
 | `spec.projection.hiddenAttributes` | Attribute names this Endpoint never serves, in any representation. Intersected with the caller's policy projection, so it only ever narrows what the Policy already allows (EP-61). | The policy projection alone decides. |
 | `spec.viewMappingRef` | A `Mapping` whose **target** model this Endpoint serves. The gateway translates every entity through the Mapping's compiled IR and rewrites `attrs`, `q` and `geoQ` back through its inverse, so the whole surface speaks the target model (EP-54, DM-51). A view Endpoint is **read only**: every method but `GET`, `HEAD` and `OPTIONS` answers `405` with an `Allow` header. | The space's own model is served. |
+
+The standards an Endpoint serves (EP-104). "Default" is what an Endpoint whose manifest omits `spec.enabledRepresentations` serves, public or internal alike; every child path answers only what the Endpoint's Policy grants the caller, so a standard switched on widens the formats and never the data or the writes.
+
+| Standard | `Representation` | Child path | Default | Writes |
+|---|---|---|---|---|
+| NGSI-LD (ETSI GS CIM 009, TS 104 175) | `ngsi-ld` | `ngsi-ld/v1/` | always (EP-10) | what the Policy grants |
+| Model Context Protocol | `mcp` | `mcp` | always, `spec.mcp: false` turns it off (EP-24) | what the Policy grants |
+| GeoJSON | `geojson` | `file.geojson`, `ogc/features/` items | always (EP-10) | none |
+| CSV, XLSX, JSON, ZIP | `csv`, `xlsx`, `json`, `zip` | `file.csv`, `file.xlsx`, `file.json`, `file.zip` | on | none |
+| OGC API - Features, Parts 1 to 5 | `ogc-features` | `ogc/features/` | on | none: every non-safe method answers `405` (EP-39) |
+| OData v4 | `odata` | `odata/v4/` | on | what the Policy grants |
+| WebSocket notifications (TS 104 243 envelope, Antares ADR-0026) | `websocket` | `ws` | on | Subscriptions of the connection only, as the Policy grants `create_subscription`; never context data (EP-106) |
+| OGC SensorThings API 1.1 | `sta` | `sta/v1.1/` | off: listed in `spec.enabledRepresentations` only | none (EP-13) |
 
 `hiddenAttributes` is a publication decision, not an authorization one: the Policy set stays the single place where access is granted, and the Endpoint can subtract from it when the same space is published twice with different amounts of detail. Because the subtraction happens in the projection every representation shares, a hidden attribute is missing from the CSV, the GeoJSON, the MCP tool result and the schema surface alike (EP-47).
 
@@ -725,10 +739,21 @@ For `spec.federation.identity`:
 
 - **`serviceAccount`** — the direct-read mode where the hub broker reads member tenants directly
   within the same project.
-- **`caller`** — requires RFC 8693 token exchange to rewrite the caller's bearer token for the
-  member space. Until token exchange is implemented, any request over a space with a registration
-  specifying `caller` identity is refused by the gateway with `501 Not Implemented` and an
-  RFC 7807 problem document, and nothing is forwarded.
+- **`caller`** — the member decides with the caller's own identity (PF-113). For a read over a
+  space with such a registration the gateway exchanges the token the caller presented (RFC 8693,
+  Keycloak standard token exchange V2, as its own client) for one whose only audiences are the
+  broker clients of the brokers those members live on (PF-114), and sends it as `Authorization`
+  on this one hop to the hub's broker; the registration carries
+  `{"key": "Authorization", "value": "urn:ngsi-ld:request"}`, so the hub's broker hands it to the
+  member's Endpoint and nowhere else. The member's gateway admits it on an Endpoint whose space
+  lives on a broker the token names, and that Endpoint's Policy decides on the person, so an
+  attribute the member hides stays hidden. The caller's original token still never reaches a
+  broker (K36), and the exchanged one is never logged. An exchange the realm refuses answers
+  `502`, a realm that does not answer `503`, both with the problem type
+  `federation-exchange-failed`; nothing is then forwarded, and the gateway never falls back to
+  its own account or to the caller's original token. A member registered by an address outside
+  this platform keeps `serviceAccount` or an `authSecretRef`: no exchanged token leaves the
+  platform.
 
 ### The federation graph (UI-27, UI-28)
 
@@ -794,7 +819,7 @@ spec:
 | In CKAN | From | Rule |
 |---|---|---|
 | One dataset (`package`) | the endpoint's DCAT-AP record (EP-27) | title, description, keywords, spatial and temporal coverage, publisher, contact and licence come from there, title and description in the language of the endpoint's space; the reconciler writes no metadata of its own, except the licence `publish.ckan.license` names when the record carries none (EP-63) |
-| One resource per representation | `spec.enabledRepresentations` | the resource URL is that representation's own URL under the endpoint, so a download always passes the gateway and its policy set (EP-64) |
+| One resource per served surface | the representations the Endpoint serves (EP-104), WebSocket and OData included | the resource URL is that surface's own URL under the endpoint, so a download always passes the gateway and its policy set (EP-64); each carries a usage description and a surface no longer served loses its resource in the same run (EP-108, [API/02 §10](../API/02-endpoint-representations.md#10-in-the-open-data-portal)) |
 | One resource for the schema | the schema surface (§1a) | `schema/index.json`, which lists `model.schema.json`, the SHACL and the rest per model version, so a consumer can validate what it downloaded without the publisher knowing which versions exist |
 | One resource per schema artifact | the record's schema distributions (§3a) | every formalism the endpoint serves — LinkML, JSON Schema, `@context`, SHACL, OWL, RDF, the generated documentation — becomes a resource of its own, carrying the sha256 the record declares in CKAN's `hash` field so a download can be checked without asking the endpoint again (EP-68) |
 | The dataset's visibility | `spec.audience` | a `public` endpoint becomes a public dataset, anything narrower a private dataset of the organization; the mapping is closed by default, so an audience the publisher does not recognise is private (EP-69, PF-45) |

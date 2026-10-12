@@ -66,6 +66,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | `disable` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "2. the organization: a settings edit rejected, a new person edited, disabled, enabled and reset, a group with a role, and the person's page" | `jc_person_disable` |
 | `enable` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "2. the organization: a settings edit rejected, a new person edited, disabled, enabled and reset, a group with a role, and the person's page" | `jc_person_enable` |
 | `reset-password` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "2. the organization: a settings edit rejected, a new person edited, disabled, enabled and reset, a group with a role, and the person's page" | person only: a reset sends a person a way into their account; an agent that can start one can take the account over |
+| `resend-invitation` | `joinedcontext-portal/src/api/people.rs` | `tests/people_tests.rs` | `ui/tests/people_invite.test.tsx` | `ui/e2e/live/invite.spec.ts` › "a steward invites a newcomer into a project as a viewer, sends it again and revokes it" | person only: a resend may hand a temporary password, a way into an account an agent must never hold (PF-92, PF-108) |
 | `remove-second-factor` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "2. the organization: a settings edit rejected, a new person edited, disabled, enabled and reset, a group with a role, and the person's page" | person only: removing a second factor weakens a person's sign-in and is decided by an administrator in person |
 | `sign-out-everywhere` | `joinedcontext-portal/src/people.rs` | `tests/people_tests.rs` | `ui/tests/people_page.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "10. nothing of the walk is left, the person is signed out everywhere and removed, and the steward signs out" | `jc_person_sign_out` |
 | `remove` | `joinedcontext-portal/src/api/people.rs` | `tests/last_administrator_tests.rs` | `ui/tests/people_page.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "10. nothing of the walk is left, the person is signed out everywhere and removed, and the steward signs out" | person only: removing a person deletes their account and cannot be proposed as a Change a second person approves |
@@ -112,6 +113,8 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | `edit` | `joinedcontext-portal/src/api/mutate.rs` | `tests/resource_mutate_tests.rs` | `ui/tests/resource_edit.test.tsx` | `ui/e2e/live/form-pages.spec.ts` › "an edit form opened from its address survives a reload, and saving lands on the list" | `jc_resource_propose` |
 | `approve` | `joinedcontext-portal/src/change.rs` | `tests/changes_tests.rs` | `ui/tests/approval_actions.test.tsx` | `ui/e2e/live/roles-refusals.spec.ts` › "an administrator of the kind approves their own change, and the space is created" | person only: a person approves a change and an agent never does (AG-11, PF-58) |
 | `retire` | `joinedcontext-portal/src/api/delete.rs` | `tests/resource_delete_tests.rs` | `ui/tests/resource_delete.test.tsx` | `ui/e2e/live/change.spec.ts` › "the assistant opens a change or a removal on the kind's page, and the person proposes it" | `jc_resource_delete` |
+| `trash` | `joinedcontext-portal/src/api/entity_trash.rs` | `tests/entity_trash_tests.rs` | `ui/tests/data_views.test.tsx` | `ui/e2e/live/space-trash.spec.ts` › "a person keeps a copy of what they delete and forgets it again" | person only: a person's own copies of the entities they delete from a data view, kept for them for 30 days; nobody else, an assistant included, reads or restores another's trash (API/01 §31) |
+| `views` | `joinedcontext-portal/src/api/data_views.rs` | `tests/data_views_api_tests.rs` | `ui/tests/data_views.test.tsx` | `ui/e2e/live/space-views.spec.ts` › "a person saves a view, changes it against its version and deletes it again" | person only: a person's saved ways of looking at a space's data (filters, hidden fields, colour rules, grouping); a view shapes what the person sees and changes no data, and the assistant reads the data itself, never a person's views (API/01, ADR-N-042 §3.2) |
 | `refused-no-permission` | `joinedcontext-portal/src/permissions.rs` | `tests/permissions_tests.rs` | `ui/tests/permission_guard.test.tsx` | `ui/e2e/live/viewer-refused.spec.ts` › "a viewer is refused with a reason on every page, and at the door" | `jc_space_propose` |
 | `refused-red-verdict` | `joinedcontext-portal/src/ops/verdict.rs` | `tests/edge_verdict_gate_tests.rs` | `ui/tests/propose_checked.test.ts` | `ui/e2e/live/verdict-gate.spec.ts` › "the verdict gate: unchecked refuses, a check opens it, an edit closes it again" | `jc_space_propose` |
 | `comments` | `joinedcontext-portal/src/api/entity_comments.rs` | `tests/entity_comments_tests.rs` | `ui/tests/comments.test.tsx` | `ui/e2e/live/space-comments.spec.ts` › "a person comments with a mention, the colleague is notified, and the comment leaves with its notification" | person only: a person's note on an entity and the colleagues it names; mentioning someone is a person speaking to a person, so no assistant comments, mentions or reads another's notifications on their behalf (API/01 §35, ADR-N-042 §3.1) |
@@ -142,7 +145,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | `edit` | `joinedcontext-portal/src/api/mutate.rs` | `tests/resource_mutate_tests.rs` | `ui/tests/resource_edit.test.tsx` | `ui/e2e/live/form-pages.spec.ts` › "an edit form opened from its address survives a reload, and saving lands on the list" | `jc_datasource_propose` |
 | `retire` | `joinedcontext-portal/src/api/delete.rs` | `tests/resource_delete_tests.rs` | `ui/tests/resource_delete.test.tsx` | `ui/e2e/live/change.spec.ts` › "the assistant opens a change or a removal on the kind's page, and the person proposes it" | `jc_resource_delete` |
 | `refused-no-permission` | `joinedcontext-portal/src/permissions.rs` | `tests/permissions_tests.rs` | `ui/tests/permission_guard.test.tsx` | `ui/e2e/live/viewer-refused.spec.ts` › "a viewer is refused with a reason on every page, and at the door" | `jc_datasource_propose` |
-| `refused-red-verdict` | `joinedcontext-portal/src/ops/verdict.rs` | `tests/strict_gate_tests.rs` | `ui/tests/propose_checked.test.ts` | `ui/e2e/live/forms-examples.spec.ts` › "every create form is green from its own examples" | `jc_datasource_check` |
+| `refused-red-verdict` | `joinedcontext-portal/src/ops/verdict.rs` | `tests/strict_gate_tests.rs` | `ui/tests/propose_checked.test.ts` | `ui/e2e/live/verdict-gate.spec.ts` › "a check refuses a model that does not exist, names the field, and a fix clears it" | `jc_datasource_check` |
 | `refused-secret` | `joinedcontext-portal/src/pipeline_secrets.rs` | `tests/attack_secret_leak_tests.rs` | `ui/tests/secret_ref_widget.test.tsx` | `ui/e2e/live/secrets.spec.ts` › "a secret written into the YAML view is refused by its field, and the value is never echoed" | `jc_datasource_propose` |
 
 ### 3.10 Pipelines (`pipeline`)
@@ -155,6 +158,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | `validation` | `joinedcontext-portal/src/pipeline_validation.rs` | `tests/ops_pipeline_steps_tests.rs` | `ui/tests/part_pipeline_test.test.tsx` | `ui/e2e/live/runner-inputs.spec.ts` › "csv: declared from the runner's form, tested, approved; entities arrive and the counter moves" | `jc_pipeline_validate` |
 | `test` | `joinedcontext-portal/src/api/pipeline_test.rs` | `tests/pipeline_test_tests.rs` | `ui/tests/pipeline_test_functions.test.ts` | `ui/e2e/live/load.spec.ts` › "a data source and a pipeline, checked, tested, proposed and approved through the UI; entities in Explore" | `jc_pipeline_test` |
 | `target` | `joinedcontext-portal/src/ops/feed_shape.rs` | `tests/pipeline_metrics_tests.rs` | `ui/tests/pipeline_runs.test.tsx` | `ui/e2e/live/assistant-paths.spec.ts` › "Integrate a pipeline from a CSV and its feed stays within its budgets (T-2695, T-2697)" | `jc_pipeline_metrics` |
+| `template` | `joinedcontext-portal/src/api/pipeline_templates.rs` | `tests/pipeline_templates_tests.rs` | `ui/tests/pipeline_templates.test.tsx` | `ui/e2e/live/pipeline-templates.spec.ts` › "a pipeline saved as a template starts the next one and keeps no credential" | person only: a person keeps a pipeline's shape in the project's gallery to start the next one from; an agent writes each pipeline with `jc_pipeline_propose` and keeps no gallery (T-3976) |
 | `retry-rejected` | `joinedcontext-portal/src/api/internal/pipeline_rejected.rs` | `tests/pipeline_rejected_api_tests.rs` | `ui/tests/pipeline_rejected.test.tsx` | `ui/e2e/live/pipeline-workbench.spec.ts` › "a pipeline built in the workbench writes only what the model takes" | person only: a person replays the records they picked on the pipeline page once the fix merged; the assistant changes the mapping with `jc_pipeline_propose` (PL-61) |
 | `alerts` | `joinedcontext-portal/src/api/alerts.rs` | `tests/alerts_api_tests.rs` | `ui/tests/alert_dialog.test.tsx` | `ui/e2e/live/pipeline-alerts.spec.ts` › "a person subscribes to a pipeline's alerts, mutes them for a day and stops them" | person only: what a person wants to be told and how loudly is their own choice, so no assistant subscribes, mutes or reads a person's alerts on their behalf (API/01 §37, PL-71) |
 | `edit` | `joinedcontext-portal/src/api/mutate.rs` | `tests/resource_mutate_tests.rs` | `ui/tests/pipeline_editor.test.tsx` | `ui/e2e/live/parity.spec.ts` › "Pipeline hel-news: the form, the REST route, the registry and the assistant plan the same change" | `jc_pipeline_propose` |
@@ -172,7 +176,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | `try-it` | `joinedcontext-portal/src/agents/data_query.rs` | `tests/edge_resource_reads_tests.rs` | `ui/tests/try_it.test.tsx` | `ui/e2e/live/workspace-preview.spec.ts` › "a copy's preview answers on its own addresses and stops answering when stopped" | `jc_ask` |
 | `edit` | `joinedcontext-portal/src/api/mutate.rs` | `tests/resource_mutate_tests.rs` | `ui/tests/endpoint_editor_toggles.test.tsx` | `ui/e2e/live/parity.spec.ts` › "Endpoint helsinki-bikes: the form, the REST route, the registry and the assistant plan the same change" | `jc_endpoint_propose` |
 | `retire` | `joinedcontext-portal/src/api/delete.rs` | `tests/resource_delete_tests.rs` | `ui/tests/resource_delete.test.tsx` | `ui/e2e/live/change.spec.ts` › "the assistant opens a change or a removal on the kind's page, and the person proposes it" | `jc_resource_delete` |
-| `refused-no-permission` | `joinedcontext-portal/src/agents/share.rs` | `tests/edge_agents_share_tests.rs` | `ui/tests/endpoint_sharing.test.tsx` | `ui/e2e/live/all-endpoints.spec.ts` › "a viewer sees the endpoints of the projects they may read, and of no other" | `jc_endpoint_propose` |
+| `refused-no-permission` | `joinedcontext-portal/src/agents/share.rs` | `tests/edge_agents_share_tests.rs` | `ui/tests/endpoint_sharing.test.tsx` | `ui/e2e/live/all-endpoints.spec.ts` › "a person who does not administer the organization is offered no cross-project table" | `jc_endpoint_propose` |
 | `refused-red-verdict` | `joinedcontext-portal/src/ops/verdict.rs` | `tests/propose_refused_before_parsed_tests.rs` | `ui/tests/endpoint_proposal_card.test.tsx` | `ui/e2e/live/one-change-at-a-time.spec.ts` › "a second change on the same resource is refused by the name of the first, and lands once that one is decided" | `jc_endpoint_propose` |
 
 ### 3.12 Policies and grants (`policy`)
@@ -260,6 +264,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | `cancel` | `joinedcontext-portal/src/api/agent_runs.rs` | `tests/ops_runs_tests.rs` | `ui/tests/agent_run.test.tsx` | `ui/e2e/live/readiness-app.spec.ts` › "a person stops an app run the assistant started, and the run says it was stopped" | `jc_run_cancel` |
 | `rebuild` | `joinedcontext-portal/src/apps/built.rs` | `tests/app_build_lane_tests.rs` | `ui/tests/app_build_panel.test.tsx` | `ui/e2e/live/apps-samples.spec.ts` › "each sample application is built from its own repository and the catalog says which commit" | person only: a person asks the forge to run the App's reviewed build.yml again; the assistant changes an application by a run, which the workflow builds on merge (AP-103) |
 | `restore` | `joinedcontext-portal/src/api/app_build.rs` | `tests/app_build_tests.rs` | `ui/tests/app_build_panel.test.tsx` | `ui/e2e/live/apps-samples.spec.ts` › "a steward reads an App's earlier builds, the build it serves is not restored again, and a viewer may not restore" | person only: a person brings an App back to an earlier build by a merge request on its repository that a reviewer merges; the assistant changes an application by a run, which the workflow builds on merge (AP-171) |
+| `rename-shapes` | `joinedcontext-portal/src/api/app_shapes.rs` | `tests/app_shapes_tests.rs` | `ui/tests/rename_shapes_notice.test.tsx` | `ui/e2e/live/apps-samples.spec.ts` › "the rename of old App shapes is offered only while one is left, and a viewer may not propose it" | person only: a person proposes the one Change that renames a project's old App shapes from the Apps page notice, in their own name (AP-124) |
 | `open-signed-in` | `joinedcontext-portal/src/apps/static_host.rs` | `tests/static_host_tests.rs` | `ui/tests/page_app_page.test.tsx` | `ui/e2e/live/apps-samples.spec.ts` › "the bikes application opens after the login with the stations of the space" | `jc_ui_navigate` |
 | `write-through-form` | `joinedcontext-portal/src/apps/functions.rs` | `tests/apps_functions_tests.rs` | `ui/tests/app_form.test.tsx` | `ui/e2e/live/apps-fullstack.spec.ts` › "a steward adds, corrects and removes a station, and the viewer sees it" | person only: an App's form is used inside the App by a person signed in to it; the assistant prepares the same entity writes with `write_entities`, which the person applies (AG-78) |
 | `refused-no-permission` | `joinedcontext-portal/src/apps/roles.rs` | `tests/attack_generated_app_tests.rs` | `ui/tests/app_roles_members.test.tsx` | `ui/e2e/live/apps-fullstack.spec.ts` › "a viewer reads the air-quality stations, gets no form and is refused a write" | `jc_run_publish` |
@@ -286,6 +291,8 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | `read` | `joinedcontext-portal/src/change.rs` | `tests/ops_changes_tests.rs` | `ui/tests/page_approvals_page.test.tsx` | `ui/e2e/live/assistant-reads.spec.ts` › "the assistant answers about changes and pipelines from the platform's own operations" | `jc_change_list` |
 | `approve` | `joinedcontext-portal/src/change.rs` | `tests/changes_tests.rs` | `ui/tests/approval_actions.test.tsx` | `ui/e2e/live/roles-refusals.spec.ts` › "an administrator of the kind approves their own change, and the space is created" | person only: a person approves a change and an agent never does (AG-11, PF-58) |
 | `reject` | `joinedcontext-portal/src/change.rs` | `tests/changes_tests.rs` | `ui/tests/approval_actions.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "9c. a blueprint proposes a flow from its form, and the approver rejects it" | person only: rejecting decides a change as approving does, and only a person decides one (AG-11) |
+| `restore` | `joinedcontext-portal/src/api/restore.rs` | `tests/change_restore_tests.rs` | `ui/tests/approvals_history.test.tsx` | `ui/e2e/live/delete-restore.spec.ts` › "the history brings it back as a new change, and once approved the space is there again" | `jc_resource_propose` |
+| `undo` | `joinedcontext-portal/src/api/restore.rs` | `tests/change_restore_tests.rs` | `ui/tests/approvals_history.test.tsx` | `ui/e2e/live/change-history.spec.ts` › "the history says the change and its field in words, and undoes it" | `jc_resource_propose` |
 | `drift-adopt` | `joinedcontext-portal/src/reconciler/drift.rs` | `tests/drift_api_tests.rs` | `ui/tests/drift_modal.test.tsx` | owed: T-2867 | person only: which side of a drift wins is a resolution a person picks, held to propose on Entity |
 | `drift-revert` | `joinedcontext-portal/src/reconciler/drift.rs` | `tests/drift_api_tests.rs` | `ui/tests/drift_modal.test.tsx` | owed: T-2867 | person only: a revert writes the repository's entity into the live space at once, with no Change to approve, so a person picks it |
 | `blueprint` | `joinedcontext-portal/src/plan.rs` | `tests/ops_flows_tests.rs` | `ui/tests/blueprint_wizard.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "9c. a blueprint proposes a flow from its form, and the approver rejects it" | `jc_flow_start` |
@@ -325,6 +332,12 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 |---|---|---|---|---|---|
 | `find-and-return` | `ui/src/navigation/places.ts` | `tests/preferences_db_tests.rs` | `ui/tests/navigation_ease.test.tsx` | `ui/e2e/live/navigation.spec.ts` › "Ctrl+K and a name reach a pipeline; its link opens the same page for a colleague" | person only: finding a page with the keyboard, starring it and sending its link are a person's own way around the Portal; the assistant reaches data through its own tools |
 
+### 3.26 Feedback (`feedback`)
+
+| step | unit | API | mocked UI | live journey | assistant |
+|---|---|---|---|---|---|
+| `send-and-read` | `joinedcontext-portal/src/api/feedback.rs` | `tests/feedback_api_tests.rs` | `ui/tests/feedback_button.test.tsx` | `ui/e2e/live/feedback.spec.ts` › "a person sends feedback from a page, without their name, and an administrator reads the list" | person only: feedback is a person's own words about what got in their way; an agent has no page, and the list is untrusted text no agent reads |
+
 ## 4. Routes
 
 Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), with the steps that send it. A route the table leaves out, or that no step claims and no `none:` explains, turns `gate_workflows` red.
@@ -338,15 +351,19 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 | `POST /api/v1/organization/people` | `people/create` |
 | `DELETE /api/v1/organization/people/{id}` | `people/remove` |
 | `PATCH /api/v1/organization/people/{id}` | `people/edit` |
+| `DELETE /api/v1/organization/people/{id}/consents/{client}` | `people/sign-out-everywhere` |
 | `POST /api/v1/organization/people/{id}/disable` | `people/disable` |
 | `POST /api/v1/organization/people/{id}/enable` | `people/enable` |
 | `POST /api/v1/organization/people/{id}/remove-second-factor` | `people/remove-second-factor` |
 | `POST /api/v1/organization/people/{id}/reset-password` | `people/reset-password` |
+| `POST /api/v1/organization/people/{id}/resend-invitation` | `people/resend-invitation` |
 | `POST /api/v1/organization/people/{id}/sign-out` | `people/sign-out-everywhere` |
 | `PUT /api/v1/preferences` | none: a person's own language, theme and last project, stored for them and never a workflow step |
 | `POST /api/v1/preferences/recent` | `navigation/find-and-return` |
 | `POST /api/v1/projects` | `project/create` |
 | `DELETE /api/v1/projects/{project}` | `project/retire` |
+| `POST /api/v1/projects/{project}/access/explore` | `policy/try-a-person` |
+| `POST /api/v1/projects/{project}/endpoints/{name}/access/simulate` | `policy/try-a-person` |
 | `POST /api/v1/projects/{project}/agent-runs` | `app/build-by-conversation` |
 | `POST /api/v1/projects/{project}/agent-runs/{id}/answers` | `app/answer-question` |
 | `POST /api/v1/projects/{project}/agent-runs/{id}/cancel` | `app/cancel` |
@@ -384,6 +401,7 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 | `POST /api/v1/alerts/{id}/mute` | `pipeline/alerts` |
 | `POST /api/v1/alerts/notices/{id}/read` | `pipeline/alerts` |
 | `POST /api/v1/projects/{project}/serviceaccounts/{name}/keys` | `serviceaccount/mint-key` |
+| `POST /api/v1/projects/{project}/serviceaccounts/{name}/keys/claims/{claimId}` | `serviceaccount/mint-key` |
 | `DELETE /api/v1/projects/{project}/serviceaccounts/{name}/keys/{keyId}` | `serviceaccount/revoke-key` |
 | `DELETE /api/v1/projects/{project}/spaces/{space}/comments/{id}` | `space/comments` |
 | `POST /api/v1/projects/{project}/serviceaccounts/{name}/keys/{keyId}/rotate` | `serviceaccount/rotate-key` |
@@ -407,6 +425,18 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 | `POST /api/v1/tools/infer-schema` | `datamodel/infer-from-sample` |
 | `POST /api/v1/webhooks/gitea` | none: Gitea calls it with its signature after a push to a project repository; no person or agent sends it |
 | `POST /api/v1/webhooks/sync/{project}/{name}` | `syncsource/webhook` |
+| `POST /api/v1/feedback` | `feedback/send-and-read` |
+| `POST /api/v1/projects/{project}/spaces/{space}/retention/preview` | `space/edit` |
+| `POST /api/v1/projects/{project}/spaces/{space}/trash` | `space/trash` |
+| `DELETE /api/v1/projects/{project}/spaces/{space}/trash/{id}` | `space/trash` |
+| `POST /api/v1/projects/{project}/spaces/{space}/views` | `space/views` |
+| `PUT /api/v1/projects/{project}/spaces/{space}/views/{id}` | `space/views` |
+| `DELETE /api/v1/projects/{project}/spaces/{space}/views/{id}` | `space/views` |
+| `POST /api/v1/projects/{project}/changes/{id}/restore` | `change/restore` |
+| `POST /api/v1/projects/{project}/changes/{id}/undo` | `change/undo` |
+| `POST /api/v1/projects/{project}/apps/rename-shapes` | `app/rename-shapes` |
+| `POST /api/v1/projects/{project}/pipelinetemplates` | `pipeline/template` |
+| `DELETE /api/v1/projects/{project}/pipelinetemplates/{id}` | `pipeline/template` |
 
 ## 5. What is owed
 

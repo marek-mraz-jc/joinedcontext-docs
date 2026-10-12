@@ -61,6 +61,8 @@ The catalogue is the CIM 009 read surface, one tool per operation, so an agent c
 
 A tool's arguments and its handler are functions of the Endpoint the URL names, never of a server-wide "current endpoint": the façade keeps no such state (SP-19), so one connector may later serve several Endpoints and let the agent name which one it reads without anything built today having to change. [ADR-N-025](../Decisions/adr-n-025-one-mcp-connector-several-endpoints.md) (accepted) is that connector: a hub at `/api/mcp` whose tools take a required `endpoint` argument, each call run as that Endpoint's own call, bounded by the token's `endpoint:{slug}` scopes and a per-subject bucket across Endpoints (EP-87, EP-88). §7 says how a connector reaches it.
 
+Since T-3647 an Endpoint's `/mcp` is the broker's MCP surface of its view, and the broker's catalogue is normative (Antares `docs/src/mcp.md`: the same operations, `list_types` and `list_attributes` split into `list_type_details` and `list_attribute_details`, `get_attribute_value`, the write tools, `type` as a list, an opaque `cursor`); the gateway keeps `describe_access` and `describe_schema` and their resources ([API/02 §8](../API/02-endpoint-representations.md#8-model-context-protocol-mcp)). The table is the gateway's own tool set, which the hub (until T-3808) and the fallbacks of §8 still serve.
+
 | CIM 009 operation | REST | Tool | Annotations | Arguments |
 |---|---|---|---|---|
 | Query Entities | `GET /entities` | `query_entities` | `readOnlyHint: true` | every selector and representation argument of the table below |
