@@ -752,6 +752,78 @@ GET /api/v1/projects/{project}/pipelines/{name}/metrics    counters of one runni
   }
   ```
 
+Rates per node come from a second route, which the Studio polls every five seconds while its tab
+is visible (PL-68):
+
+```text
+GET /api/v1/projects/{project}/pipelines/{name}/stats      counts per node over 1, 5 and 15 minutes
+```
+
+```json
+{
+  "pipeline": "hfp-vehicles",
+  "scrapedAt": "2026-10-12T08:15:05Z",
+  "coveredSeconds": 900,
+  "nodes": {
+    "input":  { "1m": { "received": 1200, "sent": 1200, "errors": 0 }, "5m": { "received": 6010, "sent": 6010, "errors": 0 }, "15m": { "received": 18050, "sent": 18050, "errors": 0 } },
+    "step_0": { "1m": { "received": 1200, "sent": 1180, "errors": 20 }, "5m": { "received": 6010, "sent": 5990, "errors": 20 }, "15m": { "received": 18050, "sent": 18030, "errors": 20 } }
+  }
+}
+```
+
+- Each request scrapes the runner as `…/metrics` does and keeps the reading in the Portal's
+  memory for 15 minutes, per pipeline; a reading younger than two seconds is reused, so many open
+  tabs cost the runner one scrape. A window's count is what the counters grew by across the
+  readings inside it; a counter that went down (the runner restarted) counts from zero. Errors
+  and other counters the runner does not export stay absent, not zero.
+- `coveredSeconds` is the age of the oldest sample kept. A window longer than it holds what was
+  seen so far, so the first answer after a Portal restart has every window at zero and
+  `coveredSeconds: 0`. The Portal keeps no history beyond that; Prometheus does (OPS-16).
+- Same rights, same `404` and same `503` as `…/metrics`: a runner that is down is `503`, never a
+  body of zeros, and the Studio shows "stats unavailable".
+- The body carries counts only. The Studio shows received and sent of the last minute on each
+  node and paints a node, and the wire into it, red while it has errors in the last five
+  minutes. A click on a failing node shows its last error from `…/rejected`, the newest record
+  of that step: the message and the time, never the record, whose values the rejected list
+  shows masked to the same readers (PL-52, PL-61).
+
+### 7b. The last messages through each step (T-3974, PL-66)
+
+```text
+GET /api/v1/projects/{project}/pipelines/{name}/samples    what last crossed each node of a running stream
+```
+
+The runner taps the stream after its source (`input`), after each step (`step_{j}`, `compute`)
+and before the write (`output`), the labels of `nodes` above. A tap is a branch whose answer is
+thrown away and whose failure is caught, so the Portal being away costs the stream nothing. It
+sends the first 20 messages after the runner starts and then one in a hundred, to the internal
+`POST /internal/pipelines/{project}/{name}/samples` the runner authenticates to like its
+rejected sink; the Portal keeps the newest 20 per node in memory, each at most 8 KiB of JSON
+(a larger one is kept as a note that it was too large), for 24 hours.
+
+```json
+{
+  "pipeline": "aq-mqtt-ingest",
+  "withheld": false,
+  "nodes": {
+    "input":  [{ "at": "2026-10-12T09:00:01Z", "record": { "id": "SK0263A", "pm10": 21.4 } }],
+    "step_0": [{ "at": "2026-10-12T09:00:01Z", "record": { "id": "urn:ngsi-ld:AirQualityObserved:SK0263A", "pm10": 21.4 } }]
+  }
+}
+```
+
+- Reading needs `read` on `Pipeline` in the project; another project's pipeline, or one the
+  caller may not read, is `404`.
+- A sample shows no more than the pipeline's target Endpoint serves: the attributes its
+  `projection.hiddenAttributes` hides are taken out, and every key of the secret list (MF-24)
+  is masked, wherever it sits in the record.
+- Before the mapping a record carries the source's own field names, so a hidden attribute is
+  not recognisable there (Linked Events' organizer contact becomes `contactPoint` only in the
+  mapping). When any target Endpoint hides an attribute, or a target cannot be read, `nodes`
+  holds `output` alone and `withheld` is `true`; the Studio says so on the earlier steps.
+- An empty `nodes` is a stream that has not run since the runner started, or a Portal that
+  restarted; it is not an error.
+
 ### 7a. Testing a candidate pipeline (PL-43, MF-38)
 
 ```text
@@ -1273,7 +1345,8 @@ reaches a third-party host itself and Model Tools needs no ingress:
 
 ```text
 GET  /api/v1/tools/sdm-catalog   the Smart Data Models catalogue index: subjects, their models
-                                 and each model's attribute names (?refresh=true refills the cache)
+                                 and each model's attribute names (?refresh=true refills the cache,
+                                 ?subject=dataModel.X fills that subject's attribute names first)
 POST /api/v1/tools/generate      LinkML source  → JSON Schema, @context, SHACL, OWL, example
 POST /api/v1/tools/import-sdm    a Smart Data Models model id → the same artifacts as LinkML
 POST /api/v1/tools/infer-schema  a sample file (multipart, ≤ 10 MiB: CSV, XLSX, JSON, PDF)
@@ -1419,12 +1492,15 @@ The editor's operations (DM-13) are `addClass`, `removeClass`, `renameClass`, `s
   daily; `?refresh=true` asks for a refresh now, and an index Model Tools could not refresh is
   answered from the cache with `stale: true` rather than withheld (DM-12). The index carries no
   URLs: a model is named by its catalogue identifier, and fetching it is `import-sdm`.
-- `refresh` is the only parameter the route takes, and the only thing a caller may steer: which
-  catalogue is fetched is Model Tools' own allowlist (DM-10), never the request
-  (`joinedcontext-portal/src/tools/model_tools.rs`). The index is passed through as Model Tools
-  wrote it, so `attributes` is there for every model whose schema that build read and `[]` for the
-  rest; the wizard narrows by subject and searches by attribute in the browser, over the one index
-  it already holds.
+- `refresh` and `subject` are the two parameters the route takes, and the only things a caller may
+  steer: which catalogue is fetched is Model Tools' own allowlist (DM-10), never the request
+  (`joinedcontext-portal/src/tools/model_tools.rs`). `subject` (comma-separated, at most 8) names
+  subjects of the index whose model attribute names Model Tools fills before it answers, once per
+  replica; a name the index does not list fetches nothing. The CSV upload (T-3840) fills the city
+  subjects it ranks a file against this way. The index is passed through as Model Tools wrote it,
+  so `attributes` is there for every model whose schema that replica read and `[]` for the rest;
+  the wizard narrows by subject and searches by attribute in the browser, over the one index it
+  already holds.
 - `linkml` is the LinkML source itself. `import-sdm` answers with it, because an import produces
   the document the editor then edits, and its `annotations` carry `spec.source.repository`,
   `spec.source.path` and `spec.source.commit` so the import is reproducible and its provenance
@@ -2876,6 +2952,48 @@ GET /api/v1/projects/{project}/spaces/{space}/quality     the last run's report 
   `outlierExamples`, `min` and `max` are absent or empty for a caller without `read` on `Entity`
   in the space; the counts are the same for everyone who reads the space.
 
+### 27.1 Checks on write (DM-94)
+
+Every write through an Endpoint is held to the space's `spec.quality` rules, and the gateway
+counts each check in `jc_quality_checks_total{space,type,rule,outcome}` (ADR-N-046 2.7). Every
+Portal replica reads the gateway's counters once an hour and on a request at most once a minute,
+and keeps the readings for eight days; a window's count is what the counters grew by inside it.
+
+```text
+GET /api/v1/projects/{project}/spaces/{space}/quality/checks     the space's checks → 200
+```
+
+```json
+{
+  "at": "2026-10-12T08:00:00Z",
+  "windows": { "24h": "2026-10-11T08:00:00Z", "7d": "2026-10-10T09:00:00Z" },
+  "rules": [
+    {
+      "type": "AirQualityObserved", "rule": "pm10-plausible", "attribute": "pm10",
+      "24h": { "pass": 1180, "reject": 0, "flag": 20, "quarantine": 0, "passRate": 0.9833 },
+      "7d": { "pass": 8200, "reject": 0, "flag": 140, "quarantine": 0, "passRate": 0.9832 },
+      "lastRejected": null
+    }
+  ]
+}
+```
+
+- `at` is the newest reading, `null` while there is none (no gateway address, or it never
+  answered); `rules` is then empty and the page says the checks are unknown, never "all pass".
+- `windows` names where each window starts: the oldest reading inside it, later than 24 hours or
+  7 days ago while the replica has not held its readings that long. A counter that went down
+  between two readings (the gateway restarted) counts from zero.
+- `rules` has one row per rule of the space's `spec.quality` and per type and rule the counters
+  name, ordered by type and rule. `attribute` comes from the manifest, empty for a rule no longer
+  declared. `passRate` is `pass` over all four, `null` when nothing was checked in the window.
+- `lastRejected` is the reading at which the rule's `reject` counter last grew, `null` when it
+  did not in seven days: the latest rejected write by rule and attribute, never its value.
+- The retention deletions sit beside the checks (DM-85, DM-96): `GET /api/v1/projects/{project}/spaces/{space}/retention/deleted`
+  answers what the broker's sweeps deleted of the space since the broker started, per class and
+  kind (`entity`, `history`), and `POST …/retention/preview` with a draft `retention` answers
+  what a shorter one would delete now; `503` when the broker does not answer.
+- Whoever reads the space reads its checks; a project or space the caller may not read is `404`.
+
 ## 28. Organization limits (PF-96…PF-102, ADR-N-035)
 
 What Organization settings shows for every policy and limit (PF-102): the catalog of ADR-N-035
@@ -3591,7 +3709,47 @@ GET /api/v1/organization/brokers                                   → 200
 - Who may read: organization administrators only; anybody else is `403`. No address or token is
   part of the answer.
 
-## 44. Moving a space to another broker (T-4000, PF-115, ADR-N-047 §2.6)
+## 44. What an MQTT broker measures (T-4043, MF-54, ADR-N-048 §2.8)
+
+The MQTT brokers page shows, per broker, the devices connected now, the messages per second and
+when each account connected. The Portal reads the broker's own HTTP API inside the cluster; the
+browser never reaches a broker, and nothing here is typed by anyone.
+
+```text
+GET /api/v1/projects/{project}/mqttbrokers/{name}/measured          → 200
+```
+
+```json
+{"measured": true, "observedAt": "2026-10-12T08:47:05Z", "messagesPerSecond": 2.0,
+ "publishers": 1, "reason": null,
+ "accounts": [{"serviceAccount": "cam-west", "connected": 1, "since": "2026-10-12T08:46:51Z"},
+              {"serviceAccount": "cam-east", "connected": 0, "since": null}]}
+```
+
+```json
+{"measured": false, "observedAt": "2026-10-12T08:47:05Z", "messagesPerSecond": null,
+ "publishers": null, "reason": "the broker did not answer; try again in a minute",
+ "accounts": []}
+```
+
+- `messagesPerSecond` is RMQTT's `messages.publish` counter of the two newest samples of
+  `GET /api/v1/metrics/history/sum` (one every five seconds), their difference over the time
+  between them; `null` while the broker holds fewer than two samples.
+- `accounts` lists every ServiceAccount the broker's roles name, in name order. `connected` counts
+  the broker's connected clients (`GET /api/v1/clients`) whose `username` is the account's
+  Keycloak client `{project}-{serviceAccount}`; `since` is the newest `connected_at` among them,
+  and `null` when none is connected: sessions are clean (§2.2), so the broker keeps nothing of a
+  client that left. `publishers` sums `connected` over the accounts of roles with `publish`
+  filters. The pipeline runner and any other client is neither counted nor named.
+- `measured: false` with a `reason` when the broker did not answer within five seconds, answered
+  something else than its HTTP API, or the instance runs without the service mesh (the broker then
+  serves no HTTP API at all, ADR-N-048 §2.8). A number is never shown in that case, and never
+  zero for "unknown".
+- Who may read: whoever may read the project's MqttBroker manifests. Anybody else gets `404`, the
+  same answer as a broker the project does not declare (PF-59). No token, topic or client address
+  is part of the answer.
+
+## 45. Moving a space to another broker (T-4000, PF-115, ADR-N-047 §2.6)
 
 One job moves one space, with its history, from the broker it lives on to another `ContextBroker`
 of the organization. Editing `brokerRef` by hand is refused for a space that holds entities

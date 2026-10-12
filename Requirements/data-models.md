@@ -5,9 +5,9 @@ title: "Data Models & the LinkML Editor"
 
 # Data Models & the LinkML Editor
 
-Family **DM** (DM-01…DM-80). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **DM** (DM-01…DM-96). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
-This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-80**. Consumer classes per `00-index.md`.
+This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-96**. Consumer classes per `00-index.md`.
 
 ## 1. Source of truth and artifacts
 
@@ -28,6 +28,7 @@ This chapter specifies how data models are authored, imported, generated, versio
 - **DM-10** — Fetching MUST be performed server-side by Model Tools with an allowlist restricted to the Smart Data Models organisation; the browser MUST NOT fetch third-party schemas directly.
 - **DM-11** — An imported model MUST keep every upstream slot; slots the user does not use MUST be marked `deprecated: true` rather than removed, so payloads of federation partners still validate.
 - **DM-12** — The catalogue index MUST be cached by Model Tools with a daily refresh and an explicit "refresh now" action; catalogue unavailability MUST degrade to the cached index, never block editing.
+- **DM-81** [H] — The Portal MUST let a person upload a CSV into the current Context Space or a new one (T-3840): it MUST rank the Smart Data Models types of the city subjects against the file's columns and offer the best two above a threshold with their score and column mapping, or the file's own inferred model; propose the space, model, Endpoint and a write Policy for that person through `jc_space_complete` with `upload: true`, the chosen Smart Data Models type passed as its LinkML; and, once the change is live, write the rows through the space's Endpoint by upsert with the person's session, a re-upload updating the same entities. The file MUST be refused above 50 MB before it is read, the rejected rows MUST download as CSV with formula cells made inert, and a person who may not propose the space MUST NOT be offered the upload.
 
 ## 3. Authoring (secondary path)
 
@@ -140,6 +141,26 @@ The owner, 2026-09-24: "write more tasks to validate everything" (T-2796). A wri
 - **DM-79** [H] — The Data models page MUST show "Organization models" and "This project's models" as two sections, every model picker MUST show each entry's level, and `GET /api/v1/organization/datamodels` MUST answer `level` (`organization` or `project`) for every model (DM-63).
 - **DM-80** [S] — A slot MAY carry an `equals_expression` over slots of its own class in the subset of [Architecture/08 §3](../Architecture/08-pipelines.md#formula-fields-a-slot-computed-from-its-entity-dm-80-t-3133); the Portal MUST compile it to Bloblang only from that subset's tokens, MUST refuse a reference to a slot outside the class, to a Relationship or a GeoProperty, and a cycle between formula slots naming every slot on it, and MUST propose the class's `formulas-{class}` derived pipeline and the Policy that lets the project's `pipelines` ServiceAccount write exactly the formula slots; the grid MUST show a formula slot read-only.
 
+## 15. Data lifecycle and quality
+
+The decision and its reasons are in [ADR-N-046](../Decisions/adr-n-046-data-lifecycle-and-quality.md).
+
+- **DM-82** [S] — A ContextSpace MAY declare `spec.retention`, at most one rule per entity type of its model, each with an optional `current` and an optional `history` ISO 8601 duration of days, hours, minutes and seconds (`PT5M`, `PT8H`, `P30D`, `P1DT12H`) from one minute to 3650 days; the platform MUST NOT delete data of a type that has no rule in its space through retention.
+- **DM-83** — The broker MUST remove, at least once a minute, every Entity of a ruled type not modified for the rule's `current` that carries no `expiresAt` of its own, so the clock restarts on every create, update, upsert and append; an `expiresAt` sent by the writer MUST win (TS 104 175 4.22).
+- **DM-84** [P] — The broker MUST delete the temporal instances of a ruled type in its tenant that are older than the rule's `history`, in bounded batches, at least once a minute while any rule is under an hour, and count each deletion in `antares_retention_deleted_total{tenant,type,kind}`.
+- **DM-85** [S][H] — The Portal MUST let only the space's owner role set or shorten a retention rule, MUST show the count the broker reports a shortening will delete and ask for confirmation before saving it, and MUST show every rule of a space with its deletion counts.
+- **DM-86** [S] — The gateway MUST check every create, update, upsert and append through an Endpoint against the slot constraints of the space's model (`required`, `minimum_value`, `maximum_value`, `pattern`, enum, `range`) and refuse a write that breaks one (DM-27).
+- **DM-87** — A ContextSpace MAY declare `spec.quality`, at most 64 named rules of the kinds `range`, `area` and `freshness`, each naming an entity type of its model, an attribute and an optional outcome among `reject`, `flag` and `quarantine`; a rule without an outcome MUST take its kind's default (`range` and `area` flag, a `freshness` `maxAhead` rejects, a `freshness` `maxAge` quarantines); a rule with a `maxAge` MUST NOT name an outcome other than `quarantine`, because the sweep finds a stale entity long after its write and has nothing to refuse or flag.
+- **DM-88** [S] — A write refused by a quality rule MUST answer `400` with an RFC 7807 problem of type `quality-rule` ([API/00 §4](../API/00-intro.md)), naming the rule and the attribute and never the value, and a pipeline's refused record MUST go to its rejected list with the rule's name (PL-61).
+- **DM-89** — A flagged attribute MUST be stored with a sub-Property `qualityFlags` listing the names of the rules it broke, and a write of that attribute that breaks none MUST store no `qualityFlags`.
+- **DM-90** [S] — A quarantined entity MUST carry the Properties `quarantinedAt` and `quarantineRules`, and every permit the Portal compiles into the space's rule document for a role other than the space's owner and steward MUST exclude it with the condition `!quarantinedAt`.
+- **DM-91** — The Portal's leading replica MUST check every `freshness` rule with a `maxAge` at least once a minute, reading the space as its own client, MUST apply the rule's outcome to each entity whose attribute's `observedAt` is older than `maxAge`, and MUST lift the mark when it is not.
+- **DM-92** [P][S] — Rule evaluation on the write path MUST use no network and no store access, MUST compile every pattern with a linear-time engine under a 64 KiB size limit, and MUST refuse a space manifest with more than 64 quality rules.
+- **DM-93** — The gateway, the pipeline's validation stage and the sweep MUST count every check in `jc_quality_checks_total`, labelled by space, type, rule and outcome, the outcome being `pass`, `reject`, `flag` or `quarantine`.
+- **DM-94** [H][S] — The space quality page MUST show, to whoever may read the space, per type and rule the checks and the pass rate over 24 hours and 7 days, the stale and quarantined counts, the latest rejected writes by rule and attribute without values, and the retention deletions (API/01 §27).
+- **DM-95** — `jcctl publish` MUST add to each dataset of the DCAT-AP record a `dqv:hasQualityMeasurement` for the pass rate of its space's quality checks over seven days and one for the freshness (the age of the newest change when the daily quality run read the space, API/01 §27), and the CKAN dataset MUST show both.
+- **DM-96** [S] — Every automatic removal of context data MUST be declared in a manifest of the space or of a pipeline (PL-64), MUST apply only to the space that declares it, and MUST be logged per sweep with its counts and never with values.
+
 ## Traceability
 
 | Requirements | Section | Architecture | Tests |
@@ -164,7 +185,9 @@ The owner, 2026-09-24: "write more tasks to validate everything" (T-2796). A wri
 | DM-64…DM-73 | Relationships, strict like foreign keys | [11-data-models.md](../Architecture/11-data-models.md#12-relationships-between-classes-dm-64dm-73) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-74 | Stored data held to its model | [API/01 §27](../API/01-portal-api.md#27-data-quality-of-a-space-dm-74) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | DM-75…DM-79 | Organization and project models, shared upwards by an administrator | [ADR-N-039](../Decisions/adr-n-039-organization-and-project-data-models.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| DM-82…DM-96 | Data lifecycle and quality | [ADR-N-046](../Decisions/adr-n-046-data-lifecycle-and-quality.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | DM-80 | Formula fields computed by a derived pipeline | [08-pipelines.md §3](../Architecture/08-pipelines.md#formula-fields-a-slot-computed-from-its-entity-dm-80-t-3133) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| DM-81 | Upload a CSV into a space, ranked against Smart Data Models | [09-portal.md](../Architecture/09-portal.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
 ## Related
 
