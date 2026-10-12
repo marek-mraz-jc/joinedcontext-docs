@@ -3506,6 +3506,53 @@ DELETE /api/v1/organization/people/{id}/consents/{client}          → 204
 - `503` when the Portal has no gateway address, no realm admin client or no Keycloak client to
   ask the gateway with, or one of them did not answer.
 
+
+## 42. Pipeline templates of a project (T-3976, PL-52)
+
+A pipeline a person saved to start the next one from, offered in the pipeline gallery beside the
+fixed recipes. A template is the Portal's own record in its database (`pipeline_templates`), not
+a kind in Git: it runs nothing and configures nothing, so saving one is no Change and needs no
+approval. Using one fills the pipeline form, and that pipeline is checked and proposed like any
+other.
+
+```text
+GET    /api/v1/projects/{project}/pipelinetemplates        the project's templates, newest first → 200
+POST   /api/v1/projects/{project}/pipelinetemplates        save one from a pipeline manifest → 201
+DELETE /api/v1/projects/{project}/pipelinetemplates/{id}   delete one → 204
+```
+
+The `POST` body is `{ "title": "…", "manifest": { …a Pipeline… } }`. The Portal keeps the
+manifest's `spec` alone and takes out of it what belongs to the project it came from: the
+`secretRefs`, each source's `dataSourceRef` and `endpointRef`, each output's `targetEndpoint`, and
+the `contextSpaceRef`. What stays is the shape of the pipeline: its class, schedule, steps and
+mapping, each source's query and trigger, each output's type and mode, its quotas. A manifest
+holding a credential written out (a `password`, `token` or another key of the secret list, as a
+write refuses it, MF-24) is `400` and nothing is saved. The title is 1 to 120 characters; a
+project holds at most 50 templates (`409` past that), each at most 64 KiB of JSON (`400` past that).
+
+Templates are per project: one project's never lists in another. Reading them needs `read` on
+`Pipeline` in the project, saving and deleting `propose` on it (`403`); a project the caller may
+not read is `404`, as is a template id the project does not hold.
+
+```json
+{
+  "items": [
+    {
+      "id": "3c0f6f0e-8a1b-4c2d-9e4f-5a6b7c8d9e0f",
+      "title": "MQTT sensor feed",
+      "spec": {
+        "class": "resident",
+        "sources": [{}],
+        "steps": [{ "kind": "bloblang", "bloblang": "root.id = \"urn:ngsi-ld:AirQualityObserved:\" + this.id" }],
+        "outputs": [{ "type": "AirQualityObserved", "mode": "upsert" }]
+      },
+      "createdBy": "Jana Kováčová",
+      "createdAt": "2026-10-12T09:00:00Z"
+    }
+  ]
+}
+```
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
