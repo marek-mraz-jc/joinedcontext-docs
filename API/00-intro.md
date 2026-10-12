@@ -137,7 +137,8 @@ A problem type is one of these slugs; `ProblemDetails::new` with any other fails
 | `too-many-connections` | 429, 503 | Close a WebSocket you no longer read, or wait a minute, then connect again. |
 | `internal-error` | 500 | Try again; if it happens again, report the `requestId`. |
 | `subscription-not-routable` | 501 | This deployment cannot deliver to that address; use an HTTP(S) receiver the platform reaches. |
-| `federation-identity-unavailable` | 501 | This deployment has no federation identity; ask an administrator to configure one. |
+| `federation-identity-unavailable` | 501 | A source of this space asks for your own token but is outside this platform; ask its steward to register it with `serviceAccount` identity. |
+| `federation-exchange-failed` | 502, 503 | The identity provider did not issue your token for the brokers this read federates to; sign in again, or try again shortly. |
 | `ogc-view-unavailable` | 501 | Read this endpoint through its NGSI-LD surface; its OGC surface needs a broker view it does not have. |
 | `odata-view-unavailable` | 501 | Read this endpoint through its NGSI-LD surface; its OData surface needs a broker view it does not have. |
 | `odata-batch-unavailable` | 501 | Send each OData write as a request of its own; `$batch` is not served through an endpoint. |
@@ -146,6 +147,7 @@ A problem type is one of these slugs; `ProblemDetails::new` with any other fails
 | `upstream-unavailable` | 502, 503 | A service behind the platform did not answer; try again in a minute. |
 | `upstream-redirect` | 502 | The service behind the platform answered with a redirect it may not follow; ask its owner for the final address. |
 | `service-unavailable` | 503 | The platform is not ready for this yet; try again in a minute. |
+| `space-moving` | 503 | The space is moving to another broker and takes no writes; send the write again after the seconds `Retry-After` names. |
 | `delivery-timeout` | 504 | The receiver did not answer in time; check that it is reachable and try again. |
 
 ### Existence Masking
