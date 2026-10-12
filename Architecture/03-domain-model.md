@@ -41,6 +41,8 @@ classDiagram
         +Boolean isSandbox
         +Duration ttl
         +MissingUnitCode missingUnitCode
+        +List~RetentionRule~ retention
+        +List~QualityRule~ quality
     }
 
     class DataModel {

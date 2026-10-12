@@ -119,6 +119,7 @@ A problem type is one of these slugs; `ProblemDetails::new` with any other fails
 | `bad-request` | 400 | Correct the request as the detail says and send it again. |
 | `invalid-body` | 400 | Send a JSON body of the documented shape; the detail names what is wrong. |
 | `urn-scheme` | 400 | Use an entity id of the form `urn:ngsi-ld:{Type}:{id}`. |
+| `quality-rule` | 400 | Correct the attribute the detail names: a quality rule of the space refuses its value (DM-88). |
 | `unauthorized` | 401 | Sign in again, or send a valid bearer token for this audience. |
 | `forbidden` | 403 | Ask a project owner or an organization administrator for the role this needs. |
 | `domain-not-verified` | 403 | Verify the domain in the organization settings first. |
