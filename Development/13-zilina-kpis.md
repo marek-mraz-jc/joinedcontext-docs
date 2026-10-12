@@ -113,9 +113,10 @@ previous value would be a second number this page does not define.
 ## 4. When a cube stops
 
 A run whose read brings no row of any of the five cubes writes nothing (the endpoint refused the
-pipeline, or answered something else). An indicator whose cube drops out alone is written as
-`not measured` with the window it looked at. An indicator unseen for three weekly runs is deleted
-by the pipeline's expiry, never shown with a stale value.
+pipeline, or answered something else). An indicator whose cube drops out alone is left out of
+the run: the value it had stays, with its own `calculationPeriod`, and nothing is written over a
+zero period (T-4081). The pipeline runs daily; an indicator unseen for 21 days is deleted by the
+pipeline's expiry, never shown with a stale value.
 
 ## Related
 
