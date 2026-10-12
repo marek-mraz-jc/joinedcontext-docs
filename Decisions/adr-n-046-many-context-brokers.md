@@ -28,7 +28,7 @@ Nothing above keys the broker by space. The gateway already resolves a space for
 
 ### 2.1 Kind `ContextBroker`
 
-An organization-scoped kind names each broker instance:
+An organization-scoped kind names each broker instance, one file per broker at `brokers/{name}.yaml` of the organization repository:
 
 ```yaml
 apiVersion: joinedcontext.com/v1alpha1
