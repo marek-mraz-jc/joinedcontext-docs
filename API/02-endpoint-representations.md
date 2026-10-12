@@ -862,6 +862,45 @@ Three answers are worth knowing before writing a client:
 
 Unauthenticated access follows the Endpoint's audience: a `public` Endpoint answers `tools/list` and every read tool with no token, everything else answers `401` with `WWW-Authenticate: Bearer resource_metadata="https://{host}/api/endpoint/{endpointSlug}/.well-known/oauth-protected-resource"` (AG-32).
 
+### The hub (`/api/mcp`)
+
+One address over every Endpoint ([EP-87](../Requirements/endpoints.md), [ADR-N-025](../Decisions/adr-n-025-one-mcp-connector-several-endpoints.md)). Without a token it answers over the `public` Endpoints that serve `mcp`; with a token over those plus the ones the token reaches (`endpoint:*` reaches every Endpoint the person may read, EP-88). `list_endpoints` takes `q`, `type`, `attribute`, `space`, `access`, `limit` and `cursor` (EP-111); every other tool is the Endpoint's own tool with one more argument, `endpoint`, a slug `list_endpoints` answered (EP-112).
+
+```bash
+curl -sS -X POST "https://{host}/api/mcp" \
+  -H 'content-type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"list_endpoints","arguments":{"type":"AirQualityObserved","limit":1}}}'
+```
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "isError": false,
+    "content": [{ "type": "text", "text": "the same rows, serialised as JSON for a model that reads text" }],
+    "structuredContent": {
+      "endpoints": [
+        {
+          "slug": "k4y7pq2mzt6vhx3nbwrs5cjd8f",
+          "title": { "en": "Air quality" },
+          "description": { "en": "Hourly air quality of the city's stations" },
+          "space": "ovzdusie",
+          "access": "public",
+          "types": ["AirQualityObserved"],
+          "attributes": { "AirQualityObserved": ["dateObserved", "location", "no2", "pm10"] },
+          "temporal": true,
+          "dcat": "https://{host}/api/endpoint/k4y7pq2mzt6vhx3nbwrs5cjd8f/",
+          "mcp": "https://{host}/api/endpoint/k4y7pq2mzt6vhx3nbwrs5cjd8f/mcp",
+          "schema": "https://{host}/api/endpoint/k4y7pq2mzt6vhx3nbwrs5cjd8f/schema/v1/model.linkml.yaml"
+        }
+      ],
+      "total": 1
+    }
+  }
+}
+```
+
 ## 8a. WebSocket (`ws`)
 
 Path: `wss://{host}/api/endpoint/{endpointSlug}/ws`
@@ -872,7 +911,7 @@ One connection carries NGSI-LD Subscriptions made over the socket and the Notifi
 
 Path: `/api/endpoints`, on the gateway's host, outside any one Endpoint.
 
-The REST twin of the hub's `list_endpoints` ([EP-105](../Requirements/endpoints.md), [ADR-N-025 §4a](../Decisions/adr-n-025-one-mcp-connector-several-endpoints.md)): the Endpoints this token reaches and may read something through, whatever they serve. A person's token, a hub token with `endpoint:` scopes, and a ServiceAccount's `client_credentials` token each get the list their token opens (EP-88). Without a token the answer is `401`; nothing is listed anonymously, and a `public` Endpoint's own URL still answers without one.
+The REST twin of the hub's `list_endpoints` ([EP-105](../Requirements/endpoints.md), [ADR-N-025 §4a](../Decisions/adr-n-025-one-mcp-connector-several-endpoints.md)): the Endpoints this token reaches and may read something through, whatever they serve. A person's token, a hub token with `endpoint:` scopes, and a ServiceAccount's `client_credentials` token each get the list their token opens (EP-88). Without a token the answer lists the `public` Endpoints only, as the hub does (EP-87); nothing internal is named. The filters and the row fields are the hub's (EP-111).
 
 ```bash
 curl -sS "https://{host}/api/endpoints?limit=2" -H "authorization: Bearer $TOKEN"
@@ -901,7 +940,7 @@ curl -sS "https://{host}/api/endpoints?limit=2" -H "authorization: Bearer $TOKEN
 }
 ```
 
-`limit` is 1 to 100 (default 50); `cursor` is the previous page's `nextCursor`. Any other parameter, or a value outside those, is `400`. `types` are the entity types this caller may read there, not every type the Endpoint serves. The list is computed from the token on every request, so a revoked grant is gone on the next call. Each call spends one request of the hub's per-subject bucket (EP-87) and writes one audit line naming the principal and the count.
+`limit` is 1 to 100 (default 50); `cursor` is the previous page's `nextCursor`; `q`, `type`, `attribute`, `space` and `access` narrow the list (EP-111). Any other parameter, or a value outside those, is `400`; a filter that matches nothing is an empty list. `types` are the entity types this caller may read there, not every type the Endpoint serves. The list is computed from the token on every request, so a revoked grant is gone on the next call. Each call spends one request of the hub's per-subject bucket (EP-87) and writes one audit line naming the principal and the count.
 
 ## 10. In the open data portal
 
@@ -916,6 +955,8 @@ A published Endpoint (`spec.publish.ckan`) is one CKAN dataset with one resource
 | OData v4 | `OData` | Excel: Data, Get Data, From OData Feed; Power BI: Get data, OData feed; the service URL |
 | GeoJSON, CSV, XLSX, JSON, ZIP | their own | that the file is generated on each download from live data |
 | Schema index and artifacts | `JSON`, `LinkML`, `SHACL`, … | the model version and the sha256 (EP-68) |
+
+Above the resources, the dataset page shows the "Connect an AI assistant" panel (EP-113): the hub's URL and copy buttons for Claude, VS Code, Cursor and a plain `mcpServers` entry. The panel names the hub, never this dataset's slug, so one installation serves the whole catalogue and the agent picks the Endpoint with `list_endpoints`. The catalogue's home page and the Portal's Endpoint page show the same panel.
 
 Publishing widens discovery and never data: every URL is the Endpoint's own, answers under its Policy, and carries no token (EP-110). A restricted Endpoint's resources are links a person without a grant cannot open.
 

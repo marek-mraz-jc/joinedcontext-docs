@@ -70,6 +70,15 @@ A `ServiceAccount` asks for its token with `client_credentials`: there is no con
 
 A client that does not speak MCP (an SDK, a script, a city's ETL) asks the same question at `GET /api/endpoints` (EP-105): the same function as `list_endpoints`, the same token rules and the same per-subject bucket, over every representation rather than only the MCP ones, as JSON instead of a tool result.
 
+### 4b. One connector for the whole portal (addendum, 2026-10-12, T-4114, owner request)
+
+The owner asked for one MCP address a person adds once to an AI client and then reaches every open dataset, and after login every internal one they may read. Two changes, neither of which widens a single call:
+
+- **Anonymous.** Without a token the hub answers over every `public` Endpoint that serves `mcp`, as each of their own MCP URLs already does (EP-24, AG-32): the same synthetic `public` role, the same per-client-address bucket. Nothing internal is named. A call that names an internal slug without a token answers `401` with the hub's resource metadata, which is how a client learns to log in.
+- **`endpoint:*`.** A default client scope on `mcp-hub`, shown on the consent screen as "every Endpoint you may read". A token carrying it reaches what the person's edge session reaches (§4, third bullet). The consent stays explicit and the per-Endpoint scopes stay for a person who wants to hand an assistant less. A token with neither still reaches nothing.
+
+Each call is still that Endpoint's own call under its Policy; the allow-list still only narrows. Requirements: EP-87, EP-88, EP-105 amended; EP-111 (filters and richer rows in `list_endpoints`), EP-112 (one tool catalogue on every MCP surface), EP-113 (the install panel).
+
 ## 5. Alternatives Considered
 
 | Alternative | Why not |
