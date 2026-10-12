@@ -338,6 +338,7 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 | `POST /api/v1/organization/people` | `people/create` |
 | `DELETE /api/v1/organization/people/{id}` | `people/remove` |
 | `PATCH /api/v1/organization/people/{id}` | `people/edit` |
+| `DELETE /api/v1/organization/people/{id}/consents/{client}` | `people/sign-out-everywhere` |
 | `POST /api/v1/organization/people/{id}/disable` | `people/disable` |
 | `POST /api/v1/organization/people/{id}/enable` | `people/enable` |
 | `POST /api/v1/organization/people/{id}/remove-second-factor` | `people/remove-second-factor` |
@@ -347,6 +348,7 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 | `POST /api/v1/preferences/recent` | `navigation/find-and-return` |
 | `POST /api/v1/projects` | `project/create` |
 | `DELETE /api/v1/projects/{project}` | `project/retire` |
+| `POST /api/v1/projects/{project}/access/explore` | `policy/try-a-person` |
 | `POST /api/v1/projects/{project}/agent-runs` | `app/build-by-conversation` |
 | `POST /api/v1/projects/{project}/agent-runs/{id}/answers` | `app/answer-question` |
 | `POST /api/v1/projects/{project}/agent-runs/{id}/cancel` | `app/cancel` |
