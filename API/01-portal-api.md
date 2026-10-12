@@ -486,6 +486,7 @@ GET  /api/v1/projects/{project}/changes                  open proposals, newest 
 GET  /api/v1/projects/{project}/changes/history          merged and rejected ones, newest first, paged
 POST /api/v1/projects/{project}/changes/{id}/restore     propose again what a merged removal took
 POST /api/v1/projects/{project}/changes/{id}/undo        propose again what a merged update altered
+GET  /api/v1/projects/{project}/changes/{id}/manifests   the manifests a merged change wrote
 GET  /api/v1/projects/{project}/changes/{id}             one proposal with its plan diff
 POST /api/v1/projects/{project}/changes/{id}/approve     review + merge
 POST /api/v1/projects/{project}/changes/{id}/reject      review "request changes" + close
@@ -599,6 +600,31 @@ under `projects/{project}/`, read at the commit its branch was cut from, propose
 (`202`). It answers `409` while any of those files holds something other than what the change wrote,
 so an undo never drops a later change; a change that is not merged or that modified nothing is `409`
 too (a removal is restored, a creation removed). It needs `propose` on every kind it puts back.
+
+`GET …/changes/{id}/manifests` answers the manifests a merged change wrote, each read at the
+change's own last commit, as a `List` of resources (T-3975). It is how a resource's editor offers
+"Restore this version": the person loads one into the form, checks it and proposes it as a new
+Change, so nothing is written by this read and the restore goes through Check and approval like any
+edit. It carries what Git holds, so a `secretRef` and never a value. A manifest of a kind the caller
+does not read is left out, as is a native file (a LinkML source, a `bento.yaml`) and a file the
+change deleted. A change the caller may not read is `404`; one that is not merged is `409`, since
+what it proposed never was a version of the resource.
+
+```json
+{
+  "apiVersion": "joinedcontext.com/v1alpha1",
+  "kind": "List",
+  "metadata": {},
+  "items": [
+    {
+      "apiVersion": "joinedcontext.com/v1alpha1",
+      "kind": "Pipeline",
+      "metadata": { "name": "aq-mqtt-ingest", "namespace": "banskabystrica" },
+      "spec": { "class": "resident", "secretRefs": [{ "name": "mqtt-credentials", "key": "password", "envVar": "MQTT_PASSWORD" }] }
+    }
+  ]
+}
+```
 
 The page of one change reads its "before" at the commit its branch was cut from once the change is
 closed (`merge_base`): after a merge the default branch already holds what it made, so a merged
@@ -2934,7 +2960,7 @@ GET /api/v1/projects/{project}/spaces/{space}/usage     the space's entity count
 ```
 
 - A space the broker has no tenant for yet holds nothing: `entities` is `0`.
-- `broker` names the `ContextBroker` the space lives on (PF-111, §42); the count is asked of that
+- `broker` names the `ContextBroker` the space lives on (PF-111, §43); the count is asked of that
   broker. A space whose `brokerRef` names no broker, or whose broker has no address, is `503`
   naming the broker or the `brokerRef`, never counted on `main`.
 - Without a broker address (`JC_PORTAL_BROKER_URL`), or while the broker does not answer, the
@@ -3483,7 +3509,53 @@ DELETE /api/v1/organization/people/{id}/consents/{client}          → 204
 - `503` when the Portal has no gateway address, no realm admin client or no Keycloak client to
   ask the gateway with, or one of them did not answer.
 
-## 42. Brokers (T-3990, PF-116, ADR-N-046)
+## 42. Pipeline templates of a project (T-3976, PL-52)
+
+A pipeline a person saved to start the next one from, offered in the pipeline gallery beside the
+fixed recipes. A template is the Portal's own record in its database (`pipeline_templates`), not
+a kind in Git: it runs nothing and configures nothing, so saving one is no Change and needs no
+approval. Using one fills the pipeline form, and that pipeline is checked and proposed like any
+other.
+
+```text
+GET    /api/v1/projects/{project}/pipelinetemplates        the project's templates, newest first → 200
+POST   /api/v1/projects/{project}/pipelinetemplates        save one from a pipeline manifest → 201
+DELETE /api/v1/projects/{project}/pipelinetemplates/{id}   delete one → 204
+```
+
+The `POST` body is `{ "title": "…", "manifest": { …a Pipeline… } }`. The Portal keeps the
+manifest's `spec` alone and takes out of it what belongs to the project it came from: the
+`secretRefs`, each source's `dataSourceRef` and `endpointRef`, each output's `targetEndpoint`, and
+the `contextSpaceRef`. What stays is the shape of the pipeline: its class, schedule, steps and
+mapping, each source's query and trigger, each output's type and mode, its quotas. A manifest
+holding a credential written out (a `password`, `token` or another key of the secret list, as a
+write refuses it, MF-24) is `400` and nothing is saved. The title is 1 to 120 characters; a
+project holds at most 50 templates (`409` past that), each at most 64 KiB of JSON (`400` past that).
+
+Templates are per project: one project's never lists in another. Reading them needs `read` on
+`Pipeline` in the project, saving and deleting `propose` on it (`403`); a project the caller may
+not read is `404`, as is a template id the project does not hold.
+
+```json
+{
+  "items": [
+    {
+      "id": "3c0f6f0e-8a1b-4c2d-9e4f-5a6b7c8d9e0f",
+      "title": "MQTT sensor feed",
+      "spec": {
+        "class": "resident",
+        "sources": [{}],
+        "steps": [{ "kind": "bloblang", "bloblang": "root.type = \"AirQualityObserved\"" }],
+        "outputs": [{ "type": "AirQualityObserved", "mode": "upsert" }]
+      },
+      "createdBy": "Jana Kováčová",
+      "createdAt": "2026-10-12T09:00:00Z"
+    }
+  ]
+}
+```
+
+## 43. Brokers (T-3990, PF-116, ADR-N-046)
 
 Administration → Brokers: every context broker of the organization, the spaces on it, its version,
 health and load. The Portal asks each broker itself; the browser never reaches a broker.
