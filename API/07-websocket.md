@@ -47,7 +47,7 @@ Every message, in both directions, is one text frame holding one JSON object wit
 | `x-gap` | server | none; notifications `x-from` to `x-to` were lost, so read the entities again over REST |
 | `x-closing` | server, before it closes | none; `x-reason` is `lifetime`, `overflow`, `view-removed`, `shutdown` or `idle` |
 
-A Subscription made over the socket is an ordinary one: it is deleted 30 seconds after the connection closes unless you resume. Keep its id from `x-result`; it is the `x-subscription` of every `x-update` and `x-unsubscribe`. With a token, `GET {endpointUrl}/ngsi-ld/v1/subscriptions` lists it too. An anonymous caller has no identity to list by, so that `GET` answers `403` for it.
+A Subscription made over the socket lives on that connection only. The gateway serves every socket of an Endpoint from one subscription of its own to the broker and matches your filters itself ([ADR-N-049](../Decisions/adr-n-049-websocket-fan-out-per-endpoint.md)), so `GET {endpointUrl}/ngsi-ld/v1/subscriptions` does not list it. It ends 30 seconds after the connection closes unless you resume. Keep its id from `x-result`; it is the `x-subscription` of every `x-update` and `x-unsubscribe`.
 
 A notification carries only the attributes your grant reads. A change to an attribute you cannot read sends nothing. No message tells you that an entity left what you may read, because that message would itself reveal a hidden change. On `x-gap`, and on your own schedule, read the subscribed types again over REST: `GET {endpointUrl}/ngsi-ld/v1/entities?type=Vehicle` for the examples below.
 
@@ -59,12 +59,14 @@ A notification carries only the attributes your grant reads. A change to an attr
 | Connections per Endpoint's space | 1 000 (an installation may set fewer) | the upgrade answers `503` |
 | Subscriptions per connection | 64 (an installation may set fewer) | `x-result` with `x-status: 400` |
 | Message you send | 64 KiB (16 KiB per frame) | the connection closes with code `1009` |
-| Message the server sends | 1 MiB | the notification is not sent and the Subscription records a failed delivery |
+| Message the server sends | one entity per notification, up to 1 MiB | the gateway does not read the change, and every socket of the Endpoint gets `x-gap` |
 | Idle time (no message and no Subscription) | 60 s | `x-closing: idle` |
 | Unread notifications queued | 256 (an installation may set fewer) | `x-gap`, then `x-closing: overflow` |
 | Connection lifetime | 300 s with a token, 24 h anonymous | `x-closing: lifetime`; reconnect and resume |
 
-The 64 KiB bound applies only to what you send. A notification, which may fold up to 256 changed entities into one message, may be up to 1 MiB.
+The 64 KiB bound applies only to what you send. A notification carries one entity and may be up to 1 MiB.
+
+One gateway replica served 1 000 sockets with random filters on one Endpoint, at 200 changes a second, with every notification checked against the ground truth: p50 0.76 s and p99 1.46 s from change to socket, 300 MiB more resident memory (the `ws-fanout` rig of EP-115, run in process with its clients).
 
 The server pings every 30 seconds and closes a connection that sent no pong for 60 seconds. Client libraries answer pings by themselves.
 
@@ -76,7 +78,7 @@ Keep `x-connection` and `x-resume-token` from the first `x-welcome`, and the las
 {"metadata": {"x-op": "x-resume", "x-id": "r1", "x-connection": "<from x-welcome>", "x-resume-token": "<from x-welcome>", "x-seq": 41}}
 ```
 
-Within 30 seconds of the close, and under the same identity, you get `x-result` with `x-status: 200`, then every notification after `x-seq` 41, then the live ones. The resumed connection keeps its first `x-connection` and `x-resume-token`: use those for the next resume, not the ones in the new `x-welcome`. A notification that is no longer held arrives as `x-gap` first. A resume that fails for any reason answers `x-result` with `x-status: 404`: subscribe again and read the entities over REST.
+Within 30 seconds of the close, under the same identity and on the same gateway replica, you get `x-result` with `x-status: 200`, then every notification after `x-seq` 41, then the live ones. The resumed connection keeps its first `x-connection` and `x-resume-token`: use those for the next resume, not the ones in the new `x-welcome`. A notification that is no longer held arrives as `x-gap` first. A resume that fails for any reason, a reconnect that reached another replica among them, answers `x-result` with `x-status: 404`: subscribe again and read the entities over REST.
 
 ## 5. Examples
 
@@ -164,10 +166,11 @@ asyncio.run(main())
 
 - **EP-106** [A][S] — the WebSocket surface of an Endpoint ([Requirements/endpoints](../Requirements/endpoints.md#23-live-access-and-the-open-data-portal)).
 - **EP-107** [S] — the token never in a URL; connections capped per caller.
+- **EP-114** [A][S] — one broker subscription per Endpoint and replica; your filters matched in the gateway.
 
 ## Related
 
 - [API/02-endpoint-representations](02-endpoint-representations.md) — every standard an Endpoint serves, and how the open data portal lists them.
-- [Requirements/endpoints](../Requirements/endpoints.md) — EP-104, EP-106 to EP-110.
+- [Requirements/endpoints](../Requirements/endpoints.md) — EP-104, EP-106 to EP-110, EP-114, EP-115.
 - [Architecture/04-context-spaces-and-endpoints](../Architecture/04-context-spaces-and-endpoints.md) — the Endpoint model and its standards table.
 - [Architecture/21-open-data-catalogue](../Architecture/21-open-data-catalogue.md) — the catalogue the Endpoint is published in.
