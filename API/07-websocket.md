@@ -66,7 +66,7 @@ A notification carries only the attributes your grant reads. A change to an attr
 
 The 64 KiB bound applies only to what you send. A notification carries one entity and may be up to 1 MiB.
 
-One gateway replica served 1 000 sockets with random filters on one Endpoint, at 200 changes a second, with every notification checked against the ground truth: p50 0.76 s and p99 1.46 s from change to socket, 300 MiB more resident memory (the `ws-fanout` rig of EP-115, run in process with its clients).
+The `ws-fanout` rig (EP-115) measures one gateway replica on a 4-vCPU GitHub runner, its clients in the same process, every notification checked against the ground truth. At 20 changes a second, the rate of dev's transit stream: 1 000 sockets p50 7 ms and p99 15 ms from change to socket; 5 000 sockets p50 25 ms and p99 237 ms, with 2.4 GiB resident. At 200 changes a second, 1 000 sockets reach p50 3.4 s and p99 6.5 s: the stream outruns one replica, and coalescing keeps each socket's latest state.
 
 The server pings every 30 seconds and closes a connection that sent no pong for 60 seconds. Client libraries answer pings by themselves.
 
