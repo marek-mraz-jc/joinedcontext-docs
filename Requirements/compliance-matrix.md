@@ -677,6 +677,8 @@ Generated 2026-10-12 from: `docs` bc9c0a6, `conformance` 2c6f70d, `deployment` 9
 | **EP-108** | [P] [H] | tested | ci-full, conformance, fast ci | conformance `tests/ckan/test_surfaces.py::test_the_default_set_is_every_standard_but_sta_and_the_always_three_stay`, conformance `tests/ckan/test_surfaces.py::test_a_dataset_that_lists_every_served_surface_passes`, conformance `tests/ckan/test_surfaces.py::test_a_missing_surface_resource_fails`, and 12 more |
 | **EP-109** | [P] | tested | ci-full | platform `crates/jcctl/tests/ckan_datastore_tests.rs::a_notification_updates_rows_and_metadata_modified`, platform `crates/jcctl/tests/publish_ckan_tests.rs::metadata_modified_moves_when_the_rows_change_and_only_then` |
 | **EP-110** | [S] | tested | ci-full, conformance, fast ci | conformance `tests/ckan/test_surfaces.py::test_the_default_set_is_every_standard_but_sta_and_the_always_three_stay`, conformance `tests/ckan/test_surfaces.py::test_a_dataset_that_lists_every_served_surface_passes`, conformance `tests/ckan/test_surfaces.py::test_a_missing_surface_resource_fails`, and 11 more |
+| **EP-114** | [A] [S] | open |  |  |
+| **EP-115** | [S] | open |  |  |
 
 ### GW — Gateway firewall
 
