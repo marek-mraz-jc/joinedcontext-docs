@@ -17,7 +17,7 @@ Today a person adds one connector per Endpoint. The Data MCP lives at `/api/endp
 
 What the platform holds today, read from `joinedcontext-platform` at `ecd7126`:
 
-- **The space comes from the URL.** SP-14 and AG-05 say the Context Space is determined by the path and confirmed by the token, and a `space` or `tenant` argument is refused, never ignored. The façade's handlers take the Endpoint the path resolved (`crates/context-gateway/src/mcp/endpoint_facade.rs`).
+- **The space comes from the URL.** SP-14 and AG-05 say the Context Space is determined by the path and confirmed by the token, and a `space` or `tenant` argument is refused, never ignored. The gateway's MCP hub takes the Endpoint the path resolved and forwards the call to that Endpoint's view on the broker (`crates/context-gateway/src/mcp/hub.rs`; the per-Endpoint façade went with T-3648).
 - **Nothing is remembered.** The façade is stateless Streamable HTTP (SP-19): every `POST` is judged on its own token, so a grant change holds on the next call. A "current endpoint" cannot live on the server without breaking that.
 - **Discovery is enforcement.** `tools/list` is rendered from the grants of that Endpoint's Policy for this token (SP-15, EP-25), and the same PDP decides the call (SP-16).
 - **Audience per Endpoint.** An Endpoint accepts a token whose audience is its slug, its public URL, or the edge audience `context-gateway` (`audiences_of`, `crates/context-gateway/src/app.rs`). The reconciler renders one Keycloak client `mcp-{endpointSlug}` per MCP-enabled Endpoint (Architecture/07 §7), so a token minted for one Endpoint is refused by every other (PF-45, PF-46, AG-32).
