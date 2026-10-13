@@ -67,13 +67,13 @@ The gateway serves an Endpoint's WebSocket itself. It opens **one** broker subsc
 
    So a `q`, `geoQ` or `watchedAttributes` naming an attribute the caller cannot read evaluates as if the attribute were absent, and the timing of a notification cannot reveal a hidden value. This holds for public Endpoints and one-audience Endpoints alike, so there is no second mode. Per-client broker subscriptions are not kept.
 8. **Limits.** The caps of API/07 §3 stay as they are: 10 connections per caller, 64 filters per connection, 64 KiB per message, 256 queued, and 1,000 connections per space. The space cap is now the gateway's alone, because the broker holds one connection per Endpoint and replica. The number of sockets one replica serves is measured by the rig (item 9) and written into [API/07](../API/07-websocket.md) §3 with the gateway's memory request.
-9. **Validated by a rig, not by belief.** The conformance repository gains the `ws-fanout` rig, run on a GitHub runner and never on the shared host:
+9. **Validated by a rig, not by belief.** The platform repository gains the `ws-fanout` rig (`crates/context-gateway/tests/ws_fanout_rig.rs`, workflow `ws-fanout-rig`), run on a GitHub runner and never on the shared host. It runs the gateway in process against a stub broker, so it measures the fan-out and not the network:
    - **Change stream:** a recorded or generated Vehicle-like stream (type, id, speed, transportMode, location).
    - **Sockets:** N sockets with random filters drawn from the grammar of item 3.
    - **Ground truth:** computed offline from the same stream by running `antares-matcher` on every (filter, change) pair, the loop the index replaces.
-   - **Assertion:** every socket receives exactly its expected notifications, with no miss, no extra, and per-entity order kept.
+   - **Assertion:** every socket receives exactly its expected notifications, with no miss, no extra, and per-entity order kept. A socket the gateway coalesced for (item 6) receives, per entity, a subsequence of them ending with the entity's last admitted state.
    - **Report:** p50 and p99 change-to-socket latency, CPU and memory at N = 100, 1,000 and 5,000.
-   - **Live smoke:** 20 sockets on `dev`'s transport Endpoint. It is also the regression check for T-4131 and T-4132.
+   - **Live smoke:** 20 sockets on `dev`'s transport Endpoint, in the conformance repository. It is also the regression check for T-4131 and T-4132.
 
    Inside the gateway, a property test holds the index to the same loop: for random filters and changes, the candidate set filtered by the predicate equals the full scan.
 
@@ -106,7 +106,7 @@ The gateway serves an Endpoint's WebSocket itself. It opens **one** broker subsc
 - **The reconciler** adds clause 5.8.1 to the gateway account's permit, and adds `@context-gateway` to each listed view of an Endpoint that serves `websocket`.
 - **The broker** is unchanged: it serves one view socket per Endpoint and replica with ADR-0026 as it stands.
 - **[API/07](../API/07-websocket.md)**: a socket's Subscriptions are no longer listed over REST, a resume holds within one replica, and the measured sockets per replica go into §3.
-- **The conformance repository** gains the `ws-fanout` rig and the 20-socket dev smoke (EP-115).
+- **The platform repository** gains the `ws-fanout` rig and **the conformance repository** the 20-socket dev smoke (EP-115).
 
 ## 6. Requirements
 
