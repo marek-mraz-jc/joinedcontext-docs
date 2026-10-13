@@ -23,37 +23,37 @@ flowchart LR
 
 ## 2. Standard Context Data MCP Toolset
 
-An Endpoint's own MCP server (`/api/endpoint/{slug}/mcp`, `/cs/{space}/mcp`) is the broker's MCP surface of its view: the gateway verifies the caller and forwards each message to `/x/views/{view}/mcp`, where the view's policy lists and decides every data tool (T-3647, T-3648). The gateway answers `describe_access` and `describe_schema` itself and adds them to the broker's `tools/list` (`crates/context-gateway/src/mcp/describe.rs`). The hub and the named servers keep the catalogue of `crates/context-gateway/src/mcp/tools.rs`, where each tool names the NGSI-LD operations it needs; `tools/list` returns only those the caller's grants would let through, so the tool list is itself an access decision and a tool a caller may not use is never offered.
+An Endpoint's own MCP server (`/api/endpoint/{slug}/mcp`, `/cs/{space}/mcp`) is the broker's MCP surface of its view: the gateway verifies the caller and forwards each message to `/x/views/{view}/mcp`, where the view's policy lists and decides every data tool (T-3647, T-3648). The gateway answers `describe_access` and `describe_schema` itself and adds them to the broker's `tools/list` (`crates/context-gateway/src/mcp/describe.rs`). The hub and the named servers list the same tools from `TOOLS` in `crates/context-gateway/src/mcp/tools.rs`, a copy of the broker's table (Antares `docs/src/mcp.md`) in which each row names the NGSI-LD operations it needs (EP-112). `tools/list` returns only those the caller's grants would let through, so the tool list is itself an access decision and a tool a caller may not use is never offered.
 
-The read side is `query_entities`, `get_entity`, `list_types`, `list_attributes`, `describe_schema`, `list_subscriptions` and `batch_query_temporal`; the write side is `upsert_entity` and `create_subscription`.
+The read side is `query_entities`, `batch_query`, `get_entity`, `get_attribute_value`, `list_types`, `list_type_details`, `list_attributes`, `list_attribute_details`, `get_type`, `get_attribute`, the three temporal tools, `list_subscriptions`, `get_subscription`, `describe_schema` and `describe_access`; the write side is `batch_upsert`, `create_subscription` and the broker's other write tools, each confirmed by the person.
 
 ```json
 [
   {
     "name": "query_entities",
-    "description": "Query the entities of this context space by type and NGSI-LD filter.",
+    "description": "Query Entities (TS 104 175 10.4.3): by type, id, q, scopeQ or area, a page at a time.",
     "annotations": { "readOnlyHint": true },
     "inputSchema": {
       "type": "object",
-      "properties": { "type": {}, "id": {}, "idPattern": {}, "q": {}, "limit": {} },
-      "anyOf": [{ "required": ["type"] }, { "required": ["id"] }]
+      "properties": { "type": { "type": "array" }, "id": { "type": "array" }, "q": {}, "limit": {}, "cursor": { "type": "string" } },
+      "additionalProperties": false
     }
   },
   {
-    "name": "upsert_entity",
-    "description": "Create or update one entity of this context space.",
-    "annotations": { "destructiveHint": true },
+    "name": "batch_upsert",
+    "description": "Create several Entities or update those that exist (TS 104 175 10.3.3).",
+    "annotations": { "readOnlyHint": false, "destructiveHint": true },
     "inputSchema": {
       "type": "object",
-      "required": ["entity"],
-      "properties": { "entity": { "type": "object" } },
+      "required": ["entities"],
+      "properties": { "entities": { "type": "array" }, "options": { "enum": ["update", "replace"] } },
       "additionalProperties": false
     }
   }
 ]
 ```
 
-The argument names are the REST surface's own, taken from the same parameter table the query string is built from, so the two cannot drift (AG-84). CIM 009 5.7.2.4 wants at least one selector and does not accept `idPattern` alone, which is why the schema asks for one of five rather than for `type`.
+The argument names and types are the broker's, so a call that works at an Endpoint's own URL works on the hub with `endpoint` beside it (EP-112). CIM 009 5.7.2.4 wants at least one selector and does not accept `idPattern` alone; the broker refuses such a query by name.
 
 ## 3. Configuration Plane MCP Tools
 
