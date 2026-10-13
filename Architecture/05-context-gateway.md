@@ -94,7 +94,7 @@ sets `NGSILD-Results-Restricted` only when the caller opted in. A conditional wr
 view's as well: the broker compares the entity tag (T-3789).
 
 An Endpoint without a view (a slug longer than 63 characters, which no view id can hold) answers
-`501 endpoint-without-view` on this surface. There is no fallback pipeline in the gateway.
+`503 no-view` on this surface, as its other surfaces do. There is no fallback pipeline in the gateway.
 
 The gateway's in-process evaluator (`context-gateway/src/pdp/`) no longer decides an NGSI-LD
 request. It still decides the WebSocket fan-out per connection (T-4133), the access document and
@@ -260,7 +260,7 @@ NetworkPolicy (public addresses on 80 and 443, every private range excepted, T-3
 
 **What no view takes.** Nothing: the gateway has no NGSI-LD pipeline of its own (T-3644). An
 Endpoint whose slug is longer than a view id (63 characters) has no view, and every NGSI-LD
-request on it, a subscription included, answers `501 endpoint-without-view`; nothing is stored
+request on it, a subscription included, answers `503 no-view`; nothing is stored
 on the broker's plain surface, where nothing would decide its deliveries.
 
 Subscriptions stored before the switch, with the gateway's old delivery route in their
