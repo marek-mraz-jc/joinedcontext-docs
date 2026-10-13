@@ -11,7 +11,7 @@ joinedcontext exposes standard-first, versioned programmatic interfaces. The pla
 - **ETSI GS CIM 009 (NGSI-LD V1.9.1):** Core context data operations. That is the version the default broker implements and the version the conformance suite runs (1822 cases); a page citing an older one is citing a specification this platform does not serve.
 - **OGC API - Features Part 1:** Geospatial feature queries.
 - **OGC SensorThings API (STA) v1.1:** Time-series sensor streams.
-- **Model Context Protocol:** autonomous agent tool integration. The Portal's MCP server negotiates `2026-07-28`, `2025-11-25`, `2025-06-18` or `2025-03-26` and answers with the newest the client names (`joinedcontext-portal/src/mcp/mod.rs`); an endpoint's own MCP server speaks `2025-06-18` (`joinedcontext-platform/crates/context-gateway/src/mcp/endpoint_facade.rs`).
+- **Model Context Protocol:** autonomous agent tool integration. The Portal's MCP server negotiates `2026-07-28`, `2025-11-25`, `2025-06-18` or `2025-03-26` and answers with the newest the client names (`joinedcontext-portal/src/mcp/mod.rs`); an endpoint's own MCP server is the broker's MCP surface of its view, and the hub and the named servers speak `2025-06-18` (`joinedcontext-platform/crates/context-gateway/src/mcp/jsonrpc.rs`).
 - **OpenAPI 3.1:** Platform management and administrative operations.
 
 ---
