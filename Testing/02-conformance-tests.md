@@ -148,15 +148,9 @@ Endpoints that carry a geospatial representation serve OGC API - Features ([SP-0
 
 ### Conformance classes claimed
 
-The landing page advertises exactly the five classes in `crates/context-gateway/src/translators/ogc.rs`:
+The surface is the broker's view (T-3752, [API/02](../API/02-endpoint-representations.md) section 6): the gateway forwards `/conformance` as the broker answers it, and the classes are the ones Antares' `antares-ogc` crate lists in `CONFORMANCE` (Part 1 core, GeoJSON and OpenAPI 3.0, Part 2 CRS, Part 3 filtering and queryables with CQL2 text and JSON, Part 5 schemas). A view declares the Part 4 write classes only as far as it offers those writes, and the gateway still answers every write `405` ([EP-39](../Requirements/endpoints.md)).
 
-- `http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core`
-- `http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/oas30`
-- `http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/geojson`
-- `http://www.opengis.net/spec/ogcapi-features-2/1.0/conf/crs`
-- `http://www.opengis.net/spec/ogcapi-features-3/1.0/conf/basic-cql2`
-
-Not claimed and not advertised: HTML output, Part 4 (create, replace, update, delete), the CQL2 text and JSON conformance classes of their own, and anything in CQL2 beyond the subset [EP-35](../Requirements/endpoints.md) lists. The compiler refuses an unsupported construct by name rather than ignoring it, which is why a filter the endpoint cannot honour is a `400` and never a silently wider answer.
+Not claimed: HTML output. A CQL2 construct the broker does not evaluate is refused by name with `400`, never ignored, so a filter the endpoint cannot honour never yields a wider answer.
 
 ### The two runs
 
