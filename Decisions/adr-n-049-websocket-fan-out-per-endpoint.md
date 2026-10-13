@@ -76,6 +76,12 @@ The gateway serves an Endpoint's WebSocket itself. It opens **one** broker subsc
    - **Live smoke:** 20 sockets on `dev`'s transport Endpoint, in the conformance repository. It is also the regression check for T-4131 and T-4132.
 
    Inside the gateway, a property test holds the index to the same loop: for random filters and changes, the candidate set filtered by the predicate equals the full scan.
+10. **A refused upstream is an error for every client, never a silent `201`** (T-4133). When the broker answers the upstream's `x-subscribe` with a status that is not 2xx (dev, apply 67: `403 no policy grants this operation`, because the view's listing lacked the gateway's account), the hub turns refused:
+   - every open connection of the Endpoint ends with close code 1011 and the reason "the context broker refuses this Endpoint's fan-out", with no `x-closing` (no new `x-reason`);
+   - every later `x-subscribe` or `x-update` is answered `x-status: 503` with the platform's `service-unavailable` ProblemDetails, whose `detail` names the broker's status and detail;
+   - the upstream retries after 30 s, and the first accepted `x-subscribe` clears the state.
+
+   A connection that subscribed before the broker answered may have received `201`; the 1011 close follows it. The upstream keeps the gateway's own account (item 1): the Portal lists `@context-gateway` on every view of an Endpoint that serves `websocket`, so a view whose own Policy grants only the role `public` still delivers. A missing listing shows as this refusal and in the gateway's log, never as a quiet socket.
 
 ## 3. Security Analysis
 
