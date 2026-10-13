@@ -38,7 +38,7 @@ Every attack of this kind is a permanent case, in the crate that enforces the ru
 | a grant that narrows is applied silently and the caller is not told | `tests/security/test_silent_narrowing.py` |
 | one representation shows what another hides | `tests/security/test_representation_parity.py` |
 | a token from the wrong realm, client, audience or algorithm | `crates/context-gateway/tests/attack_identity_token_tests.rs` |
-| notifications as an amplifier or a way out | `crates/context-gateway/tests/attack_notification_amplifier_tests.rs`, `attack_notification_targets_tests.rs` |
+| notifications as an amplifier or a way out | the broker's view delivers notifications since T-3654; Antares covers it in its antares-api security_regression tests |
 | a file or bulk surface as a resource bomb | `crates/context-gateway/tests/attack_resource_bomb_tests.rs` |
 | the edge as the decision point instead of the enforcement point | `joinedcontext-deployment/tests/test_edge_attack_surface.py` |
 
