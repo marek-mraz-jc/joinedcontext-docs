@@ -26,16 +26,12 @@ The Context Gateway is a high-performance security proxy and representation tran
 |  Stage 3: Tenant pinning (NGSILD-Tenant set from the resolved Space, never from the request)      |
 |         |                                                                                         |
 |         v                                                                                         |
-|  Stage 4: antares-ql Query AST Parser (Strict parse of q, scopeQ, geoQ, temporalQ, attrs)         |
+|  Stage 4: What stays the gateway's: query shape (GW31, GW33), media type, core context (GW35),  |
+|           identifiers, minted ids and daily creates, model units, relationships, quality rules  |
 |         |                                                                                         |
 |         v                                                                                         |
-|  Stage 5: PDP Evaluation & AST Intersection (in-process Policy evaluator, OR-of-ANDs, scope folding)|
-|         |                                                                                         |
-|         v                                                                                         |
-|  Stage 6: Query Dispatch (Rewrite to POST /entityOperations/query if URL length exceeds limits)  |
-|         |                                                                                         |
-|         v                                                                                         |
-|  Stage 7: Downstream Representation Translation & Attribute Projection Masking (R9 Stripping)     |
+|  Stage 5: Forward to the broker's view /x/views/{view}/ngsi-ld/v1 under the verified x-jc-* subject|
+|           (the view's engine decides, narrows, projects and counts: GW10-GW14, R9, R22)         |
 |         |                                                                                         |
 |         v                                                                                         |
 |  Outbound Response (Filtered NGSI-LD, GeoJSON, CSV, OGC Features, or MCP Result)                  |
@@ -75,67 +71,39 @@ NGSILD-Tenant: {resolved_space_id}
 
 This header is exposed only on the internal cluster network to the context broker.
 
-### Stage 4: Query AST Parsing (R56)
+### Stage 4: What the gateway keeps (GW31, GW33, GW35)
 
-The gateway compiles the `antares-ql` parsing engine directly into its binary. Query parameters are parsed into an Abstract Syntax Tree (AST):
+On the NGSI-LD surface the gateway decides no grant (T-3644). It refuses what is malformed
+whoever asks, before anything is forwarded: a `type` or `q` the specification refuses and a query
+naming no selector (GW31, GW33), a body that is not JSON-LD or JSON, a `@context` other than the
+core one (GW35), an identifier that is no NGSI-LD URN of its type (PF-43, PF-44), a write the
+Endpoint's model refuses (DM-61) or whose quantities are not in the model's units, and a
+Relationship to an entity the caller cannot see. A form's minted ids and its daily create limit
+are applied here too.
 
-- Query filter: `q`
-- Scope filter: `scopeQ`
-- Geographic filter: `geoQ` (`georel`, `geometry`, `coordinates`, `geoproperty`)
-- Temporal filter: `temporalQ` (`timerel`, `timeAt`, `endTimeAt`, `timeproperty`)
-- Projections: `attrs`, `pick`, `omit`
-- Identifiers: `id`, `idPattern`, `type`
+### Stage 5: The broker's view decides (plan 5.1, GW10–GW14, R9, R22)
 
-If parameter syntax violates ETSI GS CIM 009 clauses 4.9 or 4.19, the request is rejected with `400 Bad Request` and an RFC 7807 ProblemDetails body.
+Every NGSI-LD request is forwarded to `/x/views/{view}/ngsi-ld/v1{rest}`: `{view}` is the
+Endpoint's slug, or `cs-{space}` for a space's canonical surface. The caller's query goes as it
+was sent, and the subject the gateway verified (user, roles, groups, service account, agreement)
+goes in `x-jc-*` headers the broker trusts only from the gateway. The view's engine (the
+joinedcontext policy addon in Antares) matches the Endpoint's `Policy` entities, intersects the
+request with the grants (OR across policies, AND inside one; scope folding; geographic and
+temporal clamping), projects the answer to the granted attributes, counts the narrowed set, and
+sets `NGSILD-Results-Restricted` only when the caller opted in. A conditional write is the
+view's as well: the broker compares the entity tag (T-3789).
 
-### Stage 5: PDP Evaluation & AST Intersection (GW10–GW14, ADR 006)
+An Endpoint without a view (a slug longer than 63 characters, which no view id can hold) answers
+`501 endpoint-without-view` on this surface. There is no fallback pipeline in the gateway.
 
-The Policy Decision Point is in-process (ADR-N-003): `Policy` entities from the policy space are compiled into an in-memory grant index and evaluated natively in Rust; no network hop is made per request. An external PDP (OPA) MAY be plugged in behind the same `Pdp` trait for organisations that already operate one, and the AuthZEN-shaped discovery endpoints (R51) keep the PDP swappable.
+The gateway's in-process evaluator (`context-gateway/src/pdp/`) no longer decides an NGSI-LD
+request. It still decides the WebSocket fan-out per connection (T-4133), the access document and
+the schema projection, the MCP tools, a write's Relationship and quality checks, and the
+representation translators of an Endpoint without a view until T-3652 moves them.
 
-1. **Policy Matching:** Applicable `Policy` entities matching caller identity and requested operation are retrieved.
-2. **Intersection Algebra:**
-   `EffectiveQuery = UserQuery ∧ (Grant₁ ∨ Grant₂ ∨ … ∨ Grantₙ)` (GW10)
-3. **Conjunctive Merging:**
-   Within a single policy grant, constraints are combined with logical `AND`. Across separate matching policies, grants are combined with logical `OR` (GW10).
-4. **Scope Folding (R13, R30, ADR 006):**
-   To avoid privilege bleed, hierarchical `scopeQ` grants are transformed into anchored regular expressions against the entity `scope` property and conjoined into the `q` parameter:
-
-   ```text
-   scope~="^/geo/FI/HKI(/.*)?$"
-   ```
-
-5. **Geographic Clamping (GW11):**
-   If the user query and the grant both contain geographic boundaries, the gateway determines geometric containment. If disjoint, an empty result is returned immediately without contacting the broker (GW12).
-
-### Stage 6: Broker Query Dispatch (R13, GW14)
-
-If rewritten query parameters exceed HTTP GET URL length thresholds (2048 bytes), the gateway automatically converts the request to an equivalent NGSI-LD batch operation:
-
-```http
-POST /ngsi-ld/v1/entityOperations/query
-Content-Type: application/json
-```
-
-This guarantees that complex disjunctive policy filters never fail due to HTTP 414 URI Too Long errors.
-
-### Stage 7: Response Projection & Masking (R9)
-
-Entities returned by the broker pass through the response projection stage:
-
-- **Attribute Masking:** Any property or relationship present in the entity that is not explicitly granted by the matched policy's attribute whitelist (`propertyNames`, `relationshipNames`) is stripped from the payload (R9).
-- **Result Normalization:** The pruned JSON-LD structure is re-validated to ensure it remains a valid NGSI-LD entity.
-- **Count Recalculation (R59):** If `count=true` was requested, the gateway recalculates `NGSILD-Results-Count` based on the post-filtered set.
-- **Restriction Signalling (R22):** If entities or attributes were pruned **and the request carried `NGSILD-Results-Restricted: true`**, the gateway answers with the header:
-
-  ```http
-  NGSILD-Results-Restricted: true
-  ```
-
-  The signal is opt-in (R22, GW12). A caller who did not ask is answered as if the result were
-  simply what it is, so the header never tells a prober that the space holds more than they saw.
-- **Tenant Sanitization (SP-05):** `NGSILD-Tenant` is pinned on the request to the broker and
-  removed from the answer, on the space surface as on the endpoint surface. The tenant is an
-  internal name and a probe for which spaces exist; it never leaves the gateway.
+**Tenant sanitization (SP-05).** `NGSILD-Tenant` is pinned on the request to the broker and
+removed from the answer, on the space surface as on the endpoint surface. The tenant is an
+internal name and a probe for which spaces exist; it never leaves the gateway.
 
 ---
 
@@ -157,27 +125,14 @@ Narrowing never rescues a request the specification calls malformed (GW33). A qu
 
 ### Conditional writes (R45, GW16)
 
-A grant whose decision depends on the entity as it is **stored** — a policy `q` or a granted
-polygon — cannot be settled from the payload alone: between the check and the write the entity
-can move out of the grant. The gateway therefore runs such a write as read → evaluate →
-conditional write, and the same machinery serves the caller's own `If-Match`.
-
-| Situation | What the gateway does | Answer |
-|---|---|---|
-| Write on `entities/{id}` with neither `If-Match` nor a state-dependent grant | Forwards | The broker's |
-| Caller sent `If-Match` | Retrieves the entity first and compares the strong entity tag (RFC 9110 §13.1.1) | `412` on mismatch, on a weak tag, and when the broker publishes no `ETag`; `If-Match: *` needs only that the entity exists |
-| Grant carries a `q` or geo condition | Retrieves the entity, and asks the broker `GET /entities?id={id}&q={grant}` to evaluate the condition on the stored state | `404` when the stored entity is outside the grant (R20: the caller does not learn it exists) |
-| The retrieve returned an `ETag` | Forwards the write with `If-Match: {etag}` | `412` from the broker when the entity changed in between, instead of a lost race |
-
-The condition is evaluated by the broker, not re-implemented in the gateway: the gateway sends
-the grant's own `q` and keeps what comes back. The geometric half is checked in the gateway,
-against the same granted areas a read is filtered by.
-
-Two consequences are deliberate. A broker that publishes no `ETag` makes every `If-Match`
-answer `412` rather than being ignored, because a precondition the platform cannot evaluate
-must not pass. And a state-dependent grant costs one extra round trip per write, which is why
-GW16's advice stands: partition write authority by type, `scope` or an `idPattern` the policy names (ADR-N-041) wherever possible, and
-keep conditions for genuinely mobile entities.
+A conditional write goes to the view like any other write (T-3644). The broker publishes an
+entity tag and compares the caller's `If-Match` with it (T-3789): `412` on a mismatch, and a write
+without `If-Match` is forwarded as sent. A grant whose decision depends on the stored entity (a
+policy `q` or a granted area) is the view engine's to evaluate against the stored state, so the
+gateway no longer reads an entity to decide a grant; what it reads before a write are the
+Relationship targets the write names (stage 4). GW16's advice stands: partition write
+authority by type, `scope` or an `idPattern` the policy names (ADR-N-041) wherever possible, and
+keep conditions for entities that move.
 
 ---
 
@@ -303,10 +258,10 @@ may go is the broker's egress guard (`ANTARES_EGRESS_ALLOW_PRIVATE=false` with t
 in-cluster peers, checked on every resolution and every redirect hop, T-3908, T-3909) and its
 NetworkPolicy (public addresses on 80 and 443, every private range excepted, T-3882).
 
-**What no view takes.** A projection with `temporalQ`, a conditional write (`If-Match`) and a
-slug longer than a view id stay on the gateway's own pipeline (section 2); a subscription
-request there answers `501 subscription-without-view` and is never stored on the broker's plain
-surface, where nothing would decide its deliveries.
+**What no view takes.** Nothing: the gateway has no NGSI-LD pipeline of its own (T-3644). An
+Endpoint whose slug is longer than a view id (63 characters) has no view, and every NGSI-LD
+request on it, a subscription included, answers `501 endpoint-without-view`; nothing is stored
+on the broker's plain surface, where nothing would decide its deliveries.
 
 Subscriptions stored before the switch, with the gateway's old delivery route in their
 endpoint, were moved to their view by a one-time migration (T-3883) before that route was
