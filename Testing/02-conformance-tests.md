@@ -148,15 +148,9 @@ Endpoints that carry a geospatial representation serve OGC API - Features ([SP-0
 
 ### Conformance classes claimed
 
-The landing page advertises exactly the five classes in `crates/context-gateway/src/translators/ogc.rs`:
+The surface is the broker's view (T-3752, [API/02](../API/02-endpoint-representations.md) section 6): the gateway forwards `/conformance` as the broker answers it, and the classes are the ones Antares' `antares-ogc` crate lists in `CONFORMANCE` (Part 1 core, GeoJSON and OpenAPI 3.0, Part 2 CRS, Part 3 filtering and queryables with CQL2 text and JSON, Part 5 schemas). A view declares the Part 4 write classes only as far as it offers those writes, and the gateway still answers every write `405` ([EP-39](../Requirements/endpoints.md)).
 
-- `http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core`
-- `http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/oas30`
-- `http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/geojson`
-- `http://www.opengis.net/spec/ogcapi-features-2/1.0/conf/crs`
-- `http://www.opengis.net/spec/ogcapi-features-3/1.0/conf/basic-cql2`
-
-Not claimed and not advertised: HTML output, Part 4 (create, replace, update, delete), the CQL2 text and JSON conformance classes of their own, and anything in CQL2 beyond the subset [EP-35](../Requirements/endpoints.md) lists. The compiler refuses an unsupported construct by name rather than ignoring it, which is why a filter the endpoint cannot honour is a `400` and never a silently wider answer.
+Not claimed: HTML output. A CQL2 construct the broker does not evaluate is refused by name with `400`, never ignored, so a filter the endpoint cannot honour never yields a wider answer.
 
 ### The two runs
 
@@ -226,7 +220,7 @@ There is no run of the W3C JSON-LD 1.1 test suite here. The `@context` documents
 
 `tests/dsp/` runs the Eclipse Dataspace Protocol test kit, pinned by digest, against the connector addon as the system under test ([DS-05](../Requirements/data-space.md)). `check_dsp_results.py` decides the verdict, because the runtime exits `0` even when every case failed. The lane is `workflow_dispatch` with the connector's DSP URL, its base URL and its `did:web` participant id as inputs.
 
-The platform half of the protocol is covered in the gateway crate rather than here: `crates/context-gateway/tests/odrl_compiler_tests.rs` asserts that an accepted agreement yields exactly the grants the ODRL mapper predicts and that an agreement cannot exceed the endpoint's ceiling, and the dataspace token files assert what a foreign token may reach.
+The platform half of the protocol is covered in the Portal rather than here: portal `tests/agreement_rules_tests.rs` asserts that an accepted agreement yields exactly the Policies its offer names and that an agreement cannot exceed the endpoint's ceiling, and the dataspace token files assert what a foreign token may reach.
 
 ## Related
 

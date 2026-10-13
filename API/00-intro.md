@@ -11,7 +11,7 @@ joinedcontext exposes standard-first, versioned programmatic interfaces. The pla
 - **ETSI GS CIM 009 (NGSI-LD V1.9.1):** Core context data operations. That is the version the default broker implements and the version the conformance suite runs (1822 cases); a page citing an older one is citing a specification this platform does not serve.
 - **OGC API - Features Part 1:** Geospatial feature queries.
 - **OGC SensorThings API (STA) v1.1:** Time-series sensor streams.
-- **Model Context Protocol:** autonomous agent tool integration. The Portal's MCP server negotiates `2026-07-28`, `2025-11-25`, `2025-06-18` or `2025-03-26` and answers with the newest the client names (`joinedcontext-portal/src/mcp/mod.rs`); an endpoint's own MCP server speaks `2025-06-18` (`joinedcontext-platform/crates/context-gateway/src/mcp/endpoint_facade.rs`).
+- **Model Context Protocol:** autonomous agent tool integration. The Portal's MCP server negotiates `2026-07-28`, `2025-11-25`, `2025-06-18` or `2025-03-26` and answers with the newest the client names (`joinedcontext-portal/src/mcp/mod.rs`); an endpoint's own MCP server is the broker's MCP surface of its view, and the hub and the named servers speak `2025-06-18` (`joinedcontext-platform/crates/context-gateway/src/mcp/jsonrpc.rs`).
 - **OpenAPI 3.1:** Platform management and administrative operations.
 
 ---
@@ -150,6 +150,8 @@ A problem type is one of these slugs; `ProblemDetails::new` with any other fails
 | `upstream-redirect` | 502 | The service behind the platform answered with a redirect it may not follow; ask its owner for the final address. |
 | `service-unavailable` | 503 | The platform is not ready for this yet; try again in a minute. |
 | `space-moving` | 503 | The space is moving to another broker and takes no writes; send the write again after the seconds `Retry-After` names. |
+| `space-full` | 503 | The space has as many WebSocket connections open as it holds; close one or connect again in a minute. |
+| `no-view` | 503 | The endpoint has no context broker view (its slug is longer than a view id can be); its status in the Portal says so. Give it a shorter slug. |
 | `delivery-timeout` | 504 | The receiver did not answer in time; check that it is reachable and try again. |
 
 ### Existence Masking

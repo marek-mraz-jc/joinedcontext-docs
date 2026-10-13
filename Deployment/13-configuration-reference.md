@@ -43,6 +43,9 @@ The enforcement point in front of every broker surface (`context-gateway`).
 | `JC_GATEWAY_PROJECTS_DIR` | — | no | The project checkouts of a layout 2 organization, one directory per registry slug at its pinned ref (`JC_GATEWAY_PROJECTS_DIR`); a layout 1 repository needs none (CC-86). |
 | `JC_GATEWAY_PUBLIC_URL` | — | no | The gateway's own public base URL (`JC_GATEWAY_PUBLIC_URL`), which makes the full RFC 8707 resource URI an acceptable token audience alongside the endpoint slug. |
 | `JC_GATEWAY_REPO_DIR` | — | no | The manifest repository the endpoint table is built from (`JC_GATEWAY_REPO_DIR`); absent means an empty table until one is loaded. |
+| `JC_GATEWAY_WRITE_BUDGET_MIB` | `16` | no | How many MiB of write bodies may be in the gateway at once (`JC_GATEWAY_WRITE_BUDGET_MIB`, default `16`, [`crate::app::WRITE_BUDGET_MIB`]); a write past it is answered 503 with `Retry-After` (T-4077). |
+| `JC_GATEWAY_WS_ENTITIES` | — | no | `JC_GATEWAY_WS_ENTITIES`, the entity table's bound per Endpoint (ADR-N-049 §2.2). |
+| `JC_GATEWAY_WS_PER_SPACE` | — | no | `JC_GATEWAY_WS_PER_SPACE`: the space cap, raised for a measurement (the `ws-fanout` rig). |
 | `JC_OIDC_CLIENT_ASSERTION_FILE` | — | no | How the gateway proves its own Keycloak client (`JC_OIDC_CLIENT_SECRET` or `JC_OIDC_CLIENT_ASSERTION_FILE`, PF-47). |
 | `JC_OIDC_CLIENT_ID` | — | no | The gateway's own Keycloak client and how it proves it (`JC_OIDC_CLIENT_ID` with `JC_OIDC_CLIENT_ASSERTION_FILE` or `JC_OIDC_CLIENT_SECRET`): the identity it presents when it calls the Portal's internal listener (PF-46, PF-47, AG-52). |
 | `JC_OIDC_CLIENT_SECRET` | — | yes | How the gateway proves its own Keycloak client (`JC_OIDC_CLIENT_SECRET` or `JC_OIDC_CLIENT_ASSERTION_FILE`, PF-47). |

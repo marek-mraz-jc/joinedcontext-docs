@@ -23,7 +23,7 @@ flowchart LR
 
 ## 2. Standard Context Data MCP Toolset
 
-The tools of an endpoint's façade are declared in one table, `TOOLS` in `crates/context-gateway/src/mcp/endpoint_facade.rs`, and each names the NGSI-LD operations it needs. `tools/list` returns only those the caller's grants would let through, so the tool list is itself an access decision and a tool a caller may not use is never offered.
+An Endpoint's own MCP server (`/api/endpoint/{slug}/mcp`, `/cs/{space}/mcp`) is the broker's MCP surface of its view: the gateway verifies the caller and forwards each message to `/x/views/{view}/mcp`, where the view's policy lists and decides every data tool (T-3647, T-3648). The gateway answers `describe_access` and `describe_schema` itself and adds them to the broker's `tools/list` (`crates/context-gateway/src/mcp/describe.rs`). The hub and the named servers keep the catalogue of `crates/context-gateway/src/mcp/tools.rs`, where each tool names the NGSI-LD operations it needs; `tools/list` returns only those the caller's grants would let through, so the tool list is itself an access decision and a tool a caller may not use is never offered.
 
 The read side is `query_entities`, `get_entity`, `list_types`, `list_attributes`, `describe_schema`, `list_subscriptions` and `batch_query_temporal`; the write side is `upsert_entity` and `create_subscription`.
 
