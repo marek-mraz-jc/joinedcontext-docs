@@ -276,100 +276,41 @@ The gateway enforces a hard fail-closed architecture across all failure conditio
 | **Unresolved Context Space** | Drops request; prevents broker wildcard queries. | `404 Not Found` (Existence concealed). |
 | **Downstream Broker 5xx Error** | Surfaces error without exposing internal topology. | `502 Bad Gateway` |
 
-## 6. Notification egress (R46, GW27)
+## 6. Notifications (R46, GW27)
 
-A subscription is a standing query, and its notifications leave the platform without passing
-the request path that would project them. The broker stays policy-free, so the gateway routes
-the delivery through itself.
+A subscription is a standing query whose answers leave the platform later, with no caller on
+the request. Since the switch to the broker's surfaces (plan 5.5) the broker keeps it and
+delivers it, and its policy engine decides every delivery; the gateway holds no delivery path
+and no delivery key (T-3653, T-3654).
 
-**At creation and on every update.** `POST` and `PATCH` of a `Subscription` are narrowed before
-they reach the broker (GW27):
+**At creation and on every update.** `POST` and `PATCH` of a `Subscription`, and every read and
+delete of one, go to the Endpoint's view, `/x/views/{slug|cs-space}/ngsi-ld/v1/subscriptions`,
+as sent: the subscriber's own `notification.endpoint.uri`, under the `x-jc-*` subject the
+gateway verified. The broker stores that subject with the subscription (`__subject`, ADR-0020),
+refuses watched attributes the view does not show (`400`), and reaches a subscription only
+through the view it was made in. The gateway checks one thing first, the target: `400` for a
+`uri` that is neither `http://` nor `https://`, and for one whose host is `localhost` or an
+address inside the platform's own networks (loopback, private, link-local with the cloud
+metadata address, unspecified, shared RFC 6598, an IPv4 address mapped into IPv6), read with
+the WHATWG parser the outbound clients use, so `http://127.0.0.1?x`, `http://0x7f.1/` and
+`http://2130706433/` are the loopback they dial (T-1302, T-3653). An installation whose
+subscribers sit inside the cluster names them in `JC_GATEWAY_EGRESS_PRIVATE_HOSTS`.
 
-- `entities[].type` is intersected with the granted types; nothing left is `403`.
-- `q` becomes `({subscription});({grants})`, the same conjunction a query gets (R12, R13).
-- `notification.attributes` is intersected with the granted attributes and the endpoint's
-  hidden ones (R9, EP-61).
-- a scope grant needs no separate narrowing: each policy's scopes are folded into that
-  policy's own `q` term before the constraints are built (R13), so they arrive with the `q`
-  above and no `scopeQ` is ever stored.
-- `notification.endpoint.uri` is rewritten to
-  `{egressUrl}/api/endpoint/{slug}/egress/notifications?to={original uri, percent-encoded}`,
-  followed by one `&area={granted geoQ, percent-encoded}` per granted area (GW11) and one
-  `&sub={subject}`: the subscriber as the gateway established it (user, service account,
-  groups, roles, participant, agreement), base64url JSON, a `.`, and an HMAC-SHA256 over the
-  slug, the `to`, the areas and that JSON under `JC_GATEWAY_DELIVERY_KEY` (GW27, T-2383). A
-  gateway without that key refuses a subscription with `501`, as it does without an egress URL.
+**At delivery.** The broker matches the subscription inside its view and asks the engine's
+`pre_notify` for the subscriber stored with it: a revoked grant drops the notification, a
+narrowed one projects it, and an entity the view does not show never leaves. Where a delivery
+may go is the broker's egress guard (`ANTARES_EGRESS_ALLOW_PRIVATE=false` with the named
+in-cluster peers, checked on every resolution and every redirect hop, T-3908, T-3909) and its
+NetworkPolicy (public addresses on 80 and 443, every private range excepted, T-3882).
 
-The areas ride in that URI rather than in the subscription's own `geoQ` because `geoQ` holds one
-geometry and a caller may hold several grants; the delivery path applies them the way a read
-applies them to an answer, and the stored URI is written by the gateway, so it is as
-tamper-resistant as the `to` beside it.
+**What no view takes.** A projection with `temporalQ`, a conditional write (`If-Match`) and a
+slug longer than a view id stay on the gateway's own pipeline (section 2); a subscription
+request there answers `501 subscription-without-view` and is never stored on the broker's plain
+surface, where nothing would decide its deliveries.
 
-`{egressUrl}` is `JC_GATEWAY_EGRESS_URL` where the deployment names one and the public URL
-otherwise. It is the address the broker dials, and it is separate from the public URL for one
-reason: with the public URL the delivery leaves the cluster, arrives back through the ingress
-and the edge route, and reaches the gateway indistinguishable from any request off the
-internet, which is precisely what the delivery path may not be. Pointed at the in-cluster
-Service, the hop stays inside the cluster and the NetworkPolicy that admits the broker and
-nothing else is what governs it (R46). The audience a token may carry is unaffected: that
-stays the public URL (PF-45).
-
-A subscription the gateway cannot narrow faithfully is refused rather than stored half-narrowed:
-`501` when the deployment names neither `JC_GATEWAY_EGRESS_URL` nor `JC_GATEWAY_PUBLIC_URL`;
-`400` for a `uri` that is neither `http://` nor `https://`; `400` for a `uri` whose host is
-`localhost` or an address inside the platform's own networks — loopback, private (RFC 1918,
-IPv6 unique local), link-local (the cloud metadata address among them), unspecified, shared
-(RFC 6598) — so a grant to write subscriptions is not a way to make the gateway call the
-cluster's own services (T-1302). An installation whose subscribers do sit inside the cluster
-names them in `JC_GATEWAY_EGRESS_PRIVATE_HOSTS`, a comma-separated list of host names and
-addresses the check lets through; the default is empty.
-
-**At delivery.** `POST /api/endpoint/{slug}/egress/notifications` takes the broker's
-notification and, before anything leaves:
-
-1. reads the stored subscription named by `subscriptionId` from the broker — the stored form is
-   the authority, so a forged request can neither widen the projection nor choose the target;
-   verifies the `sub` its URI carries, and decides the subscription again for that subject
-   against the policies in force now (GW27): a subject that no longer holds a grant for it gets
-   nothing delivered (`204`, nothing leaves), a narrowed grant narrows the types, attributes,
-   `q` and areas below, and a missing or unverifiable `sub` is not delivered at all (`404`,
-   the answer for a subscription the gateway did not route). The subject is the one the token
-   carried at creation: a revoked `Policy` stops a delivery within the reload bound (R48), a
-   group taken away in the realm does not until the subscription is written again, so that
-   revocation goes through the `Policy` or the subscription;
-2. projects every entity in `data` to the subscription's narrowed `notification.attributes`
-   minus the endpoint's hidden attributes;
-3. re-checks the subscription's `q` against the stored state of each entity, dropping the ones
-   that no longer match;
-4. drops every entity that does not lie inside one of the `area` geometries the URI records —
-   an entity with no readable location does not, the same answer a spatial read gives (GW11);
-5. resolves the host of the `to` recorded in the stored subscription and refuses the delivery
-   with `403` when any address it resolves to is one of the networks above and the host is not
-   in `JC_GATEWAY_EGRESS_PRIVATE_HOSTS`: a public name that later resolves inward is caught here,
-   not only at creation;
-6. forwards what is left to that `to`, relaying the `receiverInfo` headers the broker attached
-   (ADR 009, R27).
-
-Nothing left to deliver is `204` and no outbound request. The delivery path carries no token:
-the broker has none to present. It is an in-cluster surface, and its controls are the
-NetworkPolicy that lets only the broker reach it and the Linkerd mTLS identity underneath.
-Forging a delivery can at worst push attacker-supplied data to a subscriber that already
-receives that subscription's notifications; it cannot disclose stored data and cannot redirect
-a delivery, because both the projection and the target come from the stored subscription.
-
-A subscriber outside the cluster is reached over TLS: an `https://` notification endpoint is
-delivered to with the public roots the image carries, plus the PEM bundle
-`JC_GATEWAY_EGRESS_CA_BUNDLE` names when the installation's subscribers sit behind its own CA.
-The public roots are read at start-up from `/etc/ssl/certs/ca-certificates.crt`, or from the
-file `SSL_CERT_FILE` names, and not compiled into the binary: the base image ships
-`ca-certificates`, so a root that is withdrawn or added arrives with the next base image
-rather than with a crate release. Either source failing — an unreadable file, a bundle that
-holds no certificate — stops the gateway at start-up rather than falling back to a smaller set
-of anchors, because a delivery that silently loses a trust anchor is a delivery to somebody
-else. The broker hop stays plain `http://` in the cluster, where Linkerd
-carries the mTLS.
-
-MQTT (ADR 011) and WebSocket (WS-45) deliveries take the same path once those bindings land.
+Subscriptions stored before the switch, with the gateway's old delivery route in their
+endpoint, were moved to their view by a one-time migration (T-3883) before that route was
+deleted.
 
 ---
 

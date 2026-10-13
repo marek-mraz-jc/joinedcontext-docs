@@ -601,8 +601,8 @@ and come back to yesterday's work in one click (UI-88…UI-92).
   `planFields` are what it changed; the history says the change and each field as sentences and
   offers Undo for a merged update (`POST …/changes/{id}/undo`) beside Restore for a removal.
 - **Policies in words** (UI-96) are built from the same values as the YAML, on the list and live in
-  the form. A simulator of what another person may do (T-3311) must ask the gateway's own
-  evaluator rather than repeat it.
+  the form. A simulator of what another person may do (T-3311) asks the decider rather than
+  repeating it: the broker's engine through the Endpoint's view (`access/simulate`, T-3881).
 - **Sharing** (EP-100) is a Policy per target project, so its end is that Policy's validity, which
   the gateway already enforces, and stopping it ends the Policy with the project's removal.
 - **Settings** (UI-97) are indexed with the form's own help texts and searched in place.

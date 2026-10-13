@@ -23,7 +23,7 @@ flowchart LR
 
 ## 2. Standard Context Data MCP Toolset
 
-An Endpoint's own MCP is the broker's view (Antares `docs/src/mcp.md`); the hub and the named servers list the same tools from `TOOLS` in `crates/context-gateway/src/mcp/tools.rs`, a copy of the broker's table in which each row names the NGSI-LD operations it needs (EP-112). `tools/list` returns only those the caller's grants would let through, so the tool list is itself an access decision and a tool a caller may not use is never offered.
+An Endpoint's own MCP server (`/api/endpoint/{slug}/mcp`, `/cs/{space}/mcp`) is the broker's MCP surface of its view: the gateway verifies the caller and forwards each message to `/x/views/{view}/mcp`, where the view's policy lists and decides every data tool (T-3647, T-3648). The gateway answers `describe_access` and `describe_schema` itself and adds them to the broker's `tools/list` (`crates/context-gateway/src/mcp/describe.rs`). The hub and the named servers list the same tools from `TOOLS` in `crates/context-gateway/src/mcp/tools.rs`, a copy of the broker's table (Antares `docs/src/mcp.md`) in which each row names the NGSI-LD operations it needs (EP-112). `tools/list` returns only those the caller's grants would let through, so the tool list is itself an access decision and a tool a caller may not use is never offered.
 
 The read side is `query_entities`, `batch_query`, `get_entity`, `get_attribute_value`, `list_types`, `list_type_details`, `list_attributes`, `list_attribute_details`, `get_type`, `get_attribute`, the three temporal tools, `list_subscriptions`, `get_subscription`, `describe_schema` and `describe_access`; the write side is `batch_upsert`, `create_subscription` and the broker's other write tools, each confirmed by the person.
 

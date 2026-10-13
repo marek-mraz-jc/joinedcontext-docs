@@ -221,15 +221,23 @@ pipeline:
         root = this
         …
     - dedupe: { cache: pipeline_changes, key: '${! json("id") }' }
+    - label: write_0
+      branch: { <the upsert through ep-bikes-ops, PL-47, as an http processor> }
+    - label: write_1
+      branch: { <the update-attrs through ep-kpi-write> }
+    - label: write_refused
+      switch: [ <a 400, 413 or 422 marks the batch failed, below> ]
 output:
-  broker:
-    pattern: fan_out_fail_fast
-    outputs:
-      - <the upsert through ep-bikes-ops, PL-47>
-      - <the update-attrs through ep-kpi-write>
+  label: output
+  switch:
+    retry_until_success: false
+    cases:
+      - check: errored()
+        output: { reject: '${! error() }' }
+      - output: { drop: {} }
 ```
 
-Every broker in front of the writes fails fast, the outcome sink's `fan_out_sequential_fail_fast` (PL-62) included: a write that fails after its own retries is nacked back to the input, which replays it. The plain patterns retry inside the broker without heeding a stop, so a stream whose target failed could be neither replaced nor deleted until the runner restarted (T-2983). One source renders as its own input with no `broker`, and one output as its own output, so a `v1alpha1` Pipeline — `source`, `compute`, `output` and `targetEndpoint` — reads as `sources: [source]`, `steps: [compute]`, `outputs: [{ targetEndpoint, mode }]` and renders the same bytes it rendered before (PL-54). It keeps running unchanged, and the Portal writes it back as `v1alpha2` the first time somebody edits it.
+The writes are processors, one `branch` per output in the order of `spec.outputs`, because a Bento output never shows its answer to anything after it: as an output, a `207` whose items the gateway refused was logged as sent (T-4056). As a processor the write keeps the answer for the outcome sink (PL-62, below), and the output only decides what happens to the batch: a write that still fails after its own retries leaves it errored, and the `reject` nacks it back to the input, which replays it. Every broker in front of the writes fails fast, the outcome sink's `fan_out_sequential_fail_fast` (PL-62) included. Because the writes now run on the pipeline's threads, a resident stream runs 64 of them, so a slow gateway answer holds back one batch and not the stream (the output used to keep 64 writes in flight); a polled stream runs 4. The plain patterns retry inside the broker without heeding a stop, so a stream whose target failed could be neither replaced nor deleted until the runner restarted (T-2983). One source renders as its own input with no `broker`, so a `v1alpha1` Pipeline — `source`, `compute`, `output` and `targetEndpoint` — reads as `sources: [source]`, `steps: [compute]`, `outputs: [{ targetEndpoint, mode }]` and renders as a `v1alpha2` one with one output (PL-54). It keeps running unchanged, and the Portal writes it back as `v1alpha2` the first time somebody edits it.
 
 A conditional path inside one lane is a step: `branch`, `switch` and `workflow` carry their own processors in their configuration. A path that ends at its own outputs is a route (PL-73, below). The manifest stores no edges either way. The studio lets a person draw a wire, and each wire only sets the order: a wire into a step moves that step behind the node it starts from, the last step feeds every output, and a wire the runner cannot run (into a source, out of an output, from a middle step into an output) is refused with the reason (PL-56). Admission reads the pipeline's grant once per source (read) and once per output (write), and each source's secrets keep their own names (PL-55).
 
@@ -280,22 +288,25 @@ pipeline:
               mapping: root = this.merge({"alertLevel": {"type": "Property", "value": "high"}})
     - group_by_value: { value: '${! meta("jc_route") }' }
     - <the batching: one array of up to 1000 records per message>
+    - label: routes
+      switch:
+        - check: meta("jc_route") == "hot"
+          processors:
+            - label: route_0_write_0
+              branch: { <the upsert through ep-alerts-write, PL-47> }
+            - label: route_0_write_refused
+              switch: [ <as for spec.outputs> ]
+        - processors:
+            - label: write_0
+              branch: { <the upsert through ep-air-write> }
+            - label: write_refused
+              switch: [ <as for spec.outputs> ]
 output:
-  label: routes
-  switch:
-    strict_mode: true
-    retry_until_success: false
-    cases:
-      - check: meta("jc_route") == "hot"
-        output:
-          label: route_0
-          <the upsert through ep-alerts-write, PL-47>
-      - output:
-          label: output
-          <the upsert through ep-air-write>
+  label: output
+  <the switch above: an errored batch is rejected back to the input, the rest dropped>
 ```
 
-A route's components are labelled by its place, `route_{i}` and `route_{i}_{j}`, because a Bento label takes no hyphen and a route name may hold one. A route with two outputs renders them as a `fan_out_fail_fast` broker, as `spec.outputs` does. `retry_until_success: false` hands a failed write back to the input as a nack, the same fail-fast rule as the brokers above (T-2983), and `strict_mode: true` makes a batch that reaches no case an error instead of a silent drop; the default case makes that unreachable. The validation stage (PL-60) stays before the batch split, so it checks each record once, when every output writes into one space.
+A route's components are labelled by its place, `route_{i}`, `route_{i}_{j}` and its writes `route_{i}_write_{j}`, because a Bento label takes no hyphen and a route name may hold one. A route with two outputs writes them one after the other, as `spec.outputs` does, and its batch goes on to the output either way: the output's `reject` hands a failed write back to the input as a nack, the same fail-fast rule as the brokers above (T-2983). The default case takes every batch no route took. The validation stage (PL-60) stays before the batch split, so it checks each record once, when every output writes into one space.
 
 The rules, checked by jc-core before a Change is proposed:
 
@@ -1017,14 +1028,13 @@ The reconciler renders the same schema into the stream: after the author's steps
 ```mermaid
 flowchart LR
   steps[author steps] --> stage[validation stage]
-  stage -- valid --> fan{fan out}
-  fan --> gw[gateway upsert]
-  fan --> sink[outcome sink]
+  stage -- valid --> gw[gateway upsert, a processor]
+  gw -- written, refused items --> sink[outcome sink]
   stage -- refused --> sink
   sink -->|drop on error| portal[(Portal: rejected list, runs, log)]
 ```
 
-The output is a `switch`: a record the stage refused goes only to the outcome sink, a valid one fans out to the gateway upsert and the sink. The sink is an `http_client` to the Portal's internal outcome route with the runner's own client credential, behind a `fallback` to `drop`, so a Portal that does not answer loses a log line and never holds back a write. Bento's `drop_on` would do the same but sends one message at a time and waits for each answer, which held a stream of single records, such as the HSL positions, to one round trip per record until its MQTT input backed up and lost the connection (T-4036). The sink reports in batches: it reduces each write to its report (the run, the ids and their hashes), gathers those reports for half a second, merges them per run and sends at most 1000 ids per report, so a stream of single records is never held to the Portal's answer for each one (T-4036), and the sink never holds a write's records (T-4062). Every part of the sink carries a label of its own, and the stream's counters leave all of them out. Each line carries the pipeline, the run, the record id, the step, the outcome (`sent`, `rejected`, `failed`) and a message; a refused record also carries the record, which the Portal masks before it stores it. A run is one tick of the pipeline's clock, or one UTC hour for a source that never ends. A clocked stream also reports each tick to the same route before it reads, as a report with no records, so every pass is a run: one that found nothing new, or deleted through its own step as a reaper does, shows with its counts at zero instead of looking like a pipeline that stopped (T-3001). The report runs in a `branch` whose failure a `catch` clears, so a Portal that does not answer never costs the tick its read, and the runner's counters leave the report out like the sink.
+A record the stage refused goes only to the outcome sink; a valid one is written by the upsert processors and then reaches the sink with what the gateway answered (T-4056). The upsert's `branch` reads a `207`'s `errors[]` into metadata, each refused item's `entityId` with the gateway's `detail` (else its `title`), and the sink logs those records `failed` with that message and the rest `sent`. A `400`, `413` or `422` is the gateway refusing the whole batch, which no retry fixes: a `catch` after the writes clears the error and marks every record of the batch `failed` with the problem's `detail`, and the batch is not replayed. Any other failure (a `5xx`, a timeout) leaves the batch errored after its retries, and the output nacks it back to the input; the runner counts such a batch in `processor_error` and in `output_error`, so `errors` grows by two for it. The stream's p99 latency is its writes' `processor_latency_ns`, the slowest write label, and the output's `output_latency_ns` only for a stream rendered before the writes were processors. The sink is an `http_client` to the Portal's internal outcome route with the runner's own client credential, behind a `fallback` to `drop`, so a Portal that does not answer loses a log line and never holds back a write. Bento's `drop_on` would do the same but sends one message at a time and waits for each answer, which held a stream of single records, such as the HSL positions, to one round trip per record until its MQTT input backed up and lost the connection (T-4036). The sink reports in batches: it reduces each write to its report (the run, the ids and their hashes), gathers those reports for half a second, merges them per run and sends at most 1000 ids per report, so a stream of single records is never held to the Portal's answer for each one (T-4036), and the sink never holds a write's records (T-4062). Every part of the sink carries a label of its own, and the stream's counters leave all of them out. Each line carries the pipeline, the run, the record id, the step, the outcome (`sent`, `rejected`, `failed`) and a message; a refused record also carries the record, which the Portal masks before it stores it. A run is one tick of the pipeline's clock, or one UTC hour for a source that never ends. A clocked stream also reports each tick to the same route before it reads, as a report with no records, so every pass is a run: one that found nothing new, or deleted through its own step as a reaper does, shows with its counts at zero instead of looking like a pipeline that stopped (T-3001). The report runs in a `branch` whose failure a `catch` clears, so a Portal that does not answer never costs the tick its read, and the runner's counters leave the report out like the sink.
 
 The Portal keeps the newest 1000 rejected records and the newest 5000 log lines per pipeline, and the counts per run. `GET /api/v1/projects/{project}/pipelines/{name}/rejected` and `GET …/runs` answer them with read on the pipeline, each rejected record naming the `run` whose log holds its line, so the list opens that run (T-3252); each run also counts what its written records did: `created` for an id the pipeline never wrote before, `updated` for a record whose hash (xxhash64 of the record as JSON, which the outcome sink sends beside the ids) differs from the last one kept for that entity, `unchanged` for the same hash, `null` all three for a stream rendered before the sink sent hashes (T-3304); the runs page shows each run's duration (first to last outcome), its written count against the run before, and flags a run that wrote nothing after one that wrote (T-3260); "Retry after fix", which needs `propose` on `Pipeline` because it writes, replays the kept records once through the pipeline's current stream on the runner (the §7 harness with the real output): a record that passes now is written, one that still fails comes back with its rule.
 
