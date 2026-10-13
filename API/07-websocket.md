@@ -70,6 +70,8 @@ The `ws-fanout` rig (EP-115) measures one gateway replica on a 4-vCPU GitHub run
 
 The server pings every 30 seconds and closes a connection that sent no pong for 60 seconds. Client libraries answer pings by themselves.
 
+When the context broker refuses the Endpoint's own subscription, the gateway serves no notification: every open connection closes with code `1011`, and every `x-subscribe` or `x-update` answers `x-result` with `x-status: 503`, whose ProblemDetails `detail` names the broker's answer. Try again later; the gateway retries every 30 seconds ([ADR-N-049](../Decisions/adr-n-049-websocket-fan-out-per-endpoint.md) §2 item 10).
+
 ## 4. Resume after a reconnect
 
 Keep `x-connection` and `x-resume-token` from the first `x-welcome`, and the last `x-seq` you processed. Open a new connection (with a fresh token, if you use one) and send this first message:
