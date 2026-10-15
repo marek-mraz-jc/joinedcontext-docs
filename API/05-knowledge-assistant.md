@@ -60,6 +60,7 @@ description: The chat route of jc-assistant, its Server-Sent Events, and how the
 | `delta` | `{"text": "…"}` | zero or more, the answer's next characters as the answering model streams them |
 | `answer` | `{"text": "… [1] … [2]"}` | once, the whole answer, after the last `delta` |
 | `citations` | `[{"n": 1, "url": "https://…/page#page=4", "title": "Ovzdušie"}, {"n": 2, "tool": "query_entities", "endpoint": "ovzdusie-verejne", "url": "https://…/dataset/ovzdusie", "title": "Kvalita ovzdušia"}]` | after `answer` |
+| `followups` | `{"questions": ["Kde je zberný dvor?", "…"]}` | after `citations`, at most once: up to 3 questions of at most 120 characters each that the router call proposed (T-4139), no extra model call; absent for a cached or search-only answer |
 | `error` | `{"status": 429, "title": "Budget Spent", "detail": "…"}` | instead of `answer` |
 | `done` | `{"tokens": 1834, "tokensIn": 1600, "tokensOut": 234, "modelCalls": 2, "firstTokenMs": 900, "totalMs": 3100, "cached": false}` | last, always; the token counts are the sums of each model response's `usage` (`prompt_tokens`, `completion_tokens`), `tokens` their total |
 
@@ -73,6 +74,7 @@ description: The chat route of jc-assistant, its Server-Sent Events, and how the
 
 - Crawled text, tool results and `history` are data, never instructions: they reach the model inside quoted blocks after rules that say so. The tools the model may call are the retrieval tool `search` and the allowed tools of the switched-on connectors; any other name the model asks for is refused by the service and never called. (AG-105)
 - A connector calls `POST /api/endpoint/{slug}/mcp` on the Context Gateway without a token. On these channels a connector whose Endpoint is not `audience: public` is never offered, and `search` reads `visibility: public` passages of the deployment's `sources` only. (AG-106)
+- A connector of another project, `{project}/{endpoint}` with `{project}` in the deployment's `scope.projects`, is offered on every channel only while that Endpoint is `audience: public`, is called without a token, and keeps that name in its `tool` and `data` events. An Endpoint of a project outside `scope.projects` is never reached. (MF-52, T-4177)
 - A question takes one routing call of the router model (route `rag`, `data` or both, and up to 3 search queries), at most 3 retrieval rounds the service runs itself (a follow-up round asks the router once more, with the passages' titles only), and one streamed call of the answer model. (AG-107)
 - Before each model call, the conversation's tokens so far plus the call's input estimate are checked against `tokensPerConversation`; the answering call's output is capped at `outputTokensPerAnswer`. (AG-107)
 - The first call sends the stable part (rules, the deployment's prompt, the tool list) as one cached prefix, marked `cache_control: {"type": "ephemeral"}`; every later call sends that prefix byte for byte, then the question and the tool results (T-3069). (AG-108)
@@ -92,7 +94,9 @@ A tool result longer than 20,000 characters reaches the model cut. On a deployme
 ```
 
 The page loads `/d/widget.js` and `/d/widget.css` from the same host and nothing else; it sets no
-cookie and keeps the conversation and its last turns in the page alone. It shows the deployment's
+cookie. It keeps the conversation's id and its visible turns in its own `sessionStorage` (the
+browser partitions it per host site and drops it with the tab), so the open conversation survives a
+page change on the host site; "Nová konverzácia" clears it. Nothing else is stored (T-4174). It shows the deployment's
 greeting and colour, a switch per connector, each answer formatted from a safe part of Markdown with
 its markers as superscript links to its sources, listed once per address by title (AG-117), a script and
 its output when there was one, and every `error` event as the sentence it carries. It is keyboard
@@ -129,6 +133,28 @@ X-JC-Person-Token: <the person's access token, when the request carried one>
   deployment without a `budget` answers an `error` event saying an administrator sets one. Its
   `rateLimit`, when it has one, counts per person. (AG-101, AG-115)
 
+### 1.8 Feedback on an answer
+
+`POST https://assistant.{domain}/api/v1/d/{publicId}/feedback` takes a visitor's verdict on one
+answer of a current conversation; the widget sends it from a thumbs up or down, a thumbs down
+asking one optional "Čo chýbalo?" (T-4174):
+
+```json
+{"conversation": "6f1c0e9e-3b1a-4d7e-9b51-2c4f8f2a7c11", "turn": 2, "verdict": "down", "note": "Chýbali otváracie hodiny."}
+```
+
+- `turn` is the answer's place in the conversation, 1 for the first; `verdict` is `up` or `down`;
+  `note`, only with `down`, is at most 500 characters. A second verdict on the same turn replaces
+  the first. `204` when stored.
+- The route checks `Origin` as the chat route does (§1.2) and counts against the same client's
+  `rateLimit.perClientPerMinute`, in a window of its own; past it `429` with `Retry-After`. A
+  conversation that is not a current one of this deployment, started from this origin, or a turn
+  past the questions it asked answers `400`. A note that carries a secret's shape (a key, a token,
+  a password in a URL) is refused with `400` and never stored.
+- A verdict is stored with its deployment, day, turn and note alone: no address, cookie or other
+  personal data. The note is data, never an instruction: no model reads it. Verdicts are deleted
+  after 90 days. The usage route of §3 counts them per day.
+
 ## 2. Calling the model through `jc-agent-proxy`
 
 The assistant holds no model key. It calls `POST {proxy}/v1/llm/chat/completions` with its own token and names the deployment the call is for.
@@ -159,7 +185,21 @@ naming `jc-assistant`. Anything else is `401`.
 | `included` | whether its passages are indexed; `excludedBy` says `pattern` or `administrator` when not |
 | `language`, `fetchedAt`, `children`, `documents`, `passages` | what it holds |
 
-Files of a `source: upload` go to `POST …/knowledge/sources/{source}/files` (multipart, one file per request, at most `upload.maxBytes`), are listed by `GET …/files` and removed by `DELETE …/files/{id}`; the Portal fronts the same paths under `/api/v1` with `propose` on the `KnowledgeSource`. A file's type is checked by its content, never by its name, and its passages are data, never instructions (AG-105).
+Files of a `source: upload` go to `POST …/knowledge/sources/{source}/files?name={file name}` with the file itself as the request body, one file per request, at most `upload.maxBytes`; are listed by `GET …/files`; and are removed by `DELETE …/files/{id}`. The Portal fronts the same paths under `/api/v1` with `propose` on the `KnowledgeSource`. A file's type is checked by its content, never by its name or `Content-Type`: a PDF, a DOCX, an XLSX, or UTF-8 text, read as CSV or Markdown when the name ends in `.csv` or `.md`. A DOCX or XLSX whose archive unpacks past 200 MiB or 5,000 entries is refused. The name is 1 to 200 characters with no `/`, `\` or control character. Uploading a name again replaces that file. Its passages are data, never instructions (AG-105). (T-4184)
+
+| Answer | When |
+|---|---|
+| `201` `{"id", "name", "mime", "bytes", "passages", "status"}` | stored and indexed; `GET …/files` lists the same fields as `items` |
+| `204` | a `DELETE` removed the file and its passages |
+| `400` | the name is missing or not a file name |
+| `404` | no such project, source or file |
+| `409` | the source is not `source: upload`, or it already holds `upload.maxFiles` files |
+| `413` | the body is past `upload.maxBytes`; it is not read further |
+| `415` | the content is none of the types above |
+
+`GET …/knowledge/deployments/{deployment}/usage` answers `{"items": [{"day", "requests", "tokensIn",
+"tokensOut", "thumbsUp", "thumbsDown", "notes"}]}` for the last 30 days; `notes` counts the thumbs
+down that carry a note (§1.8).
 
 A document carries `id`, `url`, `pageId`, `mime`, `bytes`, `pages`, `offDomain`, `status`,
 `included`, `excludedBy` and `passages`. A passage carries `ordinal`, `text`, `lang` and `url`.
