@@ -1,0 +1,139 @@
+{
+ "areas": {
+  "T-4157": "Portal shell",
+  "T-4158": "Portal forms: access",
+  "T-4159": "Portal forms: data",
+  "T-4160": "Portal explore and Apps",
+  "T-4161": "open data portal",
+  "T-4162": "public surfaces",
+  "T-4163": "Portal states"
+ },
+ "patterns": [
+  {
+   "id": "lang",
+   "title": "The visitor's language is ignored: a Slovak visit gets English text, dates or pages",
+   "fix": "Every surface takes the language from `?lang=`/`ui_locales`/`Accept-Language` before its config default, and its error and empty texts come from the same catalogue",
+   "findings": [
+    "T-4157:A visitor who opens a Portal link with lang=sk i",
+    "T-4161:The catalogue offers English only: /sk/ answers ",
+    "T-4162:A Slovak visitor (?lang=sk, browser sk-SK) gets ",
+    "T-4162:Dates in the place list read 'Sep 15, 2026' on a",
+    "T-4162:On the Slovak page the new assistant panel (T-41",
+    "T-4162:The data portal's 404 pages are English on a Slo"
+   ]
+  },
+  {
+   "id": "raw",
+   "title": "Raw machine text reaches a visitor: problem JSON, HTTP codes, API names, enum codes",
+   "fix": "One shared problem renderer per surface (Portal, SDK, assistant host, edge) that turns a problem into a sentence and a way on; enum codes through the label catalogue",
+   "findings": [
+    "T-4157:Activity's \"What happened\" prints raw problem JS",
+    "T-4162:An unknown path on an App host answers the raw p",
+    "T-4162:'Kind of event' shows the raw codes museumsGalle",
+    "T-4162:Two red banners on arrival: 'ResourceNotFound / ",
+    "T-4162:23 of 24 App hosts answer an unknown path with r",
+    "T-4162:An unknown path on the assistant host answers AP"
+   ]
+  },
+  {
+   "id": "ids",
+   "title": "Ids and schema names stand where people expect names",
+   "fix": "Lists, breadcrumbs and switchers print `title`/`name` and fall back to the id only when no name exists",
+   "findings": [
+    "T-4157:The project switcher and the breadcrumb list pro",
+    "T-4157:Search lists an entity type by its schema name \"",
+    "T-4157:An inbox item reads \"Úprava App „alerts-desk“ … ",
+    "T-4161:The resource preview leads with raw keys: the co"
+   ]
+  },
+  {
+   "id": "phone",
+   "title": "At 375 px rows, tables and long values run off the screen or get cut",
+   "fix": "Tables scroll inside their own frame with a scroll hint; long values wrap or truncate with the full value on focus; header text shortens before it cuts",
+   "findings": [
+    "T-4157:The header's wordmark is cut to \"joi…\" on a phon",
+    "T-4157:On a phone the search actions are cut to \"Nájsť ",
+    "T-4157:On a phone the activity table runs off the right",
+    "T-4161:In the \"Connect an AI assistant\" card the MCP ad",
+    "T-4161:On a phone the embedded table shows only the _id",
+    "T-4161:In the Data Dictionary the column names and thei",
+    "T-4162:The Website column is cut off at the right edge ",
+    "T-4162:At 375 px the name column wraps a hospital name "
+   ]
+  },
+  {
+   "id": "float",
+   "title": "The floating assistant button or panel covers page content",
+   "fix": "Reserve the button's space at the page end, and open the panel full screen under 640 px",
+   "findings": [
+    "T-4157:The assistant's floating button covers the right",
+    "T-4161:The floating \"Ask the assistant\" button covers c",
+    "T-4162:At 375 px the opened assistant panel sits on top"
+   ]
+  },
+  {
+   "id": "first-view",
+   "title": "An App's first view is a read error or empty, with no data",
+   "fix": "Apps read through the SDK's retrying reader and show sample-free empty states that say what is missing; a published App needs data before it is listed",
+   "findings": [
+    "T-4162:The App opens on 'The measurements could not be ",
+    "T-4162:'The published schema could not be read; validit",
+    "T-4162:'The indicators' history could not be read (HTTP",
+    "T-4162:A published App whose only content is 'The city "
+   ]
+  },
+  {
+   "id": "limit",
+   "title": "The per-address rate limit breaks pages: white Portal, Apps that 429 themselves",
+   "fix": "Exempt fingerprinted assets from the per-IP limit and cache them immutably; a chunk-load error boundary with words and a Reload button; Apps batch their reads",
+   "findings": [
+    "T-4161:The edge allows 300 requests a minute per addres",
+    "T-4162:A visitor over the Portal's public-route limit g",
+    "T-4162:When the per-IP limit of the Portal host is reac",
+    "T-4162:Opening the App alone draws HTTP 429 from its ow"
+   ]
+  },
+  {
+   "id": "helsinki",
+   "title": "Another city's name, domain or font on a city's pages",
+   "fix": "Organization name, catalogue name and URN domain come from the project or publisher, never from the demo organization's config; a font with Slovak and Czech letters",
+   "findings": [
+    "T-4157:On a Slovak page the organization's name stays E",
+    "T-4161:The footer and /about name the catalogue \"the op",
+    "T-4161:Banská Bystrica's rows carry Helsinki's domain i",
+    "T-4161:Headings use HelsinkiGrotesk, which has no š, Ž "
+   ]
+  },
+  {
+   "id": "keycloak",
+   "title": "Keycloak pages are the stock product: unstyled, English, no way back",
+   "fix": "A joinedcontext Keycloak theme for login, forgot-password and account with sk messages and a link back to the Portal",
+   "findings": [
+    "T-4157:The sign-in card repeats the organization's long",
+    "T-4157:After a wrong password the error is attached to ",
+    "T-4162:Submitting Keycloak's forgot-password form empty",
+    "T-4162:Keycloak's account console is the stock product:"
+   ]
+  },
+  {
+   "id": "dead-end",
+   "title": "A dead end: a 404 or refusal with no way on",
+   "fix": "Not-found and refusal pages keep the header and name the next step (who to ask, where to go)",
+   "findings": [
+    "T-4157:The refusal says to ask an administrator but nam",
+    "T-4157:The 404 page drops the header's navigation, lang",
+    "T-4162:An unknown assistant id answers a bare monospace",
+    "T-4162:A mistyped address on the apex or the Portal hos"
+   ]
+  },
+  {
+   "id": "viewer",
+   "title": "A viewer is shown what only a builder can do",
+   "fix": "Checklists, hints and actions render from the caller's verbs (`/me/permissions`), not from the page",
+   "findings": [
+    "T-4157:The viewer's home shows the builder checklist (c",
+    "T-4157:With nothing to decide, the viewer still reads \""
+   ]
+  }
+ ]
+}
