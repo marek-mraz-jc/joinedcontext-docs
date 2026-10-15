@@ -86,7 +86,7 @@ authorization code flow with PKCE runs server-side and the result is an encrypte
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/api/v1/auth/login?redirect_to=<in-app path>` | starts the code flow; `redirect_to` is honoured only when it is a same-origin path |
+| `GET` | `/api/v1/auth/login?redirect_to=<in-app path>&lang=<language>` | starts the code flow; `redirect_to` is honoured only when it is a same-origin path; `lang` (a 2–3 letter language tag, the Portal's current language) goes to the realm as `ui_locales`, so the sign-in page speaks it (T-4199) |
 | `GET` | `/api/v1/auth/callback` | consumes the code, verifies the ID token against the stored nonce, issues the session |
 | `GET` | `/api/v1/auth/me` | the signed-in identity, or `401` `application/problem+json` when there is no live session |
 | `GET` | `/api/v1/auth/sso-check` | a redirect into the realm with `prompt=none` for the public `portal-ui` client, answered to `/api/v1/auth/sso-check/done` in the fragment: `#error=login_required` when the person must sign in, `#code=…` when the realm session lives; the Open page reads it from a hidden frame of its own origin to decide whether a silent App means "sign in again" (AP-122); the code is never redeemed |
