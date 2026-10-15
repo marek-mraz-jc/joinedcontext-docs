@@ -6,7 +6,7 @@ description: The Citymind chat widget on zilina.sk observed as a visitor on 2026
 
 # ŽilinaBot: what a visitor sees and what it calls
 
-The owner named ŽilinaBot on https://zilina.sk/ ("Powered by Citymind") as the assistant to beat (tasks/GOAL-assistant.md, T-4136). This report records what a visitor's browser loads and sends, how the answers look, which parts point to retrieval, and the list of UX requirements the Banská Bystrica assistant takes as its floor. Observation only, on 2026-10-15 between 19:20Z and 19:40Z: the page, the files the widget loads, three ordinary questions in Slovak, and screenshots of the widget opened as a visitor. Nothing else was sent to the vendor's API, and no Žilina content went into our index.
+The owner named ŽilinaBot on <https://zilina.sk/> ("Powered by Citymind") as the assistant to beat (tasks/GOAL-assistant.md, T-4136). This report records what a visitor's browser loads and sends, how the answers look, which parts point to retrieval, and the list of UX requirements the Banská Bystrica assistant takes as its floor. Observation only, on 2026-10-15 between 19:20Z and 19:40Z: the page, the files the widget loads, three ordinary questions in Slovak, and screenshots of the widget opened as a visitor. Nothing else was sent to the vendor's API, and no Žilina content went into our index.
 
 ## 1. How the widget is built
 
