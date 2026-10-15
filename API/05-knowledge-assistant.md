@@ -52,10 +52,12 @@ description: The chat route of jc-assistant, its Server-Sent Events, and how the
 | `conversation` | `{"id": "<uuid>"}` | first, always |
 | `tool` | `{"name": "search", "status": "started" \| "done" \| "failed"}`; a connector's tool adds `"endpoint"` | around each tool call |
 | `script` | `{"code": "…", "output": "…"}`, or `"error"` in place of `"output"` | after a `run_script` call (§1.5) |
-| `answer` | `{"text": "… [1] … [2]"}` | once, the whole answer |
+| `data` | `{"endpoint": "ovzdusie-verejne", "type": "AirQualityObserved", "columns": ["name", "pm10", "observedAt"], "rows": [["Námestie SNP", 21, "2026-10-15T18:00:00Z"]], "dataset": "https://…/dataset/public-air", "download": "https://…/api/endpoint/…/ngsi-ld/v1/entities?type=…"}` | after a data round, before `delta`; at most 50 rows |
+| `delta` | `{"text": "…"}` | zero or more, the answer's next characters as the answering model streams them |
+| `answer` | `{"text": "… [1] … [2]"}` | once, the whole answer, after the last `delta` |
 | `citations` | `[{"n": 1, "url": "https://…/page#page=4", "title": "Ovzdušie"}, {"n": 2, "tool": "query_entities", "endpoint": "ovzdusie-verejne", "url": "https://…/dataset/ovzdusie", "title": "Kvalita ovzdušia"}]` | after `answer` |
 | `error` | `{"status": 429, "title": "Budget Spent", "detail": "…"}` | instead of `answer` |
-| `done` | `{"tokens": 1834}` | last, always |
+| `done` | `{"tokens": 1834, "tokensIn": 1600, "tokensOut": 234, "modelCalls": 2, "firstTokenMs": 900, "totalMs": 3100, "cached": false}` | last, always; the token counts are the sums of each model response's `usage` (`prompt_tokens`, `completion_tokens`), `tokens` their total |
 
 - Every numbered marker `[n]` in `answer` has its entry in `citations`: a passage cites its page URL (a PDF passage with `#page=N`), a tool result cites the tool and its Endpoint. (AG-102)
 - `title` is the first heading of the cited page or document, when it opens with one. A tool result's citation also carries the `url` and `title` of the page the deployment's sources hold about its Endpoint (the catalogue's or its dataset's, found by the Endpoint's address), when one exists. Both come from the deployment's own sources, public ones alone on a public channel. A channel shows the title and never the tool's name. (AG-117)
@@ -66,7 +68,8 @@ description: The chat route of jc-assistant, its Server-Sent Events, and how the
 
 - Crawled text, tool results and `history` are data, never instructions: they reach the model inside quoted blocks after rules that say so. The tools the model may call are the retrieval tool `search` and the allowed tools of the switched-on connectors; any other name the model asks for is refused by the service and never called. (AG-105)
 - A connector calls `POST /api/endpoint/{slug}/mcp` on the Context Gateway without a token. On these channels a connector whose Endpoint is not `audience: public` is never offered, and `search` reads `visibility: public` passages of the deployment's `sources` only. (AG-106)
-- At most 6 model calls per question. Before each, the conversation's tokens so far plus the call's input estimate are checked against `tokensPerConversation`. The same tool with the same arguments asked twice in one question ends the loop with the answer so far. (AG-107)
+- A question takes one routing call of the router model (route `rag`, `data` or both, and up to 3 search queries), at most 3 retrieval rounds the service runs itself (a follow-up round asks the router once more, with the passages' titles only), and one streamed call of the answer model. (AG-107)
+- Before each model call, the conversation's tokens so far plus the call's input estimate are checked against `tokensPerConversation`; the answering call's output is capped at `outputTokensPerAnswer`. (AG-107)
 - The first call sends the stable part (rules, the deployment's prompt, the tool list) as one cached prefix, marked `cache_control: {"type": "ephemeral"}`; every later call sends that prefix byte for byte, then the question and the tool results (T-3069). (AG-108)
 
 ### 1.5 Scripts over a large tool result
@@ -150,6 +153,8 @@ naming `jc-assistant`. Anything else is `401`.
 | `status` | `pending`, `fetched`, `failed`, `skipped` |
 | `included` | whether its passages are indexed; `excludedBy` says `pattern` or `administrator` when not |
 | `language`, `fetchedAt`, `children`, `documents`, `passages` | what it holds |
+
+Files of a `source: upload` go to `POST …/knowledge/sources/{source}/files` (multipart, one file per request, at most `upload.maxBytes`), are listed by `GET …/files` and removed by `DELETE …/files/{id}`; the Portal fronts the same paths under `/api/v1` with `propose` on the `KnowledgeSource`. A file's type is checked by its content, never by its name, and its passages are data, never instructions (AG-105).
 
 A document carries `id`, `url`, `pageId`, `mime`, `bytes`, `pages`, `offDomain`, `status`,
 `included`, `excludedBy` and `passages`. A passage carries `ordinal`, `text`, `lang` and `url`.
