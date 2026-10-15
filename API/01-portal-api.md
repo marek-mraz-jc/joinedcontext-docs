@@ -3293,6 +3293,7 @@ GET  /api/v1/projects/{project}/knowledge/sources/{source}/pages/{page}/links
 GET  /api/v1/projects/{project}/knowledge/sources/{source}/passages?page=|document=
 POST /api/v1/projects/{project}/knowledge/sources/{source}/inclusion       include or exclude pages, subtrees, documents
 POST /api/v1/projects/{project}/knowledge/sources/{source}/recrawl         queue a crawl now
+GET  /api/v1/projects/{project}/knowledge/sources/{source}/errors          the pages and documents the last crawls could not read
 GET  /api/v1/projects/{project}/knowledge/deployments/{deployment}/usage   requests and tokens per day, 30 days
 POST /api/v1/projects/{project}/knowledge/deployments/{deployment}/chat    ask the assistant as the signed-in person
 ```
@@ -3310,6 +3311,12 @@ POST /api/v1/projects/{project}/knowledge/deployments/{deployment}/chat    ask t
   person's own access token on for an `internal` deployment's connectors and keeps no copy
   ([API/05 §1.7](05-knowledge-assistant.md#17-in-the-portal), AG-115).
 - `recrawl` answers `202` with the queued job, or `409` when one is already queued or running.
+- The index status of a source is in its row of `sources`: `passages`, `embedded` and `pending`
+  (passages not embedded yet), `failed` (pages and documents that could not be read), and the last
+  job with its `startedAt` and `finishedAt`. `errors` lists at most 50 of the failed pages and
+  documents, newest first, each `{"url", "kind": "page"|"document", "reason"}`: the URL and the
+  HTTP status or network reason, never what a page holds. It needs `propose` on `KnowledgeSource`
+  and answers `403` naming it, so a viewer sees the counts and not the list (T-4197).
 - A source the manifests declare and `jc-assistant` has not crawled yet is listed with
   `state: "not-crawled"`; a page, a document or a source of another project is `404`.
 
