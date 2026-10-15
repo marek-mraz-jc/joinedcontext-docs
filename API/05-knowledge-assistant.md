@@ -53,6 +53,7 @@ description: The chat route of jc-assistant, its Server-Sent Events, and how the
 | Event | Data | When |
 |---|---|---|
 | `conversation` | `{"id": "<uuid>"}` | first, always |
+| `stage` | `{"stage": "understanding" \| "searching" \| "reading" \| "answering", "topic": "otváracie hodiny knižnice"}`; `topic` is the search query or the entity type read, absent otherwise | before each step of the answer; the chat shows the latest as one line until the first `delta` (T-4155) |
 | `tool` | `{"name": "search", "status": "started" \| "done" \| "failed"}`; a connector's tool adds `"endpoint"` | around each tool call |
 | `script` | `{"code": "…", "output": "…"}`, or `"error"` in place of `"output"` | after a `run_script` call (§1.5) |
 | `data` | `{"endpoint": "ovzdusie-verejne", "type": "AirQualityObserved", "columns": ["name", "pm10", "observedAt"], "rows": [["Námestie SNP", 21, "2026-10-15T18:00:00Z"]], "dataset": "https://…/dataset/public-air", "download": "https://…/api/endpoint/…/ngsi-ld/v1/entities?type=…"}` | after a data round, before `delta`; at most 50 rows |
@@ -64,6 +65,7 @@ description: The chat route of jc-assistant, its Server-Sent Events, and how the
 
 - Every numbered marker `[n]` in `answer` has its entry in `citations`: a passage cites its page URL (a PDF passage with `#page=N`), a tool result cites the tool and its Endpoint. (AG-102)
 - `title` is the first heading of the cited page or document, when it opens with one. A tool result's citation also carries the `url` and `title` of the page the deployment's sources hold about its Endpoint (the catalogue's or its dataset's, found by the Endpoint's address), when one exists. Both come from the deployment's own sources, public ones alone on a public channel. A channel shows the title and never the tool's name. (AG-117)
+- A passage citation may carry `cards`, what the cited passage itself publishes, read from its text and links without a model call: `{"kind": "contact", "name": "Klientske centrum", "phones": ["+421 48 4330 111"], "emails": ["podatelna@example.org"]}`, `{"kind": "place", "address": "Československej armády 26, 974 01 Banská Bystrica"}` or `{"kind": "procedure", "steps": ["Vyplňte žiadosť.", "…"]}`. `name` is the passage's last heading; empty lists and absent fields are left out; at most 3 cards per citation, 5 phones or e-mails per contact, 10 steps. The chat links a phone as `tel:`, an e-mail as `mailto:` and an address to an OpenStreetMap search only when each is well formed, and shows it as text otherwise. (T-4155)
 - The answer is in the language of the question; the deployment's `languages` only choose the greeting and the search stemmers. (AG-103)
 - An error the person can act on is an `error` event with a sentence: the conversation's budget is spent (`tokensPerConversation`), the deployment's day is spent (`tokensPerDay`), the model is unreachable, or a connector failed (the answer then goes on without it, and the `tool` event says `failed`). (AG-104)
 
