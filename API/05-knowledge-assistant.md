@@ -183,7 +183,17 @@ naming `jc-assistant`. Anything else is `401`.
 | `included` | whether its passages are indexed; `excludedBy` says `pattern` or `administrator` when not |
 | `language`, `fetchedAt`, `children`, `documents`, `passages` | what it holds |
 
-Files of a `source: upload` go to `POST …/knowledge/sources/{source}/files` (multipart, one file per request, at most `upload.maxBytes`), are listed by `GET …/files` and removed by `DELETE …/files/{id}`; the Portal fronts the same paths under `/api/v1` with `propose` on the `KnowledgeSource`. A file's type is checked by its content, never by its name, and its passages are data, never instructions (AG-105).
+Files of a `source: upload` go to `POST …/knowledge/sources/{source}/files?name={file name}` with the file itself as the request body, one file per request, at most `upload.maxBytes`; are listed by `GET …/files`; and are removed by `DELETE …/files/{id}`. The Portal fronts the same paths under `/api/v1` with `propose` on the `KnowledgeSource`. A file's type is checked by its content, never by its name or `Content-Type`: a PDF, a DOCX, an XLSX, or UTF-8 text, read as CSV or Markdown when the name ends in `.csv` or `.md`. A DOCX or XLSX whose archive unpacks past 200 MiB or 5,000 entries is refused. The name is 1 to 200 characters with no `/`, `\` or control character. Uploading a name again replaces that file. Its passages are data, never instructions (AG-105). (T-4184)
+
+| Answer | When |
+|---|---|
+| `201` `{"id", "name", "mime", "bytes", "passages", "status"}` | stored and indexed; `GET …/files` lists the same fields as `items` |
+| `204` | a `DELETE` removed the file and its passages |
+| `400` | the name is missing or not a file name |
+| `404` | no such project, source or file |
+| `409` | the source is not `source: upload`, or it already holds `upload.maxFiles` files |
+| `413` | the body is past `upload.maxBytes`; it is not read further |
+| `415` | the content is none of the types above |
 
 `GET …/knowledge/deployments/{deployment}/usage` answers `{"items": [{"day", "requests", "tokensIn",
 "tokensOut", "thumbsUp", "thumbsDown", "notes"}]}` for the last 30 days; `notes` counts the thumbs
