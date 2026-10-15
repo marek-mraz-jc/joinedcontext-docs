@@ -84,6 +84,7 @@ The core platform runtime is Rust services and standard open-source engines: the
 | **20 App SDK** | [20-app-sdk.md](20-app-sdk.md) | What does a generated application's code import, and how is it previewed? |
 | **21 Open Data Catalogue** | [21-open-data-catalogue.md](21-open-data-catalogue.md) | Which organization does a published Endpoint land in, and how is its record harvested? |
 | **22 Knowledge Assistant** | [22-knowledge-assistant.md](22-knowledge-assistant.md) | How does the assistant crawl, retrieve and answer, and in which channels? |
+| **23 Public Assistant for Banská Bystrica** | [23-public-assistant.md](23-public-assistant.md) | How do the public chat, its retrieval loop, data answers and public MCP connectors build on jc-assistant for one city and region? |
 
 ## Related
 
