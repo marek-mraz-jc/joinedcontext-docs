@@ -58,6 +58,7 @@ Every row below is one entry of `components/<component>/apisix-routes.yaml` with
 | `portal-metrics` | `/metrics` | `portal.{host}` | 5 | terminates at the edge | none | none | `fault-injection` answering `404` |
 | `portal-well-known` | `/.well-known/oauth-protected-resource*` | `portal.{host}` | 5 | `portal:8080` | Anonymous (RFC 9728 discovery, AG-60) | 600/min per IP | `proxy-rewrite` |
 | `portal-public`, `portal-public-assets` | `/catalogue*`; `/assets/*` (the same plugin config) | `portal.{host}` | 5 | `portal:8080` | Edge session when there is one, else anonymous (`unauth_action: pass`): the public catalogue and the bundle it runs on (EP-81) | Class 1 | `openid-connect`, `proxy-rewrite` |
+| `portal-public-connect` | `/connect/*` | `portal.{host}` | 5 | `portal:8080` | Edge session when there is one, else anonymous: the setup page of a public named MCP server (`/connect/{project}/{name}`, T-4169), which asks the server's address for its tools without credentials and holds no data | Class 1 | the `portal-public` plugin config |
 | `portal-api` | `/api/v1/*` | `portal.{host}` | 10 | `portal:8080` | Edge session or OIDC bearer (`unauth_action: pass`) | Class 2 | `openid-connect`, `proxy-rewrite` |
 | `portal-redirect` | `/*` | `{host}` | 1 | terminates at the edge | none | none | `redirect` to `https://portal.{host}/` |
 | `context-space` | `/cs/*` | `{host}` | 15 | `context-gateway:8080` | OIDC bearer, verified by the Context Gateway | Class 2 | `proxy-buffering` off, `limit-count` |
