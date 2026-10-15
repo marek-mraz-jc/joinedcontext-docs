@@ -154,6 +154,8 @@ A problem type is one of these slugs; `ProblemDetails::new` with any other fails
 | `no-view` | 503 | The endpoint has no context broker view (its slug is longer than a view id can be); its status in the Portal says so. Give it a shorter slug. |
 | `delivery-timeout` | 504 | The receiver did not answer in time; check that it is reachable and try again. |
 
+The edge's own `too-many-requests` (the per-address limit of a route) is the one refusal that also comes as a page. A request whose `Accept` names `text/html` (a browser opening a page) gets an HTML page in the language its `Accept-Language` puts first (Slovak, Czech or German, otherwise English). The page says the same thing and reloads itself after the seconds `Retry-After` names. It loads nothing and runs no script. Every other caller gets the Problem Details above, with the same status and `Retry-After` (T-4201).
+
 ### Existence Masking
 
 To prevent reconnaissance, requesting an unauthorized resource via single-entity fetch returns an RFC 7807 **HTTP 404 Not Found** rather than HTTP 403, eliminating existence disclosure ([R20](../Requirements/access-control.md#5-requesting-extra-data)).
