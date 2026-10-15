@@ -44,7 +44,9 @@ jobs:
         # jc-core-v0.7.75 -> platform main ad23dde (T-3313): the chart widgets' `q` (UI-93, T-3257)
         # is documented and no tag carries it yet; a commit pins as firmly as a tag, and the
         # archive URL takes either. Swap in jc-core-v0.7.76 when it is cut.
-        env: { JC_SCHEMAS_TAG: ad23dde7086af9df524adc2e48d5b4d40a02dfea }
+        # ad23dde -> platform main e219f50 (T-4186): KnowledgeSource `wordpressTypes` (T-4154) and the
+        # assistant kinds of T-4166/T-4177 are documented; the same pin in the manifests job below.
+        env: { JC_SCHEMAS_TAG: e219f50c1348a36b17c4ed0d5e5872b3ba1ee53c }
         run: |
           set -eu
           curl -sSL "https://github.com/marek-mraz-jc/joinedcontext-platform/archive/${JC_SCHEMAS_TAG}.tar.gz" \
@@ -168,7 +170,7 @@ jobs:
     # minute after the first run.
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env: { JC_PLATFORM_TAG: ad23dde7086af9df524adc2e48d5b4d40a02dfea }
+    env: { JC_PLATFORM_TAG: e219f50c1348a36b17c4ed0d5e5872b3ba1ee53c }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
