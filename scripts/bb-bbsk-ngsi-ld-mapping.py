@@ -36,8 +36,9 @@ SNAPSHOT = ROOT / "Research/data/bb-bbsk-ckan.json"
 PROBE = ROOT / "Research/data/bb-bbsk-probe.json"
 MAPPING = ROOT / "Research/bb-bbsk-ngsi-ld-mapping.yaml"
 PAGE = ROOT / "Research/bb-bbsk-ngsi-ld-mapping.md"
-# The public space each project's assistant reads through its public Endpoint.
-SPACE = {"banskabystrica": "banskabystrica-verejne", "bbsk": "bbsk-registre"}
+# The public space of each project that holds what this mapping loads, beside the curated spaces:
+# its generated classes cannot collide with a curated class of the same name (DM-61).
+SPACE = {"banskabystrica": "banskabystrica-otvorene-data", "bbsk": "bbsk-otvorene-data"}
 UA = {"User-Agent": "joinedcontext-docs T-4254 inventory (hello@joinedcontext.com)"}
 EXTRAS = ("publisher_name", "license_url", "generated_by", "harvest_source", "source_id", "source_url", "source_uri", "modified",
           "frequency", "issued")
@@ -51,20 +52,20 @@ TYPES: list[tuple[str, str, str | None, str]] = [
     (r"nabijacky", "EVChargingStation", "dataModel.Transportation/EVChargingStation", ""),
     (r"nehodovost", "RoadAccident", "dataModel.Transportation/RoadAccident", ""),
     (r"cykloscitace", "TrafficFlowObservedSite", None, "the counting sites; no counts in the layer"),
-    (r"mosty", "Bridge", None, "the existing bbsk-registre type"),
+    (r"mosty", "Bridge", None, "the name of the bbsk-registre class"),
     (r"podjazdy|priepusty|dilatacne-celky|zeleznicne-priecestia", "RoadStructure", None, ""),
     (r"cykloturisticke-trasy-linie", "CycleRoute", None, ""),
     (r"cykloturisticke-trasy-nosic", "PointOfInterest", "dataModel.PointOfInterest/PointOfInterest", "signposts, boards and rest stops"),
     (r"lekarni|zdravotnickych", "PointOfInterest", "dataModel.PointOfInterest/PointOfInterest", "category from the facility kind"),
-    (r"skoly|skolske", "School", None, "the existing bbsk-registre type"),
+    (r"skoly|skolske", "School", None, "the name of the bbsk-registre class"),
     (r"kulturne-institucie|kontaktne-miesta", "PointOfInterest", "dataModel.PointOfInterest/PointOfInterest", ""),
-    (r"organizacie|prispevkove", "PublicOrganization", None, "the existing bbsk-registre type"),
-    (r"poskytovatelov-socialnych", "SocialService", None, "the existing bbsk-registre type"),
-    (r"kraj-bbk-hranica|okresy-bbk-hranice|obce-bbk-hranice|obce-bbk-centroidy", "AdministrativeArea", None, "the existing bbsk-registre type"),
+    (r"organizacie|prispevkove", "PublicOrganization", None, "the name of the bbsk-registre class"),
+    (r"poskytovatelov-socialnych", "SocialService", None, "the name of the bbsk-registre class"),
+    (r"kraj-bbk-hranica|okresy-bbk-hranice|obce-bbk-hranice|obce-bbk-centroidy", "AdministrativeArea", None, "the name of the bbsk-registre class"),
     (r"povodia", "RiverBasin", None, ""),
     (r"vodnych-utvarov", "WaterBodyStatus", None, "one row per water body and assessment"),
-    (r"vyvoj-emisii|vyvoj-imisii", "StatisticalObservation", None, "the existing type; one row per station or source and year"),
-    (r"obyvatel|vekov|ohrozenie-samosprav|ppa-platby-po-okresoch", "StatisticalObservation", None, "the existing type; one row per area (and year)"),
+    (r"vyvoj-emisii|vyvoj-imisii", "StatisticalObservation", None, "one row per station or source and year"),
+    (r"obyvatel|vekov|ohrozenie-samosprav|ppa-platby-po-okresoch", "StatisticalObservation", None, "one row per area (and year)"),
     (r"register-investicii|projekty-banskobystrickeho", "PublicInvestment", None, ""),
     (r"faktury", "Invoice", None, ""),
     (r"objednavky", "PurchaseOrder", None, ""),
@@ -78,14 +79,10 @@ TYPES: list[tuple[str, str, str | None, str]] = [
     (r"peticie", "Petition", None, "the petition, not its signatories"),
     (r"vzn|nariadeni", "Regulation", None, ""),
     (r"organizacna-struktura|uradne-hodiny|kontakty-na-miestne", "OrganizationUnit", None, ""),
-    (r"bb-adresy", "Address", None, "the address list without coordinates; DTM register adries holds the same addresses with points"),
-    (r"dtm-bb-register-adries", "Address", None, "the city's address register with points"),
-    (r"dtm-bb-register-stavby", "Building", "dataModel.Building/Building", ""),
-    (r"dtm-bb-register-ulic", "Road", "dataModel.Transportation/Road", ""),
-    (r"dtm-bb-polohopis", "SurveyPoint", None, "the geodetic control points"),
+    (r"bb-adresy", "Address", None, "the city's address list, without coordinates"),
     (r"bb-aktuality", "Article", None, "the city's news (WordPress)"),
-    (r"bb-podujatia", "Event", None, "the existing banskabystrica-verejne type"),
-    (r"pocet-obcanov|prirastky", "StatisticalObservation", None, "the existing type"),
+    (r"bb-podujatia", "Event", None, "the name of the banskabystrica-verejne class"),
+    (r"pocet-obcanov|prirastky", "StatisticalObservation", None, ""),
 ]
 
 
@@ -322,7 +319,6 @@ DROP: list[tuple[str, list[str], str]] = [
     (r"kontakty-na-miestne", ["Starosta", "Telefónne_číslo___starosta", "E_mail___starosta", "Zástupca_primátora",
                                "E_mail___zástupca_primátora"], "mayors' own contacts; the offices' general ones stay"),
     (r"zdravotnickych", ["Odborný_zástupca"], "the named physician of each facility"),
-    (r"dtm-bb-polohopis", ["IDEditora", "VkladOsoba", "ZmenaOsoba"], "the surveyors who entered and changed each point"),
 ]
 # Rows that can name a natural person, kept out by a filter on a column (§8 of the sources page).
 # The city's three finance tables were filtered by the harvest itself (T-4151).
@@ -374,11 +370,12 @@ def plan(d: dict, probe_: dict, fetched: str) -> dict:
         r, p = by_fmt["CSV"]
         fields = [f["name"] for f in p["fields"]]
         source = {"kind": "ckan-datastore", "url": r["url"], "resource": r["id"], "rows": p["count"]}
-    elif "ZIP" in by_fmt and by_fmt["ZIP"][1].get("features"):
+    elif "ZIP" in by_fmt and by_fmt["ZIP"][1].get("features") and "5514" in by_fmt["ZIP"][1].get("crs", ""):
         r, p = by_fmt["ZIP"]
-        fields = [f["name"] for f in p["fields"]]
-        source = {"kind": "zip-geojson", "url": r["url"], "file": p["file"], "crs": p["crs"],
-                  "geometry": ", ".join(p["geometry"]), "rows": p["features"]}
+        return {**entry, "status": "not-ingestible",
+                "reason": f"{p['features']} {', '.join(p['geometry'])} features in S-JTSK (EPSG:5514): NGSI-LD "
+                          "locations are WGS 84 and no pipeline step reprojects; without the geometry the rows "
+                          "carry little (the city's address list without points is bb-adresy)"}
     elif "ZIP" in by_fmt:
         r, p = by_fmt["ZIP"]
         exts = p.get("extensions", {})

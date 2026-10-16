@@ -39,9 +39,9 @@ same rows.
 <!-- totals -->
 | organization | datasets | mapped | already NGSI-LD | not ingestible | source rows of the mapped |
 |---|---:|---:|---:|---:|---:|
-| banskabystrica | 34 | 13 | 2 | 19 | 113670 |
+| banskabystrica | 34 | 10 | 2 | 22 | 75029 |
 | bbsk | 90 | 88 | 2 | 0 | 252024 |
-| all | 124 | 101 | 4 | 19 | 365694 |
+| all | 124 | 98 | 4 | 22 | 327053 |
 <!-- /totals -->
 
 "Already NGSI-LD" are the four datasets the platform publishes from its own public Endpoints
@@ -61,7 +61,6 @@ probe read from each mapped source, before any row filter of section 5.
 | `Grant` | project type | 3 | 19845 |
 | `OrganizationUnit` | project type | 3 | 883 |
 | `PublicInvestment` | project type | 3 | 6200 |
-| `Address` | project type | 2 | 32671 |
 | `Bridge` | project type | 2 | 2682 |
 | `Contract` | project type | 2 | 25045 |
 | `CouncilMeeting` | project type | 2 | 1509 |
@@ -72,8 +71,8 @@ probe read from each mapped source, before any row filter of section 5.
 | `PurchaseOrder` | project type | 2 | 45758 |
 | `RoadAccident` | `dataModel.Transportation/RoadAccident` | 2 | 3127 |
 | `WaterBodyStatus` | project type | 2 | 612 |
+| `Address` | project type | 1 | 16902 |
 | `Article` | project type | 1 | 1557 |
-| `Building` | `dataModel.Building/Building` | 1 | 16534 |
 | `CouncilVote` | project type | 1 | 89670 |
 | `EVChargingStation` | `dataModel.Transportation/EVChargingStation` | 1 | 606 |
 | `Event` | project type | 1 | 6162 |
@@ -81,18 +80,17 @@ probe read from each mapped source, before any row filter of section 5.
 | `Petition` | project type | 1 | 12 |
 | `Regulation` | project type | 1 | 34 |
 | `RiverBasin` | project type | 1 | 3 |
-| `Road` | `dataModel.Transportation/Road` | 1 | 6338 |
 | `SocialService` | project type | 1 | 740 |
 | `Supplier` | project type | 1 | 5066 |
 | `TrafficFlowObservedSite` | project type | 1 | 13 |
 <!-- /types -->
 
 A Smart Data Model is named only where its attributes match the columns: `EVChargingStation`,
-`RoadAccident`, `PointOfInterest`, `Building` and `Road`. The census, migration, age-structure,
-climate-risk and payment-per-district tables become the `StatisticalObservation` type the
-`bbsk` and `banskabystrica` models already hold, one entity per area and year. `Bridge`,
-`School`, `PublicOrganization`, `SocialService` and `AdministrativeArea` are the existing
-`bbsk-registre` classes. The other project types are new classes for the space's one model
+`RoadAccident` and `PointOfInterest`. The census, migration, age-structure,
+climate-risk and payment-per-district tables become the `StatisticalObservation` type, named
+like the class the `bbsk-kraj` model holds, one entity per area and year. `Bridge`,
+`School`, `PublicOrganization`, `SocialService` and `AdministrativeArea` share their names with
+the `bbsk-registre` classes, so an assistant that knows one knows the other. The other project types are new classes for the space's one model
 (DM-61), each named after what one row is.
 
 Each mapped entry lists its `properties`: the attribute name, in ASCII lowerCamelCase, and the
@@ -105,9 +103,9 @@ keeps its value as `source<Name>`. Esri bookkeeping columns (`OBJECTID`, `Global
 <!-- ids -->
 | entity id from | datasets |
 |---|---:|
-| a key column | 59 |
+| a key column | 57 |
 | a key column and its year | 13 |
-| a row hash | 29 |
+| a row hash | 28 |
 <!-- /ids -->
 
 A key column is one whose distinct count, asked of the source, equals the row count. The probe
@@ -116,9 +114,11 @@ asks the Esri layer (`returnDistinctValues=true&returnCountOnly=true`), the CKAN
 probe tries each id-like column with the table's year column. A WordPress post's `id` is unique
 by definition. The rest have no stable key, and the mapping says `rowHash: true`.
 
-A row hash changes whenever a value in the row changes. T-4255 therefore replaces such a dataset
-as a whole on each run, rather than appending to it. Otherwise each refresh adds a copy of every
-changed row.
+A row hash changes whenever a value in the row changes, so a corrected row arrives as a new
+entity and the old one stays. Expiry (PL-64) cannot clear it, because several pipelines write
+the same space. Most row-hash datasets are registers and tables their publisher seldom revises.
+A stale copy stays until a person removes it, and the entity's `dataset` property names where
+the current rows are.
 
 ## 5. Personal data kept out
 
@@ -153,11 +153,14 @@ source. The `Evidencia psov` and `Zoznam poskytovateľov pre APS` datasets never
 |---|---|---|---|
 | Banská Bystrica — verejné údaje (`banskabystrica-verejne`) | banskabystrica | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
 | DTM_BB-funkcne-vyuzitie-uzemia (`bb-dtm-bb-funkcne-vyuzitie-uzemia`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (201 KiB): a PDF map sheet, no data |
-| DTM_BB-Polohopis_a_vyskopis_bodoveho_pola (`bb-dtm-bb-polohopis-a-vyskopis-bodoveho-pola`) | banskabystrica | not-ingestible | 240636 rows, more than the 100000 this round loads into the one broker |
+| DTM_BB-Polohopis_a_vyskopis_bodoveho_pola (`bb-dtm-bb-polohopis-a-vyskopis-bodoveho-pola`) | banskabystrica | not-ingestible | 240636 Point features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects; without the geometry the rows carry little (the city's address list without points is bb-adresy) |
+| DTM_BB-Register-adries (`bb-dtm-bb-register-adries`) | banskabystrica | not-ingestible | 15769 Point features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects; without the geometry the rows carry little (the city's address list without points is bb-adresy) |
 | DTM_BB-register-chodnikov-a-verejnych-priestranstiev (`bb-dtm-bb-register-chodnikov-a-verejnych-priestranstiev`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
 | DTM_BB-register-miestnych-komunikacii-a-vyssich-tried (`bb-dtm-bb-register-miestnych-komunikacii-a-vyssich-tried`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
 | DTM_BB-register-statickej-dopravy (`bb-dtm-bb-register-statickej-dopravy`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
+| DTM_BB-register-stavby (`bb-dtm-bb-register-stavby`) | banskabystrica | not-ingestible | 16534 MultiPolygon features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects; without the geometry the rows carry little (the city's address list without points is bb-adresy) |
 | DTM_BB-register-stlpov-VO (`bb-dtm-bb-register-stlpov-vo`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (185 KiB): a PDF map sheet, no data |
+| DTM_BB-register-ulic (`bb-dtm-bb-register-ulic`) | banskabystrica | not-ingestible | 6338 MultiLineString features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects; without the geometry the rows carry little (the city's address list without points is bb-adresy) |
 | DTM_BB-register-verejnej-zelene-1 (`bb-dtm-bb-register-verejnej-zelene-1`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (43 KiB): a PDF map sheet, no data |
 | DTM_BB-register-verejnej-zelene-2 (`bb-dtm-bb-register-verejnej-zelene-2`) | banskabystrica | not-ingestible | a ZIP of 3 .atr, 3 .cpg, 3 .dbf, 3 .shp, 3 .shx (732 KiB): Esri shapefiles; no ingestion path reads a shapefile today |
 | DTM_BB-register-verejnej-zelene-3 (`bb-dtm-bb-register-verejnej-zelene-3`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (194 KiB): a PDF map sheet, no data |
@@ -177,14 +180,16 @@ source. The `Evidencia psov` and `Zoznam poskytovateľov pre APS` datasets never
 <!-- /refused -->
 
 Most DTM ZIPs of the city hold one PDF map sheet and no data. `DTM_BB-register verejnej zelene 2`
-holds shapefiles, and no ingestion path reads a shapefile today. The terrain model and the survey
-points are the two largest sources of both organizations. They wait for a later round, after
-the integrator has read the broker's volume use with the rest loaded
+holds shapefiles, and no ingestion path reads a shapefile today. The GeoJSON registers of
+addresses, buildings, streets and survey points are drawn in S-JTSK, and no pipeline step
+reprojects to the WGS 84 that NGSI-LD requires. The terrain model is the largest source of both organizations.
+It waits for a later round, after the integrator has read the broker's volume use with the rest
+loaded
 ([integration rules §4](../Development/12-open-data-integration.md#4-capacity-on-one-node)).
 
 Decided (worker-8, owner may override): a source over 100 000 rows or a GeoJSON over 10 MiB is
 not loaded in this round, because one broker on one 16 GB node holds every project. Options: load
-both now, or load the survey points as one aggregate per cadastral area.
+the terrain model now, or as one aggregate per cadastral area.
 
 ## 7. Datasets a seed already reads
 
@@ -206,24 +211,24 @@ The facilities of every kind are a new mapping onto `PointOfInterest`.
 
 ## 8. What the generator has to handle
 
-- The four DTM GeoJSON files (`register adries`, `register stavby`, `register ulíc`, and the
-  survey points when their turn comes) are in the Slovak national grid, S-JTSK (`EPSG:5514`). The
-  mapping records this as `source.crs`. NGSI-LD `location` is WGS 84, so the generator reprojects,
-  or asks the Esri layer for `outSR=4326` where the source is a layer.
+- A BBSK layer is read with `outSR=4326`, so its geometry arrives in WGS 84, and in pages of the
+  layer's `maxRecordCount` where it holds more rows.
 - Every entity carries `dataProvider` (the CKAN `publisher_name`), `source` (the resource URL) and
   `dataset` (the CKAN dataset URL). The mapping holds all three per dataset
   ([integration rules §3](../Development/12-open-data-integration.md#3-what-each-dataset-becomes)).
 - `refresh` follows the dataset's last change, because no harvested dataset carries a frequency.
   A dataset changed in the last 31 days is read daily (`P1D`), a yearly statistic monthly
   (`P1M`), anything else weekly (`P1W`). The city's two WordPress feeds are read daily.
-- The space is the project's public one: `banskabystrica-verejne` for the city and
-  `bbsk-registre` for the region. Both are read through a public Endpoint, which the public
-  assistant's MCP server reaches.
+- The space is a new public one per project, `banskabystrica-otvorene-data` and
+  `bbsk-otvorene-data`. Each has one public Endpoint, which joins the project's public
+  `otvorene-data` MCP server.
 
-Decided (worker-8, owner may override): the BBSK target is `bbsk-registre`, not `bbsk-kraj`.
-`bbsk-registre` is the region's public register space with its own public Endpoint and CKAN
-dataset, while `bbsk-kraj` holds the steward's raw yearly rows. Options: `bbsk-kraj` behind
-`bbsk-endpoint-kraj-verejne`, or a new space per theme.
+Decided (worker-8, owner may override): the mapped datasets go to a new space per project, not
+into `banskabystrica-verejne` or `bbsk-registre`. A space has one closed model (DM-61). Several
+mapped types share a name with a curated class there (`Bridge`, `School`, `AdministrativeArea`,
+`StatisticalObservation`, `Event`), and a generated class of the same name would replace the
+curated one's slots. Options: rename every generated type, or merge the columns into the curated
+classes by hand.
 
 ## Related
 

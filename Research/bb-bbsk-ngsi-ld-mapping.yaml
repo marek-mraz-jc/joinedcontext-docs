@@ -23,7 +23,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: banskabystrica-verejne
+  space: banskabystrica-otvorene-data
   refresh: P1W
   dataProvider: Mesto Banská Bystrica
   license: cc-by
@@ -34,7 +34,7 @@ datasets:
     ulica: Ulica
     supC: Súp._č.
     orientC: Orient._č.
-  note: the address list without coordinates; DTM register adries holds the same addresses with points
+  note: the city's address list, without coordinates
 - id: 7360f463-7fe5-49d1-8707-7d91f2f97957
   name: bb-aktuality
   org: banskabystrica
@@ -50,7 +50,7 @@ datasets:
     keys:
     - id
   observedAt: null
-  space: banskabystrica-verejne
+  space: banskabystrica-otvorene-data
   refresh: P1D
   dataProvider: Mesto Banská Bystrica
   license: cc-by
@@ -81,7 +81,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: banskabystrica-verejne
+  space: banskabystrica-otvorene-data
   refresh: P1W
   dataProvider: Mesto Banská Bystrica
   license: cc-by
@@ -108,56 +108,15 @@ datasets:
   org: banskabystrica
   title: DTM_BB-Polohopis_a_vyskopis_bodoveho_pola
   status: not-ingestible
-  reason: 240636 rows, more than the 100000 this round loads into the one broker
+  reason: '240636 Point features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects;
+    without the geometry the rows carry little (the city''s address list without points is bb-adresy)'
 - id: 68714ed4-1a8d-4cd8-9d8e-94d8fde8439d
   name: bb-dtm-bb-register-adries
   org: banskabystrica
   title: DTM_BB-Register-adries
-  status: mapped
-  type: Address
-  smartDataModel: null
-  source:
-    kind: zip-geojson
-    url: https://dtm-banskabystrica.tmapserver.sk/opendata/OE_01_register_adries.zip
-    file: OE_01_register_adries.geojson
-    crs: urn:ogc:def:crs:EPSG::5514
-    geometry: Point
-    rows: 15769
-  entityId:
-    keys:
-    - ID
-  observedAt: null
-  space: banskabystrica-verejne
-  refresh: P1W
-  dataProvider: Mesto Banská Bystrica
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-adries
-  properties:
-    iD: ID
-    kRAJ: KRAJ
-    kRAJID: KRAJ_ID
-    oKRES: OKRES
-    oKRESID: OKRES_ID
-    oBEC: OBEC
-    oBECID: OBEC_ID
-    cASTOBCE: CAST_OBCE
-    cOID: CO_ID
-    uLICA: ULICA
-    uLICAID: ULICA_ID
-    oRIENTC: ORIENT_C
-    sUPISNEC: SUPISNE_C
-    oRIENTCC: ORIENT_C_C
-    oRIENTCP: ORIENT_C_P
-    pSC: PSC
-    dPOSTA: DPOSTA
-    tYPBUDOVY: TYP_BUDOVY
-    sCHRANKY: SCHRANKY
-    pOINTX: POINT_X
-    pOINTY: POINT_Y
-    zSJ: ZSJ
-    zSJID: ZSJ_ID
-    idRegad: id_regad
-  note: the city's address register with points
+  status: not-ingestible
+  reason: '15769 Point features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects;
+    without the geometry the rows carry little (the city''s address list without points is bb-adresy)'
 - id: c4fdef97-4e0b-4c8a-9b7b-9792e24ff094
   name: bb-dtm-bb-register-chodnikov-a-verejnych-priestranstiev
   org: banskabystrica
@@ -180,32 +139,9 @@ datasets:
   name: bb-dtm-bb-register-stavby
   org: banskabystrica
   title: DTM_BB-register-stavby
-  status: mapped
-  type: Building
-  smartDataModel: dataModel.Building/Building
-  source:
-    kind: zip-geojson
-    url: https://dtm-banskabystrica.tmapserver.sk/opendata/OE_03_register_stavieb.zip
-    file: OE_03_register_stavieb.geojson
-    crs: urn:ogc:def:crs:EPSG::5514
-    geometry: MultiPolygon
-    rows: 16534
-  entityId:
-    keys:
-    - Id
-  observedAt: null
-  space: banskabystrica-verejne
-  refresh: P1W
-  dataProvider: Mesto Banská Bystrica
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-stavby
-  properties:
-    sourceId: Id
-    municipal: municipal
-    munNum: mun_num
-    district: district
-    distrNum: distr_num
-    area: area
+  status: not-ingestible
+  reason: '16534 MultiPolygon features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step
+    reprojects; without the geometry the rows carry little (the city''s address list without points is bb-adresy)'
 - id: 2f4fcdb0-0853-42d8-8d76-2466e3b036cb
   name: bb-dtm-bb-register-stlpov-vo
   org: banskabystrica
@@ -216,44 +152,9 @@ datasets:
   name: bb-dtm-bb-register-ulic
   org: banskabystrica
   title: DTM_BB-register-ulic
-  status: mapped
-  type: Road
-  smartDataModel: dataModel.Transportation/Road
-  source:
-    kind: zip-geojson
-    url: https://dtm-banskabystrica.tmapserver.sk/opendata/OE_02_register_ulic.zip
-    file: OE_02_register_ulíc.geojson
-    crs: urn:ogc:def:crs:EPSG::5514
-    geometry: MultiLineString
-    rows: 6338
-  entityId:
-    rowHash: true
-  observedAt: null
-  space: banskabystrica-verejne
-  refresh: P1W
-  dataProvider: Mesto Banská Bystrica
-  license: cc-by-sa
-  dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-ulic
-  properties:
-    fCC: FCC
-    rOADID: ROAD_ID
-    dF: DF
-    fW: FW
-    fC: FC
-    rN: RN
-    uRBAN: URBAN
-    oCADMIN8: OC_ADMIN8
-    oCADMIN9: OC_ADMIN9
-    bT: BT
-    nC: NC
-    mETERS: METERS
-    oNEWAY: ONEWAY
-    sTREET: STREET
-    sQUARE: SQUARE
-    sTREETID: STREET_ID
-    rNE: RNE
-    sTREETID2: STREET_ID2
-    sTREET2: STREET2
+  status: not-ingestible
+  reason: '6338 MultiLineString features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step
+    reprojects; without the geometry the rows carry little (the city''s address list without points is bb-adresy)'
 - id: 90bb5851-fc4b-4217-ae56-733bcb438691
   name: bb-dtm-bb-register-verejnej-zelene-1
   org: banskabystrica
@@ -349,7 +250,7 @@ datasets:
     keys:
     - Číslo_objednávky
   observedAt: null
-  space: banskabystrica-verejne
+  space: banskabystrica-otvorene-data
   refresh: P1W
   dataProvider: Mesto Banská Bystrica
   license: cc-by
@@ -378,7 +279,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: banskabystrica-verejne
+  space: banskabystrica-otvorene-data
   refresh: P1M
   dataProvider: Mesto Banská Bystrica
   license: cc-by
@@ -387,7 +288,6 @@ datasets:
     den: Deň
     pohlavie: Pohlavie
     pocet: Počet
-  note: the existing type
 - id: 6037d488-7be9-4d34-9f4c-1015f6b110da
   name: bb-pocet-obcanov-podla-veku
   org: banskabystrica
@@ -403,7 +303,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: banskabystrica-verejne
+  space: banskabystrica-otvorene-data
   refresh: P1M
   dataProvider: Mesto Banská Bystrica
   license: cc-by
@@ -413,7 +313,6 @@ datasets:
     pocetObcanovVDanomVeku: Počet_občanov_v_danom_veku
     pocetMuzov: Počet_mužov
     pocetZien: Počet_žien
-  note: the existing type
 - id: a629eef7-4eae-4219-b623-17125d334362
   name: bb-podujatia
   org: banskabystrica
@@ -429,7 +328,7 @@ datasets:
     keys:
     - id
   observedAt: null
-  space: banskabystrica-verejne
+  space: banskabystrica-otvorene-data
   refresh: P1D
   dataProvider: Mesto Banská Bystrica
   license: cc-by
@@ -446,7 +345,7 @@ datasets:
   existing:
     seed: banskabystrica/datasource-podujatia.yaml
     covers: whole
-  note: the existing banskabystrica-verejne type
+  note: the name of the banskabystrica-verejne class
 - id: 218a20c4-7518-4233-9dc1-51454783fb40
   name: bb-prirastky-a-ubytky-obcanov-za-jednotlive-roky
   org: banskabystrica
@@ -462,7 +361,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: Rok
-  space: banskabystrica-verejne
+  space: banskabystrica-otvorene-data
   refresh: P1M
   dataProvider: Mesto Banská Bystrica
   license: cc-by
@@ -486,7 +385,6 @@ datasets:
     odstahovanych: Odsťahovaných
     odstahovanychM: Odsťahovaných_M
     odstahovanychZ: Odsťahovaných_Ž
-  note: the existing type
 - id: 55e7ca70-459f-45b1-9444-f3a69aba49df
   name: bb-zasadnutia-organov-samospravy
   org: banskabystrica
@@ -502,7 +400,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: Rok
-  space: banskabystrica-verejne
+  space: banskabystrica-otvorene-data
   refresh: P1W
   dataProvider: Mesto Banská Bystrica
   license: cc-by
@@ -527,7 +425,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: banskabystrica-verejne
+  space: banskabystrica-otvorene-data
   refresh: P1W
   dataProvider: Mesto Banská Bystrica
   license: cc-by
@@ -566,7 +464,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -605,7 +503,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: Rok
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -639,7 +537,7 @@ datasets:
     keys:
     - ID
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -670,7 +568,7 @@ datasets:
     keys:
     - id
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -704,7 +602,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -734,7 +632,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -775,7 +673,7 @@ datasets:
     keys:
     - ID_DC
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -812,7 +710,7 @@ datasets:
     keys:
     - ICO
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1D
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by
@@ -844,7 +742,7 @@ datasets:
     - Číslo
     - Rok
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -907,7 +805,7 @@ datasets:
     keys:
     - KOD_VU_202
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -959,7 +857,7 @@ datasets:
     keys:
     - KOD_VU_202
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -1012,7 +910,7 @@ datasets:
     - Číslo_faktúry
     - Rok
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1D
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by
@@ -1048,7 +946,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: Volebné_obdobie
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -1080,7 +978,7 @@ datasets:
     keys:
     - IDN4
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -1123,7 +1021,7 @@ datasets:
     indexEkonomickejZavislostiSt: Index_ekonomickej_závislosti_st
     billeterovIndex: Billeterov_index____
     hustotaOsobyKm: Hustota__osoby_km__
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: 96f21eb5-01aa-504c-a300-b4cd99d4f54b
   name: bbsk-hustota-obyvatelstva-v-obciach-bbk-79fd96
   org: bbsk
@@ -1139,7 +1037,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1D
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -1178,7 +1076,7 @@ datasets:
     f2002: F2002
     f2001: F2001
     f2000: F2000
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: 9dff401c-f0a9-58c1-b5f2-6a68f9c4acc5
   name: bbsk-komisie-zastupitelstva-banskobystrickeho-samospravneho-kraja-59b9e4
   org: bbsk
@@ -1194,7 +1092,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -1224,7 +1122,7 @@ datasets:
     keys:
     - ID
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -1264,7 +1162,7 @@ datasets:
     keys:
     - ID_BBSK
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -1324,7 +1222,7 @@ datasets:
     keys:
     - IDN2
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -1341,7 +1239,7 @@ datasets:
     nUTS2CODE: NUTS2_CODE
     nUTS3: NUTS3
     nUTS3CODE: NUTS3_CODE
-  note: the existing bbsk-registre type
+  note: the name of the bbsk-registre class
 - id: f26b8382-9572-5dd1-8384-ad25f0140281
   name: bbsk-kulturne-institucie-bbsk-24fbf9
   org: bbsk
@@ -1358,7 +1256,7 @@ datasets:
     keys:
     - ID
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1D
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -1399,7 +1297,7 @@ datasets:
     keys:
     - IČO
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1D
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by
@@ -1436,7 +1334,7 @@ datasets:
     keys:
     - KODSKO
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -1491,7 +1389,7 @@ datasets:
     zriadovatelTyp: Zriadovatel_Typ
     latitude: Latitude
     longitude: Longitude
-  note: the existing bbsk-registre type
+  note: the name of the bbsk-registre class
 - id: f6080c3d-22ca-5a6c-983e-9e88740c08d7
   name: bbsk-mosty-v-banskobystrickom-kraji-public-view-3b4675
   org: bbsk
@@ -1508,7 +1406,7 @@ datasets:
     keys:
     - ID_mosta
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -1532,7 +1430,7 @@ datasets:
   existing:
     seed: bbsk/bbsk-datasource-mosty.yaml
     covers: whole
-  note: the existing bbsk-registre type
+  note: the name of the bbsk-registre class
 - id: 33b9ad7f-ccfd-513b-95d0-5be0d36bb251
   name: bbsk-mosty-v-sprave-bbrsc-public-view-d3252c
   org: bbsk
@@ -1549,7 +1447,7 @@ datasets:
     keys:
     - Identifikačné_číslo
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -1582,7 +1480,7 @@ datasets:
     typPamiatky: Typ_pamiatky
     predmetPremostenia: Predmet_premostenia
     typKomunikacie: Typ_komunikácie
-  note: the existing bbsk-registre type
+  note: the name of the bbsk-registre class
 - id: c012e18f-1880-5e26-a514-12c230938f99
   name: bbsk-nabijacky-a-zastavky-937210
   org: bbsk
@@ -1598,7 +1496,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -1663,7 +1561,7 @@ datasets:
     keys:
     - Číslo_nehody
   observedAt: Dátum_a_čas
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -1698,7 +1596,7 @@ datasets:
     keys:
     - IDN4
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -1723,7 +1621,7 @@ datasets:
     lAU2CODE: LAU2_CODE
     fLAT: F_LAT
     fLON: F_LON
-  note: the existing bbsk-registre type
+  note: the name of the bbsk-registre class
 - id: 729ed464-1884-5a77-80b6-074f72552fdc
   name: bbsk-obce-bbk-hranice-ec7ac6
   org: bbsk
@@ -1740,7 +1638,7 @@ datasets:
     keys:
     - IDN4
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -1768,7 +1666,7 @@ datasets:
   existing:
     seed: bbsk/bbsk-datasource-obce.yaml
     covers: whole
-  note: the existing bbsk-registre type
+  note: the name of the bbsk-registre class
 - id: a58d8a57-6639-549e-a64e-cb37e2702f10
   name: bbsk-objednavky-a97e8a
   org: bbsk
@@ -1786,7 +1684,7 @@ datasets:
     - Číslo_objednávky
     - Rok
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1D
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by
@@ -1819,7 +1717,7 @@ datasets:
     keys:
     - IDN4
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -1911,7 +1809,7 @@ datasets:
     ina: iná____
     nezistenaAbs: nezistená__abs__
     nezistena: nezistená____
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: ae76c327-3a29-5ed6-b933-a58c52087ada
   name: bbsk-obyvatelstvo-podla-dalsej-narodnosti-2021-okresy-54bc2c
   org: bbsk
@@ -1928,7 +1826,7 @@ datasets:
     keys:
     - IDN3
   observedAt: Rok
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -2015,7 +1913,7 @@ datasets:
     kanadska: kanadská____
     ina: iná____
     nezistena: nezistená____
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: d8e1f789-d839-5b44-b62e-e323424e160a
   name: bbsk-obyvatelstvo-podla-ekonomickej-aktivity-2021-984966
   org: bbsk
@@ -2032,7 +1930,7 @@ datasets:
     keys:
     - IDN4
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -2089,7 +1987,7 @@ datasets:
     ina: iná____
     nezisteneAbs: nezistené__abs__
     nezistene: nezistené____
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: 5467a79d-82b4-5305-b20d-2d8210f170c8
   name: bbsk-obyvatelstvo-podla-materinskeho-jazyka-2011-obce-c0f097
   org: bbsk
@@ -2106,7 +2004,7 @@ datasets:
     keys:
     - IDN4
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -2148,7 +2046,7 @@ datasets:
     bulharsky: bulharský
     ostatne: ostatné
     nezisteny: nezistený
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: 71ca7ce4-8bbf-5829-821a-711ac6dd6ce2
   name: bbsk-obyvatelstvo-podla-materinskeho-jazyka-2011-okresy-590643
   org: bbsk
@@ -2165,7 +2063,7 @@ datasets:
     keys:
     - IDN3
   observedAt: Rok
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -2216,7 +2114,7 @@ datasets:
     bulharsky12: bulharský12
     ostatne13: ostatné13
     nezisteny14: nezistený14
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: bf2022a7-c103-57c1-9d0f-d88b1831dd07
   name: bbsk-obyvatelstvo-podla-materinskeho-jazyka-2021-obce-fc02ff
   org: bbsk
@@ -2233,7 +2131,7 @@ datasets:
     keys:
     - IDN4
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -2317,7 +2215,7 @@ datasets:
     iny: iný____
     nezistenyAbs: nezistený__abs__
     nezisteny: nezistený____
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: 992d8f78-0ba8-58d4-ab39-bde423d7a208
   name: bbsk-obyvatelstvo-podla-materinskeho-jazyka-2021-okresy-404a3d
   org: bbsk
@@ -2334,7 +2232,7 @@ datasets:
     keys:
     - IDN3
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -2414,7 +2312,7 @@ datasets:
     perzsky: perzský____
     iny: iný____
     nezisteny: nezistený____
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: becd2765-4d2c-50f6-93c8-1aa49849f5c5
   name: bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2011-obce-81576b
   org: bbsk
@@ -2431,7 +2329,7 @@ datasets:
     keys:
     - IDN4
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -2484,7 +2382,7 @@ datasets:
     ine: iné
     bezVyznania: bez_vyznania
     nezistene: nezistené
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: b7c9454f-46fb-5636-9517-09de13d7f156
   name: bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2011-okresy-3844c8
   org: bbsk
@@ -2501,7 +2399,7 @@ datasets:
     keys:
     - IDN3
   observedAt: Rok
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -2553,7 +2451,7 @@ datasets:
     cirkevAdventistovSiedmehoD1: Cirkev_adventistov_siedmeho_d_1
     ustrednyZvazZidovskychNabo1: Ústredný_zväz_židovských_nábo_1
     cirkevJezisaKristaSvatych1: Cirkev_Ježiša_Krista_svätých__1
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: 9bf2cab2-fc19-5a13-99e5-69a88a6eca53
   name: bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2021-obce-5fb2e9
   org: bbsk
@@ -2570,7 +2468,7 @@ datasets:
     keys:
     - IDN4
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -2652,7 +2550,7 @@ datasets:
     ine: iné____
     nezisteneAbs: nezistené__abs__
     nezistene: nezistené____
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: cd78c1e8-563d-59f0-a7c4-e686402258aa
   name: bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2021-okresy-4d7df9
   org: bbsk
@@ -2669,7 +2567,7 @@ datasets:
     keys:
     - IDN3
   observedAt: Rok
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -2738,7 +2636,7 @@ datasets:
     cirkevJezisaKristaSvatych1: Cirkev_Ježiša_Krista_Svätých__1
     novoapostolskaCirkevVSlove1: Novoapoštolská_cirkev_v_Slove_1
     ostatneANepresneUrceneKre1: ostatné_a_nepresne_určené_kre_1
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: fba4a658-ebf4-5d08-a88c-24aa7f5a9f35
   name: bbsk-obyvatelstvo-podla-narodnosti-2011-obce-a36024
   org: bbsk
@@ -2755,7 +2653,7 @@ datasets:
     keys:
     - IDN4
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -2800,7 +2698,7 @@ datasets:
     bulharska: bulharská
     ostatne: ostatné
     nezistena: nezistená
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: 9aa49497-7566-5c72-b317-02912f871273
   name: bbsk-obyvatelstvo-podla-narodnosti-2011-okresy-09f7d6
   org: bbsk
@@ -2817,7 +2715,7 @@ datasets:
     keys:
     - IDN3
   observedAt: Rok
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -2858,7 +2756,7 @@ datasets:
     bulharska: bulharská__
     ostatne: ostatné__
     nezistena: nezistená__
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: 0df4f77d-413e-55c2-8dc6-c3d612d49a4b
   name: bbsk-obyvatelstvo-podla-narodnosti-2021-obce-bf372d
   org: bbsk
@@ -2875,7 +2773,7 @@ datasets:
     keys:
     - IDN4
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -2965,7 +2863,7 @@ datasets:
     ina: iná____
     nezistenaAbs: nezistená__abs__
     nezistena: nezistená____
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: 5b90d79c-1043-5682-86c5-c2d374ce46ab
   name: bbsk-obyvatelstvo-podla-narodnosti-2021-okresy-d559c2
   org: bbsk
@@ -2982,7 +2880,7 @@ datasets:
     keys:
     - IDN3
   observedAt: Rok
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3069,7 +2967,7 @@ datasets:
     kanadska: kanadská__
     ina: iná__
     nezistena: nezistená__
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: a87cb116-fd3a-5506-afc2-87f0d29c5638
   name: bbsk-obyvatelstvo-podla-rodinneho-stavu-2021-obce-40138c
   org: bbsk
@@ -3086,7 +2984,7 @@ datasets:
     keys:
     - IDN4
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3125,7 +3023,7 @@ datasets:
     vdovecVdova: vdovec__vdova____
     nezisteneAbs: nezistené__abs__
     nezistene: nezistené____
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: b0cf51b1-3c88-58ac-839a-c1f88afa4d4b
   name: bbsk-obyvatelstvo-podla-rodinneho-stavu-2021-okresy-04e229
   org: bbsk
@@ -3142,7 +3040,7 @@ datasets:
     keys:
     - IDN3
   observedAt: Rok_
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3177,7 +3075,7 @@ datasets:
     rozvedenyRozvedena: rozvedený__rozvedená__
     vdovecVdova: vdovec__vdova__
     nezistene: nezistené__
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: 23b17bf2-220e-5ff0-a4e1-a6b46e1bba04
   name: bbsk-obyvatelstvo-podla-vekovej-struktury-2011-2021-obce-281902
   org: bbsk
@@ -3195,7 +3093,7 @@ datasets:
     - IDN4
     - Rok
   observedAt: Rok
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3231,7 +3129,7 @@ datasets:
     fPredproduktivny: F__predproduktívny
     fProduktivny: F__produktívny
     fPoproduktivny: F__poproduktívny
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: a93fa787-6e2a-59c6-b0e1-de174a664427
   name: bbsk-obyvatelstvo-podla-vekovej-struktury-2011-2021-okresy-5e08d3
   org: bbsk
@@ -3249,7 +3147,7 @@ datasets:
     - IDN3
     - Rok
   observedAt: Rok
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3280,7 +3178,7 @@ datasets:
     predproduktivnyVek: Predproduktívny_vek____
     produktivnyVek: Produktívny_vek____
     poproduktivnyVek: Poproduktívny_vek____
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: 3904099d-6fbb-5996-bcc1-f3766bf1900f
   name: bbsk-obyvatelstvo-podla-vzdelania-2021-2481df
   org: bbsk
@@ -3297,7 +3195,7 @@ datasets:
     keys:
     - IDN4
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3341,7 +3239,7 @@ datasets:
     bezSkolskehoVzdelaniaOso1: bez_školského_vzdelania___oso_1
     nezisteneAbs: nezistené__abs__
     nezistene: nezistené____
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: 770269ec-4c65-522a-881c-f61daca347df
   name: bbsk-ohrozenie-samosprav-zmenou-klimy-extremne-horucavy-68ff15
   org: bbsk
@@ -3358,7 +3256,7 @@ datasets:
     keys:
     - IDN4
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3381,7 +3279,7 @@ datasets:
     lAU2: LAU2
     lAU2CODE: LAU2_CODE
     extremneHorucavyStupenOhroz: Extrémne_horúčavy__stupeň_ohroz
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: 8fbd0162-cd4c-5e10-b935-da0b51d9d7bb
   name: bbsk-ohrozenie-samosprav-zmenou-klimy-extremne-sucho-576a4f
   org: bbsk
@@ -3398,7 +3296,7 @@ datasets:
     keys:
     - IDN4
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3420,7 +3318,7 @@ datasets:
     lAU2: LAU2
     lAU2CODE: LAU2_CODE
     suchoStupenOhrozenia: Sucho__stupeň_ohrozenia
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: 847b683f-4659-53c8-ad70-8c787fd4a69e
   name: bbsk-ohrozenie-samosprav-zmenou-klimy-extremne-zrazky-a0f87f
   org: bbsk
@@ -3437,7 +3335,7 @@ datasets:
     keys:
     - IDN4
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3459,7 +3357,7 @@ datasets:
     lAU2: LAU2
     lAU2CODE: LAU2_CODE
     extremneZrazkyStupenOhrozen: Extrémne_zrážky__stupeň_ohrozen
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: da20efb5-84c9-5ee1-a8c5-cb8e3604b364
   name: bbsk-okresy-bbk-hranice-17725f
   org: bbsk
@@ -3476,7 +3374,7 @@ datasets:
     keys:
     - IDN3
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3500,7 +3398,7 @@ datasets:
   existing:
     seed: bbsk/bbsk-datasource-okresy.yaml
     covers: whole
-  note: the existing bbsk-registre type
+  note: the name of the bbsk-registre class
 - id: 2ba5cc2b-7429-52fe-9a2e-1bc12a8e1ba6
   name: bbsk-organizacie-v-zriadovatelskej-posobnosti-bbsk-bc762a
   org: bbsk
@@ -3517,7 +3415,7 @@ datasets:
     keys:
     - IČO
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1D
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by
@@ -3537,7 +3435,7 @@ datasets:
   existing:
     seed: bbsk/bbsk-datasource-organizacie.yaml
     covers: whole
-  note: the existing bbsk-registre type
+  note: the name of the bbsk-registre class
 - id: d5175db0-5229-52a4-9af7-4b7bea484b61
   name: bbsk-organizacna-struktura-40329b
   org: bbsk
@@ -3553,7 +3451,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3590,7 +3488,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3625,7 +3523,7 @@ datasets:
     keys:
     - id
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3656,7 +3554,7 @@ datasets:
     keys:
     - KOD_NUTS_obec
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1D
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3702,7 +3600,7 @@ datasets:
     f2023: F2023
     f2024: F2024
     f2025: F2025
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: 43e48c6e-73d7-5e30-a032-0c0719539da6
   name: bbsk-podjazdy-v-banskobystrickom-kraji-public-view-e6fb8f
   org: bbsk
@@ -3719,7 +3617,7 @@ datasets:
     keys:
     - Identifikačné_číslo_podjazdu
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3754,7 +3652,7 @@ datasets:
     - IDN4
     - rok
   observedAt: rok
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3821,7 +3719,7 @@ datasets:
     celkovyPrirastokObyvatelstva: Celkový_prírastok_obyvateľstva_
     hrubaMieraCelkovehoPrirastku: Hrubá_miera_celkového_prírastku
     zivonarodeniOsoba: Živonarodení__Osoba_
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: 2f8843f4-92d0-5c2c-8b8c-2a5c5581373c
   name: bbsk-pohyb-obyvatelstva-v-okresoch-1996-2024-8b7fa1
   org: bbsk
@@ -3839,7 +3737,7 @@ datasets:
     - IDN3
     - Rok
   observedAt: Rok
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3899,7 +3797,7 @@ datasets:
     celkovyPrirastokObyvatelstva: Celkový_prírastok_obyvateľstva_
     hrubaMieraCelkovehoPrirastku: Hrubá_miera_celkového_prírastku
     zivonarodeniOsoba: Živonarodení__Osoba_
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: 4e9bb1c4-65c9-5f02-80be-64aa33f36a96
   name: bbsk-povodia-banskobystrickeho-kraja-067504
   org: bbsk
@@ -3915,7 +3813,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3960,7 +3858,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -3992,7 +3890,7 @@ datasets:
     - Kód_okresu
     - Rok___kampaň
   observedAt: Rok___kampaň
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4007,7 +3905,7 @@ datasets:
     vyplatenaSumaSpolu: Vyplatená_suma_spolu
     vyplatenaSumaNa1Obyvatela: Vyplatená_suma_na_1_obyvateľa
     pocetObyvatelstva: Počet_obyvateľstva
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: e2dd7d73-91a7-502a-9503-ea28c18c2766
   name: bbsk-priepusty-v-banskobystrickom-kraji-public-view-a9ed8e
   org: bbsk
@@ -4023,7 +3921,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4055,7 +3953,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4074,7 +3972,7 @@ datasets:
     lON: LON
     formaPodnikania: Forma_podnikania
     kodFormyPodnikania: Kód_formy_podnikania
-  note: the existing bbsk-registre type
+  note: the name of the bbsk-registre class
 - id: e407e038-c536-53cd-9229-f59564821a39
   name: bbsk-prognoza-poctu-obyvatelov-2018-2040-3a097f
   org: bbsk
@@ -4091,7 +3989,7 @@ datasets:
     keys:
     - IDN3
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4123,7 +4021,7 @@ datasets:
     abs20182040: abs___2018_2040_
     f20182040: F___2018_2040_
     fRozdielZaporny: F__rozdiel___zaporny
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: b2d0246e-b495-5333-a512-845f5b2ea971
   name: bbsk-projekty-banskobystrickeho-kraja-itms21-c8bfea
   org: bbsk
@@ -4140,7 +4038,7 @@ datasets:
     keys:
     - ID_projektu
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4196,7 +4094,7 @@ datasets:
     keys:
     - ID_časti
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4246,7 +4144,7 @@ datasets:
     - ID_IA
     - Rok_zaradenia
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4304,7 +4202,7 @@ datasets:
     - IDN3
     - Rok
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4353,7 +4251,7 @@ datasets:
     keys:
     - IČO
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1D
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by
@@ -4377,7 +4275,7 @@ datasets:
     lAT: LAT
     lON: LON
     nazovSkolyOda: nazov_skoly_oda
-  note: the existing bbsk-registre type
+  note: the name of the bbsk-registre class
 - id: 9eef884e-707c-5c98-bfd2-f46b61d1df5c
   name: bbsk-stredne-skoly-v-banskobystrickom-kraji-581554
   org: bbsk
@@ -4394,7 +4292,7 @@ datasets:
     keys:
     - KODSKO
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4449,7 +4347,7 @@ datasets:
     zriadovatelTyp: Zriadovatel_Typ
     latitude: Latitude
     longitude: Longitude
-  note: the existing bbsk-registre type
+  note: the name of the bbsk-registre class
 - id: db1b7131-18c0-5e4e-9bf0-382449c4cf7c
   name: bbsk-stredne-skoly-v-bbk-odbory-a-pocet-studentov-2023-e85365
   org: bbsk
@@ -4465,7 +4363,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4555,7 +4453,7 @@ datasets:
     odborVycvikAPrax: Odbor__výcvik_a_prax_
     absolventiZaMinulyRokSpol: Absolventi_za_minulý_rok___spol
     absolventiZaMinulyRokZeny: Absolventi_za_minulý_rok___ženy
-  note: the existing bbsk-registre type
+  note: the name of the bbsk-registre class
 - id: 84126641-ab60-5139-954d-2b80709f0686
   name: bbsk-uradne-hodiny-c912ed
   org: bbsk
@@ -4571,7 +4469,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4602,7 +4500,7 @@ datasets:
     - IDN4
     - Rok
   observedAt: Rok
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4642,7 +4540,7 @@ datasets:
     podielOsobVPredproduktivnom: Podiel_osôb_v_predproduktívnom_
     podielOsobVProduktivnomVeku: Podiel_osôb_v_produktívnom_veku
     podielOsobVPoproduktivnomVe: Podiel_osôb_v_poproduktívnom_ve
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: fddef47e-7cff-5f53-80de-bc4f5249aba1
   name: bbsk-vekova-struktura-v-okresoch-1996-2022-29ed8a
   org: bbsk
@@ -4660,7 +4558,7 @@ datasets:
     - IDN3
     - Rok
   observedAt: Rok
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4695,7 +4593,7 @@ datasets:
     podielOsobVPredproduktivnom: Podiel_osôb_v_predproduktívnom_
     podielOsobVProduktivnomVeku: Podiel_osôb_v_produktívnom_veku
     podielOsobVPoproduktivnomVe: Podiel_osôb_v_poproduktívnom_ve
-  note: the existing type; one row per area (and year)
+  note: one row per area (and year)
 - id: 41fe465a-7292-561f-b294-bf540a033084
   name: bbsk-vysoke-skoly-v-banskobystrickom-kraji-b0be47
   org: bbsk
@@ -4711,7 +4609,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4731,7 +4629,7 @@ datasets:
     pocetAbsolventovDenniIA: Počet_absolventov___denní__I__a
     pocetAbsolventovExterniI: Počet_absolventov___externí__I_
     obrazokOdkaz: Obrázok_odkaz
-  note: the existing bbsk-registre type
+  note: the name of the bbsk-registre class
 - id: 95245f82-883e-5268-ae89-44ae2d6a9ba9
   name: bbsk-vyvoj-emisii-v-bbk-c8d1ed
   org: bbsk
@@ -4749,7 +4647,7 @@ datasets:
     - IDN3
     - rok
   observedAt: rok
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4778,7 +4676,7 @@ datasets:
     kodElementu3: Kód_elementu_3
     chemickaZlucenina: chemická_zlúčenina
     hodnota: Hodnota
-  note: the existing type; one row per station or source and year
+  note: one row per station or source and year
 - id: 24866f31-1fda-5d34-b1ae-ed80d7e13bf9
   name: bbsk-vyvoj-imisii-v-bbk-377176
   org: bbsk
@@ -4794,7 +4692,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1M
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4809,7 +4707,7 @@ datasets:
     hodnota: Hodnota
     photo: Photo
     linkPdf: Link_pdf
-  note: the existing type; one row per station or source and year
+  note: one row per station or source and year
 - id: f6bb5275-acfe-5689-9dbb-5c44ea2e7690
   name: bbsk-zakladne-skoly-v-banskobystrickom-kraji-13a8b6
   org: bbsk
@@ -4826,7 +4724,7 @@ datasets:
     keys:
     - KODSKO
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4881,7 +4779,7 @@ datasets:
     zriadovatelTyp: Zriadovatel_Typ
     latitude: Latitude
     longitude: Longitude
-  note: the existing bbsk-registre type
+  note: the name of the bbsk-registre class
 - id: 124e3540-9303-5e21-b796-874ee29c763d
   name: bbsk-zasadnutia-samospravy-9a27f2
   org: bbsk
@@ -4898,7 +4796,7 @@ datasets:
     keys:
     - Číslo_zasadnutia
   observedAt: Dátum_zasadnutia
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4930,7 +4828,7 @@ datasets:
     keys:
     - Identifikacne_čislo_žel__priec_
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -4964,7 +4862,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -5010,7 +4908,7 @@ datasets:
     keys:
     - IdZZ
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -5051,7 +4949,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -5084,7 +4982,7 @@ datasets:
   existing:
     seed: bbsk/bbsk-datasource-socialne-sluzby.yaml
     covers: whole
-  note: the existing bbsk-registre type
+  note: the name of the bbsk-registre class
 - id: 2dc6f224-a7d9-5349-b0bc-8c0b4f42d896
   name: bbsk-zoznam-ucinnych-vseobecne-zavaznych-nariadeni-vzn-80db50
   org: bbsk
@@ -5101,7 +4999,7 @@ datasets:
     keys:
     - Číslo_uznesenia
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
@@ -5132,7 +5030,7 @@ datasets:
   entityId:
     rowHash: true
   observedAt: null
-  space: bbsk-registre
+  space: bbsk-otvorene-data
   refresh: P1W
   dataProvider: Banskobystrický samosprávny kraj
   license: cc-by-sa
