@@ -19,7 +19,8 @@
     "T-4162:A Slovak visitor (?lang=sk, browser sk-SK) gets ",
     "T-4162:Dates in the place list read 'Sep 15, 2026' on a",
     "T-4162:On the Slovak page the new assistant panel (T-41",
-    "T-4162:The data portal's 404 pages are English on a Slo"
+    "T-4162:The data portal's 404 pages are English on a Slo",
+    "T-4158:The rule list's \"Add\" button stays English on th"
    ]
   },
   {
@@ -32,7 +33,11 @@
     "T-4162:'Kind of event' shows the raw codes museumsGalle",
     "T-4162:Two red banners on arrival: 'ResourceNotFound / ",
     "T-4162:23 of 24 App hosts answer an unknown path with r",
-    "T-4162:An unknown path on the assistant host answers AP"
+    "T-4162:An unknown path on the assistant host answers AP",
+    "T-4158:The organization's new-role form says \"Rola proj",
+    "T-4158:Each operation group lists its raw API names as ",
+    "T-4158:After Skontrolovať on the empty form the box at ",
+    "T-4158:The group's description is English on the Slovak"
    ]
   },
   {
@@ -43,7 +48,8 @@
     "T-4157:The project switcher and the breadcrumb list pro",
     "T-4157:Search lists an entity type by its schema name \"",
     "T-4157:An inbox item reads \"Úprava App „alerts-desk“ … ",
-    "T-4161:The resource preview leads with raw keys: the co"
+    "T-4161:The resource preview leads with raw keys: the co",
+    "T-4158:The projection's class list shows only the model"
    ]
   },
   {
@@ -58,7 +64,9 @@
     "T-4161:On a phone the embedded table shows only the _id",
     "T-4161:In the Data Dictionary the column names and thei",
     "T-4162:The Website column is cut off at the right edge ",
-    "T-4162:At 375 px the name column wraps a hospital name "
+    "T-4162:At 375 px the name column wraps a hospital name ",
+    "T-4158:On a phone the Druhy and Operácie multi-selects ",
+    "T-4158:On a phone the endpoints table keeps its columns"
    ]
   },
   {
@@ -132,7 +140,36 @@
    "fix": "Checklists, hints and actions render from the caller's verbs (`/me/permissions`), not from the page",
    "findings": [
     "T-4157:The viewer's home shows the builder checklist (c",
-    "T-4157:With nothing to decide, the viewer still reads \""
+    "T-4157:With nothing to decide, the viewer still reads \"",
+    "T-4158:The viewer gets the whole 4,000 px form disabled"
+   ]
+  },
+  {
+   "id": "form-errors",
+   "title": "A schema form prints each field error twice, and one 'Neplatná hodnota' per allowed shape",
+   "fix": "Each field error shown once; a field whose allowed shapes all fail gets one message that says what to enter (T-4207)",
+   "findings": [
+    "T-4158:Every validation message under a field is printe",
+    "T-4158:An empty Druhy or Operácie list says only \"Nepla",
+    "T-4158:The same doubled validation messages on the poli",
+    "T-4158:The endpoint name's validation message is printe",
+    "T-4158:An empty Rola under Oprávnenie prints \"Neplatná "
+   ]
+  },
+  {
+   "id": "failed-read",
+   "title": "A failed read drops the shell or tells the wrong story: a first-run checklist, 'you may not create', bare 'Internal Server Error'",
+   "fix": "One error state inside the shell that says the server failed, in words, with Retry; checklists and create-hints wait for a successful read",
+   "findings": [
+    "T-4163:With every API read failing, Home shows the firs",
+    "T-4163:Policies, Context Spaces and Organization answer",
+    "T-4163:All Endpoints and Organization with a failed rea",
+    "T-4163:When the form's reads fail the page says 'This p",
+    "T-4163:On a slow network All Endpoints shows one grey l",
+    "T-4163:Applications shows its failure as bare red text ",
+    "T-4163:Access (Project settings, Members) under failed ",
+    "T-4163:When the Portal's reads fail the navigation chan",
+    "T-4158:The viewer opening the organization's new-role a"
    ]
   }
  ]
