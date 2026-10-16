@@ -186,8 +186,10 @@ An indicator is data, not configuration: one NGSI-LD entity of type `KeyPerforma
 | `currentValue` | Property (number or string) with `unitCode` (UN/CEFACT) and `observedAt` | the value as last computed |
 | `calculationPeriod` | Property (`{ "start", "end" }`, ISO 8601) | the window the value covers |
 | `updatedAt` | Property (DateTime) | when the value was written |
-| `derivedFrom` | Relationship (one or many) | the Endpoint URN the sources were read through, and the source entity URNs when they are few |
-| `computedBy` | Relationship | the Pipeline URN or the agent run URN that computed it |
+| `derivedFrom` | Property (a URN or a list of URNs) | the Endpoint URN the sources were read through, and the source entity URNs when they are few |
+| `computedBy` | Property (a URN) | the Pipeline URN or the agent run URN that computed it |
+
+Provenance is a Property holding URNs and never a Relationship: a Relationship written through a view must point at an Entity that view shows (the broker's write rule, threat-model D7), and an Endpoint, a Pipeline or an agent run is not an Entity of the indicator space.
 
 ```json
 {
@@ -198,8 +200,8 @@ An indicator is data, not configuration: one NGSI-LD entity of type `KeyPerforma
   "currentValue": { "type": "Property", "value": 18.4, "unitCode": "GQ", "observedAt": "2026-09-13T08:00:00Z" },
   "calculationPeriod": { "type": "Property", "value": { "start": "2026-09-13T07:00:00Z", "end": "2026-09-13T08:00:00Z" } },
   "updatedAt": { "type": "Property", "value": { "@type": "DateTime", "@value": "2026-09-13T08:00:12Z" } },
-  "derivedFrom": { "type": "Relationship", "object": "urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all" },
-  "computedBy": { "type": "Relationship", "object": "urn:ngsi-ld:AgentRun:hel.fi:helsinki:3f9c2a1e" }
+  "derivedFrom": { "type": "Property", "value": "urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all" },
+  "computedBy": { "type": "Property", "value": "urn:ngsi-ld:AgentRun:hel.fi:helsinki:3f9c2a1e" }
 }
 ```
 

@@ -433,7 +433,7 @@ image (AP-13a) and it exists for the same reason: the thing that runs is the thi
 | `wasm` | Bento `wasm` processor, module `wasm32-wasip1` | real computation in Rust (indices, interpolation, statistics, geometry) | not deployed yet, and no build lane exists; the design: a crate in `compute/` next to the pipeline, built and tested in CI (`cargo test`, then golden tests through `bento test`), module pinned by digest in the artifact store (ADR-N-015); no network, no filesystem, no clock beyond the message; memory limit per invocation |
 | `container` | Kubernetes Job from the CronJob (scheduled only) | heavy or library-bound compute (raster, GDAL, ML inference) | not deployed yet; the design: image built in CI, signed and pinned by digest (AP-13 rules); reads the source endpoint and writes the target endpoint with the pipeline's ServiceAccount token; same NetworkPolicy as runners (PL-23) |
 
-**Provenance and loop guard.** Every derived entity or attribute carries `derivedFrom` (Relationship to the source entities, or to the source type when aggregated) and `computedBy` (Property, the pipeline URN and the module digest). A resident derived pipeline must not trigger itself: the reconciler rejects a pipeline whose `output.type`/attributes intersect its own `trigger.subscription` unless `spec.allowFeedback: true` is set and the change is yellow lane.
+**Provenance and loop guard.** Every derived entity or attribute carries `derivedFrom` (a Property holding the URNs of the source entities, or of the Endpoint they were read through when aggregated; never a Relationship, which a view refuses when it does not show the target, Architecture/03 §2) and `computedBy` (Property, the pipeline URN and the module digest). A resident derived pipeline must not trigger itself: the reconciler rejects a pipeline whose `output.type`/attributes intersect its own `trigger.subscription` unless `spec.allowFeedback: true` is set and the change is yellow lane.
 
 The intersection is decided on the type, because the type is the only thing both sides declare. A
 pipeline whose `output.type` differs from its trigger's type cannot feed itself and is accepted
@@ -532,8 +532,8 @@ spec:
       }
       root.calculationPeriod = { "type": "Property", "value": { "start": $now.ts_sub_iso8601("PT15M"), "end": $now } }
       root.updatedAt = { "type": "Property", "value": { "@type": "DateTime", "@value": $now } }
-      root.derivedFrom = { "type": "Relationship", "object": "urn:ngsi-ld:Endpoint:%v:helsinki:helsinki-all".format($domain) }
-      root.computedBy = { "type": "Relationship", "object": "urn:ngsi-ld:Pipeline:%v:helsinki:bikes-available-avg".format($domain) }
+      root.derivedFrom = { "type": "Property", "value": "urn:ngsi-ld:Endpoint:%v:helsinki:helsinki-all".format($domain) }
+      root.computedBy = { "type": "Property", "value": "urn:ngsi-ld:Pipeline:%v:helsinki:bikes-available-avg".format($domain) }
   targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki-kpi:kpi-writer
   output:
     type: KeyPerformanceIndicator
@@ -571,8 +571,8 @@ print(json.dumps([{
                      "unitCode": "C62", "observedAt": iso(now)},
     "calculationPeriod": {"type": "Property", "value": {"start": iso(now - timedelta(minutes=15)), "end": iso(now)}},
     "updatedAt": {"type": "Property", "value": {"@type": "DateTime", "@value": iso(now)}},
-    "derivedFrom": {"type": "Relationship", "object": f"urn:ngsi-ld:Endpoint:{domain}:helsinki:helsinki-all"},
-    "computedBy": {"type": "Relationship", "object": f"urn:ngsi-ld:Pipeline:{domain}:helsinki:bikes-available-avg"},
+    "derivedFrom": {"type": "Property", "value": f"urn:ngsi-ld:Endpoint:{domain}:helsinki:helsinki-all"},
+    "computedBy": {"type": "Property", "value": f"urn:ngsi-ld:Pipeline:{domain}:helsinki:bikes-available-avg"},
 }]))
 ```
 
