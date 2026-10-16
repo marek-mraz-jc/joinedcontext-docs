@@ -22,7 +22,9 @@
     "T-4162:The data portal's 404 pages are English on a Slo",
     "T-4158:The rule list's \"Add\" button stays English on th",
     "T-4159:In the Slovak form the array buttons say \"Add\" (",
-    "T-4159:The Flow wizard in Slovak shows its blueprint in"
+    "T-4159:The Flow wizard in Slovak shows its blueprint in",
+    "T-4160:On the Slovak dataset page every resource descri",
+    "T-4160:The App framed in the Slovak Portal ('Registre B"
    ]
   },
   {
@@ -43,7 +45,22 @@
     "T-4159:The data source edit form shows a developer warn",
     "T-4159:The NATS fields below Basics are raw schema keys",
     "T-4159:The import page explains a missing feature in de",
-    "T-4159:The pipeline's Sample step shows the engine's ra"
+    "T-4159:The pipeline's Sample step shows the engine's ra",
+    "T-4160:Every create form's header prints the raw kind a",
+    "T-4160:The create-form headings show the kind name in C",
+    "T-4160:The model diagram's legend explains itself in mo",
+    "T-4160:The Policies table's Assignee column shows raw p",
+    "T-4160:The Area/Územie filter lists raw NUTS codes (FI1",
+    "T-4160:Explore's 'Your access' card lists raw API opera",
+    "T-4160:A query that matches nothing ends in a red Engli",
+    "T-4160:Raw resource names stand where people read title",
+    "T-4160:The space page's Policies table lists raw API op",
+    "T-4160:'Attributes to read' / 'Čítané atribúty' offers ",
+    "T-4160:The framed registers App's 'Kind of hospital' co",
+    "T-4160:The read-only notice on edit pages prints the ki",
+    "T-4160:The Data grid's calculationPeriod cells show raw",
+    "T-4160:The registers App's Specialties column prints re",
+    "T-4160:The catalogue source lists its pages only by raw"
    ]
   },
   {
@@ -55,7 +72,15 @@
     "T-4157:Search lists an entity type by its schema name \"",
     "T-4157:An inbox item reads \"Úprava App „alerts-desk“ … ",
     "T-4161:The resource preview leads with raw keys: the co",
-    "T-4158:The projection's class list shows only the model"
+    "T-4158:The projection's class list shows only the model",
+    "T-4160:The Data grid leads with the full URN (urn:ngsi-",
+    "T-4160:The breadcrumb of 'Complete this space' and 'Upl",
+    "T-4160:On the Slovak Assistant page the agent profiles ",
+    "T-4160:Each App card says what it reads by schema names",
+    "T-4160:A published App's detail page has no App heading",
+    "T-4160:About a dozen Banská Bystrica datasets are title",
+    "T-4160:Entity types says 'It lives on the context broke",
+    "T-4160:The Context Spaces table's Data model column sho"
    ]
   },
   {
@@ -75,7 +100,18 @@
     "T-4158:On a phone the endpoints table keeps its columns",
     "T-4159:At 375 px the pipelines table is wider than its ",
     "T-4159:At 768 px, once a row's actions are used, the ta",
-    "T-4159:At 375 px the model editor is wider than the scr"
+    "T-4159:At 375 px the model editor is wider than the scr",
+    "T-4160:In Slovak the Context Spaces table is wider than",
+    "T-4160:On the Context Space page three tables run off t",
+    "T-4160:The Resources table's descriptions do not wrap: ",
+    "T-4160:The Explore table's ID column is cut to 'urn:ngs",
+    "T-4160:Both Knowledge tables are wider than their cards",
+    "T-4160:The conversations table shows only its Name colu",
+    "T-4160:At 768 px the dataset page is 784 px wide: the A",
+    "T-4160:At 768 px the sidebar stays open and leaves the ",
+    "T-4160:The create and edit forms keep two field columns",
+    "T-4160:After 'Ask' is used on the Assistants table it s",
+    "T-4160:In the space's Data grid the calculationFormula "
    ]
   },
   {
@@ -86,7 +122,9 @@
     "T-4157:The assistant's floating button covers the right",
     "T-4161:The floating \"Ask the assistant\" button covers c",
     "T-4162:At 375 px the opened assistant panel sits on top",
-    "T-4159:At 375 px the floating assistant button covers t"
+    "T-4159:At 375 px the floating assistant button covers t",
+    "T-4160:At 768 px the floating assistant button covers c",
+    "T-4160:At 1440 px the floating assistant button sits on"
    ]
   },
   {
@@ -141,7 +179,8 @@
     "T-4157:The refusal says to ask an administrator but nam",
     "T-4157:The 404 page drops the header's navigation, lang",
     "T-4162:An unknown assistant id answers a bare monospace",
-    "T-4162:A mistyped address on the apex or the Portal hos"
+    "T-4162:A mistyped address on the apex or the Portal hos",
+    "T-4160:Dashboards are hidden in project bbsk, and /proj"
    ]
   },
   {
@@ -151,7 +190,18 @@
    "findings": [
     "T-4157:The viewer's home shows the builder checklist (c",
     "T-4157:With nothing to decide, the viewer still reads \"",
-    "T-4158:The viewer gets the whole 4,000 px form disabled"
+    "T-4158:The viewer gets the whole 4,000 px form disabled",
+    "T-4160:For the viewer every create button on the list p",
+    "T-4160:On the Context Space page 'Edit model', 'Add fie",
+    "T-4160:The Data section keeps 'Import rows' / 'Importov",
+    "T-4160:A viewer who opens a create form gets the whole ",
+    "T-4160:For the viewer /apps/new shows the list under a ",
+    "T-4160:'Complete this space' and 'Upload a CSV' open fo",
+    "T-4160:The chart dialog tells the viewer 'Save it to a ",
+    "T-4160:The viewer gets the steward's page unchanged: th",
+    "T-4160:In 'Services for Apps' the Files and Jobs checkb",
+    "T-4160:In the assistant panel five of six paths (Integr",
+    "T-4160:The App page tells the viewer 'This deployment h"
    ]
   },
   {
@@ -180,7 +230,8 @@
     "T-4163:Applications shows its failure as bare red text ",
     "T-4163:Access (Project settings, Members) under failed ",
     "T-4163:When the Portal's reads fail the navigation chan",
-    "T-4158:The viewer opening the organization's new-role a"
+    "T-4158:The viewer opening the organization's new-role a",
+    "T-4160:Asking 'Kde nájdem zoznam nemocníc v kraji?' in "
    ]
   }
  ]
