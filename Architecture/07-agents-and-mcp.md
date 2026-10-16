@@ -120,6 +120,7 @@ broker request is built (AG-31).
 | `containedBy` | list of at most 50 URNs | loop protection for a hierarchical join |
 | `entityMap` | boolean | keeps a federated entity map for paging; only on an Endpoint that federates |
 | `local` | boolean | a local-only answer |
+| `orderBy` | string, at most 1024 characters | CIM 009 §4.23 Entity Ordering, `attr[;asc\|desc]` comma-separated; on `query_entities` (EP-116) |
 | `limit`, `cursor`, `count` | integer 1…1000; integer ≥ 0; boolean | paging; the structured result carries `total` and `nextCursor` |
 | `details` | boolean | on REST `/types` and `/attributes`: each row's members; an MCP surface has `list_type_details` and `list_attribute_details` instead (EP-112) |
 
@@ -128,7 +129,7 @@ included:
 
 | Argument | Values |
 |---|---|
-| `format` / `options` | `normalized` (the default), `simplified`/`keyValues`, `concise`, `sysAttrs`; on the temporal tools also `temporalValues` and `aggregatedValues` |
+| `format` / `options` | `normalized` (the default), `simplified`/`keyValues`, `concise`, `sysAttrs`; on the temporal tools also `temporalValues` and `aggregatedValues`. A tool takes `format` (`normalized`, `concise`, `keyValues`) and `sysAttrs` (boolean, sent as `options=sysAttrs`) on `get_entity`, `query_entities`, `query_temporal` and `retrieve_temporal` (EP-116) |
 | `geometryProperty` | which GeoProperty becomes the geometry of a GeoJSON answer |
 | `accept` | `json` (the default), `json-ld` (the body carries `@context`), `geo+json` (a FeatureCollection) |
 | `context` | one or more `@context` URLs, the REST `Link` header's value: `https` only, from the Endpoint's own allow-list, and never fetched on an agent's say-so beyond what the REST path already fetches |
@@ -181,6 +182,8 @@ formalism to load (`recommended: "linkml"`) and lists every artifact with its `f
 (ADR-N-010), so it is the one document that cannot disagree with the model. SHACL is for validating
 what an agent is about to write, RDF and OWL for a reasoner, JSON Schema for building a form, and
 `markdown` for a person to read. `entityType` narrows the answer to one type, or to the list of classes an agent needs (`["User", "Vehicle"]`, at most 64); a type the caller may not read is refused exactly as an unknown one is, by name, whether it stands alone or in a list, so the argument is no way to ask which types exist (EP-47, SP-15, SP-20). A rendered document over 1 MiB is refused with the words that name `entityType` and `version` as the way to narrow it, and is never truncated: half a SHACL file is not SHACL, and a model that silently lost its last classes is the one thing a schema surface must not serve (AG-29).
+
+The hub's and every named server's `initialize.instructions` carry the NGSI-LD primer of [ADR-N-025 §4c](../Decisions/adr-n-025-one-mcp-connector-several-endpoints.md) (`crates/context-gateway/src/mcp/primer.md`): what an entity is, `@context`, the query language with examples, the temporal reads, and the order of work, `list_endpoints` → `describe_schema` → `list_types`/`get_type` → query. A caller without a token lists and calls the read tools of `ANONYMOUS_TOOLS` alone: `list_endpoints`, `list_types`, `get_type`, `list_type_details`, `list_attributes`, `list_attribute_details`, `get_attribute`, `query_entities`, `get_entity`, `get_attribute_value`, `query_temporal`, `retrieve_temporal`, `describe_schema` and `describe_access`, each where a grant holds its operation (EP-116, T-4168).
 
 Four properties hold across the whole catalogue:
 
