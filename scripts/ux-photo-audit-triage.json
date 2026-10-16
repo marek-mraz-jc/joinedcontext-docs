@@ -20,7 +20,9 @@
     "T-4162:Dates in the place list read 'Sep 15, 2026' on a",
     "T-4162:On the Slovak page the new assistant panel (T-41",
     "T-4162:The data portal's 404 pages are English on a Slo",
-    "T-4158:The rule list's \"Add\" button stays English on th"
+    "T-4158:The rule list's \"Add\" button stays English on th",
+    "T-4159:In the Slovak form the array buttons say \"Add\" (",
+    "T-4159:The Flow wizard in Slovak shows its blueprint in"
    ]
   },
   {
@@ -37,7 +39,11 @@
     "T-4158:The organization's new-role form says \"Rola proj",
     "T-4158:Each operation group lists its raw API names as ",
     "T-4158:After Skontrolovať on the empty form the box at ",
-    "T-4158:The group's description is English on the Slovak"
+    "T-4158:The group's description is English on the Slovak",
+    "T-4159:The data source edit form shows a developer warn",
+    "T-4159:The NATS fields below Basics are raw schema keys",
+    "T-4159:The import page explains a missing feature in de",
+    "T-4159:The pipeline's Sample step shows the engine's ra"
    ]
   },
   {
@@ -66,7 +72,10 @@
     "T-4162:The Website column is cut off at the right edge ",
     "T-4162:At 375 px the name column wraps a hospital name ",
     "T-4158:On a phone the Druhy and Operácie multi-selects ",
-    "T-4158:On a phone the endpoints table keeps its columns"
+    "T-4158:On a phone the endpoints table keeps its columns",
+    "T-4159:At 375 px the pipelines table is wider than its ",
+    "T-4159:At 768 px, once a row's actions are used, the ta",
+    "T-4159:At 375 px the model editor is wider than the scr"
    ]
   },
   {
@@ -76,7 +85,8 @@
    "findings": [
     "T-4157:The assistant's floating button covers the right",
     "T-4161:The floating \"Ask the assistant\" button covers c",
-    "T-4162:At 375 px the opened assistant panel sits on top"
+    "T-4162:At 375 px the opened assistant panel sits on top",
+    "T-4159:At 375 px the floating assistant button covers t"
    ]
   },
   {
@@ -153,7 +163,8 @@
     "T-4158:An empty Druhy or Operácie list says only \"Nepla",
     "T-4158:The same doubled validation messages on the poli",
     "T-4158:The endpoint name's validation message is printe",
-    "T-4158:An empty Rola under Oprávnenie prints \"Neplatná "
+    "T-4158:An empty Rola under Oprávnenie prints \"Neplatná ",
+    "T-4159:The empty service-account field of a role says \""
    ]
   },
   {
