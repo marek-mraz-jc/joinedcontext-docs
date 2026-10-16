@@ -54,7 +54,7 @@ jobs:
         # Pinned, not `main`: an unrelated platform push must not turn this lane red at a
         # random hour. Bump the tag when a new kind lands, which is the same moment the
         # "Schema not published yet" list on Development/04-manifest-kinds.md shortens.
-        env: { JC_SCHEMAS_TAG: e219f50c1348a36b17c4ed0d5e5872b3ba1ee53c }
+        env: { JC_SCHEMAS_TAG: 1e7043f7d53d344f2edee99b98272b5632b5e24f }
         run: |
           set -eu
           curl -sSL "https://github.com/marek-mraz-jc/joinedcontext-platform/archive/${JC_SCHEMAS_TAG}.tar.gz" \
