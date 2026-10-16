@@ -141,11 +141,32 @@ The flow writes nothing to CKAN and needs no CKAN credential: the Change is the 
 
 A national portal (data.gov.sk, data.europa.eu) harvests a catalogue, not a list of endpoints. The context gateway serves the installation's catalogue as one `dcat:Catalog` at `https://{host}/catalog.jsonld` and `https://{host}/catalog.ttl` (EP-84): its datasets are the records of EP-27 of every Endpoint whose audience is `public`, each as the anonymous caller would read it, so the feed carries nothing a public read would not. The same pinned SEMIC shapes that check each record check the feed in the fast CI lane. The catalogue host serves the same records a second time, as CKAN holds them (EP-91): `https://data.{domain}/catalog.ttl` and `/dataset/{id}.ttl`, written by `ckanext-dcat`'s `euro_dcat_ap_3` profile with the catalogue theme's own profile on top, which turns CKAN's strings into the vocabulary IRIs the shapes ask for and adds the catalogue's publisher from `global.branding`. That is the address another CKAN's DCAT RDF harvester is given, because it harvests a catalogue host and its dataset pages, and it carries the DataStore download the gateway's record does not. A harvester takes one of the two, never both: the datasets of the two feeds have different URIs and the same `dct:identifier`, the Endpoint's slug. The deployment repository's DCAT-AP check, which the `ckan` component README names for an operator, validates the catalogue host's feed against the pinned 3.0.1 shapes.
 
+## 9. A dataset without rows still has an entity
+
+A catalogue dataset whose files hold no machine-readable rows (a PDF map sheet, a format no pipeline reads yet) is still reachable through NGSI-LD (DM-97). One generated pipeline per project writes one entity of type `Dataset` per such dataset into the project's open-data space, read from the catalogue's own `package_show` record, so the assistant and the public MCP server find every dataset of the catalogue with the same query they use for rows, and an answer can link the file.
+
+| Attribute | From the CKAN record | NGSI-LD |
+|---|---|---|
+| `title` | `title` | Property, text |
+| `description` | `notes` | Property, text |
+| `publisher` | extra `publisher_name` | Property, text |
+| `spatial` | the organization's title (the records carry no spatial extra) | Property, text |
+| `license` | `license_title` | Property, text |
+| `landingPage` | the dataset's page on `data.{domain}` | Property, URI |
+| `distribution` | every resource `url` (for a map sheet, the ZIP that holds the PDF) | Property, array of URI |
+| `format` | every resource `format` | Property, array of text |
+| `issued`, `modified` | extras `issued`, `modified` | Property, DateTime |
+| `source` | `url`, the publisher's own record (data.gov.sk) | Property, URI |
+| `dataset` | the dataset's page, as on every row (T-4255) | Property, URI |
+
+The id is `urn:ngsi-ld:Dataset:{publisher domain}:{space}:{CKAN name}`. The pipeline reads only the catalogue of the installation, never the publisher's host, and the files are linked, never parsed. A dataset that later gets a row pipeline keeps its `Dataset` entity: the entity describes the dataset, the rows are its data.
+
 ## Related
 
 - [04-context-spaces-and-endpoints.md](04-context-spaces-and-endpoints.md#7-publication-to-an-open-data-portal) — the publication contract, the manifest fields and what one Endpoint becomes.
 - [../Requirements/endpoints.md](../Requirements/endpoints.md) — EP-62 to EP-69, the normative rules this chapter designs around.
 - [../Deployment/04-components-and-addons.md](../Deployment/04-components-and-addons.md) — the `ckan` add-on, what it deploys and what it costs to run.
 - [../Deployment/12-branding-and-naming.md](../Deployment/12-branding-and-naming.md) — the branding block the catalogue mounts.
+- [../Requirements/data-models.md](../Requirements/data-models.md) — DM-97, the catalogue entity of §9.
 - [09-portal.md](09-portal.md) — the Portal, which holds the reconciler the publication belongs to and the catalogue page of §6.
 - [../API/01-portal-api.md](../API/01-portal-api.md#16a-the-catalogue-ep-81-ep-82) — the catalogue and publication routes of §6 and §7.
