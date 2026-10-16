@@ -34,6 +34,8 @@ jobs:
       - name: the manifest and API checkers need a yaml and a schema library
         run: pip install --quiet --disable-pip-version-check pyyaml==6.0.3 jsonschema==4.26.0
       - run: python3 scripts/audit-i18n-docs.py
+      - name: every Banská Bystrica and BBSK dataset is mapped to NGSI-LD or refused with a reason (T-4254)
+        run: python3 scripts/bb-bbsk-ngsi-ld-mapping.py --selftest && python3 scripts/bb-bbsk-ngsi-ld-mapping.py check
       - name: the API pages hold to the URL scheme, with no specification to look up
         run: python3 scripts/verify-openapi-snippets.py
       - name: the draft-07 schemas the platform publishes
