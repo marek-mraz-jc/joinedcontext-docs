@@ -129,7 +129,7 @@ included:
 
 | Argument | Values |
 |---|---|
-| `format` / `options` | `normalized` (the default), `simplified`/`keyValues`, `concise`, `sysAttrs`; on the temporal tools also `temporalValues` and `aggregatedValues`. A tool takes `format` (`normalized`, `concise`, `keyValues`) and `sysAttrs` (boolean, sent as `options=sysAttrs`) on `get_entity`, `query_entities`, `query_temporal` and `retrieve_temporal` (EP-116) |
+| `format` / `options` | `normalized` (the default), `simplified`/`keyValues`, `concise`, `sysAttrs`; on the temporal tools also `temporalValues` and `aggregatedValues`. A tool takes `format` and `sysAttrs` (boolean, sent as `options=sysAttrs`) on `get_entity` and `query_entities` (`normalized`, `concise`, `keyValues`) and on `query_temporal` and `retrieve_temporal` (`normalized`, `temporalValues`, `aggregatedValues`) (EP-116) |
 | `geometryProperty` | which GeoProperty becomes the geometry of a GeoJSON answer |
 | `accept` | `json` (the default), `json-ld` (the body carries `@context`), `geo+json` (a FeatureCollection) |
 | `context` | one or more `@context` URLs, the REST `Link` header's value: `https` only, from the Endpoint's own allow-list, and never fetched on an agent's say-so beyond what the REST path already fetches |
