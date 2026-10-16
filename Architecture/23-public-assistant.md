@@ -59,10 +59,13 @@ browser ── widget or /d/{publicId} ── POST /api/v1/d/{publicId}/chat (SS
         {"answers": true} answers now; {"answers": false,
         "queries": [...]} runs the next round in the sources'
         language; any other reply answers with what was found       (T-4259)
+        the first round is the question as asked, searched and
+        judged while the router call (3) runs; when it answers, the
+        router's queries are added and nothing more is judged       (T-4293)
      5. answer call, once, streamed token by token, top passages
         and data rows as quoted data, citations from what was found
      6. SSE: delta… , data (rows, dataset link, download link),
-        citations, done (tokens in/out, latency)
+        citations, done (tokens in/out, latency, stagesMs)
 ```
 
 Decided (worker-1, owner may override): the server runs the rounds and the model never calls `search` itself, because the goal fixes the answering model to one call per answer and the injection rules want the tool allowlist enforced by code; options: keep today's model-driven loop with a lower `MAX_CALLS` (fewer code changes, but every round costs a full answering-model call with all passages again).
@@ -83,7 +86,7 @@ Decided (worker-1, owner may override): the public chat page is served by jc-ass
 
 A typical answer is one router call, one follow-up and one answer call: about 820 + 930 + 3 750 tokens (T-4259 adds the follow-up to every searched question), so the median target of 4 000 for the answer call alone is tight and 4 000 for both is reachable only with 5 passages. Decided (worker-1, owner may override): count the goal's 4 000-token median over the answer call plus the router calls, and cut passages to the top 5 (`PASSAGES` 8 → 5) when the T-4144 run shows the median above it, because the owner's target is per answer, and passages are the one input that scales. The 12 000 ceiling holds by construction: the router and two follow-up calls (≤ 2 680) plus one answer call (≤ 3 750 + 700).
 
-The numbers are read, never estimated: every model response through `jc-agent-proxy` carries the OpenAI-compatible `usage` object (`prompt_tokens`, `completion_tokens`), and jc-assistant sums it over the router and answer calls of one question into the final SSE event `done`, which today carries `tokens` alone and gains `tokensIn`, `tokensOut`, `modelCalls`, `firstTokenMs`, `totalMs` and `cached` ([API/05 §1.3](../API/05-knowledge-assistant.md#13-answer-server-sent-events)). T-4144 reads exactly these fields per answer; a cached answer reports `tokensIn: 0`.
+The numbers are read, never estimated: every model response through `jc-agent-proxy` carries the OpenAI-compatible `usage` object (`prompt_tokens`, `completion_tokens`), and jc-assistant sums it over the router and answer calls of one question into the final SSE event `done`, which today carries `tokens` alone and gains `tokensIn`, `tokensOut`, `modelCalls`, `firstTokenMs`, `totalMs` and `cached` ([API/05 §1.3](../API/05-knowledge-assistant.md#13-answer-server-sent-events)). T-4144 reads exactly these fields per answer; a cached answer reports `tokensIn: 0`. Each answer also leaves one row in `answer_timings`: deployment, time, `firstTokenMs`, `totalMs`, `stagesMs`, model calls and whether it was cached, with no question or answer text, kept 30 days; the latency eval reads p50 and p95 per stage from the `done` events it receives (T-4293).
 
 Embeddings stay at index time (`embed.rs`). The answer cache is keyed by the normalized question, the deployment and the index digest, so a re-index invalidates it.
 
