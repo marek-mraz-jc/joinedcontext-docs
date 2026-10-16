@@ -55,11 +55,10 @@ probe read from each mapped source, before any row filter of section 5.
 |---|---|---:|---:|
 | `KeyPerformanceIndicator` | [`dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator`](https://raw.githubusercontent.com/smart-data-models/dataModel.KeyPerformanceIndicator/ec7f3b642faf3f807d3c8549ccc9e0b743e05f26/KeyPerformanceIndicator/schema.json) | 37 | 43640 |
 | `Organization` | [`dataModel.Organization/Organization`](https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/Organization/schema.json) | 9 | 7415 |
-| `PointOfInterest` | [`dataModel.PointOfInterest/PointOfInterest`](https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/PointOfInterest/schema.json) | 8 | 5221 |
+| `PointOfInterest` | [`dataModel.PointOfInterest/PointOfInterest`](https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/PointOfInterest/schema.json) | 9 | 5827 |
 | `PublicOrganization` | [`dataModel.CPSV-AP/PublicOrganization`](https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/PublicOrganization/schema.json) | 2 | 231 |
 | `RoadAccident` | [`dataModel.Transportation/RoadAccident`](https://raw.githubusercontent.com/smart-data-models/dataModel.Transportation/b83ede9d3db29be1365cc272eb535f46af83bed2/RoadAccident/schema.json) | 2 | 3127 |
 | `Address` | [`dataModel.CPSV-AP/Address`](https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/Address/schema.json) | 1 | 16902 |
-| `EVChargingStation` | [`dataModel.Transportation/EVChargingStation`](https://raw.githubusercontent.com/smart-data-models/dataModel.Transportation/b83ede9d3db29be1365cc272eb535f46af83bed2/EVChargingStation/schema.json) | 1 | 606 |
 | `Event` | [`dataModel.TourismDestinations/Event`](https://raw.githubusercontent.com/smart-data-models/dataModel.TourismDestinations/6d78cb4ff0c1a7d16dc0c1bab7266e40d4b3a00c/Event/schema.json) | 1 | 6164 |
 | `Person` | [`dataModel.Organization/Person`](https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/Person/schema.json) | 1 | 125 |
 <!-- /types -->
@@ -78,7 +77,11 @@ the model's name:
 The census, migration, age-structure, climate-risk and payment-per-district tables become
 `KeyPerformanceIndicator`, one entity per area and year. The other columns keep their own names
 beside the model's: every one of these schemas allows additional properties. A CPSV-AP list
-attribute (`range: string-list`) carries the column as a one-item list.
+attribute, or a `PointOfInterest`'s `category` (`range: string-list`), carries the column as a
+one-item list. An attribute a model requires that no column holds is the same on every entity
+of the type, under `constants`: a `RoadAccident` is `status: archived`, an accident the police
+closed and published. The tourism portal's charging-and-stop layer has no socket, capacity or
+vehicle column, which `EVChargingStation` requires, so its rows are `PointOfInterest`.
 
 A type no published model holds is `status: removed` in section 6. Its reason names the models
 opened and why none fits, so the dataset can come back when one is published. We do not write

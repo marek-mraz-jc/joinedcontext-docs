@@ -49,7 +49,8 @@ ESRI_SKIP = re.compile(r"^(OBJECTID|FID|GlobalID|Shape__\w+|Shape_\w+|SHAPE_\w+|
 # First match wins. A Smart Data Model only where its attributes fit the columns; the rest
 # are project types named after what one row is.
 TYPES: list[tuple[str, str, str | None, str]] = [
-    (r"nabijacky", "EVChargingStation", "dataModel.Transportation/EVChargingStation", ""),
+    (r"nabijacky", "PointOfInterest", "dataModel.PointOfInterest/PointOfInterest",
+     "a tourism-portal layer of places; no socket, capacity or vehicle column for EVChargingStation"),
     (r"nehodovost", "RoadAccident", "dataModel.Transportation/RoadAccident", ""),
     (r"cykloscitace", "PointOfInterest", "dataModel.PointOfInterest/PointOfInterest", "the counting sites; no counts in the layer"),
     (r"mosty", "Bridge", None, "the name of the bbsk-registre class"),
@@ -378,8 +379,11 @@ RENAME: list[tuple[str, dict[str, str]]] = [
     (r"zoznam-lekarni", {"nazov": "name"}),
     (r"zdravotnickych", {"vlastnyNazovZariadenia": "name"}),
 ]
-# Model attributes whose value is a list of text (CPSV-AP): one column becomes a one-item list.
-LISTS = {"thoroughfare", "addressArea", "postName", "spatial"}
+# Model attributes whose value is a list of text (CPSV-AP, PointOfInterest category): one column becomes a one-item list.
+LISTS = {"thoroughfare", "addressArea", "postName", "spatial", "category"}
+# Attributes a model requires that no column holds: the same value on every entity of the type.
+# A RoadAccident row is an accident the police closed and published, so `archived`.
+CONSTANTS: dict[str, dict[str, str]] = {"RoadAccident": {"status": "archived"}}
 
 
 def sdm_schema(sdm: str) -> str:
@@ -562,6 +566,8 @@ def plan(d: dict, probe_: dict, fetched: str) -> dict:
            "dataProvider": d["extras"].get("publisher_name"), "license": d["license"],
            "dataset": f"{CKAN}/dataset/{d['name']}",
            "properties": modelled(d["name"], properties(fields, ranges))}
+    if typ in CONSTANTS:
+        out["constants"] = dict(CONSTANTS[typ])
     if dropped[0]:
         out["dropped"] = {"columns": dropped[0], "why": dropped[1]}
     for pat, column, where, keep, why in ROWS:

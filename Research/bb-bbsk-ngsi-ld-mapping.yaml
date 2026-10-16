@@ -527,6 +527,8 @@ datasets:
     pocetNehodVObci:
       column: počet_nehôd_v_obci
       range: integer
+  constants:
+    status: archived
 - id: 893c25ea-accb-574c-a0ce-fedc4ae8bb3e
   name: bbsk-cykloscitace-miesta-6e967d
   org: bbsk
@@ -1552,8 +1554,8 @@ datasets:
   org: bbsk
   title: Nabíjačky a Zastávky
   status: mapped
-  type: EVChargingStation
-  smartDataModel: dataModel.Transportation/EVChargingStation
+  type: PointOfInterest
+  smartDataModel: dataModel.PointOfInterest/PointOfInterest
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Nab%C3%ADja%C4%8Dky_a_Zast%C3%A1vky/FeatureServer/0
@@ -1582,7 +1584,7 @@ datasets:
       range: string
     category:
       column: category
-      range: integer
+      range: string-list
     languages:
       column: languages
       range: string
@@ -1697,6 +1699,7 @@ datasets:
     fID2:
       column: FID2
       range: integer
+  note: a tourism-portal layer of places; no socket, capacity or vehicle column for EVChargingStation
 - id: 82008199-c201-5cad-b637-f4d5b3f32047
   name: bbsk-nehodovost-v-bbk-0ea72d
   org: bbsk
@@ -1757,6 +1760,8 @@ datasets:
     skodaVEUR:
       column: Škoda_v_EUR
       range: integer
+  constants:
+    status: archived
 - id: eb203dec-e317-56c9-b504-43f0d6d26f0f
   name: bbsk-obce-bbk-centroidy-cbd19f
   org: bbsk
