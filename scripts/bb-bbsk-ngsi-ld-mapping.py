@@ -49,40 +49,43 @@ ESRI_SKIP = re.compile(r"^(OBJECTID|FID|GlobalID|Shape__\w+|Shape_\w+|SHAPE_\w+|
 # First match wins. A Smart Data Model only where its attributes fit the columns; the rest
 # are project types named after what one row is.
 TYPES: list[tuple[str, str, str | None, str]] = [
-    (r"nabijacky", "EVChargingStation", "dataModel.Transportation/EVChargingStation", ""),
+    (r"nabijacky", "PointOfInterest", "dataModel.PointOfInterest/PointOfInterest",
+     "a tourism-portal layer of places; no socket, capacity or vehicle column for EVChargingStation"),
     (r"nehodovost", "RoadAccident", "dataModel.Transportation/RoadAccident", ""),
-    (r"cykloscitace", "TrafficFlowObservedSite", None, "the counting sites; no counts in the layer"),
+    (r"cykloscitace", "PointOfInterest", "dataModel.PointOfInterest/PointOfInterest", "the counting sites; no counts in the layer"),
     (r"mosty", "Bridge", None, "the name of the bbsk-registre class"),
     (r"podjazdy|priepusty|dilatacne-celky|zeleznicne-priecestia", "RoadStructure", None, ""),
     (r"cykloturisticke-trasy-linie", "CycleRoute", None, ""),
     (r"cykloturisticke-trasy-nosic", "PointOfInterest", "dataModel.PointOfInterest/PointOfInterest", "signposts, boards and rest stops"),
     (r"lekarni|zdravotnickych", "PointOfInterest", "dataModel.PointOfInterest/PointOfInterest", "category from the facility kind"),
-    (r"skoly|skolske", "School", None, "the name of the bbsk-registre class"),
+    (r"skoly|skolske", "Organization", "dataModel.Organization/Organization", "schools as schema.org organizations"),
     (r"kulturne-institucie|kontaktne-miesta", "PointOfInterest", "dataModel.PointOfInterest/PointOfInterest", ""),
-    (r"organizacie|prispevkove", "PublicOrganization", None, "the name of the bbsk-registre class"),
-    (r"poskytovatelov-socialnych", "SocialService", None, "the name of the bbsk-registre class"),
+    (r"organizacie|prispevkove", "PublicOrganization", "dataModel.CPSV-AP/PublicOrganization", ""),
+    (r"poskytovatelov-socialnych", "PointOfInterest", "dataModel.PointOfInterest/PointOfInterest", "a provider's place of service"),
     (r"kraj-bbk-hranica|okresy-bbk-hranice|obce-bbk-hranice|obce-bbk-centroidy", "AdministrativeArea", None, "the name of the bbsk-registre class"),
     (r"povodia", "RiverBasin", None, ""),
     (r"vodnych-utvarov", "WaterBodyStatus", None, "one row per water body and assessment"),
-    (r"vyvoj-emisii|vyvoj-imisii", "StatisticalObservation", None, "one row per station or source and year"),
-    (r"obyvatel|vekov|ohrozenie-samosprav|ppa-platby-po-okresoch", "StatisticalObservation", None, "one row per area (and year)"),
+    (r"vyvoj-emisii|vyvoj-imisii", "KeyPerformanceIndicator", "dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator", "one row per station or source and year"),
+    (r"obyvatel|vekov|ohrozenie-samosprav|ppa-platby-po-okresoch", "KeyPerformanceIndicator", "dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator", "one row per area (and year)"),
     (r"register-investicii|projekty-banskobystrickeho", "PublicInvestment", None, ""),
     (r"faktury", "Invoice", None, ""),
     (r"objednavky", "PurchaseOrder", None, ""),
     (r"zmluvy", "Contract", None, ""),
     (r"dotacie|ppa-platby", "Grant", None, ""),
-    (r"dodavatelia", "Supplier", None, ""),
+    (r"dodavatelia", "Organization", "dataModel.Organization/Organization", "suppliers with an IČO"),
     (r"verejneho-obstaravania|verejne-obstaravania", "PublicProcurement", None, ""),
-    (r"clenovia|komisie", "CouncilMember", None, "public office holders, published under Act 211/2000"),
+    (r"komisie", "CommitteeSeat", None, "committee seats; the citizens' names are kept out"),
+    (r"clenovia", "Person", "dataModel.Organization/Person", "public office holders, published under Act 211/2000"),
     (r"hlasovania", "CouncilVote", None, "public office holders' votes"),
     (r"zasadnutia", "CouncilMeeting", None, ""),
     (r"peticie", "Petition", None, "the petition, not its signatories"),
     (r"vzn|nariadeni", "Regulation", None, ""),
-    (r"organizacna-struktura|uradne-hodiny|kontakty-na-miestne", "OrganizationUnit", None, ""),
-    (r"bb-adresy", "Address", None, "the city's address list, without coordinates"),
+    (r"uradne-hodiny", "OfficeHours", None, "one row per office and weekday"),
+    (r"organizacna-struktura|kontakty-na-miestne", "Organization", "dataModel.Organization/Organization", ""),
+    (r"bb-adresy", "Address", "dataModel.CPSV-AP/Address", "the city's address list, without coordinates"),
     (r"bb-aktuality", "Article", None, "the city's news (WordPress)"),
-    (r"bb-podujatia", "Event", None, "the name of the banskabystrica-verejne class"),
-    (r"pocet-obcanov|prirastky", "StatisticalObservation", None, ""),
+    (r"bb-podujatia", "Event", "dataModel.TourismDestinations/Event", "the name of the banskabystrica-verejne class"),
+    (r"pocet-obcanov|prirastky", "KeyPerformanceIndicator", "dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator", ""),
 ]
 
 
@@ -296,7 +299,7 @@ def refresh(modified: str | None, fetched: str, typ: str = "") -> str:
     rules §3), anything else weekly."""
     if modified and (date.fromisoformat(fetched[:10]) - date.fromisoformat(modified[:10])).days <= 31:
         return "P1D"
-    return "P1M" if typ == "StatisticalObservation" else "P1W"
+    return "P1M" if typ == "KeyPerformanceIndicator" else "P1W"
 
 
 # NGSI-LD core members: a column with one of these names keeps its value under `source<Name>`.
@@ -314,6 +317,89 @@ RANGES = {
 }
 
 
+# Each model's schema.json was read at this commit of its subject repository (T-4319): a model is
+# named only after its schema was opened, and the seed validates against these same files.
+SDM_SHA = {
+    "dataModel.CPSV-AP": "a05d1663475fc0f79361bc9bc2550c3f24df1ba0",
+    "dataModel.KeyPerformanceIndicator": "ec7f3b642faf3f807d3c8549ccc9e0b743e05f26",
+    "dataModel.Organization": "77a4911e7cbc72bf87bf202ade282c1bc41a36a4",
+    "dataModel.PointOfInterest": "7e5e24963a142b9bf6fd15b144a0e24588217608",
+    "dataModel.TourismDestinations": "6d78cb4ff0c1a7d16dc0c1bab7266e40d4b3a00c",
+    "dataModel.Transportation": "b83ede9d3db29be1365cc272eb535f46af83bed2",
+}
+# A type no published Smart Data Model holds: its datasets leave data.dev (owner, 2026-10-16,
+# T-4319). Each names the models opened and why none fits, so it can come back when one does.
+FINANCE = "no subject of the official list (2026-07-19) holds orders, invoices, contracts or procurement"
+COUNCIL = ("no subject holds council meetings, votes, petitions or regulations; "
+           "CPSV-AP has PublicService, BusinessEvent and LifeEvent")
+NO_MODEL: dict[str, str] = {
+    "Bridge": ("Transportation/Road and RoadSegment describe roads; RoadSegment requires refRoad, startPoint and "
+               "endPoint, which a bridge register has not"),
+    "RoadStructure": ("Transportation/Road and RoadSegment describe roads, not underpasses, culverts, expansion "
+                      "joints or level crossings"),
+    "AdministrativeArea": ("OpenStreetMap/OSMBoundary requires osmId and osmType; these boundaries come from the "
+                           "region's register, not OpenStreetMap"),
+    "RiverBasin": "OpenStreetMap/OSMWater requires osmId and osmType; the basins come from the region's register",
+    "WaterBodyStatus": ("WaterQuality/WaterQualityObserved and Environment/WaterObserved require dateObserved and "
+                        "location and hold measured parameters; these rows are ecological status classes"),
+    "CycleRoute": ("OpenStreetMap/OSMCycleRoute requires osmId and osmType; Transportation/BikeLane is a lane, "
+                   "not a touring route"),
+    "Grant": "no subject of the official list (2026-07-19) holds grants or subsidies",
+    "PublicInvestment": "no subject of the official list (2026-07-19) holds public investment projects",
+    "PurchaseOrder": FINANCE,
+    "Invoice": FINANCE,
+    "Contract": FINANCE,
+    "PublicProcurement": FINANCE,
+    "CouncilMeeting": COUNCIL,
+    "CouncilVote": COUNCIL,
+    "Petition": COUNCIL,
+    "Regulation": COUNCIL,
+    "CommitteeSeat": "Organization/Person is a person; a seat whose holder's name is kept out is none",
+    "OfficeHours": "a row is one office's hours on one weekday; no model holds an opening slot as an entity",
+    "Article": "no subject of the official list (2026-07-19) holds news articles",
+}
+# A column that is a model attribute takes the model's name (dataset pattern -> attribute -> model
+# attribute); the first matching pattern applies. `name` is the GSMA common name every model has.
+RENAME: list[tuple[str, dict[str, str]]] = [
+    (r"skoly-a-skolske-zariadenia", {"nazovZauzivany": "name", "nazovOficialny": "legalName"}),
+    (r"materske-skoly|stredne-skoly|zakladne-skoly", {"nazov": "name"}),
+    (r"vysoke-skoly", {"fakulta": "name"}),
+    (r"kontakty-na-miestne", {"obecDlhyNazov": "name"}),
+    (r"organizacna-struktura", {"utvarNazov": "name"}),
+    (r"dodavatelia", {"nazov": "legalName"}),
+    (r"organizacie-v-zriadovatelskej", {"oficialnyNazov": "preferredLabel", "obecNazov": "spatial"}),
+    (r"prispevkove", {"nazovOrganizacie": "preferredLabel", "obec": "spatial"}),
+    (r"bb-adresy", {"ulica": "thoroughfare", "castObce": "addressArea", "obec": "postName"}),
+    (r"bb-podujatia", {"link": "url", "content": "description"}),
+    (r"cykloscitace", {"miesto": "name"}),
+    (r"nabijacky", {"pRIMNAME": "name", "name": "sourceName"}),
+    (r"poskytovatelov-socialnych", {"obchodneMeno": "name"}),
+    (r"kontaktne-miesta", {"nazovOrganizacie": "name"}),
+    (r"kulturne-institucie-bbsk-a-ich", {"institucia1": "name"}),
+    (r"kulturne-institucie-bbsk-[0-9a-f]{6}$", {"institucia": "name"}),
+    (r"zoznam-lekarni", {"nazov": "name"}),
+    (r"zdravotnickych", {"vlastnyNazovZariadenia": "name"}),
+]
+# Model attributes whose value is a list of text (CPSV-AP, PointOfInterest category): one column becomes a one-item list.
+# A model attribute whose column is empty in some rows reads these columns next, in order: a
+# PointOfInterest needs a name, and 2288 health facilities have no name of their own, 174 places
+# of the tourism portal no PRIM_NAME (T-4319).
+OTHERWISE: list[tuple[str, dict[str, list[str]]]] = [
+    (r"nabijacky", {"name": ["Categ"]}),
+    (r"zdravotnickych", {"name": ["Názov_poskytovateľa"]}),
+]
+LISTS = {"thoroughfare", "addressArea", "postName", "spatial", "category"}
+# Attributes a model requires that no column holds: the same value on every entity of the type.
+# A RoadAccident row is an accident the police closed and published, so `archived`.
+CONSTANTS: dict[str, dict[str, str]] = {"RoadAccident": {"status": "archived"}}
+
+
+def sdm_schema(sdm: str) -> str:
+    """The schema.json of a model at the commit it was read at."""
+    subject, model = sdm.split("/")
+    return f"https://raw.githubusercontent.com/smart-data-models/{subject}/{SDM_SHA[subject]}/{model}/schema.json"
+
+
 def prop(field: str) -> str:
     a = attr(field)
     return "source" + a[0].upper() + a[1:] if a in RESERVED else a
@@ -329,6 +415,24 @@ def properties(fields: list[str], ranges: dict[str, str]) -> dict[str, dict]:
             name, n = f"{prop(f)}{n}", n + 1
         out[name] = {"column": f, "range": ranges[f]}
     return out
+
+
+def modelled(name: str, props: dict[str, dict]) -> dict[str, dict]:
+    """The columns a model names take its attribute names; a list attribute reads one column."""
+    renames = next((r for pat, r in RENAME if re.search(pat, name)), {})
+    absent = [a for a in renames if a not in props]
+    if absent:
+        sys.exit(f"{name}: RENAME names {absent}, which the mapping does not have")
+    clash = [m for m in renames.values() if m in props and m not in renames]
+    if clash:
+        sys.exit(f"{name}: RENAME to {clash}, which another column already is")
+    out = {renames.get(a, a): p for a, p in props.items()}
+    for a, cols in next((o for pat, o in OTHERWISE if re.search(pat, name)), {}).items():
+        known = {p["column"] for p in out.values()}
+        if a not in out or not set(cols) <= known:
+            sys.exit(f"{name}: OTHERWISE names {a} or {cols}, which the mapping does not read")
+        out[a] = {**out[a], "otherwise": cols}
+    return {a: {**p, "range": "string-list"} if a in LISTS else p for a, p in out.items()}
 
 
 def type_of(name: str):
@@ -366,6 +470,8 @@ ROWS: list[tuple[str, str, str | None, str | None, str]] = [
     (r"bbsk-dodavatelia", "ICO", "ICO IS NOT NULL AND ICO <> ''", ICO, ICO_WHY),
     (r"bbsk-zmluvy", "IČO_dodávateľa", "IČO_dodávateľa IS NOT NULL AND IČO_dodávateľa <> ''", ICO,
      "a contract whose supplier has no IČO, or a name where the IČO belongs, can name a natural person"),
+    (r"nabijacky", "Categ", "Categ IS NOT NULL AND Categ <> ''", None,
+     "three rows of the layer hold nothing but a point, no name and no category"),
     (r"poskytovatelov-socialnych", "Typ_poskytovateľa", "Typ_poskytovateľa <> 'neverejný poskytovateľ'", None,
      "a private provider can be a natural person; bbsk-datasource-socialne-sluzby applies the same filter"),
 ]
@@ -381,7 +487,7 @@ EXISTING: list[tuple[str, str, str]] = [
     (r"poskytovatelov-socialnych", "bbsk/bbsk-datasource-socialne-sluzby.yaml", "whole"),
 ]
 # observedAt is a time of measurement: only rows that are observations carry one.
-OBSERVED = {"StatisticalObservation", "RoadAccident", "WaterBodyStatus", "CouncilVote", "CouncilMeeting"}
+OBSERVED = {"KeyPerformanceIndicator", "RoadAccident"}
 # A ZIP whose GeoJSON is larger than this is not loaded in this round (16 GB node, one broker).
 ZIP_LIMIT = 10 << 20
 # A source with more rows than this waits for a later round: 240 636 survey points would double
@@ -454,6 +560,8 @@ def plan(d: dict, probe_: dict, fetched: str) -> dict:
     if not typed:
         return {**entry, "status": "not-ingestible", "reason": "no type decided (TYPES has no rule)"}
     typ, sdm, note = typed
+    if typ in NO_MODEL:
+        return {**entry, "status": "removed", "type": typ, "reason": f"no smart data model: {NO_MODEL[typ]}"}
     rows = source["rows"]
     # A key is a column (or column and year) the probe counted as many distinct values as rows;
     # a WordPress post id is unique by definition. Anything else is a row hash.
@@ -472,7 +580,9 @@ def plan(d: dict, probe_: dict, fetched: str) -> dict:
            "refresh": "P1D" if source["kind"] == "json-feed" else refresh(d["extras"].get("modified"), fetched, typ),
            "dataProvider": d["extras"].get("publisher_name"), "license": d["license"],
            "dataset": f"{CKAN}/dataset/{d['name']}",
-           "properties": properties(fields, ranges)}
+           "properties": modelled(d["name"], properties(fields, ranges))}
+    if typ in CONSTANTS:
+        out["constants"] = dict(CONSTANTS[typ])
     if dropped[0]:
         out["dropped"] = {"columns": dropped[0], "why": dropped[1]}
     for pat, column, where, keep, why in ROWS:
@@ -509,18 +619,20 @@ def totals(snap: dict, entries: list[dict]) -> dict[str, dict[str, int]]:
     t: dict[str, dict[str, int]] = {}
     for e in entries:
         for org in (e["org"], "all"):
-            row = t.setdefault(org, {"datasets": 0, "mapped": 0, "already-ngsi-ld": 0, "not-ingestible": 0, "rows": 0})
+            row = t.setdefault(org, {"datasets": 0, "mapped": 0, "already-ngsi-ld": 0, "not-ingestible": 0, "removed": 0,
+                                     "rows": 0})
             row["datasets"] += 1
             row[e["status"]] += 1
-            row["rows"] += (e.get("source") or {}).get("rows") or 0
+            row["rows"] += ((e.get("source") or {}).get("rows") or 0) if e["status"] == "mapped" else 0
     return {k: t[k] for k in [*ORGS, "all"] if k in t}
 
 
 def totals_table(t: dict) -> str:
-    lines = ["| organization | datasets | mapped | already NGSI-LD | not ingestible | source rows of the mapped |",
-             "|---|---:|---:|---:|---:|---:|"]
+    lines = ["| organization | datasets | mapped | already NGSI-LD | not ingestible | removed (no model) "
+             "| source rows of the mapped |", "|---|---:|---:|---:|---:|---:|---:|"]
     for org, r in t.items():
-        lines.append(f"| {org} | {r['datasets']} | {r['mapped']} | {r['already-ngsi-ld']} | {r['not-ingestible']} | {r['rows']} |")
+        lines.append(f"| {org} | {r['datasets']} | {r['mapped']} | {r['already-ngsi-ld']} | {r['not-ingestible']} "
+                     f"| {r['removed']} | {r['rows']} |")
     return "\n".join(lines)
 
 
@@ -534,10 +646,11 @@ def sections(snap: dict, entries: list[dict]) -> dict[str, str]:
     by_type: dict[str, list[dict]] = {}
     for e in mapped:
         by_type.setdefault(e["type"], []).append(e)
-    types = ["| NGSI-LD type | Smart Data Model | datasets | source rows |", "|---|---|---:|---:|"]
+    types = ["| NGSI-LD type | Smart Data Model (the schema read) | datasets | source rows |", "|---|---|---:|---:|"]
     for t, es in sorted(by_type.items(), key=lambda kv: (-len(kv[1]), kv[0])):
-        types.append(f"| `{t}` | {'`' + es[0]['smartDataModel'] + '`' if es[0].get('smartDataModel') else 'project type'} "
-                     f"| {len(es)} | {sum(e['source']['rows'] for e in es)} |")
+        sdm = es[0]["smartDataModel"]
+        model = f"[`{sdm}`]({sdm_schema(sdm)})" if sdm else "none"
+        types.append(f"| `{t}` | {model} | {len(es)} | {sum(e['source']['rows'] for e in es)} |")
     refused = ["| dataset | organization | status | reason |", "|---|---|---|---|"]
     for e in entries:
         if e["status"] != "mapped":
@@ -578,12 +691,13 @@ def check(snap: dict, mapping: dict, page: str) -> list[str]:
         if e.get("id") not in ids:
             errors.append(f"{e.get('name')}: id {e.get('id')} is not in the CKAN snapshot")
         st = e.get("status")
-        if st not in ("mapped", "already-ngsi-ld", "not-ingestible"):
+        if st not in ("mapped", "already-ngsi-ld", "not-ingestible", "removed"):
             errors.append(f"{e.get('name')}: status {st!r}")
         elif st != "mapped" and not e.get("reason"):
             errors.append(f"{e.get('name')}: {st} without a reason")
         elif st == "mapped":
-            missing = [k for k in ("type", "source", "entityId", "space", "refresh", "properties") if not e.get(k)]
+            missing = [k for k in ("type", "smartDataModel", "source", "entityId", "space", "refresh", "properties")
+                       if not e.get(k)]
             if missing:
                 errors.append(f"{e.get('name')}: mapped without {', '.join(missing)}")
     for i, d in ids.items():
@@ -602,7 +716,7 @@ def check(snap: dict, mapping: dict, page: str) -> list[str]:
 def selftest() -> None:
     snap = {"datasets": [{"id": "a", "name": "x"}, {"id": "b", "name": "y"}]}
     ok = {"datasets": [{"id": "a", "name": "x", "title": "X", "org": "bbsk", "status": "not-ingestible", "reason": "pdf"},
-                       {"id": "b", "name": "y", "title": "Y", "org": "bbsk", "status": "mapped", "type": "T", "space": "s", "smartDataModel": None,
+                       {"id": "b", "name": "y", "title": "Y", "org": "bbsk", "status": "mapped", "type": "T", "space": "s", "smartDataModel": "dataModel.Organization/Organization",
                         "source": {"rows": 3}, "entityId": {"rowHash": True}, "refresh": "P1D", "properties": {"a": "A"}}]}
     page = fill("x\n" + "".join(f"<!-- {n} -->\n<!-- /{n} -->\n" for n in sections(snap, [])), sections(snap, ok["datasets"]))
     assert fill(page, sections(snap, ok["datasets"])) == page
@@ -618,7 +732,18 @@ def selftest() -> None:
     assert list(properties(["Rok", "rok", "Rók"], {"Rok": "integer", "rok": "string", "Rók": "string"})) == ["rok", "rok2", "rok3"]
     assert prop("id") == "sourceId" and prop("Typ") == "typ" and prop("type") == "sourceType"
     assert refresh("2026-10-15T09:00Z", "2026-10-16T04:00Z") == "P1D" and refresh("2024-01-01", "2026-10-16") == "P1W"
-    assert refresh(None, "2026-10-16", "StatisticalObservation") == "P1M"
+    assert refresh(None, "2026-10-16", "KeyPerformanceIndicator") == "P1M"
+    no_model = {"datasets": [ok["datasets"][0], {**ok["datasets"][1], "smartDataModel": None}]}
+    assert any("mapped without smartDataModel" in e for e in check(snap, no_model, page))
+    removed = {"datasets": [ok["datasets"][0], {**ok["datasets"][1], "status": "removed", "reason": "no smart data model: x"}]}
+    assert not any(e.startswith("y: status") or "without a reason" in e for e in check(snap, removed, page))
+    adr = {"ulica": {"column": "Ulica", "range": "string"}, "obec": {"column": "Obec", "range": "string"},
+           "castObce": {"column": "C", "range": "string"}}
+    assert modelled("bb-adresy", adr) == {"thoroughfare": {"column": "Ulica", "range": "string-list"},
+                                          "postName": {"column": "Obec", "range": "string-list"},
+                                          "addressArea": {"column": "C", "range": "string-list"}}
+    assert modelled("bb-other", adr) == adr
+    assert sdm_schema("dataModel.Organization/Person").endswith("/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/Person/schema.json")
     print("selftest ok")
 
 
