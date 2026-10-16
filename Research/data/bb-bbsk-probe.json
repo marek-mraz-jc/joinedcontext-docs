@@ -1,5 +1,5 @@
 {
- "fetched": "2026-10-16T05:06Z",
+ "fetched": "2026-10-16T05:41Z",
  "resources": {
   "5ecad375-d0d4-4f09-818a-1f9d01f38aab": {
    "status": 200,
@@ -690,7 +690,7 @@
     "title",
     "type"
    ],
-   "total": "6162"
+   "total": "6164"
   },
   "e5ce57ba-2f21-4e9d-971b-82998da73665": {
    "status": 200,
@@ -1511,7 +1511,7 @@
    ],
    "distinct": {
     "ICO": 5066,
-    "Ulica_a_cislo": 4135
+    "Ulica_a_cislo": 4136
    }
   },
   "7ef64f6b-5c4c-493c-bb72-f0fa902ebd85": {
@@ -1717,14 +1717,14 @@
     }
    ],
    "distinct": {
-    "Číslo": 3621,
-    "IČO": 1486,
-    "Ulica_a_číslo": 2048,
+    "Číslo": 3622,
+    "IČO": 1487,
+    "Ulica_a_číslo": 2049,
     "ID": 2250,
-    "Číslo+Rok": 4792,
-    "IČO+Rok": 4792,
-    "Ulica_a_číslo+Rok": 4792,
-    "ID+Rok": 4792
+    "Číslo+Rok": 3916,
+    "IČO+Rok": 3129,
+    "Ulica_a_číslo+Rok": 3333,
+    "ID+Rok": 3782
    }
   },
   "f7b7b8a4-82c3-4fb5-8df4-a02c825a61ce": {
@@ -2135,13 +2135,13 @@
    ],
    "distinct": {
     "Číslo_faktúry": 21986,
-    "Číslo_zmluvy": 2531,
-    "Číslo_objednávky": 13528,
+    "Číslo_zmluvy": 2532,
+    "Číslo_objednávky": 13529,
     "IČO": 3969,
-    "Číslo_faktúry+Rok": 28844,
-    "Číslo_zmluvy+Rok": 28844,
-    "Číslo_objednávky+Rok": 28844,
-    "IČO+Rok": 28844
+    "Číslo_faktúry+Rok": 25868,
+    "Číslo_zmluvy+Rok": 13251,
+    "Číslo_objednávky+Rok": 23007,
+    "IČO+Rok": 19969
    }
   },
   "3fb2d708-09d0-4ea8-ac02-b2fd0d944e06": {
@@ -2416,7 +2416,7 @@
     "NUTS3_CODE": 1,
     "Kód_štátu": 1,
     "Kód_oblasti": 1,
-    "Kód_kraja": null,
+    "Kód_kraja": 1,
     "Kód_okresu": 13,
     "Kód_obce": 516
    }
@@ -2599,9 +2599,9 @@
     }
    ],
    "distinct": {
-    "KOD_STAT_okres": 13,
-    "KOD_NUTS_okres": 13,
-    "KOD_NUTS_obec": 515
+    "KOD_STAT_okres": 14,
+    "KOD_NUTS_okres": 14,
+    "KOD_NUTS_obec": 516
    }
   },
   "978fe4bf-eef4-466a-8668-6aa848f61dc5": {
@@ -2914,9 +2914,9 @@
    ],
    "distinct": {
     "ID_BBSK": 516,
-    "Telefónne_číslo___všobecné_1": 506,
-    "Telefónne_číslo___všobecné_2": 41,
-    "Telefónne_číslo___starosta": 416
+    "Telefónne_číslo___všobecné_1": 507,
+    "Telefónne_číslo___všobecné_2": 42,
+    "Telefónne_číslo___starosta": 417
    }
   },
   "9f61ca20-b5af-4f33-8b73-1ebe695a5c96": {
@@ -3490,9 +3490,9 @@
    ],
    "distinct": {
     "KODSKO": 405,
-    "ICO": 52,
-    "SupisneCislo": 205,
-    "OrientacneCislo": 103
+    "ICO": 53,
+    "SupisneCislo": 206,
+    "OrientacneCislo": 104
    }
   },
   "770238d0-1a6e-45a7-83e6-70cc1b38e704": {
@@ -3589,7 +3589,7 @@
    "distinct": {
     "Číslo_PK": 291,
     "ID_mosta": 1651,
-    "Číslo_PK+Rok_postavenia": 1651,
+    "Číslo_PK+Rok_postavenia": 1024,
     "ID_mosta+Rok_postavenia": 1651
    }
   },
@@ -3982,7 +3982,7 @@
     }
    ],
    "distinct": {
-    "ID": 1
+    "ID": 2
    }
   },
   "6f643418-93c8-45db-80a1-8a8b17595387": {
@@ -4067,7 +4067,7 @@
     }
    ],
    "distinct": {
-    "Číslo_nehody": 3046
+    "Číslo_nehody": 2000
    }
   },
   "7e846aec-59bf-4969-b8fc-5e7e83cee122": {
@@ -4372,7 +4372,7 @@
     "Číslo_objednávky": 18858,
     "IČO": 4667,
     "Číslo_objednávky+Rok": 18896,
-    "IČO+Rok": 18896
+    "IČO+Rok": 16427
    }
   },
   "edb2ebc4-df8f-4632-9d5f-4411f7b3fe58": {
@@ -5267,13 +5267,13 @@
     "NUTS3_CODE": 1,
     "Číslo_okresu": 13,
     "IDN3+Rok": 13,
-    "IDN2+Rok": 13,
-    "NUTS1+Rok": 13,
-    "NUTS1_CODE+Rok": 13,
-    "NUTS2+Rok": 13,
-    "NUTS2_CODE+Rok": 13,
-    "NUTS3+Rok": 13,
-    "NUTS3_CODE+Rok": 13,
+    "IDN2+Rok": 1,
+    "NUTS1+Rok": 1,
+    "NUTS1_CODE+Rok": 1,
+    "NUTS2+Rok": 1,
+    "NUTS2_CODE+Rok": 1,
+    "NUTS3+Rok": 1,
+    "NUTS3_CODE+Rok": 1,
     "Číslo_okresu+Rok": 13
    }
   },
@@ -6022,13 +6022,13 @@
     "NUTS3_CODE": 1,
     "Číslo_okresu": 13,
     "IDN3+Rok": 13,
-    "IDN2+Rok": 13,
-    "NUTS1+Rok": 13,
-    "NUTS1_CODE+Rok": 13,
-    "NUTS2+Rok": 13,
-    "NUTS2_CODE+Rok": 13,
-    "NUTS3+Rok": 13,
-    "NUTS3_CODE+Rok": 13,
+    "IDN2+Rok": 1,
+    "NUTS1+Rok": 1,
+    "NUTS1_CODE+Rok": 1,
+    "NUTS2+Rok": 1,
+    "NUTS2_CODE+Rok": 1,
+    "NUTS3+Rok": 1,
+    "NUTS3_CODE+Rok": 1,
     "Číslo_okresu+Rok": 13
    }
   },
@@ -7447,13 +7447,13 @@
     "NUTS3_CODE": 1,
     "Číslo_okresu": 13,
     "IDN3+Rok": 13,
-    "IDN2+Rok": 13,
-    "NUTS1+Rok": 13,
-    "NUTS1_CODE+Rok": 13,
-    "NUTS2+Rok": 13,
-    "NUTS2_CODE+Rok": 13,
-    "NUTS3+Rok": 13,
-    "NUTS3_CODE+Rok": 13,
+    "IDN2+Rok": 1,
+    "NUTS1+Rok": 1,
+    "NUTS1_CODE+Rok": 1,
+    "NUTS2+Rok": 1,
+    "NUTS2_CODE+Rok": 1,
+    "NUTS3+Rok": 1,
+    "NUTS3_CODE+Rok": 1,
     "Číslo_okresu+Rok": 13
    }
   },
@@ -8258,13 +8258,13 @@
     "NUTS3_CODE": 1,
     "Číslo_okresu": 13,
     "IDN3+Rok": 13,
-    "IDN2+Rok": 13,
-    "NUTS1+Rok": 13,
-    "NUTS1_CODE+Rok": 13,
-    "NUTS2+Rok": 13,
-    "NUTS2_CODE+Rok": 13,
-    "NUTS3+Rok": 13,
-    "NUTS3_CODE+Rok": 13,
+    "IDN2+Rok": 1,
+    "NUTS1+Rok": 1,
+    "NUTS1_CODE+Rok": 1,
+    "NUTS2+Rok": 1,
+    "NUTS2_CODE+Rok": 1,
+    "NUTS3+Rok": 1,
+    "NUTS3_CODE+Rok": 1,
     "Číslo_okresu+Rok": 13
    }
   },
@@ -8774,13 +8774,13 @@
     "NUTS3_CODE": 1,
     "Kód_okresu": 13,
     "IDN3+Rok": 13,
-    "IDN2+Rok": 13,
-    "NUTS1+Rok": 13,
-    "NUTS1_CODE+Rok": 13,
-    "NUTS2+Rok": 13,
-    "NUTS2_CODE+Rok": 13,
-    "NUTS3+Rok": 13,
-    "NUTS3_CODE+Rok": 13,
+    "IDN2+Rok": 1,
+    "NUTS1+Rok": 1,
+    "NUTS1_CODE+Rok": 1,
+    "NUTS2+Rok": 1,
+    "NUTS2_CODE+Rok": 1,
+    "NUTS3+Rok": 1,
+    "NUTS3_CODE+Rok": 1,
     "Kód_okresu+Rok": 13
    }
   },
@@ -9665,13 +9665,13 @@
     "NUTS3_CODE": 1,
     "Číslo_okresu": 13,
     "IDN3+Rok": 13,
-    "IDN2+Rok": 13,
-    "NUTS1+Rok": 13,
-    "NUTS1_CODE+Rok": 13,
-    "NUTS2+Rok": 13,
-    "NUTS2_CODE+Rok": 13,
-    "NUTS3+Rok": 13,
-    "NUTS3_CODE+Rok": 13,
+    "IDN2+Rok": 1,
+    "NUTS1+Rok": 1,
+    "NUTS1_CODE+Rok": 1,
+    "NUTS2+Rok": 1,
+    "NUTS2_CODE+Rok": 1,
+    "NUTS3+Rok": 1,
+    "NUTS3_CODE+Rok": 1,
     "Číslo_okresu+Rok": 13
    }
   },
@@ -10041,13 +10041,13 @@
     "NUTS3_CODE": 1,
     "Číslo_okresu": 13,
     "IDN3+Rok_": 13,
-    "IDN2+Rok_": 13,
-    "NUTS1+Rok_": 13,
-    "NUTS1_CODE+Rok_": 13,
-    "NUTS2+Rok_": 13,
-    "NUTS2_CODE+Rok_": 13,
-    "NUTS3+Rok_": 13,
-    "NUTS3_CODE+Rok_": 13,
+    "IDN2+Rok_": 1,
+    "NUTS1+Rok_": 1,
+    "NUTS1_CODE+Rok_": 1,
+    "NUTS2+Rok_": 1,
+    "NUTS2_CODE+Rok_": 1,
+    "NUTS3+Rok_": 1,
+    "NUTS3_CODE+Rok_": 1,
     "Číslo_okresu+Rok_": 13
    }
   },
@@ -10229,14 +10229,14 @@
     "NUTS3_CODE": 1,
     "Kód_obce": 516,
     "IDN4+Rok": 1032,
-    "IDN3+Rok": 1032,
-    "IDN2+Rok": 1032,
-    "NUTS1+Rok": 1032,
-    "NUTS1_CODE+Rok": 1032,
-    "NUTS2+Rok": 1032,
-    "NUTS2_CODE+Rok": 1032,
-    "NUTS3+Rok": 1032,
-    "NUTS3_CODE+Rok": 1032,
+    "IDN3+Rok": 26,
+    "IDN2+Rok": 2,
+    "NUTS1+Rok": 2,
+    "NUTS1_CODE+Rok": 2,
+    "NUTS2+Rok": 2,
+    "NUTS2_CODE+Rok": 2,
+    "NUTS3+Rok": 2,
+    "NUTS3_CODE+Rok": 2,
     "Kód_obce+Rok": 1032
    }
   },
@@ -10392,13 +10392,13 @@
     "NUTS3_CODE": 1,
     "Číslo_okresu": 13,
     "IDN3+Rok": 26,
-    "IDN2+Rok": 26,
-    "NUTS1+Rok": 26,
-    "NUTS1_CODE+Rok": 26,
-    "NUTS2+Rok": 26,
-    "NUTS2_CODE+Rok": 26,
-    "NUTS3+Rok": 26,
-    "NUTS3_CODE+Rok": 26,
+    "IDN2+Rok": 2,
+    "NUTS1+Rok": 2,
+    "NUTS1_CODE+Rok": 2,
+    "NUTS2+Rok": 2,
+    "NUTS2_CODE+Rok": 2,
+    "NUTS3+Rok": 2,
+    "NUTS3_CODE+Rok": 2,
     "Číslo_okresu+Rok": 26
    }
   },
@@ -11635,7 +11635,7 @@
    "distinct": {
     "Číslo_PK": 46,
     "Identifikačné_číslo_podjazdu": 148,
-    "Číslo_PK+rok_stavby": 148,
+    "Číslo_PK+rok_stavby": 84,
     "Identifikačné_číslo_podjazdu+rok_stavby": 148
    }
   },
@@ -11971,14 +11971,14 @@
     "NUTS3": 1,
     "NUTS3_CODE": 1,
     "IDN4+rok": 14961,
-    "IDN3+rok": 14961,
-    "IDN2+rok": 14961,
-    "NUTS1+rok": 14961,
-    "NUTS1_CODE+rok": 14961,
-    "NUTS2+rok": 14961,
-    "NUTS2_CODE+rok": 14961,
-    "NUTS3+rok": 14961,
-    "NUTS3_CODE+rok": 14961
+    "IDN3+rok": 377,
+    "IDN2+rok": 29,
+    "NUTS1+rok": 29,
+    "NUTS1_CODE+rok": 29,
+    "NUTS2+rok": 29,
+    "NUTS2_CODE+rok": 29,
+    "NUTS3+rok": 29,
+    "NUTS3_CODE+rok": 29
    }
   },
   "f1743532-775d-4af1-adc6-f23144c6f397": {
@@ -12277,13 +12277,13 @@
     "NUTS3": 1,
     "NUTS3_CODE": 1,
     "IDN3+Rok": 377,
-    "IDN2+Rok": 377,
-    "NUTS1+Rok": 377,
-    "NUTS1_CODE+Rok": 377,
-    "NUTS2+Rok": 377,
-    "NUTS2_CODE+Rok": 377,
-    "NUTS3+Rok": 377,
-    "NUTS3_CODE+Rok": 377
+    "IDN2+Rok": 29,
+    "NUTS1+Rok": 29,
+    "NUTS1_CODE+Rok": 29,
+    "NUTS2+Rok": 29,
+    "NUTS2_CODE+Rok": 29,
+    "NUTS3+Rok": 29,
+    "NUTS3_CODE+Rok": 29
    }
   },
   "c6b0117c-fc21-4592-906d-290d170ceebb": {
@@ -12619,8 +12619,8 @@
     }
    ],
    "distinct": {
-    "Číslo_PK": 348,
-    "ID_číslo_priepustu": 7077
+    "Číslo_PK": 349,
+    "ID_číslo_priepustu": 7078
    }
   },
   "ff2cd390-b7d1-4f77-aa9b-7f78d73952ae": {
@@ -12705,7 +12705,7 @@
     }
    ],
    "distinct": {
-    "ID_adresy": 0,
+    "ID_adresy": 1,
     "Ulica_a_číslo_domu": 113,
     "Kód_formy_podnikania": 7
    }
@@ -13220,7 +13220,7 @@
    "distinct": {
     "ID_zákazky": 1892,
     "ID_časti": 6829,
-    "Číslo_spisu": 1624
+    "Číslo_spisu": 1625
    }
   },
   "cec55368-e6e0-45c8-84f5-3e54a3849663": {
@@ -13418,12 +13418,12 @@
     "ID_IA": 3729,
     "Kód_okresu_kraja": 14,
     "IČO": 138,
-    "ID_IA+Rok_zaradenia": 4853,
-    "ID_IA+Rok_text": 4853,
-    "Kód_okresu_kraja+Rok_zaradenia": 4853,
-    "Kód_okresu_kraja+Rok_text": 4853,
-    "IČO+Rok_zaradenia": 4853,
-    "IČO+Rok_text": 4853
+    "ID_IA+Rok_zaradenia": 4235,
+    "ID_IA+Rok_text": 4847,
+    "Kód_okresu_kraja+Rok_zaradenia": 145,
+    "Kód_okresu_kraja+Rok_text": 140,
+    "IČO+Rok_zaradenia": 1077,
+    "IČO+Rok_text": 1107
    }
   },
   "1011073b-f3a2-4f2b-ab31-3074b129bbd7": {
@@ -13557,15 +13557,15 @@
     "NUTS3": 1,
     "NUTS3_CODE": 1,
     "Kód_okresu_kraja": 14,
-    "IDN3+Rok": 755,
-    "IDN2+Rok": 755,
-    "NUTS1+Rok": 755,
-    "NUTS1_CODE+Rok": 755,
-    "NUTS2+Rok": 755,
-    "NUTS2_CODE+Rok": 755,
-    "NUTS3+Rok": 755,
-    "NUTS3_CODE+Rok": 755,
-    "Kód_okresu_kraja+Rok": 755
+    "IDN3+Rok": 140,
+    "IDN2+Rok": 10,
+    "NUTS1+Rok": 10,
+    "NUTS1_CODE+Rok": 10,
+    "NUTS2+Rok": 10,
+    "NUTS2_CODE+Rok": 10,
+    "NUTS3+Rok": 10,
+    "NUTS3_CODE+Rok": 10,
+    "Kód_okresu_kraja+Rok": 140
    }
   },
   "2d8986fc-6cf6-4286-a6dc-10c626e5d041": {
@@ -13941,8 +13941,8 @@
    ],
    "distinct": {
     "KODSKO": 94,
-    "ICO": 74,
-    "SupisneCislo": 14,
+    "ICO": 75,
+    "SupisneCislo": 15,
     "OrientacneCislo": 46
    }
   },
@@ -14389,15 +14389,15 @@
    ],
    "distinct": {
     "KODSKO": 94,
-    "ICO": 74,
-    "SupisneCislo": 14,
+    "ICO": 75,
+    "SupisneCislo": 15,
     "OrientacneCislo": 46,
-    "ID_školy": 75,
-    "IČO": 75,
-    "Kód_odboru": 176,
-    "Kód_odboru___odbor": 176,
-    "Kód_typu_zriaďovateľa": 12,
-    "Kód_jazyka": 7
+    "ID_školy": 76,
+    "IČO": 76,
+    "Kód_odboru": 177,
+    "Kód_odboru___odbor": 177,
+    "Kód_typu_zriaďovateľa": 13,
+    "Kód_jazyka": 8
    }
   },
   "a5b0b281-6b76-4731-a636-0aaf78239bd2": {
@@ -14657,16 +14657,16 @@
     "nuts_okres": 13,
     "nuts_obec": 516,
     "IDN4+Rok": 14961,
-    "IDN3+Rok": 14961,
-    "IDN2+Rok": 14961,
-    "NUTS1+Rok": 14961,
-    "NUTS1_CODE+Rok": 14961,
-    "NUTS2+Rok": 14961,
-    "NUTS2_CODE+Rok": 14961,
-    "NUTS3+Rok": 14961,
-    "NUTS3_CODE+Rok": 14961,
-    "nuts_kraj+Rok": 14961,
-    "nuts_okres+Rok": 14961,
+    "IDN3+Rok": 377,
+    "IDN2+Rok": 29,
+    "NUTS1+Rok": 29,
+    "NUTS1_CODE+Rok": 29,
+    "NUTS2+Rok": 29,
+    "NUTS2_CODE+Rok": 29,
+    "NUTS3+Rok": 29,
+    "NUTS3_CODE+Rok": 29,
+    "nuts_kraj+Rok": 29,
+    "nuts_okres+Rok": 377,
     "nuts_obec+Rok": 14961
    }
   },
@@ -14842,16 +14842,16 @@
     "NUTS3_CODE": 1,
     "nuts_kraj": 1,
     "nuts_okres": 13,
-    "IDN3+Rok": 1079,
-    "IDN2+Rok": 1079,
-    "NUTS1+Rok": 1079,
-    "NUTS1_CODE+Rok": 1079,
-    "NUTS2+Rok": 1079,
-    "NUTS2_CODE+Rok": 1079,
-    "NUTS3+Rok": 1079,
-    "NUTS3_CODE+Rok": 1079,
-    "nuts_kraj+Rok": 1079,
-    "nuts_okres+Rok": 1079
+    "IDN3+Rok": 377,
+    "IDN2+Rok": 29,
+    "NUTS1+Rok": 29,
+    "NUTS1_CODE+Rok": 29,
+    "NUTS2+Rok": 29,
+    "NUTS2_CODE+Rok": 29,
+    "NUTS3+Rok": 29,
+    "NUTS3_CODE+Rok": 29,
+    "nuts_kraj+Rok": 29,
+    "nuts_okres+Rok": 377
    }
   },
   "90930c8a-494d-4245-852c-0dee6595a676": {
@@ -15086,18 +15086,18 @@
     "nuts": 13,
     "kód_okresu": 13,
     "Kód_elementu_3": 4,
-    "IDN3+rok": 1144,
-    "IDN2+rok": 1144,
-    "NUTS1+rok": 1144,
-    "NUTS1_CODE+rok": 1144,
-    "NUTS2+rok": 1144,
-    "NUTS2_CODE+rok": 1144,
-    "NUTS3+rok": 1144,
-    "NUTS3_CODE+rok": 1144,
-    "Kód_elementu+rok": 1144,
-    "nuts+rok": 1144,
-    "kód_okresu+rok": 1144,
-    "Kód_elementu_3+rok": 1144
+    "IDN3+rok": 143,
+    "IDN2+rok": 11,
+    "NUTS1+rok": 11,
+    "NUTS1_CODE+rok": 11,
+    "NUTS2+rok": 11,
+    "NUTS2_CODE+rok": 11,
+    "NUTS3+rok": 11,
+    "NUTS3_CODE+rok": 11,
+    "Kód_elementu+rok": 143,
+    "nuts+rok": 143,
+    "kód_okresu+rok": 143,
+    "Kód_elementu_3+rok": 44
    }
   },
   "a5c42bb5-2b7b-4bcb-8d85-caff83e6bb31": {
@@ -15426,9 +15426,9 @@
    ],
    "distinct": {
     "KODSKO": 267,
-    "ICO": 188,
-    "SupisneCislo": 140,
-    "OrientacneCislo": 76
+    "ICO": 189,
+    "SupisneCislo": 141,
+    "OrientacneCislo": 77
    }
   },
   "44f6bcb3-3ea5-43e6-be4a-aad33d4cb86d": {
@@ -15581,7 +15581,7 @@
    "distinct": {
     "Číslo_PK": 72,
     "Identifikacne_čislo_žel__priec_": 103,
-    "Číslo_PK+rok_Stavby": 103,
+    "Číslo_PK+rok_Stavby": 83,
     "Identifikacne_čislo_žel__priec_+rok_Stavby": 103
    }
   },
@@ -15703,7 +15703,7 @@
     }
    ],
    "distinct": {
-    "Číslo_zmluvy": 3142,
+    "Číslo_zmluvy": 3143,
     "ID_zmluvy": 3623
    }
   },
@@ -15941,7 +15941,7 @@
     }
    ],
    "distinct": {
-    "IČO": 331
+    "IČO": 332
    }
   },
   "554451fe-5830-4004-b099-21478c42b244": {
@@ -16008,7 +16008,7 @@
    ],
    "distinct": {
     "Číslo_VZN": 22,
-    "Číslo_zasadnutia": 0,
+    "Číslo_zasadnutia": 1,
     "Číslo_uznesenia": 34
    }
   },

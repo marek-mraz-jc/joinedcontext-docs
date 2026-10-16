@@ -39,9 +39,9 @@ same rows.
 <!-- totals -->
 | organization | datasets | mapped | already NGSI-LD | not ingestible | source rows of the mapped |
 |---|---:|---:|---:|---:|---:|
-| banskabystrica | 34 | 10 | 2 | 22 | 75029 |
+| banskabystrica | 34 | 10 | 2 | 22 | 75031 |
 | bbsk | 90 | 88 | 2 | 0 | 252024 |
-| all | 124 | 98 | 4 | 22 | 327053 |
+| all | 124 | 98 | 4 | 22 | 327055 |
 <!-- /totals -->
 
 "Already NGSI-LD" are the four datasets the platform publishes from its own public Endpoints
@@ -75,7 +75,7 @@ probe read from each mapped source, before any row filter of section 5.
 | `Article` | project type | 1 | 1557 |
 | `CouncilVote` | project type | 1 | 89670 |
 | `EVChargingStation` | `dataModel.Transportation/EVChargingStation` | 1 | 606 |
-| `Event` | project type | 1 | 6162 |
+| `Event` | project type | 1 | 6164 |
 | `Invoice` | project type | 1 | 28844 |
 | `Petition` | project type | 1 | 12 |
 | `Regulation` | project type | 1 | 34 |
@@ -93,8 +93,10 @@ like the class the `bbsk-kraj` model holds, one entity per area and year. `Bridg
 the `bbsk-registre` classes, so an assistant that knows one knows the other. The other project types are new classes for the space's one model
 (DM-61), each named after what one row is.
 
-Each mapped entry lists its `properties`: the attribute name, in ASCII lowerCamelCase, and the
-column it reads. A column named like an NGSI-LD core member (`id`, `type`, `location`, ...)
+Each mapped entry lists its `properties`: the attribute name, in ASCII lowerCamelCase, the
+column it reads and its `range` (`integer`, `float`, `date`, `datetime`, `uri` or `string`),
+taken from the source's own field type. Two columns that fold to one name take a number after
+the second. A column named like an NGSI-LD core member (`id`, `type`, `location`, ...)
 keeps its value as `source<Name>`. Esri bookkeeping columns (`OBJECTID`, `GlobalID`,
 `Shape__Area`, `Shape__Length`) are left out. A layer's geometry becomes `location`.
 
@@ -103,14 +105,17 @@ keeps its value as `source<Name>`. Esri bookkeeping columns (`OBJECTID`, `Global
 <!-- ids -->
 | entity id from | datasets |
 |---|---:|
-| a key column | 57 |
-| a key column and its year | 13 |
-| a row hash | 28 |
+| a key column | 58 |
+| a key column and its year | 7 |
+| a row hash | 33 |
 <!-- /ids -->
 
 A key column is one whose distinct count, asked of the source, equals the row count. The probe
-asks the Esri layer (`returnDistinctValues=true&returnCountOnly=true`), the CKAN DataStore
-(`datastore_search?distinct=true`) or the loaded GeoJSON. When no single column is unique, the
+pages through the Esri layer's distinct values (`returnDistinctValues=true`) and counts them,
+and asks the CKAN DataStore (`datastore_search?distinct=true`) or the loaded GeoJSON. ArcGIS
+Online answers `returnCountOnly=true` with the plain row count even when distinct values are
+asked for. That once passed `Číslo` and `Rok` of the BBSK grants as a key, although 4775 rows
+held 3905 values. When no single column is unique, the
 probe tries each id-like column with the table's year column. A WordPress post's `id` is unique
 by definition. The rest have no stable key, and the mapping says `rowHash: true`.
 
