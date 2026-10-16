@@ -160,7 +160,6 @@ The decision and its reasons are in [ADR-N-046](../Decisions/adr-n-046-data-life
 - **DM-94** [H][S] — The space quality page MUST show, to whoever may read the space, per type and rule the checks and the pass rate over 24 hours and 7 days, the stale and quarantined counts, the latest rejected writes by rule and attribute without values, and the retention deletions (API/01 §27).
 - **DM-95** — `jcctl publish` MUST add to each dataset of the DCAT-AP record a `dqv:hasQualityMeasurement` for the pass rate of its space's quality checks over seven days and one for the freshness (the age of the newest change when the daily quality run read the space, API/01 §27), and the CKAN dataset MUST show both.
 - **DM-96** [S] — Every automatic removal of context data MUST be declared in a manifest of the space or of a pipeline (PL-64), MUST apply only to the space that declares it, and MUST be logged per sweep with its counts and never with values.
-- **DM-97** — Every dataset of a project's open-data catalogue whose files hold no rows a pipeline reads MUST have one NGSI-LD entity of type `Dataset` in the project's open-data space, carrying its title, description, publisher, licence, landing page and every distribution URL (Architecture/21 §9), so a query of the space finds every dataset of the catalogue.
 
 ## Traceability
 
