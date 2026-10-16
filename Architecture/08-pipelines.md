@@ -63,6 +63,26 @@ A `schedule` is five cron fields read in UTC, as the runner and the CronJob read
 
 Trade-off named for operators: a sub-minute scheduled pipeline pays a pod start (image cached: 3–10 s) every minute; its only advantage over resident is releasing memory between minutes. `class: resident` MAY be set explicitly on any pipeline when latency matters more than memory; `class: scheduled` MAY be forced on a slow poll that happens to be declared as a stream. Today the reconciler records the stream's phase and the runner's answer in `status` (`StreamDeployed`, `StreamWriting`); it records no class or schedule, because it renders none. `StreamWriting` is `False` with reason `NothingWritten` when a Live stream has counted errors and sent nothing since it started, and with reason `Stalled` when its `received` counter has grown for ten minutes while `sent`, `rejected` and `errors` stood still: the source delivers and nothing lands, which the phase alone never showed (T-2961, T-2967). A stream whose author's last processor is `mapping: root = deleted()` writes through its processors (the vehicles reaper deletes with an `http` processor) and never reaches the output by design, so the reconciler does not watch it for `Stalled`; its processors' errors still count toward `NothingWritten` (T-2979). A filter that drops some messages midway stays watched (T-2961). The phase stays `Live`, because the stream is deployed; the condition is what the pipelines page shows beside it.
 
+### Run model in the shared runner: resident or run-and-delete (PL-78)
+
+The owner's rule of 2026-10-16: only a pipeline that waits for pushes stays loaded in the runner; every other one is loaded for its run and deleted after it. The source type decides, in one function (`is_resident`):
+
+| Source | Run model |
+|---|---|
+| `mqtt`, `websocket`; runner inputs that wait for pushes: `http_server`, `socket_server`, `kafka`, `kafka_franz`, `nats`, `nats_jetstream`, `amqp_0_9`, `amqp_1`, `redis_streams`; an Endpoint source with a change trigger (PL-51) | **resident**: one stream, loaded all the time, as §2 describes |
+| `http` polls, `gtfs-rt`, every other runner input (`file`, `sql_select`, `aws_s3`, ...), an Endpoint source read on a clock | **run-and-delete** |
+
+A pipeline with one resident source is resident. A run-and-delete pipeline goes through one queue in the reconciler, ordered by due time, then project and name. Its run is created in the runner (one stream whose clock fires once, `generate.count: 1`) only when its turn comes, and deleted when the runner reports it finished, when it fails, or after 15 minutes. The clock is the pipeline's `period` when it has one, counted from 1970-01-01T00:00Z so a Portal restart does not move it (`24h` runs at 00:00 UTC), else its `schedule` (five cron fields, UTC); a pipeline with neither runs once after apply.
+
+The queue has two lanes, so a long harvest never holds a live poller:
+
+| Lane | Pipelines | Concurrency (Portal environment) |
+|---|---|---|
+| `batch` | clock of 5 minutes or longer, and run-once pipelines | `JC_PORTAL_PIPELINES_BATCH_CONCURRENCY`, default 1 |
+| `short` | clock shorter than 5 minutes | `JC_PORTAL_PIPELINES_SHORT_CONCURRENCY`, default 1 |
+
+A pipeline still queued or running when its next run comes due keeps its one entry: the runs coalesce, never queue twice. `status.phase` is `Live` with the condition `Scheduled` (`Queued`, `Running` or `Waiting`, with the next run and the last run's end) while its runs succeed, and `Error` with the reason while its last run failed or timed out. The Portal exports `jc_pipeline_queue_depth{lane}` and `jc_pipeline_run_seconds{outcome}` (`finished`, `failed`, `timeout`). On a Portal start every run-and-delete pipeline's stream is removed from the runner once, so a stream loaded by an older Portal or a crashed run does not stay.
+
 ## 2. Bento Streams Mode Architecture
 
 In resident mode, all streaming pipelines for a given Project execute inside a dedicated, isolated deployment called the **Project Pipeline Runner**:
