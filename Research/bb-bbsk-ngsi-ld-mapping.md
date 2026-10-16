@@ -37,11 +37,11 @@ same rows.
 ## 2. Totals
 
 <!-- totals -->
-| organization | datasets | mapped | already NGSI-LD | not ingestible | removed (no model) | source rows of the mapped |
-|---|---:|---:|---:|---:|---:|---:|
-| banskabystrica | 34 | 10 | 2 | 22 | 0 | 75031 |
-| bbsk | 90 | 88 | 2 | 0 | 0 | 252024 |
-| all | 124 | 98 | 4 | 22 | 0 | 327055 |
+| organization | datasets | mapped | already NGSI-LD | not ingestible | removed (no model) | no data source | source rows of the mapped |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| banskabystrica | 34 | 13 | 2 | 1 | 17 | 1 | 99881 |
+| bbsk | 90 | 88 | 2 | 0 | 0 | 0 | 252024 |
+| all | 124 | 101 | 4 | 1 | 17 | 1 | 351905 |
 <!-- /totals -->
 
 "Already NGSI-LD" are the four datasets the platform publishes from its own public Endpoints
@@ -60,6 +60,7 @@ probe read from each mapped source, before any row filter of section 5.
 | `RoadStructure` | [`extension/RoadStructure`](https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/RoadStructure/schema.json), extending [`dataModel.PointOfInterest/PointOfInterest`](https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/PointOfInterest/schema.json) | 4 | 8981 |
 | `Grant` | [`extension/Grant`](https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Grant/schema.json), extending [`dataModel.CPSV-AP/Cost`](https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/Cost/schema.json) | 3 | 19845 |
 | `PublicInvestment` | [`extension/PublicInvestment`](https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/PublicInvestment/schema.json), extending [`dataModel.CPSV-AP/Cost`](https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/Cost/schema.json) | 3 | 6200 |
+| `Address` | [`dataModel.CPSV-AP/Address`](https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/Address/schema.json) | 2 | 32671 |
 | `Bridge` | [`extension/Bridge`](https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Bridge/schema.json), extending [`dataModel.PointOfInterest/PointOfInterest`](https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/PointOfInterest/schema.json) | 2 | 2682 |
 | `Contract` | [`extension/Contract`](https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Contract/schema.json), extending [`dataModel.CPSV-AP/Cost`](https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/Cost/schema.json) | 2 | 25045 |
 | `CouncilMeeting` | [`extension/CouncilMeeting`](https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CouncilMeeting/schema.json), extending [`dataModel.TourismDestinations/Event`](https://raw.githubusercontent.com/smart-data-models/dataModel.TourismDestinations/6d78cb4ff0c1a7d16dc0c1bab7266e40d4b3a00c/Event/schema.json) | 2 | 1509 |
@@ -69,12 +70,13 @@ probe read from each mapped source, before any row filter of section 5.
 | `PurchaseOrder` | [`extension/PurchaseOrder`](https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/PurchaseOrder/schema.json), extending [`dataModel.CPSV-AP/Cost`](https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/Cost/schema.json) | 2 | 45758 |
 | `RoadAccident` | [`dataModel.Transportation/RoadAccident`](https://raw.githubusercontent.com/smart-data-models/dataModel.Transportation/b83ede9d3db29be1365cc272eb535f46af83bed2/RoadAccident/schema.json) | 2 | 3127 |
 | `WaterBodyStatus` | [`extension/WaterBodyStatus`](https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/WaterBodyStatus/schema.json), extending [`dataModel.PointOfInterest/PointOfInterest`](https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/PointOfInterest/schema.json) | 2 | 612 |
-| `Address` | [`dataModel.CPSV-AP/Address`](https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/Address/schema.json) | 1 | 16902 |
 | `Article` | [`extension/Article`](https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Article/schema.json), extending [`dataModel.CPSV-AP/Evidence`](https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/Evidence/schema.json) | 1 | 1557 |
 | `CommitteeSeat` | [`extension/CommitteeSeat`](https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CommitteeSeat/schema.json), extending [`dataModel.Organization/Organization`](https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/Organization/schema.json) | 1 | 135 |
 | `CouncilVote` | [`extension/CouncilVote`](https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CouncilVote/schema.json), extending [`dataModel.TourismDestinations/Event`](https://raw.githubusercontent.com/smart-data-models/dataModel.TourismDestinations/6d78cb4ff0c1a7d16dc0c1bab7266e40d4b3a00c/Event/schema.json) | 1 | 89670 |
 | `Event` | [`dataModel.TourismDestinations/Event`](https://raw.githubusercontent.com/smart-data-models/dataModel.TourismDestinations/6d78cb4ff0c1a7d16dc0c1bab7266e40d4b3a00c/Event/schema.json) | 1 | 6164 |
+| `Garden` | [`dataModel.ParksAndGardens/Garden`](https://raw.githubusercontent.com/smart-data-models/dataModel.ParksAndGardens/4563de6c0ab462ab7db73bfc4ca90dbacfa0421d/Garden/schema.json) | 1 | 8546 |
 | `Invoice` | [`extension/Invoice`](https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Invoice/schema.json), extending [`dataModel.CPSV-AP/Cost`](https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/Cost/schema.json) | 1 | 28844 |
+| `OffStreetParking` | [`dataModel.Parking/OffStreetParking`](https://raw.githubusercontent.com/smart-data-models/dataModel.Parking/24342efb3425c0059c7a4b82d6d201847418b29c/OffStreetParking/schema.json) | 1 | 535 |
 | `OfficeHours` | [`extension/OfficeHours`](https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/OfficeHours/schema.json), extending [`dataModel.Organization/Organization`](https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/Organization/schema.json) | 1 | 14 |
 | `Person` | [`dataModel.Organization/Person`](https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/Person/schema.json) | 1 | 125 |
 | `Petition` | [`extension/Petition`](https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Petition/schema.json), extending [`dataModel.CPSV-AP/Evidence`](https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/Evidence/schema.json) | 1 | 12 |
@@ -142,7 +144,7 @@ keeps its value as `source<Name>`. Esri bookkeeping columns (`OBJECTID`, `Global
 <!-- ids -->
 | entity id from | datasets |
 |---|---:|
-| a key column | 63 |
+| a key column | 66 |
 | a key column and its year | 9 |
 | a row hash | 26 |
 <!-- /ids -->
@@ -167,6 +169,9 @@ the current rows are.
 <!-- personal -->
 | dataset | kept out | why |
 |---|---|---|
+| `bb-dtm-bb-register-adries` | columns `POINT_X`, `POINT_Y` | the point in S-JTSK; the location carries it in WGS 84 |
+| `bb-dtm-bb-register-statickej-dopravy` | columns `ideditora`, `vkladosoba`, `zmenaosoba`, `created_user`, `last_edited_user` | who entered or edited a feature: an editor's name or account |
+| `bb-dtm-bb-register-verejnej-zelene-1` | columns `ideditora`, `vkladosoba`, `zmenaosoba`, `created_user`, `last_edited_user` | who entered or edited a feature: an editor's name or account |
 | `bb-zmluvy-bb` | rows whose `Zmluvné_strany_s_údajom_IČO` does not match `^IČO:[^\r]*(\rIČO:[^\r]*)*$` | a party without an IČO is a natural person, a social-service client among them |
 | `bbsk-clenovia-samospravy-efc2f3` | columns `Telefonický_kontakt`, `Emailový_kontakt` | office holders' own phones and e-mails |
 | `bbsk-dodavatelia-825cd0` | rows outside `ICO IS NOT NULL AND ICO <> ''`, or rows whose `ICO` does not match `^[0-9]{6,8}( ?[0-9]{4})?$` | a row without an IČO, or with a name where the IČO belongs, can name a natural person |
@@ -196,47 +201,55 @@ source. The `Evidencia psov` and `Zoznam poskytovateľov pre APS` datasets never
 | dataset | organization | status | reason |
 |---|---|---|---|
 | Banská Bystrica — verejné údaje (`banskabystrica-verejne`) | banskabystrica | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
-| DTM_BB-funkcne-vyuzitie-uzemia (`bb-dtm-bb-funkcne-vyuzitie-uzemia`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (201 KiB): a PDF map sheet, no data |
-| DTM_BB-Polohopis_a_vyskopis_bodoveho_pola (`bb-dtm-bb-polohopis-a-vyskopis-bodoveho-pola`) | banskabystrica | not-ingestible | 240636 Point features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects; without the geometry the rows carry little (the city's address list without points is bb-adresy) |
-| DTM_BB-Register-adries (`bb-dtm-bb-register-adries`) | banskabystrica | not-ingestible | 15769 Point features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects; without the geometry the rows carry little (the city's address list without points is bb-adresy) |
-| DTM_BB-register-chodnikov-a-verejnych-priestranstiev (`bb-dtm-bb-register-chodnikov-a-verejnych-priestranstiev`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-register-miestnych-komunikacii-a-vyssich-tried (`bb-dtm-bb-register-miestnych-komunikacii-a-vyssich-tried`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-register-statickej-dopravy (`bb-dtm-bb-register-statickej-dopravy`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-register-stavby (`bb-dtm-bb-register-stavby`) | banskabystrica | not-ingestible | 16534 MultiPolygon features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects; without the geometry the rows carry little (the city's address list without points is bb-adresy) |
-| DTM_BB-register-stlpov-VO (`bb-dtm-bb-register-stlpov-vo`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (185 KiB): a PDF map sheet, no data |
-| DTM_BB-register-ulic (`bb-dtm-bb-register-ulic`) | banskabystrica | not-ingestible | 6338 MultiLineString features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects; without the geometry the rows carry little (the city's address list without points is bb-adresy) |
-| DTM_BB-register-verejnej-zelene-1 (`bb-dtm-bb-register-verejnej-zelene-1`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (43 KiB): a PDF map sheet, no data |
-| DTM_BB-register-verejnej-zelene-2 (`bb-dtm-bb-register-verejnej-zelene-2`) | banskabystrica | not-ingestible | a ZIP of 3 .atr, 3 .cpg, 3 .dbf, 3 .shp, 3 .shx (732 KiB): Esri shapefiles; no ingestion path reads a shapefile today |
-| DTM_BB-register-verejnej-zelene-3 (`bb-dtm-bb-register-verejnej-zelene-3`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (194 KiB): a PDF map sheet, no data |
-| DTM_BB-register-vodorovneho-dopravneho-znacenia (`bb-dtm-bb-register-vodorovneho-dopravneho-znacenia`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-register-zvisleho-dopravneho-znacenia (`bb-dtm-bb-register-zvisleho-dopravneho-znacenia`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-regulativy-a-limity-funkcneho-vyuzitia-uzemia (`bb-dtm-bb-regulativy-a-limity-funkcneho-vyuzitia-uzemia`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (205 KiB): a PDF map sheet, no data |
-| DTM_BB-tvorba-krajiny-a-ochrana-prirody (`bb-dtm-bb-tvorba-krajiny-a-ochrana-prirody`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-verejne-dopravne-a-technicke-vybavenie (`bb-dtm-bb-verejne-dopravne-a-technicke-vybavenie`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (198 KiB): a PDF map sheet, no data |
-| DTM_BB-verejnoprospesne-stavby (`bb-dtm-bb-verejnoprospesne-stavby`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data |
-| DTM_BB-vodne-toky-a-plochy (`bb-dtm-bb-vodne-toky-a-plochy`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-vyskopis-teran (`bb-dtm-bb-vyskopis-teran`) | banskabystrica | not-ingestible | a ZIP of 1 .geojson (65889 KiB): larger than the 10 MiB this round loads into the one broker |
-| DTM_BB-vyuzitie-pody-na-nepolnohospodarske-ucely (`bb-dtm-bb-vyuzitie-pody-na-nepolnohospodarske-ucely`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data |
-| DTM_BB-zaujmove-uzemie-a-sirsie-vztahy (`bb-dtm-bb-zaujmove-uzemie-a-sirsie-vztahy`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (24 KiB): a PDF map sheet, no data |
+| DTM_BB-funkcne-vyuzitie-uzemia (`bb-dtm-bb-funkcne-vyuzitie-uzemia`) | banskabystrica | removed | no smart data model: dataModel.UrbanPlanning holds no model yet; no other subject holds a land-use plan's zones, limits or planned works |
+| DTM_BB-Polohopis_a_vyskopis_bodoveho_pola (`bb-dtm-bb-polohopis-a-vyskopis-bodoveho-pola`) | banskabystrica | not-ingestible | 240638 rows, more than the 100000 this round loads into the one broker |
+| DTM_BB-register-chodnikov-a-verejnych-priestranstiev (`bb-dtm-bb-register-chodnikov-a-verejnych-priestranstiev`) | banskabystrica | removed | no smart data model: Transportation/BikeLane is a lane on a road; no model holds a footway or a pavement |
+| DTM_BB-register-miestnych-komunikacii-a-vyssich-tried (`bb-dtm-bb-register-miestnych-komunikacii-a-vyssich-tried`) | banskabystrica | removed | no smart data model: Transportation/Road requires name and roadClass; a DTM road point has neither, only a surface code |
+| DTM_BB-register-stavby (`bb-dtm-bb-register-stavby`) | banskabystrica | removed | no smart data model: Building/Building requires address and category; the register has neither (municipality and district only) |
+| DTM_BB-register-stlpov-VO (`bb-dtm-bb-register-stlpov-vo`) | banskabystrica | removed | no smart data model: Streetlighting/Streetlight requires status (ok, defectiveLamp, columnIssue, brokenLantern); the DTM records whether a pole is operated, not the state of its lamp |
+| DTM_BB-register-ulic (`bb-dtm-bb-register-ulic`) | banskabystrica | removed | no smart data model: Transportation/RoadSegment requires refRoad, startPoint, endPoint and allowedVehicleType, which a street register has not |
+| DTM_BB-register-verejnej-zelene-2 (`bb-dtm-bb-register-verejnej-zelene-2`) | banskabystrica | removed | no smart data model: ParksAndGardens has Garden, FlowerBed and GreenspaceRecord (a measurement); no model holds a single tree |
+| DTM_BB-register-verejnej-zelene-3 (`bb-dtm-bb-register-verejnej-zelene-3`) | banskabystrica | removed | no smart data model: ParksAndGardens/Garden is the area; no model holds the line around it |
+| DTM_BB-register-vodorovneho-dopravneho-znacenia (`bb-dtm-bb-register-vodorovneho-dopravneho-znacenia`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, and no layer of the city's ArcGIS services holds its data |
+| DTM_BB-register-zvisleho-dopravneho-znacenia (`bb-dtm-bb-register-zvisleho-dopravneho-znacenia`) | banskabystrica | removed | no smart data model: no subject of the official list (2026-07-19) holds a traffic sign but OpenStreetMap's |
+| DTM_BB-regulativy-a-limity-funkcneho-vyuzitia-uzemia (`bb-dtm-bb-regulativy-a-limity-funkcneho-vyuzitia-uzemia`) | banskabystrica | removed | no smart data model: dataModel.UrbanPlanning holds no model yet; no other subject holds a land-use plan's zones, limits or planned works |
+| DTM_BB-tvorba-krajiny-a-ochrana-prirody (`bb-dtm-bb-tvorba-krajiny-a-ochrana-prirody`) | banskabystrica | removed | no smart data model: dataModel.UrbanPlanning holds no model yet; no other subject holds a land-use plan's zones, limits or planned works |
+| DTM_BB-verejne-dopravne-a-technicke-vybavenie (`bb-dtm-bb-verejne-dopravne-a-technicke-vybavenie`) | banskabystrica | removed | no smart data model: dataModel.UrbanPlanning holds no model yet; no other subject holds a land-use plan's zones, limits or planned works |
+| DTM_BB-verejnoprospesne-stavby (`bb-dtm-bb-verejnoprospesne-stavby`) | banskabystrica | removed | no smart data model: dataModel.UrbanPlanning holds no model yet; no other subject holds a land-use plan's zones, limits or planned works |
+| DTM_BB-vodne-toky-a-plochy (`bb-dtm-bb-vodne-toky-a-plochy`) | banskabystrica | removed | no smart data model: OpenChannelManagement/OpenChannel is a hydraulic model of a channel (cross sections, flow); Environment/WaterObserved is a measurement; no model holds a stream or a reservoir |
+| DTM_BB-vyskopis-teran (`bb-dtm-bb-vyskopis-teran`) | banskabystrica | removed | no smart data model: no subject of the official list (2026-07-19) holds contour lines or terrain edges |
+| DTM_BB-vyuzitie-pody-na-nepolnohospodarske-ucely (`bb-dtm-bb-vyuzitie-pody-na-nepolnohospodarske-ucely`) | banskabystrica | removed | no smart data model: dataModel.UrbanPlanning holds no model yet; no other subject holds a land-use plan's zones, limits or planned works |
+| DTM_BB-zaujmove-uzemie-a-sirsie-vztahy (`bb-dtm-bb-zaujmove-uzemie-a-sirsie-vztahy`) | banskabystrica | removed | no smart data model: dataModel.UrbanPlanning holds no model yet; no other subject holds a land-use plan's zones, limits or planned works |
 | Kvalita ovzdušia v Banskej Bystrici (`public-air`) | banskabystrica | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
 | Ukazovatele kraja (`bbsk-kpi`) | bbsk | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
 | Registre kraja (`bbsk-registre`) | bbsk | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
 <!-- /refused -->
 
-Most DTM ZIPs of the city hold one PDF map sheet and no data. `DTM_BB-register verejnej zelene 2`
-holds shapefiles, and no ingestion path reads a shapefile today. The GeoJSON registers of
-addresses, buildings, streets and survey points are drawn in S-JTSK, and no pipeline step
-reprojects to the WGS 84 that NGSI-LD requires. The terrain model is the largest source of both organizations.
-It waits for a later round, after the integrator has read the broker's volume use with the rest
-loaded
-([integration rules §4](../Development/12-open-data-integration.md#4-capacity-on-one-node)).
+Most DTM ZIPs of the city hold one PDF map sheet, and the shapefile ZIP of `DTM_BB-register
+verejnej zelene 2` has every member encrypted. The data behind them sits in the city's public
+ArcGIS Server (`dtm-banskabystrica.tmapserver.sk/arcgis/rest/services`, found 2026-10-16, T-4317):
+the DTM service `dtm/DTM_v_1_4_2_3_verejny` (247 layers) and 14 land-use plan (ÚPN) services
+under `up/`. Each of these datasets reads the layers its sheet draws (`LAYERS` in the script,
+`source.kind: esri-layers`). The server answers GeoJSON in WGS 84 itself (`outSR=4326`) in pages of
+at most 2000 rows. Only the green areas (`Garden`) and the car parks (`OffStreetParking`) have a
+Smart Data Model. The other sheets name their layers (`layers:`) and are removed for want of a
+model, each with the models checked (`NO_MODEL`), so they come back when one is published. The probe of those layers is `Research/data/bb-dtm-layers.json`. The cadastral
+map that each ÚPN service draws underneath (`vnutorná kresba`, `hranice parcel`, 295 000 lines,
+the ÚGKK's data and not the city's) is no layer of any dataset. A layer that two sheets draw is
+read once. The terms of use of each dataset's record in the national catalogue
+(`data.gov.sk/def/ontology/legislation/termsOfUse`) are CC BY-SA 4.0. The service states no terms
+of its own, so the record's licence applies to the layers of that dataset. The registers of
+addresses, buildings and streets keep their archive: its GeoJSON carries the register columns,
+which the layers lack, and the pipeline reprojects it from S-JTSK. Of the three, only the addresses
+have a model (CPSV-AP `Address`). The horizontal road markings
+have a sheet and no layer. The survey points (240 638 in layer 1) stay over the row limit below.
 
 Decided (worker-8, owner may override): a source over 100 000 rows or a GeoJSON over 10 MiB is
 not loaded in this round, because one broker on one 16 GB node holds every project. Options: load
 the terrain model now, or as one aggregate per cadastral area.
 
-No dataset is `removed` since T-4336; the status stays for a type whose extension is withdrawn.
-Such a dataset is mapped to nothing and leaves data.dev: its catalogue row is hidden by the
+The 36 datasets T-4319 removed are mapped under extensions since T-4336. The city's DTM types
+(T-4317) stay `removed` until an extension covers them. A `removed` dataset is mapped to nothing and leaves data.dev: its catalogue row is hidden by the
 publish gate (T-4318) and the seed generator writes no pipeline for it (T-4319). A `not-ingestible` dataset leaves
 data.dev through the same gate, because the catalogue lists only data in NGSI-LD.
 
