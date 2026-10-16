@@ -59,10 +59,13 @@ browser ── widget or /d/{publicId} ── POST /api/v1/d/{publicId}/chat (SS
         {"answers": true} answers now; {"answers": false,
         "queries": [...]} runs the next round in the sources'
         language; any other reply answers with what was found       (T-4259)
+        the first round is the question as asked, searched and
+        judged while the router call (3) runs; when it answers, the
+        router's queries are added and nothing more is judged       (T-4293)
      5. answer call, once, streamed token by token, top passages
         and data rows as quoted data, citations from what was found
      6. SSE: delta… , data (rows, dataset link, download link),
-        citations, done (tokens in/out, latency)
+        citations, done (tokens in/out, latency, stagesMs)
 ```
 
 Decided (worker-1, owner may override): the server runs the rounds and the model never calls `search` itself, because the goal fixes the answering model to one call per answer and the injection rules want the tool allowlist enforced by code; options: keep today's model-driven loop with a lower `MAX_CALLS` (fewer code changes, but every round costs a full answering-model call with all passages again).
