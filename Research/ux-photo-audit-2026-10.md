@@ -32,11 +32,12 @@ Each audit wrote its screenshots, a contact sheet `index.html` and a `findings.j
 |---|---|---:|---:|---:|
 | T-4157 | Portal shell | 156 | 144 | 20 |
 | T-4158 | Portal forms: access | 502 | 502 | 15 |
-| T-4159 | Portal forms: data | 167 | 167 | 12 |
+| T-4159 | Portal forms: data | 169 | 169 | 12 |
+| T-4160 | Portal explore and Apps | 370 | 370 | 135 |
 | T-4161 | open data portal | 135 | 129 | 16 |
 | T-4162 | public surfaces | 405 | 264 | 25 |
 | T-4163 | Portal states | 123 | 102 | 15 |
-| **total** | | **1488** | **1308** | **103** |
+| **total** | | **1860** | **1680** | **238** |
 
 ### Findings by area and severity
 
@@ -45,29 +46,30 @@ Each audit wrote its screenshots, a contact sheet `index.html` and a `findings.j
 | Portal shell | 0 | 6 | 14 |
 | Portal forms: access | 1 | 10 | 4 |
 | Portal forms: data | 0 | 6 | 6 |
+| Portal explore and Apps | 0 | 34 | 101 |
 | open data portal | 0 | 6 | 10 |
 | public surfaces | 4 | 13 | 8 |
 | Portal states | 0 | 5 | 10 |
-| **total** | **5** | **46** | **52** |
+| **total** | **5** | **80** | **153** |
 
 ### Patterns
 
 | Pattern | Shared fix | Findings | Worst | Areas |
 |---|---|---:|---|---|
-| Raw machine text reaches a visitor: problem JSON, HTTP codes, API names, enum codes | One shared problem renderer per surface (Portal, SDK, assistant host, edge) that turns a problem into a sentence and a way on; enum codes through the label catalogue | 14 | blocker | Portal shell, Portal forms: access, Portal forms: data, public surfaces |
-| At 375 px rows, tables and long values run off the screen or get cut | Tables scroll inside their own frame with a scroll hint; long values wrap or truncate with the full value on focus; header text shortens before it cuts | 13 | major | Portal shell, Portal forms: access, Portal forms: data, open data portal, public surfaces |
-| The visitor's language is ignored: a Slovak visit gets English text, dates or pages | Every surface takes the language from `?lang=`/`ui_locales`/`Accept-Language` before its config default, and its error and empty texts come from the same catalogue | 9 | major | Portal shell, Portal forms: access, Portal forms: data, open data portal, public surfaces |
-| A failed read drops the shell or tells the wrong story: a first-run checklist, 'you may not create', bare 'Internal Server Error' | One error state inside the shell that says the server failed, in words, with Retry; checklists and create-hints wait for a successful read | 9 | major | Portal forms: access, Portal states |
+| Raw machine text reaches a visitor: problem JSON, HTTP codes, API names, enum codes | One shared problem renderer per surface (Portal, SDK, assistant host, edge) that turns a problem into a sentence and a way on; enum codes through the label catalogue | 29 | blocker | Portal shell, Portal forms: access, Portal forms: data, Portal explore and Apps, public surfaces |
+| At 375 px rows, tables and long values run off the screen or get cut | Tables scroll inside their own frame with a scroll hint; long values wrap or truncate with the full value on focus; header text shortens before it cuts | 24 | major | Portal shell, Portal forms: access, Portal forms: data, Portal explore and Apps, open data portal, public surfaces |
+| A viewer is shown what only a builder can do | Checklists, hints and actions render from the caller's verbs (`/me/permissions`), not from the page | 14 | major | Portal shell, Portal forms: access, Portal explore and Apps |
+| Ids and schema names stand where people expect names | Lists, breadcrumbs and switchers print `title`/`name` and fall back to the id only when no name exists | 13 | major | Portal shell, Portal forms: access, Portal explore and Apps, open data portal |
+| The visitor's language is ignored: a Slovak visit gets English text, dates or pages | Every surface takes the language from `?lang=`/`ui_locales`/`Accept-Language` before its config default, and its error and empty texts come from the same catalogue | 11 | major | Portal shell, Portal forms: access, Portal forms: data, Portal explore and Apps, open data portal, public surfaces |
+| A failed read drops the shell or tells the wrong story: a first-run checklist, 'you may not create', bare 'Internal Server Error' | One error state inside the shell that says the server failed, in words, with Retry; checklists and create-hints wait for a successful read | 10 | major | Portal forms: access, Portal explore and Apps, Portal states |
+| The floating assistant button or panel covers page content | Reserve the button's space at the page end, and open the panel full screen under 640 px | 6 | major | Portal shell, Portal forms: data, Portal explore and Apps, open data portal, public surfaces |
 | A schema form prints each field error twice, and one 'Neplatná hodnota' per allowed shape | Each field error shown once; a field whose allowed shapes all fail gets one message that says what to enter (T-4207) | 6 | blocker | Portal forms: access, Portal forms: data |
-| Ids and schema names stand where people expect names | Lists, breadcrumbs and switchers print `title`/`name` and fall back to the id only when no name exists | 5 | major | Portal shell, Portal forms: access, open data portal |
-| The floating assistant button or panel covers page content | Reserve the button's space at the page end, and open the panel full screen under 640 px | 4 | major | Portal shell, Portal forms: data, open data portal, public surfaces |
+| A dead end: a 404 or refusal with no way on | Not-found and refusal pages keep the header and name the next step (who to ask, where to go) | 5 | minor | Portal shell, Portal explore and Apps, public surfaces |
 | An App's first view is a read error or empty, with no data | Apps read through the SDK's retrying reader and show sample-free empty states that say what is missing; a published App needs data before it is listed | 4 | blocker | public surfaces |
 | The per-address rate limit breaks pages: white Portal, Apps that 429 themselves | Exempt fingerprinted assets from the per-IP limit and cache them immutably; a chunk-load error boundary with words and a Reload button; Apps batch their reads | 4 | blocker | open data portal, public surfaces |
 | Another city's name, domain or font on a city's pages | Organization name, catalogue name and URN domain come from the project or publisher, never from the demo organization's config; a font with Slovak and Czech letters | 4 | major | Portal shell, open data portal |
 | Keycloak pages are the stock product: unstyled, English, no way back | A joinedcontext Keycloak theme for login, forgot-password and account with sk messages and a link back to the Portal | 4 | major | Portal shell, public surfaces |
-| A dead end: a 404 or refusal with no way on | Not-found and refusal pages keep the header and name the next step (who to ask, where to go) | 4 | minor | Portal shell, public surfaces |
-| A viewer is shown what only a builder can do | Checklists, hints and actions render from the caller's verbs (`/me/permissions`), not from the page | 3 | major | Portal shell, Portal forms: access |
-| (page only) | one fix per page | 20 | | |
+| (page only) | one fix per page | 104 | | |
 
 ### Top 20
 
@@ -84,15 +86,15 @@ Each audit wrote its screenshots, a contact sheet `index.html` and a `findings.j
 | 9 | major | Portal forms: access | `/projects/helsinki/settings/service-accounts/new` | After Skontrolovať on the empty form the box at the top shows the server's raw refusal: "invalid metadata.name … must match DNS-1123 label regex '^[a-z0-9]…'". | `/workspace/evidence/worker-8/T-4158/access-projects-helsinki-settings-service-accounts-new-project-serviceaccount-new-validation-steward-sk-375.png` |
 | 10 | major | Portal forms: data | `/projects/helsinki/datasources/$name/edit` | The data source edit form shows a developer warning to the steward: "This form's arrangement manifest asks for something the form cannot do: the schema has no field 'tls.caCertRef.name', so nothing was arranged for it". | `/workspace/evidence/worker-6/T-4159/forms-data-projects-helsinki-datasources-name-edit-datasources-edit-steward-en-375.png` |
 | 11 | major | Portal forms: data | `/projects/helsinki/pipelines/$name/edit` | The pipeline's Sample step shows the engine's raw error: "failed assignment (line 1): function content: failed to parse value as JSON: invalid character '<' looking for beginning of value". It is English in the Slovak form and does not say that the source answered HTML or what to do. | `/workspace/evidence/worker-6/T-4159/forms-data-projects-helsinki-pipelines-name-edit-pipelines-edit-tab-1-steward-sk-768.png` |
-| 12 | major | public surfaces | `apps/banskabystrica/banskabystrica-mapa` | An unknown path on an App host answers the raw problem JSON ({"type":…,"detail":"app 'banskabystrica-mapa' not found"}), in English, with the browser's pretty-print box; and the App itself exists. | `/workspace/evidence/worker-4/T-4162/public-apps-banskabystrica-banskabystrica-mapa-unknown-path-anonymous-sk-375.png` |
-| 13 | major | public surfaces | `apps/banskabystrica/banskabystrica-data` | 'Kind of event' shows the raw codes museumsGalleriesLibraries, musicDanceTheatre, other. | `/workspace/evidence/worker-4/T-4162/public-apps-banskabystrica-banskabystrica-data-first-view-anonymous-en-1440.png` |
-| 14 | major | public surfaces | `apps/* unknown path` | 23 of 24 App hosts answer an unknown path with raw problem JSON 'app … not found' (only hsl-transport falls back to the App). | `/workspace/evidence/worker-4/T-4162/public-apps-helsinki-helsinki-kartta-unknown-path-anonymous-en-1440.png` |
-| 15 | major | Portal shell | `/projects/helsinki/activity` | On a phone the activity table runs off the right edge: the "What happened" column shows three letters per line and "Who says so" is out of view. | `/workspace/evidence/worker-6/T-4157/shell-projects-helsinki-activity-page-steward-sk-375.png` |
-| 16 | major | Portal forms: access | `/projects/helsinki/endpoints` | On a phone the endpoints table keeps its columns, so names wrap word by word and the page is 8,100 px tall for 28 endpoints and the catalogue below. | `/workspace/evidence/worker-8/T-4158/endpoints-projects-helsinki-endpoints-list-steward-sk-375.png` |
-| 17 | major | Portal forms: data | `/projects/helsinki/pipelines` | At 375 px the pipelines table is wider than its card: the row actions column (Pause, the row menu) is cut off at the right edge and the 'Not deployed' badge clips. Nothing shows that the table scrolls sideways, and the assistant button sits over the cut edge. | `/workspace/evidence/worker-6/T-4159/forms-data-projects-helsinki-pipelines-pipelines-list-steward-en-375.png` |
-| 18 | major | Portal forms: data | `/projects/helsinki/pipelines` | At 768 px, once a row's actions are used, the table stays scrolled sideways: the name column is gone off the left edge, so the rows show only 'Runs on its schedule' / 'Held by its data source …' and the person cannot tell which pipeline is which. | `/workspace/evidence/worker-6/T-4159/forms-data-projects-helsinki-pipelines-pipelines-menu-2-steward-en-768.png` |
-| 19 | major | Portal forms: data | `/projects/helsinki/models?new=blank` | At 375 px the model editor is wider than the screen (about 460 px): the whole page scrolls sideways, the Pridať buttons and the attribute table's last columns are off screen and the header 'DRUH NGSI-LD' breaks across three lines. | `/workspace/evidence/worker-6/T-4159/forms-data-projects-helsinki-models-new-blank-models-new-blank-tab-2-steward-sk-375.png` |
-| 20 | major | Portal shell | `idm/login` | A visitor who opens a Portal link with lang=sk is sent by the edge straight to Keycloak, which answers in English: the redirect carries no ui_locales, and kc_locale=sk did not switch it either. | `/workspace/evidence/worker-6/T-4157/shell-idm-login-form-anonymous-sk-768.png` |
+| 12 | major | Portal explore and Apps | `/projects/bbsk/spaces/new` | Every create form's header prints the raw kind and a machine-built sentence, sk and en: 'Read about ContextSpace in the User Guide' and 'Will be approved when you propose: you hold approve and delete on ContextSpace.'; the same on KnowledgeSource, AssistantDeployment and 'Read about App'. | `/workspace/evidence/worker-2/T-4160/spaces-projects-bbsk-spaces-new-form-open-steward-sk-375.png` |
+| 13 | major | Portal explore and Apps | `/projects/bbsk/knowledgesources/new` | The create-form headings show the kind name in CamelCase, sk and en: 'Nový KnowledgeSource' / 'New KnowledgeSource' and 'Nový AssistantDeployment' / 'New AssistantDeployment' (also on the validated-empty shots). | `/workspace/evidence/worker-2/T-4160/knowledge-projects-bbsk-knowledgesources-new-form-open-steward-sk-375.png` |
+| 14 | major | Portal explore and Apps | `/catalogue` | The Area/Územie filter lists raw NUTS codes (FI1B1, SK032, SK031, CZ010), and the dataset page shows the area as the URI 'http://data.europa.eu/nuts/code/CZ010'; sk and en. | `/workspace/evidence/worker-2/T-4160/catalogue-catalogue-list-steward-sk-375.png` |
+| 15 | major | Portal explore and Apps | `/projects/bbsk/explore` | Explore's 'Your access' card lists raw API operation names (queryEntity, retrieveAttrTypeInfo, retrieveEntityTypeDetails…) and the chips read 'Smiete queryEntity Hospital' / 'Nesmiete updateAttrs Hospital'; sk and en. | `/workspace/evidence/worker-2/T-4160/explore-projects-bbsk-explore-table-steward-sk-375.png` |
+| 16 | major | Portal explore and Apps | `/projects/bbsk/explore` | A query that matches nothing ends in a red English parser error on the Slovak page, 'Nenačítané, skúste znova: invalid q expression "qzxwv-nothing-is-called-this"…', telling the person to retry, and the Filters hint wrongly says the query uses '\|' or brackets; there is no empty state. | `/workspace/evidence/worker-2/T-4160/explore-projects-bbsk-explore-empty-result-steward-sk-375.png` |
+| 17 | major | public surfaces | `apps/banskabystrica/banskabystrica-mapa` | An unknown path on an App host answers the raw problem JSON ({"type":…,"detail":"app 'banskabystrica-mapa' not found"}), in English, with the browser's pretty-print box; and the App itself exists. | `/workspace/evidence/worker-4/T-4162/public-apps-banskabystrica-banskabystrica-mapa-unknown-path-anonymous-sk-375.png` |
+| 18 | major | public surfaces | `apps/banskabystrica/banskabystrica-data` | 'Kind of event' shows the raw codes museumsGalleriesLibraries, musicDanceTheatre, other. | `/workspace/evidence/worker-4/T-4162/public-apps-banskabystrica-banskabystrica-data-first-view-anonymous-en-1440.png` |
+| 19 | major | public surfaces | `apps/* unknown path` | 23 of 24 App hosts answer an unknown path with raw problem JSON 'app … not found' (only hsl-transport falls back to the App). | `/workspace/evidence/worker-4/T-4162/public-apps-helsinki-helsinki-kartta-unknown-path-anonymous-en-1440.png` |
+| 20 | major | Portal shell | `/projects/helsinki/activity` | On a phone the activity table runs off the right edge: the "What happened" column shows three letters per line and "Who says so" is out of view. | `/workspace/evidence/worker-6/T-4157/shell-projects-helsinki-activity-page-steward-sk-375.png` |
 
 <!-- end generated -->
 
