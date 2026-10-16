@@ -166,6 +166,17 @@ The temporal grammar, on `query_temporal`, `retrieve_temporal` and the temporal 
 `modifiedAt`, `deletedAt`), `lastN`, `aggrMethods` (`totalCount`, `distinctCount`, `sum`, `avg`,
 `min`, `max`, `stddev`, `sumsq`) and `aggrPeriodDuration` (an ISO 8601 duration) (AG-30).
 
+A caller without a token on the hub or a named server (T-4168) reads history at a bounded cost,
+because the per-IP request limit counts calls, not the attribute instances one call makes the
+broker read (T-4261). Before anything reaches the broker, `query_temporal` and `retrieve_temporal`
+need `timerel: between` with `timeAt` and `endTimeAt` at most 31 days apart; `query_temporal` needs
+`type` or `id`; `lastN` is 100 when absent and a larger one is refused; `limit` stays at or below the
+page cap of 1000; and `aggrMethods` needs an `aggrPeriodDuration` of at least `PT1H` (a year as 365
+days, a month as 30). A call outside a bound is the tool error (`isError: true`) that names the
+bound, as SP-17 names an ungranted operation. The broker has 10 seconds to answer such a call; past
+them the caller gets a tool error, not a held stream. A caller with a token keeps the Endpoint
+Policy's own limits and none of these.
+
 Never an argument, on any tool: `space`, `tenant`, `NGSILD-Tenant`, `endpoint`, an upstream URL and
 `via`. The space is the URL's (AG-05); the rest are the deployment's, not a caller's.
 
