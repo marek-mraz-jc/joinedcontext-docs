@@ -59,7 +59,7 @@ A dataset carries three kinds of resource, and the choice is the Endpoint's, not
 
 - **A link per representation** is always written. The resource URL is that representation's own URL under the Endpoint, so a download passes the gateway and its policy set, and a restricted dataset's links are useless without a token. This is what makes the catalogue safe to publish at all.
 - **A DataStore sheet** is written when the Endpoint declares `spec.publish.ckan.datastore`. It gives the dataset page a preview, a filtered API and SQL over the rows, which a link alone cannot. The sheet is filled through the Endpoint's tabular representation as an ordinary consumer, one table per entity type, one row per entity, keyed by the entity's URN (`crates/jcctl/src/publish/ckan_datastore.rs`). A table's columns are the ones its rows fill plus every column the type's class in the Endpoint's `model.schema.json` declares, so an attribute no entity carries yet still has its column; a geometry also gets a `<attr>.geojson` text column. The schema is read as the same anonymous caller as the rows, so a column never names an attribute the grant hides. `refresh: onChange` upserts the entities a notification named, re-read through the Endpoint; `refresh: onReconcile` reloads the table on the reconcile tick, for a space with no subscription. A row whose entity the Endpoint no longer answers for is deleted by the same rule, so a deletion behind the Endpoint propagates instead of leaving a public copy.
-- **A file dump** is not written. The `zip` and `csv` representations are already downloads of the same data, served through the policy set, and a third copy in CKAN's file store would be the one nobody rebuilds.
+- **A file dump** is not written. The `csv` and `json` representations are already downloads of the same data, served through the policy set, and a third copy in CKAN's file store would be the one nobody rebuilds.
 
 The cadence a person reads on the dataset page is the `frequency` extra, which comes from the Endpoint's own record. A sheet says the same thing in the resource description, so a preview that is a day old does not read as live.
 
@@ -75,10 +75,10 @@ The Helsinki project publishes four datasets into the `hel-fi` organization of t
 
 | Dataset | Endpoint | Representations | Sheet |
 |---|---|---|---|
-| `helsinki-all` | Helsinki city context, everything | NGSI-LD, GeoJSON, CSV, XLSX, ZIP, MCP | CSV, on reconcile |
-| `helsinki-bikes` | Helsinki city bike stations | the same six | CSV, on reconcile |
-| `helsinki-transport` | Helsinki trunk-line buses | the same six | CSV, on reconcile |
-| `helsinki-events` | Helsinki events | the same six | CSV, on reconcile |
+| `helsinki-all` | Helsinki city context, everything | the list of [§9](#9-what-every-dataset-lists) | CSV, on reconcile |
+| `helsinki-bikes` | Helsinki city bike stations | the same | CSV, on reconcile |
+| `helsinki-transport` | Helsinki trunk-line buses | the same | CSV, on reconcile |
+| `helsinki-events` | Helsinki events | the same | CSV, on reconcile |
 
 All four Endpoints are `audience: public`, so all four datasets are public, and the catalogue is not empty on a fresh installation. The instance itself is `helsinki-ckan-hel-fi.yaml`, whose `apiTokenRef` is resolved at run time and never held in the manifest.
 
@@ -141,10 +141,29 @@ The flow writes nothing to CKAN and needs no CKAN credential: the Change is the 
 
 A national portal (data.gov.sk, data.europa.eu) harvests a catalogue, not a list of endpoints. The context gateway serves the installation's catalogue as one `dcat:Catalog` at `https://{host}/catalog.jsonld` and `https://{host}/catalog.ttl` (EP-84): its datasets are the records of EP-27 of every Endpoint whose audience is `public`, each as the anonymous caller would read it, so the feed carries nothing a public read would not. The same pinned SEMIC shapes that check each record check the feed in the fast CI lane. The catalogue host serves the same records a second time, as CKAN holds them (EP-91): `https://data.{domain}/catalog.ttl` and `/dataset/{id}.ttl`, written by `ckanext-dcat`'s `euro_dcat_ap_3` profile with the catalogue theme's own profile on top, which turns CKAN's strings into the vocabulary IRIs the shapes ask for and adds the catalogue's publisher from `global.branding`. That is the address another CKAN's DCAT RDF harvester is given, because it harvests a catalogue host and its dataset pages, and it carries the DataStore download the gateway's record does not. A harvester takes one of the two, never both: the datasets of the two feeds have different URIs and the same `dct:identifier`, the Endpoint's slug. The deployment repository's DCAT-AP check, which the `ckan` component README names for an operator, validates the catalogue host's feed against the pinned 3.0.1 shapes.
 
+## 9. What every dataset lists
+
+The owner set one rule for every dataset of the catalogue on 2026-10-16 (EP-118). A dataset is NGSI-LD data the platform serves, so its page lists the platform's own doors to it, and a dataset that cannot list them is not in the catalogue.
+
+| Distribution | When | CKAN format label |
+|---|---|---|
+| NGSI-LD API | always | `NGSI-LD` |
+| Model Context Protocol | always | `MCP` |
+| WebSocket | always | `WebSocket` |
+| CSV, JSON | always; a whole-file download up to 50 MB, a paged API link (`limit` and `offset`) above it | `CSV`, `JSON` |
+| The data model: JSON Schema, JSON-LD `@context`, LinkML, Markdown, OWL, RDF, SHACL | always | `JSON Schema`, `JSON-LD`, `LinkML`, `Markdown`, `OWL`, `RDF`, `SHACL` |
+| GeoJSON, OGC API - Features | when the rows carry a location | `GeoJSON`, `OGCFEAT` |
+| XLSX, OData | optional | `XLSX`, `OData` |
+| ZIP, Esri REST | never | |
+
+The labels are the ones `jcctl`'s publisher writes for an Endpoint's own dataset (`crates/jcctl/src/publish/ckan.rs`, `distribution`), so the format facet counts a harvested dataset and a published one under the same name. Every listed link answers 200 to an anonymous GET, because the catalogue lists public data only.
+
+A harvested source dataset (`charts/ckan/files/harvest-hub.py`, `harvest-nkod.py`) lists none of its source's links: its rows reach the catalogue as an NGSI-LD Endpoint's distributions and the data model that Endpoint's `schema/index.json` names (`od-standards.py`, from `od-datasets.json`), or the dataset is withdrawn. A DataStore table of its rows, the dataset page's preview and SQL, stays when it holds 50 MB or less. A run in which no dataset is converted at all withdraws nothing, since that is a missing gateway or mapping rather than an empty catalogue. The harvest withdraws it with `package_delete` on the next run, and its row in the mapping (`scripts/open-data/bb-bbsk-ngsi-ld-mapping.yaml`) carries `status: removed` with the reason. The source stays public and is imported again by mapping it. Decided (worker-3, owner may override): withdraw rather than purge, because the harvest finds a withdrawn dataset by its fixed id and revives it the night its rows are mapped, and a purge would only lose that link.
+
 ## Related
 
 - [04-context-spaces-and-endpoints.md](04-context-spaces-and-endpoints.md#7-publication-to-an-open-data-portal) — the publication contract, the manifest fields and what one Endpoint becomes.
-- [../Requirements/endpoints.md](../Requirements/endpoints.md) — EP-62 to EP-69, the normative rules this chapter designs around.
+- [../Requirements/endpoints.md](../Requirements/endpoints.md) — EP-62 to EP-69 and EP-118, the normative rules this chapter designs around.
 - [../Deployment/04-components-and-addons.md](../Deployment/04-components-and-addons.md) — the `ckan` add-on, what it deploys and what it costs to run.
 - [../Deployment/12-branding-and-naming.md](../Deployment/12-branding-and-naming.md) — the branding block the catalogue mounts.
 - [09-portal.md](09-portal.md) — the Portal, which holds the reconciler the publication belongs to and the catalogue page of §6.

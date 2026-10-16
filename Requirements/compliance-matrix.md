@@ -27,7 +27,7 @@ Generated 2026-10-16 from: `docs` 5f28851, `conformance` e954341, `deployment` 3
 | **CC** — Configuration as code | 90 | 73 | 8 | 9 | 0 |
 | **DM** — Data models | 96 | 80 | 9 | 7 | 1 |
 | **DS** — Data space connector | 20 | 13 | 3 | 4 | 0 |
-| **EP** — Endpoints and parity | 116 | 102 | 7 | 7 | 4 |
+| **EP** — Endpoints and parity | 118 | 103 | 8 | 7 | 5 |
 | **GW** — Gateway firewall | 35 | 25 | 3 | 7 | 2 |
 | **I** — Identity and credentials | 4 | 2 | 2 | 0 | 0 |
 | **MF** — Manifests | 53 | 49 | 4 | 0 | 0 |
@@ -41,7 +41,7 @@ Generated 2026-10-16 from: `docs` 5f28851, `conformance` e954341, `deployment` 3
 | **SP** — Context-space surface | 22 | 19 | 1 | 2 | 0 |
 | **TS** — Testing and quality | 26 | 16 | 5 | 5 | 0 |
 | **UI** — Portal and user interface | 95 | 70 | 14 | 11 | 5 |
-| **Total** | 1269 | 951 | 109 | 209 | 37 |
+| **Total** | 1271 | 952 | 110 | 209 | 38 |
 
 ## 3. Requirement to test
 
@@ -682,6 +682,7 @@ Generated 2026-10-16 from: `docs` 5f28851, `conformance` e954341, `deployment` 3
 | **EP-113** | [H] [P] | tested | fast ci | deployment `tests/test_ckan_theme.py::test_the_mcp_panel_names_the_installation_s_hub_and_nothing_else`, portal `ui/tests/endpoint_page.test.tsx::offers the one connector for every endpoint, never this endpoint's own slug in it (T-4114, EP-113)` |
 | **EP-116** | [A] [S] | tested | ci-full, fast ci | platform `crates/context-gateway/src/mcp/tools.rs::the_reads_take_format_sys_attrs_and_order_by`, platform `crates/context-gateway/src/mcp/tools.rs::the_primer_teaches_ngsi_ld_and_names_no_slug_token_or_host`, platform `crates/context-gateway/tests/mcp_hub_anonymous_tests.rs::an_agent_with_only_the_address_reads_ngsi_ld_from_catalogue_to_history` |
 | **EP-117** | [S] | open |  |  |
+| **EP-118** | [P] [S] | tested | conformance, fast ci | conformance `tests/ckan/test_ep118.py::test_a_conforming_dataset_passes_and_every_link_is_read_small`, conformance `tests/ckan/test_ep118.py::test_a_missing_mandatory_distribution_fails_and_is_named`, conformance `tests/ckan/test_ep118.py::test_located_rows_need_geojson_and_ogc_features`, and 7 more |
 | **EP-114** | [A] [S] | tested | ci-full, fast ci | platform `crates/context-gateway/src/fanout/hub.rs::a_joined_connection_without_a_session_leaves_the_hub`, platform `crates/context-gateway/src/fanout/hub.rs::a_caller_never_receives_what_its_grant_does_not_read`, platform `crates/context-gateway/src/fanout/hub.rs::notification_attributes_cut_the_entity_further`, and 29 more |
 | **EP-115** | [S] | tested | ci-full | platform `crates/context-gateway/tests/ws_fanout_rig.rs::every_socket_receives_exactly_what_its_filter_admits` |
 
