@@ -356,7 +356,12 @@ DROP: list[tuple[str, list[str], str]] = [
 # Esri SQL can tell from a number, so those rows are kept only when the column matches IČO.
 ICO = r"^[0-9]{6,8}( ?[0-9]{4})?$"
 ICO_WHY = "a row without an IČO, or with a name where the IČO belongs, can name a natural person"
-ROWS: list[tuple[str, str, str, str | None, str]] = [
+# The city's contracts name each party, a social-service client by name too ("úhrada za SS"); a
+# contract stays only when every party line carries an IČO (T-4255).
+PARTIES = r"^IČO:[^\r]*(\rIČO:[^\r]*)*$"
+ROWS: list[tuple[str, str, str | None, str | None, str]] = [
+    (r"bb-zmluvy-bb", "Zmluvné_strany_s_údajom_IČO", None, PARTIES,
+     "a party without an IČO is a natural person, a social-service client among them"),
     (r"bbsk-(faktury|objednavky|dotacie)", "IČO", "IČO IS NOT NULL AND IČO <> ''", ICO, ICO_WHY),
     (r"bbsk-dodavatelia", "ICO", "ICO IS NOT NULL AND ICO <> ''", ICO, ICO_WHY),
     (r"bbsk-zmluvy", "IČO_dodávateľa", "IČO_dodávateľa IS NOT NULL AND IČO_dodávateľa <> ''", ICO,
@@ -474,8 +479,8 @@ def plan(d: dict, probe_: dict, fetched: str) -> dict:
         if re.search(pat, d["name"]):
             if column not in fields:
                 sys.exit(f"{d['name']}: ROWS filters on {column}, which the source does not have")
-            out["rowFilter"] = {"where": where, **({"keep": {"column": column, "pattern": keep}} if keep else {}),
-                                "why": why}
+            out["rowFilter"] = {**({"where": where} if where else {}),
+                                **({"keep": {"column": column, "pattern": keep}} if keep else {}), "why": why}
     for pat, seed, part in EXISTING:
         if re.search(pat, d["name"]):
             out["existing"] = {"seed": seed, "covers": part}
@@ -543,8 +548,9 @@ def sections(snap: dict, entries: list[dict]) -> dict[str, str]:
             personal.append(f"| `{e['name']}` | columns {', '.join(f'`{c}`' for c in e['dropped']['columns'])} | {cell(e['dropped']['why'])} |")
         if e.get("rowFilter"):
             f = e["rowFilter"]
-            kept = f", or whose `{f['keep']['column']}` does not match `{cell(f['keep']['pattern'])}`" if f.get("keep") else ""
-            personal.append(f"| `{e['name']}` | rows outside `{cell(f['where'])}`{kept} | {cell(f['why'])} |")
+            parts = ([f"rows outside `{cell(f['where'])}`"] if f.get("where") else []) + (
+                [f"rows whose `{f['keep']['column']}` does not match `{cell(f['keep']['pattern'])}`"] if f.get("keep") else [])
+            personal.append(f"| `{e['name']}` | {', or '.join(parts)} | {cell(f['why'])} |")
     existing = ["| dataset | seed that already reads it | covers |", "|---|---|---|"]
     existing += [f"| `{e['name']}` | `{e['existing']['seed']}` | {e['existing']['covers']} |" for e in mapped if e.get("existing")]
     keys = {"a key column": 0, "a key column and its year": 0, "a row hash": 0}

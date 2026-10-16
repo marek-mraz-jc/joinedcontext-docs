@@ -590,6 +590,11 @@ datasets:
     zmluvneStranySUdajomICO:
       column: Zmluvné_strany_s_údajom_IČO
       range: string
+  rowFilter:
+    keep:
+      column: Zmluvné_strany_s_údajom_IČO
+      pattern: ^IČO:[^\r]*(\rIČO:[^\r]*)*$
+    why: a party without an IČO is a natural person, a social-service client among them
 - id: c1880954-0bb6-470e-aa10-d12052c528be
   name: public-air
   org: banskabystrica
