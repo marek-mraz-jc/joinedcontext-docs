@@ -86,9 +86,9 @@ id stays readable as its four parts.
 
 | space | one literal id |
 |---|---|
-| `bbsk-kraj` | `urn:ngsi-ld:StatisticalObservation:hel.fi:bbsk-kraj:zp3803rs-SK032-2023-PROD_TONY-1` |
+| `bbsk-kraj` | `urn:ngsi-ld:KeyPerformanceIndicator:hel.fi:bbsk-kraj:zp3803rs-SK032-2023-PROD_TONY-1` |
 | `bbsk-kpi` | `urn:ngsi-ld:KeyPerformanceIndicator:hel.fi:bbsk-kpi:emisie-tuhe-okres-brezno` |
-| `banskabystrica-mesto` | `urn:ngsi-ld:StatisticalObservation:hel.fi:banskabystrica-mesto:vh5003rr-SK0321508438-2023-U03084` |
+| `banskabystrica-mesto` | `urn:ngsi-ld:KeyPerformanceIndicator:hel.fi:banskabystrica-mesto:vh5003rr-SK0321508438-2023-U03084` |
 | `banskabystrica-kpi` | `urn:ngsi-ld:KeyPerformanceIndicator:hel.fi:banskabystrica-kpi:spotreba-vody-mesto` |
 | `ovzdusie` | `urn:ngsi-ld:AirQualityObserved:hel.fi:ovzdusie:stanica-1` |
 
@@ -96,14 +96,19 @@ The `{localId}` of a raw observation is the publisher's own key, in the publishe
 the cube code, the territory code, the period and the indicator code, joined by hyphens. Nothing
 is renamed on the way in, so a row can always be traced back to the request that produced it.
 
-**`StatisticalObservation` is a new type and this page mints it.** The six feeds the survey found
-are statistical tables and none of them is a Smart Data Model: a territory code, a period, an
-indicator code and a number. The raw spaces hold them under a type of ours whose LinkML model
-each raw space declares, with the dimensions as slots and one `value` measure. It is deliberately
-**not** a Data Structure Definition in the sense of DM-60: a declared DSD puts its observations
-in the project's indicator space, and the raw space would then hold nothing. When a KPI needs
-slicing by a dimension rather than one number per territory, DM-60 is the upgrade, and the
-observations move to the indicator space at that moment.
+**A raw cell is a FIWARE Smart Data Model `KeyPerformanceIndicator`** (`dataModel.KeyPerformanceIndicator`,
+owner order 2026-10-16, T-4329; it was a type of ours, `StatisticalObservation`, until then). The six
+feeds the survey found are statistical tables: a territory code, a period, an indicator code and a
+number. The number is the model's `kpiValue`; the cube's dimensions stay slots of the raw space's
+LinkML model beside it (`dataSet`, `indicator`, `refArea`, `refPeriod`, `dimensionKey`), which the
+model's schema allows. Every raw cell validates against the model's `schema.json`, vendored at a
+pinned commit in joinedcontext-deployment `scripts/open-data/sdm/`. The raw space and the
+indicator space then hold the same type, told apart by their space: a raw cell has a `dataSet`, a
+computed indicator has `calculationPeriod` and `derivedFrom`. It is deliberately **not** a Data
+Structure Definition in the sense of DM-60: a declared DSD puts its observations in the project's
+indicator space, and the raw space would then hold nothing. When a KPI needs slicing by a
+dimension rather than one number per territory, DM-60 is the upgrade, and the observations move
+to the indicator space at that moment.
 
 ## 4. The KPI entity
 
@@ -165,7 +170,7 @@ is a different case and section 5 gives it a value of its own.
   },
   "calculationFormula": {
     "type": "Property",
-    "value": "sum(value) over StatisticalObservation where cube=zp3803rs, indicator=PROD_TONY, pollutant=1, refArea=SK032"
+    "value": "sum(kpiValue) over the raw KeyPerformanceIndicator where cube=zp3803rs, indicator=PROD_TONY, pollutant=1, refArea=SK032"
   },
   "derivedFrom": {
     "type": "Property",
@@ -205,7 +210,7 @@ zero. A zero is a measurement, and a dashboard cannot tell it apart from a real 
   },
   "calculationFormula": {
     "type": "Property",
-    "value": "sum(value) over StatisticalObservation where cube=zp3803rs, indicator=PROD_TONY, pollutant=1, refArea=SK0327"
+    "value": "sum(kpiValue) over the raw KeyPerformanceIndicator where cube=zp3803rs, indicator=PROD_TONY, pollutant=1, refArea=SK0327"
   },
   "derivedFrom": {
     "type": "Property",
