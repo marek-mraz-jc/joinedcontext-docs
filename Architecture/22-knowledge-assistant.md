@@ -58,7 +58,7 @@ spec:
   allowedOrigins: [https://www.banskabystrica.sk]
   rateLimit: { requestsPerMinute: 60, perClientPerMinute: 10 }
   budget: { tokensPerDay: 2000000, tokensPerConversation: 40000 }
-  theme: { primaryColor: "#0b5394", greeting: "Dobrý deň, s čím vám pomôžem?" }
+  theme: { title: Banská Bystrica, primaryColor: "#0b5394", greeting: "Dobrý deň, s čím vám pomôžem?" }
   languages: [sk, en]
   sandbox: false
 ```
@@ -94,6 +94,8 @@ Retrieval is one statement: the candidate set is filtered by the deployment's so
 | `platform` | the data platform's pages | the Portal session | as `internal` |
 
 The widget is a small script that opens an iframe at `https://assistant.{domain}/w/{deployment}`. Its `frame-ancestors` is the deployment's `allowedOrigins`.
+
+The chat's header shows `theme.title` (the body's name, at most 60 characters) beside a monogram of it in `theme.primaryColor`; the widget loads no image. On its first open in a browser the panel asks for the language among `languages` before anything else, and keeps the answer in that browser's storage; the full page with `?lang=` set does not ask. The framed page tells its parent how tall its content is, `postMessage({type: "jc-assistant-height", height})` with the height in CSS pixels, and the page that framed it sets the frame to that height, never taller than its window, so a short conversation leaves no empty panel (T-4283). The parent accepts the message only from the frame's own window and origin, and a height that is not a positive finite number is ignored.
 
 ## 5. An answer, end to end
 
