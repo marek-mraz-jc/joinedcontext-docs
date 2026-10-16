@@ -39,9 +39,9 @@ same rows.
 <!-- totals -->
 | organization | datasets | mapped | already NGSI-LD | not ingestible | source rows of the mapped |
 |---|---:|---:|---:|---:|---:|
-| banskabystrica | 34 | 10 | 2 | 22 | 75031 |
+| banskabystrica | 34 | 13 | 2 | 19 | 113672 |
 | bbsk | 90 | 88 | 2 | 0 | 252024 |
-| all | 124 | 98 | 4 | 22 | 327055 |
+| all | 124 | 101 | 4 | 19 | 365696 |
 <!-- /totals -->
 
 "Already NGSI-LD" are the four datasets the platform publishes from its own public Endpoints
@@ -72,7 +72,9 @@ probe read from each mapped source, before any row filter of section 5.
 | `RoadAccident` | `dataModel.Transportation/RoadAccident` | 2 | 3127 |
 | `WaterBodyStatus` | project type | 2 | 612 |
 | `Address` | project type | 1 | 16902 |
+| `AddressPoint` | project type | 1 | 15769 |
 | `Article` | project type | 1 | 1557 |
+| `Building` | project type | 1 | 16534 |
 | `CouncilVote` | project type | 1 | 89670 |
 | `EVChargingStation` | `dataModel.Transportation/EVChargingStation` | 1 | 606 |
 | `Event` | project type | 1 | 6164 |
@@ -80,6 +82,7 @@ probe read from each mapped source, before any row filter of section 5.
 | `Petition` | project type | 1 | 12 |
 | `Regulation` | project type | 1 | 34 |
 | `RiverBasin` | project type | 1 | 3 |
+| `RoadSegment` | project type | 1 | 6338 |
 | `SocialService` | project type | 1 | 740 |
 | `Supplier` | project type | 1 | 5066 |
 | `TrafficFlowObservedSite` | project type | 1 | 13 |
@@ -105,9 +108,9 @@ keeps its value as `source<Name>`. Esri bookkeeping columns (`OBJECTID`, `Global
 <!-- ids -->
 | entity id from | datasets |
 |---|---:|
-| a key column | 58 |
+| a key column | 60 |
 | a key column and its year | 7 |
-| a row hash | 33 |
+| a row hash | 34 |
 <!-- /ids -->
 
 A key column is one whose distinct count, asked of the source, equals the row count. The probe
@@ -130,6 +133,7 @@ the current rows are.
 <!-- personal -->
 | dataset | kept out | why |
 |---|---|---|
+| `bb-dtm-bb-register-adries` | columns `POINT_X`, `POINT_Y` | the point in S-JTSK; the location carries it in WGS 84 |
 | `bb-zmluvy-bb` | rows whose `Zmluvné_strany_s_údajom_IČO` does not match `^IČO:[^\r]*(\rIČO:[^\r]*)*$` | a party without an IČO is a natural person, a social-service client among them |
 | `bbsk-clenovia-samospravy-efc2f3` | columns `Telefonický_kontakt`, `Emailový_kontakt` | office holders' own phones and e-mails |
 | `bbsk-dodavatelia-825cd0` | rows outside `ICO IS NOT NULL AND ICO <> ''`, or rows whose `ICO` does not match `^[0-9]{6,8}( ?[0-9]{4})?$` | a row without an IČO, or with a name where the IČO belongs, can name a natural person |
@@ -158,28 +162,25 @@ source. The `Evidencia psov` and `Zoznam poskytovateľov pre APS` datasets never
 | dataset | organization | status | reason |
 |---|---|---|---|
 | Banská Bystrica — verejné údaje (`banskabystrica-verejne`) | banskabystrica | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
-| DTM_BB-funkcne-vyuzitie-uzemia (`bb-dtm-bb-funkcne-vyuzitie-uzemia`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (201 KiB): a PDF map sheet, no data |
-| DTM_BB-Polohopis_a_vyskopis_bodoveho_pola (`bb-dtm-bb-polohopis-a-vyskopis-bodoveho-pola`) | banskabystrica | not-ingestible | 240636 Point features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects; without the geometry the rows carry little (the city's address list without points is bb-adresy) |
-| DTM_BB-Register-adries (`bb-dtm-bb-register-adries`) | banskabystrica | not-ingestible | 15769 Point features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects; without the geometry the rows carry little (the city's address list without points is bb-adresy) |
-| DTM_BB-register-chodnikov-a-verejnych-priestranstiev (`bb-dtm-bb-register-chodnikov-a-verejnych-priestranstiev`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-register-miestnych-komunikacii-a-vyssich-tried (`bb-dtm-bb-register-miestnych-komunikacii-a-vyssich-tried`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-register-statickej-dopravy (`bb-dtm-bb-register-statickej-dopravy`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-register-stavby (`bb-dtm-bb-register-stavby`) | banskabystrica | not-ingestible | 16534 MultiPolygon features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects; without the geometry the rows carry little (the city's address list without points is bb-adresy) |
-| DTM_BB-register-stlpov-VO (`bb-dtm-bb-register-stlpov-vo`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (185 KiB): a PDF map sheet, no data |
-| DTM_BB-register-ulic (`bb-dtm-bb-register-ulic`) | banskabystrica | not-ingestible | 6338 MultiLineString features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects; without the geometry the rows carry little (the city's address list without points is bb-adresy) |
-| DTM_BB-register-verejnej-zelene-1 (`bb-dtm-bb-register-verejnej-zelene-1`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (43 KiB): a PDF map sheet, no data |
+| DTM_BB-funkcne-vyuzitie-uzemia (`bb-dtm-bb-funkcne-vyuzitie-uzemia`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (201 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/ answer its map app) and data.slovensko.sk lists only this ZIP |
+| DTM_BB-Polohopis_a_vyskopis_bodoveho_pola (`bb-dtm-bb-polohopis-a-vyskopis-bodoveho-pola`) | banskabystrica | not-ingestible | 240636 rows, more than the 100000 this round loads into the one broker |
+| DTM_BB-register-chodnikov-a-verejnych-priestranstiev (`bb-dtm-bb-register-chodnikov-a-verejnych-priestranstiev`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/ answer its map app) and data.slovensko.sk lists only this ZIP |
+| DTM_BB-register-miestnych-komunikacii-a-vyssich-tried (`bb-dtm-bb-register-miestnych-komunikacii-a-vyssich-tried`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/ answer its map app) and data.slovensko.sk lists only this ZIP |
+| DTM_BB-register-statickej-dopravy (`bb-dtm-bb-register-statickej-dopravy`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/ answer its map app) and data.slovensko.sk lists only this ZIP |
+| DTM_BB-register-stlpov-VO (`bb-dtm-bb-register-stlpov-vo`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (185 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/ answer its map app) and data.slovensko.sk lists only this ZIP |
+| DTM_BB-register-verejnej-zelene-1 (`bb-dtm-bb-register-verejnej-zelene-1`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (43 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/ answer its map app) and data.slovensko.sk lists only this ZIP |
 | DTM_BB-register-verejnej-zelene-2 (`bb-dtm-bb-register-verejnej-zelene-2`) | banskabystrica | not-ingestible | a ZIP of 3 .atr, 3 .cpg, 3 .dbf, 3 .shp, 3 .shx (732 KiB): Esri shapefiles; no ingestion path reads a shapefile today |
-| DTM_BB-register-verejnej-zelene-3 (`bb-dtm-bb-register-verejnej-zelene-3`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (194 KiB): a PDF map sheet, no data |
-| DTM_BB-register-vodorovneho-dopravneho-znacenia (`bb-dtm-bb-register-vodorovneho-dopravneho-znacenia`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-register-zvisleho-dopravneho-znacenia (`bb-dtm-bb-register-zvisleho-dopravneho-znacenia`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-regulativy-a-limity-funkcneho-vyuzitia-uzemia (`bb-dtm-bb-regulativy-a-limity-funkcneho-vyuzitia-uzemia`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (205 KiB): a PDF map sheet, no data |
-| DTM_BB-tvorba-krajiny-a-ochrana-prirody (`bb-dtm-bb-tvorba-krajiny-a-ochrana-prirody`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-verejne-dopravne-a-technicke-vybavenie (`bb-dtm-bb-verejne-dopravne-a-technicke-vybavenie`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (198 KiB): a PDF map sheet, no data |
-| DTM_BB-verejnoprospesne-stavby (`bb-dtm-bb-verejnoprospesne-stavby`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data |
-| DTM_BB-vodne-toky-a-plochy (`bb-dtm-bb-vodne-toky-a-plochy`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
+| DTM_BB-register-verejnej-zelene-3 (`bb-dtm-bb-register-verejnej-zelene-3`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (194 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/ answer its map app) and data.slovensko.sk lists only this ZIP |
+| DTM_BB-register-vodorovneho-dopravneho-znacenia (`bb-dtm-bb-register-vodorovneho-dopravneho-znacenia`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/ answer its map app) and data.slovensko.sk lists only this ZIP |
+| DTM_BB-register-zvisleho-dopravneho-znacenia (`bb-dtm-bb-register-zvisleho-dopravneho-znacenia`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/ answer its map app) and data.slovensko.sk lists only this ZIP |
+| DTM_BB-regulativy-a-limity-funkcneho-vyuzitia-uzemia (`bb-dtm-bb-regulativy-a-limity-funkcneho-vyuzitia-uzemia`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (205 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/ answer its map app) and data.slovensko.sk lists only this ZIP |
+| DTM_BB-tvorba-krajiny-a-ochrana-prirody (`bb-dtm-bb-tvorba-krajiny-a-ochrana-prirody`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/ answer its map app) and data.slovensko.sk lists only this ZIP |
+| DTM_BB-verejne-dopravne-a-technicke-vybavenie (`bb-dtm-bb-verejne-dopravne-a-technicke-vybavenie`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (198 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/ answer its map app) and data.slovensko.sk lists only this ZIP |
+| DTM_BB-verejnoprospesne-stavby (`bb-dtm-bb-verejnoprospesne-stavby`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/ answer its map app) and data.slovensko.sk lists only this ZIP |
+| DTM_BB-vodne-toky-a-plochy (`bb-dtm-bb-vodne-toky-a-plochy`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/ answer its map app) and data.slovensko.sk lists only this ZIP |
 | DTM_BB-vyskopis-teran (`bb-dtm-bb-vyskopis-teran`) | banskabystrica | not-ingestible | a ZIP of 1 .geojson (65889 KiB): larger than the 10 MiB this round loads into the one broker |
-| DTM_BB-vyuzitie-pody-na-nepolnohospodarske-ucely (`bb-dtm-bb-vyuzitie-pody-na-nepolnohospodarske-ucely`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data |
-| DTM_BB-zaujmove-uzemie-a-sirsie-vztahy (`bb-dtm-bb-zaujmove-uzemie-a-sirsie-vztahy`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (24 KiB): a PDF map sheet, no data |
+| DTM_BB-vyuzitie-pody-na-nepolnohospodarske-ucely (`bb-dtm-bb-vyuzitie-pody-na-nepolnohospodarske-ucely`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/ answer its map app) and data.slovensko.sk lists only this ZIP |
+| DTM_BB-zaujmove-uzemie-a-sirsie-vztahy (`bb-dtm-bb-zaujmove-uzemie-a-sirsie-vztahy`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (24 KiB): a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/ answer its map app) and data.slovensko.sk lists only this ZIP |
 | Kvalita ovzdušia v Banskej Bystrici (`public-air`) | banskabystrica | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
 | Ukazovatele kraja (`bbsk-kpi`) | bbsk | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
 | Registre kraja (`bbsk-registre`) | bbsk | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |

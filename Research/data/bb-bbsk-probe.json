@@ -139,46 +139,60 @@
    "features": 240636,
    "fields": [
     {
-     "name": "ID"
+     "name": "ID",
+     "range": "string"
     },
     {
-     "name": "IDZmeny"
+     "name": "IDZmeny",
+     "range": "string"
     },
     {
-     "name": "PopisObjek"
+     "name": "PopisObjek",
+     "range": "string"
     },
     {
-     "name": "IDEditora"
+     "name": "IDEditora",
+     "range": "string"
     },
     {
-     "name": "DatumVklad"
+     "name": "DatumVklad",
+     "range": "string"
     },
     {
-     "name": "VkladOsoba"
+     "name": "VkladOsoba",
+     "range": "string"
     },
     {
-     "name": "DatumZmeny"
+     "name": "DatumZmeny",
+     "range": "string"
     },
     {
-     "name": "ZmenaOsoba"
+     "name": "ZmenaOsoba",
+     "range": "string"
     },
     {
-     "name": "DatumPlatn"
+     "name": "DatumPlatn",
+     "range": "string"
     },
     {
-     "name": "UrovenUmis"
+     "name": "UrovenUmis",
+     "range": "integer"
     },
     {
-     "name": "TridaPresn"
+     "name": "TridaPresn",
+     "range": "integer"
     },
     {
-     "name": "TridaPre_1"
+     "name": "TridaPre_1",
+     "range": "integer"
     },
     {
-     "name": "ZpusobPori"
+     "name": "ZpusobPori",
+     "range": "integer"
     },
     {
-     "name": "CisloBodu"
+     "name": "CisloBodu",
+     "range": "string"
     }
    ],
    "distinct": {
@@ -190,7 +204,8 @@
    "geometry": [
     "Point"
    ],
-   "crs": "urn:ogc:def:crs:EPSG::5514"
+   "crs": "urn:ogc:def:crs:EPSG::5514",
+   "probed": "2026-10-16T10:14Z"
   },
   "b0d59939-e136-43a8-89a1-87bbe0f5db72": {
    "status": 200,
@@ -204,76 +219,100 @@
    "features": 15769,
    "fields": [
     {
-     "name": "ID"
+     "name": "ID",
+     "range": "float"
     },
     {
-     "name": "KRAJ"
+     "name": "KRAJ",
+     "range": "string"
     },
     {
-     "name": "KRAJ_ID"
+     "name": "KRAJ_ID",
+     "range": "integer"
     },
     {
-     "name": "OKRES"
+     "name": "OKRES",
+     "range": "string"
     },
     {
-     "name": "OKRES_ID"
+     "name": "OKRES_ID",
+     "range": "integer"
     },
     {
-     "name": "OBEC"
+     "name": "OBEC",
+     "range": "string"
     },
     {
-     "name": "OBEC_ID"
+     "name": "OBEC_ID",
+     "range": "integer"
     },
     {
-     "name": "CAST_OBCE"
+     "name": "CAST_OBCE",
+     "range": "string"
     },
     {
-     "name": "CO_ID"
+     "name": "CO_ID",
+     "range": "integer"
     },
     {
-     "name": "ULICA"
+     "name": "ULICA",
+     "range": "string"
     },
     {
-     "name": "ULICA_ID"
+     "name": "ULICA_ID",
+     "range": "integer"
     },
     {
-     "name": "ORIENT_C"
+     "name": "ORIENT_C",
+     "range": "string"
     },
     {
-     "name": "SUPISNE_C"
+     "name": "SUPISNE_C",
+     "range": "string"
     },
     {
-     "name": "ORIENT_C_C"
+     "name": "ORIENT_C_C",
+     "range": "string"
     },
     {
-     "name": "ORIENT_C_P"
+     "name": "ORIENT_C_P",
+     "range": "string"
     },
     {
-     "name": "PSC"
+     "name": "PSC",
+     "range": "string"
     },
     {
-     "name": "DPOSTA"
+     "name": "DPOSTA",
+     "range": "string"
     },
     {
-     "name": "TYP_BUDOVY"
+     "name": "TYP_BUDOVY",
+     "range": "integer"
     },
     {
-     "name": "SCHRANKY"
+     "name": "SCHRANKY",
+     "range": "integer"
     },
     {
-     "name": "POINT_X"
+     "name": "POINT_X",
+     "range": "float"
     },
     {
-     "name": "POINT_Y"
+     "name": "POINT_Y",
+     "range": "float"
     },
     {
-     "name": "ZSJ"
+     "name": "ZSJ",
+     "range": "string"
     },
     {
-     "name": "ZSJ_ID"
+     "name": "ZSJ_ID",
+     "range": "float"
     },
     {
-     "name": "id_regad"
+     "name": "id_regad",
+     "range": "string"
     }
    ],
    "distinct": {
@@ -283,7 +322,8 @@
    "geometry": [
     "Point"
    ],
-   "crs": "urn:ogc:def:crs:EPSG::5514"
+   "crs": "urn:ogc:def:crs:EPSG::5514",
+   "probed": "2026-10-16T10:14Z"
   },
   "07f9b80b-e981-4eae-ac01-17a7d11a8c6d": {
    "status": 200,
@@ -324,22 +364,28 @@
    "features": 16534,
    "fields": [
     {
-     "name": "Id"
+     "name": "Id",
+     "range": "integer"
     },
     {
-     "name": "municipal"
+     "name": "municipal",
+     "range": "string"
     },
     {
-     "name": "mun_num"
+     "name": "mun_num",
+     "range": "integer"
     },
     {
-     "name": "district"
+     "name": "district",
+     "range": "string"
     },
     {
-     "name": "distr_num"
+     "name": "distr_num",
+     "range": "integer"
     },
     {
-     "name": "area"
+     "name": "area",
+     "range": "float"
     }
    ],
    "distinct": {
@@ -348,7 +394,8 @@
    "geometry": [
     "MultiPolygon"
    ],
-   "crs": "urn:ogc:def:crs:EPSG::5514"
+   "crs": "urn:ogc:def:crs:EPSG::5514",
+   "probed": "2026-10-16T10:14Z"
   },
   "939dfb0a-7fef-4051-a686-6fd299f421df": {
    "status": 200,
@@ -371,68 +418,88 @@
    "features": 6338,
    "fields": [
     {
-     "name": "FCC"
+     "name": "FCC",
+     "range": "integer"
     },
     {
-     "name": "ROAD_ID"
+     "name": "ROAD_ID",
+     "range": "float"
     },
     {
-     "name": "DF"
+     "name": "DF",
+     "range": "integer"
     },
     {
-     "name": "FW"
+     "name": "FW",
+     "range": "integer"
     },
     {
-     "name": "FC"
+     "name": "FC",
+     "range": "integer"
     },
     {
-     "name": "RN"
+     "name": "RN",
+     "range": "string"
     },
     {
-     "name": "URBAN"
+     "name": "URBAN",
+     "range": "integer"
     },
     {
-     "name": "OC_ADMIN8"
+     "name": "OC_ADMIN8",
+     "range": "string"
     },
     {
-     "name": "OC_ADMIN9"
+     "name": "OC_ADMIN9",
+     "range": "string"
     },
     {
-     "name": "BT"
+     "name": "BT",
+     "range": "integer"
     },
     {
-     "name": "NC"
+     "name": "NC",
+     "range": "integer"
     },
     {
-     "name": "METERS"
+     "name": "METERS",
+     "range": "float"
     },
     {
-     "name": "ONEWAY"
+     "name": "ONEWAY",
+     "range": "string"
     },
     {
-     "name": "STREET"
+     "name": "STREET",
+     "range": "string"
     },
     {
-     "name": "SQUARE"
+     "name": "SQUARE",
+     "range": "integer"
     },
     {
-     "name": "STREET_ID"
+     "name": "STREET_ID",
+     "range": "float"
     },
     {
-     "name": "RNE"
+     "name": "RNE",
+     "range": "string"
     },
     {
-     "name": "STREET_ID2"
+     "name": "STREET_ID2",
+     "range": "float"
     },
     {
-     "name": "STREET2"
+     "name": "STREET2",
+     "range": "string"
     }
    ],
    "distinct": {},
    "geometry": [
     "MultiLineString"
    ],
-   "crs": "urn:ogc:def:crs:EPSG::5514"
+   "crs": "urn:ogc:def:crs:EPSG::5514",
+   "probed": "2026-10-16T10:14Z"
   },
   "3c1a4cd5-b421-4111-9c0c-566e2237aef7": {
    "status": 200,

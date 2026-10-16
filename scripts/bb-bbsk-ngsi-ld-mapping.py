@@ -49,6 +49,10 @@ ESRI_SKIP = re.compile(r"^(OBJECTID|FID|GlobalID|Shape__\w+|Shape_\w+|SHAPE_\w+|
 # First match wins. A Smart Data Model only where its attributes fit the columns; the rest
 # are project types named after what one row is.
 TYPES: list[tuple[str, str, str | None, str]] = [
+    (r"dtm-bb-register-adries", "AddressPoint", None, "the city's address points (DTM_BB), reprojected from S-JTSK"),
+    (r"dtm-bb-register-stavby", "Building", None, "the city's building footprints (DTM_BB), reprojected from S-JTSK"),
+    (r"dtm-bb-register-ulic", "RoadSegment", None, "the city's street segments (DTM_BB), reprojected from S-JTSK"),
+    (r"dtm-bb-polohopis", "SurveyPoint", None, "the city's survey points (DTM_BB), reprojected from S-JTSK"),
     (r"nabijacky", "EVChargingStation", "dataModel.Transportation/EVChargingStation", ""),
     (r"nehodovost", "RoadAccident", "dataModel.Transportation/RoadAccident", ""),
     (r"cykloscitace", "TrafficFlowObservedSite", None, "the counting sites; no counts in the layer"),
@@ -178,7 +182,12 @@ def zip_geojson(url: str) -> dict:
         keys += [k for k in (f.get("properties") or {}) if k not in keys]
     distinct = {"+".join(c): len({tuple((f.get("properties") or {}).get(k) for k in c) for f in feats})
                 for c in key_candidates(keys)}
-    return {"file": name, "features": len(feats), "fields": [{"name": k} for k in keys], "distinct": distinct,
+
+    def range_of(k: str) -> str:
+        seen = {type(v) for f in feats[:2000] if (v := (f.get("properties") or {}).get(k)) is not None}
+        return "integer" if seen == {int} else "float" if seen and seen <= {int, float} else "string"
+    return {"file": name, "features": len(feats), "fields": [{"name": k, "range": range_of(k)} for k in keys],
+            "distinct": distinct,
             "geometry": sorted({(f.get("geometry") or {}).get("type") for f in feats} - {None}),
             "crs": ((doc.get("crs") or {}).get("properties") or {}).get("name", "EPSG:4326 (no crs member)")}
 
@@ -349,6 +358,8 @@ DROP: list[tuple[str, list[str], str]] = [
     (r"kontakty-na-miestne", ["Starosta", "Telefónne_číslo___starosta", "E_mail___starosta", "Zástupca_primátora",
                                "E_mail___zástupca_primátora"], "mayors' own contacts; the offices' general ones stay"),
     (r"zdravotnickych", ["Odborný_zástupca"], "the named physician of each facility"),
+    (r"dtm-bb-register-adries", ["POINT_X", "POINT_Y"], "the point in S-JTSK; the location carries it in WGS 84"),
+    (r"dtm-bb-polohopis", ["VkladOsoba", "ZmenaOsoba", "IDEditora"], "who entered or changed a survey point"),
 ]
 # Rows that can name a natural person, kept out by a filter on a column (§8 of the sources page).
 # The city's three finance tables were filtered by the harvest itself (T-4151). An IČO column also
@@ -412,11 +423,12 @@ def plan(d: dict, probe_: dict, fetched: str) -> dict:
         ranges = {f["name"]: RANGES.get(f["type"], "string") for f in p["fields"]}
         source = {"kind": "ckan-datastore", "url": r["url"], "resource": r["id"], "rows": p["count"]}
     elif "ZIP" in by_fmt and by_fmt["ZIP"][1].get("features") and "5514" in by_fmt["ZIP"][1].get("crs", ""):
+        # The pipeline unpacks the ZIP and reprojects S-JTSK to WGS 84 itself (T-4317).
         r, p = by_fmt["ZIP"]
-        return {**entry, "status": "not-ingestible",
-                "reason": f"{p['features']} {', '.join(p['geometry'])} features in S-JTSK (EPSG:5514): NGSI-LD "
-                          "locations are WGS 84 and no pipeline step reprojects; without the geometry the rows "
-                          "carry little (the city's address list without points is bb-adresy)"}
+        fields = [f["name"] for f in p["fields"]]
+        ranges = {f["name"]: f.get("range", "string") for f in p["fields"]}
+        source = {"kind": "zip-geojson", "url": r["url"], "member": p["file"], "crs": "EPSG:5514",
+                  "geometry": True, "rows": p["features"]}
     elif "ZIP" in by_fmt:
         r, p = by_fmt["ZIP"]
         exts = p.get("extensions", {})
@@ -428,7 +440,11 @@ def plan(d: dict, probe_: dict, fetched: str) -> dict:
         elif shp:
             why += ": Esri shapefiles; no ingestion path reads a shapefile today"
         elif set(exts) == {"pdf"}:
-            why += ": a PDF map sheet, no data"
+            # Looked for as data on 2026-10-16 (T-4317): the T-MAPY host serves no OGC service
+            # (/-/wfs/ and /-/wms/ answer its map application, whose GraphQL sits behind its own
+            # sign-in), and the national catalogue lists this ZIP as the only distribution.
+            why += (": a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/ answer "
+                    "its map app) and data.slovensko.sk lists only this ZIP")
         else:
             why += ": no table or feature file inside"
         return {**entry, "status": "not-ingestible", "reason": why}
