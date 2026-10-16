@@ -8,6 +8,7 @@ from TYPES below, the only judgement in this script; everything else is read.
 
     bb-bbsk-ngsi-ld-mapping.py snapshot   # CKAN package_search -> Research/data/bb-bbsk-ckan.json
     bb-bbsk-ngsi-ld-mapping.py probe      # one request per resource -> Research/data/bb-bbsk-probe.json
+    bb-bbsk-ngsi-ld-mapping.py layers     # the city GIS layers LAYERS names -> Research/data/bb-dtm-layers.json
     bb-bbsk-ngsi-ld-mapping.py draft      # both snapshots -> Research/bb-bbsk-ngsi-ld-mapping.yaml
     bb-bbsk-ngsi-ld-mapping.py check      # CI: every dataset mapped or refused, page totals equal
     bb-bbsk-ngsi-ld-mapping.py --selftest
@@ -34,6 +35,7 @@ CKAN = "https://data.dev.joinedcontext.com"
 ORGS = ("banskabystrica", "bbsk")
 SNAPSHOT = ROOT / "Research/data/bb-bbsk-ckan.json"
 PROBE = ROOT / "Research/data/bb-bbsk-probe.json"
+GIS_PROBE = ROOT / "Research/data/bb-dtm-layers.json"
 MAPPING = ROOT / "Research/bb-bbsk-ngsi-ld-mapping.yaml"
 PAGE = ROOT / "Research/bb-bbsk-ngsi-ld-mapping.md"
 # The public space of each project that holds what this mapping loads, beside the curated spaces:
@@ -52,7 +54,19 @@ TYPES: list[tuple[str, str, str | None, str]] = [
     (r"dtm-bb-register-adries", "AddressPoint", None, "the city's address points (DTM_BB), reprojected from S-JTSK"),
     (r"dtm-bb-register-stavby", "Building", None, "the city's building footprints (DTM_BB), reprojected from S-JTSK"),
     (r"dtm-bb-register-ulic", "RoadSegment", None, "the city's street segments (DTM_BB), reprojected from S-JTSK"),
-    (r"dtm-bb-polohopis", "SurveyPoint", None, "the city's survey points (DTM_BB), reprojected from S-JTSK"),
+    (r"dtm-bb-polohopis", "SurveyPoint", None, "the city's survey points (DTM_BB)"),
+    (r"dtm-bb-vyskopis-teran", "TerrainFeature", None, "contour lines, their height labels and terrain edges (DTM_BB)"),
+    (r"dtm-bb-register-chodnikov", "Footway", None, "the definition point of each footway and cycle path (DTM_BB)"),
+    (r"dtm-bb-register-miestnych-komunikacii", "Road", None, "the definition point of each road (DTM_BB)"),
+    (r"dtm-bb-register-statickej-dopravy", "ParkingArea", None, "the definition point of each car park (DTM_BB)"),
+    (r"dtm-bb-register-stlpov-vo", "StreetlightPole", None, "the supports the DTM codes as street-light poles (DTM_BB)"),
+    (r"dtm-bb-register-verejnej-zelene-1", "GreenArea", None, "the definition point of each kept green area (DTM_BB)"),
+    (r"dtm-bb-register-verejnej-zelene-2", "Tree", None, "single trees (DTM_BB)"),
+    (r"dtm-bb-register-verejnej-zelene-3", "GreenAreaBoundary", None, "the edges of the kept green areas (DTM_BB)"),
+    (r"dtm-bb-register-zvisleho-dopravneho", "TrafficSign", None, "traffic signs (DTM_BB)"),
+    (r"dtm-bb-vodne-toky", "WaterBody", None, "the definition point of each stream, reservoir and channel (DTM_BB)"),
+    (r"dtm-bb-(funkcne-vyuzitie|verejne-dopravne|tvorba-krajiny|regulativy|vyuzitie-pody|verejnoprospesne|zaujmove-uzemie)",
+     "LandUsePlanFeature", None, "the land-use plan's drawing, one entity per feature of its layers (ÚPN)"),
     (r"nabijacky", "EVChargingStation", "dataModel.Transportation/EVChargingStation", ""),
     (r"nehodovost", "RoadAccident", "dataModel.Transportation/RoadAccident", ""),
     (r"cykloscitace", "TrafficFlowObservedSite", None, "the counting sites; no counts in the layer"),
@@ -361,7 +375,6 @@ DROP: list[tuple[str, list[str], str]] = [
                                "E_mail___zástupca_primátora"], "mayors' own contacts; the offices' general ones stay"),
     (r"zdravotnickych", ["Odborný_zástupca"], "the named physician of each facility"),
     (r"dtm-bb-register-adries", ["POINT_X", "POINT_Y"], "the point in S-JTSK; the location carries it in WGS 84"),
-    (r"dtm-bb-polohopis", ["VkladOsoba", "ZmenaOsoba", "IDEditora"], "who entered or changed a survey point"),
 ]
 # Rows that can name a natural person, kept out by a filter on a column (§8 of the sources page).
 # The city's three finance tables were filtered by the harvest itself (T-4151). An IČO column also
@@ -401,17 +414,117 @@ ZIP_LIMIT = 10 << 20
 # the broker's entities for the least-asked question.
 ROW_LIMIT = 100_000
 
+# The city's public ArcGIS Server 11.1 (found 2026-10-16, T-4317): its DTM and its land-use plan
+# (ÚPN) as query layers that answer GeoJSON in WGS 84 themselves (outSR=4326), so no step reprojects.
+# A DTM_BB dataset whose ZIP holds a map sheet, a locked shapefile or a file too big to load reads
+# the layers its sheet draws: (name pattern, [(service or service prefix, layer or None for every
+# thematic layer of it, where)]). Decided (worker-2, owner may override): the three archives with
+# their own GeoJSON (addresses, streets, buildings) stay on the archive, whose register columns
+# the layers lack; the three greenery sheets are the green areas (OE_19), the trees (the locked
+# shapefile's point layer) and the edges of the green areas.
+GIS = "https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services"
+DTM = "dtm/DTM_v_1_4_2_3_verejny"
+LAYERS: list[tuple[str, list[tuple[str, int | None, str | None]]]] = [
+    (r"dtm-bb-polohopis", [(DTM, 1, None)]),
+    (r"dtm-bb-vyskopis-teran", [(DTM, 136, None), (DTM, 135, None), (DTM, 79, None)]),
+    (r"dtm-bb-register-chodnikov", [(DTM, 4, None), (DTM, 5, None)]),
+    (r"dtm-bb-register-miestnych-komunikacii", [(DTM, 3, None)]),
+    (r"dtm-bb-register-statickej-dopravy", [(DTM, 6, None)]),
+    (r"dtm-bb-register-stlpov-vo", [(DTM, 226, "typpodpernehozarizeni=3")]),
+    (r"dtm-bb-register-verejnej-zelene-1", [(DTM, 57, None)]),
+    (r"dtm-bb-register-verejnej-zelene-2", [(DTM, 128, None)]),
+    (r"dtm-bb-register-verejnej-zelene-3", [(DTM, 88, None)]),
+    (r"dtm-bb-register-zvisleho-dopravneho", [(DTM, 175, None)]),
+    (r"dtm-bb-vodne-toky", [(DTM, 51, None), (DTM, 23, None), (DTM, 26, None)]),
+    (r"dtm-bb-zaujmove-uzemie", [("up/02___", None, None)]),
+    (r"dtm-bb-funkcne-vyuzitie", [("up/3a___", None, None)]),
+    (r"dtm-bb-verejne-dopravne", [("up/04___", None, None), ("up/5a_", None, None), ("up/5b___", None, None), ("up/5c___", None, None)]),
+    (r"dtm-bb-tvorba-krajiny", [("up/06___", None, None)]),
+    (r"dtm-bb-regulativy", [("up/7a___", None, None), ("up/7b___", None, None), ("up/7c___", None, None)]),
+    (r"dtm-bb-vyuzitie-pody", [("up/8___", None, None)]),
+    (r"dtm-bb-verejnoprospesne", [("up/10___", None, None)]),
+]
+# What a land-use plan service draws under its own layers: the cadastral map (the ÚGKK's, not the
+# city's, 295 000 lines in every service) and the masks; never an entity.
+GIS_BASEMAP = re.compile(r"^(vnutorn[aá] kresba|hranice parcel|maska( zu)?)$", re.I)
+# Geodatabase bookkeeping, and who entered or edited a feature (an editor's name or account).
+GIS_SKIP = re.compile(r"^(objectid|globalid|fid|shape|shape_length|shape_area|shape_leng|st_length\(shape\)|"
+                      r"created_date|last_edited_date)$", re.I)
+GIS_PERSON = re.compile(r"^(vkladosoba|zmenaosoba|ideditora|created_user|last_edited_user)$", re.I)
+
+
+def gis_layers() -> None:
+    """Name, geometry, row count and fields of every layer LAYERS names, one service at a time."""
+    status, _, body = get(f"{GIS}/up?f=json")
+    services = [s["name"] for s in json.loads(body)["services"]] if status == 200 else []
+    out = {"fetched": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%MZ"), "source": GIS, "layers": {}}
+    for _, parts in LAYERS:
+        for svc, layer, where in parts:
+            name = svc if layer is not None else next(s for s in services if s.startswith(svc))
+            base = f"{GIS}/{urllib.parse.quote(name)}/MapServer"
+            _, _, body = get(f"{base}/layers?f=json", limit=1 << 24)
+            for m in json.loads(body)["layers"]:
+                if (layer is not None and m["id"] != layer) or m["type"] != "Feature Layer" or GIS_BASEMAP.match(m["name"].strip()):
+                    continue
+                q = urllib.parse.urlencode({"where": where or "1=1", "returnCountOnly": "true", "f": "json"})
+                _, _, cnt = get(f"{base}/{m['id']}/query?{q}")
+                out["layers"][f"{name}/{m['id']}"] = {
+                    "url": f"{base}/{m['id']}", "name": m["name"].strip(), "geometry": m.get("geometryType"),
+                    "count": json.loads(cnt or b"{}").get("count"), **({"where": where} if where else {}),
+                    "fields": [{"name": f["name"], "type": f["type"].removeprefix("esriFieldType")} for f in m.get("fields") or []]}
+                print(name[:40].ljust(40), m["id"], out["layers"][f"{name}/{m['id']}"]["count"], m["name"].strip(), flush=True)
+    GIS_PROBE.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+
+
+def gis_source(d: dict, gis: dict) -> tuple[dict, list[str], dict[str, str], list[str]] | None:
+    """The `esri-layers` source of a dataset LAYERS names: its layers that hold rows, the union of
+    their columns with the range each takes, and the person columns kept out. None: no rule."""
+    parts = next((p for pat, p in LAYERS if re.search(pat, d["name"])), None)
+    if parts is None:
+        return None
+    layers, fields, ranges, dropped = [], [], {}, []
+    for svc, layer, _ in parts:
+        for key, m in gis.items():
+            name, lid = key.rsplit("/", 1)
+            if not name.startswith(svc) or (layer is not None and int(lid) != layer) or not m["count"] or not m["geometry"]:
+                continue
+            if any((x["name"], x["rows"]) == (m["name"], m["count"]) for x in layers):
+                continue  # one layer the plan draws in two sheets (Telekomunikačné vedenie in 5b and 5c)
+            kept = [f for f in m["fields"] if not GIS_SKIP.match(f["name"]) and not GIS_PERSON.match(f["name"])]
+            dropped += [f["name"] for f in m["fields"] if GIS_PERSON.match(f["name"]) and f["name"] not in dropped]
+            for f in kept:
+                r = RANGES.get(f["type"], "string")
+                seen = ranges.setdefault(f["name"], r)
+                ranges[f["name"]] = r if seen == r else "float" if {seen, r} <= {"integer", "float"} else "string"
+                if f["name"] not in fields:
+                    fields.append(f["name"])
+            short = "dtm" if name == DTM else name.removeprefix("up/").split("_")[0]
+            layers.append({"url": m["url"], "key": f"{short}-{lid}", "name": m["name"], "rows": m["count"],
+                           **({"where": m["where"]} if m.get("where") else {}), "fields": [f["name"] for f in kept]})
+    source = {"kind": "esri-layers", "geometry": True, "rows": sum(x["rows"] for x in layers), "layers": layers}
+    return source, fields, ranges, dropped
+
+
 KEY_HINT = re.compile(r"^(id\w*|\w*_id|kod\w*|\w*_kod|ico|idn\d|lau\d?_code|\w*cislo\w*|nuts\w*|identifik\w*)$", re.I)
 
 
-def plan(d: dict, probe_: dict, fetched: str) -> dict:
+def plan(d: dict, probe_: dict, fetched: str, gis: dict | None = None) -> dict:
     """One mapping entry: mapped (with its source resource), already NGSI-LD, or not ingestible."""
     entry = {"id": d["id"], "name": d["name"], "org": d["org"], "title": d["title"]}
     if d["extras"].get("generated_by"):
         return {**entry, "status": "already-ngsi-ld",
                 "reason": "published by the platform from its own public Endpoint (jcctl ckan-publisher)"}
     by_fmt = {r["format"].upper(): (r, probe_.get(r["id"], {})) for r in d["resources"]}
-    if "ESRI REST" in by_fmt:
+    layered = gis_source(d, gis or {})
+    if layered:
+        source, fields, ranges, gis_dropped = layered
+        p = {}
+        if not source["layers"]:
+            return {**entry, "status": "no-data-source", "reason": "no layer LAYERS names holds a feature",
+                    "tried": [f"{GIS}/{svc}" for svc, _, _ in next(p for pat, p in LAYERS if re.search(pat, d["name"]))]}
+        # The layer and the feature's own id, which the pipeline writes into each row (T-4317).
+        fields, ranges = [*fields, "vrstva"], {**ranges, "vrstva": "string"}
+    elif "ESRI REST" in by_fmt:
         r, p = by_fmt["ESRI REST"]
         if p.get("status") != 200:
             return {**entry, "status": "not-ingestible", "reason": f"Esri layer answered {p.get('status')}"}
@@ -451,12 +564,15 @@ def plan(d: dict, probe_: dict, fetched: str) -> dict:
             # (/-/wfs/ and /-/wms/ answer its map application, whose GraphQL sits behind its own
             # sign-in), and the national catalogue lists this ZIP as the only distribution. With
             # no data found, data.dev hides the dataset (owner 2026-10-16: no ZIP-only dataset).
+            # The city's ArcGIS services came after (LAYERS): a sheet still here has no layer there.
             host = urllib.parse.urlsplit(r["url"])
-            return {**entry, "status": "no-data-source", "reason": why + ": a PDF map sheet, no data",
+            return {**entry, "status": "no-data-source",
+                    "reason": why + ": a PDF map sheet, and no layer of the city's ArcGIS services holds its data",
                     "tried": [r["url"], f"{host.scheme}://{host.netloc}/-/wfs/?service=WFS&request=GetCapabilities",
                               f"{host.scheme}://{host.netloc}/-/wms/?service=WMS&request=GetCapabilities",
                               "https://data.slovensko.sk/api/sparql (dcat:distribution of "
-                              f"{d['extras'].get('source_uri') or d['name']})"]}
+                              f"{d['extras'].get('source_uri') or d['name']})",
+                              f"{GIS}/{DTM}/MapServer/layers?f=json (247 layers)", f"{GIS}/up?f=json (14 land-use plan services)"]}
         else:
             why += ": no table or feature file inside"
         return {**entry, "status": "not-ingestible", "reason": why}
@@ -488,16 +604,20 @@ def plan(d: dict, probe_: dict, fetched: str) -> dict:
     unique = [k.split("+") for k, n in (p.get("distinct") or {}).items() if n == rows and all(c in fields for c in k.split("+"))]
     if source["kind"] == "json-feed" and "id" in fields:
         unique = [["id"]]
+    if source["kind"] == "esri-layers":
+        unique = [["vrstva_id"]]
     observed = next((f for f in fields if re.search(r"d[aá]tum|date|rok$|^rok|year|obdobie", f, re.I)), None) if typ in OBSERVED else None
     dropped = next(((cols, why) for pat, cols, why in DROP if re.search(pat, d["name"])), ([], ""))
-    absent = [c for c in dropped[0] if c not in fields]
+    if layered and gis_dropped:
+        dropped = (gis_dropped, "who entered or edited a feature: an editor's name or account")
+    absent = [] if layered else [c for c in dropped[0] if c not in fields]  # a layer leaves them out itself
     if absent:
         sys.exit(f"{d['name']}: DROP names {absent}, which the source does not have")
     fields = [f for f in fields if f not in dropped[0]]
     out = {**entry, "status": "mapped", "type": typ, "smartDataModel": sdm, "source": source,
            "entityId": {"keys": unique[0]} if unique else {"rowHash": True},
            "observedAt": observed, "space": SPACE[d["org"]],
-           "refresh": "P1D" if source["kind"] == "json-feed" else refresh(d["extras"].get("modified"), fetched, typ),
+           "refresh": "P1D" if source["kind"] == "json-feed" else "P1W" if layered else refresh(d["extras"].get("modified"), fetched, typ),
            "dataProvider": d["extras"].get("publisher_name"), "license": d["license"],
            "dataset": f"{CKAN}/dataset/{d['name']}",
            "properties": properties(fields, ranges)}
@@ -520,7 +640,8 @@ def plan(d: dict, probe_: dict, fetched: str) -> dict:
 def draft() -> None:
     snap = json.loads(SNAPSHOT.read_text(encoding="utf-8"))
     probe_ = json.loads(PROBE.read_text(encoding="utf-8"))["resources"]
-    entries = [plan(d, probe_, snap["fetched"]) for d in snap["datasets"]]
+    gis = json.loads(GIS_PROBE.read_text(encoding="utf-8"))["layers"] if GIS_PROBE.exists() else {}
+    entries = [plan(d, probe_, snap["fetched"], gis) for d in snap["datasets"]]
     import yaml  # draft only: the CI check reads the file with the same library
     head = (f"# Generated by scripts/bb-bbsk-ngsi-ld-mapping.py draft from Research/data/ (CKAN snapshot "
             f"{snap['fetched']}). T-4255's seed generator reads this file. Do not edit by hand:\n"
@@ -652,6 +773,17 @@ def selftest() -> None:
     assert prop("id") == "sourceId" and prop("Typ") == "typ" and prop("type") == "sourceType"
     assert refresh("2026-10-15T09:00Z", "2026-10-16T04:00Z") == "P1D" and refresh("2024-01-01", "2026-10-16") == "P1W"
     assert refresh(None, "2026-10-16", "StatisticalObservation") == "P1M"
+    up = f"{GIS}/up/5b___x/MapServer"
+    layer = lambda n, c, f: {"url": f"{up}/{n}", "name": "Telekomunikačné vedenie", "geometry": "esriGeometryPolyline",  # noqa: E731
+                             "count": c, "fields": [{"name": x, "type": t} for x, t in f]}
+    gis = {"up/5b___x/11": layer(11, 3, [("OBJECTID", "OID"), ("Typ", "String"), ("vkladosoba", "String")]),
+           "up/5c___y/12": layer(12, 3, [("OBJECTID", "OID"), ("Typ", "String")]),
+           "up/5c___y/13": {**layer(13, 0, []), "name": "Empty"}}
+    src, fields, ranges, dropped = gis_source({"name": "bb-dtm-bb-verejne-dopravne-a"}, gis)
+    assert [x["key"] for x in src["layers"]] == ["5b-11"] and src["rows"] == 3, src  # read once, the empty one skipped
+    assert fields == ["Typ"] and ranges == {"Typ": "string"} and dropped == ["vkladosoba"]
+    assert gis_source({"name": "bb-adresy"}, gis) is None
+    assert GIS_BASEMAP.match("vnutorná kresba") and GIS_BASEMAP.match("Hranice parcel") and not GIS_BASEMAP.match("Funkčné plochy")
     print("selftest ok")
 
 
@@ -659,8 +791,8 @@ def main() -> None:
     cmd = sys.argv[1] if len(sys.argv) > 1 else "check"
     if cmd == "--selftest":
         return selftest()
-    if cmd in ("snapshot", "probe", "draft"):
-        return {"snapshot": snapshot, "probe": probe, "draft": draft}[cmd]()
+    if cmd in ("snapshot", "probe", "layers", "draft"):
+        return {"snapshot": snapshot, "probe": probe, "layers": gis_layers, "draft": draft}[cmd]()
     import yaml
     errors = check(json.loads(SNAPSHOT.read_text(encoding="utf-8")),
                    yaml.safe_load(MAPPING.read_text(encoding="utf-8")), PAGE.read_text(encoding="utf-8"))

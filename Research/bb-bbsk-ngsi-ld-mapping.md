@@ -39,9 +39,9 @@ same rows.
 <!-- totals -->
 | organization | datasets | mapped | already NGSI-LD | not ingestible | no data source | source rows of the mapped |
 |---|---:|---:|---:|---:|---:|---:|
-| banskabystrica | 34 | 13 | 2 | 2 | 17 | 113672 |
+| banskabystrica | 34 | 30 | 2 | 1 | 1 | 302649 |
 | bbsk | 90 | 88 | 2 | 0 | 0 | 252024 |
-| all | 124 | 101 | 4 | 2 | 17 | 365696 |
+| all | 124 | 118 | 4 | 1 | 1 | 554673 |
 <!-- /totals -->
 
 "Already NGSI-LD" are the four datasets the platform publishes from its own public Endpoints
@@ -54,6 +54,7 @@ probe read from each mapped source, before any row filter of section 5.
 | NGSI-LD type | Smart Data Model | datasets | source rows |
 |---|---|---:|---:|
 | `StatisticalObservation` | project type | 37 | 43640 |
+| `LandUsePlanFeature` | project type | 7 | 118714 |
 | `PointOfInterest` | `dataModel.PointOfInterest/PointOfInterest` | 6 | 4468 |
 | `School` | project type | 6 | 1480 |
 | `AdministrativeArea` | project type | 4 | 1053 |
@@ -78,14 +79,24 @@ probe read from each mapped source, before any row filter of section 5.
 | `CouncilVote` | project type | 1 | 89670 |
 | `EVChargingStation` | `dataModel.Transportation/EVChargingStation` | 1 | 606 |
 | `Event` | project type | 1 | 6164 |
+| `Footway` | project type | 1 | 2615 |
+| `GreenArea` | project type | 1 | 8546 |
+| `GreenAreaBoundary` | project type | 1 | 9740 |
 | `Invoice` | project type | 1 | 28844 |
+| `ParkingArea` | project type | 1 | 535 |
 | `Petition` | project type | 1 | 12 |
 | `Regulation` | project type | 1 | 34 |
 | `RiverBasin` | project type | 1 | 3 |
+| `Road` | project type | 1 | 1050 |
 | `RoadSegment` | project type | 1 | 6338 |
 | `SocialService` | project type | 1 | 740 |
+| `StreetlightPole` | project type | 1 | 1522 |
 | `Supplier` | project type | 1 | 5066 |
+| `TerrainFeature` | project type | 1 | 36062 |
 | `TrafficFlowObservedSite` | project type | 1 | 13 |
+| `TrafficSign` | project type | 1 | 1700 |
+| `Tree` | project type | 1 | 8366 |
+| `WaterBody` | project type | 1 | 127 |
 <!-- /types -->
 
 A Smart Data Model is named only where its attributes match the columns: `EVChargingStation`,
@@ -108,7 +119,7 @@ keeps its value as `source<Name>`. Esri bookkeeping columns (`OBJECTID`, `Global
 <!-- ids -->
 | entity id from | datasets |
 |---|---:|
-| a key column | 60 |
+| a key column | 77 |
 | a key column and its year | 7 |
 | a row hash | 34 |
 <!-- /ids -->
@@ -134,6 +145,16 @@ the current rows are.
 | dataset | kept out | why |
 |---|---|---|
 | `bb-dtm-bb-register-adries` | columns `POINT_X`, `POINT_Y` | the point in S-JTSK; the location carries it in WGS 84 |
+| `bb-dtm-bb-register-chodnikov-a-verejnych-priestranstiev` | columns `ideditora`, `vkladosoba`, `zmenaosoba`, `created_user`, `last_edited_user` | who entered or edited a feature: an editor's name or account |
+| `bb-dtm-bb-register-miestnych-komunikacii-a-vyssich-tried` | columns `ideditora`, `vkladosoba`, `zmenaosoba`, `created_user`, `last_edited_user` | who entered or edited a feature: an editor's name or account |
+| `bb-dtm-bb-register-statickej-dopravy` | columns `ideditora`, `vkladosoba`, `zmenaosoba`, `created_user`, `last_edited_user` | who entered or edited a feature: an editor's name or account |
+| `bb-dtm-bb-register-stlpov-vo` | columns `ideditora`, `vkladosoba`, `zmenaosoba`, `created_user`, `last_edited_user` | who entered or edited a feature: an editor's name or account |
+| `bb-dtm-bb-register-verejnej-zelene-1` | columns `ideditora`, `vkladosoba`, `zmenaosoba`, `created_user`, `last_edited_user` | who entered or edited a feature: an editor's name or account |
+| `bb-dtm-bb-register-verejnej-zelene-2` | columns `ideditora`, `vkladosoba`, `zmenaosoba`, `created_user`, `last_edited_user` | who entered or edited a feature: an editor's name or account |
+| `bb-dtm-bb-register-verejnej-zelene-3` | columns `ideditora`, `vkladosoba`, `zmenaosoba`, `created_user`, `last_edited_user` | who entered or edited a feature: an editor's name or account |
+| `bb-dtm-bb-register-zvisleho-dopravneho-znacenia` | columns `ideditora`, `vkladosoba`, `zmenaosoba`, `created_user`, `last_edited_user` | who entered or edited a feature: an editor's name or account |
+| `bb-dtm-bb-vodne-toky-a-plochy` | columns `ideditora`, `vkladosoba`, `zmenaosoba`, `created_user`, `last_edited_user` | who entered or edited a feature: an editor's name or account |
+| `bb-dtm-bb-vyskopis-teran` | columns `ideditora`, `vkladosoba`, `zmenaosoba`, `created_user`, `last_edited_user` | who entered or edited a feature: an editor's name or account |
 | `bb-zmluvy-bb` | rows whose `Zmluvné_strany_s_údajom_IČO` does not match `^IČO:[^\r]*(\rIČO:[^\r]*)*$` | a party without an IČO is a natural person, a social-service client among them |
 | `bbsk-clenovia-samospravy-efc2f3` | columns `Telefonický_kontakt`, `Emailový_kontakt` | office holders' own phones and e-mails |
 | `bbsk-dodavatelia-825cd0` | rows outside `ICO IS NOT NULL AND ICO <> ''`, or rows whose `ICO` does not match `^[0-9]{6,8}( ?[0-9]{4})?$` | a row without an IČO, or with a name where the IČO belongs, can name a natural person |
@@ -162,37 +183,28 @@ source. The `Evidencia psov` and `Zoznam poskytovateľov pre APS` datasets never
 | dataset | organization | status | reason |
 |---|---|---|---|
 | Banská Bystrica — verejné údaje (`banskabystrica-verejne`) | banskabystrica | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
-| DTM_BB-funkcne-vyuzitie-uzemia (`bb-dtm-bb-funkcne-vyuzitie-uzemia`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (201 KiB): a PDF map sheet, no data |
-| DTM_BB-Polohopis_a_vyskopis_bodoveho_pola (`bb-dtm-bb-polohopis-a-vyskopis-bodoveho-pola`) | banskabystrica | not-ingestible | 240636 rows, more than the 100000 this round loads into the one broker |
-| DTM_BB-register-chodnikov-a-verejnych-priestranstiev (`bb-dtm-bb-register-chodnikov-a-verejnych-priestranstiev`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-register-miestnych-komunikacii-a-vyssich-tried (`bb-dtm-bb-register-miestnych-komunikacii-a-vyssich-tried`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-register-statickej-dopravy (`bb-dtm-bb-register-statickej-dopravy`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-register-stlpov-VO (`bb-dtm-bb-register-stlpov-vo`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (185 KiB): a PDF map sheet, no data |
-| DTM_BB-register-verejnej-zelene-1 (`bb-dtm-bb-register-verejnej-zelene-1`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (43 KiB): a PDF map sheet, no data |
-| DTM_BB-register-verejnej-zelene-2 (`bb-dtm-bb-register-verejnej-zelene-2`) | banskabystrica | no-data-source | a ZIP of 3 .atr, 3 .cpg, 3 .dbf, 3 .shp, 3 .shx (732 KiB): every member is encrypted (a password is required) |
-| DTM_BB-register-verejnej-zelene-3 (`bb-dtm-bb-register-verejnej-zelene-3`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (194 KiB): a PDF map sheet, no data |
-| DTM_BB-register-vodorovneho-dopravneho-znacenia (`bb-dtm-bb-register-vodorovneho-dopravneho-znacenia`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-register-zvisleho-dopravneho-znacenia (`bb-dtm-bb-register-zvisleho-dopravneho-znacenia`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-regulativy-a-limity-funkcneho-vyuzitia-uzemia (`bb-dtm-bb-regulativy-a-limity-funkcneho-vyuzitia-uzemia`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (205 KiB): a PDF map sheet, no data |
-| DTM_BB-tvorba-krajiny-a-ochrana-prirody (`bb-dtm-bb-tvorba-krajiny-a-ochrana-prirody`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-verejne-dopravne-a-technicke-vybavenie (`bb-dtm-bb-verejne-dopravne-a-technicke-vybavenie`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (198 KiB): a PDF map sheet, no data |
-| DTM_BB-verejnoprospesne-stavby (`bb-dtm-bb-verejnoprospesne-stavby`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data |
-| DTM_BB-vodne-toky-a-plochy (`bb-dtm-bb-vodne-toky-a-plochy`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
-| DTM_BB-vyskopis-teran (`bb-dtm-bb-vyskopis-teran`) | banskabystrica | not-ingestible | a ZIP of 1 .geojson (65889 KiB): larger than the 10 MiB this round loads into the one broker |
-| DTM_BB-vyuzitie-pody-na-nepolnohospodarske-ucely (`bb-dtm-bb-vyuzitie-pody-na-nepolnohospodarske-ucely`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data |
-| DTM_BB-zaujmove-uzemie-a-sirsie-vztahy (`bb-dtm-bb-zaujmove-uzemie-a-sirsie-vztahy`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (24 KiB): a PDF map sheet, no data |
+| DTM_BB-Polohopis_a_vyskopis_bodoveho_pola (`bb-dtm-bb-polohopis-a-vyskopis-bodoveho-pola`) | banskabystrica | not-ingestible | 240638 rows, more than the 100000 this round loads into the one broker |
+| DTM_BB-register-vodorovneho-dopravneho-znacenia (`bb-dtm-bb-register-vodorovneho-dopravneho-znacenia`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, and no layer of the city's ArcGIS services holds its data |
 | Kvalita ovzdušia v Banskej Bystrici (`public-air`) | banskabystrica | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
 | Ukazovatele kraja (`bbsk-kpi`) | bbsk | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
 | Registre kraja (`bbsk-registre`) | bbsk | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
 <!-- /refused -->
 
-Most DTM ZIPs of the city hold one PDF map sheet and no data. `DTM_BB-register verejnej zelene 2`
-holds shapefiles, and no ingestion path reads a shapefile today. The GeoJSON registers of
-addresses, buildings, streets and survey points are drawn in S-JTSK, and no pipeline step
-reprojects to the WGS 84 that NGSI-LD requires. The terrain model is the largest source of both organizations.
-It waits for a later round, after the integrator has read the broker's volume use with the rest
-loaded
-([integration rules §4](../Development/12-open-data-integration.md#4-capacity-on-one-node)).
+Most DTM ZIPs of the city hold one PDF map sheet, and the shapefile ZIP of `DTM_BB-register
+verejnej zelene 2` has every member encrypted. The data behind them sits in the city's public
+ArcGIS Server (`dtm-banskabystrica.tmapserver.sk/arcgis/rest/services`, found 2026-10-16, T-4317):
+the DTM service `dtm/DTM_v_1_4_2_3_verejny` (247 layers) and 14 land-use plan (ÚPN) services
+under `up/`. Each of these datasets reads the layers its sheet draws (`LAYERS` in the script,
+`source.kind: esri-layers`). The server answers GeoJSON in WGS 84 itself (`outSR=4326`) in pages of
+at most 2000 rows. The probe of those layers is `Research/data/bb-dtm-layers.json`. The cadastral
+map that each ÚPN service draws underneath (`vnutorná kresba`, `hranice parcel`, 295 000 lines,
+the ÚGKK's data and not the city's) is no layer of any dataset. A layer that two sheets draw is
+read once. The terms of use of each dataset's record in the national catalogue
+(`data.gov.sk/def/ontology/legislation/termsOfUse`) are CC BY-SA 4.0. The service states no terms
+of its own, so the record's licence applies to the layers of that dataset. The registers of
+addresses, buildings and streets keep their archive: its GeoJSON carries the register columns,
+which the layers lack, and the pipeline reprojects it from S-JTSK. The horizontal road markings
+have a sheet and no layer. The survey points (240 638 in layer 1) stay over the row limit below.
 
 Decided (worker-8, owner may override): a source over 100 000 rows or a GeoJSON over 10 MiB is
 not loaded in this round, because one broker on one 16 GB node holds every project. Options: load
