@@ -50,7 +50,8 @@ jobs:
         # ad23dde -> platform main e219f50 (T-4186): KnowledgeSource `wordpressTypes` (T-4154) and the
         # assistant kinds of T-4166/T-4177 are documented; the same pin in the manifests job below.
         # e219f50 -> platform 1e7043f (T-4230): an indicator's derivedFrom/computedBy are Properties (T-4229).
-        env: { JC_SCHEMAS_TAG: 1e7043f7d53d344f2edee99b98272b5632b5e24f }
+        # 1e7043f -> platform main 2d2eb92 (T-4300): a Theme's `title` (T-4283) is documented.
+        env: { JC_SCHEMAS_TAG: 2d2eb92f63fb514e82a5062d150c77274182b934 }
         run: |
           set -eu
           curl -sSL "https://github.com/marek-mraz-jc/joinedcontext-platform/archive/${JC_SCHEMAS_TAG}.tar.gz" \
@@ -174,7 +175,8 @@ jobs:
     # minute after the first run.
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env: { JC_PLATFORM_TAG: e219f50c1348a36b17c4ed0d5e5872b3ba1ee53c }
+    # e219f50 -> platform main 2d2eb92 (T-4300): a Theme's `title` (T-4283).
+    env: { JC_PLATFORM_TAG: 2d2eb92f63fb514e82a5062d150c77274182b934 }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
