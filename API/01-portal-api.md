@@ -249,10 +249,25 @@ workspace's own door (CC-76), and so is `revision` beside `workspace`. A commit 
 not know is the caller's own `404`, the same as a resource the commit did not hold (R20). The read
 grants are the caller's current ones.
 
-`GET /api/v1/projects` answers a `kind: List` whose items carry `name` and nothing else, the
-projects the caller may read (PF-59). A project no binding covers is not in it, which is the same
-answer as `404` on its routes and discloses no department's project list to a session that may not
-see it.
+`GET /api/v1/projects` answers a `kind: List` of the projects the caller may read (PF-59). Each
+item carries `name` (the slug, the `{project}` of every other path), `sample` (whether its
+`Project` manifest is labelled `joinedcontext.com/sample`, PF-109) and `title`, the Project
+manifest's `metadata.title`: one string, or the legacy map per locale, absent when the manifest
+names none (T-4243). The project switcher and the breadcrumb show the title in the person's
+language and the slug beside it, without one request per project. A project no binding covers is
+not in the list, which is the same answer as `404` on its routes and discloses no department's
+project list to a session that may not see it.
+
+```json
+{
+  "apiVersion": "joinedcontext.com/v1alpha1",
+  "kind": "List",
+  "items": [
+    { "name": "banskabystrica", "sample": false, "title": { "sk": "Mesto Banská Bystrica", "en": "City of Banská Bystrica" } },
+    { "name": "helsinki-mobility", "sample": true }
+  ]
+}
+```
 
 `{plural}` is the kind's plural from the catalogue in
 [Development/04-manifest-kinds.md §2](../Development/04-manifest-kinds.md#2-standard-kind-catalog),
