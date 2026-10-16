@@ -447,8 +447,10 @@ LAYERS: list[tuple[str, list[tuple[str, int | None, str | None]]]] = [
 # What a land-use plan service draws under its own layers: the cadastral map (the ÚGKK's, not the
 # city's, 295 000 lines in every service) and the masks; never an entity.
 GIS_BASEMAP = re.compile(r"^(vnutorn[aá] kresba|hranice parcel|maska( zu)?)$", re.I)
-# Geodatabase bookkeeping, and who entered or edited a feature (an editor's name or account).
-GIS_SKIP = re.compile(r"^(objectid|globalid|fid|shape|shape_length|shape_area|shape_leng|st_length\(shape\)|"
+# Geodatabase bookkeeping, and who entered or edited a feature (an editor's name or account). The
+# DTM's own `id` is empty on all but 3 of the 25 000 features counted (layers 4, 57, 128, 136, 175,
+# 226; 2026-10-16), and as text it would turn every model's `sourceId` from a number into a string.
+GIS_SKIP = re.compile(r"^(id|objectid|globalid|fid|shape|shape_length|shape_area|shape_leng|st_length\(shape\)|"
                       r"created_date|last_edited_date)$", re.I)
 GIS_PERSON = re.compile(r"^(vkladosoba|zmenaosoba|ideditora|created_user|last_edited_user)$", re.I)
 

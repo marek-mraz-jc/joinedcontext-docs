@@ -793,7 +793,6 @@ datasets:
       name: chodník - db
       rows: 2611
       fields:
-      - id
       - idzmeny
       - popisobjektu
       - datumvkladu
@@ -807,7 +806,6 @@ datasets:
       name: cyklotrasa - db
       rows: 4
       fields:
-      - id
       - idzmeny
       - popisobjektu
       - datumvkladu
@@ -827,9 +825,6 @@ datasets:
   license: cc-by-sa
   dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-chodnikov-a-verejnych-priestranstiev
   properties:
-    sourceId:
-      column: id
-      range: string
     idzmeny:
       column: idzmeny
       range: string
@@ -886,7 +881,6 @@ datasets:
       name: pozemná komunikácie - db
       rows: 1050
       fields:
-      - id
       - idzmeny
       - popisobjektu
       - datumvkladu
@@ -906,9 +900,6 @@ datasets:
   license: cc-by-sa
   dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-miestnych-komunikacii-a-vyssich-tried
   properties:
-    sourceId:
-      column: id
-      range: string
     idzmeny:
       column: idzmeny
       range: string
@@ -965,7 +956,6 @@ datasets:
       name: parkovisko, odstavná plocha - db
       rows: 535
       fields:
-      - id
       - idzmeny
       - popisobjektu
       - datumvkladu
@@ -984,9 +974,6 @@ datasets:
   license: cc-by-sa
   dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-statickej-dopravy
   properties:
-    sourceId:
-      column: id
-      range: string
     idzmeny:
       column: idzmeny
       range: string
@@ -1084,7 +1071,6 @@ datasets:
       rows: 1522
       where: typpodpernehozarizeni=3
       fields:
-      - id
       - idzmeny
       - popisobjektu
       - datumvkladu
@@ -1116,9 +1102,6 @@ datasets:
   license: cc-by-sa
   dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-stlpov-vo
   properties:
-    sourceId:
-      column: id
-      range: string
     idzmeny:
       column: idzmeny
       range: string
@@ -1292,7 +1275,6 @@ datasets:
       name: udržiavaná plocha zelene - db
       rows: 8546
       fields:
-      - id
       - idzmeny
       - popisobjektu
       - datumvkladu
@@ -1311,9 +1293,6 @@ datasets:
   license: cc-by-sa
   dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-verejnej-zelene-1
   properties:
-    sourceId:
-      column: id
-      range: string
     idzmeny:
       column: idzmeny
       range: string
@@ -1367,7 +1346,6 @@ datasets:
       name: jednotlivo rastúce stromy
       rows: 8366
       fields:
-      - id
       - idzmeny
       - popisobjektu
       - datumvkladu
@@ -1386,9 +1364,6 @@ datasets:
   license: cc-by-sa
   dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-verejnej-zelene-2
   properties:
-    sourceId:
-      column: id
-      range: string
     idzmeny:
       column: idzmeny
       range: string
@@ -1442,7 +1417,6 @@ datasets:
       name: hranica udržovanej zelene
       rows: 9740
       fields:
-      - id
       - idzmeny
       - popisobjektu
       - datumvkladu
@@ -1461,9 +1435,6 @@ datasets:
   license: cc-by-sa
   dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-verejnej-zelene-3
   properties:
-    sourceId:
-      column: id
-      range: string
     idzmeny:
       column: idzmeny
       range: string
@@ -1531,7 +1502,6 @@ datasets:
       name: dopravná značka
       rows: 1700
       fields:
-      - id
       - idzmeny
       - popisobjektu
       - datumvkladu
@@ -1550,9 +1520,6 @@ datasets:
   license: cc-by-sa
   dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-register-zvisleho-dopravneho-znacenia
   properties:
-    sourceId:
-      column: id
-      range: string
     idzmeny:
       column: idzmeny
       range: string
@@ -2383,7 +2350,6 @@ datasets:
       - JEV_ID
       - ETAPA
       - ENTITA_ID
-      - ID
       - Nazov
       - Objem
       - Max_hl
@@ -2808,9 +2774,6 @@ datasets:
     lokalita:
       column: Lokalita
       range: string
-    iD:
-      column: ID
-      range: integer
     objem:
       column: Objem
       range: string
@@ -2964,7 +2927,6 @@ datasets:
       name: Ekologicky významný segment (RÚSES)
       rows: 9
       fields:
-      - ID
       - Nazov
       - Oznacenie
       - JEV_ID
@@ -3046,7 +3008,6 @@ datasets:
       - JEV_ID
       - ETAPA
       - ENTITA_ID
-      - ID
       - Typ
       - Nazov
       - Lokacia
@@ -3089,7 +3050,6 @@ datasets:
       - JEV_ID
       - ETAPA
       - ENTITA_ID
-      - ID
       - Nazov
       - Lokacia
       - Label
@@ -3170,7 +3130,6 @@ datasets:
       - JEV_ID
       - ETAPA
       - ENTITA_ID
-      - ID
       - Typ
       - Nazov
       - Lokacia
@@ -3196,7 +3155,6 @@ datasets:
       name: Genofondovo významná lokalita (RÚSES)
       rows: 21
       fields:
-      - ID
       - Nazov
       - Kataster
       - Biotop
@@ -3419,9 +3377,6 @@ datasets:
     adresa:
       column: Adresa
       range: string
-    iD:
-      column: ID
-      range: integer
     oznacenie:
       column: Oznacenie
       range: string
@@ -4099,7 +4054,6 @@ datasets:
       - JEV_ID
       - ETAPA
       - ENTITA_ID
-      - ID
       - Nazov
       - Objem
       - Max_hl
@@ -4406,7 +4360,6 @@ datasets:
       name: Nárast spotreby elektriny - tabulka
       rows: 96
       fields:
-      - ID
       - TYP
       - POPIS
       - SIZE
@@ -4549,7 +4502,6 @@ datasets:
       name: Tabuľka
       rows: 96
       fields:
-      - ID
       - TYP
       - POPIS
       - SIZE
@@ -4724,9 +4676,6 @@ datasets:
     kota:
       column: Kota
       range: integer
-    iD:
-      column: ID
-      range: integer
     objem:
       column: Objem
       range: string
@@ -4817,7 +4766,6 @@ datasets:
       name: Zoznam VPS v mestské časti
       rows: 721
       fields:
-      - ID
       - TYP
       - POPIS
     - url: https://dtm-banskabystrica.tmapserver.sk/arcgis/rest/services/up/10___Verejno_prospe%C5%A1n%C3%A9_stavby_a_n%C3%A1sledn%C3%A9_%C3%9APN_Z/MapServer/5
@@ -4858,7 +4806,6 @@ datasets:
       - ETAPA
       - ENTITA_ID
       - Typ
-      - ID
       - Nazov
       - Objem
       - Max_hl
@@ -5238,9 +5185,6 @@ datasets:
     datumRP:
       column: Datum_RP
       range: string
-    iD:
-      column: ID
-      range: integer
     tYP:
       column: TYP
       range: string
@@ -5361,7 +5305,6 @@ datasets:
       name: vodní tok - db
       rows: 97
       fields:
-      - id
       - idzmeny
       - popisobjektu
       - datumvkladu
@@ -5374,7 +5317,6 @@ datasets:
       name: vodná nádrž - db
       rows: 14
       fields:
-      - id
       - idzmeny
       - popisobjektu
       - datumvkladu
@@ -5388,7 +5330,6 @@ datasets:
       name: stavebně upravené koryto - db
       rows: 16
       fields:
-      - id
       - idzmeny
       - popisobjektu
       - datumvkladu
@@ -5406,9 +5347,6 @@ datasets:
   license: cc-by-sa
   dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-vodne-toky-a-plochy
   properties:
-    sourceId:
-      column: id
-      range: string
     idzmeny:
       column: idzmeny
       range: string
@@ -5462,7 +5400,6 @@ datasets:
       name: vrstevnice
       rows: 22417
       fields:
-      - id
       - idzmeny
       - popisobjektu
       - datumvkladu
@@ -5476,7 +5413,6 @@ datasets:
       name: vrstevnice - výška
       rows: 2257
       fields:
-      - id
       - idzmeny
       - popisobjektu
       - datumvkladu
@@ -5491,7 +5427,6 @@ datasets:
       name: terénná hrana
       rows: 11388
       fields:
-      - id
       - idzmeny
       - popisobjektu
       - datumvkladu
@@ -5512,9 +5447,6 @@ datasets:
   license: cc-by-sa
   dataset: https://data.dev.joinedcontext.com/dataset/bb-dtm-bb-vyskopis-teran
   properties:
-    sourceId:
-      column: id
-      range: string
     idzmeny:
       column: idzmeny
       range: string
@@ -5692,7 +5624,6 @@ datasets:
       - JEV_ID
       - ETAPA
       - ENTITA_ID
-      - ID
       - Nazov
       - Lokacia
       - Label
@@ -5720,7 +5651,6 @@ datasets:
       - JEV_ID
       - ETAPA
       - ENTITA_ID
-      - ID
       - Typ
       - Nazov
       - Lokacia
@@ -5738,7 +5668,6 @@ datasets:
       - ENTITA_ID
       - BPEJ
       - Skupina
-      - ID
       - Chranena
       - intra_extra
       - Label
@@ -5755,7 +5684,6 @@ datasets:
       - ENTITA_ID
       - BPEJ
       - Skupina
-      - ID
       - Chranena
       - intra_extra
       - Label
@@ -5950,9 +5878,6 @@ datasets:
     lokacia:
       column: Lokacia
       range: string
-    iD:
-      column: ID
-      range: float
     hranica:
       column: Hranica
       range: string
@@ -6138,7 +6063,6 @@ datasets:
       - JEV_ID
       - ETAPA
       - ENTITA_ID
-      - ID
       - Nazov
       - Objem
       - Max_hl
@@ -6237,7 +6161,6 @@ datasets:
       - JEV_ID
       - ETAPA
       - ENTITA_ID
-      - ID
       - Nazov
       - Lokacia
       - Label
@@ -6741,7 +6664,6 @@ datasets:
       - JEV_ID
       - ETAPA
       - ENTITA_ID
-      - ID
       - Typ
       - Nazov
       - Lokacia
@@ -7121,9 +7043,6 @@ datasets:
     vPS:
       column: VPS
       range: string
-    iD:
-      column: ID
-      range: integer
     objem:
       column: Objem
       range: string
