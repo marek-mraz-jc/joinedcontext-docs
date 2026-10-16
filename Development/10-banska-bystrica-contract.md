@@ -120,8 +120,8 @@ contract adds nothing to it.
 | `currentValue` | Property | number or string, `unitCode` a UN/CEFACT common code, `observedAt` RFC 3339 | yes |
 | `calculationPeriod` | Property | `{ start, end }`, RFC 3339 instants | yes |
 | `calculationFormula` | Property | string, how the value is computed | yes |
-| `derivedFrom` | Relationship | the Endpoint URN the sources were read through | yes |
-| `computedBy` | Relationship | the Pipeline URN that computed it | yes |
+| `derivedFrom` | Property | the Endpoint URN the sources were read through, a string | yes |
+| `computedBy` | Property | the Pipeline URN that computed it, a string | yes |
 | `updatedAt` | Property | `{ "@type": "DateTime", "@value": … }` | yes |
 
 ### Where the fields this demonstration asked for actually live
@@ -132,7 +132,7 @@ contract adds nothing to it.
 | `unit` | `currentValue.unitCode`, a UN/CEFACT common code |
 | `window` | `calculationPeriod.value.start` and `.end` |
 | `computedAt` | `updatedAt.value["@value"]` |
-| `sources` | `derivedFrom.object`, the Endpoint URN and the source entity URNs when they are few |
+| `sources` | `derivedFrom.value`, the Endpoint URN and the source entity URNs when they are few |
 | `territory` | the `-{territory}` suffix of `{localId}`, and therefore of `name` |
 | `state` | nowhere on the entity, see below |
 | `threshold` | nowhere on the entity, see below |
@@ -168,12 +168,12 @@ is a different case and section 5 gives it a value of its own.
     "value": "sum(value) over StatisticalObservation where cube=zp3803rs, indicator=PROD_TONY, pollutant=1, refArea=SK032"
   },
   "derivedFrom": {
-    "type": "Relationship",
-    "object": "urn:ngsi-ld:Endpoint:hel.fi:bbsk-kraj:bbsk-kraj"
+    "type": "Property",
+    "value": "urn:ngsi-ld:Endpoint:hel.fi:bbsk-kraj:bbsk-kraj"
   },
   "computedBy": {
-    "type": "Relationship",
-    "object": "urn:ngsi-ld:Pipeline:hel.fi:bbsk-kpi:emisie-tuhe"
+    "type": "Property",
+    "value": "urn:ngsi-ld:Pipeline:hel.fi:bbsk-kpi:emisie-tuhe"
   },
   "updatedAt": {
     "type": "Property",
@@ -208,12 +208,12 @@ zero. A zero is a measurement, and a dashboard cannot tell it apart from a real 
     "value": "sum(value) over StatisticalObservation where cube=zp3803rs, indicator=PROD_TONY, pollutant=1, refArea=SK0327"
   },
   "derivedFrom": {
-    "type": "Relationship",
-    "object": "urn:ngsi-ld:Endpoint:hel.fi:bbsk-kraj:bbsk-kraj"
+    "type": "Property",
+    "value": "urn:ngsi-ld:Endpoint:hel.fi:bbsk-kraj:bbsk-kraj"
   },
   "computedBy": {
-    "type": "Relationship",
-    "object": "urn:ngsi-ld:Pipeline:hel.fi:bbsk-kpi:emisie-tuhe"
+    "type": "Property",
+    "value": "urn:ngsi-ld:Pipeline:hel.fi:bbsk-kpi:emisie-tuhe"
   },
   "updatedAt": {
     "type": "Property",
