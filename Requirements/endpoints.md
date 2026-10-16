@@ -6,7 +6,7 @@ description: Universal ingress and egress multi-representation views, opaque slu
 
 # Endpoints & Representation Parity
 
-Family **EP** (EP-01…EP-113). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **EP** (EP-01…EP-118). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
 ## 1. Endpoint Identity and Opaque Slug
 
@@ -250,6 +250,7 @@ Decided in [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) (T-3154).
 | EP-108…EP-110 | [API/02-endpoint-representations.md#10-in-the-open-data-portal](../API/02-endpoint-representations.md#10-in-the-open-data-portal) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | EP-116 | [Architecture/07-agents-and-mcp.md#2-tool-catalogue-specification](../Architecture/07-agents-and-mcp.md#2-tool-catalogue-specification) | [Testing/02-conformance-tests.md#4-model-context-protocol](../Testing/02-conformance-tests.md#4-model-context-protocol) |
 | EP-117 | [ADR-N-041](../Decisions/adr-n-041-entity-identity-is-space-and-urn.md) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
+| EP-118 | [Architecture/21-open-data-catalogue.md#9-what-every-dataset-lists](../Architecture/21-open-data-catalogue.md#9-what-every-dataset-lists) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | EP-111…EP-112 | [Architecture/07-agents-and-mcp.md#7-connecting-from-a-phone](../Architecture/07-agents-and-mcp.md#7-connecting-from-a-phone) | [Testing/02-conformance-tests.md#4-model-context-protocol](../Testing/02-conformance-tests.md#4-model-context-protocol) |
 | EP-113 | [API/02-endpoint-representations.md#10-in-the-open-data-portal](../API/02-endpoint-representations.md#10-in-the-open-data-portal) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
