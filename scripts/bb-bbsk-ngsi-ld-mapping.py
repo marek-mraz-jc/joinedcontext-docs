@@ -442,9 +442,14 @@ def plan(d: dict, probe_: dict, fetched: str) -> dict:
         elif set(exts) == {"pdf"}:
             # Looked for as data on 2026-10-16 (T-4317): the T-MAPY host serves no OGC service
             # (/-/wfs/ and /-/wms/ answer its map application, whose GraphQL sits behind its own
-            # sign-in), and the national catalogue lists this ZIP as the only distribution.
-            why += (": a PDF map sheet, no data; no WFS or WMS on the T-MAPY host (/-/wfs/, /-/wms/ answer "
-                    "its map app) and data.slovensko.sk lists only this ZIP")
+            # sign-in), and the national catalogue lists this ZIP as the only distribution. With
+            # no data found, data.dev hides the dataset (owner 2026-10-16: no ZIP-only dataset).
+            host = urllib.parse.urlsplit(r["url"])
+            return {**entry, "status": "no-data-source", "reason": why + ": a PDF map sheet, no data",
+                    "tried": [r["url"], f"{host.scheme}://{host.netloc}/-/wfs/?service=WFS&request=GetCapabilities",
+                              f"{host.scheme}://{host.netloc}/-/wms/?service=WMS&request=GetCapabilities",
+                              "https://data.slovensko.sk/api/sparql (dcat:distribution of "
+                              f"{d['extras'].get('source_uri') or d['name']})"]}
         else:
             why += ": no table or feature file inside"
         return {**entry, "status": "not-ingestible", "reason": why}
@@ -525,7 +530,7 @@ def totals(snap: dict, entries: list[dict]) -> dict[str, dict[str, int]]:
     t: dict[str, dict[str, int]] = {}
     for e in entries:
         for org in (e["org"], "all"):
-            row = t.setdefault(org, {"datasets": 0, "mapped": 0, "already-ngsi-ld": 0, "not-ingestible": 0, "rows": 0})
+            row = t.setdefault(org, {"datasets": 0, "mapped": 0, "already-ngsi-ld": 0, "not-ingestible": 0, "no-data-source": 0, "rows": 0})
             row["datasets"] += 1
             row[e["status"]] += 1
             row["rows"] += (e.get("source") or {}).get("rows") or 0
@@ -533,10 +538,11 @@ def totals(snap: dict, entries: list[dict]) -> dict[str, dict[str, int]]:
 
 
 def totals_table(t: dict) -> str:
-    lines = ["| organization | datasets | mapped | already NGSI-LD | not ingestible | source rows of the mapped |",
-             "|---|---:|---:|---:|---:|---:|"]
+    lines = ["| organization | datasets | mapped | already NGSI-LD | not ingestible | no data source | source rows of the mapped |",
+             "|---|---:|---:|---:|---:|---:|---:|"]
     for org, r in t.items():
-        lines.append(f"| {org} | {r['datasets']} | {r['mapped']} | {r['already-ngsi-ld']} | {r['not-ingestible']} | {r['rows']} |")
+        lines.append(f"| {org} | {r['datasets']} | {r['mapped']} | {r['already-ngsi-ld']} | {r['not-ingestible']} "
+                     f"| {r['no-data-source']} | {r['rows']} |")
     return "\n".join(lines)
 
 
@@ -594,10 +600,12 @@ def check(snap: dict, mapping: dict, page: str) -> list[str]:
         if e.get("id") not in ids:
             errors.append(f"{e.get('name')}: id {e.get('id')} is not in the CKAN snapshot")
         st = e.get("status")
-        if st not in ("mapped", "already-ngsi-ld", "not-ingestible"):
+        if st not in ("mapped", "already-ngsi-ld", "not-ingestible", "no-data-source"):
             errors.append(f"{e.get('name')}: status {st!r}")
         elif st != "mapped" and not e.get("reason"):
             errors.append(f"{e.get('name')}: {st} without a reason")
+        elif st == "no-data-source" and not e.get("tried"):
+            errors.append(f"{e.get('name')}: no-data-source without the URLs tried")
         elif st == "mapped":
             missing = [k for k in ("type", "source", "entityId", "space", "refresh", "properties") if not e.get(k)]
             if missing:
@@ -627,6 +635,8 @@ def selftest() -> None:
     assert any("missing from the mapping" in e for e in check(snap, short, page))
     no_reason = {"datasets": [{**ok["datasets"][0], "reason": ""}, ok["datasets"][1]]}
     assert any("without a reason" in e for e in check(snap, no_reason, page))
+    untried = {"datasets": [{**ok["datasets"][0], "status": "no-data-source"}, ok["datasets"][1]]}
+    assert any("without the URLs tried" in e for e in check(snap, untried, page))
     assert any("totals table differs" in e for e in check(snap, ok, page.replace("| 3 |", "| 4 |")))
     assert any("no <!-- types -->" in e for e in check(snap, ok, page.replace("<!-- types -->", "")))
     assert any("not in the CKAN snapshot" in e for e in check(snap, {"datasets": ok["datasets"] + [{**ok["datasets"][0], "id": "z"}]}, page))
