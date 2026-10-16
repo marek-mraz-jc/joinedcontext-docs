@@ -125,7 +125,7 @@ static. No value is carried forward and relabelled as current.
 | Slovak | Emisie tuhých znečisťujúcich látok na km² |
 | English | Solid particulate emissions per square kilometre |
 | Question | How much particulate matter do large and medium sources release per square kilometre of this territory? |
-| Reads | `StatisticalObservation.value`, cube `zp3803rs`, indicator `ODPAD_TONY_KM2`, pollutant `1` (tuhé emisie) |
+| Reads | `kpiValue` of the raw `KeyPerformanceIndicator`, cube `zp3803rs`, indicator `ODPAD_TONY_KM2`, pollutant `1` (tuhé emisie) |
 | Formula | the publisher's own value for the territory, taken as published, not recomputed, and decoded by the cube's dimension index rather than by assuming an order |
 | Window | one calendar year, the latest the cube carries |
 | Unit | tonnes per km², `unitCode: TNE` with the per-km² divisor named in `calculationFormula` |
@@ -140,7 +140,7 @@ static. No value is carried forward and relabelled as current.
 | Slovak | Stav trvale bývajúceho obyvateľstva na konci obdobia |
 | English | Resident population at the end of the period |
 | Question | How many people does this territory have, and which way is it moving? |
-| Reads | `StatisticalObservation.value`, cube `om7102rr`, indicator `IN010115`, sex `SPOLU` |
+| Reads | `kpiValue` of the raw `KeyPerformanceIndicator`, cube `om7102rr`, indicator `IN010115`, sex `SPOLU` |
 | Formula | the publisher's own value for the territory |
 | Window | one calendar year, the latest the cube carries |
 | Unit | persons, `unitCode: C62` |
@@ -155,7 +155,7 @@ static. No value is carried forward and relabelled as current.
 | Slovak | Fakturovaná spotreba pitnej vody na obyvateľa za deň |
 | English | Invoiced drinking water per inhabitant per day |
 | Question | How much drinking water does the city buy per person per day? |
-| Reads | `StatisticalObservation.value`, cube `vh5003rr`, indicator `U03084`, territory `SK0321508438`; and the city's own age register for the divisor |
+| Reads | `kpiValue` of the raw `KeyPerformanceIndicator`, cube `vh5003rr`, indicator `U03084`, territory `SK0321508438`; and the city's own age register for the divisor |
 | Formula | `value × 1 000 000 ÷ population ÷ days(window)`, the cube being in thousands of m³ and a m³ being 1 000 litres |
 | Window | one calendar year, the latest the cube carries |
 | Unit | litres per inhabitant per day, `unitCode: LTR` with the per-inhabitant-per-day divisor named in `calculationFormula` |
