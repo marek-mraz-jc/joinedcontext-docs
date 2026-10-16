@@ -28,8 +28,13 @@ NON_BLANK = 25 * 1024
 TOP = 20
 
 
+# A URL an auditor quotes in a finding; bare in a table it breaks markdownlint MD034 (T-4262).
+BARE_URL = re.compile(r"(?<![<(`])\bhttps?://[^\s|'\"<>)`]+")
+
+
 def cell(text: str) -> str:
-    return " ".join(str(text).split()).replace("|", "\\|")
+    text = " ".join(str(text).split()).replace("|", "\\|")
+    return BARE_URL.sub(lambda m: f"<{m.group(0).rstrip('.,;')}>{m.group(0)[len(m.group(0).rstrip('.,;')):]}", text)
 
 
 def load(folders: list[Path], triage: dict) -> tuple[list[dict], list[dict], list[str]]:
@@ -115,7 +120,8 @@ def selftest() -> None:
               "patterns": [{"id": "lang", "title": "Slovak ignored", "fix": "locale from the URL", "findings": ["T-1:Slovak", "T-2:Slovak"]}]}
     with tempfile.TemporaryDirectory() as tmp:
         folders = []
-        for task, found in (("T-1", [("major", "Slovak page in English"), ("minor", "A | cut button")]),
+        for task, found in (("T-1", [("major", "Slovak page in English"), ("minor", "A | cut button"),
+                                     ("minor", "Area shows 'http://data.europa.eu/nuts/code/CZ010'.")]),
                             ("T-2", [("blocker", "Slovak gone, white page")])):
             folder = Path(tmp) / task
             folder.mkdir()
@@ -127,10 +133,12 @@ def selftest() -> None:
             folders.append(folder)
         audits, findings, unmatched = load(folders, triage)
         assert [a["shots"] for a in audits] == [1, 1] and [a["pngs"] for a in audits] == [2, 2]
-        assert unmatched == ["T-1:A | cut button"], unmatched
+        assert unmatched == ["T-1:A | cut button", "T-1:Area shows 'http://data.europa.eu/nuts/code/CZ010'."], unmatched
         block = render(audits, findings, triage)
-        assert "| **total** | | **4** | **2** | **3** |" in block, block
-        assert "| shell | 0 | 1 | 1 |" in block and "| **total** | **1** | **1** | **1** |" in block, block
+        assert "| **total** | | **4** | **2** | **4** |" in block, block
+        # T-4262: a quoted URL is an autolink, never bare (MD034).
+        assert "'<http://data.europa.eu/nuts/code/CZ010>'." in block and not BARE_URL.search(block), block
+        assert "| shell | 0 | 1 | 2 |" in block and "| **total** | **1** | **1** | **2** |" in block, block
         assert "| Slovak ignored | locale from the URL | 2 | blocker | shell, public |" in block, block
         top = [line for line in block.splitlines() if re.match(r"\| \d+ \|", line)]
         assert top[0].startswith("| 1 | blocker | public") and "A \\| cut button" in top[2], top

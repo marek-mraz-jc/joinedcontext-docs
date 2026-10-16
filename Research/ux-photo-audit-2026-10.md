@@ -32,12 +32,12 @@ Each audit wrote its screenshots, a contact sheet `index.html` and a `findings.j
 |---|---|---:|---:|---:|
 | T-4157 | Portal shell | 156 | 144 | 20 |
 | T-4158 | Portal forms: access | 502 | 502 | 15 |
-| T-4159 | Portal forms: data | 169 | 169 | 12 |
+| T-4159 | Portal forms: data | 177 | 177 | 12 |
 | T-4160 | Portal explore and Apps | 370 | 370 | 135 |
 | T-4161 | open data portal | 135 | 129 | 16 |
 | T-4162 | public surfaces | 405 | 264 | 25 |
 | T-4163 | Portal states | 123 | 102 | 15 |
-| **total** | | **1860** | **1680** | **238** |
+| **total** | | **1868** | **1688** | **238** |
 
 ### Findings by area and severity
 
@@ -88,7 +88,7 @@ Each audit wrote its screenshots, a contact sheet `index.html` and a `findings.j
 | 11 | major | Portal forms: data | `/projects/helsinki/pipelines/$name/edit` | The pipeline's Sample step shows the engine's raw error: "failed assignment (line 1): function content: failed to parse value as JSON: invalid character '<' looking for beginning of value". It is English in the Slovak form and does not say that the source answered HTML or what to do. | `/workspace/evidence/worker-6/T-4159/forms-data-projects-helsinki-pipelines-name-edit-pipelines-edit-tab-1-steward-sk-768.png` |
 | 12 | major | Portal explore and Apps | `/projects/bbsk/spaces/new` | Every create form's header prints the raw kind and a machine-built sentence, sk and en: 'Read about ContextSpace in the User Guide' and 'Will be approved when you propose: you hold approve and delete on ContextSpace.'; the same on KnowledgeSource, AssistantDeployment and 'Read about App'. | `/workspace/evidence/worker-2/T-4160/spaces-projects-bbsk-spaces-new-form-open-steward-sk-375.png` |
 | 13 | major | Portal explore and Apps | `/projects/bbsk/knowledgesources/new` | The create-form headings show the kind name in CamelCase, sk and en: 'Nový KnowledgeSource' / 'New KnowledgeSource' and 'Nový AssistantDeployment' / 'New AssistantDeployment' (also on the validated-empty shots). | `/workspace/evidence/worker-2/T-4160/knowledge-projects-bbsk-knowledgesources-new-form-open-steward-sk-375.png` |
-| 14 | major | Portal explore and Apps | `/catalogue` | The Area/Územie filter lists raw NUTS codes (FI1B1, SK032, SK031, CZ010), and the dataset page shows the area as the URI 'http://data.europa.eu/nuts/code/CZ010'; sk and en. | `/workspace/evidence/worker-2/T-4160/catalogue-catalogue-list-steward-sk-375.png` |
+| 14 | major | Portal explore and Apps | `/catalogue` | The Area/Územie filter lists raw NUTS codes (FI1B1, SK032, SK031, CZ010), and the dataset page shows the area as the URI '<http://data.europa.eu/nuts/code/CZ010>'; sk and en. | `/workspace/evidence/worker-2/T-4160/catalogue-catalogue-list-steward-sk-375.png` |
 | 15 | major | Portal explore and Apps | `/projects/bbsk/explore` | Explore's 'Your access' card lists raw API operation names (queryEntity, retrieveAttrTypeInfo, retrieveEntityTypeDetails…) and the chips read 'Smiete queryEntity Hospital' / 'Nesmiete updateAttrs Hospital'; sk and en. | `/workspace/evidence/worker-2/T-4160/explore-projects-bbsk-explore-table-steward-sk-375.png` |
 | 16 | major | Portal explore and Apps | `/projects/bbsk/explore` | A query that matches nothing ends in a red English parser error on the Slovak page, 'Nenačítané, skúste znova: invalid q expression "qzxwv-nothing-is-called-this"…', telling the person to retry, and the Filters hint wrongly says the query uses '\|' or brackets; there is no empty state. | `/workspace/evidence/worker-2/T-4160/explore-projects-bbsk-explore-empty-result-steward-sk-375.png` |
 | 17 | major | public surfaces | `apps/banskabystrica/banskabystrica-mapa` | An unknown path on an App host answers the raw problem JSON ({"type":…,"detail":"app 'banskabystrica-mapa' not found"}), in English, with the browser's pretty-print box; and the App itself exists. | `/workspace/evidence/worker-4/T-4162/public-apps-banskabystrica-banskabystrica-mapa-unknown-path-anonymous-sk-375.png` |
