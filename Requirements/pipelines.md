@@ -6,7 +6,7 @@ description: Normative requirements for data integration, transformation, and in
 
 # Pipeline Execution & Processing
 
-Family **PL** (PL-01…PL-77). Owning chapter: [Architecture/08-pipelines.md](../Architecture/08-pipelines.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
+Family **PL** (PL-01…PL-78). Owning chapter: [Architecture/08-pipelines.md](../Architecture/08-pipelines.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
 
 ## 1. Manifest Envelope and Native Payloads
 
@@ -139,6 +139,7 @@ An entity whose source dropped it stays in the space with its last value until s
 - **PL-75** [S] — The gateway's `POST /internal/mqtt/auth`, reachable from broker pods only and naming the broker by the caller's mesh identity, never by a request field, MUST allow a device CONNECT only when the password is an access token that verifies against the realm JWKS, whose audience holds the broker's client and whose `azp` equals the username and the client id, of a ServiceAccount holding a role of that broker; the answer MUST carry that role's filters as the RMQTT `acl` (`retain: false`, QoS 0 and 1), `superuser: false`, and `expire_at` equal to the token's `exp` ([ADR-N-048](../Decisions/adr-n-048-mqtt-edge-brokers.md)).
 - **PL-76** [S] — A `DataSource` of `type: mqtt` MAY name a broker of its own project by `spec.mqtt.brokerRef` in place of `urls`, and then MUST carry no password; the broker's internal listener MUST admit only the pipeline runner's mesh identity, and the gateway MUST allow a CONNECT without a password only for the runner's name from the address of one of the runner's own pods (its headless Service, `JC_GATEWAY_MQTT_RUNNER_HOST`; a private address alone is not enough), granting `subscribe` on the topic filters of the DataSources that reference the broker and nothing else ([ADR-N-048](../Decisions/adr-n-048-mqtt-edge-brokers.md)).
 - **PL-77** [S] — A broker MUST be reachable from outside the cluster only over TLS: on 8883 through a Traefik TCP route `HostSNI(<name>.<project>.mqtt.<domain>)` with a certificate issued for that hostname by HTTP-01 and forwarded with the PROXY protocol, or on its dedicated `port` with TLS terminated by the broker; plain 1883 MUST NOT be published outside the cluster ([ADR-N-048](../Decisions/adr-n-048-mqtt-edge-brokers.md)).
+- **PL-78** [H][S] — The Portal reconciler MUST keep a pipeline loaded in the runner only when one of its sources waits for pushes (`mqtt`, `websocket`, `http_server`, `socket_server`, a broker subscriber input, or an Endpoint source with a change trigger); every other pipeline MUST be created in the runner only for its run and deleted when the run finishes, fails or reaches 15 minutes, through one queue ordered by due time, then project and name, in two lanes (`batch` for a clock of 5 minutes or longer and run-once pipelines, `short` below 5 minutes), each at the concurrency the Portal configures (default 1); a pipeline due again while queued or running MUST stay one entry; a pipeline with neither `period` nor `schedule` runs once after apply; the queue depth per lane and the run seconds MUST be exported (Architecture/08 §1, owner 2026-10-16).
 
 ## Traceability
 
@@ -174,6 +175,7 @@ An entity whose source dropped it stays in the space with its last value until s
 | PL-69…PL-71 | [Architecture/08-pipelines.md](../Architecture/08-pipelines.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | PL-72 | [Architecture/08-pipelines.md](../Architecture/08-pipelines.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | PL-73 | [Architecture/08-pipelines.md#routes-by-condition-pl-73](../Architecture/08-pipelines.md#routes-by-condition-pl-73) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
+| PL-78 | [Architecture/08-pipelines.md#run-model-in-the-shared-runner-resident-or-run-and-delete-pl-78](../Architecture/08-pipelines.md#run-model-in-the-shared-runner-resident-or-run-and-delete-pl-78) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
 | PL-74…PL-77 | [ADR-N-048](../Decisions/adr-n-048-mqtt-edge-brokers.md) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
 | PL-67 | [API/01-portal-api.md#7a-testing-a-candidate-pipeline-pl-43-mf-38](../API/01-portal-api.md#7a-testing-a-candidate-pipeline-pl-43-mf-38) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
 

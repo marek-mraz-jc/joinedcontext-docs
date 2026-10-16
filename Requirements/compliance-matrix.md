@@ -1140,6 +1140,7 @@ Generated 2026-10-16 from: `docs` 5f28851, `conformance` e954341, `deployment` 3
 | **PL-75** | [S] | tested | ci-full, fast ci | platform `crates/context-gateway/src/mqtt.rs::a_mesh_identity_names_its_broker_by_its_first_label`, platform `crates/context-gateway/src/mqtt.rs::the_runner_is_the_addresses_its_name_resolves_to_and_nothing_else`, platform `crates/context-gateway/src/mqtt.rs::the_answer_reads_as_rmqtt_expects_it`, and 12 more |
 | **PL-76** | [S] | tested | ci-full, fast ci | deployment `tests/test_mqtt_brokers.py::test_each_broker_is_one_release_with_its_own_identity`, deployment `tests/test_mqtt_brokers.py::test_the_last_acl_rule_denies_everything_and_nothing_is_stored`, deployment `tests/test_mqtt_brokers.py::test_only_the_two_plain_listeners_are_open`, and 26 more |
 | **PL-77** | [S] | tested | fast ci | deployment `tests/test_mqtt_brokers.py::test_each_broker_is_one_release_with_its_own_identity`, deployment `tests/test_mqtt_brokers.py::test_the_last_acl_rule_denies_everything_and_nothing_is_stored`, deployment `tests/test_mqtt_brokers.py::test_only_the_two_plain_listeners_are_open`, and 15 more |
+| **PL-78** | [H] [S] | open |  |  |
 
 ### R — Access control and federation
 
