@@ -39,7 +39,7 @@ second organization.
 **Four spaces, not two.** A space holds one data model (DM-61), and the sources need four: the
 ŠÚ SR rows (`zilina-mesto`, `StatisticalObservation`), the city's public map data
 (`zilina-verejne`: `AirQualityObserved`, `PointOfInterest`, `GtfsStop`), the university's works
-(`zilina-uniza`, `CreativeWork`) and the indicators computed from the rows (`zilina-kpi`,
+(`zilina-uniza`, `Article`, the Smart Data Model extension of CPSV-AP Evidence, T-4338) and the indicators computed from the rows (`zilina-kpi`,
 `KeyPerformanceIndicator`). This is Banská Bystrica's split (`-mesto`, `-verejne`, `-kpi`), and the
 `zilina-` prefix keeps every space segment unique in the Organization's ids (PF-84).
 
@@ -67,7 +67,7 @@ Every row answered 200 and carries an open licence. `NGSI-LD type` is the type t
 | Budovy v obci Žilina | `national` MV SR | `mesto` | `https://rageo.minv.sk/opendata/dataset/building_by_lau2_SK031B517402.geojson` | 200 | GeoJSON | CC-BY-4.0 | daily, modified 2026-10-05 | 6.2 MB | none: a lookup | building purpose and type per address; the features carry no geometry, so no building becomes an entity |
 | Register nehnuteľných národných kultúrnych pamiatok, ŽSK | `national` MK SR (Pamiatkový úrad) | `mesto` | `https://data.slovensko.sk/download?id=dc413b1c-3c2e-454f-b986-d15e1c16093c` | 200, `text/csv` | CSV | CC-BY-4.0 | not declared; modified 2019-12-18 | 344 kB, 1 770 rows; 104 objects of 79 monuments in the city (the 281 of the first count were the district's) | `PointOfInterest` (category heritage) | the city's monuments, placed through the address register by cadastral area and súpisné číslo (83 of the 104 objects; a column or a statue has no address); ownership is only a category (church, state, private), no person is named |
 | Grafikon vlakovej dopravy, GTFS | `operator` ŽSR | `mesto` | `https://data.slovensko.sk/download?id=a5503f2c-c7cc-4a9a-a713-511e7406800d` | 200, a ZIP served as `text/csv` | GTFS in a ZIP | CC-BY-1.0 on the catalogue's copy, CC0 by the publisher | with the timetable, modified 2026-10-05 | 291 kB | `GtfsStop` (Smart Data Models, UrbanMobility): the city's five stations and the trains leaving each that day; in this feed one route is one train number, so routes and trips stay in the file | the trains leaving Žilina, the node of four lines |
-| DREPO, publikácie UNIZA | `university` UNIZA | `uniza` | `https://dspace.uniza.sk/server/api/discover/search/objects?dsoType=ITEM` (REST) and `https://dspace.uniza.sk/server/oai/request?verb=Identify` (OAI-PMH) | 200 and 200 | JSON (HAL), OAI-PMH XML | CC-BY-4.0 per item (`dc.rights.uri`); an item without an open `dc.rights.uri` is left out | continuous | 1 316 items, 787 with CC BY 4.0; 100 per page whatever `size` asks | `CreativeWork` (LinkML: title, type, year, deposit collection, publisher, licence, handle; **no author names**) | the university's open research by year, type and journal |
+| DREPO, publikácie UNIZA | `university` UNIZA | `uniza` | `https://dspace.uniza.sk/server/api/discover/search/objects?dsoType=ITEM` (REST) and `https://dspace.uniza.sk/server/oai/request?verb=Identify` (OAI-PMH) | 200 and 200 | JSON (HAL), OAI-PMH XML | CC-BY-4.0 per item (`dc.rights.uri`); an item without an open `dc.rights.uri` is left out | continuous | 1 316 items, 787 with CC BY 4.0; 100 per page whatever `size` asks | `Article` (LinkML: title, type, year, deposit collection, publisher, licence, handle; **no author names**) | the university's open research by year, type and journal |
 
 ## 3. What the feeds actually returned
 
