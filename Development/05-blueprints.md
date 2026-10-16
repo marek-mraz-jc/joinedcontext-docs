@@ -48,6 +48,23 @@ every merge request, whether the change came from the Portal or from a hand-writ
 parameter set that validates MUST always render valid manifests (CC-24). Titles and
 descriptions are what the generated form shows, so write them for the person filling it in.
 
+`title` and `description` stay plain strings, because JSON Schema requires that, and the plain
+string is the English text. The other languages sit beside it in `x-jc-title` and
+`x-jc-description`, maps of language to text, the same as the blueprint's `metadata.title`. The
+Portal shows the entry for the page's language and falls back to the plain string, also for the
+`title` of a `oneOf` choice. A description says what the parameter means to the person; the
+builder's contract (request headers, requirement ids) goes in the YAML comment above the
+blueprint, not in a text the form shows (T-4244):
+
+```yaml excerpt title="a parameter in more than one language"
+      name:
+        type: string
+        title: "App name"
+        x-jc-title: { sk: "Názov aplikácie", cs: "Název aplikace", de: "Name der App" }
+        description: "The address the app opens at: /apps/{name}/."
+        x-jc-description: { sk: "Adresa, na ktorej sa aplikácia otvorí: /apps/{name}/." }
+```
+
 ```yaml excerpt title="blueprints/threshold-alert/blueprint.yaml (spec.parameterSchema)"
 apiVersion: joinedcontext.com/v1alpha1
 kind: Blueprint
