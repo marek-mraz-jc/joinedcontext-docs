@@ -76,6 +76,8 @@ PL-64 stays: it is a pipeline's hourly sweep in hours and days, run under the pi
 
 The same rule's `history` is executed by the broker's maintenance job: temporal instances of that type in that tenant older than `history` are deleted in bounded batches, at least once a minute while any rule is under an hour (DM-84). `ANTARES_TEMPORAL_RETENTION_DAYS` stays the broker-wide fallback for a deployment that sets it; the platform's deployment leaves it unset, so a space that declares nothing keeps its history. Each sweep logs, per tenant and type, the count it deleted, never ids of history instances and never values, and counts in `antares_retention_deleted_total{tenant,type,kind}` (`kind` = `entity` or `history`).
 
+`history: off` (T-4275, owner 2026-10-16: "When history does not matter, do not set expires at all and so it won't save temporal values") keeps a type's current state only: the reconciler writes the rule as `"history": "off"`, the broker's write path records no temporal instance for an entity with that type in that tenant, and the sweep deletes what the type already holds, which frees the disk. `history: forever` keeps everything and carries a `reason`, for the rare type whose whole history is the point; the Portal offers Off and Keep for a duration only. Decided (worker-7, owner may override): an absent rule still keeps everything, so no space loses data by upgrading; the seed states a value for every type it ruled (measurement series `P30D`, everything else `off`).
+
 ### 2.4 Quality rules: the model's constraints plus three rule kinds
 
 Two sources, one evaluation:
