@@ -1573,9 +1573,11 @@ datasets:
     cMSID:
       column: CMS_ID
       range: integer
-    pRIMNAME:
+    name:
       column: PRIM_NAME
       range: string
+      otherwise:
+      - Categ
     categ:
       column: Categ
       range: string
@@ -1588,7 +1590,7 @@ datasets:
     languages:
       column: languages
       range: string
-    name:
+    sourceName:
       column: name
       range: string
     importKey:
@@ -1699,6 +1701,9 @@ datasets:
     fID2:
       column: FID2
       range: integer
+  rowFilter:
+    where: Categ IS NOT NULL AND Categ <> ''
+    why: three rows of the layer hold nothing but a point, no name and no category
   note: a tourism-portal layer of places; no socket, capacity or vehicle column for EVChargingStation
 - id: 82008199-c201-5cad-b637-f4d5b3f32047
   name: bbsk-nehodovost-v-bbk-0ea72d
@@ -8143,6 +8148,8 @@ datasets:
     name:
       column: Vlastný_názov_zariadenia
       range: string
+      otherwise:
+      - Názov_poskytovateľa
     druhZariadenia:
       column: Druh_zariadenia
       range: string

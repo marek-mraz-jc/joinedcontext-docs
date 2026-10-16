@@ -372,6 +372,7 @@ RENAME: list[tuple[str, dict[str, str]]] = [
     (r"bb-adresy", {"ulica": "thoroughfare", "castObce": "addressArea", "obec": "postName"}),
     (r"bb-podujatia", {"link": "url", "content": "description"}),
     (r"cykloscitace", {"miesto": "name"}),
+    (r"nabijacky", {"pRIMNAME": "name", "name": "sourceName"}),
     (r"poskytovatelov-socialnych", {"obchodneMeno": "name"}),
     (r"kontaktne-miesta", {"nazovOrganizacie": "name"}),
     (r"kulturne-institucie-bbsk-a-ich", {"institucia1": "name"}),
@@ -380,6 +381,13 @@ RENAME: list[tuple[str, dict[str, str]]] = [
     (r"zdravotnickych", {"vlastnyNazovZariadenia": "name"}),
 ]
 # Model attributes whose value is a list of text (CPSV-AP, PointOfInterest category): one column becomes a one-item list.
+# A model attribute whose column is empty in some rows reads these columns next, in order: a
+# PointOfInterest needs a name, and 2288 health facilities have no name of their own, 174 places
+# of the tourism portal no PRIM_NAME (T-4319).
+OTHERWISE: list[tuple[str, dict[str, list[str]]]] = [
+    (r"nabijacky", {"name": ["Categ"]}),
+    (r"zdravotnickych", {"name": ["Názov_poskytovateľa"]}),
+]
 LISTS = {"thoroughfare", "addressArea", "postName", "spatial", "category"}
 # Attributes a model requires that no column holds: the same value on every entity of the type.
 # A RoadAccident row is an accident the police closed and published, so `archived`.
@@ -419,6 +427,11 @@ def modelled(name: str, props: dict[str, dict]) -> dict[str, dict]:
     if clash:
         sys.exit(f"{name}: RENAME to {clash}, which another column already is")
     out = {renames.get(a, a): p for a, p in props.items()}
+    for a, cols in next((o for pat, o in OTHERWISE if re.search(pat, name)), {}).items():
+        known = {p["column"] for p in out.values()}
+        if a not in out or not set(cols) <= known:
+            sys.exit(f"{name}: OTHERWISE names {a} or {cols}, which the mapping does not read")
+        out[a] = {**out[a], "otherwise": cols}
     return {a: {**p, "range": "string-list"} if a in LISTS else p for a, p in out.items()}
 
 
@@ -457,6 +470,8 @@ ROWS: list[tuple[str, str, str | None, str | None, str]] = [
     (r"bbsk-dodavatelia", "ICO", "ICO IS NOT NULL AND ICO <> ''", ICO, ICO_WHY),
     (r"bbsk-zmluvy", "IČO_dodávateľa", "IČO_dodávateľa IS NOT NULL AND IČO_dodávateľa <> ''", ICO,
      "a contract whose supplier has no IČO, or a name where the IČO belongs, can name a natural person"),
+    (r"nabijacky", "Categ", "Categ IS NOT NULL AND Categ <> ''", None,
+     "three rows of the layer hold nothing but a point, no name and no category"),
     (r"poskytovatelov-socialnych", "Typ_poskytovateľa", "Typ_poskytovateľa <> 'neverejný poskytovateľ'", None,
      "a private provider can be a natural person; bbsk-datasource-socialne-sluzby applies the same filter"),
 ]

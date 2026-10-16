@@ -81,7 +81,10 @@ attribute, or a `PointOfInterest`'s `category` (`range: string-list`), carries t
 one-item list. An attribute a model requires that no column holds is the same on every entity
 of the type, under `constants`: a `RoadAccident` is `status: archived`, an accident the police
 closed and published. The tourism portal's charging-and-stop layer has no socket, capacity or
-vehicle column, which `EVChargingStation` requires, so its rows are `PointOfInterest`.
+vehicle column, which `EVChargingStation` requires, so its rows are `PointOfInterest`. A model
+attribute whose column is empty in some rows names the columns read next under `otherwise`: a
+health facility without a name of its own takes its provider's, a tourism-portal place without
+`PRIM_NAME` its category.
 
 A type no published model holds is `status: removed` in section 6. Its reason names the models
 opened and why none fits, so the dataset can come back when one is published. We do not write
@@ -127,6 +130,7 @@ the current rows are.
 | `bbsk-clenovia-samospravy-efc2f3` | columns `Telefonický_kontakt`, `Emailový_kontakt` | office holders' own phones and e-mails |
 | `bbsk-dodavatelia-825cd0` | rows outside `ICO IS NOT NULL AND ICO <> ''`, or rows whose `ICO` does not match `^[0-9]{6,8}( ?[0-9]{4})?$` | a row without an IČO, or with a name where the IČO belongs, can name a natural person |
 | `bbsk-kontakty-na-miestne-samospravy-v-bbk-fc5ecb` | columns `Starosta`, `Telefónne_číslo___starosta`, `E_mail___starosta`, `Zástupca_primátora`, `E_mail___zástupca_primátora` | mayors' own contacts; the offices' general ones stay |
+| `bbsk-nabijacky-a-zastavky-937210` | rows outside `Categ IS NOT NULL AND Categ <> ''` | three rows of the layer hold nothing but a point, no name and no category |
 | `bbsk-organizacna-struktura-40329b` | columns `Priezvisko`, `Meno`, `Titul_pred_menom`, `Titul_za_menom`, `Telefon`, `Mobil`, `Email` | employees' names and contacts; the units and functions stay |
 | `bbsk-zoznam-poskytovatelov-socialnych-sluzieb-v-bbk-9ab090` | rows outside `Typ_poskytovateľa <> 'neverejný poskytovateľ'` | a private provider can be a natural person; bbsk-datasource-socialne-sluzby applies the same filter |
 | `bbsk-zoznam-zdravotnickych-zariadeni-v-bbk-701db2` | columns `Odborný_zástupca` | the named physician of each facility |
