@@ -37,11 +37,11 @@ same rows.
 ## 2. Totals
 
 <!-- totals -->
-| organization | datasets | mapped | already NGSI-LD | not ingestible | source rows of the mapped |
-|---|---:|---:|---:|---:|---:|
-| banskabystrica | 34 | 10 | 2 | 22 | 75031 |
-| bbsk | 90 | 88 | 2 | 0 | 252024 |
-| all | 124 | 98 | 4 | 22 | 327055 |
+| organization | datasets | mapped | already NGSI-LD | not ingestible | removed (no model) | source rows of the mapped |
+|---|---:|---:|---:|---:|---:|---:|
+| banskabystrica | 34 | 5 | 2 | 22 | 5 | 23930 |
+| bbsk | 90 | 57 | 2 | 0 | 31 | 59501 |
+| all | 124 | 62 | 4 | 22 | 36 | 83431 |
 <!-- /totals -->
 
 "Already NGSI-LD" are the four datasets the platform publishes from its own public Endpoints
@@ -51,50 +51,47 @@ probe read from each mapped source, before any row filter of section 5.
 ## 3. Types
 
 <!-- types -->
-| NGSI-LD type | Smart Data Model | datasets | source rows |
+| NGSI-LD type | Smart Data Model (the schema read) | datasets | source rows |
 |---|---|---:|---:|
-| `StatisticalObservation` | project type | 37 | 43640 |
-| `PointOfInterest` | `dataModel.PointOfInterest/PointOfInterest` | 6 | 4468 |
-| `School` | project type | 6 | 1480 |
-| `AdministrativeArea` | project type | 4 | 1053 |
-| `RoadStructure` | project type | 4 | 8981 |
-| `Grant` | project type | 3 | 19845 |
-| `OrganizationUnit` | project type | 3 | 883 |
-| `PublicInvestment` | project type | 3 | 6200 |
-| `Bridge` | project type | 2 | 2682 |
-| `Contract` | project type | 2 | 25045 |
-| `CouncilMeeting` | project type | 2 | 1509 |
-| `CouncilMember` | project type | 2 | 260 |
-| `CycleRoute` | project type | 2 | 1005 |
-| `PublicOrganization` | project type | 2 | 231 |
-| `PublicProcurement` | project type | 2 | 10665 |
-| `PurchaseOrder` | project type | 2 | 45758 |
-| `RoadAccident` | `dataModel.Transportation/RoadAccident` | 2 | 3127 |
-| `WaterBodyStatus` | project type | 2 | 612 |
-| `Address` | project type | 1 | 16902 |
-| `Article` | project type | 1 | 1557 |
-| `CouncilVote` | project type | 1 | 89670 |
-| `EVChargingStation` | `dataModel.Transportation/EVChargingStation` | 1 | 606 |
-| `Event` | project type | 1 | 6164 |
-| `Invoice` | project type | 1 | 28844 |
-| `Petition` | project type | 1 | 12 |
-| `Regulation` | project type | 1 | 34 |
-| `RiverBasin` | project type | 1 | 3 |
-| `SocialService` | project type | 1 | 740 |
-| `Supplier` | project type | 1 | 5066 |
-| `TrafficFlowObservedSite` | project type | 1 | 13 |
+| `KeyPerformanceIndicator` | [`dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator`](https://raw.githubusercontent.com/smart-data-models/dataModel.KeyPerformanceIndicator/ec7f3b642faf3f807d3c8549ccc9e0b743e05f26/KeyPerformanceIndicator/schema.json) | 37 | 43640 |
+| `Organization` | [`dataModel.Organization/Organization`](https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/Organization/schema.json) | 9 | 7415 |
+| `PointOfInterest` | [`dataModel.PointOfInterest/PointOfInterest`](https://raw.githubusercontent.com/smart-data-models/dataModel.PointOfInterest/7e5e24963a142b9bf6fd15b144a0e24588217608/PointOfInterest/schema.json) | 9 | 5827 |
+| `PublicOrganization` | [`dataModel.CPSV-AP/PublicOrganization`](https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/PublicOrganization/schema.json) | 2 | 231 |
+| `RoadAccident` | [`dataModel.Transportation/RoadAccident`](https://raw.githubusercontent.com/smart-data-models/dataModel.Transportation/b83ede9d3db29be1365cc272eb535f46af83bed2/RoadAccident/schema.json) | 2 | 3127 |
+| `Address` | [`dataModel.CPSV-AP/Address`](https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/Address/schema.json) | 1 | 16902 |
+| `Event` | [`dataModel.TourismDestinations/Event`](https://raw.githubusercontent.com/smart-data-models/dataModel.TourismDestinations/6d78cb4ff0c1a7d16dc0c1bab7266e40d4b3a00c/Event/schema.json) | 1 | 6164 |
+| `Person` | [`dataModel.Organization/Person`](https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/Person/schema.json) | 1 | 125 |
 <!-- /types -->
 
-A Smart Data Model is named only where its attributes match the columns: `EVChargingStation`,
-`RoadAccident` and `PointOfInterest`. The census, migration, age-structure,
-climate-risk and payment-per-district tables become the `StatisticalObservation` type, named
-like the class the `bbsk-kraj` model holds, one entity per area and year. `Bridge`,
-`School`, `PublicOrganization`, `SocialService` and `AdministrativeArea` share their names with
-the `bbsk-registre` classes, so an assistant that knows one knows the other. The other project types are new classes for the space's one model
-(DM-61), each named after what one row is.
+Every mapped dataset is in a published FIWARE Smart Data Model, or it leaves data.dev (owner,
+2026-10-16, T-4319). A model is named only after its `schema.json` was opened at the commit the
+link pins. The type is the model's entity type, and a column the model has an attribute for takes
+the model's name:
+
+- `name`: the place's, school's or office's own name.
+- `legalName`: the registered name.
+- `preferredLabel` and `spatial` of CPSV-AP's `PublicOrganization`.
+- `thoroughfare`, `addressArea` and `postName` of CPSV-AP's `Address`.
+- `url` and `description` of an `Event`.
+
+The census, migration, age-structure, climate-risk and payment-per-district tables become
+`KeyPerformanceIndicator`, one entity per area and year. The other columns keep their own names
+beside the model's: every one of these schemas allows additional properties. A CPSV-AP list
+attribute, or a `PointOfInterest`'s `category` (`range: string-list`), carries the column as a
+one-item list. An attribute a model requires that no column holds is the same on every entity
+of the type, under `constants`: a `RoadAccident` is `status: archived`, an accident the police
+closed and published. The tourism portal's charging-and-stop layer has no socket, capacity or
+vehicle column, which `EVChargingStation` requires, so its rows are `PointOfInterest`. A model
+attribute whose column is empty in some rows names the columns read next under `otherwise`: a
+health facility without a name of its own takes its provider's, a tourism-portal place without
+`PRIM_NAME` its category.
+
+A type no published model holds is `status: removed` in section 6. Its reason names the models
+opened and why none fits, so the dataset can come back when one is published. We do not write
+our own models: "smart data model" means one published in smart-data-models.
 
 Each mapped entry lists its `properties`: the attribute name, in ASCII lowerCamelCase, the
-column it reads and its `range` (`integer`, `float`, `date`, `datetime`, `uri` or `string`),
+column it reads and its `range` (`integer`, `float`, `date`, `datetime`, `uri`, `string` or `string-list`),
 taken from the source's own field type. Two columns that fold to one name take a number after
 the second. A column named like an NGSI-LD core member (`id`, `type`, `location`, ...)
 keeps its value as `source<Name>`. Esri bookkeeping columns (`OBJECTID`, `GlobalID`,
@@ -105,9 +102,9 @@ keeps its value as `source<Name>`. Esri bookkeeping columns (`OBJECTID`, `Global
 <!-- ids -->
 | entity id from | datasets |
 |---|---:|
-| a key column | 58 |
-| a key column and its year | 7 |
-| a row hash | 33 |
+| a key column | 43 |
+| a key column and its year | 8 |
+| a row hash | 11 |
 <!-- /ids -->
 
 A key column is one whose distinct count, asked of the source, equals the row count. The probe
@@ -130,16 +127,11 @@ the current rows are.
 <!-- personal -->
 | dataset | kept out | why |
 |---|---|---|
-| `bb-zmluvy-bb` | rows whose `Zmluvné_strany_s_údajom_IČO` does not match `^IČO:[^\r]*(\rIČO:[^\r]*)*$` | a party without an IČO is a natural person, a social-service client among them |
 | `bbsk-clenovia-samospravy-efc2f3` | columns `Telefonický_kontakt`, `Emailový_kontakt` | office holders' own phones and e-mails |
 | `bbsk-dodavatelia-825cd0` | rows outside `ICO IS NOT NULL AND ICO <> ''`, or rows whose `ICO` does not match `^[0-9]{6,8}( ?[0-9]{4})?$` | a row without an IČO, or with a name where the IČO belongs, can name a natural person |
-| `bbsk-dotacie-bada80` | rows outside `IČO IS NOT NULL AND IČO <> ''`, or rows whose `IČO` does not match `^[0-9]{6,8}( ?[0-9]{4})?$` | a row without an IČO, or with a name where the IČO belongs, can name a natural person |
-| `bbsk-faktury-422b35` | rows outside `IČO IS NOT NULL AND IČO <> ''`, or rows whose `IČO` does not match `^[0-9]{6,8}( ?[0-9]{4})?$` | a row without an IČO, or with a name where the IČO belongs, can name a natural person |
-| `bbsk-komisie-zastupitelstva-banskobystrickeho-samospravneho-kraja-59b9e4` | columns `Meno` | committees seat citizens who hold no office; the seats stay, the names do not |
 | `bbsk-kontakty-na-miestne-samospravy-v-bbk-fc5ecb` | columns `Starosta`, `Telefónne_číslo___starosta`, `E_mail___starosta`, `Zástupca_primátora`, `E_mail___zástupca_primátora` | mayors' own contacts; the offices' general ones stay |
-| `bbsk-objednavky-a97e8a` | rows outside `IČO IS NOT NULL AND IČO <> ''`, or rows whose `IČO` does not match `^[0-9]{6,8}( ?[0-9]{4})?$` | a row without an IČO, or with a name where the IČO belongs, can name a natural person |
+| `bbsk-nabijacky-a-zastavky-937210` | rows outside `Categ IS NOT NULL AND Categ <> ''` | three rows of the layer hold nothing but a point, no name and no category |
 | `bbsk-organizacna-struktura-40329b` | columns `Priezvisko`, `Meno`, `Titul_pred_menom`, `Titul_za_menom`, `Telefon`, `Mobil`, `Email` | employees' names and contacts; the units and functions stay |
-| `bbsk-zmluvy-cafee6` | rows outside `IČO_dodávateľa IS NOT NULL AND IČO_dodávateľa <> ''`, or rows whose `IČO_dodávateľa` does not match `^[0-9]{6,8}( ?[0-9]{4})?$` | a contract whose supplier has no IČO, or a name where the IČO belongs, can name a natural person |
 | `bbsk-zoznam-poskytovatelov-socialnych-sluzieb-v-bbk-9ab090` | rows outside `Typ_poskytovateľa <> 'neverejný poskytovateľ'` | a private provider can be a natural person; bbsk-datasource-socialne-sluzby applies the same filter |
 | `bbsk-zoznam-zdravotnickych-zariadeni-v-bbk-701db2` | columns `Odborný_zástupca` | the named physician of each facility |
 <!-- /personal -->
@@ -152,12 +144,14 @@ DataStore tables already hold only the rows with an IČO. A row filter is writte
 source. The `Evidencia psov` and `Zoznam poskytovateľov pre APS` datasets never reached CKAN
 ([sources §8](banska-bystrica-open-data-sources.md#8-personal-data-found-in-published-datasets)).
 
-## 6. Not ingestible, and already in NGSI-LD
+## 6. Not ingestible, removed, and already in NGSI-LD
 
 <!-- refused -->
 | dataset | organization | status | reason |
 |---|---|---|---|
 | Banská Bystrica — verejné údaje (`banskabystrica-verejne`) | banskabystrica | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
+| Aktuality (`bb-aktuality`) | banskabystrica | removed | no smart data model: no subject of the official list (2026-07-19) holds news articles |
+| Dotácie (`bb-dotacie`) | banskabystrica | removed | no smart data model: no subject of the official list (2026-07-19) holds grants or subsidies |
 | DTM_BB-funkcne-vyuzitie-uzemia (`bb-dtm-bb-funkcne-vyuzitie-uzemia`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (201 KiB): a PDF map sheet, no data |
 | DTM_BB-Polohopis_a_vyskopis_bodoveho_pola (`bb-dtm-bb-polohopis-a-vyskopis-bodoveho-pola`) | banskabystrica | not-ingestible | 240636 Point features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects; without the geometry the rows carry little (the city's address list without points is bb-adresy) |
 | DTM_BB-Register-adries (`bb-dtm-bb-register-adries`) | banskabystrica | not-ingestible | 15769 Point features in S-JTSK (EPSG:5514): NGSI-LD locations are WGS 84 and no pipeline step reprojects; without the geometry the rows carry little (the city's address list without points is bb-adresy) |
@@ -180,9 +174,43 @@ source. The `Evidencia psov` and `Zoznam poskytovateľov pre APS` datasets never
 | DTM_BB-vyskopis-teran (`bb-dtm-bb-vyskopis-teran`) | banskabystrica | not-ingestible | a ZIP of 1 .geojson (65889 KiB): larger than the 10 MiB this round loads into the one broker |
 | DTM_BB-vyuzitie-pody-na-nepolnohospodarske-ucely (`bb-dtm-bb-vyuzitie-pody-na-nepolnohospodarske-ucely`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data |
 | DTM_BB-zaujmove-uzemie-a-sirsie-vztahy (`bb-dtm-bb-zaujmove-uzemie-a-sirsie-vztahy`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (24 KiB): a PDF map sheet, no data |
+| Objednávky BB (`bb-objednavky-bb`) | banskabystrica | removed | no smart data model: no subject of the official list (2026-07-19) holds orders, invoices, contracts or procurement |
+| Zasadnutia orgánov samosprávy (`bb-zasadnutia-organov-samospravy`) | banskabystrica | removed | no smart data model: no subject holds council meetings, votes, petitions or regulations; CPSV-AP has PublicService, BusinessEvent and LifeEvent |
+| Zmluvy BB (`bb-zmluvy-bb`) | banskabystrica | removed | no smart data model: no subject of the official list (2026-07-19) holds orders, invoices, contracts or procurement |
 | Kvalita ovzdušia v Banskej Bystrici (`public-air`) | banskabystrica | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
+| Cykloturistické trasy - línie (`bbsk-cykloturisticke-trasy-linie-e6a1a7`) | bbsk | removed | no smart data model: OpenStreetMap/OSMCycleRoute requires osmId and osmType; Transportation/BikeLane is a lane, not a touring route |
+| Cykloturistické trasy - línie - povrchy (`bbsk-cykloturisticke-trasy-linie-povrchy-2ec670`) | bbsk | removed | no smart data model: OpenStreetMap/OSMCycleRoute requires osmId and osmType; Transportation/BikeLane is a lane, not a touring route |
+| Dilatačné celky v Banskobystrickom kraji (public view) (`bbsk-dilatacne-celky-v-banskobystrickom-kraji-public-view-6ff77a`) | bbsk | removed | no smart data model: Transportation/Road and RoadSegment describe roads, not underpasses, culverts, expansion joints or level crossings |
+| Dotácie (`bbsk-dotacie-bada80`) | bbsk | removed | no smart data model: no subject of the official list (2026-07-19) holds grants or subsidies |
+| Ekologický potenciál vodných útvarov (`bbsk-ekologicky-potencial-vodnych-utvarov-672eca`) | bbsk | removed | no smart data model: WaterQuality/WaterQualityObserved and Environment/WaterObserved require dateObserved and location and hold measured parameters; these rows are ecological status classes |
+| Ekologický stav vodných útvarov (`bbsk-ekologicky-stav-vodnych-utvarov-48bbbd`) | bbsk | removed | no smart data model: WaterQuality/WaterQualityObserved and Environment/WaterObserved require dateObserved and location and hold measured parameters; these rows are ecological status classes |
+| Faktúry (`bbsk-faktury-422b35`) | bbsk | removed | no smart data model: no subject of the official list (2026-07-19) holds orders, invoices, contracts or procurement |
+| Hlasovania poslancov (`bbsk-hlasovania-poslancov-ba7ca6`) | bbsk | removed | no smart data model: no subject holds council meetings, votes, petitions or regulations; CPSV-AP has PublicService, BusinessEvent and LifeEvent |
+| Komisie zastupiteľstva Banskobystrického samosprávneho kraja (`bbsk-komisie-zastupitelstva-banskobystrickeho-samospravneho-kraja-59b9e4`) | bbsk | removed | no smart data model: Organization/Person is a person; a seat whose holder's name is kept out is none |
 | Ukazovatele kraja (`bbsk-kpi`) | bbsk | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
+| Kraj BBK - hranica (`bbsk-kraj-bbk-hranica-a05568`) | bbsk | removed | no smart data model: OpenStreetMap/OSMBoundary requires osmId and osmType; these boundaries come from the region's register, not OpenStreetMap |
+| Mosty v Banskobystrickom kraji (public view) (`bbsk-mosty-v-banskobystrickom-kraji-public-view-3b4675`) | bbsk | removed | no smart data model: Transportation/Road and RoadSegment describe roads; RoadSegment requires refRoad, startPoint and endPoint, which a bridge register has not |
+| Mosty v správe BBRSC (public view) (`bbsk-mosty-v-sprave-bbrsc-public-view-d3252c`) | bbsk | removed | no smart data model: Transportation/Road and RoadSegment describe roads; RoadSegment requires refRoad, startPoint and endPoint, which a bridge register has not |
+| Obce BBK - centroidy (`bbsk-obce-bbk-centroidy-cbd19f`) | bbsk | removed | no smart data model: OpenStreetMap/OSMBoundary requires osmId and osmType; these boundaries come from the region's register, not OpenStreetMap |
+| Obce BBK - hranice (`bbsk-obce-bbk-hranice-ec7ac6`) | bbsk | removed | no smart data model: OpenStreetMap/OSMBoundary requires osmId and osmType; these boundaries come from the region's register, not OpenStreetMap |
+| Objednávky (`bbsk-objednavky-a97e8a`) | bbsk | removed | no smart data model: no subject of the official list (2026-07-19) holds orders, invoices, contracts or procurement |
+| Okresy BBK - hranice (`bbsk-okresy-bbk-hranice-17725f`) | bbsk | removed | no smart data model: OpenStreetMap/OSMBoundary requires osmId and osmType; these boundaries come from the region's register, not OpenStreetMap |
+| Petície (`bbsk-peticie-f80530`) | bbsk | removed | no smart data model: no subject holds council meetings, votes, petitions or regulations; CPSV-AP has PublicService, BusinessEvent and LifeEvent |
+| Plán verejného obstarávania (`bbsk-plan-verejneho-obstaravania-48b7e9`) | bbsk | removed | no smart data model: no subject of the official list (2026-07-19) holds orders, invoices, contracts or procurement |
+| Podjazdy v Banskobystrickom kraji (public view) (`bbsk-podjazdy-v-banskobystrickom-kraji-public-view-e6fb8f`) | bbsk | removed | no smart data model: Transportation/Road and RoadSegment describe roads, not underpasses, culverts, expansion joints or level crossings |
+| Povodia Banskobystrického kraja (`bbsk-povodia-banskobystrickeho-kraja-067504`) | bbsk | removed | no smart data model: OpenStreetMap/OSMWater requires osmId and osmType; the basins come from the region's register |
+| PPA platby (`bbsk-ppa-platby-f3c509`) | bbsk | removed | no smart data model: no subject of the official list (2026-07-19) holds grants or subsidies |
+| Priepusty v Banskobystrickom kraji (public view) (`bbsk-priepusty-v-banskobystrickom-kraji-public-view-a9ed8e`) | bbsk | removed | no smart data model: Transportation/Road and RoadSegment describe roads, not underpasses, culverts, expansion joints or level crossings |
+| Projekty Banskobystrického kraja ITMS21 (`bbsk-projekty-banskobystrickeho-kraja-itms21-c8bfea`) | bbsk | removed | no smart data model: no subject of the official list (2026-07-19) holds public investment projects |
+| Realizované verejné obstarávania (`bbsk-realizovane-verejne-obstaravania-754eee`) | bbsk | removed | no smart data model: no subject of the official list (2026-07-19) holds orders, invoices, contracts or procurement |
+| Register investícií - bodová vrstva (`bbsk-register-investicii-bodova-vrstva-e0b3b4`) | bbsk | removed | no smart data model: no subject of the official list (2026-07-19) holds public investment projects |
+| Register investícií - polygónová vrstva (`bbsk-register-investicii-polygonova-vrstva-e902a9`) | bbsk | removed | no smart data model: no subject of the official list (2026-07-19) holds public investment projects |
 | Registre kraja (`bbsk-registre`) | bbsk | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
+| Úradné hodiny (`bbsk-uradne-hodiny-c912ed`) | bbsk | removed | no smart data model: a row is one office's hours on one weekday; no model holds an opening slot as an entity |
+| Zasadnutia samosprávy (`bbsk-zasadnutia-samospravy-9a27f2`) | bbsk | removed | no smart data model: no subject holds council meetings, votes, petitions or regulations; CPSV-AP has PublicService, BusinessEvent and LifeEvent |
+| Železničné priecestia v Banskobystrickom kraji (public view) (`bbsk-zeleznicne-priecestia-v-banskobystrickom-kraji-public-view-89feb8`) | bbsk | removed | no smart data model: Transportation/Road and RoadSegment describe roads, not underpasses, culverts, expansion joints or level crossings |
+| Zmluvy (`bbsk-zmluvy-cafee6`) | bbsk | removed | no smart data model: no subject of the official list (2026-07-19) holds orders, invoices, contracts or procurement |
+| Zoznam účinných všeobecne záväzných nariadení (VZN) (`bbsk-zoznam-ucinnych-vseobecne-zavaznych-nariadeni-vzn-80db50`) | bbsk | removed | no smart data model: no subject holds council meetings, votes, petitions or regulations; CPSV-AP has PublicService, BusinessEvent and LifeEvent |
 <!-- /refused -->
 
 Most DTM ZIPs of the city hold one PDF map sheet and no data. `DTM_BB-register verejnej zelene 2`
@@ -197,15 +225,17 @@ Decided (worker-8, owner may override): a source over 100 000 rows or a GeoJSON 
 not loaded in this round, because one broker on one 16 GB node holds every project. Options: load
 the terrain model now, or as one aggregate per cadastral area.
 
+A `removed` dataset is mapped to nothing and leaves data.dev: its catalogue row is hidden by the
+publish gate (T-4318), the seed generator writes no pipeline for it, and its entities are deleted
+from the open-data space once no pipeline writes them (T-4319). A `not-ingestible` dataset leaves
+data.dev through the same gate, because the catalogue lists only data in NGSI-LD.
+
 ## 7. Datasets a seed already reads
 
 <!-- existing -->
 | dataset | seed that already reads it | covers |
 |---|---|---|
 | `bb-podujatia` | `banskabystrica/datasource-podujatia.yaml` | whole |
-| `bbsk-mosty-v-banskobystrickom-kraji-public-view-3b4675` | `bbsk/bbsk-datasource-mosty.yaml` | whole |
-| `bbsk-obce-bbk-hranice-ec7ac6` | `bbsk/bbsk-datasource-obce.yaml` | whole |
-| `bbsk-okresy-bbk-hranice-17725f` | `bbsk/bbsk-datasource-okresy.yaml` | whole |
 | `bbsk-organizacie-v-zriadovatelskej-posobnosti-bbsk-bc762a` | `bbsk/bbsk-datasource-organizacie.yaml` | whole |
 | `bbsk-zoznam-poskytovatelov-socialnych-sluzieb-v-bbk-9ab090` | `bbsk/bbsk-datasource-socialne-sluzby.yaml` | whole |
 | `bbsk-zoznam-zdravotnickych-zariadeni-v-bbk-701db2` | `bbsk/bbsk-datasource-nemocnice.yaml` | hospitals only |
