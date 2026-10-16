@@ -215,10 +215,13 @@ def esri_layer(fs: str, layer: int) -> dict:
                                         "resultRecordCount": 2000, "f": "json"})
             _, _, body = get(f"{fs}/{layer}/query?{q}", limit=1 << 24)
             page = json.loads(body or b"{}")
-            seen |= {tuple(f["attributes"].get(c) for c in cols) for f in page.get("features", [])}
-            if not page.get("exceededTransferLimit"):
+            features = page.get("features", [])
+            seen |= {tuple(f["attributes"].get(c) for c in cols) for f in features}
+            if not page.get("exceededTransferLimit") or not features:
                 break
-            offset += 2000
+            # A layer serves at most its maxRecordCount (1000 on the BBSK Hub), not the 2000 asked:
+            # stepping by 2000 skipped every other page and took Číslo_nehody's 3046 values for 2000.
+            offset += len(features)
         distinct["+".join(cols)] = len(seen)
     return {"status": 200, "layer": layer, "name": meta.get("name"), "geometry": meta.get("geometryType"),
             "count": json.loads(cnt or b"{}").get("count"), "fields": fields, "distinct": distinct}
@@ -442,6 +445,20 @@ def type_of(name: str):
     return None
 
 
+# Keys the probe does not find: a column without an id-like name, or one it counted before the
+# paging fix above. Each checked unique and never empty over the whole source on 2026-10-16
+# (T-4332). A key keeps one entity per row when a value changes; a row hash makes a second one.
+KEYS: dict[str, list[str]] = {
+    "bb-pocet-obcanov-podla-dna-narodenia": ["Deň", "Pohlavie"],  # 732 rows, 732 pairs
+    "bb-pocet-obcanov-podla-veku": ["Vek"],  # 105 rows
+    "bb-prirastky-a-ubytky-obcanov-za-jednotlive-roky": ["Rok"],  # 27 rows
+    "bbsk-cyklisti-nehodovost-addf0f": ["Rok", "obdobie", "parameter", "Územie"],  # 81 rows
+    "bbsk-nabijacky-a-zastavky-937210": ["CMS_ID"],  # 606 rows
+    "bbsk-nehodovost-v-bbk-0ea72d": ["Číslo_nehody"],  # 3046 rows
+    "bbsk-prispevkove-rozpoctove-a-ine-organizacie-samospravy-cec768": ["IČO_organizácie"],  # 126 rows
+}
+
+
 # Columns that name or reach a person, dropped before a row becomes an entity (Security of T-4254;
 # Open data integration rules §1). Office holders keep name and function; their phones and e-mails
 # and every employee's or appointee's name and contact stay out.
@@ -568,6 +585,11 @@ def plan(d: dict, probe_: dict, fetched: str) -> dict:
     unique = [k.split("+") for k, n in (p.get("distinct") or {}).items() if n == rows and all(c in fields for c in k.split("+"))]
     if source["kind"] == "json-feed" and "id" in fields:
         unique = [["id"]]
+    if d["name"] in KEYS:
+        missing = [c for c in KEYS[d["name"]] if c not in fields]
+        if missing:
+            sys.exit(f"{d['name']}: KEYS names {missing}, which the source does not have")
+        unique = [KEYS[d["name"]]]
     observed = next((f for f in fields if re.search(r"d[aá]tum|date|rok$|^rok|year|obdobie", f, re.I)), None) if typ in OBSERVED else None
     dropped = next(((cols, why) for pat, cols, why in DROP if re.search(pat, d["name"])), ([], ""))
     absent = [c for c in dropped[0] if c not in fields]

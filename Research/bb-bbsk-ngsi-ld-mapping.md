@@ -102,9 +102,9 @@ keeps its value as `source<Name>`. Esri bookkeeping columns (`OBJECTID`, `Global
 <!-- ids -->
 | entity id from | datasets |
 |---|---:|
-| a key column | 38 |
-| a key column and its year | 6 |
-| a row hash | 18 |
+| a key column | 43 |
+| a key column and its year | 8 |
+| a row hash | 11 |
 <!-- /ids -->
 
 A key column is one whose distinct count, asked of the source, equals the row count. The probe
