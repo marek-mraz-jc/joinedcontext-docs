@@ -49,12 +49,16 @@ browser ── widget or /d/{publicId} ── POST /api/v1/d/{publicId}/chat (SS
      1. limits: per-IP and per-chat counters, daily cost cap        (T-4149)
      2. cache: same normalized question + same index digest → stored answer
      3. router call, cheap model, JSON out: route rag|data|both,
-        up to 3 search queries, language                              (T-4139)
+        up to 3 search queries in the question's language and in
+        each language the sources are written in                    (T-4139, T-4259)
      4. retrieval rounds, server-run, at most 3:
           rag  → hybrid_search per query, top passages by RRF
           data → read-only MCP tools on the deployment's Endpoints    (T-4140)
-        stop when the passages cover the question (score and facet
-        check); else one more router call with titles only
+        after each round but the last, a follow-up call reads the
+        first 300 characters of the top 5 passages as quoted data:
+        {"answers": true} answers now; {"answers": false,
+        "queries": [...]} runs the next round in the sources'
+        language; any other reply answers with what was found       (T-4259)
      5. answer call, once, streamed token by token, top passages
         and data rows as quoted data, citations from what was found
      6. SSE: delta… , data (rows, dataset link, download link),
@@ -63,6 +67,10 @@ browser ── widget or /d/{publicId} ── POST /api/v1/d/{publicId}/chat (SS
 
 Decided (worker-1, owner may override): the server runs the rounds and the model never calls `search` itself, because the goal fixes the answering model to one call per answer and the injection rules want the tool allowlist enforced by code; options: keep today's model-driven loop with a lower `MAX_CALLS` (fewer code changes, but every round costs a full answering-model call with all passages again).
 
+The sources' languages are the distinct `chunks.lang` of the deployment's sources, most passages first, at most 4, kept for 10 minutes like an Endpoint's type list. Full-text search uses the configuration of each passage's own language (`jc_fts_config`), so an English query never matches a Slovak page by its words: only the vectors would find it, and the round's best passages would rank in one list alone. The router therefore writes each query once in the question's language and once in every source language that differs; the `searching` stage event shows each one, so a person reads "hľadám: …" for the Slovak search of an English question.
+
+Decided (supervisor, owner may override; T-4259): no RAG framework, because LangChain, LlamaIndex and Haystack are Python (no new languages) and the Rust agent crates add a large dependency for a loop this crate already has; the multi-query rewrite with a relevance judge is two prompts and one JSON field; options: a framework, a translation service (another outbound host and key). The answer still streams once: the judgment runs before it, never as an answer-then-retry loop.
+
 Decided (worker-1, owner may override): the public chat page is served by jc-assistant at `assistant.{domain}/d/{publicId}` beside the existing widget, from the same `render.js`, plus a one-line launcher `assistant.{domain}/d/{publicId}/embed.js` that a city site includes, because every Portal route needs a login and the widget already has the Origin checks, the limits and the renderer; options: a public Portal route (a second renderer and a second set of limits).
 
 ## 4. Token budget at runtime
@@ -70,10 +78,10 @@ Decided (worker-1, owner may override): the public chat page is served by jc-ass
 | Step | Model | Input | Output |
 |---|---|---|---|
 | Router, round 1 | cheap | system 300 + question and last 2 turns ≤ 400 | ≤ 120 (JSON) |
-| Router, rounds 2-3 (only when needed) | cheap | 300 + passage titles ≤ 300 | ≤ 80 |
+| Follow-up, after rounds 1-2 (until the passages answer) | cheap | 350 + question, searches and 5 passage starts of 300 characters ≤ 500 | ≤ 80 |
 | Answer | chosen by T-4144 | system 400 + top 6 passages (about 300 tokens each, 1 800) + data rows ≤ 600 + question 250 | ≤ 700 (owner limit) |
 
-A typical answer is one router call and one answer call: about 820 + 3 750 tokens, so the median target of 4 000 for the answer call alone is tight and 4 000 for both is reachable only with 5 passages. Decided (worker-1, owner may override): count the goal's 4 000-token median over the answer call plus the router calls, and cut passages to the top 5 (`PASSAGES` 8 → 5) when the T-4144 run shows the median above it, because the owner's target is per answer, and passages are the one input that scales. The 12 000 ceiling holds by construction: three router calls (≤ 2 100) plus one answer call (≤ 3 750 + 700).
+A typical answer is one router call, one follow-up and one answer call: about 820 + 930 + 3 750 tokens (T-4259 adds the follow-up to every searched question), so the median target of 4 000 for the answer call alone is tight and 4 000 for both is reachable only with 5 passages. Decided (worker-1, owner may override): count the goal's 4 000-token median over the answer call plus the router calls, and cut passages to the top 5 (`PASSAGES` 8 → 5) when the T-4144 run shows the median above it, because the owner's target is per answer, and passages are the one input that scales. The 12 000 ceiling holds by construction: the router and two follow-up calls (≤ 2 680) plus one answer call (≤ 3 750 + 700).
 
 The numbers are read, never estimated: every model response through `jc-agent-proxy` carries the OpenAI-compatible `usage` object (`prompt_tokens`, `completion_tokens`), and jc-assistant sums it over the router and answer calls of one question into the final SSE event `done`, which today carries `tokens` alone and gains `tokensIn`, `tokensOut`, `modelCalls`, `firstTokenMs`, `totalMs` and `cached` ([API/05 §1.3](../API/05-knowledge-assistant.md#13-answer-server-sent-events)). T-4144 reads exactly these fields per answer; a cached answer reports `tokensIn: 0`.
 
