@@ -93,8 +93,10 @@ like the class the `bbsk-kraj` model holds, one entity per area and year. `Bridg
 the `bbsk-registre` classes, so an assistant that knows one knows the other. The other project types are new classes for the space's one model
 (DM-61), each named after what one row is.
 
-Each mapped entry lists its `properties`: the attribute name, in ASCII lowerCamelCase, and the
-column it reads. A column named like an NGSI-LD core member (`id`, `type`, `location`, ...)
+Each mapped entry lists its `properties`: the attribute name, in ASCII lowerCamelCase, the
+column it reads and its `range` (`integer`, `float`, `date`, `datetime`, `uri` or `string`),
+taken from the source's own field type. Two columns that fold to one name take a number after
+the second. A column named like an NGSI-LD core member (`id`, `type`, `location`, ...)
 keeps its value as `source<Name>`. Esri bookkeeping columns (`OBJECTID`, `GlobalID`,
 `Shape__Area`, `Shape__Length`) are left out. A layer's geometry becomes `location`.
 

@@ -292,13 +292,32 @@ def refresh(modified: str | None, fetched: str, typ: str = "") -> str:
 RESERVED = {"id", "type", "scope", "location", "observationSpace", "operationSpace", "createdAt",
             "modifiedAt", "deletedAt", "observedAt", "datasetId", "instanceId", "unitCode", "value", "object"}
 # What a WordPress post is to a reader; the rest of the REST answer is theme and editor state.
-WP_FIELDS = ("title", "link", "date_gmt", "modified_gmt", "content", "news_categories", "event_categories",
-             "municipal_districts", "meta")
+WP_FIELDS = {"title": "string", "link": "uri", "date_gmt": "datetime", "modified_gmt": "datetime", "content": "string"}
+# The value type of a column, from the source's own field type: what the generator converts to and
+# what the generated model declares.
+RANGES = {
+    "SmallInteger": "integer", "Integer": "integer", "BigInteger": "integer", "OID": "integer",
+    "Double": "float", "Single": "float", "Date": "datetime", "DateOnly": "date", "TimestampOffset": "datetime",
+    "int2": "integer", "int4": "integer", "int8": "integer", "numeric": "float", "float8": "float",
+    "timestamp": "datetime", "date": "date",
+}
 
 
 def prop(field: str) -> str:
     a = attr(field)
     return "source" + a[0].upper() + a[1:] if a in RESERVED else a
+
+
+def properties(fields: list[str], ranges: dict[str, str]) -> dict[str, dict]:
+    """Attribute name -> column and range. Two columns that fold to one name (case, diacritics)
+    take a number after the second, in column order."""
+    out: dict[str, dict] = {}
+    for f in fields:
+        name, n = prop(f), 2
+        while name in out:
+            name, n = f"{prop(f)}{n}", n + 1
+        out[name] = {"column": f, "range": ranges[f]}
+    return out
 
 
 def type_of(name: str):
@@ -364,11 +383,13 @@ def plan(d: dict, probe_: dict, fetched: str) -> dict:
         if p.get("status") != 200:
             return {**entry, "status": "not-ingestible", "reason": f"Esri layer answered {p.get('status')}"}
         fields = [f["name"] for f in p["fields"]]
+        ranges = {f["name"]: RANGES.get(f["type"], "string") for f in p["fields"]}
         source = {"kind": "esri-featureserver", "url": f"{r['url'].rstrip('/')}/{p['layer']}",
                   "geometry": p["geometry"], "rows": p["count"]}
     elif "CSV" in by_fmt and by_fmt["CSV"][1].get("status") == 200:
         r, p = by_fmt["CSV"]
         fields = [f["name"] for f in p["fields"]]
+        ranges = {f["name"]: RANGES.get(f["type"], "string") for f in p["fields"]}
         source = {"kind": "ckan-datastore", "url": r["url"], "resource": r["id"], "rows": p["count"]}
     elif "ZIP" in by_fmt and by_fmt["ZIP"][1].get("features") and "5514" in by_fmt["ZIP"][1].get("crs", ""):
         r, p = by_fmt["ZIP"]
@@ -394,9 +415,10 @@ def plan(d: dict, probe_: dict, fetched: str) -> dict:
     elif "JSON" in by_fmt:
         r, p = by_fmt["JSON"]
         if p.get("status") == 200 and p.get("json"):
-            fields = [k for k in p.get("keys", []) if k in WP_FIELDS or "wp-json" not in r["url"]]
-            if "wp-json" in r["url"] and "id" in p.get("keys", []):
-                fields = ["id", *fields]
+            if "wp-json" not in r["url"]:
+                return {**entry, "status": "not-ingestible", "reason": "a JSON feed other than WordPress: no mapping reads it yet"}
+            fields = ["id", *(k for k in WP_FIELDS if k in p.get("keys", []))]
+            ranges = {"id": "integer", **WP_FIELDS}
             source = {"kind": "json-feed", "url": r["url"], "rows": int(p["total"]) if p.get("total") else p.get("rows_in_first_page")}
         else:
             return {**entry, "status": "not-ingestible",
@@ -430,7 +452,7 @@ def plan(d: dict, probe_: dict, fetched: str) -> dict:
            "refresh": "P1D" if source["kind"] == "json-feed" else refresh(d["extras"].get("modified"), fetched, typ),
            "dataProvider": d["extras"].get("publisher_name"), "license": d["license"],
            "dataset": f"{CKAN}/dataset/{d['name']}",
-           "properties": {prop(f): f for f in fields}}
+           "properties": properties(fields, ranges)}
     if dropped[0]:
         out["dropped"] = {"columns": dropped[0], "why": dropped[1]}
     for pat, column, where, why in ROWS:
@@ -569,6 +591,7 @@ def selftest() -> None:
     assert any("no <!-- types -->" in e for e in check(snap, ok, page.replace("<!-- types -->", "")))
     assert any("not in the CKAN snapshot" in e for e in check(snap, {"datasets": ok["datasets"] + [{**ok["datasets"][0], "id": "z"}]}, page))
     assert attr("Dĺžka_premostenia___m") == "dlzkaPremosteniaM" and attr("IČO") == "iCO" and attr("2021") == "n2021"
+    assert list(properties(["Rok", "rok", "Rók"], {"Rok": "integer", "rok": "string", "Rók": "string"})) == ["rok", "rok2", "rok3"]
     assert prop("id") == "sourceId" and prop("Typ") == "typ" and prop("type") == "sourceType"
     assert refresh("2026-10-15T09:00Z", "2026-10-16T04:00Z") == "P1D" and refresh("2024-01-01", "2026-10-16") == "P1W"
     assert refresh(None, "2026-10-16", "StatisticalObservation") == "P1M"
