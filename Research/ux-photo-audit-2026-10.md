@@ -96,11 +96,31 @@ Each audit wrote its screenshots, a contact sheet `index.html` and a `findings.j
 
 <!-- end generated -->
 
-## 3. Status
+## 3. Status and fix tasks
 
-The block above covers the audits that were finished when the script last ran. T-4164 runs it again over all seven folders, then files the fix tasks: one per pattern with a blocker or major finding, plus one per page-only blocker, at most 15, each named here and in T-4165.
+The block above covers six of the seven audits. T-4160 (explore and Apps) was still shooting when T-4164 closed; when it lands, its owner adds its findings to `scripts/ux-photo-audit-triage.json` and runs the script again.
 
-Two findings stay out of the fix tasks because the owner decides them: the public assistant's model call (the proxy that T-4170 turns on) and whether fingerprinted assets leave the per-address rate limit. The chunk-load error boundary, with words and a Reload button, is a Portal fix either way and belongs to the `limit` pattern.
+Each pattern and its fix tasks, as of 2026-10-16:
+
+| Pattern | Fix tasks |
+|---|---|
+| `lang` | T-4199 (Apps, assistant, Keycloak, catalogue), T-4212 (form list buttons), T-4228 (Keycloak account console); the Flow wizard's English blueprints stay with T-4165 |
+| `raw` | T-4200 (App hosts, assistant host, edge, Activity), T-4208, T-4209, T-4210, T-4211 (access forms); the data source form's developer warning and raw keys, the import page's design note and the pipeline Sample step's engine error stay with T-4165 |
+| `phone` | T-4213 (role checkboxes), T-4214 (endpoints row); tables wider than their card (activity, pipelines, the model editor) stay with T-4165 |
+| `failed-read` | T-4165: one error state inside the shell |
+| `form-errors` | T-4207 |
+| `ids` | T-4165 |
+| `viewer` | T-4165 |
+| `dead-end` | T-4165 (Portal); T-4200 (App hosts) |
+| `first-view` | T-4195 |
+| `limit` | T-4201; the chunk-load error boundary with words and a Reload button stays with T-4165 |
+| `helsinki` | T-4202 |
+| `keycloak` | T-4203, T-4228 |
+| `float` | T-4204 |
+
+Page-only findings with their own task: T-4215 (empty Policy summary), T-4216 (breadcrumbs), T-4217 (Topics), T-4218 (hyphenated search), T-4219 (pipeline naming, Activity lead), T-4220 (publisher naming), T-4221 (Policies list filter), T-4222 (App grid filters), T-4223 (Administration breadcrumb), T-4225 (Context Spaces counts), T-4233 (Slovak stemming in the catalogue search). The remaining page-only minor findings go to T-4165 when a shared fix touches their page.
+
+One finding waits on the owner: the public assistant's model call, which T-4170 ("proxy on") turns on.
 
 ## Related
 
