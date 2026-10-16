@@ -131,14 +131,14 @@ the current rows are.
 | dataset | kept out | why |
 |---|---|---|
 | `bbsk-clenovia-samospravy-efc2f3` | columns `Telefonický_kontakt`, `Emailový_kontakt` | office holders' own phones and e-mails |
-| `bbsk-dodavatelia-825cd0` | rows outside `ICO IS NOT NULL AND ICO <> ''` | a row without an IČO can name a natural person |
-| `bbsk-dotacie-bada80` | rows outside `IČO IS NOT NULL AND IČO <> ''` | a row without an IČO can name a natural person |
-| `bbsk-faktury-422b35` | rows outside `IČO IS NOT NULL AND IČO <> ''` | a row without an IČO can name a natural person |
+| `bbsk-dodavatelia-825cd0` | rows outside `ICO IS NOT NULL AND ICO <> ''`, or whose `ICO` does not match `^[0-9]{6,8}( ?[0-9]{4})?$` | a row without an IČO, or with a name where the IČO belongs, can name a natural person |
+| `bbsk-dotacie-bada80` | rows outside `IČO IS NOT NULL AND IČO <> ''`, or whose `IČO` does not match `^[0-9]{6,8}( ?[0-9]{4})?$` | a row without an IČO, or with a name where the IČO belongs, can name a natural person |
+| `bbsk-faktury-422b35` | rows outside `IČO IS NOT NULL AND IČO <> ''`, or whose `IČO` does not match `^[0-9]{6,8}( ?[0-9]{4})?$` | a row without an IČO, or with a name where the IČO belongs, can name a natural person |
 | `bbsk-komisie-zastupitelstva-banskobystrickeho-samospravneho-kraja-59b9e4` | columns `Meno` | committees seat citizens who hold no office; the seats stay, the names do not |
 | `bbsk-kontakty-na-miestne-samospravy-v-bbk-fc5ecb` | columns `Starosta`, `Telefónne_číslo___starosta`, `E_mail___starosta`, `Zástupca_primátora`, `E_mail___zástupca_primátora` | mayors' own contacts; the offices' general ones stay |
-| `bbsk-objednavky-a97e8a` | rows outside `IČO IS NOT NULL AND IČO <> ''` | a row without an IČO can name a natural person |
+| `bbsk-objednavky-a97e8a` | rows outside `IČO IS NOT NULL AND IČO <> ''`, or whose `IČO` does not match `^[0-9]{6,8}( ?[0-9]{4})?$` | a row without an IČO, or with a name where the IČO belongs, can name a natural person |
 | `bbsk-organizacna-struktura-40329b` | columns `Priezvisko`, `Meno`, `Titul_pred_menom`, `Titul_za_menom`, `Telefon`, `Mobil`, `Email` | employees' names and contacts; the units and functions stay |
-| `bbsk-zmluvy-cafee6` | rows outside `IČO_dodávateľa IS NOT NULL AND IČO_dodávateľa <> ''` | a contract whose supplier has no IČO can name a natural person |
+| `bbsk-zmluvy-cafee6` | rows outside `IČO_dodávateľa IS NOT NULL AND IČO_dodávateľa <> ''`, or whose `IČO_dodávateľa` does not match `^[0-9]{6,8}( ?[0-9]{4})?$` | a contract whose supplier has no IČO, or a name where the IČO belongs, can name a natural person |
 | `bbsk-zoznam-poskytovatelov-socialnych-sluzieb-v-bbk-9ab090` | rows outside `Typ_poskytovateľa <> 'neverejný poskytovateľ'` | a private provider can be a natural person; bbsk-datasource-socialne-sluzby applies the same filter |
 | `bbsk-zoznam-zdravotnickych-zariadeni-v-bbk-701db2` | columns `Odborný_zástupca` | the named physician of each facility |
 <!-- /personal -->

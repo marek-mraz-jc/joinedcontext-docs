@@ -351,13 +351,17 @@ DROP: list[tuple[str, list[str], str]] = [
     (r"zdravotnickych", ["Odborný_zástupca"], "the named physician of each facility"),
 ]
 # Rows that can name a natural person, kept out by a filter on a column (§8 of the sources page).
-# The city's three finance tables were filtered by the harvest itself (T-4151).
-ROWS: list[tuple[str, str, str, str]] = [
-    (r"bbsk-(faktury|objednavky|dotacie)", "IČO", "IČO IS NOT NULL AND IČO <> ''", "a row without an IČO can name a natural person"),
-    (r"bbsk-dodavatelia", "ICO", "ICO IS NOT NULL AND ICO <> ''", "a row without an IČO can name a natural person"),
-    (r"bbsk-zmluvy", "IČO_dodávateľa", "IČO_dodávateľa IS NOT NULL AND IČO_dodávateľa <> ''",
-     "a contract whose supplier has no IČO can name a natural person"),
-    (r"poskytovatelov-socialnych", "Typ_poskytovateľa", "Typ_poskytovateľa <> 'neverejný poskytovateľ'",
+# The city's three finance tables were filtered by the harvest itself (T-4151). An IČO column also
+# holds surnames padded to eight characters (`0000BIBA`, 1903 of the BBSK orders, T-4255), which no
+# Esri SQL can tell from a number, so those rows are kept only when the column matches IČO.
+ICO = r"^[0-9]{6,8}( ?[0-9]{4})?$"
+ICO_WHY = "a row without an IČO, or with a name where the IČO belongs, can name a natural person"
+ROWS: list[tuple[str, str, str, str | None, str]] = [
+    (r"bbsk-(faktury|objednavky|dotacie)", "IČO", "IČO IS NOT NULL AND IČO <> ''", ICO, ICO_WHY),
+    (r"bbsk-dodavatelia", "ICO", "ICO IS NOT NULL AND ICO <> ''", ICO, ICO_WHY),
+    (r"bbsk-zmluvy", "IČO_dodávateľa", "IČO_dodávateľa IS NOT NULL AND IČO_dodávateľa <> ''", ICO,
+     "a contract whose supplier has no IČO, or a name where the IČO belongs, can name a natural person"),
+    (r"poskytovatelov-socialnych", "Typ_poskytovateľa", "Typ_poskytovateľa <> 'neverejný poskytovateľ'", None,
      "a private provider can be a natural person; bbsk-datasource-socialne-sluzby applies the same filter"),
 ]
 # Seed DataSources that already read the same source (joinedcontext-deployment
@@ -466,11 +470,12 @@ def plan(d: dict, probe_: dict, fetched: str) -> dict:
            "properties": properties(fields, ranges)}
     if dropped[0]:
         out["dropped"] = {"columns": dropped[0], "why": dropped[1]}
-    for pat, column, where, why in ROWS:
+    for pat, column, where, keep, why in ROWS:
         if re.search(pat, d["name"]):
             if column not in fields:
                 sys.exit(f"{d['name']}: ROWS filters on {column}, which the source does not have")
-            out["rowFilter"] = {"where": where, "why": why}
+            out["rowFilter"] = {"where": where, **({"keep": {"column": column, "pattern": keep}} if keep else {}),
+                                "why": why}
     for pat, seed, part in EXISTING:
         if re.search(pat, d["name"]):
             out["existing"] = {"seed": seed, "covers": part}
@@ -537,7 +542,9 @@ def sections(snap: dict, entries: list[dict]) -> dict[str, str]:
         if e.get("dropped"):
             personal.append(f"| `{e['name']}` | columns {', '.join(f'`{c}`' for c in e['dropped']['columns'])} | {cell(e['dropped']['why'])} |")
         if e.get("rowFilter"):
-            personal.append(f"| `{e['name']}` | rows outside `{cell(e['rowFilter']['where'])}` | {cell(e['rowFilter']['why'])} |")
+            f = e["rowFilter"]
+            kept = f", or whose `{f['keep']['column']}` does not match `{cell(f['keep']['pattern'])}`" if f.get("keep") else ""
+            personal.append(f"| `{e['name']}` | rows outside `{cell(f['where'])}`{kept} | {cell(f['why'])} |")
     existing = ["| dataset | seed that already reads it | covers |", "|---|---|---|"]
     existing += [f"| `{e['name']}` | `{e['existing']['seed']}` | {e['existing']['covers']} |" for e in mapped if e.get("existing")]
     keys = {"a key column": 0, "a key column and its year": 0, "a row hash": 0}

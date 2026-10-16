@@ -1057,7 +1057,10 @@ datasets:
       range: string
   rowFilter:
     where: ICO IS NOT NULL AND ICO <> ''
-    why: a row without an IČO can name a natural person
+    keep:
+      column: ICO
+      pattern: ^[0-9]{6,8}( ?[0-9]{4})?$
+    why: a row without an IČO, or with a name where the IČO belongs, can name a natural person
 - id: b39156ed-ecdc-5aca-9b04-99f22660f347
   name: bbsk-dotacie-bada80
   org: bbsk
@@ -1195,7 +1198,10 @@ datasets:
       range: string
   rowFilter:
     where: IČO IS NOT NULL AND IČO <> ''
-    why: a row without an IČO can name a natural person
+    keep:
+      column: IČO
+      pattern: ^[0-9]{6,8}( ?[0-9]{4})?$
+    why: a row without an IČO, or with a name where the IČO belongs, can name a natural person
 - id: c6d2cc72-fc45-5924-935a-98c86f223a78
   name: bbsk-ekologicky-potencial-vodnych-utvarov-672eca
   org: bbsk
@@ -1475,7 +1481,10 @@ datasets:
       range: string
   rowFilter:
     where: IČO IS NOT NULL AND IČO <> ''
-    why: a row without an IČO can name a natural person
+    keep:
+      column: IČO
+      pattern: ^[0-9]{6,8}( ?[0-9]{4})?$
+    why: a row without an IČO, or with a name where the IČO belongs, can name a natural person
 - id: 95278f1d-563c-5af5-94f5-54bcb707ee71
   name: bbsk-hlasovania-poslancov-ba7ca6
   org: bbsk
@@ -2969,7 +2978,10 @@ datasets:
       range: string
   rowFilter:
     where: IČO IS NOT NULL AND IČO <> ''
-    why: a row without an IČO can name a natural person
+    keep:
+      column: IČO
+      pattern: ^[0-9]{6,8}( ?[0-9]{4})?$
+    why: a row without an IČO, or with a name where the IČO belongs, can name a natural person
 - id: aaf0bc46-f9cb-5fe5-baed-b09a48c8fe1e
   name: bbsk-obyvatelstvo-podla-dalsej-narodnosti-2021-obce-11667a
   org: bbsk
@@ -10111,7 +10123,10 @@ datasets:
       range: date
   rowFilter:
     where: IČO_dodávateľa IS NOT NULL AND IČO_dodávateľa <> ''
-    why: a contract whose supplier has no IČO can name a natural person
+    keep:
+      column: IČO_dodávateľa
+      pattern: ^[0-9]{6,8}( ?[0-9]{4})?$
+    why: a contract whose supplier has no IČO, or a name where the IČO belongs, can name a natural person
 - id: f6bfcbd3-ad01-5a3f-89ff-e9dafd6d6826
   name: bbsk-zoznam-lekarni-v-bbk-c564de
   org: bbsk
