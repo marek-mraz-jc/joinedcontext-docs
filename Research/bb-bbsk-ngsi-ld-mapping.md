@@ -1,0 +1,234 @@
+---
+sidebar_position: 13
+title: "Banská Bystrica and BBSK Datasets in NGSI-LD"
+description: Every dataset of the CKAN organizations banskabystrica and bbsk on data.dev, read through the CKAN API and probed resource by resource on 2026-10-16, with the NGSI-LD type each one becomes or the reason it cannot.
+---
+
+# Banská Bystrica and BBSK datasets in NGSI-LD
+
+The public assistant answers from the context data, so a dataset it should know has to be in
+NGSI-LD first. This page lists every dataset the data portal holds for the city of Banská Bystrica
+(`banskabystrica`) and the Banská Bystrica Self-Governing Region (`bbsk`). For each one it gives
+the type, the entity id rule, the space and the refresh interval. A dataset left out carries its
+reason. The seed generator of T-4255 reads the machine form of this page,
+`Research/bb-bbsk-ngsi-ld-mapping.yaml`. Read this page before you change that generator or ask
+why the assistant cannot answer about a dataset.
+
+## 1. How the numbers were made
+
+`scripts/bb-bbsk-ngsi-ld-mapping.py` builds everything here in three steps, and CI repeats the
+check offline.
+
+| step | what it reads | what it writes |
+|---|---|---|
+| `snapshot` | `package_search?fq=organization:{org}&rows=1000` on `https://data.dev.joinedcontext.com` | `Research/data/bb-bbsk-ckan.json` |
+| `probe` | one request per resource: the Esri layer's `?f=json` and its count, the CKAN DataStore's fields and total, a ZIP's central directory (a ranged GET), a JSON feed's first page | `Research/data/bb-bbsk-probe.json` |
+| `draft` | both snapshots and the rules at the top of the script (`TYPES`, `DROP`, `ROWS`, `EXISTING`) | the mapping file and every table on this page |
+
+`check` runs in the docs `ci` lane. It fails when the mapping misses a dataset id of the snapshot,
+names one the snapshot lacks, refuses a dataset without a reason, or when a table on this page
+differs from what the mapping gives. The `fetched` member of each snapshot holds its time. To
+refresh them, run the three steps in order and commit the five files together.
+
+The probe read the Hub's CSV and GeoJSON exports of a BBSK layer through the layer itself, not
+through the export URL. The Hub builds an export on its first request, and the layer answers the
+same rows.
+
+## 2. Totals
+
+<!-- totals -->
+| organization | datasets | mapped | already NGSI-LD | not ingestible | source rows of the mapped |
+|---|---:|---:|---:|---:|---:|
+| banskabystrica | 34 | 13 | 2 | 19 | 113670 |
+| bbsk | 90 | 88 | 2 | 0 | 252024 |
+| all | 124 | 101 | 4 | 19 | 365694 |
+<!-- /totals -->
+
+"Already NGSI-LD" are the four datasets the platform publishes from its own public Endpoints
+(`generated_by: jcctl/ckan-publisher`). They need nothing. "Source rows" is the row count the
+probe read from each mapped source, before any row filter of section 5.
+
+## 3. Types
+
+<!-- types -->
+| NGSI-LD type | Smart Data Model | datasets | source rows |
+|---|---|---:|---:|
+| `StatisticalObservation` | project type | 37 | 43640 |
+| `PointOfInterest` | `dataModel.PointOfInterest/PointOfInterest` | 6 | 4468 |
+| `School` | project type | 6 | 1480 |
+| `AdministrativeArea` | project type | 4 | 1053 |
+| `RoadStructure` | project type | 4 | 8981 |
+| `Grant` | project type | 3 | 19845 |
+| `OrganizationUnit` | project type | 3 | 883 |
+| `PublicInvestment` | project type | 3 | 6200 |
+| `Address` | project type | 2 | 32671 |
+| `Bridge` | project type | 2 | 2682 |
+| `Contract` | project type | 2 | 25045 |
+| `CouncilMeeting` | project type | 2 | 1509 |
+| `CouncilMember` | project type | 2 | 260 |
+| `CycleRoute` | project type | 2 | 1005 |
+| `PublicOrganization` | project type | 2 | 231 |
+| `PublicProcurement` | project type | 2 | 10665 |
+| `PurchaseOrder` | project type | 2 | 45758 |
+| `RoadAccident` | `dataModel.Transportation/RoadAccident` | 2 | 3127 |
+| `WaterBodyStatus` | project type | 2 | 612 |
+| `Article` | project type | 1 | 1557 |
+| `Building` | `dataModel.Building/Building` | 1 | 16534 |
+| `CouncilVote` | project type | 1 | 89670 |
+| `EVChargingStation` | `dataModel.Transportation/EVChargingStation` | 1 | 606 |
+| `Event` | project type | 1 | 6162 |
+| `Invoice` | project type | 1 | 28844 |
+| `Petition` | project type | 1 | 12 |
+| `Regulation` | project type | 1 | 34 |
+| `RiverBasin` | project type | 1 | 3 |
+| `Road` | `dataModel.Transportation/Road` | 1 | 6338 |
+| `SocialService` | project type | 1 | 740 |
+| `Supplier` | project type | 1 | 5066 |
+| `TrafficFlowObservedSite` | project type | 1 | 13 |
+<!-- /types -->
+
+A Smart Data Model is named only where its attributes match the columns: `EVChargingStation`,
+`RoadAccident`, `PointOfInterest`, `Building` and `Road`. The census, migration, age-structure,
+climate-risk and payment-per-district tables become the `StatisticalObservation` type the
+`bbsk` and `banskabystrica` models already hold, one entity per area and year. `Bridge`,
+`School`, `PublicOrganization`, `SocialService` and `AdministrativeArea` are the existing
+`bbsk-registre` classes. The other project types are new classes for the space's one model
+(DM-61), each named after what one row is.
+
+Each mapped entry lists its `properties`: the attribute name, in ASCII lowerCamelCase, and the
+column it reads. A column named like an NGSI-LD core member (`id`, `type`, `location`, ...)
+keeps its value as `source<Name>`. Esri bookkeeping columns (`OBJECTID`, `GlobalID`,
+`Shape__Area`, `Shape__Length`) are left out. A layer's geometry becomes `location`.
+
+## 4. Entity ids
+
+<!-- ids -->
+| entity id from | datasets |
+|---|---:|
+| a key column | 59 |
+| a key column and its year | 13 |
+| a row hash | 29 |
+<!-- /ids -->
+
+A key column is one whose distinct count, asked of the source, equals the row count. The probe
+asks the Esri layer (`returnDistinctValues=true&returnCountOnly=true`), the CKAN DataStore
+(`datastore_search?distinct=true`) or the loaded GeoJSON. When no single column is unique, the
+probe tries each id-like column with the table's year column. A WordPress post's `id` is unique
+by definition. The rest have no stable key, and the mapping says `rowHash: true`.
+
+A row hash changes whenever a value in the row changes. T-4255 therefore replaces such a dataset
+as a whole on each run, rather than appending to it. Otherwise each refresh adds a copy of every
+changed row.
+
+## 5. Personal data kept out
+
+<!-- personal -->
+| dataset | kept out | why |
+|---|---|---|
+| `bbsk-clenovia-samospravy-efc2f3` | columns `Telefonický_kontakt`, `Emailový_kontakt` | office holders' own phones and e-mails |
+| `bbsk-dodavatelia-825cd0` | rows outside `ICO IS NOT NULL AND ICO <> ''` | a row without an IČO can name a natural person |
+| `bbsk-dotacie-bada80` | rows outside `IČO IS NOT NULL AND IČO <> ''` | a row without an IČO can name a natural person |
+| `bbsk-faktury-422b35` | rows outside `IČO IS NOT NULL AND IČO <> ''` | a row without an IČO can name a natural person |
+| `bbsk-komisie-zastupitelstva-banskobystrickeho-samospravneho-kraja-59b9e4` | columns `Meno` | committees seat citizens who hold no office; the seats stay, the names do not |
+| `bbsk-kontakty-na-miestne-samospravy-v-bbk-fc5ecb` | columns `Starosta`, `Telefónne_číslo___starosta`, `E_mail___starosta`, `Zástupca_primátora`, `E_mail___zástupca_primátora` | mayors' own contacts; the offices' general ones stay |
+| `bbsk-objednavky-a97e8a` | rows outside `IČO IS NOT NULL AND IČO <> ''` | a row without an IČO can name a natural person |
+| `bbsk-organizacna-struktura-40329b` | columns `Priezvisko`, `Meno`, `Titul_pred_menom`, `Titul_za_menom`, `Telefon`, `Mobil`, `Email` | employees' names and contacts; the units and functions stay |
+| `bbsk-zmluvy-cafee6` | rows outside `IČO_dodávateľa IS NOT NULL AND IČO_dodávateľa <> ''` | a contract whose supplier has no IČO can name a natural person |
+| `bbsk-zoznam-poskytovatelov-socialnych-sluzieb-v-bbk-9ab090` | rows outside `Typ_poskytovateľa <> 'neverejný poskytovateľ'` | a private provider can be a natural person; bbsk-datasource-socialne-sluzby applies the same filter |
+| `bbsk-zoznam-zdravotnickych-zariadeni-v-bbk-701db2` | columns `Odborný_zástupca` | the named physician of each facility |
+<!-- /personal -->
+
+Office holders keep their name and function, which Act 211/2000 makes public. Their own phones and
+e-mails stay out, and so does every employee's or appointed citizen's name. The city's
+`Objednávky`, `Zmluvy` and `Dotácie` were filtered by the harvest itself (T-4151): their
+DataStore tables already hold only the rows with an IČO. A row filter is written as an Esri
+`where` clause, so the generator can send it with the layer query and the rows never leave the
+source. The `Evidencia psov` and `Zoznam poskytovateľov pre APS` datasets never reached CKAN
+([sources §8](banska-bystrica-open-data-sources.md#8-personal-data-found-in-published-datasets)).
+
+## 6. Not ingestible, and already in NGSI-LD
+
+<!-- refused -->
+| dataset | organization | status | reason |
+|---|---|---|---|
+| Banská Bystrica — verejné údaje (`banskabystrica-verejne`) | banskabystrica | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
+| DTM_BB-funkcne-vyuzitie-uzemia (`bb-dtm-bb-funkcne-vyuzitie-uzemia`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (201 KiB): a PDF map sheet, no data |
+| DTM_BB-Polohopis_a_vyskopis_bodoveho_pola (`bb-dtm-bb-polohopis-a-vyskopis-bodoveho-pola`) | banskabystrica | not-ingestible | 240636 rows, more than the 100000 this round loads into the one broker |
+| DTM_BB-register-chodnikov-a-verejnych-priestranstiev (`bb-dtm-bb-register-chodnikov-a-verejnych-priestranstiev`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
+| DTM_BB-register-miestnych-komunikacii-a-vyssich-tried (`bb-dtm-bb-register-miestnych-komunikacii-a-vyssich-tried`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
+| DTM_BB-register-statickej-dopravy (`bb-dtm-bb-register-statickej-dopravy`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
+| DTM_BB-register-stlpov-VO (`bb-dtm-bb-register-stlpov-vo`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (185 KiB): a PDF map sheet, no data |
+| DTM_BB-register-verejnej-zelene-1 (`bb-dtm-bb-register-verejnej-zelene-1`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (43 KiB): a PDF map sheet, no data |
+| DTM_BB-register-verejnej-zelene-2 (`bb-dtm-bb-register-verejnej-zelene-2`) | banskabystrica | not-ingestible | a ZIP of 3 .atr, 3 .cpg, 3 .dbf, 3 .shp, 3 .shx (732 KiB): Esri shapefiles; no ingestion path reads a shapefile today |
+| DTM_BB-register-verejnej-zelene-3 (`bb-dtm-bb-register-verejnej-zelene-3`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (194 KiB): a PDF map sheet, no data |
+| DTM_BB-register-vodorovneho-dopravneho-znacenia (`bb-dtm-bb-register-vodorovneho-dopravneho-znacenia`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
+| DTM_BB-register-zvisleho-dopravneho-znacenia (`bb-dtm-bb-register-zvisleho-dopravneho-znacenia`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
+| DTM_BB-regulativy-a-limity-funkcneho-vyuzitia-uzemia (`bb-dtm-bb-regulativy-a-limity-funkcneho-vyuzitia-uzemia`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (205 KiB): a PDF map sheet, no data |
+| DTM_BB-tvorba-krajiny-a-ochrana-prirody (`bb-dtm-bb-tvorba-krajiny-a-ochrana-prirody`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
+| DTM_BB-verejne-dopravne-a-technicke-vybavenie (`bb-dtm-bb-verejne-dopravne-a-technicke-vybavenie`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (198 KiB): a PDF map sheet, no data |
+| DTM_BB-verejnoprospesne-stavby (`bb-dtm-bb-verejnoprospesne-stavby`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data |
+| DTM_BB-vodne-toky-a-plochy (`bb-dtm-bb-vodne-toky-a-plochy`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
+| DTM_BB-vyskopis-teran (`bb-dtm-bb-vyskopis-teran`) | banskabystrica | not-ingestible | a ZIP of 1 .geojson (65889 KiB): larger than the 10 MiB this round loads into the one broker |
+| DTM_BB-vyuzitie-pody-na-nepolnohospodarske-ucely (`bb-dtm-bb-vyuzitie-pody-na-nepolnohospodarske-ucely`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (197 KiB): a PDF map sheet, no data |
+| DTM_BB-zaujmove-uzemie-a-sirsie-vztahy (`bb-dtm-bb-zaujmove-uzemie-a-sirsie-vztahy`) | banskabystrica | not-ingestible | a ZIP of 1 .pdf (24 KiB): a PDF map sheet, no data |
+| Kvalita ovzdušia v Banskej Bystrici (`public-air`) | banskabystrica | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
+| Ukazovatele kraja (`bbsk-kpi`) | bbsk | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
+| Registre kraja (`bbsk-registre`) | bbsk | already-ngsi-ld | published by the platform from its own public Endpoint (jcctl ckan-publisher) |
+<!-- /refused -->
+
+Most DTM ZIPs of the city hold one PDF map sheet and no data. `DTM_BB-register verejnej zelene 2`
+holds shapefiles, and no ingestion path reads a shapefile today. The terrain model and the survey
+points are the two largest sources of both organizations. They wait for a later round, after
+the integrator has read the broker's volume use with the rest loaded
+([integration rules §4](../Development/12-open-data-integration.md#4-capacity-on-one-node)).
+
+Decided (worker-8, owner may override): a source over 100 000 rows or a GeoJSON over 10 MiB is
+not loaded in this round, because one broker on one 16 GB node holds every project. Options: load
+both now, or load the survey points as one aggregate per cadastral area.
+
+## 7. Datasets a seed already reads
+
+<!-- existing -->
+| dataset | seed that already reads it | covers |
+|---|---|---|
+| `bb-podujatia` | `banskabystrica/datasource-podujatia.yaml` | whole |
+| `bbsk-mosty-v-banskobystrickom-kraji-public-view-3b4675` | `bbsk/bbsk-datasource-mosty.yaml` | whole |
+| `bbsk-obce-bbk-hranice-ec7ac6` | `bbsk/bbsk-datasource-obce.yaml` | whole |
+| `bbsk-okresy-bbk-hranice-17725f` | `bbsk/bbsk-datasource-okresy.yaml` | whole |
+| `bbsk-organizacie-v-zriadovatelskej-posobnosti-bbsk-bc762a` | `bbsk/bbsk-datasource-organizacie.yaml` | whole |
+| `bbsk-zoznam-poskytovatelov-socialnych-sluzieb-v-bbk-9ab090` | `bbsk/bbsk-datasource-socialne-sluzby.yaml` | whole |
+| `bbsk-zoznam-zdravotnickych-zariadeni-v-bbk-701db2` | `bbsk/bbsk-datasource-nemocnice.yaml` | hospitals only |
+<!-- /existing -->
+
+T-4255 extends these DataSources or leaves them as they are, and never adds a second reader of
+the same source. `bbsk-datasource-nemocnice` reads only the hospitals of the facilities layer.
+The facilities of every kind are a new mapping onto `PointOfInterest`.
+
+## 8. What the generator has to handle
+
+- The four DTM GeoJSON files (`register adries`, `register stavby`, `register ulíc`, and the
+  survey points when their turn comes) are in the Slovak national grid, S-JTSK (`EPSG:5514`). The
+  mapping records this as `source.crs`. NGSI-LD `location` is WGS 84, so the generator reprojects,
+  or asks the Esri layer for `outSR=4326` where the source is a layer.
+- Every entity carries `dataProvider` (the CKAN `publisher_name`), `source` (the resource URL) and
+  `dataset` (the CKAN dataset URL). The mapping holds all three per dataset
+  ([integration rules §3](../Development/12-open-data-integration.md#3-what-each-dataset-becomes)).
+- `refresh` follows the dataset's last change, because no harvested dataset carries a frequency.
+  A dataset changed in the last 31 days is read daily (`P1D`), a yearly statistic monthly
+  (`P1M`), anything else weekly (`P1W`). The city's two WordPress feeds are read daily.
+- The space is the project's public one: `banskabystrica-verejne` for the city and
+  `bbsk-registre` for the region. Both are read through a public Endpoint, which the public
+  assistant's MCP server reaches.
+
+Decided (worker-8, owner may override): the BBSK target is `bbsk-registre`, not `bbsk-kraj`.
+`bbsk-registre` is the region's public register space with its own public Endpoint and CKAN
+dataset, while `bbsk-kraj` holds the steward's raw yearly rows. Options: `bbsk-kraj` behind
+`bbsk-endpoint-kraj-verejne`, or a new space per theme.
+
+## Related
+
+- [Open data sources: Banská Bystrica region](banska-bystrica-open-data-sources.md) — the survey these two CKAN organizations were harvested from, and the personal-data findings of §8.
+- [Open data integration rules](../Development/12-open-data-integration.md) — the five things a dataset becomes, the attribution rule and the capacity limit this mapping follows.
+- [The Banská Bystrica contract](../Development/10-banska-bystrica-contract.md) — the projects, spaces and types the mapped datasets join.
+- [Data models](../Architecture/11-data-models.md) — where the new project types are declared before a pipeline writes them.
+- [Pipelines](../Architecture/08-pipelines.md) — how the generated DataSources and Pipelines fetch, map and write.

@@ -1,0 +1,4799 @@
+{
+ "fetched": "2026-10-16T05:06Z",
+ "source": "https://data.dev.joinedcontext.com",
+ "datasets": [
+  {
+   "id": "a2d136f9-aa16-4567-8782-cd6e615cceed",
+   "name": "banskabystrica-verejne",
+   "org": "banskabystrica",
+   "title": "Banská Bystrica — verejné údaje",
+   "license": "cc-by",
+   "modified": "2026-10-16T04:11:25.846765",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "license_url": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0",
+    "generated_by": "jcctl/ckan-publisher",
+    "frequency": "http://publications.europa.eu/resource/authority/frequency/CONT"
+   },
+   "resources": [
+    {
+     "id": "d95a2594-ea43-4929-8f27-96988f8213f7",
+     "name": "NGSI-LD API",
+     "format": "NGSI-LD",
+     "url": "https://dev.joinedcontext.com/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/ngsi-ld/v1/",
+     "datastore": false
+    },
+    {
+     "id": "65219579-277e-4732-b22c-7fe149c03250",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://dev.joinedcontext.com/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/file.geojson",
+     "datastore": false
+    },
+    {
+     "id": "fb9f1088-38ef-44c5-92b6-1be294274adc",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://dev.joinedcontext.com/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/file.csv",
+     "datastore": false
+    },
+    {
+     "id": "c5ddc7ca-cc50-4d52-8e9b-6ab2660d0a22",
+     "name": "JSON",
+     "format": "JSON",
+     "url": "https://dev.joinedcontext.com/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/file.json",
+     "datastore": false
+    },
+    {
+     "id": "069b8f3b-5db0-4d6e-91ec-d01c5d2f4b85",
+     "name": "Live updates over WebSocket",
+     "format": "WebSocket",
+     "url": "https://dev.joinedcontext.com/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/ws",
+     "datastore": false
+    },
+    {
+     "id": "3124e41c-a820-476c-a890-788925d2eda7",
+     "name": "OGC API - Features",
+     "format": "OGCFEAT",
+     "url": "https://dev.joinedcontext.com/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/ogc/features/",
+     "datastore": false
+    },
+    {
+     "id": "4f232c7a-f224-4363-b8be-ebc272a3af8e",
+     "name": "OData v4",
+     "format": "OData",
+     "url": "https://dev.joinedcontext.com/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/odata/v4/",
+     "datastore": false
+    },
+    {
+     "id": "5dbb96c5-b703-4b84-aa3c-61c0714a49f8",
+     "name": "Model Context Protocol",
+     "format": "MCP",
+     "url": "https://dev.joinedcontext.com/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/mcp",
+     "datastore": false
+    },
+    {
+     "id": "819bf2e9-4322-443a-9ffb-dfbb6a4cb13b",
+     "name": "Schema artifacts",
+     "format": "JSON",
+     "url": "https://dev.joinedcontext.com/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/schema/index.json",
+     "datastore": false
+    },
+    {
+     "id": "9262bc9e-3c8e-4947-964b-b4bb68fd81e2",
+     "name": "banskabystrica-verejne context.jsonld",
+     "format": "JSON-LD",
+     "url": "https://dev.joinedcontext.com/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/schema/v1/context.jsonld",
+     "datastore": false
+    },
+    {
+     "id": "81ecd326-cfdc-4121-9c0a-b9a7d188da88",
+     "name": "banskabystrica-verejne model.linkml.yaml",
+     "format": "LinkML",
+     "url": "https://dev.joinedcontext.com/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/schema/v1/model.linkml.yaml",
+     "datastore": false
+    },
+    {
+     "id": "eb4636d7-dcbd-47cc-ab02-2113f8a68f8b",
+     "name": "banskabystrica-verejne model.md",
+     "format": "Markdown",
+     "url": "https://dev.joinedcontext.com/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/schema/v1/model.md",
+     "datastore": false
+    },
+    {
+     "id": "49afd842-4558-4f34-86a1-08d9555a5588",
+     "name": "banskabystrica-verejne model.owl.ttl",
+     "format": "OWL",
+     "url": "https://dev.joinedcontext.com/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/schema/v1/model.owl.ttl",
+     "datastore": false
+    },
+    {
+     "id": "def4b7c1-18ec-4ce2-95af-2ea756caedca",
+     "name": "banskabystrica-verejne model.rdf.ttl",
+     "format": "RDF",
+     "url": "https://dev.joinedcontext.com/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/schema/v1/model.rdf.ttl",
+     "datastore": false
+    },
+    {
+     "id": "f0693733-d45e-497b-b1fb-7a84d9847a96",
+     "name": "banskabystrica-verejne model.schema.json",
+     "format": "JSON Schema",
+     "url": "https://dev.joinedcontext.com/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/schema/v1/model.schema.json",
+     "datastore": false
+    },
+    {
+     "id": "972fdfe1-8332-4215-9c49-83a85977f4b9",
+     "name": "banskabystrica-verejne model.shacl.ttl",
+     "format": "SHACL",
+     "url": "https://dev.joinedcontext.com/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/schema/v1/model.shacl.ttl",
+     "datastore": false
+    },
+    {
+     "id": "0d938ebb-dc18-4966-99c3-d0ee67df26e2",
+     "name": "AirQualityObserved",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/0d938ebb-dc18-4966-99c3-d0ee67df26e2",
+     "datastore": true
+    },
+    {
+     "id": "c6f5bc83-1f1a-43fc-988b-4a68e0d40494",
+     "name": "Event",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/c6f5bc83-1f1a-43fc-988b-4a68e0d40494",
+     "datastore": true
+    },
+    {
+     "id": "ce91854c-0011-4bc2-b230-73a0be566010",
+     "name": "School",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/ce91854c-0011-4bc2-b230-73a0be566010",
+     "datastore": true
+    },
+    {
+     "id": "172106d7-aac9-4f03-a2f2-4b77311278e7",
+     "name": "WeatherObserved",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/172106d7-aac9-4f03-a2f2-4b77311278e7",
+     "datastore": true
+    }
+   ]
+  },
+  {
+   "id": "c8595e2b-ed15-4b7a-8beb-d13bc95012a9",
+   "name": "bb-adresy",
+   "org": "banskabystrica",
+   "title": "Adresy",
+   "license": "cc-by",
+   "modified": "2026-10-16T03:23:06.181741",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/4b6d52a0-c385-47e3-bb47-b3612d3bf7ee",
+    "modified": "2023-11-30T09:16:53Z",
+    "issued": "2023-11-30T09:06:30Z"
+   },
+   "resources": [
+    {
+     "id": "5ecad375-d0d4-4f09-818a-1f9d01f38aab",
+     "name": "adresy",
+     "format": "JSON",
+     "url": "https://egov.banskabystrica.sk/Default.aspx?NavigationState=840:0::plac2127:_144119_5_8",
+     "datastore": false
+    },
+    {
+     "id": "dfd84e65-70bc-4842-9785-ba756ec8b738",
+     "name": "adresy (tabuľka)",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/dfd84e65-70bc-4842-9785-ba756ec8b738",
+     "datastore": true
+    }
+   ]
+  },
+  {
+   "id": "7360f463-7fe5-49d1-8707-7d91f2f97957",
+   "name": "bb-aktuality",
+   "org": "banskabystrica",
+   "title": "Aktuality",
+   "license": "cc-by",
+   "modified": "2026-10-16T03:23:30.003515",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/e3614396-3d1d-4881-a06b-6597eb233079",
+    "modified": "2026-01-15T10:09:00Z",
+    "issued": "2026-01-15T10:07:47Z"
+   },
+   "resources": [
+    {
+     "id": "a5fcd340-9fd9-4651-b746-e8c6acca255f",
+     "name": "Aktuality",
+     "format": "JSON",
+     "url": "https://www.banskabystrica.sk/wp-json/wp/v2/newses",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "a9577f0a-e725-48a3-82ad-5dcc72331c06",
+   "name": "bb-dotacie",
+   "org": "banskabystrica",
+   "title": "Dotácie",
+   "license": "cc-by",
+   "modified": "2026-10-16T03:23:42.553476",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/fef9936a-6377-4fcb-8c07-34e9020eb207",
+    "modified": "2026-01-15T09:50:50Z",
+    "issued": "2026-01-15T09:44:08Z"
+   },
+   "resources": [
+    {
+     "id": "7d9f3a85-c733-47bd-96cf-3f4fadab81eb",
+     "name": "dotácie (tabuľka)",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/7d9f3a85-c733-47bd-96cf-3f4fadab81eb",
+     "datastore": true
+    }
+   ]
+  },
+  {
+   "id": "4a64f94e-3fcb-465d-9430-92657a2d4bc0",
+   "name": "bb-dtm-bb-funkcne-vyuzitie-uzemia",
+   "org": "banskabystrica",
+   "title": "DTM_BB-funkcne-vyuzitie-uzemia",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:31.463482",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/0f69ed3c-ee95-479d-8606-f7fd0da177e6",
+    "modified": "2023-11-24T07:11:12Z",
+    "issued": "2023-11-24T07:05:59Z"
+   },
+   "resources": [
+    {
+     "id": "8641cfd5-c199-4481-8826-53ec6817410e",
+     "name": "DTM_BB-funkcne-vyuzitie-uzemia",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/OE_23.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "fb1385c6-eddb-4412-bb4b-fc54ce7f3fb3",
+   "name": "bb-dtm-bb-polohopis-a-vyskopis-bodoveho-pola",
+   "org": "banskabystrica",
+   "title": "DTM_BB-Polohopis_a_vyskopis_bodoveho_pola",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:30.579070",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/73da9506-bec7-4515-b3af-bcc678e0dae0",
+    "modified": "2023-11-24T05:25:19Z",
+    "issued": "2023-11-24T05:17:44Z"
+   },
+   "resources": [
+    {
+     "id": "a2dfa37e-81cf-4b07-b844-cdc0163ede13",
+     "name": "DTM_BB-Polohopis a vyskopis bodoveho pola",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/OE_4_DTM_BB_3.0_polohopis_a_v%C3%BD%C5%A1kopis_bodov%C3%A9ho_po%C4%BEa.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "68714ed4-1a8d-4cd8-9d8e-94d8fde8439d",
+   "name": "bb-dtm-bb-register-adries",
+   "org": "banskabystrica",
+   "title": "DTM_BB-Register-adries",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:31.053690",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/5e118d3a-3a60-4caa-a9e9-921e846204f5",
+    "modified": "2023-11-24T05:33:48Z",
+    "issued": "2023-11-24T05:26:54Z"
+   },
+   "resources": [
+    {
+     "id": "b0d59939-e136-43a8-89a1-87bbe0f5db72",
+     "name": "DTM_BB-register-adries",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/OE_01_register_adries.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "c4fdef97-4e0b-4c8a-9b7b-9792e24ff094",
+   "name": "bb-dtm-bb-register-chodnikov-a-verejnych-priestranstiev",
+   "org": "banskabystrica",
+   "title": "DTM_BB-register-chodnikov-a-verejnych-priestranstiev",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:32.001760",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/6a855ed0-f087-418f-90e6-1014707fce6e",
+    "modified": "2023-11-24T06:07:14Z",
+    "issued": "2023-11-24T06:01:13Z"
+   },
+   "resources": [
+    {
+     "id": "07f9b80b-e981-4eae-ac01-17a7d11a8c6d",
+     "name": "DTM_BB-register-chodnikov-a-verejnych-priestranstiev",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/OE_14.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "5f43a3ee-cc18-4e2d-8f1d-df801bdc8bab",
+   "name": "bb-dtm-bb-register-miestnych-komunikacii-a-vyssich-tried",
+   "org": "banskabystrica",
+   "title": "DTM_BB-register-miestnych-komunikacii-a-vyssich-tried",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:32.389999",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/fbee2f10-8416-4cc5-927e-00fb59fa775e",
+    "modified": "2023-11-24T05:59:33Z",
+    "issued": "2023-11-24T05:55:19Z"
+   },
+   "resources": [
+    {
+     "id": "ca90b073-15e4-448b-a47d-c3d0dc842312",
+     "name": "DTM_BB-register-miestnych-komunikacii-a-vyssich-tried",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/OE_13.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "ed2fa840-b6b0-4a33-acf8-6e3408375fd3",
+   "name": "bb-dtm-bb-register-statickej-dopravy",
+   "org": "banskabystrica",
+   "title": "DTM_BB-register-statickej-dopravy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:32.874878",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/19403049-adf8-4e2b-b5a4-4d2443f17cb8",
+    "modified": "2023-11-24T06:12:23Z",
+    "issued": "2023-11-24T06:08:34Z"
+   },
+   "resources": [
+    {
+     "id": "c39cea29-f13c-4a19-ad5c-da8c135ad4fa",
+     "name": "DTM_BB-register-statickej-dopravy",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/OE_15.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "24326e00-8f80-4308-8a4b-51081c8b950f",
+   "name": "bb-dtm-bb-register-stavby",
+   "org": "banskabystrica",
+   "title": "DTM_BB-register-stavby",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:33.207779",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/8ef79547-b614-4e70-a0d8-5b123f6134ef",
+    "modified": "2023-11-24T05:53:57Z",
+    "issued": "2023-11-24T05:50:38Z"
+   },
+   "resources": [
+    {
+     "id": "2cd831ea-ca84-46df-b64f-ed33c89a0932",
+     "name": "DTM_BB-register-stavby",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/OE_03_register_stavieb.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "2f4fcdb0-0853-42d8-8d76-2466e3b036cb",
+   "name": "bb-dtm-bb-register-stlpov-vo",
+   "org": "banskabystrica",
+   "title": "DTM_BB-register-stlpov-VO",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:33.561993",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/d46034b3-c277-4219-97a2-c7b94e240f09",
+    "modified": "2023-11-24T06:41:50Z",
+    "issued": "2023-11-24T06:36:09Z"
+   },
+   "resources": [
+    {
+     "id": "939dfb0a-7fef-4051-a686-6fd299f421df",
+     "name": "DTM_BB-register-stlpov-verejneho-osvetlenia",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/bb_paosv_stoziare.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "fc06f7ea-2763-44f3-a543-4ea70b6eb668",
+   "name": "bb-dtm-bb-register-ulic",
+   "org": "banskabystrica",
+   "title": "DTM_BB-register-ulic",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:33.927506",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/2a93cabe-6eda-4502-8431-3a9269239c03",
+    "modified": "2023-11-24T05:39:48Z",
+    "issued": "2023-11-24T05:35:28Z"
+   },
+   "resources": [
+    {
+     "id": "d675d21e-d920-4ac5-9f49-7655d76548e9",
+     "name": "DTM_BB-register-ulíc",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/OE_02_register_ulic.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "90bb5851-fc4b-4217-ae56-733bcb438691",
+   "name": "bb-dtm-bb-register-verejnej-zelene-1",
+   "org": "banskabystrica",
+   "title": "DTM_BB-register-verejnej-zelene-1",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:34.264400",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/d2b2630a-c17e-4a37-8f0f-e9e8da119bcb",
+    "modified": "2023-11-24T06:48:51Z",
+    "issued": "2023-11-24T06:43:12Z"
+   },
+   "resources": [
+    {
+     "id": "3c1a4cd5-b421-4111-9c0c-566e2237aef7",
+     "name": "DTM_BB-register-verejnej-zelene-1",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/bb_pazel_t_dbf.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "b2057885-c4f5-4f6a-aa7b-ba8556a7a13c",
+   "name": "bb-dtm-bb-register-verejnej-zelene-2",
+   "org": "banskabystrica",
+   "title": "DTM_BB-register-verejnej-zelene-2",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:34.752138",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/555fae5f-c4a1-43fe-85b9-91e72388d31a",
+    "modified": "2023-11-24T06:54:10Z",
+    "issued": "2023-11-24T06:50:02Z"
+   },
+   "resources": [
+    {
+     "id": "b33615cd-ed6b-4a90-aece-498a3bffea9b",
+     "name": "DTM_BB-register-verejnej-zelene-2",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/bb_pazel_shp.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "f08602e6-ec95-43a7-b13d-44320f1caa46",
+   "name": "bb-dtm-bb-register-verejnej-zelene-3",
+   "org": "banskabystrica",
+   "title": "DTM_BB-register-verejnej-zelene-3",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:35.073717",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/a352abb0-e3d9-4192-9149-bea8055bcd8a",
+    "modified": "2023-11-24T06:58:57Z",
+    "issued": "2023-11-24T06:55:17Z"
+   },
+   "resources": [
+    {
+     "id": "bc93b9cd-95cf-4425-8970-7473b574a3a9",
+     "name": "DTM_BB-register-verejnej-zelene-3",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/bb_pazel_c_dbf.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "ebcf8bb3-7248-4f1c-aa9c-2f1302abc593",
+   "name": "bb-dtm-bb-register-vodorovneho-dopravneho-znacenia",
+   "org": "banskabystrica",
+   "title": "DTM_BB-register-vodorovneho-dopravneho-znacenia",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:35.423425",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/10d623e9-5b5c-4388-820b-19366ed06976",
+    "modified": "2023-11-24T06:35:00Z",
+    "issued": "2023-11-24T06:30:53Z"
+   },
+   "resources": [
+    {
+     "id": "08453fc0-97f1-4eeb-8c90-06b24ec33d5b",
+     "name": "DTM_BB-register-vodorovneho-dopravneho-znacenia",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/OE_17.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "f5382a0f-ef29-4823-a925-d5b0254e823c",
+   "name": "bb-dtm-bb-register-zvisleho-dopravneho-znacenia",
+   "org": "banskabystrica",
+   "title": "DTM_BB-register-zvisleho-dopravneho-znacenia",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:35.768485",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/ce59a87a-a3d9-4f24-9d48-ca0df97c24e2",
+    "modified": "2023-11-24T06:29:31Z",
+    "issued": "2023-11-24T06:25:23Z"
+   },
+   "resources": [
+    {
+     "id": "b65d9aac-a6ff-45c1-bbcf-7c26c1db3995",
+     "name": "DTM_BB-register-zvisleho-dopravneho-znacenia",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/OE_16.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "5e147d8b-e44f-4f37-b5b0-501f54179e56",
+   "name": "bb-dtm-bb-regulativy-a-limity-funkcneho-vyuzitia-uzemia",
+   "org": "banskabystrica",
+   "title": "DTM_BB-regulativy-a-limity-funkcneho-vyuzitia-uzemia",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:36.111886",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/4e0cc517-bc95-4fcd-b4df-a508ce8a5d64",
+    "modified": "2023-11-24T07:34:49Z",
+    "issued": "2023-11-24T07:31:18Z"
+   },
+   "resources": [
+    {
+     "id": "a99468ba-1370-44ce-8989-c0571ffd2b2a",
+     "name": "DTM_BB-regulativy-a-limity-funkcneho-vyuzitia-uzemia",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/OE_26.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "42d98983-d9d4-4c82-b093-7ab459c25ca6",
+   "name": "bb-dtm-bb-tvorba-krajiny-a-ochrana-prirody",
+   "org": "banskabystrica",
+   "title": "DTM_BB-tvorba-krajiny-a-ochrana-prirody",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:36.396606",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/fd4a23d6-876c-43c6-96ff-b79c6c78820c",
+    "modified": "2023-11-24T07:30:02Z",
+    "issued": "2023-11-24T07:23:05Z"
+   },
+   "resources": [
+    {
+     "id": "37f6a1d1-ca39-4b4b-bbeb-7ee1f93e204c",
+     "name": "DTM_BB-tvorba-krajiny-a-ochrana-prirody",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/OE_25.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "c512a703-7a5e-4c78-af60-ee4dbc4b1d19",
+   "name": "bb-dtm-bb-verejne-dopravne-a-technicke-vybavenie",
+   "org": "banskabystrica",
+   "title": "DTM_BB-verejne-dopravne-a-technicke-vybavenie",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:36.723914",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/64062f21-7ed2-4b2b-8f86-92031f2e4424",
+    "modified": "2023-11-24T07:17:21Z",
+    "issued": "2023-11-24T07:12:29Z"
+   },
+   "resources": [
+    {
+     "id": "2066de2e-b98f-404c-93c2-636c72e12ffb",
+     "name": "DTM_BB-verejne-dopravne-a-technicke-vybavenie",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/OE_24.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "8c3c67bf-074e-4207-9cd7-b51ed756a4f8",
+   "name": "bb-dtm-bb-verejnoprospesne-stavby",
+   "org": "banskabystrica",
+   "title": "DTM_BB-verejnoprospesne-stavby",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:37.047768",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/0938a275-6e7e-444c-a679-79714e7774e9",
+    "modified": "2023-11-24T07:45:26Z",
+    "issued": "2023-11-24T07:40:09Z"
+   },
+   "resources": [
+    {
+     "id": "5c358e8e-d404-4d98-98e9-e72424d31834",
+     "name": "DTM_BB-verejnoprospesne-stavby",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/OE_28.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "3877e9a5-9a5d-4f00-980b-8aba89101e66",
+   "name": "bb-dtm-bb-vodne-toky-a-plochy",
+   "org": "banskabystrica",
+   "title": "DTM_BB-vodne-toky-a-plochy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:37.450878",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/b80831e5-4a8b-4129-ad80-2beb11e3db80",
+    "modified": "2023-11-24T07:04:41Z",
+    "issued": "2023-11-24T07:00:19Z"
+   },
+   "resources": [
+    {
+     "id": "8adfed65-1307-400e-9fb4-a88142bb8e34",
+     "name": "DTM_BB-vodne-toky-a-plochy",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/vodne_toky_plochy.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "0bca145f-6437-4969-94b6-04732103c7d4",
+   "name": "bb-dtm-bb-vyskopis-teran",
+   "org": "banskabystrica",
+   "title": "DTM_BB-vyskopis-teran",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:37.857799",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/42eb89cd-5703-44fd-8138-9959f9348582",
+    "modified": "2023-11-24T05:47:34Z",
+    "issued": "2023-11-24T05:43:20Z"
+   },
+   "resources": [
+    {
+     "id": "6069bfd2-bd67-4b76-be90-f1614b156e73",
+     "name": "DTM_BB-vyskopis-teren",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/vrstevnice.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "eccabe9d-eebf-4518-a337-1c6661d88377",
+   "name": "bb-dtm-bb-vyuzitie-pody-na-nepolnohospodarske-ucely",
+   "org": "banskabystrica",
+   "title": "DTM_BB-vyuzitie-pody-na-nepolnohospodarske-ucely",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:38.248542",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/a91835cd-85bb-4a3b-bf39-5fefe7eb66db",
+    "modified": "2023-11-24T07:39:22Z",
+    "issued": "2023-11-24T07:35:56Z"
+   },
+   "resources": [
+    {
+     "id": "df80eae5-8687-43f9-8a9e-63cb4173b9d0",
+     "name": "DTM_BB-vyuzitie-pody-na-nepolnohospodarske-ucely",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/OE_27.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "78b602b1-e0c1-4d7c-86a2-881f11b826a5",
+   "name": "bb-dtm-bb-zaujmove-uzemie-a-sirsie-vztahy",
+   "org": "banskabystrica",
+   "title": "DTM_BB-zaujmove-uzemie-a-sirsie-vztahy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T03:23:38.658559",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/892f3512-73af-4650-ba5a-f832ffe9026d",
+    "modified": "2023-11-24T07:50:12Z",
+    "issued": "2023-11-24T07:46:47Z"
+   },
+   "resources": [
+    {
+     "id": "72a5c9d1-64f7-4b98-8590-30dbe765e750",
+     "name": "DTM_BB-zaujmove-uzemie-a-sirsie-vztahy",
+     "format": "ZIP",
+     "url": "https://dtm-banskabystrica.tmapserver.sk/opendata/zaujmove_riesene_uzemie.zip",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "e3715528-0a0f-40e4-8178-e42beca9da39",
+   "name": "bb-objednavky-bb",
+   "org": "banskabystrica",
+   "title": "Objednávky BB",
+   "license": "cc-by",
+   "modified": "2026-10-16T03:23:49.654585",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/b7c6507f-506b-47d9-9459-6223aa73678c",
+    "modified": "2026-01-15T10:35:01Z",
+    "issued": "2023-11-29T11:35:29Z"
+   },
+   "resources": [
+    {
+     "id": "dcd35739-3b47-4722-8c80-380d89d864e8",
+     "name": "Objednávky BB (tabuľka)",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/dcd35739-3b47-4722-8c80-380d89d864e8",
+     "datastore": true
+    }
+   ]
+  },
+  {
+   "id": "0248d85c-d4e8-4053-9be4-efbf7ae66c6b",
+   "name": "bb-pocet-obcanov-podla-dna-narodenia",
+   "org": "banskabystrica",
+   "title": "Počet občanov podľa dňa narodenia",
+   "license": "cc-by",
+   "modified": "2026-10-16T03:24:32.606948",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/9ae5f366-e4a1-4b89-8e8c-2be3382d902a",
+    "modified": "2023-11-30T08:44:35Z",
+    "issued": "2023-11-30T08:39:59Z"
+   },
+   "resources": [
+    {
+     "id": "cea68407-d708-43f3-ae6c-2df3b15dc063",
+     "name": "Počet občanov podľa dňa narodenia",
+     "format": "JSON",
+     "url": "https://egov.banskabystrica.sk/Default.aspx?NavigationState=945:0::plac2174:_144154_5_8",
+     "datastore": false
+    },
+    {
+     "id": "c7e533af-04b7-4a0a-95bc-dc75f18ede97",
+     "name": "Počet občanov podľa dňa narodenia (tabuľka)",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/c7e533af-04b7-4a0a-95bc-dc75f18ede97",
+     "datastore": true
+    }
+   ]
+  },
+  {
+   "id": "6037d488-7be9-4d34-9f4c-1015f6b110da",
+   "name": "bb-pocet-obcanov-podla-veku",
+   "org": "banskabystrica",
+   "title": "Počet občanov podľa veku",
+   "license": "cc-by",
+   "modified": "2026-10-16T03:24:34.690376",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/8196e8cd-75fe-47a2-b36c-cfcd86dc080f",
+    "modified": "2023-11-30T08:26:58Z",
+    "issued": "2023-11-30T08:18:37Z"
+   },
+   "resources": [
+    {
+     "id": "89dd09ce-ebff-40d9-9b7d-54f4c3d862f2",
+     "name": "Počet občanov podľa veku",
+     "format": "JSON",
+     "url": "https://egov.banskabystrica.sk/Default.aspx?NavigationState=920:0::plac1140:_144053_5_8",
+     "datastore": false
+    },
+    {
+     "id": "eb9bd402-c590-4667-ab82-e2c11dd9c248",
+     "name": "Počet občanov podľa veku (tabuľka)",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/eb9bd402-c590-4667-ab82-e2c11dd9c248",
+     "datastore": true
+    }
+   ]
+  },
+  {
+   "id": "a629eef7-4eae-4219-b623-17125d334362",
+   "name": "bb-podujatia",
+   "org": "banskabystrica",
+   "title": "Podujatia",
+   "license": "cc-by",
+   "modified": "2026-10-16T03:24:32.018404",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/823f513f-6b8d-432e-b69e-f5d61f999f0c",
+    "modified": "2026-01-15T10:04:37Z",
+    "issued": "2026-01-15T10:03:25Z"
+   },
+   "resources": [
+    {
+     "id": "2737412c-52f9-4e62-b08f-df07d0b323ca",
+     "name": "Podujatia",
+     "format": "JSON",
+     "url": "https://www.banskabystrica.sk/wp-json/wp/v2/events",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "218a20c4-7518-4233-9dc1-51454783fb40",
+   "name": "bb-prirastky-a-ubytky-obcanov-za-jednotlive-roky",
+   "org": "banskabystrica",
+   "title": "Prírastky a úbytky občanov za jednotlivé roky",
+   "license": "cc-by",
+   "modified": "2026-10-16T03:24:35.771052",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/057d6d0f-6aa9-4f01-a37d-65b96290bd5a",
+    "modified": "2023-11-30T08:13:56Z",
+    "issued": "2023-11-30T07:59:41Z"
+   },
+   "resources": [
+    {
+     "id": "e5ce57ba-2f21-4e9d-971b-82998da73665",
+     "name": "Prírastky a úbytky občanov za jednotlivé roky",
+     "format": "JSON",
+     "url": "https://egov.banskabystrica.sk/Default.aspx?NavigationState=890:0::plac1400:_144057_5_8",
+     "datastore": false
+    },
+    {
+     "id": "4450222b-7726-40e9-980e-1fbe60a18d12",
+     "name": "Prírastky a úbytky občanov za jednotlivé roky (tabuľka)",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/4450222b-7726-40e9-980e-1fbe60a18d12",
+     "datastore": true
+    }
+   ]
+  },
+  {
+   "id": "55e7ca70-459f-45b1-9444-f3a69aba49df",
+   "name": "bb-zasadnutia-organov-samospravy",
+   "org": "banskabystrica",
+   "title": "Zasadnutia orgánov samosprávy",
+   "license": "cc-by",
+   "modified": "2026-10-16T03:24:38.451105",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/0fdc8080-3b55-42a5-a13c-60641ffe549a",
+    "modified": "2026-01-15T09:59:18Z",
+    "issued": "2026-01-15T09:57:07Z"
+   },
+   "resources": [
+    {
+     "id": "3c38942c-3686-4ecd-af3e-91eba4dd4ce2",
+     "name": "Zasadnutia orgánov samosprávy",
+     "format": "JSON",
+     "url": "https://egov.banskabystrica.sk/Default.aspx?NavigationState=261:0::plac381:_144112_5_8",
+     "datastore": false
+    },
+    {
+     "id": "93b1c198-87a6-4d71-920a-d777221b5035",
+     "name": "Zasadnutia orgánov samosprávy (tabuľka)",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/93b1c198-87a6-4d71-920a-d777221b5035",
+     "datastore": true
+    }
+   ]
+  },
+  {
+   "id": "90f75c36-abe7-4337-acd2-963572280173",
+   "name": "bb-zmluvy-bb",
+   "org": "banskabystrica",
+   "title": "Zmluvy BB",
+   "license": "cc-by",
+   "modified": "2026-10-16T03:24:47.041779",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "harvest_source": "nkod-banskabystrica",
+    "source_uri": "https://data.gov.sk/set/0a977d11-aae3-4348-9653-8cdd0f289629",
+    "modified": "2026-01-15T10:24:13Z",
+    "issued": "2023-11-29T11:12:30Z"
+   },
+   "resources": [
+    {
+     "id": "d2df226d-cbf4-4202-aa63-8ef3e38979da",
+     "name": "Zmluvy BB (tabuľka)",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/d2df226d-cbf4-4202-aa63-8ef3e38979da",
+     "datastore": true
+    }
+   ]
+  },
+  {
+   "id": "c1880954-0bb6-470e-aa10-d12052c528be",
+   "name": "public-air",
+   "org": "banskabystrica",
+   "title": "Kvalita ovzdušia v Banskej Bystrici",
+   "license": "cc-by",
+   "modified": "2026-10-16T04:11:30.248961",
+   "extras": {
+    "publisher_name": "Mesto Banská Bystrica",
+    "license_url": "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0",
+    "generated_by": "jcctl/ckan-publisher",
+    "frequency": "http://publications.europa.eu/resource/authority/frequency/HOURLY"
+   },
+   "resources": [
+    {
+     "id": "81a0f7ab-31e6-4bda-8981-2c4b947bd505",
+     "name": "NGSI-LD API",
+     "format": "NGSI-LD",
+     "url": "https://dev.joinedcontext.com/api/endpoint/mluyob4nz52lok3ssk7pgn5vwt/ngsi-ld/v1/",
+     "datastore": false
+    },
+    {
+     "id": "c3e2800a-01e3-4c18-9dda-b1f702860d84",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://dev.joinedcontext.com/api/endpoint/mluyob4nz52lok3ssk7pgn5vwt/file.geojson",
+     "datastore": false
+    },
+    {
+     "id": "9e7ff9e6-c98a-4713-b7b5-4515b3633d34",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://dev.joinedcontext.com/api/endpoint/mluyob4nz52lok3ssk7pgn5vwt/file.csv",
+     "datastore": false
+    },
+    {
+     "id": "5d9a6861-643c-4158-9126-b1c46bf489a3",
+     "name": "Excel spreadsheet",
+     "format": "XLSX",
+     "url": "https://dev.joinedcontext.com/api/endpoint/mluyob4nz52lok3ssk7pgn5vwt/file.xlsx",
+     "datastore": false
+    },
+    {
+     "id": "a9cc3a2d-91d9-400d-be5e-57f0e6d619c8",
+     "name": "Model Context Protocol",
+     "format": "MCP",
+     "url": "https://dev.joinedcontext.com/api/endpoint/mluyob4nz52lok3ssk7pgn5vwt/mcp",
+     "datastore": false
+    },
+    {
+     "id": "87a24e54-6e62-4d40-a3cf-b73e3fed3e1a",
+     "name": "OGC API - Features",
+     "format": "OGCFEAT",
+     "url": "https://dev.joinedcontext.com/api/endpoint/mluyob4nz52lok3ssk7pgn5vwt/ogc/features/",
+     "datastore": false
+    },
+    {
+     "id": "b605dbca-6026-42f9-a29c-1d6ab5b786f3",
+     "name": "Live updates over WebSocket",
+     "format": "WebSocket",
+     "url": "https://dev.joinedcontext.com/api/endpoint/mluyob4nz52lok3ssk7pgn5vwt/ws",
+     "datastore": false
+    },
+    {
+     "id": "8b6e7df1-09aa-457d-8cf1-68b0d744a3ea",
+     "name": "OData v4",
+     "format": "OData",
+     "url": "https://dev.joinedcontext.com/api/endpoint/mluyob4nz52lok3ssk7pgn5vwt/odata/v4/",
+     "datastore": false
+    },
+    {
+     "id": "ffbfcb8f-1bf4-426e-bed5-32ebbbc71afe",
+     "name": "Schema artifacts",
+     "format": "JSON",
+     "url": "https://dev.joinedcontext.com/api/endpoint/mluyob4nz52lok3ssk7pgn5vwt/schema/index.json",
+     "datastore": false
+    },
+    {
+     "id": "92262166-e204-4228-b1dd-3f0091448506",
+     "name": "bb-air-quality context.jsonld",
+     "format": "JSON-LD",
+     "url": "https://dev.joinedcontext.com/api/endpoint/mluyob4nz52lok3ssk7pgn5vwt/schema/v1/context.jsonld",
+     "datastore": false
+    },
+    {
+     "id": "a13e311a-c8c5-4f98-b7bc-84bf0187b64e",
+     "name": "bb-air-quality model.linkml.yaml",
+     "format": "LinkML",
+     "url": "https://dev.joinedcontext.com/api/endpoint/mluyob4nz52lok3ssk7pgn5vwt/schema/v1/model.linkml.yaml",
+     "datastore": false
+    },
+    {
+     "id": "3da2b06a-f8f9-4cd3-bb0a-5017d5959244",
+     "name": "bb-air-quality model.md",
+     "format": "Markdown",
+     "url": "https://dev.joinedcontext.com/api/endpoint/mluyob4nz52lok3ssk7pgn5vwt/schema/v1/model.md",
+     "datastore": false
+    },
+    {
+     "id": "f23cf34e-e953-42ae-9889-d38ce9904e94",
+     "name": "bb-air-quality model.owl.ttl",
+     "format": "OWL",
+     "url": "https://dev.joinedcontext.com/api/endpoint/mluyob4nz52lok3ssk7pgn5vwt/schema/v1/model.owl.ttl",
+     "datastore": false
+    },
+    {
+     "id": "d37a4cea-c493-48cf-83d8-29b0c9b1c21a",
+     "name": "bb-air-quality model.rdf.ttl",
+     "format": "RDF",
+     "url": "https://dev.joinedcontext.com/api/endpoint/mluyob4nz52lok3ssk7pgn5vwt/schema/v1/model.rdf.ttl",
+     "datastore": false
+    },
+    {
+     "id": "632c123d-eca0-458f-8c29-ed32991b140c",
+     "name": "bb-air-quality model.schema.json",
+     "format": "JSON Schema",
+     "url": "https://dev.joinedcontext.com/api/endpoint/mluyob4nz52lok3ssk7pgn5vwt/schema/v1/model.schema.json",
+     "datastore": false
+    },
+    {
+     "id": "f7deda70-9c14-455f-a9cf-1499c92af229",
+     "name": "bb-air-quality model.shacl.ttl",
+     "format": "SHACL",
+     "url": "https://dev.joinedcontext.com/api/endpoint/mluyob4nz52lok3ssk7pgn5vwt/schema/v1/model.shacl.ttl",
+     "datastore": false
+    },
+    {
+     "id": "fd25c909-5d83-4f00-9af1-891f91e6746f",
+     "name": "AirQualityObserved",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/fd25c909-5d83-4f00-9af1-891f91e6746f",
+     "datastore": true
+    }
+   ]
+  },
+  {
+   "id": "933ea618-b4f1-55e8-81cf-ae6bb67182e0",
+   "name": "bbsk-clenovia-samospravy-efc2f3",
+   "org": "bbsk",
+   "title": "Členovia samosprávy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:17:48.710230",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "efc2f3ee02ba4fe89743a4ed84a90e89",
+    "source_url": "https://opendata.bbsk.sk/datasets/efc2f3ee02ba4fe89743a4ed84a90e89",
+    "modified": "2024-07-22T07:14:21Z",
+    "issued": "2024-04-30T13:56:35Z"
+   },
+   "resources": [
+    {
+     "id": "a30b21b1-b0cc-4f85-8e6e-880ae25d5299",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/efc2f3ee02ba4fe89743a4ed84a90e89/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "e3dbcbd9-4f42-4417-a0c0-2b4cc0384dd8",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/%C4%8Clenovia_samospr%C3%A1vy/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "bc4f320b-10f4-5805-9d25-d7cda0f34562",
+   "name": "bbsk-cyklisti-nehodovost-addf0f",
+   "org": "bbsk",
+   "title": "Cyklisti_nehodovosť",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:13:52.063263",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "addf0f665a8c4990a93095cec06226c6",
+    "source_url": "https://opendata.bbsk.sk/datasets/addf0f665a8c4990a93095cec06226c6",
+    "modified": "2026-06-08T11:35:22Z",
+    "issued": "2026-06-08T11:26:14Z"
+   },
+   "resources": [
+    {
+     "id": "26b92c16-f577-4a5a-99dc-5c7e1aa7e57b",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/addf0f665a8c4990a93095cec06226c6/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "c774adaf-a975-4b57-9ec7-be6fbd5a59bd",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Cyklisti_nehodovos%C5%A5_(1)/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "893c25ea-accb-574c-a0ce-fedc4ae8bb3e",
+   "name": "bbsk-cykloscitace-miesta-6e967d",
+   "org": "bbsk",
+   "title": "Cyklosčítače - miesta",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:11:58.109073",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "6e967d28dd07404a83b67226917ed607",
+    "source_url": "https://opendata.bbsk.sk/datasets/6e967d28dd07404a83b67226917ed607",
+    "modified": "2026-07-07T13:38:55Z",
+    "issued": "2025-07-28T08:13:01Z"
+   },
+   "resources": [
+    {
+     "id": "8ba5f7e0-0b0c-45dc-907b-94724a149f45",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/6e967d28dd07404a83b67226917ed607/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "ff3ab494-3dda-418e-a6f5-6689a9dde212",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/6e967d28dd07404a83b67226917ed607/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "d458e245-2083-46d2-955a-43a44de805b6",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/S%C4%8D%C3%ADta%C4%8De_detail_ECOVISIO/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "527d543e-13c7-5e63-b466-8ab6cefb68fd",
+   "name": "bbsk-cykloturisticke-trasy-linie-e6a1a7",
+   "org": "bbsk",
+   "title": "Cykloturistické trasy - línie",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:11:10.340861",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "e6a1a7a0d2f7484ba92776d291be9af6",
+    "source_url": "https://opendata.bbsk.sk/datasets/e6a1a7a0d2f7484ba92776d291be9af6",
+    "modified": "2025-07-04T13:41:15Z",
+    "issued": "2025-05-20T12:17:33Z"
+   },
+   "resources": [
+    {
+     "id": "40f7625a-e3f6-4420-bb8e-4518e206388e",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/e6a1a7a0d2f7484ba92776d291be9af6/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "b1cbac5f-bc27-40bf-93de-b70b37afbad8",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/e6a1a7a0d2f7484ba92776d291be9af6/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "8844e44d-587d-425d-889d-a1bf6ac30121",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/2019_linie_CTT_ML/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "e147a037-e9d9-5d54-88bf-fc0d6e33ac3b",
+   "name": "bbsk-cykloturisticke-trasy-linie-povrchy-2ec670",
+   "org": "bbsk",
+   "title": "Cykloturistické trasy - línie - povrchy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:19:44.974302",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "2ec670b54bd240cfae999e7c738ff72c",
+    "source_url": "https://opendata.bbsk.sk/datasets/2ec670b54bd240cfae999e7c738ff72c",
+    "modified": "2025-06-25T07:38:10Z",
+    "issued": "2025-05-20T12:19:11Z"
+   },
+   "resources": [
+    {
+     "id": "2a8529b3-f4ef-4593-8deb-e874a1363edd",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/2ec670b54bd240cfae999e7c738ff72c/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "76134f15-499b-4865-9fbd-1f7b283567b5",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/2ec670b54bd240cfae999e7c738ff72c/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "1b564bb0-51bf-470c-ab46-2212c500d6bd",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/2019_linie_povrchy_ML/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "332ad920-5852-5473-8b0d-c999b81652d1",
+   "name": "bbsk-cykloturisticke-trasy-nosic-infotabula-odpocivadlo-znacenie-f3c643",
+   "org": "bbsk",
+   "title": "Cykloturistické trasy - nosič/infotabuľa/odpočívadlo/značenie",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:11:14.196742",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "f3c6432c170943d0b9d91098507c035f",
+    "source_url": "https://opendata.bbsk.sk/datasets/f3c6432c170943d0b9d91098507c035f",
+    "modified": "2025-06-25T07:37:42Z",
+    "issued": "2025-05-20T12:25:03Z"
+   },
+   "resources": [
+    {
+     "id": "106eae0f-9cb6-4866-aff7-46f3d82b06bf",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/f3c6432c170943d0b9d91098507c035f/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "32ba87b7-950d-418c-b5f3-eef12ec22c14",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/f3c6432c170943d0b9d91098507c035f/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "5f071356-3b6e-4e05-87db-5d5effc73aa0",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/nosic_info_odpoc_WGS_ML/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "d7073f38-190e-5e09-a29a-c6ae256535a8",
+   "name": "bbsk-dilatacne-celky-v-banskobystrickom-kraji-public-view-6ff77a",
+   "org": "bbsk",
+   "title": "Dilatačné celky v Banskobystrickom kraji (public view)",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:11:18.293624",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "6ff77a2d969449d19f1a39c901c1ddc2",
+    "source_url": "https://opendata.bbsk.sk/datasets/6ff77a2d969449d19f1a39c901c1ddc2",
+    "modified": "2024-10-07T22:16:12Z",
+    "issued": "2024-10-07T21:19:27Z"
+   },
+   "resources": [
+    {
+     "id": "8b2afb2b-f2cf-4b56-bf31-059aec9e40b7",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/6ff77a2d969449d19f1a39c901c1ddc2/csv?layers=2",
+     "datastore": false
+    },
+    {
+     "id": "c31b7a1c-49a0-4fb7-9e89-657fa16d6883",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/6ff77a2d969449d19f1a39c901c1ddc2/geojson?layers=2",
+     "datastore": false
+    },
+    {
+     "id": "51faaeae-2aba-401e-b301-21b8e67b3ad7",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Dilata%C4%8Dn%C3%A9_celky_v_Banskobystrickom_kraji_(organization)_view/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "9b107cf2-1acd-5b24-8214-81c8b5b1801a",
+   "name": "bbsk-dodavatelia-825cd0",
+   "org": "bbsk",
+   "title": "Dodávatelia",
+   "license": "cc-by",
+   "modified": "2026-10-15T22:15:25.800021",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "825cd0cb3b0f46759d14f3bb0d328b59",
+    "source_url": "https://opendata.bbsk.sk/datasets/825cd0cb3b0f46759d14f3bb0d328b59",
+    "modified": "2026-10-15T11:13:59Z",
+    "issued": "2026-10-15T11:06:18Z"
+   },
+   "resources": [
+    {
+     "id": "632b65d8-6594-47c6-8eab-74bd44238d84",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/825cd0cb3b0f46759d14f3bb0d328b59/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "64adf6b8-b7f9-4ac7-a85a-952d6c3bc747",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pokus_dodavatelia/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "b39156ed-ecdc-5aca-9b04-99f22660f347",
+   "name": "bbsk-dotacie-bada80",
+   "org": "bbsk",
+   "title": "Dotácie",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:15:46.109790",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "bada80945cc841df96f9ca2e8ab7eeea",
+    "source_url": "https://opendata.bbsk.sk/datasets/bada80945cc841df96f9ca2e8ab7eeea",
+    "modified": "2026-07-07T12:12:35Z",
+    "issued": "2025-11-14T12:37:52Z"
+   },
+   "resources": [
+    {
+     "id": "7ef64f6b-5c4c-493c-bb72-f0fa902ebd85",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/bada80945cc841df96f9ca2e8ab7eeea/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "85d5f655-9a83-4e27-84cc-9d9bca9a3904",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/VZN_Sharepoint_listy/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "c6d2cc72-fc45-5924-935a-98c86f223a78",
+   "name": "bbsk-ekologicky-potencial-vodnych-utvarov-672eca",
+   "org": "bbsk",
+   "title": "Ekologický potenciál vodných útvarov",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:18:28.198219",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "672eca16ca644f63a58031bc4e31e983",
+    "source_url": "https://opendata.bbsk.sk/datasets/672eca16ca644f63a58031bc4e31e983",
+    "modified": "2026-07-07T13:13:36Z",
+    "issued": "2024-10-22T06:52:46Z"
+   },
+   "resources": [
+    {
+     "id": "f7b7b8a4-82c3-4fb5-8df4-a02c825a61ce",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/672eca16ca644f63a58031bc4e31e983/csv?layers=1",
+     "datastore": false
+    },
+    {
+     "id": "77da352b-2023-43b8-8845-829801e15397",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/672eca16ca644f63a58031bc4e31e983/geojson?layers=1",
+     "datastore": false
+    },
+    {
+     "id": "1e1537f5-7f8f-41ad-9dcf-f91dbe27732e",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Eko_potencial_project/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "257bea35-5179-56f1-bcec-63f7e7e5b51d",
+   "name": "bbsk-ekologicky-stav-vodnych-utvarov-48bbbd",
+   "org": "bbsk",
+   "title": "Ekologický stav vodných útvarov",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:10:38.159645",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "48bbbd5c1c8e4459ad58c14cf0567dfd",
+    "source_url": "https://opendata.bbsk.sk/datasets/48bbbd5c1c8e4459ad58c14cf0567dfd",
+    "modified": "2026-07-07T13:15:20Z",
+    "issued": "2024-10-22T06:51:12Z"
+   },
+   "resources": [
+    {
+     "id": "e1e52e2d-c917-4085-af4b-242819fa0bc0",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/48bbbd5c1c8e4459ad58c14cf0567dfd/csv?layers=1",
+     "datastore": false
+    },
+    {
+     "id": "d1a0a0c6-d4f9-4228-ab0d-8ae8513859f5",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/48bbbd5c1c8e4459ad58c14cf0567dfd/geojson?layers=1",
+     "datastore": false
+    },
+    {
+     "id": "1b169f7c-560c-4a86-bc08-b625b2a010a5",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Eko_stav_project/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "93fa8aa4-0103-5252-924c-a2ec74bb6eba",
+   "name": "bbsk-faktury-422b35",
+   "org": "bbsk",
+   "title": "Faktúry",
+   "license": "cc-by",
+   "modified": "2026-10-15T22:15:30.563221",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "422b35049691411480c235a0036e9819",
+    "source_url": "https://opendata.bbsk.sk/datasets/422b35049691411480c235a0036e9819",
+    "modified": "2026-10-15T09:38:50Z",
+    "issued": "2026-10-14T08:32:04Z"
+   },
+   "resources": [
+    {
+     "id": "b4d9e803-1be1-4fc7-8f78-f27fe64e6be0",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/422b35049691411480c235a0036e9819/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "e7c502d4-c01b-4709-a187-0d039a306faa",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Fakt%C3%BAry/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "95278f1d-563c-5af5-94f5-54bcb707ee71",
+   "name": "bbsk-hlasovania-poslancov-ba7ca6",
+   "org": "bbsk",
+   "title": "Hlasovania poslancov",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:17:46.625019",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "ba7ca689104843dca36da509ca8e9eef",
+    "source_url": "https://opendata.bbsk.sk/datasets/ba7ca689104843dca36da509ca8e9eef",
+    "modified": "2024-07-22T07:15:24Z",
+    "issued": "2024-04-30T13:52:15Z"
+   },
+   "resources": [
+    {
+     "id": "3fb2d708-09d0-4ea8-ac02-b2fd0d944e06",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/ba7ca689104843dca36da509ca8e9eef/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "708f1a5e-1c7b-4354-bb99-a311af50f036",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Hlasovania_poslancov/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "97d8fe91-4ceb-5344-8ba7-9c81541f1781",
+   "name": "bbsk-hustota-obyvatelstva-2021-503a78",
+   "org": "bbsk",
+   "title": "Hustota obyvateľstva (2021)",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:14:01.085229",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "503a782eadf6468cbd017e14febaf7b1",
+    "source_url": "https://opendata.bbsk.sk/datasets/503a782eadf6468cbd017e14febaf7b1",
+    "modified": "2026-05-04T06:44:40Z",
+    "issued": "2024-03-27T11:39:20Z"
+   },
+   "resources": [
+    {
+     "id": "ba22e941-bdb0-462d-b416-cb641252d808",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/503a782eadf6468cbd017e14febaf7b1/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "6b8a09ef-ecac-4731-86ac-18ad5b54c554",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/503a782eadf6468cbd017e14febaf7b1/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "3a201478-0825-47f4-b188-84041de5207b",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_hustota_obyvate%C4%BEstva/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "96f21eb5-01aa-504c-a300-b4cd99d4f54b",
+   "name": "bbsk-hustota-obyvatelstva-v-obciach-bbk-79fd96",
+   "org": "bbsk",
+   "title": "Hustota obyvateľstva v obciach BBK",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:11:55.947252",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "79fd967ed5bb4417a0c3c612bc15c797",
+    "source_url": "https://opendata.bbsk.sk/datasets/79fd967ed5bb4417a0c3c612bc15c797",
+    "modified": "2026-10-08T06:33:51Z",
+    "issued": "2026-02-25T13:01:56Z"
+   },
+   "resources": [
+    {
+     "id": "b1332728-3236-4e67-9650-4ee53ae84f5d",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/79fd967ed5bb4417a0c3c612bc15c797/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "2a5ee00f-64fe-4e5a-939e-e74a7fe8648e",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Hustota_obyvate%C4%BEstva_obce_BBK1/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "9dff401c-f0a9-58c1-b5f2-6a68f9c4acc5",
+   "name": "bbsk-komisie-zastupitelstva-banskobystrickeho-samospravneho-kraja-59b9e4",
+   "org": "bbsk",
+   "title": "Komisie zastupiteľstva Banskobystrického samosprávneho kraja",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:11:21.872095",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "59b9e4f669df47318855799215f62e66",
+    "source_url": "https://opendata.bbsk.sk/datasets/59b9e4f669df47318855799215f62e66",
+    "modified": "2024-07-22T07:13:43Z",
+    "issued": "2024-04-30T13:46:44Z"
+   },
+   "resources": [
+    {
+     "id": "978fe4bf-eef4-466a-8668-6aa848f61dc5",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/59b9e4f669df47318855799215f62e66/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "c0d5a768-b3b2-4ed7-9b50-0ccea39e4fcc",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Komisie_ZBBSK/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "37e29bed-a8e5-5639-bfe1-d934a7cfa2eb",
+   "name": "bbsk-kontaktne-miesta-2128a0",
+   "org": "bbsk",
+   "title": "Kontaktné miesta",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:13:48.465217",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "2128a02b2b6646458be785ed2b51f99f",
+    "source_url": "https://opendata.bbsk.sk/datasets/2128a02b2b6646458be785ed2b51f99f",
+    "modified": "2026-07-07T12:53:37Z",
+    "issued": "2025-04-16T12:36:25Z"
+   },
+   "resources": [
+    {
+     "id": "cbea5e24-048d-489d-8174-901b02df62a1",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/2128a02b2b6646458be785ed2b51f99f/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "ec4965c8-d6e9-43f8-bacb-542281bf09e8",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/2128a02b2b6646458be785ed2b51f99f/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "811e5d84-2c02-40b9-9b17-1a9b5a4c50c0",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kontaktne_miesta/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "04b8a1b7-d37d-54ca-afe6-ec78b77ae694",
+   "name": "bbsk-kontakty-na-miestne-samospravy-v-bbk-fc5ecb",
+   "org": "bbsk",
+   "title": "Kontakty na miestne samosprávy v BBK",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:13:54.399876",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "fc5ecb592f2945d8be61d0712f0d73d2",
+    "source_url": "https://opendata.bbsk.sk/datasets/fc5ecb592f2945d8be61d0712f0d73d2",
+    "modified": "2026-05-07T16:11:15Z",
+    "issued": "2026-02-13T08:29:11Z"
+   },
+   "resources": [
+    {
+     "id": "6c08b26e-f6ab-440a-9d9c-0af7a23355bc",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/fc5ecb592f2945d8be61d0712f0d73d2/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "bce6a868-3a8b-4cf3-8335-1f87834c9878",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/fc5ecb592f2945d8be61d0712f0d73d2/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "cde91a03-f90a-4a5c-af6e-2adcb66e9f18",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kontakty_na_samospr%C3%A1vy/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "0e7c7776-405d-4e2c-a781-a0343aeebc30",
+   "name": "bbsk-kpi",
+   "org": "bbsk",
+   "title": "Ukazovatele kraja",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T02:35:15.010153",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "http://publications.europa.eu/resource/authority/licence/CC_BYSA_4_0",
+    "generated_by": "jcctl/ckan-publisher",
+    "frequency": "http://publications.europa.eu/resource/authority/frequency/WEEKLY"
+   },
+   "resources": [
+    {
+     "id": "087ea375-a185-462a-b0aa-3a67310b825e",
+     "name": "NGSI-LD API",
+     "format": "NGSI-LD",
+     "url": "https://dev.joinedcontext.com/api/endpoint/qfhhh5no5wz4lk3rfjisdtx3chiyfig3/ngsi-ld/v1/",
+     "datastore": false
+    },
+    {
+     "id": "fbaf79a3-393b-400f-b3bf-c95147cf2545",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://dev.joinedcontext.com/api/endpoint/qfhhh5no5wz4lk3rfjisdtx3chiyfig3/file.csv",
+     "datastore": false
+    },
+    {
+     "id": "2af49d49-efa6-467a-b7dc-d410ded49e5c",
+     "name": "JSON",
+     "format": "JSON",
+     "url": "https://dev.joinedcontext.com/api/endpoint/qfhhh5no5wz4lk3rfjisdtx3chiyfig3/file.json",
+     "datastore": false
+    },
+    {
+     "id": "0fc1358d-38d5-4195-bf3b-44a4f4f45654",
+     "name": "Live updates over WebSocket",
+     "format": "WebSocket",
+     "url": "https://dev.joinedcontext.com/api/endpoint/qfhhh5no5wz4lk3rfjisdtx3chiyfig3/ws",
+     "datastore": false
+    },
+    {
+     "id": "2cbe4905-4523-4f5a-bd17-598808ea691e",
+     "name": "OGC API - Features",
+     "format": "OGCFEAT",
+     "url": "https://dev.joinedcontext.com/api/endpoint/qfhhh5no5wz4lk3rfjisdtx3chiyfig3/ogc/features/",
+     "datastore": false
+    },
+    {
+     "id": "2b04c1e8-0b6e-48d9-9813-a8d768df3729",
+     "name": "OData v4",
+     "format": "OData",
+     "url": "https://dev.joinedcontext.com/api/endpoint/qfhhh5no5wz4lk3rfjisdtx3chiyfig3/odata/v4/",
+     "datastore": false
+    },
+    {
+     "id": "bdb70d66-47fc-4517-9b90-81b9e0a6b4f7",
+     "name": "Model Context Protocol",
+     "format": "MCP",
+     "url": "https://dev.joinedcontext.com/api/endpoint/qfhhh5no5wz4lk3rfjisdtx3chiyfig3/mcp",
+     "datastore": false
+    },
+    {
+     "id": "f1d428ac-1984-4757-bc5b-b67b628f4a9a",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://dev.joinedcontext.com/api/endpoint/qfhhh5no5wz4lk3rfjisdtx3chiyfig3/file.geojson",
+     "datastore": false
+    },
+    {
+     "id": "d26aeb3d-c83d-4082-8e78-2f71f722c12f",
+     "name": "Schema artifacts",
+     "format": "JSON",
+     "url": "https://dev.joinedcontext.com/api/endpoint/qfhhh5no5wz4lk3rfjisdtx3chiyfig3/schema/index.json",
+     "datastore": false
+    },
+    {
+     "id": "9a671944-b51f-4a65-8f7c-502763bb5ebb",
+     "name": "key-performance-indicator context.jsonld",
+     "format": "JSON-LD",
+     "url": "https://dev.joinedcontext.com/api/endpoint/qfhhh5no5wz4lk3rfjisdtx3chiyfig3/schema/v1/context.jsonld",
+     "datastore": false
+    },
+    {
+     "id": "1774beca-09b1-4b62-a1f4-3058b017db25",
+     "name": "key-performance-indicator model.linkml.yaml",
+     "format": "LinkML",
+     "url": "https://dev.joinedcontext.com/api/endpoint/qfhhh5no5wz4lk3rfjisdtx3chiyfig3/schema/v1/model.linkml.yaml",
+     "datastore": false
+    },
+    {
+     "id": "9f2c25ee-9aa0-4b9a-8798-49eb670957cb",
+     "name": "key-performance-indicator model.md",
+     "format": "Markdown",
+     "url": "https://dev.joinedcontext.com/api/endpoint/qfhhh5no5wz4lk3rfjisdtx3chiyfig3/schema/v1/model.md",
+     "datastore": false
+    },
+    {
+     "id": "00fc1431-f168-4445-b1a3-6d70d2685df5",
+     "name": "key-performance-indicator model.owl.ttl",
+     "format": "OWL",
+     "url": "https://dev.joinedcontext.com/api/endpoint/qfhhh5no5wz4lk3rfjisdtx3chiyfig3/schema/v1/model.owl.ttl",
+     "datastore": false
+    },
+    {
+     "id": "12810757-62cc-481d-8083-67338cd19d7b",
+     "name": "key-performance-indicator model.rdf.ttl",
+     "format": "RDF",
+     "url": "https://dev.joinedcontext.com/api/endpoint/qfhhh5no5wz4lk3rfjisdtx3chiyfig3/schema/v1/model.rdf.ttl",
+     "datastore": false
+    },
+    {
+     "id": "722f5652-6fcd-4ff3-974e-6d585432a938",
+     "name": "key-performance-indicator model.schema.json",
+     "format": "JSON Schema",
+     "url": "https://dev.joinedcontext.com/api/endpoint/qfhhh5no5wz4lk3rfjisdtx3chiyfig3/schema/v1/model.schema.json",
+     "datastore": false
+    },
+    {
+     "id": "f7e8a629-4db2-4754-a0bc-9dab8e05abab",
+     "name": "key-performance-indicator model.shacl.ttl",
+     "format": "SHACL",
+     "url": "https://dev.joinedcontext.com/api/endpoint/qfhhh5no5wz4lk3rfjisdtx3chiyfig3/schema/v1/model.shacl.ttl",
+     "datastore": false
+    },
+    {
+     "id": "16533244-ff97-474b-a456-fda831701be6",
+     "name": "KeyPerformanceIndicator",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/16533244-ff97-474b-a456-fda831701be6",
+     "datastore": true
+    }
+   ]
+  },
+  {
+   "id": "c9e66c78-5b6a-5a8f-b215-6a79ebb41574",
+   "name": "bbsk-kraj-bbk-hranica-a05568",
+   "org": "bbsk",
+   "title": "Kraj BBK - hranica",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:20:18.201618",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "a055681d77ac4de681bdafadee68f82f",
+    "source_url": "https://opendata.bbsk.sk/datasets/a055681d77ac4de681bdafadee68f82f",
+    "modified": "2024-07-22T04:53:28Z",
+    "issued": "2023-12-08T13:15:25Z"
+   },
+   "resources": [
+    {
+     "id": "9f61ca20-b5af-4f33-8b73-1ebe695a5c96",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/a055681d77ac4de681bdafadee68f82f/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "7d78b8d3-2b55-450e-818d-bbcb513dc0b2",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/a055681d77ac4de681bdafadee68f82f/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "a66959b3-4082-4def-a8f3-58c3a392db06",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kraj3_WebMercator/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "f26b8382-9572-5dd1-8384-ad25f0140281",
+   "name": "bbsk-kulturne-institucie-bbsk-24fbf9",
+   "org": "bbsk",
+   "title": "Kultúrne inštitúcie BBSK",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:15:36.582582",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "24fbf99ac161460986bcf075e37bf890",
+    "source_url": "https://opendata.bbsk.sk/datasets/24fbf99ac161460986bcf075e37bf890",
+    "modified": "2026-10-01T14:30:41Z",
+    "issued": "2024-04-30T13:07:17Z"
+   },
+   "resources": [
+    {
+     "id": "c70c1410-f8f4-4455-a094-25d05b8bc1ff",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/24fbf99ac161460986bcf075e37bf890/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "94fa9140-00e7-4e75-9c1f-12565734e338",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/24fbf99ac161460986bcf075e37bf890/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "9e5ba7c9-6827-451d-9a8e-95136d9d370a",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kult%C3%BArne_in%C5%A1tit%C3%BAcie_BBSK_view_public/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "dea3038f-34c5-5adb-9aed-8ae9605fa5e8",
+   "name": "bbsk-kulturne-institucie-bbsk-a-ich-pobocky-2f9362",
+   "org": "bbsk",
+   "title": "Kultúrne inštitúcie BBSK a ich pobočky",
+   "license": "cc-by",
+   "modified": "2026-10-15T22:11:24.421137",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "2f936202febe4340a72c1b7224a664d9",
+    "source_url": "https://opendata.bbsk.sk/datasets/2f936202febe4340a72c1b7224a664d9",
+    "modified": "2026-10-15T09:38:34Z",
+    "issued": "2025-03-27T08:36:49Z"
+   },
+   "resources": [
+    {
+     "id": "666ab450-56af-45dc-a531-b62d492c2401",
+     "name": "Kultúrne inštitúcie CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/2f936202febe4340a72c1b7224a664d9/csv?layers=7",
+     "datastore": false
+    },
+    {
+     "id": "706c63b9-8061-4d1b-a986-23de0816f487",
+     "name": "Kultúrne inštitúcie GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/2f936202febe4340a72c1b7224a664d9/geojson?layers=7",
+     "datastore": false
+    },
+    {
+     "id": "bb170e8c-284c-4498-98e2-00e4c5f5a03b",
+     "name": "Pobočky KI body CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/2f936202febe4340a72c1b7224a664d9/csv?layers=8",
+     "datastore": false
+    },
+    {
+     "id": "299b093c-4999-4891-9d20-490ba4f01118",
+     "name": "Pobočky KI body GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/2f936202febe4340a72c1b7224a664d9/geojson?layers=8",
+     "datastore": false
+    },
+    {
+     "id": "b9ffe258-b153-4f06-a298-893247ee259f",
+     "name": "Pobočky KI polygóny CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/2f936202febe4340a72c1b7224a664d9/csv?layers=9",
+     "datastore": false
+    },
+    {
+     "id": "100c2703-817a-4625-ae0b-d460c9f2ea50",
+     "name": "Pobočky KI polygóny GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/2f936202febe4340a72c1b7224a664d9/geojson?layers=9",
+     "datastore": false
+    },
+    {
+     "id": "5dd47eb0-bd70-4d0d-b3ae-fc2417aadde8",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kult%C3%BArne_in%C5%A1tit%C3%BAcie_view/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "a471d1c2-cf5b-5707-b2d2-64a4b5ee1c31",
+   "name": "bbsk-materske-skoly-v-banskobystrickom-kraji-3f7d07",
+   "org": "bbsk",
+   "title": "Materské školy v Banskobystrickom kraji",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:15:09.917619",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "3f7d077c4d7d41deae2800cb2b7a4fe3",
+    "source_url": "https://opendata.bbsk.sk/datasets/3f7d077c4d7d41deae2800cb2b7a4fe3",
+    "modified": "2024-09-26T11:13:48Z",
+    "issued": "2024-05-06T13:25:51Z"
+   },
+   "resources": [
+    {
+     "id": "37bdd3a1-20a1-414a-b046-3d6062401769",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/3f7d077c4d7d41deae2800cb2b7a4fe3/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "aeb5f9a1-418a-487c-91fe-dbaea0454fb3",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/3f7d077c4d7d41deae2800cb2b7a4fe3/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "67207ade-dcfc-491a-947d-957ae187b6e4",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Matersk%C3%A9_%C5%A1koly/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "f6080c3d-22ca-5a6c-983e-9e88740c08d7",
+   "name": "bbsk-mosty-v-banskobystrickom-kraji-public-view-3b4675",
+   "org": "bbsk",
+   "title": "Mosty v Banskobystrickom kraji (public view)",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:13:05.275791",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "3b46759b595a42e88d82e87867b22ddf",
+    "source_url": "https://opendata.bbsk.sk/datasets/3b46759b595a42e88d82e87867b22ddf",
+    "modified": "2024-10-07T22:16:50Z",
+    "issued": "2024-10-07T21:03:40Z"
+   },
+   "resources": [
+    {
+     "id": "770238d0-1a6e-45a7-83e6-70cc1b38e704",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/3b46759b595a42e88d82e87867b22ddf/csv?layers=2",
+     "datastore": false
+    },
+    {
+     "id": "74382be3-ad01-4e0b-b51d-3354f78b9db1",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/3b46759b595a42e88d82e87867b22ddf/geojson?layers=2",
+     "datastore": false
+    },
+    {
+     "id": "17b124ab-1bfd-4ad2-a7f9-70602657bb47",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mosty_v_Banskobystrickom_kraji_(public_view)/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "33b9ad7f-ccfd-513b-95d0-5be0d36bb251",
+   "name": "bbsk-mosty-v-sprave-bbrsc-public-view-d3252c",
+   "org": "bbsk",
+   "title": "Mosty v správe BBRSC (public view)",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:17:22.686370",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "d3252ce3c6f74033bd513d959766cfc8",
+    "source_url": "https://opendata.bbsk.sk/datasets/d3252ce3c6f74033bd513d959766cfc8",
+    "modified": "2024-10-07T21:05:09Z",
+    "issued": "2024-10-07T14:36:43Z"
+   },
+   "resources": [
+    {
+     "id": "a91c81bd-75db-4fcf-b23e-0924036cb399",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/d3252ce3c6f74033bd513d959766cfc8/csv?layers=2",
+     "datastore": false
+    },
+    {
+     "id": "d26f4c78-6bba-4113-b23a-0e3d307991d7",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/d3252ce3c6f74033bd513d959766cfc8/geojson?layers=2",
+     "datastore": false
+    },
+    {
+     "id": "a77150f2-1e85-477e-8e64-c83409694c64",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mosty_v_spr%C3%A1ve_BBRSC_(public_view)/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "c012e18f-1880-5e26-a514-12c230938f99",
+   "name": "bbsk-nabijacky-a-zastavky-937210",
+   "org": "bbsk",
+   "title": "Nabíjačky a Zastávky",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:13:42.908301",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "937210a7270243569fc0e63c8b131b91",
+    "source_url": "https://opendata.bbsk.sk/datasets/937210a7270243569fc0e63c8b131b91",
+    "modified": "2026-07-07T13:45:11Z",
+    "issued": "2025-07-03T06:57:46Z"
+   },
+   "resources": [
+    {
+     "id": "eb1bebad-9397-4dd9-a602-a7e640f83387",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/937210a7270243569fc0e63c8b131b91/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "c98aefd0-51c6-415f-8457-492a8fcdf45c",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/937210a7270243569fc0e63c8b131b91/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "e288d9e9-92d5-43f7-b06e-535c98445149",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Nab%C3%ADja%C4%8Dky_a_Zast%C3%A1vky/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "82008199-c201-5cad-b637-f4d5b3f32047",
+   "name": "bbsk-nehodovost-v-bbk-0ea72d",
+   "org": "bbsk",
+   "title": "Nehodovosť v BBK",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:11:06.373041",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "0ea72db6b6de43a0b9b6fec8a2f358bf",
+    "source_url": "https://opendata.bbsk.sk/datasets/0ea72db6b6de43a0b9b6fec8a2f358bf",
+    "modified": "2025-07-31T10:35:14Z",
+    "issued": "2025-07-28T12:04:09Z"
+   },
+   "resources": [
+    {
+     "id": "6f643418-93c8-45db-80a1-8a8b17595387",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/0ea72db6b6de43a0b9b6fec8a2f358bf/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "a26ad3bc-6d1f-4789-a263-c4e3f2697525",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/0ea72db6b6de43a0b9b6fec8a2f358bf/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "0ad8da76-7806-484b-bdca-207f3d7d4453",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Export_z_vizualu_nehodovost_MINV/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "eb203dec-e317-56c9-b504-43f0d6d26f0f",
+   "name": "bbsk-obce-bbk-centroidy-cbd19f",
+   "org": "bbsk",
+   "title": "Obce BBK - centroidy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:17:51.513365",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "cbd19f1c2e164e1a950a724b35d15ab1",
+    "source_url": "https://opendata.bbsk.sk/datasets/cbd19f1c2e164e1a950a724b35d15ab1",
+    "modified": "2024-07-22T04:54:15Z",
+    "issued": "2024-04-18T13:52:14Z"
+   },
+   "resources": [
+    {
+     "id": "7e846aec-59bf-4969-b8fc-5e7e83cee122",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/cbd19f1c2e164e1a950a724b35d15ab1/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "f4780c7d-bf45-43a4-ac06-2e89362a6827",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/cbd19f1c2e164e1a950a724b35d15ab1/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "a2b2d4f9-ef7b-4536-bdb3-4819d8cf8d28",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Obec_centroid/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "729ed464-1884-5a77-80b6-074f72552fdc",
+   "name": "bbsk-obce-bbk-hranice-ec7ac6",
+   "org": "bbsk",
+   "title": "Obce BBK - hranice",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:18:02.053710",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "ec7ac665e1d34dfc8678dbfdf1db8891",
+    "source_url": "https://opendata.bbsk.sk/datasets/ec7ac665e1d34dfc8678dbfdf1db8891",
+    "modified": "2024-07-22T04:54:01Z",
+    "issued": "2023-12-11T08:05:36Z"
+   },
+   "resources": [
+    {
+     "id": "28d328bc-3aac-4421-93cd-f3f71a0fd63f",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/ec7ac665e1d34dfc8678dbfdf1db8891/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "f1eb0bf7-283a-4cd8-8e0e-840250fcacbf",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/ec7ac665e1d34dfc8678dbfdf1db8891/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "e6867a62-6dd8-4801-b413-d07863ad0614",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Obec3_WebMercator/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "a58d8a57-6639-549e-a64e-cb37e2702f10",
+   "name": "bbsk-objednavky-a97e8a",
+   "org": "bbsk",
+   "title": "Objednávky",
+   "license": "cc-by",
+   "modified": "2026-10-15T22:15:28.224230",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "a97e8a56a3d24cac9bb227f689b5e3b0",
+    "source_url": "https://opendata.bbsk.sk/datasets/a97e8a56a3d24cac9bb227f689b5e3b0",
+    "modified": "2026-10-15T09:39:00Z",
+    "issued": "2026-10-14T08:53:30Z"
+   },
+   "resources": [
+    {
+     "id": "1d4c1311-dfc7-4efd-b615-e43ebfe88ad6",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/a97e8a56a3d24cac9bb227f689b5e3b0/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "25aecf67-87e9-437d-bf95-120dfb0e5fd5",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Objedn%C3%A1vky/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "aaf0bc46-f9cb-5fe5-baed-b09a48c8fe1e",
+   "name": "bbsk-obyvatelstvo-podla-dalsej-narodnosti-2021-obce-11667a",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa ďalšej národnosti (2021), obce",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:16:31.372326",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "11667a5630ce459ca19479f5eb1413bd",
+    "source_url": "https://opendata.bbsk.sk/datasets/11667a5630ce459ca19479f5eb1413bd",
+    "modified": "2026-05-04T06:47:13Z",
+    "issued": "2024-01-25T14:02:18Z"
+   },
+   "resources": [
+    {
+     "id": "edb2ebc4-df8f-4632-9d5f-4411f7b3fe58",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/11667a5630ce459ca19479f5eb1413bd/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "74fa96b8-6f78-4057-8821-dc7c69f37f7d",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/11667a5630ce459ca19479f5eb1413bd/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "7cda661c-a6f1-4dfa-b36e-f3e8d3593249",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_%C4%8Fal%C5%A1ia_n%C3%A1rodnos%C5%A5/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "ae76c327-3a29-5ed6-b933-a58c52087ada",
+   "name": "bbsk-obyvatelstvo-podla-dalsej-narodnosti-2021-okresy-54bc2c",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa ďalšej národnosti (2021), okresy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:16:05.369672",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "54bc2cca50824f64ba0343873257cbe6",
+    "source_url": "https://opendata.bbsk.sk/datasets/54bc2cca50824f64ba0343873257cbe6",
+    "modified": "2026-05-04T06:51:07Z",
+    "issued": "2024-02-21T08:17:18Z"
+   },
+   "resources": [
+    {
+     "id": "dd6e3cfe-5788-46f9-b5c2-8c893cf4c6c8",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/54bc2cca50824f64ba0343873257cbe6/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "be152cc3-54b9-4267-a445-18ea8f9c11d9",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/54bc2cca50824f64ba0343873257cbe6/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "a041b908-18fb-4323-bccd-bd4be7d88c59",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_%C4%8Fal%C5%A1ia_n%C3%A1rodnos%C5%A5_okresy/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "d8e1f789-d839-5b44-b62e-e323424e160a",
+   "name": "bbsk-obyvatelstvo-podla-ekonomickej-aktivity-2021-984966",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa ekonomickej aktivity (2021)",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:14:22.964588",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "98496682c2d64881b1528c16d2cab2d1",
+    "source_url": "https://opendata.bbsk.sk/datasets/98496682c2d64881b1528c16d2cab2d1",
+    "modified": "2026-05-04T06:43:49Z",
+    "issued": "2024-01-24T12:37:07Z"
+   },
+   "resources": [
+    {
+     "id": "73eba05d-287f-47e8-af62-9ce2e282c529",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/98496682c2d64881b1528c16d2cab2d1/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "92c86547-f3fe-46de-9cdf-2863b8c743d5",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/98496682c2d64881b1528c16d2cab2d1/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "fc66358c-a514-4aab-9aaa-f14feea81612",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_pracuj%C3%BAci_nezaestnan%C3%AD/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "5467a79d-82b4-5305-b20d-2d8210f170c8",
+   "name": "bbsk-obyvatelstvo-podla-materinskeho-jazyka-2011-obce-c0f097",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa materinského jazyka (2011), obce",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:12:10.650921",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "c0f097d92ceb4a90b006fdee8af6da1d",
+    "source_url": "https://opendata.bbsk.sk/datasets/c0f097d92ceb4a90b006fdee8af6da1d",
+    "modified": "2026-05-04T06:42:30Z",
+    "issued": "2024-01-05T09:23:53Z"
+   },
+   "resources": [
+    {
+     "id": "c2aaa466-3dff-4b1a-8ad7-c04adbd48740",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/c0f097d92ceb4a90b006fdee8af6da1d/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "cb034ed5-9aad-4598-be28-cc1e5731e451",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/c0f097d92ceb4a90b006fdee8af6da1d/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "34587fff-00d7-4213-9627-17b7d6c3e09e",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_materinsk%C3%BD_jazyk/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "71ca7ce4-8bbf-5829-821a-711ac6dd6ce2",
+   "name": "bbsk-obyvatelstvo-podla-materinskeho-jazyka-2011-okresy-590643",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa materinského jazyka (2011), okresy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:15:58.432288",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "59064392c3e248d39199c0376ba56d22",
+    "source_url": "https://opendata.bbsk.sk/datasets/59064392c3e248d39199c0376ba56d22",
+    "modified": "2026-05-04T06:51:23Z",
+    "issued": "2024-02-16T11:39:46Z"
+   },
+   "resources": [
+    {
+     "id": "8858c357-09a4-4cba-b3ab-e1111cb06a4e",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/59064392c3e248d39199c0376ba56d22/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "65d4e6d3-443f-4dcc-ad8c-1e6e1b13cfbd",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/59064392c3e248d39199c0376ba56d22/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "c14e5018-24c9-451b-b093-50909b9f851c",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_materinsk%C3%BD_jazyk_okres/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "bf2022a7-c103-57c1-9d0f-d88b1831dd07",
+   "name": "bbsk-obyvatelstvo-podla-materinskeho-jazyka-2021-obce-fc02ff",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa materinského jazyka (2021), obce",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:14:35.706938",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "fc02ff58590647ed98f1df29d18e617f",
+    "source_url": "https://opendata.bbsk.sk/datasets/fc02ff58590647ed98f1df29d18e617f",
+    "modified": "2026-05-04T06:43:28Z",
+    "issued": "2023-12-13T13:48:38Z"
+   },
+   "resources": [
+    {
+     "id": "f6d7ead6-49e7-422e-9a67-023b29fa5781",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/fc02ff58590647ed98f1df29d18e617f/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "fb6f861e-8068-4bba-bc06-b71ea3c015a0",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/fc02ff58590647ed98f1df29d18e617f/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "7c8ef018-7a73-443e-9c24-eb327cda5c82",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_materinsk%C3%BD_jazyk/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "992d8f78-0ba8-58d4-ab39-bde423d7a208",
+   "name": "bbsk-obyvatelstvo-podla-materinskeho-jazyka-2021-okresy-404a3d",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa materinského jazyka (2021), okresy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:12:21.442816",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "404a3d55408b439891269e5985056db9",
+    "source_url": "https://opendata.bbsk.sk/datasets/404a3d55408b439891269e5985056db9",
+    "modified": "2026-05-04T06:42:15Z",
+    "issued": "2024-02-16T13:03:04Z"
+   },
+   "resources": [
+    {
+     "id": "1b272e55-dddf-4117-8451-476bc4933626",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/404a3d55408b439891269e5985056db9/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "2e76af63-5d98-4278-baab-83e838e3ee9f",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/404a3d55408b439891269e5985056db9/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "280f1c77-b77f-43a7-9c40-86c353e8e7ac",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_materinsk%C3%BD_jazyk_okresy/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "becd2765-4d2c-50f6-93c8-1aa49849f5c5",
+   "name": "bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2011-obce-81576b",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa náboženského vyznania (2011), obce",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:12:39.059299",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "81576bdd05ea48a6b660a217a61097c8",
+    "source_url": "https://opendata.bbsk.sk/datasets/81576bdd05ea48a6b660a217a61097c8",
+    "modified": "2026-05-04T06:41:38Z",
+    "issued": "2024-01-09T09:42:17Z"
+   },
+   "resources": [
+    {
+     "id": "1f2b180a-b448-4337-a542-9832cfbfea62",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/81576bdd05ea48a6b660a217a61097c8/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "ec5a5457-8fca-4518-baaa-72c48183f4e2",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/81576bdd05ea48a6b660a217a61097c8/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "f58b0cd7-5ae5-42a2-9cf2-2caa40f4e6fb",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_n%C3%A1bo%C5%BEenstvo/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "b7c9454f-46fb-5636-9517-09de13d7f156",
+   "name": "bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2011-okresy-3844c8",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa náboženského vyznania (2011), okresy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:16:23.537524",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "3844c8ed6ade4c2e96e547005c5f2178",
+    "source_url": "https://opendata.bbsk.sk/datasets/3844c8ed6ade4c2e96e547005c5f2178",
+    "modified": "2026-05-04T06:47:54Z",
+    "issued": "2024-02-19T12:45:10Z"
+   },
+   "resources": [
+    {
+     "id": "bc2796a5-7df6-4a58-898a-ed2a431393c4",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/3844c8ed6ade4c2e96e547005c5f2178/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "3ed7b67b-7c73-427d-b0cb-b0de1e4ebcca",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/3844c8ed6ade4c2e96e547005c5f2178/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "f34021be-ad14-47b1-9b71-834359d22d53",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_n%C3%A1bo%C5%BEenstvo_okresy/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "9bf2cab2-fc19-5a13-99e5-69a88a6eca53",
+   "name": "bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2021-obce-5fb2e9",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa náboženského vyznania (2021), obce",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:19:10.826847",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "5fb2e96e5c57464183dab40a727a6db4",
+    "source_url": "https://opendata.bbsk.sk/datasets/5fb2e96e5c57464183dab40a727a6db4",
+    "modified": "2026-05-04T06:53:24Z",
+    "issued": "2024-04-19T12:42:00Z"
+   },
+   "resources": [
+    {
+     "id": "520705ad-64c9-4498-af79-01c7391484fc",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/5fb2e96e5c57464183dab40a727a6db4/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "395c2429-fc65-4425-872d-6e5976418a61",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/5fb2e96e5c57464183dab40a727a6db4/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "111f4c71-874f-4e01-9bf3-f5b4a7af356c",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Obyvate%C4%BEstvo_pod%C4%BEa_n%C3%A1bo%C5%BEensk%C3%A9ho_vyznania_(2021)/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "cd78c1e8-563d-59f0-a7c4-e686402258aa",
+   "name": "bbsk-obyvatelstvo-podla-nabozenskeho-vyznania-2021-okresy-4d7df9",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa náboženského vyznania (2021), okresy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:14:53.534737",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "4d7df96609bd49deabf028eca4fdf301",
+    "source_url": "https://opendata.bbsk.sk/datasets/4d7df96609bd49deabf028eca4fdf301",
+    "modified": "2026-05-04T06:42:50Z",
+    "issued": "2024-02-19T12:53:33Z"
+   },
+   "resources": [
+    {
+     "id": "0e96effa-de88-428b-82a5-4fde8491b93f",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/4d7df96609bd49deabf028eca4fdf301/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "f339c464-5b0a-4f16-a67f-5d786c89eff6",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/4d7df96609bd49deabf028eca4fdf301/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "5661c23c-2563-4eab-aec9-6301ef4c5435",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_n%C3%A1bo%C5%BEenstvo_okres/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "fba4a658-ebf4-5d08-a88c-24aa7f5a9f35",
+   "name": "bbsk-obyvatelstvo-podla-narodnosti-2011-obce-a36024",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa národnosti (2011), obce",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:12:28.733717",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "a36024d023cf47e9bf5759bc43f8e585",
+    "source_url": "https://opendata.bbsk.sk/datasets/a36024d023cf47e9bf5759bc43f8e585",
+    "modified": "2026-05-04T06:41:57Z",
+    "issued": "2024-01-08T13:12:46Z"
+   },
+   "resources": [
+    {
+     "id": "403b35c2-ae87-4ff5-ac76-e375122a8d36",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/a36024d023cf47e9bf5759bc43f8e585/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "3136dad2-bbb0-469d-b996-cbea673d0915",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/a36024d023cf47e9bf5759bc43f8e585/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "5efd2be9-fb5c-46f5-89fa-fb24eeafe316",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_n%C3%A1rodnos%C5%A5_vsrstvy/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "9aa49497-7566-5c72-b317-02912f871273",
+   "name": "bbsk-obyvatelstvo-podla-narodnosti-2011-okresy-09f7d6",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa národnosti (2011), okresy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:16:14.801908",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "09f7d6aed66349f2b3a1bf53dc2eb771",
+    "source_url": "https://opendata.bbsk.sk/datasets/09f7d6aed66349f2b3a1bf53dc2eb771",
+    "modified": "2026-05-04T06:48:14Z",
+    "issued": "2024-02-19T08:25:39Z"
+   },
+   "resources": [
+    {
+     "id": "1796bbc8-212e-4f81-9c1a-76eedf208075",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/09f7d6aed66349f2b3a1bf53dc2eb771/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "ea229d2b-74ae-43fe-bc60-814805c8f939",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/09f7d6aed66349f2b3a1bf53dc2eb771/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "f2efcd6a-3654-4238-b4f8-ca025028d636",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Join_Features_to_Okres3_WebMercator_view/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "0df4f77d-413e-55c2-8dc6-c3d612d49a4b",
+   "name": "bbsk-obyvatelstvo-podla-narodnosti-2021-obce-bf372d",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa národnosti (2021), obce",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:19:01.166506",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "bf372d72bb444e40a8ecd7f15b8a9329",
+    "source_url": "https://opendata.bbsk.sk/datasets/bf372d72bb444e40a8ecd7f15b8a9329",
+    "modified": "2026-05-04T06:53:40Z",
+    "issued": "2024-01-08T13:39:10Z"
+   },
+   "resources": [
+    {
+     "id": "a0868bba-60d7-403a-b8fa-5e09345f42dc",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/bf372d72bb444e40a8ecd7f15b8a9329/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "ad1604a5-b301-48bd-9001-3b7f3cd40c1f",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/bf372d72bb444e40a8ecd7f15b8a9329/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "230602a9-a790-45a0-8076-1d0b7edb495d",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_n%C3%A1rodnos%C5%A5/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "5b90d79c-1043-5682-86c5-c2d374ce46ab",
+   "name": "bbsk-obyvatelstvo-podla-narodnosti-2021-okresy-d559c2",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa národnosti (2021), okresy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:14:43.882251",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "d559c2bdffab4e4dae7b1383913e42e8",
+    "source_url": "https://opendata.bbsk.sk/datasets/d559c2bdffab4e4dae7b1383913e42e8",
+    "modified": "2026-05-04T06:43:09Z",
+    "issued": "2024-02-19T11:31:49Z"
+   },
+   "resources": [
+    {
+     "id": "84d154e3-7c18-4f6b-8f24-39062055a7c8",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/d559c2bdffab4e4dae7b1383913e42e8/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "36ff84b4-d164-499c-a0eb-f482f55126ef",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/d559c2bdffab4e4dae7b1383913e42e8/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "69eedf34-2b8e-42da-bfa9-30a49d64db68",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_n%C3%A1rodnos%C5%A5_okresy/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "a87cb116-fd3a-5506-afc2-87f0d29c5638",
+   "name": "bbsk-obyvatelstvo-podla-rodinneho-stavu-2021-obce-40138c",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa rodinného stavu (2021), obce",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:18:49.688888",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "40138c783eaa46cd8cd3c8e09ab67127",
+    "source_url": "https://opendata.bbsk.sk/datasets/40138c783eaa46cd8cd3c8e09ab67127",
+    "modified": "2026-05-04T06:53:56Z",
+    "issued": "2024-01-29T12:42:12Z"
+   },
+   "resources": [
+    {
+     "id": "d5baa336-76b4-484a-845e-0c202a272ea9",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/40138c783eaa46cd8cd3c8e09ab67127/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "5f8f61fc-0aae-4f62-b6c4-a61104874786",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/40138c783eaa46cd8cd3c8e09ab67127/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "c0f65a79-8d1c-49ee-8544-5e1a91c98fe5",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_rodinn%C3%BD_stav/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "b0cf51b1-3c88-58ac-839a-c1f88afa4d4b",
+   "name": "bbsk-obyvatelstvo-podla-rodinneho-stavu-2021-okresy-04e229",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa rodinného stavu (2021), okresy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:10:42.393949",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "04e229d8b39b415497081c63a74c94f9",
+    "source_url": "https://opendata.bbsk.sk/datasets/04e229d8b39b415497081c63a74c94f9",
+    "modified": "2026-05-04T06:46:12Z",
+    "issued": "2024-02-16T10:32:32Z"
+   },
+   "resources": [
+    {
+     "id": "6db2ff2b-ec45-4e95-993f-377c5995c407",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/04e229d8b39b415497081c63a74c94f9/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "b9a5e20a-e3f6-4298-bfa8-51e6f0f137f1",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/04e229d8b39b415497081c63a74c94f9/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "b0c57ca0-db45-42f8-99ec-d7c45ddc0e7f",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_rodinn%C3%BD_stav_okres/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "23b17bf2-220e-5ff0-a4e1-a6b46e1bba04",
+   "name": "bbsk-obyvatelstvo-podla-vekovej-struktury-2011-2021-obce-281902",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa vekovej štruktúry (2011, 2021), obce",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:14:11.734548",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "2819023d949e4f14be1fe0b72de157aa",
+    "source_url": "https://opendata.bbsk.sk/datasets/2819023d949e4f14be1fe0b72de157aa",
+    "modified": "2026-05-04T06:44:07Z",
+    "issued": "2024-01-18T07:55:12Z"
+   },
+   "resources": [
+    {
+     "id": "ce5d6f91-552a-4dd1-9de0-1aa0e4acdfa9",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/2819023d949e4f14be1fe0b72de157aa/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "97b44463-4c15-4d00-8c25-7dfb5801ff2c",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/2819023d949e4f14be1fe0b72de157aa/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "b52be89d-bc91-4425-afb6-7c8ba90e3300",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_2021_ekonomick%C3%A1_aktivita/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "a93fa787-6e2a-59c6-b0e1-de174a664427",
+   "name": "bbsk-obyvatelstvo-podla-vekovej-struktury-2011-2021-okresy-5e08d3",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa vekovej štruktúry (2011, 2021), okresy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:15:48.376241",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "5e08d37332034f87be19ebc116ee9df5",
+    "source_url": "https://opendata.bbsk.sk/datasets/5e08d37332034f87be19ebc116ee9df5",
+    "modified": "2026-05-04T06:51:57Z",
+    "issued": "2024-02-16T07:47:08Z"
+   },
+   "resources": [
+    {
+     "id": "9b0066b7-964e-429f-aa02-014e7d11c08e",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/5e08d37332034f87be19ebc116ee9df5/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "ac056932-92ba-41c2-80dc-20c05b88722c",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/5e08d37332034f87be19ebc116ee9df5/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "9488c74a-b78d-4c61-b2ac-8449a4e7249a",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_2021_vekov%C3%A1_%C5%A1trukt%C3%BAra_okres/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "3904099d-6fbb-5996-bcc1-f3766bf1900f",
+   "name": "bbsk-obyvatelstvo-podla-vzdelania-2021-2481df",
+   "org": "bbsk",
+   "title": "Obyvateľstvo podľa vzdelania (2021)",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:18:39.920746",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "2481df8ac0284f10bc286a098501ae42",
+    "source_url": "https://opendata.bbsk.sk/datasets/2481df8ac0284f10bc286a098501ae42",
+    "modified": "2026-05-04T06:54:11Z",
+    "issued": "2024-01-24T13:41:35Z"
+   },
+   "resources": [
+    {
+     "id": "debe8cc6-693e-4a7e-9432-de701d569c2c",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/2481df8ac0284f10bc286a098501ae42/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "f0e78f09-1e9c-4aa3-bcef-0120b71e1249",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/2481df8ac0284f10bc286a098501ae42/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "cd86fdba-6316-4a23-ab32-b7d3afef767e",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_vzdelanie/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "770269ec-4c65-522a-881c-f61daca347df",
+   "name": "bbsk-ohrozenie-samosprav-zmenou-klimy-extremne-horucavy-68ff15",
+   "org": "bbsk",
+   "title": "Ohrozenie samospráv zmenou klímy - extrémne horúčavy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:10:52.048139",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "68ff15c394c94403b51a1aa8322403b1",
+    "source_url": "https://opendata.bbsk.sk/datasets/68ff15c394c94403b51a1aa8322403b1",
+    "modified": "2026-05-04T06:45:20Z",
+    "issued": "2025-06-11T13:25:21Z"
+   },
+   "resources": [
+    {
+     "id": "26cd2058-afd4-4718-9786-ccb08258b30f",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/68ff15c394c94403b51a1aa8322403b1/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "09ca3657-7add-4668-84a4-f75bb63c8cb4",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/68ff15c394c94403b51a1aa8322403b1/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "0cc85223-fe52-4314-912b-0bf27e387483",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Dataset_hodnotenia_ohrozenia_samospr%C3%A1v_zmenou_kl%C3%ADmy_a_extr%C3%A9mnymi_prejavmi_zobrazenie/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "8fbd0162-cd4c-5e10-b935-da0b51d9d7bb",
+   "name": "bbsk-ohrozenie-samosprav-zmenou-klimy-extremne-sucho-576a4f",
+   "org": "bbsk",
+   "title": "Ohrozenie samospráv zmenou klímy - extrémne sucho",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:16:38.869860",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "576a4f78920a463a903a03236bca25ba",
+    "source_url": "https://opendata.bbsk.sk/datasets/576a4f78920a463a903a03236bca25ba",
+    "modified": "2026-05-04T06:46:32Z",
+    "issued": "2025-06-12T08:54:01Z"
+   },
+   "resources": [
+    {
+     "id": "aa7fdc3b-7534-40a3-a0ca-07ad9cadb394",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/576a4f78920a463a903a03236bca25ba/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "bff66297-f99e-466e-8d53-2020d5466e3e",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/576a4f78920a463a903a03236bca25ba/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "d800ed29-7b05-4755-8191-695892e57c6e",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Ohrozenie_samospr%C3%A1v_zmenou_kl%C3%ADmy___extr%C3%A9mne_sucho/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "847b683f-4659-53c8-ad70-8c787fd4a69e",
+   "name": "bbsk-ohrozenie-samosprav-zmenou-klimy-extremne-zrazky-a0f87f",
+   "org": "bbsk",
+   "title": "Ohrozenie samospráv zmenou klímy - extrémne zrážky",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:12:50.578207",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "a0f87ffca6854443a8cd77d85a7fd810",
+    "source_url": "https://opendata.bbsk.sk/datasets/a0f87ffca6854443a8cd77d85a7fd810",
+    "modified": "2026-05-04T06:41:20Z",
+    "issued": "2025-06-12T08:32:52Z"
+   },
+   "resources": [
+    {
+     "id": "a9524693-93a1-4d15-bce1-5fc12416c655",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/a0f87ffca6854443a8cd77d85a7fd810/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "f4d590f7-2ae7-428e-84a6-b32beb059e3c",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/a0f87ffca6854443a8cd77d85a7fd810/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "16e73443-7f51-4991-aa80-01b6502dbb20",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Ohrozenie_samospr%C3%A1v_zmenou_kl%C3%ADmy___extr%C3%A9mne_zr%C3%A1%C5%BEky/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "da20efb5-84c9-5ee1-a8c5-cb8e3604b364",
+   "name": "bbsk-okresy-bbk-hranice-17725f",
+   "org": "bbsk",
+   "title": "Okresy BBK - hranice",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:12:01.871742",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "17725f8c05f1461fa7bb29d845c0c9d5",
+    "source_url": "https://opendata.bbsk.sk/datasets/17725f8c05f1461fa7bb29d845c0c9d5",
+    "modified": "2026-05-08T10:07:20Z",
+    "issued": "2023-12-11T08:00:17Z"
+   },
+   "resources": [
+    {
+     "id": "229629c2-7a2a-4394-b7bc-de7169646c31",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/17725f8c05f1461fa7bb29d845c0c9d5/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "b3c92f97-67cb-494e-a1e4-220fd5bdf495",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/17725f8c05f1461fa7bb29d845c0c9d5/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "9ff50dad-1ee9-49dc-8c0a-37655837ec7b",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Okres3_WebMercator/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "2ba5cc2b-7429-52fe-9a2e-1bc12a8e1ba6",
+   "name": "bbsk-organizacie-v-zriadovatelskej-posobnosti-bbsk-bc762a",
+   "org": "bbsk",
+   "title": "Organizácie v zriaďovateľskej pôsobnosti BBSK",
+   "license": "cc-by",
+   "modified": "2026-10-15T22:15:32.706017",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "bc762a8fa8ce45fba6ea6f74e321e435",
+    "source_url": "https://opendata.bbsk.sk/datasets/bc762a8fa8ce45fba6ea6f74e321e435",
+    "modified": "2026-10-15T09:38:21Z",
+    "issued": "2026-08-31T13:27:05Z"
+   },
+   "resources": [
+    {
+     "id": "57726480-4af8-410c-8771-f582f441af98",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/bc762a8fa8ce45fba6ea6f74e321e435/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "83b9d085-c405-41e7-abc2-1e9f85916895",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/bc762a8fa8ce45fba6ea6f74e321e435/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "2d290332-98b3-4b3c-af55-4b802128255f",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/NEW_VIEW_Organiz%C3%A1cie_v_zria%C4%8Fovate%C4%BEskej_p%C3%B4sobnosti_BBSK/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "d5175db0-5229-52a4-9af7-4b7bea484b61",
+   "name": "bbsk-organizacna-struktura-40329b",
+   "org": "bbsk",
+   "title": "Organizačná štruktúra",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:19:48.616535",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "40329b7ae13d4b8eb5a51a3ce13cda91",
+    "source_url": "https://opendata.bbsk.sk/datasets/40329b7ae13d4b8eb5a51a3ce13cda91",
+    "modified": "2025-05-06T13:23:36Z",
+    "issued": "2025-05-06T07:16:25Z"
+   },
+   "resources": [
+    {
+     "id": "0cead4cd-497f-4d27-b1c6-ec2c09f0bd45",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/40329b7ae13d4b8eb5a51a3ce13cda91/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "b1a3d610-09f5-48de-8520-9d3c4c76361a",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Organizacna_struktura/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "ebcf791f-83b5-5a4e-9408-afa31f4df775",
+   "name": "bbsk-peticie-f80530",
+   "org": "bbsk",
+   "title": "Petície",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:19:50.934657",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "f805305d98564eedbd54d19f192e79e8",
+    "source_url": "https://opendata.bbsk.sk/datasets/f805305d98564eedbd54d19f192e79e8",
+    "modified": "2025-05-06T13:23:06Z",
+    "issued": "2025-05-06T10:21:10Z"
+   },
+   "resources": [
+    {
+     "id": "fe32977f-4a07-4897-b2dc-e9b4027785b0",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/f805305d98564eedbd54d19f192e79e8/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "34df287d-94a8-4d9b-9a6e-f0f855570471",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pet%C3%ADcie/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "77c23976-38b7-5329-8e7e-20001c49c48e",
+   "name": "bbsk-plan-verejneho-obstaravania-48b7e9",
+   "org": "bbsk",
+   "title": "Plán verejného obstarávania",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:15:18.883761",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "48b7e922da264872bd649174e7b54630",
+    "source_url": "https://opendata.bbsk.sk/datasets/48b7e922da264872bd649174e7b54630",
+    "modified": "2024-07-22T07:12:20Z",
+    "issued": "2024-04-30T11:49:30Z"
+   },
+   "resources": [
+    {
+     "id": "d0b2331d-648c-40af-9d92-f9ee964a9136",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/48b7e922da264872bd649174e7b54630/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "c24b3a8a-9366-40c9-929b-7c764f9238ba",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pl%C3%A1n_verejn%C3%A9ho_obstar%C3%A1vania/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "706c34b8-b5fe-5819-823e-52571a313f3c",
+   "name": "bbsk-pocet-obyvatelov-v-obciach-bbk-b2adc3",
+   "org": "bbsk",
+   "title": "Počet obyvateľov v obciach BBK",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:13:25.599623",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "b2adc387e7cd494897426332fa891ccf",
+    "source_url": "https://opendata.bbsk.sk/datasets/b2adc387e7cd494897426332fa891ccf",
+    "modified": "2026-10-06T13:52:30Z",
+    "issued": "2026-02-25T12:57:10Z"
+   },
+   "resources": [
+    {
+     "id": "2d21d583-7515-491d-a948-58fa716c5b05",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/b2adc387e7cd494897426332fa891ccf/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "241c829d-23e6-420a-8c11-d10b78402c1a",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Po%C4%8Det_obyvate%C4%BEov_obce_BBK1/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "43e48c6e-73d7-5e30-a032-0c0719539da6",
+   "name": "bbsk-podjazdy-v-banskobystrickom-kraji-public-view-e6fb8f",
+   "org": "bbsk",
+   "title": "Podjazdy v Banskobystrickom kraji (public view)",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:17:18.764472",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "e6fb8f5a5b08424a8037c9e39af6e9b3",
+    "source_url": "https://opendata.bbsk.sk/datasets/e6fb8f5a5b08424a8037c9e39af6e9b3",
+    "modified": "2024-10-07T22:15:33Z",
+    "issued": "2024-10-07T21:56:57Z"
+   },
+   "resources": [
+    {
+     "id": "ce48630f-a939-4ded-b480-574f6656a71e",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/e6fb8f5a5b08424a8037c9e39af6e9b3/csv?layers=2",
+     "datastore": false
+    },
+    {
+     "id": "8c9c6f07-4cfd-48ea-b532-e669ebfac866",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/e6fb8f5a5b08424a8037c9e39af6e9b3/geojson?layers=2",
+     "datastore": false
+    },
+    {
+     "id": "0d3236a0-7958-4513-b010-81d0b97d5f1f",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Podjazdy_v_Banskobystrickom_kraji_(public_view)/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "6d82c9bb-74a2-5c47-b16d-e806bc0d5241",
+   "name": "bbsk-pohyb-obyvatelstva-v-obciach-1996-2024-919463",
+   "org": "bbsk",
+   "title": "Pohyb obyvateľstva v obciach (1996 - 2024)",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:19:29.783855",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "9194635d21d94eaab378afdc97c5c0af",
+    "source_url": "https://opendata.bbsk.sk/datasets/9194635d21d94eaab378afdc97c5c0af",
+    "modified": "2025-08-12T14:35:00Z",
+    "issued": "2024-01-31T10:22:33Z"
+   },
+   "resources": [
+    {
+     "id": "0a2f302f-68a6-44df-a8ad-931a897d5233",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/9194635d21d94eaab378afdc97c5c0af/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "cfe378db-04cb-47aa-a9cc-03112d5b12bd",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/9194635d21d94eaab378afdc97c5c0af/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "2fe4a2db-ae2a-491b-8f2f-299760a3841a",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/pohyb_view/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "2f8843f4-92d0-5c2c-8b8c-2a5c5581373c",
+   "name": "bbsk-pohyb-obyvatelstva-v-okresoch-1996-2024-8b7fa1",
+   "org": "bbsk",
+   "title": "Pohyb obyvateľstva v okresoch (1996 - 2024)",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:16:50.282930",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "8b7fa1095b8f4941972753e91eb97566",
+    "source_url": "https://opendata.bbsk.sk/datasets/8b7fa1095b8f4941972753e91eb97566",
+    "modified": "2025-08-12T14:35:33Z",
+    "issued": "2024-02-06T14:50:27Z"
+   },
+   "resources": [
+    {
+     "id": "f1743532-775d-4af1-adc6-f23144c6f397",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/8b7fa1095b8f4941972753e91eb97566/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "00914be3-dd89-4f9e-80a6-faa276dda268",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/8b7fa1095b8f4941972753e91eb97566/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "2100822d-f759-46ab-9413-e2c8449a8cb8",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/pohyb_okresy_view/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "4e9bb1c4-65c9-5f02-80be-64aa33f36a96",
+   "name": "bbsk-povodia-banskobystrickeho-kraja-067504",
+   "org": "bbsk",
+   "title": "Povodia Banskobystrického kraja",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:18:24.472378",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "067504d861e443b3844d841dfd312651",
+    "source_url": "https://opendata.bbsk.sk/datasets/067504d861e443b3844d841dfd312651",
+    "modified": "2026-07-07T13:16:53Z",
+    "issued": "2024-10-22T06:54:52Z"
+   },
+   "resources": [
+    {
+     "id": "c6b0117c-fc21-4592-906d-290d170ceebb",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/067504d861e443b3844d841dfd312651/csv?layers=1",
+     "datastore": false
+    },
+    {
+     "id": "a5255309-7462-45fb-96f5-2f8b3cbf0af2",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/067504d861e443b3844d841dfd312651/geojson?layers=1",
+     "datastore": false
+    },
+    {
+     "id": "edc41c3a-6528-4386-a39f-9a4a2be1c829",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/PovodiavBanskobystri_Project/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "4bf945da-cd87-56dd-b07a-112f85ada584",
+   "name": "bbsk-ppa-platby-f3c509",
+   "org": "bbsk",
+   "title": "PPA platby",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:14:58.815593",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "f3c5098ccc2f426e9552bc7a413151bf",
+    "source_url": "https://opendata.bbsk.sk/datasets/f3c5098ccc2f426e9552bc7a413151bf",
+    "modified": "2025-10-09T06:01:55Z",
+    "issued": "2025-10-06T11:53:19Z"
+   },
+   "resources": [
+    {
+     "id": "eeaedf0b-c1df-4c64-a27a-5cc772185791",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/f3c5098ccc2f426e9552bc7a413151bf/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "da6948e6-effc-4e94-be36-e97d1a0afff6",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/PPA_dataset_AGOL_2/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "84ff570c-97aa-5f58-85bd-24863d1408db",
+   "name": "bbsk-ppa-platby-po-okresoch-bf09ef",
+   "org": "bbsk",
+   "title": "PPA platby po okresoch",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:15:00.990180",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "bf09ef796c4a4c329969f09b728c9bb4",
+    "source_url": "https://opendata.bbsk.sk/datasets/bf09ef796c4a4c329969f09b728c9bb4",
+    "modified": "2025-10-09T06:01:31Z",
+    "issued": "2025-10-03T11:45:58Z"
+   },
+   "resources": [
+    {
+     "id": "85809c15-5caa-4f6a-82a9-8a1bb33ec0d6",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/bf09ef796c4a4c329969f09b728c9bb4/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "e82d1e7b-8f9d-4b0c-9cd7-2e48ac89eb5c",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/PPA_dataset_AGOL_1/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "e2dd7d73-91a7-502a-9503-ea28c18c2766",
+   "name": "bbsk-priepusty-v-banskobystrickom-kraji-public-view-a9ed8e",
+   "org": "bbsk",
+   "title": "Priepusty v Banskobystrickom kraji (public view)",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:17:11.489737",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "a9ed8e8fb6214c88bc07a0fe9665434f",
+    "source_url": "https://opendata.bbsk.sk/datasets/a9ed8e8fb6214c88bc07a0fe9665434f",
+    "modified": "2024-10-07T22:15:52Z",
+    "issued": "2024-10-07T21:31:35Z"
+   },
+   "resources": [
+    {
+     "id": "f2b3c8c5-f7ff-479c-9dec-8b4a5dbd56ca",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/a9ed8e8fb6214c88bc07a0fe9665434f/csv?layers=2",
+     "datastore": false
+    },
+    {
+     "id": "25ffa901-cc33-4ca2-a133-77dc4269f77e",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/a9ed8e8fb6214c88bc07a0fe9665434f/geojson?layers=2",
+     "datastore": false
+    },
+    {
+     "id": "e6df4aab-89a8-4ed3-b187-74559b1576ff",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Priepusty_v_Banskobystrickom_kraji_(public_view)/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "2fc52266-8a11-5e2f-a364-eb7a91b786fb",
+   "name": "bbsk-prispevkove-rozpoctove-a-ine-organizacie-samospravy-cec768",
+   "org": "bbsk",
+   "title": "Príspevkové rozpočtové a iné organizácie samosprávy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:13:29.734420",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "cec768b27669450aaf205c9663499eb2",
+    "source_url": "https://opendata.bbsk.sk/datasets/cec768b27669450aaf205c9663499eb2",
+    "modified": "2026-07-16T14:48:40Z",
+    "issued": "2024-05-14T13:53:17Z"
+   },
+   "resources": [
+    {
+     "id": "ff2cd390-b7d1-4f77-aa9b-7f78d73952ae",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/cec768b27669450aaf205c9663499eb2/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "5df51968-f67c-4cd1-8db7-3a8f7c894b87",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/cec768b27669450aaf205c9663499eb2/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "c33f86f9-b941-461f-8e80-ffe366aea3a1",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pr%C3%ADspevkov%C3%A9_rozpo%C4%8Dtov%C3%A9_a_in%C3%A9_organiz%C3%A1cie_samospr%C3%A1vy/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "e407e038-c536-53cd-9229-f59564821a39",
+   "name": "bbsk-prognoza-poctu-obyvatelov-2018-2040-3a097f",
+   "org": "bbsk",
+   "title": "Prognóza počtu obyvateľov (2018 - 2040)",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:19:20.671769",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "3a097f047b0a4df9936475f860e27a31",
+    "source_url": "https://opendata.bbsk.sk/datasets/3a097f047b0a4df9936475f860e27a31",
+    "modified": "2026-05-04T06:53:09Z",
+    "issued": "2024-02-16T14:23:16Z"
+   },
+   "resources": [
+    {
+     "id": "96d2cf8e-3578-499a-bb46-b8f4b2462247",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/3a097f047b0a4df9936475f860e27a31/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "1207a2d0-f87e-4358-a5b4-87fe3eca2056",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/3a097f047b0a4df9936475f860e27a31/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "054cd984-980e-4d25-a803-bc7b6c7eed39",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_progn%C3%B3za_po%C4%8Dtu_obyvate%C4%BEov_2018_2040/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "b2d0246e-b495-5333-a512-845f5b2ea971",
+   "name": "bbsk-projekty-banskobystrickeho-kraja-itms21-c8bfea",
+   "org": "bbsk",
+   "title": "Projekty Banskobystrického kraja ITMS21",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:16:46.277313",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "c8bfeac23df14731aaeaba73fbc34892",
+    "source_url": "https://opendata.bbsk.sk/datasets/c8bfeac23df14731aaeaba73fbc34892",
+    "modified": "2025-10-15T09:29:55Z",
+    "issued": "2024-08-01T11:43:19Z"
+   },
+   "resources": [
+    {
+     "id": "55a886e6-504b-43b0-863b-b7b87c3e8149",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/c8bfeac23df14731aaeaba73fbc34892/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "ff78b84f-c861-4420-bca3-478fc06177ec",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/c8bfeac23df14731aaeaba73fbc34892/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "f635439f-9d9c-4dee-bd0f-a22179700430",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Join_Features_to_Obce_BBK_centroidy_view_new/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "6ab2ef3b-b22b-52da-852f-9cef7de7a418",
+   "name": "bbsk-realizovane-verejne-obstaravania-754eee",
+   "org": "bbsk",
+   "title": "Realizované verejné obstarávania",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:15:07.557979",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "754eee49f67a4e629e1d2d25d118d2d4",
+    "source_url": "https://opendata.bbsk.sk/datasets/754eee49f67a4e629e1d2d25d118d2d4",
+    "modified": "2024-12-03T13:32:13Z",
+    "issued": "2024-04-30T12:11:24Z"
+   },
+   "resources": [
+    {
+     "id": "27b5b9a9-c4a6-4d5e-a857-8511a32da901",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/754eee49f67a4e629e1d2d25d118d2d4/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "3454bca4-312c-41f2-8187-60f220a075c4",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Realizovan%C3%A9_verejn%C3%A9_obstar%C3%A1vania/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "13769fab-c568-5b6e-8607-9633e7ae0a94",
+   "name": "bbsk-register-investicii-bodova-vrstva-e0b3b4",
+   "org": "bbsk",
+   "title": "Register investícií - bodová vrstva",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:18:31.956062",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "e0b3b4efeced4dc7b7615f4cb1549f28",
+    "source_url": "https://opendata.bbsk.sk/datasets/e0b3b4efeced4dc7b7615f4cb1549f28",
+    "modified": "2026-06-08T08:03:41Z",
+    "issued": "2026-01-27T10:57:41Z"
+   },
+   "resources": [
+    {
+     "id": "cec55368-e6e0-45c8-84f5-3e54a3849663",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/e0b3b4efeced4dc7b7615f4cb1549f28/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "844d2c9f-119d-4e05-b2db-dc19b2221e46",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/e0b3b4efeced4dc7b7615f4cb1549f28/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "032fa2a2-6e5c-4380-a11a-9ecbaaf93bc5",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pripoji%C5%A51_FINAL_JITTERED_XYTableToPoint_ExportFeatures/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "d5c0a7f7-63bc-566d-a080-c79a396d3a53",
+   "name": "bbsk-register-investicii-polygonova-vrstva-e902a9",
+   "org": "bbsk",
+   "title": "Register investícií - polygónová vrstva",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:18:35.859544",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "e902a90e9f794964bd8208467a0ea370",
+    "source_url": "https://opendata.bbsk.sk/datasets/e902a90e9f794964bd8208467a0ea370",
+    "modified": "2026-06-08T08:01:25Z",
+    "issued": "2026-01-19T08:49:53Z"
+   },
+   "resources": [
+    {
+     "id": "1011073b-f3a2-4f2b-ab31-3074b129bbd7",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/e902a90e9f794964bd8208467a0ea370/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "47c61b1e-1670-4c65-9630-db2e39612952",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/e902a90e9f794964bd8208467a0ea370/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "f3bbce90-cf66-459c-bf12-9759b21ec65b",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Join_Features_to_Ok_Dissolve_Export_Features/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "24979dde-ef9d-4d9a-bbc3-08a7127dd614",
+   "name": "bbsk-registre",
+   "org": "bbsk",
+   "title": "Registre kraja",
+   "license": "cc-by-sa",
+   "modified": "2026-10-16T04:11:38.627557",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "http://publications.europa.eu/resource/authority/licence/CC_BYSA_4_0",
+    "generated_by": "jcctl/ckan-publisher",
+    "frequency": "http://publications.europa.eu/resource/authority/frequency/WEEKLY"
+   },
+   "resources": [
+    {
+     "id": "f0eaccba-d8f8-4550-b4db-67d6b28ec40f",
+     "name": "NGSI-LD API",
+     "format": "NGSI-LD",
+     "url": "https://dev.joinedcontext.com/api/endpoint/lws6dd7o56veegwxsjtvak3goeta4mfn/ngsi-ld/v1/",
+     "datastore": false
+    },
+    {
+     "id": "10a6bba5-3711-4686-acc2-f4fd0f07947a",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://dev.joinedcontext.com/api/endpoint/lws6dd7o56veegwxsjtvak3goeta4mfn/file.geojson",
+     "datastore": false
+    },
+    {
+     "id": "0cc1af51-4e72-4731-977b-88e0608b0623",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://dev.joinedcontext.com/api/endpoint/lws6dd7o56veegwxsjtvak3goeta4mfn/file.csv",
+     "datastore": false
+    },
+    {
+     "id": "2b908d88-32ea-4f53-b689-d4675537f819",
+     "name": "JSON",
+     "format": "JSON",
+     "url": "https://dev.joinedcontext.com/api/endpoint/lws6dd7o56veegwxsjtvak3goeta4mfn/file.json",
+     "datastore": false
+    },
+    {
+     "id": "ae189009-381a-4ff1-9ef2-630be96a4a3b",
+     "name": "Live updates over WebSocket",
+     "format": "WebSocket",
+     "url": "https://dev.joinedcontext.com/api/endpoint/lws6dd7o56veegwxsjtvak3goeta4mfn/ws",
+     "datastore": false
+    },
+    {
+     "id": "15f67658-2bef-41c2-8913-d0c021eddb75",
+     "name": "OGC API - Features",
+     "format": "OGCFEAT",
+     "url": "https://dev.joinedcontext.com/api/endpoint/lws6dd7o56veegwxsjtvak3goeta4mfn/ogc/features/",
+     "datastore": false
+    },
+    {
+     "id": "12d0f85b-7e5e-4da8-8615-1f9683a8fb73",
+     "name": "OData v4",
+     "format": "OData",
+     "url": "https://dev.joinedcontext.com/api/endpoint/lws6dd7o56veegwxsjtvak3goeta4mfn/odata/v4/",
+     "datastore": false
+    },
+    {
+     "id": "297fa90a-ab6c-4bb5-876b-018025a5354c",
+     "name": "Model Context Protocol",
+     "format": "MCP",
+     "url": "https://dev.joinedcontext.com/api/endpoint/lws6dd7o56veegwxsjtvak3goeta4mfn/mcp",
+     "datastore": false
+    },
+    {
+     "id": "5735de55-7900-4537-a405-8405627c1b50",
+     "name": "Schema artifacts",
+     "format": "JSON",
+     "url": "https://dev.joinedcontext.com/api/endpoint/lws6dd7o56veegwxsjtvak3goeta4mfn/schema/index.json",
+     "datastore": false
+    },
+    {
+     "id": "0caa8df1-819b-464e-97ad-b8844bba3ed8",
+     "name": "bbsk-registre context.jsonld",
+     "format": "JSON-LD",
+     "url": "https://dev.joinedcontext.com/api/endpoint/lws6dd7o56veegwxsjtvak3goeta4mfn/schema/v1/context.jsonld",
+     "datastore": false
+    },
+    {
+     "id": "2b879338-cd01-4d1f-ad5c-618947b42c99",
+     "name": "bbsk-registre model.linkml.yaml",
+     "format": "LinkML",
+     "url": "https://dev.joinedcontext.com/api/endpoint/lws6dd7o56veegwxsjtvak3goeta4mfn/schema/v1/model.linkml.yaml",
+     "datastore": false
+    },
+    {
+     "id": "31240b2b-faed-4084-b463-b3a6e0dd5b3a",
+     "name": "bbsk-registre model.md",
+     "format": "Markdown",
+     "url": "https://dev.joinedcontext.com/api/endpoint/lws6dd7o56veegwxsjtvak3goeta4mfn/schema/v1/model.md",
+     "datastore": false
+    },
+    {
+     "id": "affdd72f-aed1-4917-b995-df5712692241",
+     "name": "bbsk-registre model.owl.ttl",
+     "format": "OWL",
+     "url": "https://dev.joinedcontext.com/api/endpoint/lws6dd7o56veegwxsjtvak3goeta4mfn/schema/v1/model.owl.ttl",
+     "datastore": false
+    },
+    {
+     "id": "ca87495a-3731-4d16-a0bb-2ce284eff924",
+     "name": "bbsk-registre model.rdf.ttl",
+     "format": "RDF",
+     "url": "https://dev.joinedcontext.com/api/endpoint/lws6dd7o56veegwxsjtvak3goeta4mfn/schema/v1/model.rdf.ttl",
+     "datastore": false
+    },
+    {
+     "id": "c618b2b3-9aff-4339-a31f-91197046f4b1",
+     "name": "bbsk-registre model.schema.json",
+     "format": "JSON Schema",
+     "url": "https://dev.joinedcontext.com/api/endpoint/lws6dd7o56veegwxsjtvak3goeta4mfn/schema/v1/model.schema.json",
+     "datastore": false
+    },
+    {
+     "id": "961b3401-1677-4e2a-92ef-c7b11ef5351d",
+     "name": "bbsk-registre model.shacl.ttl",
+     "format": "SHACL",
+     "url": "https://dev.joinedcontext.com/api/endpoint/lws6dd7o56veegwxsjtvak3goeta4mfn/schema/v1/model.shacl.ttl",
+     "datastore": false
+    },
+    {
+     "id": "1d1790be-bfa2-44d2-80b1-d88b1f88e4c0",
+     "name": "AdministrativeArea",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/1d1790be-bfa2-44d2-80b1-d88b1f88e4c0",
+     "datastore": true
+    },
+    {
+     "id": "a9cf5153-6b96-4a0f-8a31-304df109d478",
+     "name": "Bridge",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/a9cf5153-6b96-4a0f-8a31-304df109d478",
+     "datastore": true
+    },
+    {
+     "id": "dba3caf2-e8bf-41c5-b6fd-ac440e6e9a33",
+     "name": "Hospital",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/dba3caf2-e8bf-41c5-b6fd-ac440e6e9a33",
+     "datastore": true
+    },
+    {
+     "id": "f51d6097-1d76-405b-931d-c9f6efa0cc72",
+     "name": "PublicOrganization",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/f51d6097-1d76-405b-931d-c9f6efa0cc72",
+     "datastore": true
+    },
+    {
+     "id": "ffd950da-da17-4698-83e8-59ac90b7324a",
+     "name": "SocialService",
+     "format": "CSV",
+     "url": "https://data.dev.joinedcontext.com/datastore/dump/ffd950da-da17-4698-83e8-59ac90b7324a",
+     "datastore": true
+    }
+   ]
+  },
+  {
+   "id": "193c0ec6-bd1d-53df-b087-05ed924756d6",
+   "name": "bbsk-skoly-a-skolske-zariadenia-v-zriadovatelskej-posobnosti-bbsk-791897",
+   "org": "bbsk",
+   "title": "Školy a školské zariadenia v zriaďovateľskej pôsobnosti BBSK",
+   "license": "cc-by",
+   "modified": "2026-10-15T22:18:12.667123",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "79189784b14346e59c11aff35abf26ac",
+    "source_url": "https://opendata.bbsk.sk/datasets/79189784b14346e59c11aff35abf26ac",
+    "modified": "2026-10-15T09:38:43Z",
+    "issued": "2026-05-18T14:17:01Z"
+   },
+   "resources": [
+    {
+     "id": "2d8986fc-6cf6-4286-a6dc-10c626e5d041",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/79189784b14346e59c11aff35abf26ac/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "559e2b42-835e-4507-a59c-76bd7d3deee7",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/79189784b14346e59c11aff35abf26ac/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "28619ad0-1ef2-4737-98b2-5cf50dcd24b3",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/%C5%A0koly_a_%C5%A1kolsk%C3%A9_zariadenia_v_zria%C4%8Fovate%C4%BEskej_p%C3%B4sobnosti_BBSK_view/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "9eef884e-707c-5c98-bfd2-f46b61d1df5c",
+   "name": "bbsk-stredne-skoly-v-banskobystrickom-kraji-581554",
+   "org": "bbsk",
+   "title": "Stredné školy v Banskobystrickom kraji",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:19:53.114021",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "581554fe8f1e45008c87c677031c1fec",
+    "source_url": "https://opendata.bbsk.sk/datasets/581554fe8f1e45008c87c677031c1fec",
+    "modified": "2024-09-26T11:14:50Z",
+    "issued": "2024-05-06T12:03:55Z"
+   },
+   "resources": [
+    {
+     "id": "5efbe0d2-40f7-4192-ad6f-601331be7804",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/581554fe8f1e45008c87c677031c1fec/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "64cf7190-4db6-4c61-bc80-70da8c07b549",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/581554fe8f1e45008c87c677031c1fec/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "1ff62324-f757-4b6b-87e0-b2c0b76a5c22",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/skoly_RIS_spolu/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "db1b7131-18c0-5e4e-9bf0-382449c4cf7c",
+   "name": "bbsk-stredne-skoly-v-bbk-odbory-a-pocet-studentov-2023-e85365",
+   "org": "bbsk",
+   "title": "Stredné školy v BBK, odbory a počet študentov (2023)",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:15:03.469510",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "e85365e642a34cb6a0a0a89cbd6784bd",
+    "source_url": "https://opendata.bbsk.sk/datasets/e85365e642a34cb6a0a0a89cbd6784bd",
+    "modified": "2025-07-04T07:46:30Z",
+    "issued": "2024-11-15T10:12:24Z"
+   },
+   "resources": [
+    {
+     "id": "41029118-4b34-4c77-b7d6-e077bdceed11",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/e85365e642a34cb6a0a0a89cbd6784bd/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "0524b933-84c6-4fd9-8b6a-3074f4a45522",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/e85365e642a34cb6a0a0a89cbd6784bd/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "12af56ec-39fe-4e22-9b3d-6793a1a93418",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Join_Features_to_Stredn%C3%A9_%C5%A1koly_v_Banskobystrickom_kraji_view/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "84126641-ab60-5139-954d-2b80709f0686",
+   "name": "bbsk-uradne-hodiny-c912ed",
+   "org": "bbsk",
+   "title": "Úradné hodiny",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:18:19.575429",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "c912edbd676f456db2744c4c82ff96e4",
+    "source_url": "https://opendata.bbsk.sk/datasets/c912edbd676f456db2744c4c82ff96e4",
+    "modified": "2026-07-07T13:34:09Z",
+    "issued": "2024-05-14T13:44:07Z"
+   },
+   "resources": [
+    {
+     "id": "a5b0b281-6b76-4731-a636-0aaf78239bd2",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/c912edbd676f456db2744c4c82ff96e4/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "601d27f5-0553-4bd4-8cfc-bbdd1c077549",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/%C3%9Aradn%C3%A9_hodiny/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "491848f6-8980-5b5a-be68-abb78754dae2",
+   "name": "bbsk-vekova-struktura-v-obciach-1996-2022-6de8c3",
+   "org": "bbsk",
+   "title": "Veková štruktúra v obciach (1996 - 2022)",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:20:13.509062",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "6de8c3ce1c60425da48a57a9ef5fa2dc",
+    "source_url": "https://opendata.bbsk.sk/datasets/6de8c3ce1c60425da48a57a9ef5fa2dc",
+    "modified": "2024-07-22T05:07:41Z",
+    "issued": "2024-02-21T12:24:19Z"
+   },
+   "resources": [
+    {
+     "id": "3386e8f3-c5d7-4d60-892a-41fc46aebf00",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/6de8c3ce1c60425da48a57a9ef5fa2dc/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "8ce01054-3704-4445-a6f1-52e1f282cd53",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/6de8c3ce1c60425da48a57a9ef5fa2dc/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "9d3581df-94c0-4f78-97de-85025164e7c5",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Join_Features_to_Obec3_WebMercator_view/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "fddef47e-7cff-5f53-80de-bc4f5249aba1",
+   "name": "bbsk-vekova-struktura-v-okresoch-1996-2022-29ed8a",
+   "org": "bbsk",
+   "title": "Veková štruktúra v okresoch (1996 - 2022)",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:15:21.419198",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "29ed8a8a4b494613a623a0d2bd7f2ba0",
+    "source_url": "https://opendata.bbsk.sk/datasets/29ed8a8a4b494613a623a0d2bd7f2ba0",
+    "modified": "2024-07-22T05:07:30Z",
+    "issued": "2024-02-21T12:27:20Z"
+   },
+   "resources": [
+    {
+     "id": "cf839a16-8748-4ee0-8fc0-6f869489b42a",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/29ed8a8a4b494613a623a0d2bd7f2ba0/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "cbefde62-f381-468c-b2cf-4d23acb65397",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/29ed8a8a4b494613a623a0d2bd7f2ba0/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "8a40f9e4-416e-486d-b5cf-2f0023723a37",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/vekove_indexy_okresy_zeny_muzi_view/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "41fe465a-7292-561f-b294-bf540a033084",
+   "name": "bbsk-vysoke-skoly-v-banskobystrickom-kraji-b0be47",
+   "org": "bbsk",
+   "title": "Vysoké školy v Banskobystrickom kraji",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:20:06.254437",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "b0be47b1448e422d8fd7f3e958f6cad8",
+    "source_url": "https://opendata.bbsk.sk/datasets/b0be47b1448e422d8fd7f3e958f6cad8",
+    "modified": "2024-09-26T11:10:30Z",
+    "issued": "2024-07-11T10:36:42Z"
+   },
+   "resources": [
+    {
+     "id": "90930c8a-494d-4245-852c-0dee6595a676",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/b0be47b1448e422d8fd7f3e958f6cad8/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "1c615c77-3f94-4761-9a28-e8fca2bf62fc",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/b0be47b1448e422d8fd7f3e958f6cad8/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "f1c024d4-82b0-44a9-ac58-97d74f0adefc",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/V%C5%A0/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "95245f82-883e-5268-ae89-44ae2d6a9ba9",
+   "name": "bbsk-vyvoj-emisii-v-bbk-c8d1ed",
+   "org": "bbsk",
+   "title": "Vývoj emisií v BBK",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:13:01.545748",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "c8d1ed82dc90415e9a6f04fa2bfe2893",
+    "source_url": "https://opendata.bbsk.sk/datasets/c8d1ed82dc90415e9a6f04fa2bfe2893",
+    "modified": "2025-03-12T13:30:11Z",
+    "issued": "2024-10-02T10:18:40Z"
+   },
+   "resources": [
+    {
+     "id": "1598986e-bf2e-438e-ab65-fae9a9a34de7",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/c8d1ed82dc90415e9a6f04fa2bfe2893/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "8e25a19b-d42d-44eb-b3bd-531f9c7f8766",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/c8d1ed82dc90415e9a6f04fa2bfe2893/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "5bd2d324-c124-44f5-9ecd-077a50fb1d5c",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/JF_to_Okresy_BBK_hranice_view/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "24866f31-1fda-5d34-b1ae-ed80d7e13bf9",
+   "name": "bbsk-vyvoj-imisii-v-bbk-377176",
+   "org": "bbsk",
+   "title": "Vývoj imisií v BBK",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:17:07.983457",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "3771767f236d4f6da43b4d0f97788de4",
+    "source_url": "https://opendata.bbsk.sk/datasets/3771767f236d4f6da43b4d0f97788de4",
+    "modified": "2025-03-12T13:30:34Z",
+    "issued": "2024-10-25T13:02:33Z"
+   },
+   "resources": [
+    {
+     "id": "a5c42bb5-2b7b-4bcb-8d85-caff83e6bb31",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/3771767f236d4f6da43b4d0f97788de4/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "d596cca5-481d-4db4-900c-724e6aabe5e5",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/3771767f236d4f6da43b4d0f97788de4/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "ac471669-c2a5-446c-872b-fd218c1ec9cc",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Imisie_dataset/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "f6bb5275-acfe-5689-9dbb-5c44ea2e7690",
+   "name": "bbsk-zakladne-skoly-v-banskobystrickom-kraji-13a8b6",
+   "org": "bbsk",
+   "title": "Základné školy v Banskobystrickom kraji",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:17:35.124214",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "13a8b6d05cac452989c281354a797e06",
+    "source_url": "https://opendata.bbsk.sk/datasets/13a8b6d05cac452989c281354a797e06",
+    "modified": "2024-09-26T11:15:48Z",
+    "issued": "2024-05-06T13:12:31Z"
+   },
+   "resources": [
+    {
+     "id": "1d5338a1-d3d2-4234-bd1b-232cd5c7f5b3",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/13a8b6d05cac452989c281354a797e06/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "8187ce93-0e0e-4054-9cdd-f4fe5f115735",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/13a8b6d05cac452989c281354a797e06/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "d279f73f-29ff-4e1a-8949-5548b659c011",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Z%C3%A1kladn%C3%A9_%C5%A1koly/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "124e3540-9303-5e21-b796-874ee29c763d",
+   "name": "bbsk-zasadnutia-samospravy-9a27f2",
+   "org": "bbsk",
+   "title": "Zasadnutia samosprávy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:15:16.710073",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "9a27f2b523fc45bc8771565ef1575f0c",
+    "source_url": "https://opendata.bbsk.sk/datasets/9a27f2b523fc45bc8771565ef1575f0c",
+    "modified": "2024-07-22T07:14:45Z",
+    "issued": "2024-04-30T13:41:38Z"
+   },
+   "resources": [
+    {
+     "id": "44f6bcb3-3ea5-43e6-be4a-aad33d4cb86d",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/9a27f2b523fc45bc8771565ef1575f0c/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "b09dce41-aa44-45c2-b44e-54968e8ed4df",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Zasadnutia_samospr%C3%A1vy/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "eff94b09-42b3-59a8-a6d5-6d08b839a56c",
+   "name": "bbsk-zeleznicne-priecestia-v-banskobystrickom-kraji-public-view-89feb8",
+   "org": "bbsk",
+   "title": "Železničné priecestia v Banskobystrickom kraji (public view)",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:13:14.923094",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "89feb87cb79548dfbf6ea180c7e89d25",
+    "source_url": "https://opendata.bbsk.sk/datasets/89feb87cb79548dfbf6ea180c7e89d25",
+    "modified": "2024-10-07T22:15:20Z",
+    "issued": "2024-10-07T22:11:14Z"
+   },
+   "resources": [
+    {
+     "id": "cea880c7-a479-43b0-b610-4137c0e2c00d",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/89feb87cb79548dfbf6ea180c7e89d25/csv?layers=2",
+     "datastore": false
+    },
+    {
+     "id": "056a73c6-49f9-44bb-8906-3806d5a3cf6d",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/89feb87cb79548dfbf6ea180c7e89d25/geojson?layers=2",
+     "datastore": false
+    },
+    {
+     "id": "d3c47db9-94e9-4114-8514-a00b272e0c57",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/%C5%BDelezni%C4%8Dn%C3%A9_priecestia_v_Banskobystrickom_kraji_(public_view)/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "76016124-eea4-5e0f-83e0-d3fbb038d9af",
+   "name": "bbsk-zmluvy-cafee6",
+   "org": "bbsk",
+   "title": "Zmluvy",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:19:27.587880",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "cafee64779994f2c828b9bc2150fb4cc",
+    "source_url": "https://opendata.bbsk.sk/datasets/cafee64779994f2c828b9bc2150fb4cc",
+    "modified": "2025-10-14T07:56:04Z",
+    "issued": "2025-03-18T11:24:23Z"
+   },
+   "resources": [
+    {
+     "id": "349148fb-7ea3-4e16-b6af-050f9115bf09",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/cafee64779994f2c828b9bc2150fb4cc/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "c1e91ee2-72ac-4485-a09c-aabc0a05de2e",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Zmluvy_13_3_2025/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "f6bfcbd3-ad01-5a3f-89ff-e9dafd6d6826",
+   "name": "bbsk-zoznam-lekarni-v-bbk-c564de",
+   "org": "bbsk",
+   "title": "Zoznam lekární v BBK",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:19:33.674876",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "c564de3489424d57a9f92a4b82249d07",
+    "source_url": "https://opendata.bbsk.sk/datasets/c564de3489424d57a9f92a4b82249d07",
+    "modified": "2025-08-08T09:38:54Z",
+    "issued": "2025-08-08T09:17:27Z"
+   },
+   "resources": [
+    {
+     "id": "46edcdc5-a329-4e77-9236-2a866fcca2f3",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/c564de3489424d57a9f92a4b82249d07/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "13a8a1aa-2c2e-45e0-b7d5-692f33912b70",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/c564de3489424d57a9f92a4b82249d07/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "23473942-d5c6-4ee6-ae74-a18387eb823b",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Zoznam_lek%C3%A1rn%C3%AD_v_BBK_public_2025/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "704b1e1e-74cc-5a72-86ba-b601fa06ca8a",
+   "name": "bbsk-zoznam-poskytovatelov-socialnych-sluzieb-v-bbk-9ab090",
+   "org": "bbsk",
+   "title": "Zoznam poskytovateľov sociálnych služieb v BBK",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:11:00.007396",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "9ab090b9a0594414b9d2f6e5d95d21fe",
+    "source_url": "https://opendata.bbsk.sk/datasets/9ab090b9a0594414b9d2f6e5d95d21fe",
+    "modified": "2025-08-08T09:39:03Z",
+    "issued": "2025-08-08T08:16:14Z"
+   },
+   "resources": [
+    {
+     "id": "f9f81a0f-98be-4889-a107-4a0014b567c4",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/9ab090b9a0594414b9d2f6e5d95d21fe/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "2e65d9fc-16c6-435f-b9ee-0cb89f5e06fb",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Zoznam_poskytovate%C4%BEov_soci%C3%A1lnych_slu%C5%BEieb_v_BBK_public_2025/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "2dc6f224-a7d9-5349-b0bc-8c0b4f42d896",
+   "name": "bbsk-zoznam-ucinnych-vseobecne-zavaznych-nariadeni-vzn-80db50",
+   "org": "bbsk",
+   "title": "Zoznam účinných všeobecne záväzných nariadení (VZN)",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:17:30.219987",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "80db5049e273487e84b70d6a05877f17",
+    "source_url": "https://opendata.bbsk.sk/datasets/80db5049e273487e84b70d6a05877f17",
+    "modified": "2024-10-01T07:54:14Z",
+    "issued": "2024-05-20T08:27:56Z"
+   },
+   "resources": [
+    {
+     "id": "554451fe-5830-4004-b099-21478c42b244",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/80db5049e273487e84b70d6a05877f17/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "cbf5cc63-66b4-45ad-ac1c-5fe4a4a54d98",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Zoznam_%C3%BA%C4%8Dinn%C3%BDch_v%C5%A1eobecne_z%C3%A1v%C3%A4zn%C3%BDch_nariaden%C3%AD_(VZN)/FeatureServer",
+     "datastore": false
+    }
+   ]
+  },
+  {
+   "id": "09e0e635-3610-5b50-9a37-f1f6cb24448a",
+   "name": "bbsk-zoznam-zdravotnickych-zariadeni-v-bbk-701db2",
+   "org": "bbsk",
+   "title": "Zoznam zdravotníckych zariadení v BBK",
+   "license": "cc-by-sa",
+   "modified": "2026-10-15T22:16:56.288398",
+   "extras": {
+    "publisher_name": "Banskobystrický samosprávny kraj",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "harvest_source": "hub-bbsk",
+    "source_id": "701db22f20a7412da21554528be80aea",
+    "source_url": "https://opendata.bbsk.sk/datasets/701db22f20a7412da21554528be80aea",
+    "modified": "2025-08-08T11:53:09Z",
+    "issued": "2025-08-08T11:26:19Z"
+   },
+   "resources": [
+    {
+     "id": "fae8b036-c716-463b-97f5-8a1c0a6f92c0",
+     "name": "CSV",
+     "format": "CSV",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/701db22f20a7412da21554528be80aea/csv?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "1c4c44c9-b330-47e4-8fd9-bad6d9602b56",
+     "name": "GeoJSON",
+     "format": "GeoJSON",
+     "url": "https://opendata.bbsk.sk/api/download/v1/items/701db22f20a7412da21554528be80aea/geojson?layers=0",
+     "datastore": false
+    },
+    {
+     "id": "22ec0a0b-e59f-41b0-9e52-0bda886dd80d",
+     "name": "ArcGIS REST API",
+     "format": "Esri REST",
+     "url": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Zoznam_zdravotn%C3%ADckych_zariaden%C3%AD_v_BBK_public_2025/FeatureServer",
+     "datastore": false
+    }
+   ]
+  }
+ ]
+}
