@@ -200,12 +200,23 @@ def esri_layer(fs: str, layer: int) -> dict:
     _, _, cnt = get(f"{fs}/{layer}/query?where=1%3D1&returnCountOnly=true&f=json")
     fields = [{"name": f["name"], "type": f["type"].removeprefix("esriFieldType"), "alias": f.get("alias")}
               for f in meta.get("fields", []) if not ESRI_SKIP.match(f["name"])]
+    # ArcGIS Online answers returnDistinctValues with returnCountOnly by the plain row count, which
+    # took Číslo+Rok of the BBSK grants for a key while 4775 rows held 3905 values (T-4255), so the
+    # distinct values are paged and counted here.
     distinct = {}
     for cols in key_candidates([f["name"] for f in fields]):
-        q = urllib.parse.urlencode({"where": "1=1", "outFields": ",".join(cols), "returnDistinctValues": "true",
-                                    "returnCountOnly": "true", "f": "json"})
-        _, _, n = get(f"{fs}/{layer}/query?{q}")
-        distinct["+".join(cols)] = json.loads(n or b"{}").get("count")
+        seen, offset = set(), 0
+        while True:
+            q = urllib.parse.urlencode({"where": "1=1", "outFields": ",".join(cols), "returnDistinctValues": "true",
+                                        "returnGeometry": "false", "resultOffset": offset,
+                                        "resultRecordCount": 2000, "f": "json"})
+            _, _, body = get(f"{fs}/{layer}/query?{q}", limit=1 << 24)
+            page = json.loads(body or b"{}")
+            seen |= {tuple(f["attributes"].get(c) for c in cols) for f in page.get("features", [])}
+            if not page.get("exceededTransferLimit"):
+                break
+            offset += 2000
+        distinct["+".join(cols)] = len(seen)
     return {"status": 200, "layer": layer, "name": meta.get("name"), "geometry": meta.get("geometryType"),
             "count": json.loads(cnt or b"{}").get("count"), "fields": fields, "distinct": distinct}
 

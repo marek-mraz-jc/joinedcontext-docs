@@ -392,7 +392,7 @@ datasets:
   source:
     kind: json-feed
     url: https://www.banskabystrica.sk/wp-json/wp/v2/events
-    rows: 6162
+    rows: 6164
   entityId:
     keys:
     - id
@@ -1071,9 +1071,7 @@ datasets:
     geometry: null
     rows: 4792
   entityId:
-    keys:
-    - Číslo
-    - Rok
+    rowHash: true
   observedAt: null
   space: bbsk-otvorene-data
   refresh: P1W
@@ -1431,9 +1429,7 @@ datasets:
     geometry: null
     rows: 28844
   entityId:
-    keys:
-    - Číslo_faktúry
-    - Rok
+    rowHash: true
   observedAt: null
   space: bbsk-otvorene-data
   refresh: P1D
@@ -1676,7 +1672,8 @@ datasets:
     geometry: null
     rows: 516
   entityId:
-    rowHash: true
+    keys:
+    - KOD_NUTS_obec
   observedAt: null
   space: bbsk-otvorene-data
   refresh: P1D
@@ -2713,8 +2710,7 @@ datasets:
     geometry: esriGeometryPoint
     rows: 3046
   entityId:
-    keys:
-    - Číslo_nehody
+    rowHash: true
   observedAt: Dátum_a_čas
   space: bbsk-otvorene-data
   refresh: P1W
@@ -8091,7 +8087,8 @@ datasets:
     geometry: esriGeometryMultipoint
     rows: 7078
   entityId:
-    rowHash: true
+    keys:
+    - ID_číslo_priepustu
   observedAt: null
   space: bbsk-otvorene-data
   refresh: P1W
@@ -8534,9 +8531,7 @@ datasets:
     geometry: esriGeometryPoint
     rows: 4853
   entityId:
-    keys:
-    - ID_IA
-    - Rok_zaradenia
+    rowHash: true
   observedAt: null
   space: bbsk-otvorene-data
   refresh: P1W
@@ -8662,9 +8657,7 @@ datasets:
     geometry: esriGeometryPolygon
     rows: 755
   entityId:
-    keys:
-    - IDN3
-    - Rok
+    rowHash: true
   observedAt: null
   space: bbsk-otvorene-data
   refresh: P1W
@@ -9449,9 +9442,7 @@ datasets:
     geometry: esriGeometryPolygon
     rows: 1079
   entityId:
-    keys:
-    - IDN3
-    - Rok
+    rowHash: true
   observedAt: Rok
   space: bbsk-otvorene-data
   refresh: P1M
@@ -9624,9 +9615,7 @@ datasets:
     geometry: esriGeometryPolygon
     rows: 1144
   entityId:
-    keys:
-    - IDN3
-    - rok
+    rowHash: true
   observedAt: rok
   space: bbsk-otvorene-data
   refresh: P1M
