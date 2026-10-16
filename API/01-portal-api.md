@@ -839,6 +839,21 @@ rejected sink; the Portal keeps the newest 20 per node in memory, each at most 8
 - An empty `nodes` is a stream that has not run since the runner started, or a Portal that
   restarted; it is not an error.
 
+### 7c. Runs, and one run now (PL-62, PL-78, T-4349)
+
+```text
+GET  /api/v1/projects/{project}/pipelines/{name}/runs    the latest runs with their counts (read on Pipeline)
+POST /api/v1/projects/{project}/pipelines/{name}/runs    queue one run now (propose and approve on Pipeline)
+```
+
+A run is named by its due time, `2026-10-17T05:00:00Z`, and its log files every record under that name. The `POST` takes no body. It queues one run of a pipeline that runs from the queue (Architecture/08 §1, PL-78), outside its schedule, and answers `202` with the run it queued:
+
+```json
+{ "run": "2026-10-16T14:02:11Z" }
+```
+
+The run waits its turn in its lane, so runs started for 97 pipelines go one after another. A second `POST` while the run waits answers the same run. A pipeline whose run is in the runner answers `409` and names that run. A pipeline that waits for pushes, and so always runs, answers `409` too, as does one the reconciler has not deployed. A caller without propose and approve on Pipeline gets `403`, and one who may not read the pipeline gets `404`. Each accepted `POST` writes one `pipeline.run` activity event with the actor, the run and `object: pipelines/{name}`.
+
 ### 7a. Testing a candidate pipeline (PL-43, MF-38)
 
 ```text
