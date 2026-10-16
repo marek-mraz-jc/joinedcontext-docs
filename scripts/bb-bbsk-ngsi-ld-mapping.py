@@ -100,7 +100,7 @@ TYPES: list[tuple[str, str, str | None, str]] = [
     (r"hlasovania", "CouncilVote", None, "public office holders' votes"),
     (r"zasadnutia", "CouncilMeeting", None, ""),
     (r"peticie", "Petition", None, "the petition, not its signatories"),
-    (r"vzn|nariadeni", "Regulation", None, ""),
+    (r"vzn|nariadeni", "Rule", "dataModel.CPSV-AP/Rule", "a generally binding regulation (VZN) is a CPSV-AP Rule: name, description, identifier"),
     (r"uradne-hodiny", "OfficeHours", None, "one row per office and weekday"),
     (r"organizacna-struktura|kontakty-na-miestne", "Organization", "dataModel.Organization/Organization", ""),
     (r"bb-adresy", "Address", "dataModel.CPSV-AP/Address", "the city's address list, without coordinates"),
@@ -360,36 +360,53 @@ SDM_SHA = {
     "dataModel.TourismDestinations": "6d78cb4ff0c1a7d16dc0c1bab7266e40d4b3a00c",
     "dataModel.Transportation": "b83ede9d3db29be1365cc272eb535f46af83bed2",
 }
-# A type no published Smart Data Model holds: its datasets leave data.dev (owner, 2026-10-16,
-# T-4319). Each names the models opened and why none fits, so it can come back when one does.
-FINANCE = "no subject of the official list (2026-07-19) holds orders, invoices, contracts or procurement"
-COUNCIL = ("no subject holds council meetings, votes, petitions or regulations; "
-           "CPSV-AP has PublicService, BusinessEvent and LifeEvent")
+# A type no published Smart Data Model holds as is gets an extension of the nearest one (owner,
+# 2026-10-16 ~11:40Z, T-4336, overriding T-4319's removal): the base model's schema.json at its
+# pinned commit under `allOf`, plus the type's own attributes, vendored in joinedcontext-deployment
+# scripts/open-data/sdm/extensions/<Type>/. Type -> (base model, what one entity is, why this base).
+COST = ("CPSV-AP Cost is the official model of an amount a public body pays or charges (value, currency, "
+        "identifier); no subject holds a contract, order, invoice, grant or procurement")
+EXTENSIONS: dict[str, tuple[str, str, str]] = {
+    "Contract": ("dataModel.CPSV-AP/Cost", "A contract the publisher signed and published.", COST),
+    "PurchaseOrder": ("dataModel.CPSV-AP/Cost", "An order the publisher issued and published.", COST),
+    "Invoice": ("dataModel.CPSV-AP/Cost", "An invoice the publisher received and published.", COST),
+    "Grant": ("dataModel.CPSV-AP/Cost", "A grant or subsidy the publisher awarded or paid out.", COST),
+    "PublicProcurement": ("dataModel.CPSV-AP/Cost", "A planned or realised public procurement of the publisher.", COST),
+    "PublicInvestment": ("dataModel.CPSV-AP/Cost", "A public investment project, with its place where the source has one.", COST),
+    "CouncilMeeting": ("dataModel.TourismDestinations/Event", "A meeting of a council or another body of the self-government.",
+                       "TourismDestinations Event is the official model of a dated happening; CPSV-AP has none for a council"),
+    "CouncilVote": ("dataModel.TourismDestinations/Event", "One deputy's vote on one item of a council meeting.",
+                    "a vote is a dated happening of a meeting, so the meeting's base"),
+    "Petition": ("dataModel.CPSV-AP/Evidence", "A petition filed with the publisher and how it was settled.",
+                 "CPSV-AP Evidence is the official model of a document filed with a public body (identifier, name)"),
+    "Article": ("dataModel.CPSV-AP/Evidence", "A news article the publisher posted.",
+                "CPSV-AP Evidence is the official model of a document a public body issues (identifier, name, "
+                "relatedDocumentation); no subject holds news"),
+    "CommitteeSeat": ("dataModel.Organization/Organization", "A seat of a council committee; the citizens' names are kept out.",
+                      "Organization is the official model of a body; a seat is a position of one"),
+    "OfficeHours": ("dataModel.Organization/Organization", "One office's opening hours on one weekday.",
+                    "Organization is the office; the rows are its hours per weekday, which no model holds as an entity"),
+    "Bridge": ("dataModel.PointOfInterest/PointOfInterest", "A bridge on a road the region owns or manages.",
+               "Transportation Road and RoadSegment require roadClass, refRoad, startPoint and endPoint, which a "
+               "structure register has not; PointOfInterest is a located named thing"),
+    "RoadStructure": ("dataModel.PointOfInterest/PointOfInterest",
+                      "An underpass, culvert, expansion joint or level crossing on a regional road.",
+                      "as Bridge: a located structure of a road, not a road"),
+    "AdministrativeArea": ("dataModel.PointOfInterest/PointOfInterest",
+                           "A region, district or municipality: its boundary or centroid and its NUTS and LAU codes.",
+                           "OpenStreetMap OSMBoundary requires osmId and osmType, which the region's register has not"),
+    "RiverBasin": ("dataModel.PointOfInterest/PointOfInterest", "A river basin of the region.",
+                   "OpenStreetMap OSMWater requires osmId and osmType, which the region's register has not"),
+    "WaterBodyStatus": ("dataModel.PointOfInterest/PointOfInterest",
+                        "A water body with its ecological status or potential class.",
+                        "WaterQualityObserved and WaterObserved require dateObserved and hold measured parameters; "
+                        "these rows are assessed classes of a located water body"),
+    "CycleRoute": ("dataModel.Transportation/BikeLane", "A signed cycle touring route or one surface section of it.",
+                   "Transportation BikeLane is the official model of a way for bicycles; OSMCycleRoute requires osmId"),
+}
+# A type no published model holds and no extension covers yet: its datasets leave data.dev
+# (T-4319). Each names the models opened and why none fits, so it can come back when one does.
 NO_MODEL: dict[str, str] = {
-    "Bridge": ("Transportation/Road and RoadSegment describe roads; RoadSegment requires refRoad, startPoint and "
-               "endPoint, which a bridge register has not"),
-    "RoadStructure": ("Transportation/Road and RoadSegment describe roads, not underpasses, culverts, expansion "
-                      "joints or level crossings"),
-    "AdministrativeArea": ("OpenStreetMap/OSMBoundary requires osmId and osmType; these boundaries come from the "
-                           "region's register, not OpenStreetMap"),
-    "RiverBasin": "OpenStreetMap/OSMWater requires osmId and osmType; the basins come from the region's register",
-    "WaterBodyStatus": ("WaterQuality/WaterQualityObserved and Environment/WaterObserved require dateObserved and "
-                        "location and hold measured parameters; these rows are ecological status classes"),
-    "CycleRoute": ("OpenStreetMap/OSMCycleRoute requires osmId and osmType; Transportation/BikeLane is a lane, "
-                   "not a touring route"),
-    "Grant": "no subject of the official list (2026-07-19) holds grants or subsidies",
-    "PublicInvestment": "no subject of the official list (2026-07-19) holds public investment projects",
-    "PurchaseOrder": FINANCE,
-    "Invoice": FINANCE,
-    "Contract": FINANCE,
-    "PublicProcurement": FINANCE,
-    "CouncilMeeting": COUNCIL,
-    "CouncilVote": COUNCIL,
-    "Petition": COUNCIL,
-    "Regulation": COUNCIL,
-    "CommitteeSeat": "Organization/Person is a person; a seat whose holder's name is kept out is none",
-    "OfficeHours": "a row is one office's hours on one weekday; no model holds an opening slot as an entity",
-    "Article": "no subject of the official list (2026-07-19) holds news articles",
     # The city's DTM (T-4317, models read 2026-10-16). An OpenStreetMap model (OSMBuilding,
     # OSMHighway, OSMTrafficSign, OSMLanduse, OSMWater, OSMNatural) requires osmId and osmType, and
     # none of these features comes from OpenStreetMap.
@@ -410,6 +427,17 @@ NO_MODEL: dict[str, str] = {
     "LandUsePlanFeature": ("dataModel.UrbanPlanning holds no model yet; no other subject holds a land-use plan's "
                            "zones, limits or planned works"),
 }
+# What each base model requires beyond id and type (its schema.json `required`, read at the pin):
+# a mapping that cannot fill one is refused here, not at the seed's validation.
+REQUIRED: dict[str, list[str]] = {
+    "dataModel.CPSV-AP/Cost": ["identifier"],
+    "dataModel.CPSV-AP/Evidence": ["identifier", "name"],
+    "dataModel.CPSV-AP/Rule": ["description", "identifier", "name"],
+    "dataModel.PointOfInterest/PointOfInterest": ["name"],
+    "dataModel.CPSV-AP/PublicOrganization": ["preferredLabel", "spatial"],
+}
+# Model attributes the model types as text, whatever the column's own range.
+TEXT = {"identifier", "name", "description"}
 # A column that is a model attribute takes the model's name (dataset pattern -> attribute -> model
 # attribute); the first matching pattern applies. `name` is the GSMA common name every model has.
 RENAME: list[tuple[str, dict[str, str]]] = [
@@ -432,6 +460,35 @@ RENAME: list[tuple[str, dict[str, str]]] = [
     (r"kulturne-institucie-bbsk-[0-9a-f]{6}$", {"institucia": "name"}),
     (r"zoznam-lekarni", {"nazov": "name"}),
     (r"zdravotnickych", {"vlastnyNazovZariadenia": "name"}),
+    # The attributes the base of an extension requires (T-4336).
+    (r"bb-objednavky-bb", {"cisloObjednavky": "identifier"}),
+    (r"bb-zmluvy-bb", {"centralneCisloZmluvy": "identifier"}),
+    (r"bbsk-dotacie", {"cislo": "identifier", "nazov": "name"}),
+    (r"bbsk-faktury", {"cisloFaktury": "identifier"}),
+    (r"bbsk-objednavky", {"cisloObjednavky": "identifier"}),
+    (r"bbsk-zmluvy", {"cisloZmluvy": "identifier", "nazovZmluvy": "name"}),
+    (r"plan-verejneho-obstaravania", {"sourceId": "identifier", "predmetZakazky": "name"}),
+    (r"realizovane-verejne-obstaravania", {"iDCasti": "identifier", "nazovPredmetu": "name"}),
+    (r"itms21", {"kodProjektu": "identifier", "nazovProjektu": "name"}),
+    (r"register-investicii-bodova", {"iDIA": "identifier", "nazov": "name"}),
+    (r"register-investicii-polygonova", {"nazov": "name"}),
+    (r"peticie", {"pC": "identifier", "nazovPeticie": "name"}),
+    (r"bb-aktuality", {"sourceId": "identifier", "title": "name", "link": "url"}),
+    (r"mosty-v-banskobystrickom", {"nazovMosta": "name"}),
+    (r"mosty-v-sprave", {"nazov": "name"}),
+    (r"dilatacne-celky", {"iDDC": "name"}),
+    (r"podjazdy", {"identifikacneCisloPodjazdu": "name"}),
+    (r"priepusty", {"iDCisloPriepustu": "name"}),
+    (r"zeleznicne-priecestia", {"identifikacneCisloZelPriec": "name"}),
+    (r"kraj-bbk-hranica", {"nM2": "name"}),
+    (r"okresy-bbk-hranice", {"nM3": "name"}),
+    (r"obce-bbk", {"nM4": "name"}),
+    (r"povodia", {"nameText": "name"}),
+    (r"vodnych-utvarov", {"nAZOVVU": "name"}),
+    (r"komisie", {"nazovKomisie": "name"}),
+    (r"uradne-hodiny", {"nazovKontaktnehoMiesta": "name"}),
+    (r"hlasovania", {"tema": "name"}),
+    (r"vzn|nariadeni", {"cisloVZN": "name", "nazovVZN": "description", "cisloUznesenia": "identifier"}),
 ]
 # Model attributes whose value is a list of text (CPSV-AP, PointOfInterest category): one column becomes a one-item list.
 # A model attribute whose column is empty in some rows reads these columns next, in order: a
@@ -447,8 +504,13 @@ LISTS = {"thoroughfare", "addressArea", "postName", "postCode", "spatial", "cate
 CONSTANTS: dict[str, dict[str, str]] = {"RoadAccident": {"status": "archived"}}
 
 
+DEPLOYMENT = "https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm"
+
+
 def sdm_schema(sdm: str) -> str:
-    """The schema.json of a model at the commit it was read at."""
+    """The schema.json of a model at the commit it was read at; an extension's where it is vendored."""
+    if sdm.startswith("extension/"):
+        return f"{DEPLOYMENT}/extensions/{sdm.split('/')[1]}/schema.json"
     subject, model = sdm.split("/")
     return f"https://raw.githubusercontent.com/smart-data-models/{subject}/{SDM_SHA[subject]}/{model}/schema.json"
 
@@ -485,7 +547,7 @@ def modelled(name: str, props: dict[str, dict]) -> dict[str, dict]:
         if a not in out or not set(cols) <= known:
             sys.exit(f"{name}: OTHERWISE names {a} or {cols}, which the mapping does not read")
         out[a] = {**out[a], "otherwise": cols}
-    return {a: {**p, "range": "string-list"} if a in LISTS else p for a, p in out.items()}
+    return {a: {**p, "range": "string-list" if a in LISTS else "string" if a in TEXT else p["range"]} for a, p in out.items()}
 
 
 def type_of(name: str):
@@ -752,6 +814,9 @@ def plan(d: dict, probe_: dict, fetched: str, gis: dict | None = None) -> dict:
         # The layers a DTM sheet would read stay named, so it comes back when a model does (T-4317).
         return {**entry, "status": "removed", "type": typ, "reason": f"no smart data model: {NO_MODEL[typ]}",
                 **({"layers": [x["url"] for x in source["layers"]]} if layered else {})}
+    base = EXTENSIONS[typ][0] if typ in EXTENSIONS else None
+    if base:
+        sdm = f"extension/{typ}"
     rows = source["rows"]
     # A key is a column (or column and year) the probe counted as many distinct values as rows;
     # a WordPress post id is unique by definition. Anything else is a row hash.
@@ -780,8 +845,16 @@ def plan(d: dict, probe_: dict, fetched: str, gis: dict | None = None) -> dict:
            "dataProvider": d["extras"].get("publisher_name"), "license": d["license"],
            "dataset": f"{CKAN}/dataset/{d['name']}",
            "properties": modelled(d["name"], properties(fields, ranges))}
+    if base:
+        out["baseModel"] = base
     if typ in CONSTANTS:
         out["constants"] = dict(CONSTANTS[typ])
+    # A base that requires an identifier no column holds takes the entity's own key or row hash.
+    unmet = [a for a in REQUIRED.get(base or sdm, []) if a not in out["properties"] and a not in out.get("constants", {})]
+    if unmet == ["identifier"]:
+        out["identifierFromId"] = True
+    elif unmet:
+        sys.exit(f"{d['name']}: {base or sdm} requires {unmet}, which no column holds (RENAME)")
     if dropped[0]:
         out["dropped"] = {"columns": dropped[0], "why": dropped[1]}
     for pat, column, where, keep, why in ROWS:
@@ -807,7 +880,9 @@ def draft() -> None:
     head = (f"# Generated by scripts/bb-bbsk-ngsi-ld-mapping.py draft from Research/data/ (CKAN snapshot "
             f"{snap['fetched']}). T-4255's seed generator reads this file. Do not edit by hand:\n"
             f"# change TYPES in the script and run `draft` again.\n")
-    body = yaml.safe_dump({"fetched": snap["fetched"], "datasets": entries}, allow_unicode=True,
+    used = {e["type"] for e in entries if e.get("baseModel")}
+    extensions = {t: {"baseModel": b, "description": what, "why": why} for t, (b, what, why) in EXTENSIONS.items() if t in used}
+    body = yaml.safe_dump({"fetched": snap["fetched"], "extensions": extensions, "datasets": entries}, allow_unicode=True,
                           sort_keys=False, width=110)
     MAPPING.write_text(head + body, encoding="utf-8")
     if PAGE.exists():
@@ -850,6 +925,8 @@ def sections(snap: dict, entries: list[dict]) -> dict[str, str]:
     for t, es in sorted(by_type.items(), key=lambda kv: (-len(kv[1]), kv[0])):
         sdm = es[0]["smartDataModel"]
         model = f"[`{sdm}`]({sdm_schema(sdm)})" if sdm else "none"
+        if es[0].get("baseModel"):
+            model += f", extending [`{es[0]['baseModel']}`]({sdm_schema(es[0]['baseModel'])})"
         types.append(f"| `{t}` | {model} | {len(es)} | {sum(e['source']['rows'] for e in es)} |")
     refused = ["| dataset | organization | status | reason |", "|---|---|---|---|"]
     for e in entries:
@@ -902,6 +979,9 @@ def check(snap: dict, mapping: dict, page: str) -> list[str]:
                        if not e.get(k)]
             if missing:
                 errors.append(f"{e.get('name')}: mapped without {', '.join(missing)}")
+            elif str(e["smartDataModel"]).startswith("extension/") and (
+                    e["smartDataModel"].split("/")[1] not in (mapping.get("extensions") or {}) or not e.get("baseModel")):
+                errors.append(f"{e.get('name')}: {e['smartDataModel']} is no extension the mapping declares with its baseModel")
     for i, d in ids.items():
         if i not in seen:
             errors.append(f"{d['name']} ({i}) is in CKAN and missing from the mapping")
@@ -947,6 +1027,16 @@ def selftest() -> None:
                                           "postName": {"column": "Obec", "range": "string-list"},
                                           "addressArea": {"column": "C", "range": "string-list"}}
     assert modelled("bb-other", adr) == adr
+    ext = {"datasets": [ok["datasets"][0], {**ok["datasets"][1], "smartDataModel": "extension/Contract"}]}
+    assert any("no extension the mapping declares" in e for e in check(snap, ext, page))
+    declared = {"extensions": {"Contract": {"baseModel": "dataModel.CPSV-AP/Cost"}},
+                "datasets": [ok["datasets"][0], {**ok["datasets"][1], "smartDataModel": "extension/Contract",
+                                                 "baseModel": "dataModel.CPSV-AP/Cost"}]}
+    assert not any("no extension" in e for e in check(snap, declared, page)), check(snap, declared, page)
+    assert modelled("bb-zmluvy-bb", {"centralneCisloZmluvy": {"column": "C", "range": "integer"}}) == {
+        "identifier": {"column": "C", "range": "string"}}
+    assert sdm_schema("extension/Grant").endswith("/sdm/extensions/Grant/schema.json")
+    assert all(b in SDM_SHA or b.split("/")[0] in SDM_SHA for b, _, _ in EXTENSIONS.values())
     assert sdm_schema("dataModel.Organization/Person").endswith("/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/Person/schema.json")
     up = f"{GIS}/up/5b___x/MapServer"
     layer = lambda n, c, f: {"url": f"{up}/{n}", "name": "Telekomunikačné vedenie", "geometry": "esriGeometryPolyline",  # noqa: E731
