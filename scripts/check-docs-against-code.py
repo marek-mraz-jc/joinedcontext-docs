@@ -128,6 +128,8 @@ SOURCE_SUFFIXES = (
     ".justfile",
     ".robot",
     ".rego",
+    # A migration defines functions and tables the docs name, `jc_fts_config` among them (T-4260).
+    ".sql",
 )
 SKIP_DIRECTORIES = {".git", "node_modules", "target", "dist", ".venv", "__pycache__"}
 
@@ -301,6 +303,7 @@ title: A page that is true
 The router lives in `crates/context-gateway/src/app.rs` and the Portal form in
 `ui/src/pages/endpoints/Form.tsx`. The gateway reads `JC_BROKER_URL` at start-up.
 The assistant calls `jc_catalog_search`; a user's compute container receives `JC_SOURCE_URL`.
+A passage is indexed with the configuration `jc_fts_config` gives its language.
 A pipeline of somebody else's lives in `compute/src/lib.rs`, which is their repository.
 A refusal is `https://joinedcontext.com/errors/forbidden`, and a draft that moved under the
 request is `https://joinedcontext.com/problems/draft-conflict`.
@@ -343,6 +346,11 @@ def selftest() -> int:
             'let slug = "forbidden";\n'
             'let conflict = "https://joinedcontext.com/problems/draft-conflict";\n',
             encoding="utf-8",
+        )
+        migrations = code / "joinedcontext-platform" / "crates" / "assistant" / "migrations"
+        migrations.mkdir(parents=True)
+        (migrations / "0001_store.up.sql").write_text(
+            "CREATE FUNCTION jc_fts_config(lang text) RETURNS regconfig LANGUAGE sql;\n", encoding="utf-8"
         )
         form = code / "joinedcontext-portal" / "ui" / "src" / "pages" / "endpoints"
         form.mkdir(parents=True)
