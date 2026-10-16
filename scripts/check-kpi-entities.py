@@ -140,8 +140,8 @@ title: "A contract"
     "value": { "start": "2023-01-01T00:00:00Z", "end": "2023-12-31T23:59:59Z" }
   },
   "calculationFormula": { "type": "Property", "value": "sum(value)" },
-  "derivedFrom": { "type": "Relationship", "object": "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kraj:kraj-read" },
-  "computedBy": { "type": "Relationship", "object": "urn:ngsi-ld:Pipeline:bbsk.sk:bbsk-kpi:emisie-tuhe" },
+  "derivedFrom": { "type": "Property", "value": "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kraj:kraj-read" },
+  "computedBy": { "type": "Property", "value": "urn:ngsi-ld:Pipeline:bbsk.sk:bbsk-kpi:emisie-tuhe" },
   "updatedAt": { "type": "Property", "value": { "@type": "DateTime", "@value": "2026-09-20T06:00:00Z" } }
 }
 ```

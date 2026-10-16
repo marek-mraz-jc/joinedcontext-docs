@@ -197,6 +197,22 @@ Files of a `source: upload` go to `POST …/knowledge/sources/{source}/files?nam
 | `413` | the body is past `upload.maxBytes`; it is not read further |
 | `415` | the content is none of the types above |
 
+A source's row of `GET …/knowledge/sources` carries its index status, every number a count over
+the service's own tables (T-4197):
+
+| Field of a source | Meaning |
+|---|---|
+| `pages`, `pagesIncluded`, `documents` | what the crawls stored; a `source: upload`'s files are its documents |
+| `passages`, `embedded`, `pending` | its passages, those with an embedding, and those still waiting for one |
+| `failed` | pages and documents whose last read failed |
+| `lastCrawl` | the end of the last crawl that stored anything |
+| `job` | the last crawl job: `state` (`queued`, `running`, `done`, `failed`), `attempts`, `error`, `startedAt`, `finishedAt` |
+
+`GET …/knowledge/sources/{source}/errors` answers `{"items": [{"url", "kind", "reason"}]}`: at most
+50 pages (`kind: page`) and documents (`kind: document`) whose last read failed, newest first.
+`reason` is `HTTP {status}` or the network error, at most 300 characters; no content of a page is
+in it. A source not crawled yet answers `404`.
+
 `GET …/knowledge/deployments/{deployment}/usage` answers `{"items": [{"day", "requests", "tokensIn",
 "tokensOut", "thumbsUp", "thumbsDown", "notes"}]}` for the last 30 days; `notes` counts the thumbs
 down that carry a note (§1.8).

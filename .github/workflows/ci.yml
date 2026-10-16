@@ -47,7 +47,8 @@ jobs:
         # archive URL takes either. Swap in jc-core-v0.7.76 when it is cut.
         # ad23dde -> platform main e219f50 (T-4186): KnowledgeSource `wordpressTypes` (T-4154) and the
         # assistant kinds of T-4166/T-4177 are documented; the same pin in the manifests job below.
-        env: { JC_SCHEMAS_TAG: e219f50c1348a36b17c4ed0d5e5872b3ba1ee53c }
+        # e219f50 -> platform 1e7043f (T-4230): an indicator's derivedFrom/computedBy are Properties (T-4229).
+        env: { JC_SCHEMAS_TAG: 1e7043f7d53d344f2edee99b98272b5632b5e24f }
         run: |
           set -eu
           curl -sSL "https://github.com/marek-mraz-jc/joinedcontext-platform/archive/${JC_SCHEMAS_TAG}.tar.gz" \

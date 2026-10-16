@@ -86,7 +86,7 @@ authorization code flow with PKCE runs server-side and the result is an encrypte
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/api/v1/auth/login?redirect_to=<in-app path>` | starts the code flow; `redirect_to` is honoured only when it is a same-origin path |
+| `GET` | `/api/v1/auth/login?redirect_to=<in-app path>&lang=<language>` | starts the code flow; `redirect_to` is honoured only when it is a same-origin path; `lang` (a 2–3 letter language tag, the Portal's current language) goes to the realm as `ui_locales`, so the sign-in page speaks it (T-4199) |
 | `GET` | `/api/v1/auth/callback` | consumes the code, verifies the ID token against the stored nonce, issues the session |
 | `GET` | `/api/v1/auth/me` | the signed-in identity, or `401` `application/problem+json` when there is no live session |
 | `GET` | `/api/v1/auth/sso-check` | a redirect into the realm with `prompt=none` for the public `portal-ui` client, answered to `/api/v1/auth/sso-check/done` in the fragment: `#error=login_required` when the person must sign in, `#code=…` when the realm session lives; the Open page reads it from a hidden frame of its own origin to decide whether a silent App means "sign in again" (AP-122); the code is never redeemed |
@@ -3293,6 +3293,7 @@ GET  /api/v1/projects/{project}/knowledge/sources/{source}/pages/{page}/links
 GET  /api/v1/projects/{project}/knowledge/sources/{source}/passages?page=|document=
 POST /api/v1/projects/{project}/knowledge/sources/{source}/inclusion       include or exclude pages, subtrees, documents
 POST /api/v1/projects/{project}/knowledge/sources/{source}/recrawl         queue a crawl now
+GET  /api/v1/projects/{project}/knowledge/sources/{source}/errors          the pages and documents the last crawls could not read
 GET  /api/v1/projects/{project}/knowledge/deployments/{deployment}/usage   requests and tokens per day, 30 days
 POST /api/v1/projects/{project}/knowledge/deployments/{deployment}/chat    ask the assistant as the signed-in person
 ```
@@ -3310,6 +3311,12 @@ POST /api/v1/projects/{project}/knowledge/deployments/{deployment}/chat    ask t
   person's own access token on for an `internal` deployment's connectors and keeps no copy
   ([API/05 §1.7](05-knowledge-assistant.md#17-in-the-portal), AG-115).
 - `recrawl` answers `202` with the queued job, or `409` when one is already queued or running.
+- The index status of a source is in its row of `sources`: `passages`, `embedded` and `pending`
+  (passages not embedded yet), `failed` (pages and documents that could not be read), and the last
+  job with its `startedAt` and `finishedAt`. `errors` lists at most 50 of the failed pages and
+  documents, newest first, each `{"url", "kind": "page"|"document", "reason"}`: the URL and the
+  HTTP status or network reason, never what a page holds. It needs `propose` on `KnowledgeSource`
+  and answers `403` naming it, so a viewer sees the counts and not the list (T-4197).
 - A source the manifests declare and `jc-assistant` has not crawled yet is listed with
   `state: "not-crawled"`; a page, a document or a source of another project is `404`.
 
