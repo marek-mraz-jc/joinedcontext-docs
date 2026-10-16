@@ -39,9 +39,9 @@ same rows.
 <!-- totals -->
 | organization | datasets | mapped | already NGSI-LD | not ingestible | no data source | source rows of the mapped |
 |---|---:|---:|---:|---:|---:|---:|
-| banskabystrica | 34 | 13 | 2 | 3 | 16 | 113672 |
+| banskabystrica | 34 | 13 | 2 | 2 | 17 | 113672 |
 | bbsk | 90 | 88 | 2 | 0 | 0 | 252024 |
-| all | 124 | 101 | 4 | 3 | 16 | 365696 |
+| all | 124 | 101 | 4 | 2 | 17 | 365696 |
 <!-- /totals -->
 
 "Already NGSI-LD" are the four datasets the platform publishes from its own public Endpoints
@@ -169,7 +169,7 @@ source. The `Evidencia psov` and `Zoznam poskytovateľov pre APS` datasets never
 | DTM_BB-register-statickej-dopravy (`bb-dtm-bb-register-statickej-dopravy`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
 | DTM_BB-register-stlpov-VO (`bb-dtm-bb-register-stlpov-vo`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (185 KiB): a PDF map sheet, no data |
 | DTM_BB-register-verejnej-zelene-1 (`bb-dtm-bb-register-verejnej-zelene-1`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (43 KiB): a PDF map sheet, no data |
-| DTM_BB-register-verejnej-zelene-2 (`bb-dtm-bb-register-verejnej-zelene-2`) | banskabystrica | not-ingestible | a ZIP of 3 .atr, 3 .cpg, 3 .dbf, 3 .shp, 3 .shx (732 KiB): Esri shapefiles; no ingestion path reads a shapefile today |
+| DTM_BB-register-verejnej-zelene-2 (`bb-dtm-bb-register-verejnej-zelene-2`) | banskabystrica | no-data-source | a ZIP of 3 .atr, 3 .cpg, 3 .dbf, 3 .shp, 3 .shx (732 KiB): every member is encrypted (a password is required) |
 | DTM_BB-register-verejnej-zelene-3 (`bb-dtm-bb-register-verejnej-zelene-3`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (194 KiB): a PDF map sheet, no data |
 | DTM_BB-register-vodorovneho-dopravneho-znacenia (`bb-dtm-bb-register-vodorovneho-dopravneho-znacenia`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |
 | DTM_BB-register-zvisleho-dopravneho-znacenia (`bb-dtm-bb-register-zvisleho-dopravneho-znacenia`) | banskabystrica | no-data-source | a ZIP of 1 .pdf (193 KiB): a PDF map sheet, no data |

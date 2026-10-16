@@ -125,7 +125,9 @@
    "members": 1,
    "extensions": {
     "pdf": 1
-   }
+   },
+   "encrypted": 0,
+   "probed": "2026-10-16T10:30Z"
   },
   "a2dfa37e-81cf-4b07-b844-cdc0163ede13": {
    "status": 200,
@@ -332,7 +334,9 @@
    "members": 1,
    "extensions": {
     "pdf": 1
-   }
+   },
+   "encrypted": 0,
+   "probed": "2026-10-16T10:30Z"
   },
   "ca90b073-15e4-448b-a47d-c3d0dc842312": {
    "status": 200,
@@ -341,7 +345,9 @@
    "members": 1,
    "extensions": {
     "pdf": 1
-   }
+   },
+   "encrypted": 0,
+   "probed": "2026-10-16T10:30Z"
   },
   "c39cea29-f13c-4a19-ad5c-da8c135ad4fa": {
    "status": 200,
@@ -350,7 +356,9 @@
    "members": 1,
    "extensions": {
     "pdf": 1
-   }
+   },
+   "encrypted": 0,
+   "probed": "2026-10-16T10:30Z"
   },
   "2cd831ea-ca84-46df-b64f-ed33c89a0932": {
    "status": 200,
@@ -404,7 +412,9 @@
    "members": 1,
    "extensions": {
     "pdf": 1
-   }
+   },
+   "encrypted": 0,
+   "probed": "2026-10-16T10:30Z"
   },
   "d675d21e-d920-4ac5-9f49-7655d76548e9": {
    "status": 200,
@@ -508,7 +518,9 @@
    "members": 1,
    "extensions": {
     "pdf": 1
-   }
+   },
+   "encrypted": 0,
+   "probed": "2026-10-16T10:30Z"
   },
   "b33615cd-ed6b-4a90-aece-498a3bffea9b": {
    "status": 200,
@@ -521,7 +533,9 @@
     "dbf": 3,
     "shp": 3,
     "shx": 3
-   }
+   },
+   "encrypted": 15,
+   "probed": "2026-10-16T10:30Z"
   },
   "bc93b9cd-95cf-4425-8970-7473b574a3a9": {
    "status": 200,
@@ -530,7 +544,9 @@
    "members": 1,
    "extensions": {
     "pdf": 1
-   }
+   },
+   "encrypted": 0,
+   "probed": "2026-10-16T10:30Z"
   },
   "08453fc0-97f1-4eeb-8c90-06b24ec33d5b": {
    "status": 200,
@@ -539,7 +555,9 @@
    "members": 1,
    "extensions": {
     "pdf": 1
-   }
+   },
+   "encrypted": 0,
+   "probed": "2026-10-16T10:30Z"
   },
   "b65d9aac-a6ff-45c1-bbcf-7c26c1db3995": {
    "status": 200,
@@ -548,7 +566,9 @@
    "members": 1,
    "extensions": {
     "pdf": 1
-   }
+   },
+   "encrypted": 0,
+   "probed": "2026-10-16T10:30Z"
   },
   "a99468ba-1370-44ce-8989-c0571ffd2b2a": {
    "status": 200,
@@ -557,7 +577,9 @@
    "members": 1,
    "extensions": {
     "pdf": 1
-   }
+   },
+   "encrypted": 0,
+   "probed": "2026-10-16T10:30Z"
   },
   "37f6a1d1-ca39-4b4b-bbeb-7ee1f93e204c": {
    "status": 200,
@@ -566,7 +588,9 @@
    "members": 1,
    "extensions": {
     "pdf": 1
-   }
+   },
+   "encrypted": 0,
+   "probed": "2026-10-16T10:30Z"
   },
   "2066de2e-b98f-404c-93c2-636c72e12ffb": {
    "status": 200,
@@ -575,7 +599,9 @@
    "members": 1,
    "extensions": {
     "pdf": 1
-   }
+   },
+   "encrypted": 0,
+   "probed": "2026-10-16T10:30Z"
   },
   "5c358e8e-d404-4d98-98e9-e72424d31834": {
    "status": 200,
@@ -584,7 +610,9 @@
    "members": 1,
    "extensions": {
     "pdf": 1
-   }
+   },
+   "encrypted": 0,
+   "probed": "2026-10-16T10:30Z"
   },
   "8adfed65-1307-400e-9fb4-a88142bb8e34": {
    "status": 200,
@@ -593,7 +621,9 @@
    "members": 1,
    "extensions": {
     "pdf": 1
-   }
+   },
+   "encrypted": 0,
+   "probed": "2026-10-16T10:30Z"
   },
   "6069bfd2-bd67-4b76-be90-f1614b156e73": {
    "status": 200,
@@ -602,7 +632,9 @@
    "members": 1,
    "extensions": {
     "geojson": 1
-   }
+   },
+   "encrypted": 0,
+   "probed": "2026-10-16T10:30Z"
   },
   "df80eae5-8687-43f9-8a9e-63cb4173b9d0": {
    "status": 200,
@@ -611,7 +643,9 @@
    "members": 1,
    "extensions": {
     "pdf": 1
-   }
+   },
+   "encrypted": 0,
+   "probed": "2026-10-16T10:30Z"
   },
   "72a5c9d1-64f7-4b98-8590-30dbe765e750": {
    "status": 200,
@@ -620,7 +654,9 @@
    "members": 1,
    "extensions": {
     "pdf": 1
-   }
+   },
+   "encrypted": 0,
+   "probed": "2026-10-16T10:30Z"
   },
   "dcd35739-3b47-4722-8c80-380d89d864e8": {
    "status": 200,

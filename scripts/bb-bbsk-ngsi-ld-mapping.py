@@ -148,17 +148,19 @@ def zip_members(url: str) -> dict:
         return info
     count, cd_size, cd_off = struct.unpack("<HII", buf[at + 10:at + 20])
     cd = buf[cd_off - (size - tail):] if cd_off >= size - tail else b""
-    names, i = [], 0
+    names, encrypted, i = [], 0, 0
     while len(names) < count and cd[i:i + 4] == b"PK\x01\x02":
+        flags, = struct.unpack("<H", cd[i + 8:i + 10])
         n, e, c = struct.unpack("<HHH", cd[i + 28:i + 34])
         names.append(cd[i + 46:i + 46 + n].decode("utf-8", "replace"))
+        encrypted += bool(flags & 1) and not names[-1].endswith("/")
         i += 46 + n + e + c
     exts: dict[str, int] = {}
     for n in names:
         if "." in n and not n.endswith("/"):
             x = n.rsplit(".", 1)[1].lower()
             exts[x] = exts.get(x, 0) + 1
-    return {**info, "members": len(names), "extensions": exts}
+    return {**info, "members": len(names), "extensions": exts, "encrypted": encrypted}
 
 
 def zip_geojson(url: str) -> dict:
@@ -435,6 +437,11 @@ def plan(d: dict, probe_: dict, fetched: str) -> dict:
         shp = "shp" in exts
         why = (f"a ZIP of {', '.join(f'{n} .{x}' for x, n in sorted(exts.items()))} ({p.get('size', 0) // 1024} KiB)"
                if exts else f"a ZIP that answered {p.get('status')}")
+        if exts and p.get("encrypted") == sum(exts.values()):
+            # Found on 2026-10-16 (T-4317): every member needs a password, so the archive is no
+            # open data at all, whatever format sits inside.
+            return {**entry, "status": "no-data-source", "reason": why + ": every member is encrypted (a password is required)",
+                    "tried": [r["url"]]}
         if "geojson" in exts:
             why += f": larger than the {ZIP_LIMIT >> 20} MiB this round loads into the one broker"
         elif shp:

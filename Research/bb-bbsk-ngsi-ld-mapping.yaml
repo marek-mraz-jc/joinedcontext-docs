@@ -432,9 +432,10 @@ datasets:
   name: bb-dtm-bb-register-verejnej-zelene-2
   org: banskabystrica
   title: DTM_BB-register-verejnej-zelene-2
-  status: not-ingestible
-  reason: 'a ZIP of 3 .atr, 3 .cpg, 3 .dbf, 3 .shp, 3 .shx (732 KiB): Esri shapefiles; no ingestion path reads a
-    shapefile today'
+  status: no-data-source
+  reason: 'a ZIP of 3 .atr, 3 .cpg, 3 .dbf, 3 .shp, 3 .shx (732 KiB): every member is encrypted (a password is required)'
+  tried:
+  - https://dtm-banskabystrica.tmapserver.sk/opendata/bb_pazel_shp.zip
 - id: f08602e6-ec95-43a7-b13d-44320f1caa46
   name: bb-dtm-bb-register-verejnej-zelene-3
   org: banskabystrica
