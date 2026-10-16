@@ -81,7 +81,7 @@ The queue has two lanes, so a long harvest never holds a live poller:
 | `batch` | clock of 5 minutes or longer, and run-once pipelines | `JC_PORTAL_PIPELINES_BATCH_CONCURRENCY`, default 1 |
 | `short` | clock shorter than 5 minutes | `JC_PORTAL_PIPELINES_SHORT_CONCURRENCY`, default 1 |
 
-A pipeline still queued or running when its next run comes due keeps its one entry: the runs coalesce, never queue twice. `status.phase` is `Live` with the condition `Scheduled` (`Queued`, `Running` or `Waiting`, with the next run and the last run's end) while its runs succeed, and `Error` with the reason while its last run failed or timed out. The Portal exports `jc_pipeline_queue_depth{lane}` and `jc_pipeline_run_seconds{outcome}` (`finished`, `failed`, `timeout`). On a Portal start every run-and-delete pipeline's stream is removed from the runner once, so a stream loaded by an older Portal or a crashed run does not stay.
+A pipeline still queued or running when its next run comes due keeps its one entry: the runs coalesce, never queue twice. `status.phase` is `Live` with the condition `Scheduled` (`Queued`, `Running` or `Waiting`, with the next run and the last run's end) while its runs succeed, and `Error` with the reason while its last run failed or timed out. The Portal exports `jc_pipeline_queue_depth{lane}` and `jc_pipeline_run_seconds{outcome}` (`finished`, `failed`, `timeout`). A steward starts one run outside the schedule with `POST …/pipelines/{name}/runs` (API/01 §7c); it joins the same queue. On a Portal start every run-and-delete pipeline's stream is removed from the runner once, so a stream loaded by an older Portal or a crashed run does not stay.
 
 ## 2. Bento Streams Mode Architecture
 
