@@ -16,13 +16,13 @@ Platform components are cleanly partitioned between core services and pluggable 
 
 ### Context Gateway (`context-gateway`)
 
-- **Primary Role:** Policy Enforcement Point (PEP), query AST rewriter via `antares-ql`, representation translation engine, and MCP façade.
-- **Interfaces:** Inbound HTTPS from APISIX; outbound HTTP/2 to Context Broker; outbound HTTPS to Keycloak JWKS; policy space subscription for in-process PDP updates.
+- **Primary Role:** Token verification, endpoint slug to broker view mapping, write checks (identifiers, units, relationships, minted ids, creates) and the `file.*`, STA and DCAT representations; NGSI-LD and the broker's other surfaces are forwarded to the Endpoint's view, whose policy engine decides ([ADR-N-050](../Decisions/adr-n-050-broker-views-decide-context-data.md)). Its in-process PDP still decides discovery, schema visibility, WebSocket fan-out and write-rule targets.
+- **Interfaces:** Inbound HTTPS from APISIX; outbound HTTP/2 to the Endpoint's broker view (`/x/views/{view}`) with the verified caller in `x-jc-*` headers; outbound HTTPS to Keycloak JWKS; policy space subscription for the PDP's remaining decisions.
 - **State & Failure Behavior:** Completely stateless. Horizontally scalable via Kubernetes HPA. If the in-process PDP grant cache is stale or uninitialized, the gateway fails closed, returning HTTP 503 (GW5, R48).
 
 ### Antares Context Broker (`context-broker`)
 
-- **Primary Role:** Spec-native ETSI GS CIM 009 context broker managing current entity state, temporal records, and context subscriptions.
+- **Primary Role:** ETSI GS CIM 009 context broker managing current entity state, temporal records, and context subscriptions; one view per Endpoint and the `joinedcontext` policy engine decide and narrow every data request under the Portal's rule documents (ADR-N-050).
 - **Interfaces:** HTTP/2 CIM 009 REST endpoints; TCP PostgreSQL protocol with CNPG.
 - **State & Failure Behavior:** Stateless broker workers backed by PostgreSQL. Scale-out read replicas supported via streaming replication. Unreachable database triggers HTTP 503 on incoming broker requests.
 

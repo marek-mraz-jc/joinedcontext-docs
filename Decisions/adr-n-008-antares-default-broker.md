@@ -9,6 +9,15 @@ Date: 2026-09-05
 Status: Accepted  
 Decision Makers: Architecture Board
 
+:::warning Antares is no longer policy-free
+Decision 2 (a vanilla, policy-free broker) and decision 3 (Scorpio and Stellio as drop-in
+replacements) no longer hold. The platform depends on Antares's Endpoint views (`/x/views`), its
+rule documents (`/q/policy`, `/q/schemas`, `/q/retention`, `/q/quality`) and the `x-jc-*` subject
+headers its `joinedcontext` policy engine decides by. A broker that replaces Antares must offer
+those surfaces; a vanilla CIM 009 broker would serve unfiltered data. See
+[ADR-N-050](adr-n-050-broker-views-decide-context-data.md), decision 4.
+:::
+
 ## 1. Context
 
 CIVITAS/CORE v2 evaluated context broker technology for IoT and smart city data. Historical implementations frequently struggled with heavy JVM broker implementations (Scorpio, Stellio) that required significant heap memory (2–4 GB), exhibited slow boot times, and complicated edge deployments.

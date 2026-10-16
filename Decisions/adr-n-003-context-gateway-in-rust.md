@@ -6,8 +6,18 @@ title: "ADR-N-003: Context Gateway in Rust with Embedded Policy Evaluation"
 # ADR-N-003: Context Gateway in Rust with Embedded Policy Evaluation
 
 Date: 2026-09-05  
-Status: Accepted  
-Decision Makers: Architecture Board
+Status: Superseded  
+Decision Makers: Architecture Board  
+Superseded by: [ADR-N-050](adr-n-050-broker-views-decide-context-data.md)
+
+:::warning Where the decision is taken since T-3643
+Decisions 2 and 3 below (the gateway rewrites the query and evaluates the grants) no longer
+describe the data path. Since T-3643 the gateway forwards an NGSI-LD request to the broker's view
+of the Endpoint with the caller's query as sent, and the broker's `joinedcontext` policy engine
+decides and narrows it; the gateway verifies the token, maps the slug and checks writes.
+[ADR-N-050](adr-n-050-broker-views-decide-context-data.md) records the split and the four
+questions the gateway's PDP still answers. Decision 1 (a Rust gateway) and decision 4 stand.
+:::
 
 :::note One grammar, and what carries it today
 Decision 2 says the gateway parses `q`, `scopeQ` and `geoQ` with the broker's own
