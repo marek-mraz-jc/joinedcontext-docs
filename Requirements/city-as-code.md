@@ -37,6 +37,11 @@ one or more manifests; *flow*, a blueprint instance as shown to [H] users.
   plane (no YAML/Git awareness), MUST NOT require vendor extensions for
   any capability of this document, and MUST remain independently
   upgradable and replaceable by any other compliant broker.
+
+  Note (2026-10-16, non-normative): on `dev` the broker is not vanilla. It serves one view per
+  Endpoint and decides every data request with its `joinedcontext` policy engine
+  ([ADR-N-050](../Decisions/adr-n-050-broker-views-decide-context-data.md)), so a vanilla broker
+  could not replace it. Amending CC-01 is the owner's decision.
 - **CC-02** — The city repository MUST be the single source of truth for
   all declarative platform configuration: context spaces/tenants,
   Context Source Registrations, subscriptions, pipeline configurations,
