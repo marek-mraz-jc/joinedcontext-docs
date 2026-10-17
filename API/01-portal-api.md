@@ -81,8 +81,14 @@ A client that reads the status code and then `type` or `error` handles all of th
 
 Humans reach the portal through the browser, never with a bearer token of their own. The
 authorization code flow with PKCE runs server-side and the result is an encrypted session cookie
-(`jc_session`, `Secure`, `HttpOnly`, `SameSite=Lax`); a second, deliberately readable cookie
-(`jc_csrf`) carries the double-submit token the SPA echoes in `x-csrf-token` on every mutation.
+(`__Host-jc_session`, `Secure`, `HttpOnly`, `SameSite=Lax`); a second, deliberately readable
+cookie (`__Host-jc_csrf`) carries the double-submit token the SPA echoes in `x-csrf-token` on
+every mutation. Every Portal cookie (`__Host-jc_session`, `__Host-jc_refresh`,
+`__Host-jc_oidc_flow`, `__Host-jc_csrf`) and every edge session cookie carries the `__Host-`
+prefix, `Secure` and `Path=/` and no `Domain`, removals included: an App on
+`{name}.apps.{domain}` may set a cookie for `{domain}`, and the browser keeps none of those under
+a `__Host-` name, so a planted cookie never rides beside the real one under its name (AP-29,
+T-4395).
 
 | Method | Path | Purpose |
 |---|---|---|
@@ -1618,8 +1624,10 @@ to the Context Gateway, for the App's own endpoints only (Deployment/10, AP-133)
   app that is not published or not the caller's to read, and a build with no such function are
   `404`; a body that is not JSON is `400`, one over 256 KiB `413`, a full runtime `429` with
   `Retry-After`. A call that carries the edge's token also carries `X-CSRF-Token` matching the
-  `jc_csrf` cookie, or it is `403`: the edge sets the token from a cookie a cross-site form would
-  send too. The host sets that cookie on the apps origin with a signed-in person's first index.
+  `__Host-jc_csrf` cookie, or it is `403`: the edge sets the token from a cookie a cross-site form
+  would send too. The host sets that cookie on the apps origin with a signed-in person's first
+  index, and a copy of the same token as `jc_csrf` for an App built on an SDK before T-4395; only
+  `__Host-jc_csrf` is compared.
 
 ### 12a. The build of an application (AP-100, AP-103, ADR-N-028)
 

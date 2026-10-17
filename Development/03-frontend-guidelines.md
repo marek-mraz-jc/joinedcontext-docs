@@ -40,7 +40,7 @@ export function useSpace(project: string, name: string) {
 }
 ```
 
-Mutations go through the same client: `csrfMiddleware` in `src/api/client.ts` echoes the `jc_csrf` double-submit cookie on every method that is not GET, HEAD or OPTIONS, so a hand-rolled `fetch` is a write the backend refuses.
+Mutations go through the same client: `csrfMiddleware` in `src/api/client.ts` echoes the `__Host-jc_csrf` double-submit cookie on every method that is not GET, HEAD or OPTIONS, so a hand-rolled `fetch` is a write the backend refuses.
 
 ## 2. Form Generation with `react-jsonschema-form` (RJSF)
 
