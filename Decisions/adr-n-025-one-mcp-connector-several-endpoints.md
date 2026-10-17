@@ -90,6 +90,33 @@ The owner asked that one pasted connector be a full NGSI-LD client: an agent lea
 
 Requirement: EP-116.
 
+### 4d. Ten thousand Endpoint scopes (addendum, 2026-10-17, T-4449, owner order: 10,000 Endpoints fast)
+
+Measured on Keycloak 26.8.0 at the deployment's pinned digest (`sha256:27b3230f…`), production mode on Postgres 17, in a throwaway container, not `dev`. One realm per N, `mcp-hub` as the deployment renders it, N optional scopes shaped as the reconciler writes them. Median of 3 where repeated; seconds.
+
+| Step | N = 1,000 | N = 10,000 |
+|---|---|---|
+| Realm import with the N scopes linked to `mcp-hub` | 35.8 | fails: aborted at Keycloak's 300 s transaction timeout |
+| Realm import, scopes not linked | 7.0 (1 run) | 298.8 (1 run) |
+| Restart to ready | 7.1 | 8.8 |
+| The realm's first OIDC answer after a restart | 1.41 | 7.31 |
+| Login page, 5 `endpoint:` scopes asked | 0.026 | 0.52 |
+| Login POST | 0.041 | 0.34 |
+| Consent page | 0.009 | 0.041 |
+| Consent POST | 0.033 | 0.26 |
+| Code → token (the token carries exactly the 5) | 0.026 | 0.95 |
+| Admin-permissions Job link pass, nothing new | 5.6 | 9.4 |
+| Its first run, every scope new (900 s Job timeout) | linked 916 in 900 | linked 874 in 900 |
+| The same links over the admin API, 8 in parallel | | 9,126 in 52.9 (5.8 ms each) |
+
+Over one second at 10,000: the realm import, the first answer after a restart, a token about to cross it, and the Job, whose one `kcadm` JVM per link (1 s each here, 8 s each on `dev` on 2026-10-11) never converges a fresh realm. Options:
+
+- **Keep one `endpoint:{slug}` scope per Endpoint**, and link them in one process. The consent screen and EP-88 stay exact; login cost grows with N (0.95 s per token at 10,000); a cold realm answers its first request in 7 s once per restart.
+- **One scope per project**, the Endpoint list as a claim. A few dozen scopes, so login stays flat; the person picks projects, not Endpoints, which narrows less than EP-88 asks.
+- **Keycloak's dynamic scope `endpoint:{slug}`** (one parameterised scope). Flat cost and exact consent, but the feature is a Keycloak preview, which the platform does not run in production.
+
+**Decided (worker-4, owner may override): keep the per-Endpoint scopes**, because they are the only option that keeps EP-88 exact on a supported Keycloak feature. Two changes follow: the link pass runs as one process speaking the admin API (the measured 5.8 ms per link), not one JVM per link; and no realm import ever carries the `endpoint:` scopes, which the Portal writes over the admin API as it does today. Revisit with the dynamic scope when Keycloak makes it supported, or when a deployment's token median passes one second.
+
 ## 5. Alternatives Considered
 
 | Alternative | Why not |
