@@ -624,6 +624,7 @@ Generated 2026-10-17 from: `docs` 84a13b5, `conformance` 1d4bd95, `deployment` 2
 | **EP-121** | [A] | open |  |  |
 | **EP-122** | [A][S] | open |  |  |
 | **EP-123** | [S] | open |  |  |
+| **EP-124** | [A] | open |  |  |
 | **EP-46** | [P] [A] | tested | ci-full, conformance, fast ci | conformance `tests/mcp/test_mcp_read_parity.py::test_a_document_tool_answers_what_its_rest_route_serves`, conformance `tests/schemathesis/test_gateway_endpoints.py::test_ep46_schema_directory_artifacts`, platform `crates/context-gateway/tests/describedby_link_tests.rs::an_endpoint_with_two_majors_names_four_documents`, and 12 more |
 | **EP-47** | [P] | tested | ci-full, conformance, fast ci | conformance `tests/models/test_endpoint_schema.py::test_dm46_pyshacl_accepts_an_entity_the_endpoint_serves`, deployment `tests/test_context_gateway.py::test_the_public_grant_hides_exactly_the_two_attributes_the_demo_shows_hidden`, platform `crates/context-gateway/src/handlers/schema.rs::a_prohibition_takes_back_a_type_or_the_attributes_it_names`, and 11 more |
 | **EP-48** | [P] | tested | ci-full, conformance | conformance `tests/schemathesis/test_gateway_endpoints.py::test_ep48_schema_etag_and_caching`, platform `crates/context-gateway/tests/mcp_schema_tests.rs::the_digest_in_the_summary_is_the_digest_of_the_document`, platform `crates/context-gateway/tests/schema_view_tests.rs::a_revalidation_is_the_brokers_304` |
