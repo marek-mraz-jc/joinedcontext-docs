@@ -2398,10 +2398,15 @@ write to the live space and adopt is a write to the repository, so neither is a 
 
 ## 21. Operations and the Portal MCP (AG-59, AG-60, AG-61, AG-62, AG-77)
 
-One registry behind every door (ADR-N-021). An operation lets through whom the REST route of the same action lets through (PF-50, AG-77): `jc_resource_list` and `jc_resource_get` any signed-in person, `jc_resource_propose` and `jc_resource_delete` a binding with `propose` or `delete` on the kind, `jc_change_approve` and `jc_change_reject` a binding with `approve`, on the change's kind once the change is read; any other operation its verb on its kind, or a grant in the project when it names no verb. A refusal is `403` naming the verb and the kind, the same words as the route's, except that a removal of a resource the caller may not read answers the `404` of a name that does not exist, so a removal never tells whether something is there (R20, PF-59); input is validated against the operation's schema with unknown fields refused (`422`, the schema path). MCP `tools/list` lists exactly the operations the caller would be let through (T-4453 removed
-the `GET …/ops` route that listed them beside it). A `verdict_required` refusal names the check to run and why in `reason` (`verdict_absent`, `verdict_failed` or `stale`) and says it in `detail`, one sentence a page shows as it is; a form writes the draft it shows before it proposes that draft, so a proposal never takes an older manifest than the one on screen.
+One registry behind every door (ADR-N-021). An operation lets through whom the REST route of the same action lets through (PF-50, AG-77): `jc_resource_list` and `jc_resource_get` any signed-in person, `jc_resource_propose` and `jc_resource_delete` a binding with `propose` or `delete` on the kind, `jc_change_approve` and `jc_change_reject` a binding with `approve`, on the change's kind once the change is read; any other operation its verb on its kind, or a grant in the project when it names no verb. A refusal is `403` naming the verb and the kind, the same words as the route's, except that a removal of a resource the caller may not read answers the `404` of a name that does not exist, so a removal never tells whether something is there (R20, PF-59); input is validated against the operation's schema with unknown fields refused (`422`, the schema path). `GET …/ops` lists exactly the operations the caller would be let through. A `verdict_required` refusal names the check to run and why in `reason` (`verdict_absent`, `verdict_failed` or `stale`) and says it in `detail`, one sentence a page shows as it is; a form writes the draft it shows before it proposes that draft, so a proposal never takes an older manifest than the one on screen.
 
 ```text
+GET  /api/v1/projects/{project}/ops
+  → 200 [{ "name": "jc_datasource_check", "title": "…", "description": "…",
+           "inputSchema": {…}, "outputSchema": {…},
+           "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true },
+           "lane": "green" }, …]          # only what this caller may run
+
 POST /api/v1/projects/{project}/ops/{name}
   body: the operation's input; a draft may be named instead of a manifest:
         { "draft": { "kind": "DataSource", "name": "hsl-citybikes-free" } }
@@ -2464,7 +2469,7 @@ route's problem document.
   An assistant or application run calling jc_change_approve or jc_change_reject is refused
   (AG-11): 403 problem "an agent never approves or rejects a change; a person does (AG-11)".
   Five more operations are the person's in the same way, refused for a run whatever its profile
-  names and so absent from its `tools/list`: jc_run_create, jc_run_cancel and
+  names and so absent from its `GET …/ops` and its `tools/list`: jc_run_create, jc_run_cancel and
   jc_run_publish (a run does not drive another run), jc_run_answer (a run does not answer the
   question a run asked the person it acts for, AG-45), and jc_service_account_key_mint,
   jc_service_account_key_rotate and jc_service_account_key_revoke (a run does not mint or retire
@@ -2499,7 +2504,7 @@ MCP (Streamable HTTP, protocol 2026-07-28):
   `initialize` and `server/discover` answer the client's own revision when it names one of them
   and `2026-07-28` otherwise — never the client's string for a revision the server does not
   implement, which would move the disagreement from the handshake to the first unknown method.
-  tools/list = the registry, the operations this caller is let through.
+  tools/list = the registry as GET …/ops shows it to this caller.
   resources/list and resources/read serve, for the caller's own bindings (AG-60):
     jc://schemas/{Kind}                       the kind's JSON Schema
     jc://{project}/{plural}/{name}            one manifest
