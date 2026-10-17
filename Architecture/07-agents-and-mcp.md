@@ -374,6 +374,8 @@ The deployment defines one Keycloak client for the mobile apps, `mcp-mobile` (`c
 
 **A named server over chosen Endpoints.** An `McpServer` manifest (MF-53, ADR-N-043) curates up to ten Endpoints, of any project, into one address, `https://{host}/api/mcp/{project}/{name}`, with its own protected-resource metadata and Keycloak client. It offers the hub's catalogue narrowed to the members this caller may read; a read without `endpoint` visits each such member as that member's own call and answers one result per member, never blended (EP-92…EP-96). A member the caller may not read is never named; a member that fails is named in a `partial` answer.
 
+**Connector profiles (ADR-N-043 §7, T-4504).** A server may `select` Endpoints by project, space, domain, theme and access level instead of, or beside, naming them; the gateway resolves the selector per call from the caller's own reach, so it only narrows, and a public server selects public Endpoints only (EP-120, MF-55). A read without `endpoint` fans out over ten Endpoints at most; past that the agent searches the `catalog` first (EP-121). Every organization has `org/all` (EP-122), an AssistantDeployment names its server in `spec.mcpServer` (MF-56), and a person keeps up to ten personal connectors with their favourite Endpoints in the Portal, served at `/api/mcp/me/{name}` to them alone (EP-123, UI-98).
+
 Setting it up:
 
 1. Portal, Endpoints view, copy the endpoint's MCP URL.

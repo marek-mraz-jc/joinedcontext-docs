@@ -620,6 +620,10 @@ Generated 2026-10-17 from: `docs` 84a13b5, `conformance` 1d4bd95, `deployment` 2
 | **EP-44** | [P] | tested | ci-full, fast ci | platform `crates/context-gateway/src/translators/tabular.rs::column_names_carry_past_z`, platform `crates/context-gateway/src/translators/tabular.rs::a_control_character_never_reaches_the_workbook`, platform `crates/context-gateway/tests/attack_resource_bomb_tests.rs::a_download_of_a_dataset_that_never_ends_is_refused_at_the_row_ceiling`, and 66 more |
 | **EP-45** | [P] | tested | ci-full, fast ci | platform `crates/context-gateway/src/translators/tabular.rs::column_names_carry_past_z`, platform `crates/context-gateway/src/translators/tabular.rs::a_control_character_never_reaches_the_workbook`, platform `crates/context-gateway/tests/edge_gateway_tabular_tests.rs::an_answer_that_is_not_entities_is_an_empty_table_and_not_an_error`, and 28 more |
 | **EP-119** | [P] | tested | ci-full | platform `crates/context-gateway/tests/tabular_translator_tests.rs::parquet_columns_are_typed_by_their_values`, platform `crates/context-gateway/tests/tabular_translator_tests.rs::an_empty_answer_is_an_empty_parquet_file`, platform `crates/context-gateway/tests/tabular_translator_tests.rs::the_parquet_file_is_served_filtered_as_an_attachment` |
+| **EP-120** | [A][S] | open |  |  |
+| **EP-121** | [A] | open |  |  |
+| **EP-122** | [A][S] | open |  |  |
+| **EP-123** | [S] | open |  |  |
 | **EP-46** | [P] [A] | tested | ci-full, conformance, fast ci | conformance `tests/mcp/test_mcp_read_parity.py::test_a_document_tool_answers_what_its_rest_route_serves`, conformance `tests/schemathesis/test_gateway_endpoints.py::test_ep46_schema_directory_artifacts`, platform `crates/context-gateway/tests/describedby_link_tests.rs::an_endpoint_with_two_majors_names_four_documents`, and 12 more |
 | **EP-47** | [P] | tested | ci-full, conformance, fast ci | conformance `tests/models/test_endpoint_schema.py::test_dm46_pyshacl_accepts_an_entity_the_endpoint_serves`, deployment `tests/test_context_gateway.py::test_the_public_grant_hides_exactly_the_two_attributes_the_demo_shows_hidden`, platform `crates/context-gateway/src/handlers/schema.rs::a_prohibition_takes_back_a_type_or_the_attributes_it_names`, and 11 more |
 | **EP-48** | [P] | tested | ci-full, conformance | conformance `tests/schemathesis/test_gateway_endpoints.py::test_ep48_schema_etag_and_caching`, platform `crates/context-gateway/tests/mcp_schema_tests.rs::the_digest_in_the_summary_is_the_digest_of_the_document`, platform `crates/context-gateway/tests/schema_view_tests.rs::a_revalidation_is_the_brokers_304` |
@@ -793,6 +797,8 @@ Generated 2026-10-17 from: `docs` 84a13b5, `conformance` 1d4bd95, `deployment` 2
 | **MF-52** | [S] | tested | ci-full, fast ci | deployment `tests/test_catalogue_assistant_seed.py::test_the_catalogue_assistant_answers_from_the_whole_data_portal`, deployment `tests/test_catalogue_assistant_seed.py::test_a_public_channel_reads_public_sources_and_public_endpoints_only`, deployment `tests/test_catalogue_assistant_seed.py::test_it_is_placed_on_the_data_portal_alone_and_its_spending_is_bounded`, and 30 more |
 | **MF-53** | [S] | tested | ci-full, fast ci | platform `crates/context-gateway/tests/mcp_server_tests.rs::the_store_loads_each_server_with_its_members_slugs`, platform `crates/jc-core/src/kinds/mcp_server.rs::one_to_ten_distinct_endpoint_members_of_a_project`, platform `crates/jc-core/src/kinds/mcp_server.rs::a_server_of_the_organization_names_each_members_project`, and 23 more |
 | **MF-54** | [S] | tested | ci-full, fast ci | deployment `tests/test_mqtt_brokers.py::test_each_broker_is_one_release_with_its_own_identity`, deployment `tests/test_mqtt_brokers.py::test_the_last_acl_rule_denies_everything_and_nothing_is_stored`, deployment `tests/test_mqtt_brokers.py::test_only_the_two_plain_listeners_are_open`, and 39 more |
+| **MF-55** | [S] | open |  |  |
+| **MF-56** | [S] | open |  |  |
 
 ### MIM — OASC interoperability
 
@@ -1413,6 +1419,7 @@ Generated 2026-10-17 from: `docs` 84a13b5, `conformance` 1d4bd95, `deployment` 2
 | **UI-95** | [H] | open |  |  |
 | **UI-96** | [H] | open |  |  |
 | **UI-97** | [H] | open |  |  |
+| **UI-98** | [S] | open |  |  |
 
 ## Related
 
