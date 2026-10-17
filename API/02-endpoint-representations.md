@@ -226,7 +226,7 @@ Converts spatial NGSI-LD entities into standard RFC 7946 GeoJSON.
 ## 4. Tabular CSV Representation
 
 Path: `/api/endpoint/{endpointSlug}/file.csv` (also `file.geojson`, `file.json`, `file.xlsx`,
-`file.zip`; EP-41…EP-45)
+`file.parquet`, `file.zip`; EP-41…EP-45, EP-119)
 
 Which of them an Endpoint answers is `spec.enabledRepresentations`, plus `ngsi-ld`, `geojson` and
 `mcp`, which every Endpoint serves whether or not it lists them (EP-10, EP-24); a manifest that omits the
@@ -354,6 +354,29 @@ advertises is therefore also the memory one download may claim, which is why the
 A type whose schema the caller may not read in full contributes the granted projection of that
 schema, the same document `schema/` would serve, so a bundle never widens what the endpoint
 narrows (EP-47).
+
+---
+
+## 5b. Apache Parquet
+
+Path: `/api/endpoint/{endpointSlug}/file.parquet` (`Representation` `parquet`, EP-119)
+
+The rows of `file.csv` (§4) as one Apache Parquet file, the format a data scientist loads into
+pandas, Polars, DuckDB or Spark without parsing text. `Content-Type: application/vnd.apache.parquet`
+and `Content-Disposition: attachment; filename="{slug}.parquet"`.
+
+- One column per flattened path of §4, in the same order, under the same name; `humanHeaders=true`
+  renames them as it renames the CSV header.
+- A column is typed by its values: `INT64` when every value it holds is a JSON integer, `DOUBLE`
+  when every one is a number, `BOOLEAN` when every one is a boolean, and a UTF-8 string otherwise.
+  A column that mixes kinds is a string column, each value written as the CSV writes it.
+- Every column is optional: a row whose entity has no value at that path holds null, never an empty
+  string.
+- The file's key-value metadata carries what the `metadata` sheet of the workbook carries (§5): the
+  space, the endpoint slug, the export instant, the query and the row count.
+- One row group, no compression. The limits of §4 apply: the file is assembled in a buffer
+  `spec.fileLimits.maxFileBytes` bounds, because a Parquet footer is written last, and a file past
+  either limit is refused whole with `413`.
 
 ---
 
