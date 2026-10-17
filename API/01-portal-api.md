@@ -2402,12 +2402,6 @@ One registry behind every door (ADR-N-021). An operation lets through whom the R
 the `GET …/ops` route that listed them beside it). A `verdict_required` refusal names the check to run and why in `reason` (`verdict_absent`, `verdict_failed` or `stale`) and says it in `detail`, one sentence a page shows as it is; a form writes the draft it shows before it proposes that draft, so a proposal never takes an older manifest than the one on screen.
 
 ```text
-GET  /api/v1/projects/{project}/ops
-  → 200 [{ "name": "jc_datasource_check", "title": "…", "description": "…",
-           "inputSchema": {…}, "outputSchema": {…},
-           "annotations": { "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true },
-           "lane": "green" }, …]          # only what this caller may run
-
 POST /api/v1/projects/{project}/ops/{name}
   body: the operation's input; a draft may be named instead of a manifest:
         { "draft": { "kind": "DataSource", "name": "hsl-citybikes-free" } }
