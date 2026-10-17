@@ -63,7 +63,7 @@ Family **UI** (UI-01…UI-97; UI-43 is unassigned). Owning chapters: [Architectu
 
 ## 7a. Federation graph
 
-- **UI-27** [H] — A project's federation graph (Context Spaces, Endpoints, `ContextSourceRegistration`s, Pipelines, Apps, the `CkanInstance`s an Endpoint publishes to, and external sources, with directed edges naming the manifest each comes from and a health of `ok`, `degraded` or `unknown` per node) MUST be derived from the manifests and reported health only and served by `GET /api/v1/projects/{project}/federation-graph`; no node MUST carry a token, a resolved `secretRef` or an external source's address (PF-48, EP-71).
+- **UI-27** [H] — A project's federation graph (Context Spaces, Endpoints, `ContextSourceRegistration`s, Pipelines, Apps, the `CkanInstance`s an Endpoint publishes to, and external sources, with directed edges naming the manifest each comes from and a health of `ok`, `degraded` or `unknown` per node) MUST be derived from the manifests and reported health only and served by the registry operation `jc_federation_graph` (`POST /api/v1/projects/{project}/ops/jc_federation_graph`); no node MUST carry a token, a resolved `secretRef` or an external source's address (PF-48, EP-71).
 - **UI-28** [H] — The Portal MUST NOT show a Federation page or a federation playground: registrations are manifests proposed through the change flow like any other (CC-34), and the graph of UI-27 stays an API answer for a tool that draws it, so the navigation carries no page every project would show empty.
 
 ## 8. Branding at runtime

@@ -759,7 +759,7 @@ For `spec.federation.identity`:
 
 ### The federation graph (UI-27, UI-28)
 
-The API serves this (`GET /api/v1/projects/{project}/federation-graph`); the Portal draws no page of it (UI-28), and a tool that draws it reads one shape:
+The API serves this as the operation `jc_federation_graph` (API/01 §17); the Portal draws no page of it (UI-28), and a tool that draws it reads one shape:
 
 | | |
 |---|---|

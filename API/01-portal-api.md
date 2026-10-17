@@ -1345,20 +1345,16 @@ POST /api/v1/webhooks/sync/{project}/{name}                  signed, no session
 
 ### The mirror itself (MF-04, CC-08, OPS-51)
 
-Four routes are about the Portal's own copy of the repository rather than about any project
-(`joinedcontext-portal/src/api/sync.rs`, `joinedcontext-portal/src/api/webhook.rs`,
-`joinedcontext-portal/src/api/health.rs`):
+Three routes are about the Portal's own copy of the repository rather than about any project
+(`joinedcontext-portal/src/api/webhook.rs`, `joinedcontext-portal/src/api/health.rs`); a replica
+is ready only once its first sync has landed (T-4453 removed `GET /api/v1/sync`, which nothing read):
 
 ```text
-GET  /api/v1/sync              how the background mirror sync stands; a session, no project
 POST /api/v1/webhooks/gitea    the forge's own hook: signed, no session
 GET  /api/v1/health            liveness; public
 GET  /api/v1/ready             readiness; public
 ```
 
-- `/sync` answers `lastSync` (a Unix instant), `revision`, `manifests`, `lastError` and `leader`,
-  which is the replica that reconciles. It never carries the repository URL, the branch or a
-  token: a browser reads it, and none of those is the browser's business.
 - `/webhooks/gitea` is what makes a merged change visible without waiting for the next tick. The
   body is authenticated by an HMAC-SHA256 in `x-gitea-signature` against the configured webhook
   secret, and the previous one while a rotation runs, so a rotation never closes the door
@@ -2178,10 +2174,11 @@ A write answers `202` with a `Change` like any other manifest, and a federation 
 takes the Red lane: it makes one tenant's data answerable in another, which is a decision a
 steward signs (CC-63). The manifest lands at `projects/{project}/spaces/{space}/registrations/{name}.yaml`.
 
-What needs a route of its own is the picture across five kinds at once:
+What needs an operation of its own is the picture across five kinds at once, the registry's
+`jc_federation_graph` (§21; T-4453 removed the `GET …/federation-graph` route beside it):
 
 ```text
-GET /api/v1/projects/{project}/federation-graph   who reads whose data, as nodes and edges
+POST /api/v1/projects/{project}/ops/jc_federation_graph   {}   who reads whose data, as nodes and edges
 ```
 
 ```json
@@ -2245,11 +2242,12 @@ GET /api/v1/projects/{project}/federation-graph   who reads whose data, as nodes
 
 ## 18. Assistant catalog search (AG-58, UI-46)
 
-The question a person asks the assistant, answered from the mirror (Architecture/09 §9). The same
-call is the assistant's `search_catalog` tool, so a run and a person get the same answer:
+The question a person asks the assistant, answered from the mirror (Architecture/09 §9) by the
+registry's `jc_catalog_search` (§21), which is also the assistant's `search_catalog` tool, so a
+run and a person get the same answer (T-4453 removed the `GET …/assistant/catalog` route beside it):
 
 ```text
-GET /api/v1/projects/{project}/assistant/catalog?q=bike%20availability&scope=Endpoint
+POST /api/v1/projects/{project}/ops/jc_catalog_search   { "q": "bike availability", "scope": "Endpoint" }
 ```
 
 ```json
@@ -2400,7 +2398,8 @@ write to the live space and adopt is a write to the repository, so neither is a 
 
 ## 21. Operations and the Portal MCP (AG-59, AG-60, AG-61, AG-62, AG-77)
 
-One registry behind every door (ADR-N-021). An operation lets through whom the REST route of the same action lets through (PF-50, AG-77): `jc_resource_list` and `jc_resource_get` any signed-in person, `jc_resource_propose` and `jc_resource_delete` a binding with `propose` or `delete` on the kind, `jc_change_approve` and `jc_change_reject` a binding with `approve`, on the change's kind once the change is read; any other operation its verb on its kind, or a grant in the project when it names no verb. A refusal is `403` naming the verb and the kind, the same words as the route's, except that a removal of a resource the caller may not read answers the `404` of a name that does not exist, so a removal never tells whether something is there (R20, PF-59); input is validated against the operation's schema with unknown fields refused (`422`, the schema path). `GET …/ops` lists exactly the operations the caller would be let through. A `verdict_required` refusal names the check to run and why in `reason` (`verdict_absent`, `verdict_failed` or `stale`) and says it in `detail`, one sentence a page shows as it is; a form writes the draft it shows before it proposes that draft, so a proposal never takes an older manifest than the one on screen.
+One registry behind every door (ADR-N-021). An operation lets through whom the REST route of the same action lets through (PF-50, AG-77): `jc_resource_list` and `jc_resource_get` any signed-in person, `jc_resource_propose` and `jc_resource_delete` a binding with `propose` or `delete` on the kind, `jc_change_approve` and `jc_change_reject` a binding with `approve`, on the change's kind once the change is read; any other operation its verb on its kind, or a grant in the project when it names no verb. A refusal is `403` naming the verb and the kind, the same words as the route's, except that a removal of a resource the caller may not read answers the `404` of a name that does not exist, so a removal never tells whether something is there (R20, PF-59); input is validated against the operation's schema with unknown fields refused (`422`, the schema path). MCP `tools/list` lists exactly the operations the caller would be let through (T-4453 removed
+the `GET …/ops` route that listed them beside it). A `verdict_required` refusal names the check to run and why in `reason` (`verdict_absent`, `verdict_failed` or `stale`) and says it in `detail`, one sentence a page shows as it is; a form writes the draft it shows before it proposes that draft, so a proposal never takes an older manifest than the one on screen.
 
 ```text
 GET  /api/v1/projects/{project}/ops
@@ -2471,7 +2470,7 @@ route's problem document.
   An assistant or application run calling jc_change_approve or jc_change_reject is refused
   (AG-11): 403 problem "an agent never approves or rejects a change; a person does (AG-11)".
   Five more operations are the person's in the same way, refused for a run whatever its profile
-  names and so absent from its `GET …/ops` and its `tools/list`: jc_run_create, jc_run_cancel and
+  names and so absent from its `tools/list`: jc_run_create, jc_run_cancel and
   jc_run_publish (a run does not drive another run), jc_run_answer (a run does not answer the
   question a run asked the person it acts for, AG-45), and jc_service_account_key_mint,
   jc_service_account_key_rotate and jc_service_account_key_revoke (a run does not mint or retire
@@ -2506,7 +2505,7 @@ MCP (Streamable HTTP, protocol 2026-07-28):
   `initialize` and `server/discover` answer the client's own revision when it names one of them
   and `2026-07-28` otherwise — never the client's string for a revision the server does not
   implement, which would move the disagreement from the handshake to the first unknown method.
-  tools/list = the registry as GET …/ops shows it to this caller.
+  tools/list = the registry, the operations this caller is let through.
   resources/list and resources/read serve, for the caller's own bindings (AG-60):
     jc://schemas/{Kind}                       the kind's JSON Schema
     jc://{project}/{plural}/{name}            one manifest
@@ -3138,7 +3137,6 @@ read and never widens it (ADR-N-042 §3.2).
 ```text
 GET    /api/v1/projects/{project}/spaces/{space}/views          the views this caller sees → 200
 POST   /api/v1/projects/{project}/spaces/{space}/views          save a new one → 201
-GET    /api/v1/projects/{project}/spaces/{space}/views/{id}     one view → 200
 PUT    /api/v1/projects/{project}/spaces/{space}/views/{id}     rename it, change its mode or settings → 200
 DELETE /api/v1/projects/{project}/spaces/{space}/views/{id}     delete it → 204
 ```
