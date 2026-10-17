@@ -124,6 +124,40 @@ The four scripts are `gateway-latency-load.js` (latency and throughput), `gatewa
 
 No benchmark runs by itself today: the `k6` and `nightly-benchmarks` workflows are `workflow_dispatch` only while the private repositories' Actions minutes are metered, and there is no `criterion` microbenchmark in the Rust repositories at all.
 
+---
+
+## 6. Scale: 10,000 Endpoints
+
+The platform has to serve 10,000 Endpoints (CC-54). `crates/context-gateway/examples/scale_bench.rs` in `joinedcontext-platform` measures what that costs offline, with no cluster. `jcctl::bench_org` writes a layout 2 organization of N public Endpoints over N/100 projects. Each Endpoint has its own ContextSpace and read Policy, each project one DataModel, and every tenth Endpoint a Pipeline. The bench loads it the way the gateway does and measures:
+
+- the store load;
+- the reaper's idle tick, and its tick after one Policy edit;
+- a slug lookup;
+- `jcctl validate` over the tree;
+- the peak resident set.
+
+One size runs per process. The `scale-bench` workflow runs 100, 1,000 and 10,000 three times each, on demand only; it is never a gate.
+
+```bash
+cargo run --release -p context-gateway --example scale_bench -- 10000
+```
+
+Medians of three on the sandbox host (12 cores), platform branch of T-4443:
+
+| Endpoints | load | idle tick | tick after one Policy | slug lookup | `jcctl validate` | peak RSS |
+|---|---|---|---|---|---|---|
+| 100 | 83 ms | 4.7 ms | 98 ms | 0.031 µs | 115 ms | 15 MiB |
+| 1,000 | 880 ms | 53 ms | 1.09 s | 0.035 µs | 1.24 s | 35 MiB |
+| 10,000 | 8.99 s | 533 ms | 11.2 s | 0.075 µs | 13.1 s | 239 MiB |
+
+Every cost but the request path grows linearly with the tree. At 10,000 the three largest are:
+
+1. the layout 2 assembly, which copies, re-renders and re-parses every file of every project on each load (T-4457);
+2. a reload of everything for any change (T-4444);
+3. an idle tick that stats every file once a second (T-4444).
+
+A request does not pay any of these: the slug table is a hash map swapped whole, so a lookup costs the same at 10 and at 10,000. Before T-4443 the load at 10,000 took 14.4 s. Two costs were removed: a scan of every resource for each space, and a second parse of the assembled tree.
+
 ## Related
 
 - [00-strategy.md](00-strategy.md) — which lane each of these runs in.
@@ -131,3 +165,4 @@ No benchmark runs by itself today: the `k6` and `nightly-benchmarks` workflows a
 - [CC-50](../Requirements/city-as-code.md) — the portability the drill proves.
 - [TS-22](../Requirements/testing.md) — the load requirement the budgets carry.
 - [06-security-tests.md](06-security-tests.md) — the scans that run beside these lanes.
+- [CC-54](../Requirements/city-as-code.md) — the scale the bench measures.
