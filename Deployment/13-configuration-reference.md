@@ -29,6 +29,7 @@ The enforcement point in front of every broker surface (`context-gateway`).
 | `JC_GATEWAY_BIND` | `0.0.0.0:8080` | no | The address to listen on (`JC_GATEWAY_BIND`, default `0.0.0.0:8080`). |
 | `JC_GATEWAY_BROKER_URL` | — | no | The broker to forward to, scheme and authority only (`JC_GATEWAY_BROKER_URL`): the implicit `main`, and every space when the organization declares no broker. |
 | `JC_GATEWAY_BROKER_URL_TEMPLATE` | — | no | The address of every other `ContextBroker`, `{broker}` replaced by its name (`JC_GATEWAY_BROKER_URL_TEMPLATE`, ADR-N-047); absent refuses the spaces that live on one rather than sending them to `main`. |
+| `JC_GATEWAY_CONNECTORS_URL` | — | no | The Portal's read of a person's connectors (`JC_GATEWAY_CONNECTORS_URL`, its internal listener's `/internal/connectors`); absent serves no `/api/mcp/me/{name}` (EP-123). |
 | `JC_GATEWAY_DOMAIN_VERIFICATION` | `report` | no | `report` or `enforce` (`JC_GATEWAY_DOMAIN_VERIFICATION`, default `report`): whether a write waits for the Organization's verified domain (PF-41, Architecture/03 §3). |
 | `JC_GATEWAY_DOMAIN_VERIFICATIONS_URL` | — | no | The Portal's list of domain states (`JC_GATEWAY_DOMAIN_VERIFICATIONS_URL`, its internal listener's `/internal/domain-verifications`); required under `enforce`. |
 | `JC_GATEWAY_EGRESS_CA_BUNDLE` | — | no | A PEM file of extra trust anchors the outbound client trusts on top of the public roots (`JC_GATEWAY_EGRESS_CA_BUNDLE`), for a broker behind the installation's own CA (R46). |
