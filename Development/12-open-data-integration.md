@@ -89,9 +89,13 @@ Each chosen dataset becomes five things in its project, in this order.
 
 **Attribution travels with the data.** Each entity carries `dataProvider` (the publisher) and
 `source` (the URL it was read from), the two Smart Data Models common properties for it, and both
-are declared in the space's model. The licence is the dataset's, not the entity's: the Endpoint's
-`publish.ckan.license` states it to a harvester, and the space's description names it to a
-person. The model's own `license` is the licence of the model document and says nothing about the
+are declared in the space's model. A row of a catalogue dataset also carries `isPartOf`, the
+dataset's catalogue URL, which a catalogue distribution filters on (`q=isPartOf=="…"`, OGC
+`?isPartOf=…`, OData `$filter=isPartOf eq '…'`). It is never named `dataset`: the NGSI-LD core
+@context defines that term (`ngsi-ld:hasDataset`) and, being protected, overrides a space's own
+definition, so the rows and the model would name two different properties (T-4289). The
+licence is the dataset's, not the entity's: the Endpoint's `publish.ckan.license` states it to a
+harvester, and the space's description names it to a person. The model's own `license` is the licence of the model document and says nothing about the
 data. An application that shows the data shows the publisher and the licence beside it.
 
 ## 4. Capacity on one node

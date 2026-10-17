@@ -161,7 +161,7 @@ by definition. The rest have no stable key, and the mapping says `rowHash: true`
 A row hash changes whenever a value in the row changes, so a corrected row arrives as a new
 entity and the old one stays. Expiry (PL-64) cannot clear it, because several pipelines write
 the same space. Most row-hash datasets are registers and tables their publisher seldom revises.
-A stale copy stays until a person removes it, and the entity's `dataset` property names where
+A stale copy stays until a person removes it, and the entity's `isPartOf` property names where
 the current rows are.
 
 ## 5. Personal data kept out
@@ -276,7 +276,8 @@ The facilities of every kind are a new mapping onto `PointOfInterest`.
 - A BBSK layer is read with `outSR=4326`, so its geometry arrives in WGS 84, and in pages of the
   layer's `maxRecordCount` where it holds more rows.
 - Every entity carries `dataProvider` (the CKAN `publisher_name`), `source` (the resource URL) and
-  `dataset` (the CKAN dataset URL). The mapping holds all three per dataset
+  `isPartOf` (the CKAN dataset URL; not `dataset`, a term of the NGSI-LD core @context, T-4289).
+  The mapping holds all three per dataset
   ([integration rules §3](../Development/12-open-data-integration.md#3-what-each-dataset-becomes)).
 - `refresh` follows the dataset's last change, because no harvested dataset carries a frequency.
   A dataset changed in the last 31 days is read daily (`P1D`), a yearly statistic monthly
