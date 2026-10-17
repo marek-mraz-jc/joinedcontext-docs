@@ -162,19 +162,21 @@ A harvested source dataset (`charts/ckan/files/harvest-hub.py`, `harvest-nkod.py
 
 ## 10. The catalogue as an NGSI-LD Endpoint
 
-An agent asks the catalogue first and the dataset second (T-4500, ADR-N-025). The catalogue it asks is one more public Endpoint: the Endpoint named `catalog` on the space named `catalog`, read with the normal NGSI-LD tools (`type=Dataset`, `q=searchText~=(?i).*bystrica.*`, `georel=near`). Nothing in it is authored: the Portal reconciler writes it from the feed of §8, which is built by the same function as each Endpoint's own record (EP-27), so CKAN, a harvester and the NGSI-LD catalogue read one source.
+An agent asks the catalogue first and the dataset second (T-4500, ADR-N-025). The catalogue it asks is one more public Endpoint: the Endpoint named `catalog` on the space named `catalog`, read with the normal NGSI-LD tools (`type=Dataset`, `q=searchText~="bystrica"`, `georel=near`). Nothing in it is authored: the Portal reconciler writes it from the feed of §8, which is built by the same function as each Endpoint's own record (EP-27), so CKAN, a harvester and the NGSI-LD catalogue read one source.
 
-Publicly a dataset is a context space and its Endpoints are access paths (owner, 2026-10-17). So the catalogue holds one `Dataset` per context space with at least one public Endpoint, and one `DataService` per public Endpoint, both Smart Data Models DCAT-AP subject types. An organization or private Endpoint never enters it; a caller with grants finds those through the hub's own catalogue of what it may read (T-4503).
+Publicly a dataset is a context space and its Endpoints are access paths (owner, 2026-10-17). So the catalogue holds one `Dataset` per context space with at least one public Endpoint, and one `DataService` per public Endpoint, both Smart Data Models DCAT-AP subject types. An organization or private Endpoint never enters it; a caller with grants finds those in its own catalogue on the MCP hub (below).
 
 | Entity | Id | Attribute | Type | Source in the record of the feed |
 |---|---|---|---|---|
 | `DataService` | `urn:ngsi-ld:DataService:{slug}` | `title`, `description` | LanguageProperty | `dct:title`, `dct:description` per `@language` |
+| | | `accessLevel` | Property | the Endpoint's audience: `public`, `organization`, `project-list` |
+| | | `visibleBecause` | Property | why this caller sees it: `public`, `organization`, `project`, `grant`; `public` in the public catalogue |
 | | | `identifier` | Property | `dct:identifier`, the slug a tool call names |
 | | | `endpointURL` | Property | the `dcat:DataService`'s `dcat:endpointURL` |
-| | | `accessURL` | Property, one object per distribution | `dcat:distribution`: `dcat:accessURL`, `dct:conformsTo`, `dcat:mediaType` |
+| | | `accessURL` | Property, one object per distribution | `dcat:distribution`: `dcat:accessURL`, `dct:conformsTo`, `dcat:mediaType`; the access paths only, not the schema artifacts under `/schema/` |
 | | | `accessRights`, `license` | Property | `dct:accessRights`, `dct:license` |
 | | | `servesDataset` | Relationship | the `Dataset` of the Endpoint's space |
-| `Dataset` | `urn:ngsi-ld:Dataset:{project}:{space}` | `title`, `description` | LanguageProperty | those of the space's first public Endpoint by slug |
+| `Dataset` | `urn:ngsi-ld:Dataset:{space}`, the space's `{space}` segment | `title`, `description` | LanguageProperty | those of the space's first public Endpoint by slug |
 | | | `keyword` | Property, a list | `dcat:keyword` of every public Endpoint of the space |
 | | | `theme` | Property, a list of IRIs | `dcat:theme`, EU data-theme table (T-4498) |
 | | | `spatial` | Property, a list of IRIs | `dct:spatial`, NUTS and LAU codes |
@@ -188,6 +190,8 @@ Publicly a dataset is a context space and its Endpoints are access paths (owner,
 Attributes the record does not carry are left out, never written empty. The ids never carry a title, so a renamed Endpoint changes its entities in place.
 
 The reconciler reads the feed once per run and writes only the entities that changed, through the `catalog` Endpoint as the Portal's own client, in batches of 100; an entity it wrote whose Endpoint is gone or no longer public is deleted in the same run. After a restart, and once an hour, it lists what the catalogue holds instead of trusting its memory, so an entity left by a run that stopped halfway is still removed. The `catalog` Endpoint's Policy grants reads to everyone and writes only to the Portal's ServiceAccount: every write to context data goes through an Endpoint and its Policy, this one included.
+
+On the MCP hub and on every named server, `endpoint: catalog` is the caller's own catalogue (T-4503, ADR-N-025): the gateway builds it per request from the Endpoints the request reaches, by the same function (`jc_core::ngsi_catalog`) from the same records, without a broker read. The anonymous caller's catalogue is the public one entity for entity; a signed-in caller's adds the organization and granted Endpoints it reads, each saying why in `visibleBecause`; a named server's holds only its members. The catalogue answers `query_entities` (`type`, `id`, `idPattern`, `q`, `georel`, `geometry`, `coordinates`, `attrs`, `pick`, `format`, `count`, `limit`, `cursor`), `get_entity` and `list_types`; every other tool belongs to the Endpoint a Dataset lists in `dataService`. An Endpoint outside the caller's reach gives no entity, no word of `searchText` and no count.
 
 Not yet in the entities: the entity types an Endpoint holds with their counts, first and last `observedAt`, and the ready-to-run second call per type (`nextQuery`, T-4486). They need one broker read per Endpoint and land in a follow-up task.
 
