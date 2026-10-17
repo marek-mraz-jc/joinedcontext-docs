@@ -7,6 +7,7 @@ title: "ADR-N-043: Named MCP Servers over Chosen Endpoints"
 
 Date: 2026-10-06  
 Status: Accepted  
+Amended: 2026-10-17 (section 7, connector profiles, T-4504)  
 Decision Makers: product owner (order of 2026-10-06, T-3154; the choices of section 2 were delegated in the order)
 
 ## 1. Context
@@ -24,7 +25,7 @@ What neither gives: a server somebody **curates** — "the city's mobility data"
 
 A **named MCP server** is a manifest, `kind: McpServer`, that a project (or the organization) declares over a list of member Endpoints. The gateway serves it at its own address with the hub's catalogue narrowed to its members, and a read may fan out across them.
 
-1. **The kind.** `McpServer` lives in a project (`projects/{p}/mcp/{name}.yaml`) or in the organization (`mcp/{name}.yaml`, namespace `org`). Its `metadata.title` and `metadata.description` are what an AI client reads (`initialize.instructions` and `serverInfo`). `spec.members` names one to ten Endpoints by typed reference (`{kind: Endpoint, name, namespace}`; a member of another project names its project). `spec.audience` is `public`, `organization` or `project-list` (with `allowedProjects`), and may be no wider than the narrowest member's own audience: a public server only over public Endpoints. Declaring or widening a server to `public` takes the red lane and a publisher's approval (EP-16, PF-71).
+1. **The kind.** `McpServer` lives in a project (`projects/{p}/mcp/{name}.yaml`) or in the organization (`mcp/{name}.yaml`, namespace `org`). Its `metadata.title` and `metadata.description` are what an AI client reads (`initialize.instructions` and `serverInfo`). `spec.members` names one to ten Endpoints by typed reference (zero to ten beside a selector since §7) (`{kind: Endpoint, name, namespace}`; a member of another project names its project). `spec.audience` is `public`, `organization` or `project-list` (with `allowedProjects`), and may be no wider than the narrowest member's own audience: a public server only over public Endpoints. Declaring or widening a server to `public` takes the red lane and a publisher's approval (EP-16, PF-71).
 2. **The address.** `https://{host}/api/mcp/{project}/{name}` (`org` for the organization's), stateless Streamable HTTP like the other two (SP-19). It is its own RFC 8707 resource, with protected-resource metadata (RFC 9728) under `/api/mcp/{project}/{name}/.well-known/oauth-protected-resource` and a Keycloak client `mcp-{project}-{name}` the reconciler renders like the per-Endpoint clients (public, PKCE S256, no secret, dynamic registration off). A token whose audience is the server reaches its members only; the edge audience (`context-gateway`) reaches the members its person's Policies grant; a public server answers an anonymous caller with each member's public grants. A token for one Endpoint or for the hub is refused here.
 3. **The tools.** The hub's catalogue (ADR-N-025 §2): `list_endpoints` answers the members this caller may read, and every data tool takes `endpoint`, a member by its slug, title or space (ADR-N-025 §2), never published as an enum. `tools/list` lists a tool when at least one such member grants its operation.
 4. **A read may fan out.** On the read tools (`query_entities`, `list_types`, `describe_schema`) `endpoint` is optional: absent, the call runs once per member this caller may read, in parallel, each run exactly as a call to that member's own MCP URL runs (its PDP with the caller's token, its projection, its rate limit). The answer is grouped, never blended: `structuredContent.results` holds one entry per member, `{endpoint, space, entities, total, nextCursor}`, in the order of `spec.members`. The same URN in two members' spaces is two entities in two entries ([ADR-N-041](adr-n-041-entity-identity-is-space-and-urn.md)). `limit` holds per member and paging is per member: `cursor` is then an object keyed by member slug, each value that member's own `nextCursor`. No filter, join, sort or count is computed across members: what one member's Policy allows is never combined with what another's allows.
@@ -74,6 +75,34 @@ Landed with this decision:
 
 - `Requirements/endpoints.md`: **EP-92**…**EP-96**.
 - `Requirements/manifests.md`: **MF-53**.
+
+Landed with the amendment of section 7:
+
+- `Requirements/endpoints.md`: **EP-120**…**EP-123**.
+- `Requirements/manifests.md`: **MF-55**, **MF-56**.
+- `Requirements/portal-and-ui.md`: **UI-98**.
+
+## 7. Amendment 2026-10-17: Connector Profiles (T-4504)
+
+The owner, 2026-10-17: each group of people, each assistant and each agent gets a connector that shows the part of the platform it needs, filtered by access and preference. A hand-kept list of ten members does not reach that at 10,000 Endpoints, and nothing gave an organization or an assistant a connector of its own.
+
+Decided (worker-1, owner may override): selectors on the existing kind, one built-in server per organization, personal connectors held in the person's Portal preferences; options: a new `ConnectorProfile` kind (a second kind for the same address and the same rules), personal connectors as manifests in Git (every reviewer would read a person's choice), favourites carried in the token (a token per change of a star, and a claim that grows with the list).
+
+1. **`spec.select` beside `spec.members`.** A server names `members` (zero to ten, the limit of §2.7 unchanged), `select`, or both; at least one. `select` holds up to five fields, each a list of at most 50 values, and an Endpoint is selected when it matches every field given (one value of a field is enough): `projects` (project names), `spaces` (`{project}/{space}`), `domains` (Smart Data Models domains of the Endpoint's classification, T-4498), `themes` (EU data-theme codes of that classification, `ENVI`, `TRAN`, …) and `accessLevel` (`public`, `organization`, `project`, `grant`, the levels of the per-caller catalogue, T-4503). `select: {}` selects every Endpoint the other bounds admit. A server's reach is the union of its members and its selected Endpoints.
+2. **A selector resolves at read time and only narrows.** On every call the gateway takes the Endpoints this caller's token may read (the hub's reach, ADR-N-025), keeps those the selector matches and whose own audience is at least as wide as the server's, and adds the readable members. A public server therefore selects public Endpoints only, an organization server public and organization ones, whatever its selector says. A selector names no Endpoint, so it can never add one the token does not read, and an Endpoint that leaves a selector's match (another theme, a narrower audience) leaves the server at the next reload of the Endpoint table, with no Change to the server.
+3. **Validation.** `jcctl validate` refuses an `accessLevel` value wider than the server's audience allows (a `public` server with `organization`, `project` or `grant`; an `organization` server with `project` or `grant`), an unknown domain or theme code, a `spaces` or `projects` value naming nothing the repository declares, and a server with neither `members` nor `select`.
+4. **Fan-out stays at ten.** A read without `endpoint` (§2.4) fans out when the caller's resolved reach holds at most ten Endpoints, in the order members first, then selected ones by slug. Above ten it is refused with a sentence naming `list_endpoints` and the `catalog` endpoint (T-4501), so a selector never turns one call into a thousand.
+5. **`org/all`, one per organization.** Every organization has a server at `/api/mcp/org/all` with `audience: organization` and `select: {}`, served without a manifest and with its Keycloak client `mcp-org-all` rendered by the reconciler like any other. An organization that declares `mcp/all.yaml` replaces it (its own title, description, selector or audience, never wider than `organization` unless it takes the red lane of §2.1).
+6. **An AssistantDeployment names its server.** `spec.mcpServer` names one McpServer (`{project}/{name}` or `org/{name}`); its reach becomes the deployment's data connector beside or instead of `connectors`. A deployment on a channel other than `internal` names a `public` server only.
+7. **Personal connectors.** A person creates up to ten connectors in the Portal, each a name and a `select` with one more field, `endpoints` (up to 50 Endpoint slugs, the person's favourites). They live in that person's Portal preferences (API/01 §8), never in Git, are served at `/api/mcp/me/{name}` to that person's token only, and the gateway reads them from the Portal by the token's `sub` (a ServiceAccount call, cached for a minute). Another person's token at that address gets the bytes of an unknown server; no listing, audit view or catalogue shows one person's connectors to another. A favourite the person can no longer read is dropped from the reach like any other.
+
+| Threat | Control |
+|---|---|
+| A selector widens what a caller reads | The reach starts from the token's own reach and is only filtered; a selector never names an Endpoint. Test: for every selector, the reach is a subset of the hub's reach for the same token. |
+| A public server selects internal data | The audience bound of §7.2 holds at read time, and validation refuses an `accessLevel` wider than the audience. |
+| A selector reveals an Endpoint outside the grants | Counts, `list_endpoints`, refusals and the over-ten sentence are all computed after the token's reach, so none names or counts an Endpoint the caller cannot read. |
+| One person's favourites seen by another | Held per `sub` in the preferences tier; the address answers its owner's token only and an unknown-server answer otherwise. |
+| A fan-out over thousands of Endpoints | Fan-out only up to ten (§7.4); above that the caller searches the catalogue first. |
 
 ## Related
 

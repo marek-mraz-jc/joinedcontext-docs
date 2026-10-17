@@ -6,7 +6,7 @@ description: Universal ingress and egress multi-representation views, opaque slu
 
 # Endpoints & Representation Parity
 
-Family **EP** (EP-01…EP-118). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **EP** (EP-01…EP-123). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
 ## 1. Endpoint Identity and Opaque Slug
 
@@ -92,6 +92,10 @@ Family **EP** (EP-01…EP-118). Owning chapter: [Architecture/04-context-spaces-
 - **EP-44** [P] — File generation MUST page through the context broker, streaming rows while enforcing per-endpoint row and byte size limits.
 - **EP-45** [P] — Tabular export headers MUST format flattened property keys, appending unit symbols when human-readable headers are requested.
 - **EP-119** [P] — `file.parquet` MUST carry the rows and columns of `file.csv` (EP-08, EP-45) as one Apache Parquet file: each column typed `INT64`, `DOUBLE` or `BOOLEAN` when every value it holds is one, a UTF-8 string otherwise, every column optional (null where an entity has no value), and the export's space, endpoint, instant, query and row count in the file's key-value metadata.
+- **EP-120** [A][S] — A named server's reach MUST be computed on every call as its readable members plus the Endpoints this caller's token may read (the hub's reach) that match `spec.select` (MF-55) and whose own audience is at least as wide as the server's, so a public server reaches public Endpoints only; for every selector and token the reach MUST be a subset of the hub's reach for that token, and no count, list, refusal or sentence MUST name or count an Endpoint outside it ([ADR-N-043 §7](../Decisions/adr-n-043-named-mcp-servers.md#7-amendment-2026-10-17-connector-profiles-t-4504)).
+- **EP-121** [A] — A read without `endpoint` on a named server MUST fan out (EP-94) only when the caller's reach holds at most ten Endpoints, members first in `spec.members` order, then selected ones by slug; above ten it MUST be refused with a sentence naming `list_endpoints` and the `catalog` endpoint, and resolving the reach MUST stay within the per-caller catalogue's budget at 10,000 Endpoints (T-4503) ([ADR-N-043 §7](../Decisions/adr-n-043-named-mcp-servers.md#7-amendment-2026-10-17-connector-profiles-t-4504)).
+- **EP-122** [A][S] — Every organization MUST have a named server at `/api/mcp/org/all` with `audience: organization` and `select: {}` and its Keycloak client `mcp-org-all`, served without a manifest; an organization's `mcp/all.yaml` MUST replace it ([ADR-N-043 §7](../Decisions/adr-n-043-named-mcp-servers.md#7-amendment-2026-10-17-connector-profiles-t-4504)).
+- **EP-123** [S] — A person's connectors (UI-98) MUST be served at `/api/mcp/me/{name}` to that person's token alone, resolved by the gateway from the Portal by the token's `sub` with a ServiceAccount token and cached for at most 60 seconds; any other token MUST get the bytes of an unknown server, and a favourite Endpoint the person can no longer read MUST be out of the reach ([ADR-N-043 §7](../Decisions/adr-n-043-named-mcp-servers.md#7-amendment-2026-10-17-connector-profiles-t-4504)).
 
 ## 11. Schema Surface
 
@@ -253,6 +257,7 @@ Decided in [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) (T-3154).
 | EP-117 | [ADR-N-041](../Decisions/adr-n-041-entity-identity-is-space-and-urn.md) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
 | EP-118 | [Architecture/21-open-data-catalogue.md#9-what-every-dataset-lists](../Architecture/21-open-data-catalogue.md#9-what-every-dataset-lists) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | EP-119 | [API/02-endpoint-representations.md#5b-apache-parquet](../API/02-endpoint-representations.md#5b-apache-parquet) | [Testing/01-backend-tests.md#2-the-context-gateway-harness](../Testing/01-backend-tests.md#2-the-context-gateway-harness) |
+| EP-120…EP-123 | [ADR-N-043 §7](../Decisions/adr-n-043-named-mcp-servers.md#7-amendment-2026-10-17-connector-profiles-t-4504) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | EP-111…EP-112 | [Architecture/07-agents-and-mcp.md#7-connecting-from-a-phone](../Architecture/07-agents-and-mcp.md#7-connecting-from-a-phone) | [Testing/02-conformance-tests.md#4-model-context-protocol](../Testing/02-conformance-tests.md#4-model-context-protocol) |
 | EP-113 | [API/02-endpoint-representations.md#10-in-the-open-data-portal](../API/02-endpoint-representations.md#10-in-the-open-data-portal) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 

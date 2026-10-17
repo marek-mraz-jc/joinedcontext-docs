@@ -902,7 +902,8 @@ PUT /api/v1/preferences      replaces them whole; answers 200 with what is now s
   "advancedMode": false,
   "firstRunDismissed": false,
   "recent": [{ "path": "/projects/air-quality/pipelines/shmu/edit", "title": "shmu · air-quality" }],
-  "favourites": [{ "path": "/projects/air-quality/explore?type=AirQualityObserved", "title": "Explore data · air-quality" }]
+  "favourites": [{ "path": "/projects/air-quality/explore?type=AirQualityObserved", "title": "Explore data · air-quality" }],
+  "connectors": [{ "name": "my-air", "select": { "themes": ["ENVI"], "endpoints": ["zt4qm7ge2xdv6ksb3ncf5arw2y"] } }]
 }
 ```
 
@@ -919,6 +920,10 @@ PUT /api/v1/preferences      replaces them whole; answers 200 with what is now s
   space, connect a data source, run a pipeline, see the data, share it); the help menu shows it
   again by clearing it. Absent means shown. Each step ticks itself from the project's own state,
   never from this record (T-3233).
+- `connectors` holds up to ten personal MCP connectors (UI-98, ADR-N-043 §7): a DNS-label `name`,
+  unique in the list, and a `select` of the McpServer selector fields (MF-55) plus `endpoints`, up to
+  50 Endpoint slugs; a slug the caller may not read when saved, an eleventh connector or a fifty-first
+  slug is a `400`. The gateway reads them for `/api/mcp/me/{name}` by the caller's `sub` alone (EP-123).
 - `recent` holds the last ten item pages the person opened, newest first, and `favourites` up to
   fifty pages they starred (UI-90). Each place is a `path` inside the Portal, with its query and
   without `lang`, and the `title` the page had: a path that is not one of this Portal's (`//host`,
