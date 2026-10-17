@@ -259,6 +259,8 @@ output:
 
 The writes are processors, one `branch` per output in the order of `spec.outputs`, because a Bento output never shows its answer to anything after it: as an output, a `207` whose items the gateway refused was logged as sent (T-4056). As a processor the write keeps the answer for the outcome sink (PL-62, below), and the output only decides what happens to the batch: a write that still fails after its own retries leaves it errored, and the `reject` nacks it back to the input, which replays it. Every broker in front of the writes fails fast, the outcome sink's `fan_out_sequential_fail_fast` (PL-62) included. Because the writes now run on the pipeline's threads, a resident stream runs 64 of them, so a slow gateway answer holds back one batch and not the stream (the output used to keep 64 writes in flight); a polled stream runs 4. The plain patterns retry inside the broker without heeding a stop, so a stream whose target failed could be neither replaced nor deleted until the runner restarted (T-2983). One source renders as its own input with no `broker`, so a `v1alpha1` Pipeline — `source`, `compute`, `output` and `targetEndpoint` — reads as `sources: [source]`, `steps: [compute]`, `outputs: [{ targetEndpoint, mode }]` and renders as a `v1alpha2` one with one output (PL-54). It keeps running unchanged, and the Portal writes it back as `v1alpha2` the first time somebody edits it.
 
+**What a write does to the entity (PL-79).** Every output posts to its Endpoint's `entityOperations/upsert`, and its `mode` decides what is left of the entity afterwards. `upsert`, the default, adds `options=update`: the attributes the record names are created or overwritten and every other attribute stays, which is what several pipelines writing one entity need (PL-64). `replace` posts without options: the entity becomes exactly the record, so an attribute a later version of the mapping no longer writes disappears at the next run instead of staying beside its successor (T-4289's `dataset`, renamed `isPartOf`). Only a pipeline that alone writes its entities may say `replace`; the generated open-data pipelines do. `update-attrs` is the derived pipelines' write onto entities that already exist. All three are the `upsertBatch` operation under the same Endpoint grant.
+
 A conditional path inside one lane is a step: `branch`, `switch` and `workflow` carry their own processors in their configuration. A path that ends at its own outputs is a route (PL-73, below). The manifest stores no edges either way. The studio lets a person draw a wire, and each wire only sets the order: a wire into a step moves that step behind the node it starts from, the last step feeds every output, and a wire the runner cannot run (into a source, out of an output, from a middle step into an output) is refused with the reason (PL-56). Admission reads the pipeline's grant once per source (read) and once per output (write), and each source's secrets keep their own names (PL-55).
 
 The studio draws the same list: a lane with the sources on the left, the steps in order, the outputs on the right; a palette of the runner's processors inserts a step between two nodes, a selected node shows its own Bento block as YAML, and the test trace paints each step by its processor index (PL-56). The palette is searchable, each node says its state before a test (configured, missing input, error), a double-click opens its form, every graph edit can be undone and redone, the canvas zooms and fits, and a list view holds the same nodes with move up, move down and remove for a keyboard or a screen reader; positions are computed from the order and never stored (PL-68).
@@ -395,7 +397,7 @@ spec:
   targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:air-quality:ep-derived   # write grant; may point into another space
   output:
     type: AirQualityIndexDaily
-    mode: upsert                           # upsert | update-attrs (same entity, new attributes)
+    mode: upsert                           # upsert (merge) | replace (whole entity) | update-attrs (PL-79)
 ```
 
 **Not deployed today.** The Portal reconciler deploys only `bloblang` compute. It renders an endpoint query as a `generate` clock followed by an `http` processor that fetches `…/entities` with `limit=1000`, ignores `temporalQ`, and renders a `trigger.subscription` as a change gate on the polled page, not as a subscription (`src/reconciler/streams.rs`). The rest of this subsection is the renderer in `crates/jcctl/src/pipelines_derived.rs`, which nothing outside its tests calls yet.
@@ -457,8 +459,8 @@ image (AP-13a) and it exists for the same reason: the thing that runs is the thi
 
 The intersection is decided on the type, because the type is the only thing both sides declare. A
 pipeline whose `output.type` differs from its trigger's type cannot feed itself and is accepted
-without further question. When the two types are the same it is refused, in either mode: `upsert`
-rewrites the whole entity, and `update-attrs` names no attribute list, so nothing in the manifest
+without further question. When the two types are the same it is refused, in every mode: `replace`
+rewrites the whole entity, and `upsert` and `update-attrs` name no attribute list, so nothing in the manifest
 says which attributes the compute writes and the reconciler will not guess that they miss the
 watched ones. `allowFeedback: true` states that the author knows and accepts the loop, which is
 why PL-37 puts that change in the yellow lane rather than letting it merge on a green one.
