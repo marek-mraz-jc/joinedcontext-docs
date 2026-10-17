@@ -616,6 +616,10 @@ EXISTING: list[tuple[str, str, str]] = [
     (r"zdravotnickych", "bbsk/bbsk-datasource-nemocnice.yaml", "hospitals only"),
     (r"poskytovatelov-socialnych", "bbsk/bbsk-datasource-socialne-sluzby.yaml", "whole"),
 ]
+# The city's registers of who lives in it today: a count that moves with every birth, death and
+# move, while the harvested record's last change is months old, so `refresh` would read it monthly
+# and dev would trail the source by a few people a row (T-4519). Read daily.
+CURRENT = (r"^bb-pocet-obcanov-podla-",)
 # observedAt is a time of measurement: only rows that are observations carry one.
 OBSERVED = {"KeyPerformanceIndicator", "RoadAccident"}
 # A ZIP whose GeoJSON is larger than this is not loaded in this round (16 GB node, one broker).
@@ -841,7 +845,7 @@ def plan(d: dict, probe_: dict, fetched: str, gis: dict | None = None) -> dict:
     out = {**entry, "status": "mapped", "type": typ, "smartDataModel": sdm, "source": source,
            "entityId": {"keys": unique[0]} if unique else {"rowHash": True},
            "observedAt": observed, "space": SPACE[d["org"]],
-           "refresh": "P1D" if source["kind"] == "json-feed" else "P1W" if layered else refresh(d["extras"].get("modified"), fetched, typ),
+           "refresh": "P1D" if source["kind"] == "json-feed" or any(re.search(p, d["name"]) for p in CURRENT) else "P1W" if layered else refresh(d["extras"].get("modified"), fetched, typ),
            "dataProvider": d["extras"].get("publisher_name"), "license": d["license"],
            "dataset": f"{CKAN}/dataset/{d['name']}",
            "properties": modelled(d["name"], properties(fields, ranges))}
@@ -1017,6 +1021,10 @@ def selftest() -> None:
     assert prop("id") == "sourceId" and prop("Typ") == "typ" and prop("type") == "sourceType"
     assert refresh("2026-10-15T09:00Z", "2026-10-16T04:00Z") == "P1D" and refresh("2024-01-01", "2026-10-16") == "P1W"
     assert refresh(None, "2026-10-16", "KeyPerformanceIndicator") == "P1M"
+    import yaml
+    current = [e for e in yaml.safe_load(MAPPING.read_text(encoding="utf-8"))["datasets"]
+               if any(re.search(p, e["name"]) for p in CURRENT)]
+    assert current and {e.get("refresh") for e in current} == {"P1D"}, current
     no_model = {"datasets": [ok["datasets"][0], {**ok["datasets"][1], "smartDataModel": None}]}
     assert any("mapped without smartDataModel" in e for e in check(snap, no_model, page))
     removed = {"datasets": [ok["datasets"][0], {**ok["datasets"][1], "status": "removed", "reason": "no smart data model: x"}]}
