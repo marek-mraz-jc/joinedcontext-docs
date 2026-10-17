@@ -259,6 +259,7 @@ Decided in [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) (T-3154).
 | EP-118 | [Architecture/21-open-data-catalogue.md#9-what-every-dataset-lists](../Architecture/21-open-data-catalogue.md#9-what-every-dataset-lists) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | EP-119 | [API/02-endpoint-representations.md#5b-apache-parquet](../API/02-endpoint-representations.md#5b-apache-parquet) | [Testing/01-backend-tests.md#2-the-context-gateway-harness](../Testing/01-backend-tests.md#2-the-context-gateway-harness) |
 | EP-120…EP-123 | [ADR-N-043 §7](../Decisions/adr-n-043-named-mcp-servers.md#7-amendment-2026-10-17-connector-profiles-t-4504) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
+| EP-124 | [Architecture/07-agents-and-mcp.md#2-tool-catalogue-specification](../Architecture/07-agents-and-mcp.md#2-tool-catalogue-specification) | [Testing/02-conformance-tests.md#4-model-context-protocol](../Testing/02-conformance-tests.md#4-model-context-protocol) |
 | EP-111…EP-112 | [Architecture/07-agents-and-mcp.md#7-connecting-from-a-phone](../Architecture/07-agents-and-mcp.md#7-connecting-from-a-phone) | [Testing/02-conformance-tests.md#4-model-context-protocol](../Testing/02-conformance-tests.md#4-model-context-protocol) |
 | EP-113 | [API/02-endpoint-representations.md#10-in-the-open-data-portal](../API/02-endpoint-representations.md#10-in-the-open-data-portal) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
