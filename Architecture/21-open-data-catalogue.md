@@ -171,6 +171,8 @@ Publicly a dataset is a context space and its Endpoints are access paths (owner,
 | `DataService` | `urn:ngsi-ld:DataService:{slug}` | `title`, `description` | LanguageProperty | `dct:title`, `dct:description` per `@language` |
 | | | `accessLevel` | Property | the Endpoint's audience: `public`, `organization`, `project-list` |
 | | | `visibleBecause` | Property | why this caller sees it: `public`, `organization`, `project`, `grant`; `public` in the public catalogue |
+| | | `entityTypes` | Property | `[{type, count}]`, most first, read by the Portal as the anonymous caller from the Endpoint's `/types` and `count=true&limit=0`, once an hour (T-4526); absent while unread |
+| | | `nextQuery` | Property | `{tool: query_entities, arguments: {endpoint, type, limit}}`: the second call, on the largest type (T-4526) |
 | | | `identifier` | Property | `dct:identifier`, the slug a tool call names |
 | | | `endpointURL` | Property | the `dcat:DataService`'s `dcat:endpointURL` |
 | | | `accessURL` | Property, one object per distribution | `dcat:distribution`: `dcat:accessURL`, `dct:conformsTo`, `dcat:mediaType`; the access paths only, not the schema artifacts under `/schema/` |
