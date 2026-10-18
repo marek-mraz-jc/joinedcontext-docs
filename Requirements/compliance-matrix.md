@@ -22,15 +22,15 @@ Generated 2026-10-18 from: `docs` 175dc72, `conformance` 934eff1, `deployment` 0
 
 | Family | Requirements | Tested | Built | Open | Untested and security-tagged |
 |---|---|---|---|---|---|
-| **AG** — Agents and MCP | 117 | 98 | 5 | 14 | 9 |
+| **AG** — Agents and MCP | 119 | 98 | 5 | 16 | 10 |
 | **AP** — Apps on demand | 170 | 140 | 11 | 19 | 9 |
 | **CC** — Configuration as code | 90 | 74 | 7 | 9 | 0 |
 | **DM** — Data models | 97 | 81 | 9 | 7 | 1 |
 | **DS** — Data space connector | 20 | 13 | 3 | 4 | 0 |
-| **EP** — Endpoints and parity | 132 | 112 | 10 | 10 | 9 |
+| **EP** — Endpoints and parity | 134 | 112 | 10 | 12 | 11 |
 | **GW** — Gateway firewall | 35 | 25 | 3 | 7 | 2 |
 | **I** — Identity and credentials | 4 | 2 | 2 | 0 | 0 |
-| **MF** — Manifests | 55 | 51 | 4 | 0 | 0 |
+| **MF** — Manifests | 56 | 51 | 4 | 1 | 1 |
 | **MIM** — OASC interoperability | 76 | 1 | 4 | 71 | 0 |
 | **MP** — Model projections | 3 | 3 | 0 | 0 | 0 |
 | **OPS** — Operations and reliability | 51 | 45 | 2 | 4 | 1 |
@@ -40,8 +40,8 @@ Generated 2026-10-18 from: `docs` 175dc72, `conformance` 934eff1, `deployment` 0
 | **SDK** — App SDK | 42 | 34 | 3 | 5 | 1 |
 | **SP** — Context-space surface | 22 | 18 | 2 | 2 | 0 |
 | **TS** — Testing and quality | 26 | 16 | 5 | 5 | 0 |
-| **UI** — Portal and user interface | 96 | 71 | 14 | 11 | 5 |
-| **Total** | 1291 | 967 | 112 | 212 | 42 |
+| **UI** — Portal and user interface | 97 | 71 | 14 | 12 | 5 |
+| **Total** | 1297 | 967 | 112 | 218 | 46 |
 
 ## 3. Requirement to test
 
@@ -158,6 +158,8 @@ Generated 2026-10-18 from: `docs` 175dc72, `conformance` 934eff1, `deployment` 0
 | **AG-116** | [S] | tested | ci-full, fast ci | deployment `tests/test_catalogue_knowledge_seed.py::test_every_project_seeds_a_public_catalogue_source_at_its_path`, deployment `tests/test_catalogue_knowledge_seed.py::test_helsinkis_public_assistants_answer_from_its_catalogue`, platform `crates/assistant/src/bin/jc-assistant.rs::embed_threads_default_to_two_and_stay_between_one_and_sixteen`, and 14 more |
 | **AG-117** | [S] | tested | fast ci | portal `ui/tests/answer_format.test.ts::keeps a paragraph's breaks and starts the next at a blank line`, portal `ui/tests/answer_format.test.ts::reads bullet and numbered lists, an indented line staying with its item`, portal `ui/tests/answer_format.test.ts::reads bold, italic and code, a heading as bold, and leaves snake_case alone`, and 3 more |
 | **AG-118** | [S] | tested | ci-full, fast ci | deployment `tests/test_catalogue_knowledge_seed.py::test_helsinki_seeds_the_user_guide_for_its_internal_and_public_assistants`, platform `crates/assistant/src/bin/jc-assistant.rs::embed_threads_default_to_two_and_stay_between_one_and_sixteen`, platform `crates/assistant/src/bin/jc-assistant.rs::a_base_is_scheme_and_authority_only`, and 10 more |
+| **AG-119** | [S] | open |  |  |
+| **AG-120** | [A] | open |  |  |
 | **AG-115** | [S] | tested | ci-full, fast ci | platform `crates/assistant/src/chat/mcp.rs::a_server_lends_its_listed_slugs_at_most_ten`, platform `crates/assistant/src/chat/mcp.rs::a_long_result_is_cut_on_a_character_and_says_so`, platform `crates/assistant/src/chat/mod.rs::a_failing_listing_is_logged_once_an_hour`, and 29 more |
 | **AG-87** | [H] | tested | ci-full, fast ci | portal `src/agents/paths.rs::building_an_app_may_draft_the_space_it_needs`, portal `src/agents/paths.rs::every_path_says_its_steps_with_tools_it_may_call`, portal `src/agents/paths.rs::every_path_has_an_id_that_reads_back_and_a_first_question`, and 41 more |
 | **AG-88** | [A] | built |  | `joinedcontext-portal/src/agents/oneshot/conversation.rs` |
@@ -700,6 +702,8 @@ Generated 2026-10-18 from: `docs` 175dc72, `conformance` 934eff1, `deployment` 0
 | **EP-130** | [H] [P] | open |  |  |
 | **EP-131** | [S] | open |  |  |
 | **EP-132** | [H] [S] | open |  |  |
+| **EP-133** | [A] [S] | open |  |  |
+| **EP-134** | [S] | open |  |  |
 
 ### GW — Gateway firewall
 
@@ -809,6 +813,7 @@ Generated 2026-10-18 from: `docs` 175dc72, `conformance` 934eff1, `deployment` 0
 | **MF-54** | [S] | tested | ci-full, fast ci | deployment `tests/test_mqtt_brokers.py::test_each_broker_is_one_release_with_its_own_identity`, deployment `tests/test_mqtt_brokers.py::test_the_last_acl_rule_denies_everything_and_nothing_is_stored`, deployment `tests/test_mqtt_brokers.py::test_only_the_two_plain_listeners_are_open`, and 39 more |
 | **MF-55** | [S] | tested | ci-full, fast ci | platform `crates/jc-core/src/kinds/mcp_server.rs::a_select_alone_names_no_member`, platform `crates/jc-core/src/kinds/mcp_server.rs::a_selector_never_reaches_past_the_servers_audience`, platform `crates/jc-core/src/kinds/mcp_server.rs::a_select_names_known_codes_in_bounded_lists`, and 6 more |
 | **MF-56** | [S] | tested | ci-full, fast ci | platform `crates/assistant/src/chat/mcp.rs::a_server_lends_its_listed_slugs_at_most_ten`, platform `crates/assistant/src/chat/mcp.rs::a_long_result_is_cut_on_a_character_and_says_so`, platform `crates/assistant/tests/chat_tests.rs::an_internal_deployment_reads_its_named_servers_endpoints_as_the_person`, and 3 more |
+| **MF-57** | [S] | open |  |  |
 
 ### MIM — OASC interoperability
 
@@ -1430,6 +1435,7 @@ Generated 2026-10-18 from: `docs` 175dc72, `conformance` 934eff1, `deployment` 0
 | **UI-96** | [H] | open |  |  |
 | **UI-97** | [H] | open |  |  |
 | **UI-98** | [S] | tested | ci-full, fast ci | platform `crates/context-gateway/src/mcp/personal.rs::a_sub_is_one_plain_segment`, platform `crates/context-gateway/src/mcp/personal.rs::a_connector_is_served_as_an_organization_server_of_its_favourites`, portal `tests/connectors_tests.rs::a_persons_connectors_reach_the_gateway_and_nobody_else`, and 12 more |
+| **UI-99** | [H] | open |  |  |
 
 ## Related
 

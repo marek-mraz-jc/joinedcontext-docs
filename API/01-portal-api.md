@@ -3277,6 +3277,8 @@ token ([API/05 §3](05-knowledge-assistant.md#3-administration-for-the-portal)).
 ```text
 GET  /api/v1/projects/{project}/knowledge/sources                          every source with what it holds
 GET  /api/v1/projects/{project}/knowledge/sources/{source}/pages?parent=   one level of the page tree; no parent: the roots
+GET  /api/v1/projects/{project}/knowledge/sources/{source}/pages?q=        pages whose title or address holds q, at most 100
+GET  /api/v1/projects/{project}/knowledge/sources/{source}/search?q=&limit= the hits the MCP's search_documents would answer
 GET  /api/v1/projects/{project}/knowledge/sources/{source}/documents       the documents (PDFs) the pages link
 GET  /api/v1/projects/{project}/knowledge/sources/{source}/pages/{page}/links
 GET  /api/v1/projects/{project}/knowledge/sources/{source}/passages?page=|document=
