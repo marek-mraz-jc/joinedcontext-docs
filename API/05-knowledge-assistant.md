@@ -240,6 +240,7 @@ the service's own tables (T-4197):
 | `pages`, `pagesIncluded`, `documents` | what the crawls stored; a `source: upload`'s files are its documents |
 | `passages`, `embedded`, `pending` | its passages, those with an embedding, and those still waiting for one |
 | `failed` | pages and documents whose last read failed |
+| `languages` | its passages per language, `{"sk": 23140, "en": 2012}`; passages of no known language are not counted (UI-99) |
 | `lastCrawl` | the end of the last crawl that stored anything |
 | `job` | the last crawl job: `state` (`queued`, `running`, `done`, `failed`), `attempts`, `error`, `startedAt`, `finishedAt` |
 
@@ -252,6 +253,9 @@ in it. A source not crawled yet answers `404`.
 "tokensOut", "thumbsUp", "thumbsDown", "notes"}]}` for the last 30 days; `notes` counts the thumbs
 down that carry a note (§1.8).
 
+A page carries `id`, `url`, `depth`, `parentId`, `status`, `included`, `excludedBy`, `language`,
+`fetchedAt`, `children`, `documents`, `passages`, and what it states of itself: `title`,
+`description`, `published` and `modified` (AG-120), each `null` where the page states none.
 A document carries `id`, `url`, `pageId`, `mime`, `bytes`, `pages`, `offDomain`, `status`,
 `included`, `excludedBy`, `passages`, and from its document information `title`, `description`
 (its `Subject`), `published` and `modified` (AG-120). A passage carries `ordinal`, `text`, `lang`
