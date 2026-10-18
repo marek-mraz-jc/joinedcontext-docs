@@ -339,7 +339,7 @@ A chart on the dataset is part of the Endpoint, so it is reviewed, versioned and
 
 OData and OGC read the current value of each entity; a line over time reads `temporal`. The weather Endpoint of Banská Bystrica, which serves the SHMÚ stations as `WeatherObserved`, carries a bar chart of the temperature now at each station, from `odata`, and the temperature of each station over the last 24 hours, from `temporal`:
 
-```yaml
+```yaml excerpt
 apiVersion: joinedcontext.com/v1alpha1
 kind: Endpoint
 metadata:
