@@ -158,6 +158,26 @@ Every cost but the request path grows linearly with the tree. At 10,000 the thre
 
 A request does not pay any of these: the slug table is a hash map swapped whole, so a lookup costs the same at 10 and at 10,000. Before T-4443 the load at 10,000 took 14.4 s. Two costs were removed: a scan of every resource for each space, and a second parse of the assembled tree.
 
+### 6.1 Finding one of 10,000 datasets in CKAN and the Portal
+
+T-4544 measures the paths a person searches with outside the gateway, offline and never on `dev`. The catalogue comes from T-4497's generator: seed 4497, the 14 SDM topics, the 518 place names read from dev, and the years 2023 to 2026. Three measurements read it:
+
+- `tests/scale/ckan-rig.sh all` in `joinedcontext-conformance` starts CKAN, Solr, Redis and Postgres in docker from the chart's pinned images. It loads the 10,000 packages that `tests/scale/catalogue.py` exports, then asks `package_search` 200 questions: a third sk, a third sk folded to ASCII, a third en. Each question carries two facets and a type filter.
+- `tests/endpoint_list_scale_bench.rs` in `joinedcontext-portal` (ignored, release) asks the Endpoint list 200 times through the whole router.
+- `ui/e2e/endpoints_scale.spec.ts` times the built Endpoints page with the same 10,000 Endpoints answered in the browser.
+
+Sandbox host (12 cores), 2026-10-18:
+
+| path | p50 | p95 | target |
+|---|---|---|---|
+| CKAN `package_search` with facets | 21.6 ms | 26.5 ms | p95 < 300 ms |
+| Portal Endpoint list, first page of 50 | 34.9 ms | 55.3 ms | p95 < 200 ms |
+| Portal Endpoint list, deep page of 50 | 33.8 ms | 54.2 ms | p95 < 200 ms |
+| Portal Endpoint list, all 10,000 | 54.3 ms | 74.3 ms | p95 < 200 ms |
+| Endpoints page, first row on screen | 16.5 s | | < 1 s |
+
+In CKAN, a dataset about the asked topic, place and year is among the first three for 200 of 200 questions. The Endpoints page misses its target: it fetches the whole list and mounts every row (T-4545).
+
 ## Related
 
 - [00-strategy.md](00-strategy.md) — which lane each of these runs in.
