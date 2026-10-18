@@ -149,7 +149,7 @@ The Portal refuses a model that marks personal data without `legalBasis`, `purpo
 |---|---|
 | Access (Art. 15) | an export of every Entity naming the subject: current state, every version with provenance, and the read log entries of those Entities, as JSON (DM-124) |
 | Rectification (Art. 16) | a correction (§2.4), and the old personal value in the superseded version is replaced by `null` with `redacted: true`, its provenance kept (DM-125) |
-| Erasure (Art. 17) | the values are removed from the current state, from every version and from audit payloads, leaving one content-free tombstone per Entity with `operation: erase`, actor, reason and time; the erasure reaches the CKAN DataStore copy, the CSV and GeoJSON exports, the gateway's caches and the assistant's stored conversations (DM-126) |
+| Erasure (Art. 17) | the values are removed from the current state, from every version and from audit payloads, leaving one content-free tombstone per Entity with `operation: erase`, actor, reason and time; the erasure reaches the CKAN DataStore copy, the CSV exports, the gateway's caches and the assistant's stored conversations (DM-126) |
 
 Backups cannot be edited. The CNPG backups expire after their `retentionPolicy`, which the platform's deployment sets to 30 days and states to the data subject, and the Portal keeps an **erasure log** (the subject's keyed hash, the space, when, the counts per store, never a value); after a restore the reconciler re-applies every erasure in the log before the restored data is served (DM-127).
 

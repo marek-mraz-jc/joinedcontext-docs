@@ -175,7 +175,7 @@ kubectl -n <env> logs deploy/portal | grep 'erasure log re-applied'
 
 The line names the number of erasures re-applied and the restore point. Without it, keep the edge closed and read [09-troubleshooting.md](09-troubleshooting.md).
 
-Audit metadata, the erasure log and the read log of personal data are kept for `JC_AUDIT_RETENTION` (default `P2Y`) and hold no personal value.
+Audit metadata, the erasure log and the read log of personal data are kept for the audit retention, two years by default (ADR-N-054 §2.7), and hold no personal value.
 
 ## Related
 

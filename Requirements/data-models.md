@@ -7,7 +7,7 @@ title: "Data Models & the LinkML Editor"
 
 Family **DM** (DM-01…DM-129). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
-This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-103**. Consumer classes per `00-index.md`.
+This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-129**. Consumer classes per `00-index.md`.
 
 ## 1. Source of truth and artifacts
 
@@ -199,7 +199,7 @@ The decision and its reasons are in [ADR-N-054](../Decisions/adr-n-054-history-v
 - **DM-123** [S] — The broker MUST delete every row of a personal attribute, current state and every version, whose `observedAt` is older than its class's `maxRetention`.
 - **DM-124** [S] — The Portal MUST export, to a person the space's Policy grants `personalData`, every Entity naming a data subject: its current state, its versions with provenance and the read log entries of those Entities.
 - **DM-125** [S] — A rectification MUST store the new value as a correction and replace the old personal value of the superseded version by `null` with `redacted: true`, keeping its provenance.
-- **DM-126** [S] — An erasure MUST remove the subject's values from the current state, every version, the audit payloads, the CKAN DataStore copy, the CSV and GeoJSON exports, the gateway's caches and the assistant's stored conversations, leaving one tombstone per Entity with `operation: erase` and no value.
+- **DM-126** [S] — An erasure MUST remove the subject's values from the current state, every version, the audit payloads, the CKAN DataStore copy, the CSV exports, the gateway's caches and the assistant's stored conversations, leaving one tombstone per Entity with `operation: erase` and no value.
 - **DM-127** [S] — The Portal MUST keep an erasure log of the subject's keyed hash, the space, the time and the counts per store, never a value, and MUST re-apply every logged erasure after a restore before the restored data is served.
 - **DM-128** [S] — The gateway MUST log every read of a personal attribute through an Endpoint with the reader, the time, the Endpoint and the Entities' URNs, never values.
 - **DM-129** — How long a row lives MUST be decided by the first that applies: an erasure, the class's personal `maxRetention`, the type's history rule and its layers (DM-97), the platform default `P28D`; audit metadata MUST keep its own retention, `P2Y` by default.
