@@ -75,6 +75,7 @@ Every row below is one entry of `components/<component>/apisix-routes.yaml` with
 | `gitea-forge` | `/git/*` | `{host}` | 10 | `gitea-http:3000` | Basic or token, verified by Gitea | Class 2 | `proxy-rewrite` |
 | `grafana` | `/grafana*` | `{host}` | 5 | `grafana:3000` | Grafana's own OIDC login | Class 2 | `proxy-rewrite` |
 | `ckan` | `/*` | `data.{host}` | default | `ckan:5000` | CKAN's own login | Class 1 | `proxy-rewrite` |
+| `basemap` | `/*` | `tiles.{host}` | default | `basemap-tiles:8080` | Anonymous; nginx answers `GET`, `HEAD` and the CORS preflight from the installation's own hosts and refuses every other method (T-4638) | 1,200 per minute per client IP: a map view asks for tens of tiles | `limit-count`, `proxy-rewrite` |
 | `ckan-redirect` | `/ckan*` | `{host}` | 5 | terminates at the edge | none | none | `redirect` to `https://data.{host}/` |
 | `keycloak` | `/*` | `idm.{host}` | default | `keycloak-app-keycloakx-http:80` | Identity provider | none at the edge | `proxy-rewrite` |
 | `app-{name}` | `/*` | `{name}.apps.{host}` | 30 | `app-{name}` in `{release}-{project}-apps` (`ui-rust`, `ui-node`) or `portal:8080` (`ui`) | Session of the App's own client `app-{name}`; `unauth_action: pass` for `visibility: public` | Class 1 | `openid-connect`, a host-only cookie of its own, logout `/logout` (AP-26…AP-29, AP-112, AP-133) |
