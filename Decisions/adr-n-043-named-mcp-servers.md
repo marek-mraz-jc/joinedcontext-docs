@@ -104,10 +104,29 @@ Decided (worker-1, owner may override): selectors on the existing kind, one buil
 | One person's favourites seen by another | Held per `sub` in the preferences tier; the address answers its owner's token only and an unknown-server answer otherwise. |
 | A fan-out over thousands of Endpoints | Fan-out only up to ten (§7.4); above that the caller searches the catalogue first. |
 
+## 8. Amendment 2026-10-18: Knowledge Sources on a Server (T-4659)
+
+The owner, 2026-10-18: the pages and documents the assistants read (the crawled websites of the publishers) are a platform feature anyone can use. Whoever adds a connector queries them with their own model, so the platform spends no model call on that question.
+
+Decided (worker-4, owner may override): the server names its sources, and the gateway asks `jc-assistant` for the passages; options: a source names the servers it joins (a project would place its pages on another's server), the gateway reading the assistant's database itself (a second writer's schema in the gateway), a separate RAG service (a second copy of the index and its embedding model).
+
+1. **`spec.knowledgeSources`.** An McpServer attaches up to 20 `KnowledgeSource`s, `{source}` of its own project or `{project}/{source}` (MF-57). Only `visibility: public` sources may be attached, whatever the server's audience, so no source reaches a caller its own visibility would not. The hub, which has no manifest, attaches the list of the gateway's `hub.knowledgeSources` setting, which the platform's owner holds in the deployment.
+2. **The tool.** A server with at least one source lists `search_documents` (EP-133) beside `search`, which finds Datasets. Its description is built from the attached sources at load: the publishers' names, the passages' languages with their shares, and the advice to ask in the commonest one, because the full-text half of the search matches words of that language best.
+3. **The call.** The gateway posts the query and the attached sources to `jc-assistant`'s `/internal/v1/search` (AG-119) on the cluster network. It runs the chat's hybrid search with the local embedding model and no model call, and answers the passages with the metadata of their page or document (AG-120).
+4. **Limits.** One call embeds one query on the assistant's CPU. A bucket of 30 calls a minute per caller and one of 600 a minute for the gateway (EP-134) bound that work on the node, beside the server's own bucket.
+
+| Threat | Control |
+|---|---|
+| A private or test source served to anyone | Only `visibility: public` sources can be attached, validated by `jcctl` and checked again by the assistant on every call; an eval or test source is never attached to a server. |
+| Instructions planted in a crawled page | Hits are data: the tool's description and every hit say the text is quoted content of the publishers' pages. The calling assistant's own rules apply, as for a web search. |
+| The internal route reached from outside | The edge routes `/api/v1/d/*` alone; the assistant refuses a proxied request with `404`, and a NetworkPolicy admits the gateway alone. |
+| CPU spent on embeddings by a burst | The per-caller and global buckets of §8.4. |
+
 ## Related
 
 - [ADR-N-025](adr-n-025-one-mcp-connector-several-endpoints.md) — the hub, amended in §2.5 for named servers.
 - [ADR-N-041](adr-n-041-entity-identity-is-space-and-urn.md) — an entity is its space and its URN.
 - [Architecture/07-agents-and-mcp.md](../Architecture/07-agents-and-mcp.md) — the Data MCP surfaces.
-- [Requirements/endpoints.md](../Requirements/endpoints.md) — EP-24, EP-25, EP-87, EP-88, EP-92…EP-96.
+- [Requirements/endpoints.md](../Requirements/endpoints.md) — EP-24, EP-25, EP-87, EP-88, EP-92…EP-96, EP-133, EP-134.
+- [API/05-knowledge-assistant.md](../API/05-knowledge-assistant.md) — §4, the search the gateway calls.
 - [Requirements/space-surface.md](../Requirements/space-surface.md) — SP-14…SP-20.
