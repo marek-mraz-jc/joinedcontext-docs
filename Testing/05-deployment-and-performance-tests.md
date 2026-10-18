@@ -114,7 +114,7 @@ Memory growth is a least-squares slope of the resident set over the run, express
 ### Running one
 
 ```bash
-GATEWAY_URL=https://{host}/cs/{space}/ngsi-ld/v1 \
+GATEWAY_URL=https://api.{domain}/cs/{space}/ngsi-ld/v1 \
   BROKER_URL=http://antares.joinedcontext.svc:8080/ngsi-ld/v1 \
   JC_K6_SCRIPT=gateway-latency-load.js JC_K6_RATE=5000 JC_K6_DURATION=1m \
   jc-conformance k6

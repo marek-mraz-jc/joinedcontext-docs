@@ -45,13 +45,13 @@ flowchart LR
 | API Surface | Base Path URL | Purpose | Primary Consumer |
 |---|---|---|---|
 | **Portal Management API** | `https://{host}/api/v1/...` | Managing projects, organizations, blueprints, and approvals | Portal UI, CI systems, admin scripts |
-| **Canonical Space Surface** | `https://{host}/cs/{space}/...` | Direct NGSI-LD access for the project owning the space | Project team members, resident pipelines |
+| **Canonical Space Surface** | `https://api.{domain}/cs/{space}/...` | Direct NGSI-LD access for the project owning the space | Project team members, resident pipelines |
 | **Shared Endpoint Surface** | `https://api.{domain}/api/endpoint/{endpointSlug}/...`| Multi-representation data consumption (GeoJSON, CSV, OGC, MCP) | Dashboards, external users, QGIS, agents |
 | **Portal MCP** | `https://{host}/api/v1/mcp` | The management API as agent tools: proposing manifests, opening changes, reading a project | AI agents (Claude Code, OpenHands) |
-| **Endpoint and space MCP** | `https://api.{domain}/api/endpoint/{endpointSlug}/mcp`, `https://api.{domain}/api/mcp` (the hub), `https://{host}/cs/{space}/mcp` | The context data of one endpoint or space as agent tools, under the same Policy as every other read | AI agents |
+| **Endpoint and space MCP** | `https://api.{domain}/api/endpoint/{endpointSlug}/mcp`, `https://api.{domain}/api/mcp` (the hub), `https://api.{domain}/cs/{space}/mcp` | The context data of one endpoint or space as agent tools, under the same Policy as every other read | AI agents |
 | **Public documentation** | `https://portal.{host}/docs/API/{page}`, `https://portal.{host}/docs/User-Guide/{page}` | The pages of this API chapter and of the User Guide, readable with no account, so a citizen can use a public Endpoint (T-4063). `{page}` is the file name without `.md`; the apex `https://{host}/docs/...` redirects there. No other chapter (Operations, Deployment, Architecture) is served there | Citizens, external developers |
 
-The public data surfaces, the Shared Endpoint Surface and the hub, answer on their own host `api.{domain}` (`api.dev.joinedcontext.com` on `dev`); every other surface stays on the Portal's host `{host}` ([EP-128](../Requirements/endpoints.md), [ADR-N-052](../Decisions/adr-n-052-anonymous-oauth-public-mcp.md)). Until release `v0.2.0` the old `https://{host}/api/endpoint/...` and `https://{host}/api/mcp...` answer `308` to the same path on `api.{domain}`.
+Every surface that serves data to the outside, the Canonical Space Surface, the Shared Endpoint Surface, the hub and the harvesting feed `/catalog*`, answers on its own host `api.{domain}` (`api.dev.joinedcontext.com` on `dev`); the Portal and its public pages stay on `portal.{domain}`, the open-data catalogue on `data.{domain}` ([EP-128](../Requirements/endpoints.md), [ADR-N-052](../Decisions/adr-n-052-anonymous-oauth-public-mcp.md)). Until release `v0.2.0` the old addresses of those four on `{host}` and `portal.{host}` answer `308` to the same path on `api.{domain}`; a client drops its `Authorization` header when it follows a redirect to another host, so a caller with a token changes its address.
 
 ---
 

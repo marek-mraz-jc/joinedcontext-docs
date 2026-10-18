@@ -18,11 +18,12 @@ What the target cluster must provide before [02-installation.md](02-installation
 
 ## 2. Network & DNS Requirements
 
-One base domain is delegated to the ingress controller (`global.domain`). The edge puts most surfaces on the apex host and gives three names their own subdomain, taken from the `subDomain` key of each component's `apisix-routes.yaml`.
+One base domain is delegated to the ingress controller (`global.domain`). The edge puts the forge on the apex host and gives the other surfaces their own subdomain, taken from the `subDomain` key of each component's `apisix-routes.yaml`.
 
 | Host | Target | Usage |
 |---|---|---|
-| `<domain>` | APISIX data plane | The programmatic surfaces: `/api/endpoint/*` (NGSI-LD, STA, OGC Features, MCP, per Endpoint), `/cs/*`, the forge under `/git/*`, and `/apps/{name}/*` only as a `308` to the App's host |
+| `<domain>` | APISIX data plane | The forge under `/git/*`; `/apps/{name}/*` only as a `308` to the App's host, and the old data paths only as a `308` to `api.<domain>` |
+| `api.<domain>` | APISIX data plane, Context Gateway | Every surface that serves data to the outside: `/api/endpoint/*` (NGSI-LD, STA, OGC Features, MCP, per Endpoint), the MCP hub `/api/mcp*`, `/cs/*`, the harvesting feed `/catalog*` and the anonymous OAuth server `/oauth/*` ([ADR-N-052](../Decisions/adr-n-052-anonymous-oauth-public-mcp.md)); covered by the `*.<domain>` record and its own HTTP-01 certificate |
 | `{name}.apps.<domain>` | APISIX, one host per published App | The App, its endpoint calls and its functions ([ADR-N-037](../Decisions/adr-n-037-an-origin-per-app.md)); covered by the `*.<domain>` record and one HTTP-01 certificate per App, or by a delegated `apps.<domain>` zone and the wildcard certificate `*.apps.<domain>` when `global.ingress.appsWildcard` is on |
 | `portal.<domain>` | Portal | The API, the UI and the Portal's MCP door ([ADR-N-019](../Decisions/adr-n-019-login-at-the-edge-apisix-openid-connect.md)) |
 | `idm.<domain>` | Keycloak | OIDC authentication, token issuance, account console |
