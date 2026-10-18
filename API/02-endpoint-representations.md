@@ -1010,7 +1010,7 @@ Smart Data Models type: `Event` (`https://smartdatamodels.org/dataModel.Event/Ev
 ### The refusal
 
 ```text
-Endpoint banskabystrica/banskabystrica-podujatia: `ical` needs the type Event in the data model of space banskabystrica-verejne with the required attribute(s) startDate (EP-125)
+Endpoint banskabystrica/banskabystrica-podujatia: `ical` needs the type Event with the required attribute(s) startDate in the data model of space banskabystrica-verejne (EP-125)
 ```
 
 ### An entity that lacks a mandatory attribute
