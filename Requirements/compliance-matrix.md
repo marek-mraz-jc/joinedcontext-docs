@@ -537,6 +537,7 @@ Generated 2026-10-17 from: `docs` 84a13b5, `conformance` 1d4bd95, `deployment` 2
 | **DM-94** | [H] [S] | tested | ci-full, fast ci | portal `src/quality_checks.rs::the_metric_lines_are_read_by_their_labels_and_nothing_else`, portal `src/quality_checks.rs::no_reading_is_an_empty_answer_never_all_passing`, portal `src/quality_checks.rs::the_windows_count_what_grew_inside_them_and_name_the_attribute`, and 7 more |
 | **DM-95** |  | tested | ci-full | platform `crates/jcctl/tests/publish_ckan_tests.rs::the_quality_measurements_reach_the_record_and_the_dataset`, portal `tests/ckan_reconciler_tests.rs::the_measurements_are_the_spaces_pass_rate_and_freshness`, portal `tests/ckan_reconciler_tests.rs::a_datasets_measurements_are_read_by_its_spaces_segment` |
 | **DM-96** | [S] | open |  |  |
+| **DM-97** | [S] [P] | open |  |  |
 
 ### DS — Data space connector
 
