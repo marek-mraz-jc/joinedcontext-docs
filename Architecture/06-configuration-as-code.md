@@ -244,7 +244,7 @@ Rules that make bundles portable: identity is `(group, kind, namespace, name)` a
 | `SharedSpaceReference`| `projects/{p}/shared/` | `schema/kinds/SharedSpaceReference.json`| Context Gateway In-Memory Sharing Table |
 | `Blueprint` | `blueprints/{n}/blueprint.yaml` | `schema/kinds/Blueprint.json` | Portal API Flow Gallery |
 | `Mapping` | `projects/{p}/spaces/{s}/datamodels/mappings/` | `schema/kinds/Mapping.json` | Model Tools (validate, compile → `generated/*.blobl`); Bento via `Pipeline.spec.mappingRef` (DM-33…DM-42) |
-| `ServiceAccount` | `projects/{p}/access/serviceaccounts/` | `schema/kinds/ServiceAccount.json` | Keycloak client / Portal API key table (hashes only); Policy entities for grants (PF-34…PF-40) |
+| `ServiceAccount` | `projects/{p}/access/serviceaccounts/` | `schema/kinds/ServiceAccount.json` | Keycloak client; Policy entities for grants (PF-34…PF-40) |
 | `Environment` | `environments/` (org level) | `schema/kinds/Environment.json` | Merged by every loader before validation; red lane (CC-73…CC-75) |
 | `ContextBroker` | `brokers/` (org level) | `schema/kinds/ContextBroker.json` | Portal reconciler: one Antares release, database and Keycloak client per broker; spaces name it by `spec.brokerRef` (PF-110, PF-111, ADR-N-047) |
 | `Group` | `users/groups/` (org level) | `schema/kinds/Group.json` | Keycloak groups the reconciler manages, members pruned to the manifest (PF-62, PF-63) |
