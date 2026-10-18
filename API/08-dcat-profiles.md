@@ -89,7 +89,18 @@ The conformance repository vendors the shapes under `dcat/shapes/<profile>/<vers
 
 A third national profile is one more folder of shapes and one more entry in `PROFILES`; nothing else changes.
 
-## 5. Safe and reusable records
+## 5. Choosing a profile
+
+An Organization names the national profiles its records are served in, in `Organization.spec.dcatProfiles`: a list of `dcat-ap-sk` and `dcat-ap-cz`, empty by default. DCAT-AP 3.0 is always served and stays the default representation.
+
+- **One rendering per profile.** The record of an Endpoint and the catalogue feed take `?profile=<id>`: `dcat-ap` (the default), or a profile the Organization lists. A profile it does not list, or one this build was compiled without, answers 404. Every profile renders the same core record (title, description, publisher, themes, licence, distributions) and only adds or retypes what section 2 or 3 asks for, so the core values never differ between profiles.
+- **The Slovak record has no checksum.** The DCAT-AP 2.1.1 base accepts only SHA-1 in `spdx:algorithm`, and every checksum node must carry it. SHA-1 is broken, and `spdx:checksum` is optional in 2.1.1, so a `dcat-ap-sk` record omits it and types `dcat:byteSize` as `xsd:decimal`. The DCAT-AP 3.0 record keeps its SHA-256 checksums (EP-68).
+- **SK and CZ in one record is not offered.** The two bases disagree on `dcat:byteSize` and on the checksum, so no single record meets both; an Organization listing both serves two renderings.
+- **Inputs.** The national terms-of-use node (`leg:TermsOfUse`, `pu:Specifikace`) is derived from `spec.catalog.license`; `dct:spatial`, `dct:accrualPeriodicity`, `dcat:keyword`, `r5r:applicableLegislation` and the publisher come from `spec.catalog` as today. A property a profile requires and the Endpoint does not declare is left out, never invented, and the conformance suite names it.
+
+Decided (worker-2, T-4499, owner may override): a profile is a query parameter, not content negotiation by `Accept-Profile`, because a harvester is configured with one URL. The other options were one URL per profile, or the profile as an `Accept-Profile` header.
+
+## 6. Safe and reusable records
 
 These rules hold for every profile, so a record meeting a national catalogue never says more than the Endpoint's public description:
 
@@ -98,7 +109,7 @@ These rules hold for every profile, so a record meeting a national catalogue nev
 - **Licences only from the EU licence table** (`http://publications.europa.eu/resource/authority/licence`), and the national terms-of-use node (`leg:TermsOfUse`, `pu:Specifikace`) is derived from that licence, never typed separately (EP-78).
 - **Profiles are data.** The shapes and the mapping table are the profile; the code that writes a record reads them and holds no profile-specific branch.
 
-## 6. Requirements
+## 7. Requirements
 
 - **EP-27** [H][P][A] — the Endpoint's DCAT-AP 3.0 record ([Requirements/endpoints](../Requirements/endpoints.md)).
 - **EP-46** [P][A] — the schema artifacts the record lists.

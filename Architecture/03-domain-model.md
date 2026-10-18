@@ -395,6 +395,7 @@ spec:
   gitRepositoryUrl: https://forge.hel.fi/kaupunki/config.git
   locales: [sk, en, de, cs]         # ordered, most preferred first (PF-25)
   defaultLocale: sk                 # the fallback locale, MUST be one of spec.locales (PF-25, PF-26)
+  dcatProfiles: [dcat-ap-sk]        # national DCAT-AP profiles its records are also served in (API/08); DCAT-AP 3.0 always
   contacts:
     - role: administrative          # administrative | technical | data-protection | security | open-data
       name: "Odbor digitalizácie"
