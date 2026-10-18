@@ -39,13 +39,39 @@ description: The chat route of jc-assistant, its Server-Sent Events, and how the
 | `internal` | a signed-in person, in the Portal | through the Portal (§1.7); `404` here |
 
 - A request whose `Origin` is present and not in the deployment's `allowedOrigins` answers `403`. The route answers CORS preflight for the allowed origins only, with `Access-Control-Allow-Origin` naming the origin, never `*`. (AG-100)
+- On these channels every question carries a visitor token (§1.2.1) in `X-JC-Visitor`. A request without one, or with one that is forged, expired or another deployment's, answers `401` with a `detail` the chat shows, in Slovak; the widget then gets a new token and asks again once. (T-4653)
+- A request that names no `Origin` is no browser on an allowed site: it also counts in a pool of its own, a sixth of `rateLimit.requestsPerMinute` (one at least), and all such requests share one visitor's share of the day's cost. (T-4653)
 - `rateLimit.requestsPerMinute` counts every request of the deployment, `rateLimit.perClientPerMinute` the requests of one client address: `X-Forwarded-For` read from the right, past the cluster's own private, loopback and link-local proxy hops, to the address the edge appended, so an address a caller writes in front changes nothing (T-3059). Past any of them, `429` with `Retry-After` and a `detail` the chat shows, in Slovak. (AG-101)
 - One client also has `rateLimit.perClientPerHour`, `rateLimit.perClientPerDay` and `rateLimit.perClientPerMonth` questions (the month is the UTC calendar month; default 300 when the manifest names none), and `rateLimit.streamsPerClient` answers in progress at once. A request that one window refuses counts in none. The service knows a client by a keyed hash of the address and the UTC day (the month, for the monthly window), with a key that is random per process; it stores and logs no address (T-4149, T-4286). Past the monthly window that client is answered as search, without a model call, under a sentence that names the day it resets (the first of the next month), like the cost cap below; the minute, hour and day windows still count, and other clients are not affected. (AG-101)
+- The visitor token's id counts a minute of `rateLimit.perClientPerMinute` and `rateLimit.streamsPerClient` of its own, so people behind one address (an office, a school, a mobile carrier) each have their own minute. The hour, day and month windows and the cost share below stay the address's: a new token never buys a fresh month or cost share. With a token, the address's minute is five times `rateLimit.perClientPerMinute`. (T-4653)
+- One visitor, or the no-`Origin` pool together, spends at most a tenth of `budget.costPerDayUsd` a day; past that, their questions are answered as search (as at the cost cap below) while other visitors still get answers. `history` turns on these channels are cut to 1,000 characters each. (T-4653)
 - `budget.questionChars` caps the question (`400` past it) and `budget.messagesPerConversation` the questions of one conversation (`429`, start a new one). One answer takes at most 30 seconds; past that, an `error` event with status `504`. `enabled: false` answers every request `503`. (T-4149)
 - `budget.costPerDayUsd` caps the day's cost: the sum of each model response's `usage.cost`, per deployment and UTC day. From the request that finds the cap reached, the chat answers as search, without a model call: one `answer` event that says so in Slovak and cites the best-matching pages, then `citations` and `done` with `modelCalls: 0`. The service logs the cap once a day. (T-4149, AG-107)
 - `budget.tokensPerDay` is the model proxy's cap (§2). A question whose model call the proxy refuses for the day is answered the same way, as search with the best-matching pages, never with a refusal: no visitor reads that the assistant's answers are used up. `costPerDayUsd` is the guard a deployment is sized by; a public deployment's `tokensPerDay` is set high enough that the cost cap binds first (T-4286).
 - The service answers at most 32 questions at once across its deployments; a question past that is refused, never queued: `503` with `Retry-After: 5` and nothing spent (T-3059).
 - One model reply may carry at most 4 tool calls and each call's arguments at most 4,096 characters as JSON; a call past either is answered to the model with a refusal instead of being run (T-3059).
+
+#### 1.2.1 Visitor token
+
+A visitor token proves that the browser spent a moment of work, and gives each person behind one address a minute of their own (T-4653). It carries a random id and its expiry, nothing about the person, and the service stores nothing per token: the challenge and the token are signed with a key that is random per process, so a restart only makes the widget fetch a new one.
+
+1. `GET https://assistant.{domain}/api/v1/d/{publicId}/challenge` answers `200`, `Cache-Control: no-store`:
+
+   ```json
+   { "challenge": "3q2-7w.1760792400.14.9f2c…", "difficulty": 14, "expiresAt": "2026-10-18T13:00:00Z" }
+   ```
+
+   `challenge` is opaque and valid for 2 minutes. `difficulty` is the number of leading zero bits the proof needs: 14, and 18 while the deployment's minute is above 80 % of `requestsPerMinute`, so a script pays more work per token when the assistant is busy.
+2. The widget finds a decimal `nonce` such that SHA-256 of the UTF-8 text `{challenge}:{nonce}` starts with `difficulty` zero bits, in a Web Worker (`crypto.subtle`), while the panel opens.
+3. `POST https://assistant.{domain}/api/v1/d/{publicId}/token` with `{"challenge": "…", "nonce": "48211"}` answers `200`:
+
+   ```json
+   { "token": "a41f….1760795940.0c7d…", "expiresAt": "2026-10-18T14:00:00Z" }
+   ```
+
+   valid for 1 hour. A challenge that is malformed, expired, not signed by this service for this `publicId`, or a nonce whose hash does not meet the difficulty answers `400`. The same solved challenge always gives the same visitor id, so replaying one proof is one visitor. One address redeems at most 10 tokens a minute per deployment (`429` past it); a browser needs one an hour. The challenge route keeps no state and is left to the edge's per-address limit.
+
+Both routes follow the `Origin` rules of §1.2, and the preflight allows `GET`, `POST` and the `content-type` and `x-jc-visitor` headers. The MCP and API channels keep their own authentication and need no visitor token.
 
 ### 1.3 Answer: Server-Sent Events
 
