@@ -26,6 +26,7 @@ The enforcement point in front of every broker surface (`context-gateway`).
 |---|---|---|---|
 | `JC_ENVIRONMENT` | — | no | The overlay `JC_ENVIRONMENT` names, as `validate` and `plan` read it (CC-73). |
 | `JC_GATEWAY_ASSEMBLY_DIR` | `/tmp/jc-assembly` | no | Where a layout 2 organization is assembled (`JC_GATEWAY_ASSEMBLY_DIR`, default `/tmp/jc-assembly`), a scratch directory the pod owns. |
+| `JC_GATEWAY_ASSISTANT_URL` | — | no | `jc-assistant`, scheme and authority, for `search_documents` (`JC_GATEWAY_ASSISTANT_URL`, e.g. `http://jc-assistant.assistant:8080`, EP-133); absent offers the tool nowhere. |
 | `JC_GATEWAY_BIND` | `0.0.0.0:8080` | no | The address to listen on (`JC_GATEWAY_BIND`, default `0.0.0.0:8080`). |
 | `JC_GATEWAY_BROKER_URL` | — | no | The broker to forward to, scheme and authority only (`JC_GATEWAY_BROKER_URL`): the implicit `main`, and every space when the organization declares no broker. |
 | `JC_GATEWAY_BROKER_URL_TEMPLATE` | — | no | The address of every other `ContextBroker`, `{broker}` replaced by its name (`JC_GATEWAY_BROKER_URL_TEMPLATE`, ADR-N-047); absent refuses the spaces that live on one rather than sending them to `main`. |
@@ -34,6 +35,7 @@ The enforcement point in front of every broker surface (`context-gateway`).
 | `JC_GATEWAY_DOMAIN_VERIFICATIONS_URL` | — | no | The Portal's list of domain states (`JC_GATEWAY_DOMAIN_VERIFICATIONS_URL`, its internal listener's `/internal/domain-verifications`); required under `enforce`. |
 | `JC_GATEWAY_EGRESS_CA_BUNDLE` | — | no | A PEM file of extra trust anchors the outbound client trusts on top of the public roots (`JC_GATEWAY_EGRESS_CA_BUNDLE`), for a broker behind the installation's own CA (R46). |
 | `JC_GATEWAY_EGRESS_PRIVATE_HOSTS` | — | no | Hosts inside the platform's own networks a subscription may still name as its target (`JC_GATEWAY_EGRESS_PRIVATE_HOSTS`, comma-separated); empty refuses them all (T-1302). |
+| `JC_GATEWAY_HUB_KNOWLEDGE_SOURCES` | — | no | The knowledge sources the hub's `search_documents` searches (`JC_GATEWAY_HUB_KNOWLEDGE_SOURCES`, comma-separated `{project}/{source}`, MF-57). |
 | `JC_GATEWAY_INTERNAL_BIND` | — | no | The internal listener, for the MQTT brokers' CONNECT checks only (`JC_GATEWAY_INTERNAL_BIND`, e.g. `0.0.0.0:8082`); absent serves none (ADR-N-048). |
 | `JC_GATEWAY_MQTT_RUNNER_HOST` | — | no | The pipeline runner's headless Service (`JC_GATEWAY_MQTT_RUNNER_HOST`, e.g. `pipeline-runner-pods.dev.svc.cluster.local`): a broker admits the runner's tokenless CONNECT only from an address this name resolves to; absent admits none (PL-76, T-4004). |
 | `JC_GATEWAY_OAUTH_KEY` | — | yes | The key the anonymous OAuth server signs with (`JC_GATEWAY_OAUTH_KEY`, from a `secretRef`, at least 32 bytes, ADR-N-052 §2.2.6); absent serves no `/oauth/*`. |
