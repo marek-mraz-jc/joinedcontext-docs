@@ -58,10 +58,10 @@ A visitor token proves that the browser spent a moment of work, and lets the lim
 1. `GET https://assistant.{domain}/api/v1/d/{publicId}/challenge` answers `200`, `Cache-Control: no-store`:
 
    ```json
-   { "challenge": "3q2-7w.1760792400.16.9f2c…", "difficulty": 16, "expiresAt": "2026-10-18T13:00:00Z" }
+   { "challenge": "3q2-7w.1760792400.14.9f2c…", "difficulty": 14, "expiresAt": "2026-10-18T13:00:00Z" }
    ```
 
-   `challenge` is opaque and valid for 2 minutes. `difficulty` is the number of leading zero bits the proof needs: 16, and 20 while the deployment's minute is above 80 % of `requestsPerMinute`, so a script pays more work per token when the assistant is busy.
+   `challenge` is opaque and valid for 2 minutes. `difficulty` is the number of leading zero bits the proof needs: 14, and 18 while the deployment's minute is above 80 % of `requestsPerMinute`, so a script pays more work per token when the assistant is busy.
 2. The widget finds a decimal `nonce` such that SHA-256 of the UTF-8 text `{challenge}:{nonce}` starts with `difficulty` zero bits, in a Web Worker (`crypto.subtle`), while the panel opens.
 3. `POST https://assistant.{domain}/api/v1/d/{publicId}/token` with `{"challenge": "…", "nonce": "48211"}` answers `200`:
 
