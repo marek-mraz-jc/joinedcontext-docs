@@ -63,7 +63,7 @@ spec:
       operations: [queryEntity, retrieveEntity, queryTemporal]      # CIM 009 names (R8)
       temporalQ: { window: P1D }                                     # today only
       geoQ: { within: { scopeRef: /geo/FI/HKI } }
-      representations: [ngsi-ld, geojson]           # Endpoint.enabledRepresentations vocabulary (EP-08)
+      representations: [ngsi-ld, csv]               # Endpoint.enabledRepresentations vocabulary (EP-08)
   limits: { requestsPerMinute: 600, maxFileRows: 20000 }
   csp: { connectSrc: [self], frameAncestors: [], frameSrc: [] }     # defaults; only the app's own endpoint is reachable, only the Portal frames it, it frames only itself
   egress: []                                                         # a server pod's destinations besides its endpoint: {cidr, ports}, red lane (AP-134)
@@ -226,7 +226,7 @@ spec:
       attrs: [pm10, pm25, airQualityIndex, location, name, stewardNote]
       operations: [queryEntity, retrieveEntity, queryTemporal, updateAttrs]
       temporalQ: { window: P1D }
-      representations: [ngsi-ld, geojson]
+      representations: [ngsi-ld, csv]
   limits: { requestsPerMinute: 300, maxFileRows: 5000 }
 ```
 
@@ -250,7 +250,7 @@ spec:
       types: [Vehicle]
       attrs: [location, bearing, speed, refLine]
       operations: [queryEntity, retrieveEntity]
-      representations: [ngsi-ld, geojson]
+      representations: [ngsi-ld, csv]
   limits: { requestsPerMinute: 1200, maxFileRows: 5000 }
 ```
 

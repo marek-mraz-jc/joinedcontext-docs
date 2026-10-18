@@ -367,7 +367,7 @@ spec:
 
 A class absent from `spec.classes` is not exposed at all; a class listed with an empty `slots` list is exposed with identity only (`id`, `type`). CI and `jcctl plan` refuse a projection that names a class or slot version 3 of `fleet` does not have, every offending name listed at once, so an Endpoint that exposes nothing cannot look like one that works.
 
-The Endpoint references it as `spec.projectionRef: { kind: ModelProjection, name: partner-view }` beside its `policyRef`, and so may any number of others; the rest of the Endpoint is what section 3 shows (`contextSpaceRef: fleet`, `audience: project-list` with `allowedProjects: [regional-transport]`, `enabledRepresentations: [ngsi-ld, geojson]`, and a slug minted by the Portal, never typed, EP-75). The member appears in the published `Endpoint` schema with T-0563.
+The Endpoint references it as `spec.projectionRef: { kind: ModelProjection, name: partner-view }` beside its `policyRef`, and so may any number of others; the rest of the Endpoint is what section 3 shows (`contextSpaceRef: fleet`, `audience: project-list` with `allowedProjects: [regional-transport]`, `enabledRepresentations: [ngsi-ld, csv]`, and a slug minted by the Portal, never typed, EP-75). The member appears in the published `Endpoint` schema with T-0563.
 
 What comes out of the schema surface (MP-03, EP-47) is the projected model, generated, never a second hand-maintained file; two callers with different grants see two different documents, each a subset of this one:
 

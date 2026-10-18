@@ -604,7 +604,7 @@ flowchart LR
 - Always re-importable: `status` stripped, secrets as `secretRef`, generated schema artifacts and native `bento.yaml`/LinkML files included next to their envelopes.
 - Self-describing: a whole-project download carries what its files mean. `schemas/kinds/{Kind}.schema.json` is the JSON Schema of every kind it holds, with the description of every field; `schemas/models/{name}/` holds every data model's LinkML source and JSON Schema; `README.md` lists each kind with what it is, how many resources it holds and where its schema is. A person or another tool reads the bundle without this platform's documentation, and an import leaves these files out of the project (MF-41).
 - Grants apply: a viewer's download omits what they may not read and says only how many objects were omitted.
-- Live entities and history are a separate *data export* through the space's endpoint (`file.{json|csv|geojson}`), so configuration bundles never carry state (CC-07).
+- Live entities and history are a separate *data export* through the space's endpoint (`file.csv` and its APIs), so configuration bundles never carry state (CC-07).
 
 ### Import (MF-20…MF-26)
 

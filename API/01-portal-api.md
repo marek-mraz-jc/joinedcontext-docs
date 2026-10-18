@@ -1147,7 +1147,7 @@ GET /api/v1/projects/{project}/apps/{name}/export
 - Grants apply as on the resource API: the bundle holds the kinds the caller may `read` in the
   project (PF-59), a project they may not read is `404`, and `omitted` in the index counts what
   was withheld without naming it (MF-18). Live entities and histories are
-  never part of a bundle (MF-19); they are the endpoint's `file.{json|csv|geojson}` representation.
+  never part of a bundle (MF-19); they are the endpoint's `file.csv` and its APIs.
 - `/revisions` is the history of `projects/{project}/` on the default branch, newest first, for the
   revision picker (Architecture/06 section 6): `sha`, `message`, `author`, `date`. `limit` is 1…100,
   default 20.
@@ -2360,7 +2360,7 @@ POST /api/v1/projects/{project}/assistant/propose-endpoint
   "name": "bikes-regional-transport",
   "audience": "project-list",
   "allowedProjects": ["regional-transport"],
-  "representations": ["ngsi-ld", "geojson"],
+  "representations": ["ngsi-ld", "csv"],
   "hiddenAttributes": ["maintenanceNote"],
   "entityTypes": ["BikeHireDockingStation"]
 }
@@ -2370,14 +2370,14 @@ POST /api/v1/projects/{project}/assistant/propose-endpoint
 {
   "lane": "yellow",
   "slug": "k7m2p9q4r6s8t3v5w7x2y4z6a8b3",
-  "endpoint": { "apiVersion": "joinedcontext.com/v1alpha1", "kind": "Endpoint", "metadata": { "name": "bikes-regional-transport", "namespace": "helsinki" }, "spec": { "contextSpaceRef": "helsinki", "slug": "k7m2p9q4r6s8t3v5w7x2y4z6a8b3", "audience": "project-list", "allowedProjects": ["regional-transport"], "enabledRepresentations": ["ngsi-ld", "geojson"], "projection": { "hiddenAttributes": ["maintenanceNote"] } } },
+  "endpoint": { "apiVersion": "joinedcontext.com/v1alpha1", "kind": "Endpoint", "metadata": { "name": "bikes-regional-transport", "namespace": "helsinki" }, "spec": { "contextSpaceRef": "helsinki", "slug": "k7m2p9q4r6s8t3v5w7x2y4z6a8b3", "audience": "project-list", "allowedProjects": ["regional-transport"], "enabledRepresentations": ["ngsi-ld", "csv"], "projection": { "hiddenAttributes": ["maintenanceNote"] } } },
   "policies": [ { "apiVersion": "joinedcontext.com/v1alpha1", "kind": "Policy", "metadata": { "name": "bikes-regional-transport-regional-transport", "namespace": "helsinki" }, "spec": { "contextSpaceRef": { "kind": "ContextSpace", "name": "helsinki" }, "assigner": "did:web:hel.fi", "assignee": { "kind": "group", "id": "regional-transport" }, "operations": ["retrieveOps"], "information": [ { "entities": [ { "type": "BikeHireDockingStation" } ] } ] } } ],
-  "prefill": { "name": "bikes-regional-transport", "contextSpaceRef": "helsinki", "slug": "k7m2p9q4r6s8t3v5w7x2y4z6a8b3", "audience": "project-list", "allowedProjects": ["regional-transport"], "enabledRepresentations": ["ngsi-ld", "geojson"], "hiddenAttributes": ["maintenanceNote"] }
+  "prefill": { "name": "bikes-regional-transport", "contextSpaceRef": "helsinki", "slug": "k7m2p9q4r6s8t3v5w7x2y4z6a8b3", "audience": "project-list", "allowedProjects": ["regional-transport"], "enabledRepresentations": ["ngsi-ld", "csv"], "hiddenAttributes": ["maintenanceNote"] }
 }
 ```
 
 - `audience` defaults to `project-list`; `project-list` needs at least one project in
-  `allowedProjects`; `representations` defaults to `ngsi-ld` and `geojson`; every name is a
+  `allowedProjects`; `representations` defaults to `ngsi-ld` and `csv`; every name is a
   DNS-1123 label and every attribute an identifier, or the answer is `400`.
 - `access` names what the new endpoint's Policy grants: absent, `retrieveOps` (a share); `read`,
   `update` or `full`, the operations of AP-132 for an endpoint an app proposes; `create`,
@@ -3681,7 +3681,7 @@ DELETE /api/v1/organization/people/{id}/consents/{client}          → 204
 ```json
 {"subject": {"serviceAccount": "ovzdusie-etl", "groups": [], "roles": []},
  "endpoints": [{"name": "air", "slug": "zt4qm7ge2xdv6ksb3ncf5arw2y", "title": "Air quality",
-                "space": "ovzdusie", "representations": ["ngsi-ld", "geojson", "mcp"],
+                "space": "ovzdusie", "representations": ["ngsi-ld", "csv", "mcp"],
                 "policies": ["public-air"],
                 "permissions": [{"resource": {"type": "AirQualityObserved"},
                                  "actions": ["queryEntity", "retrieveEntity"],
@@ -3702,7 +3702,7 @@ DELETE /api/v1/organization/people/{id}/consents/{client}          → 204
   `prohibitions` as the gateway answered them (types, actions, attributes, and the view
   restriction as `constraints` `q`, `scopeQ`, `geoQ`, `temporalQ`), `policies` naming the Policies
   in force for the subject, and `representations`, the surfaces the Endpoint serves (the list of
-  its manifest, then `ngsi-ld`, `geojson` and, unless `spec.mcp` is `false`, `mcp`). The page
+  its manifest, then `ngsi-ld` and, unless `spec.mcp` is `false`, `mcp`). The page
   builds each surface's URL under `/api/endpoint/{slug}` and the hub's at `/api/mcp`.
 - `mcpServers` names the project's McpServers (ADR-N-043) with a member among the rows.
 - The page is Project settings → Access explorer, `/projects/{project}/settings/explorer`, with
