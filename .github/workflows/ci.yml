@@ -54,7 +54,8 @@ jobs:
         # 2d2eb92 -> platform 6be6fd8 (T-4346): AssistantDeployment `widget` (T-4343) is documented; the
         # platform branch tip (main 7a84e61 plus T-4343), until its merge on main is the pin.
         # 6be6fd8 -> platform main 3c50417: T-4343's merge on platform main.
-        env: { JC_SCHEMAS_TAG: 3c5041739bf6e7ff03f9d8bd453f770e5b437b63 }
+        # 3c50417 -> platform main 4362451 (T-4555): Organization `dcatProfiles` (T-4499) is documented.
+        env: { JC_SCHEMAS_TAG: 4362451056784fb02a897bfdad52b274a28cfe17 }
         run: |
           set -eu
           curl -sSL "https://github.com/marek-mraz-jc/joinedcontext-platform/archive/${JC_SCHEMAS_TAG}.tar.gz" \
@@ -181,7 +182,8 @@ jobs:
     # e219f50 -> platform main 2d2eb92 (T-4300): a Theme's `title` (T-4283).
     # 2d2eb92 -> platform 6be6fd8 (T-4346): AssistantDeployment `widget` (T-4343).
     # 6be6fd8 -> platform main 3c50417: T-4343's merge on platform main.
-    env: { JC_PLATFORM_TAG: 3c5041739bf6e7ff03f9d8bd453f770e5b437b63 }
+    # 3c50417 -> platform main 4362451 (T-4555): Organization `dcatProfiles` (T-4499).
+    env: { JC_PLATFORM_TAG: 4362451056784fb02a897bfdad52b274a28cfe17 }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
