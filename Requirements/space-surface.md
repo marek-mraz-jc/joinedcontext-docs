@@ -87,20 +87,15 @@ for the **SP-01…SP-22** family.
 - **SP-12** — Format handling: each artifact has one canonical
   content-negotiated resource; extension-suffixed URLs
   (`model.linkml.yaml`, …) MUST exist as direct-download aliases of the
-  same resource, never as divergent copies. The dump is one resource,
-  `dump/`, a ZIP archive with no alias (SP-13).
+  same resource, never as divergent copies.
 - **SP-13** — Versioning: `schema/context.jsonld` and model artifacts
   MUST have stable versioned URLs (e.g. `schema/v3/context.jsonld`)
   with `latest` as a redirect, a subscription's `jsonldContext` must
-  not change meaning under a live consumer. A dump is not versioned:
-  `GET /cs/{space}/dump/` MUST generate, per request, the `file.zip`
-  bundle (EP-41) over everything in the space the caller's grants read
-  at that instant, projected as the NGSI-LD surface projects it, named
-  by its date in `Content-Disposition`; a caller whose grants reach
-  nothing gets the `404` of a space that does not exist (SP-06), and a
-  dump past the byte or row ceiling (EP-44) MUST be refused whole with
-  `413`, never truncated. Nothing is stored, so there is no
-  `dump/latest` and no dated URL to pin (T-2391).
+  not change meaning under a live consumer. The space dump
+  (`/cs/{space}/dump/`, the `file.zip` bundle of EP-41) is withdrawn
+  (owner 2026-10-18, T-4597): the path answers the `404` of an unknown
+  child, and a space's data leaves through its Endpoints' `file.csv` and
+  APIs.
 
 ## 4. Per-space MCP instances
 

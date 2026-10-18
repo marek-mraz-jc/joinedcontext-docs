@@ -181,7 +181,7 @@ An endpoint with the SensorThings representation projects entities into the Sens
 
 The last row is a claim this documentation set and `tests/sta/README.md` both made and the code does not keep. Until the gateway either serves `$select` or refuses it, `tests/sta/test_sta_sensing.py::test_ts08_select_returns_only_the_requested_fields` is a red case waiting for a dispatch, not a proven class.
 
-Not claimed: the DataArray extension, MultiDatastream, and Tasking or Actuation. Bulk reads leave through the file representations (`file.csv`, `file.xlsx`, `file.zip`, `file.geojson`), not through an STA array, and every write to `sta/v1.1/` is a `405`.
+Not claimed: the DataArray extension, MultiDatastream, and Tasking or Actuation. Bulk reads leave through `file.csv` and the NGSI-LD API, not through an STA array, and every write to `sta/v1.1/` is a `405`.
 
 ---
 

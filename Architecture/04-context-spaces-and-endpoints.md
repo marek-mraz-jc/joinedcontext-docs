@@ -22,7 +22,7 @@ This specification establishes the public URL structure, tenancy abstraction, re
 |     https://{host}/api/endpoint/{endpointSlug}/            (GET → DCAT-AP record of the endpoint)  |
 |     ├── ngsi-ld/v1/          (Policy-Narrowed Standard ETSI CIM 009 API)                          |
 |     ├── mcp                  (Façade MCP with Grants Rendered into Active Tool Annotations)       |
-|     ├── file.{json|csv|xlsx|parquet|geojson|zip}  (file-style downloads, EP-41…45, EP-119)        |
+|     ├── file.csv  (the one file download, EP-42…45; the others went with T-4597)                  |
 |     ├── ogc/features/        (OGC API - Features Part 1: collections, items)                      |
 |     ├── sta/v1.1/            (SensorThings API v1.1 Read Path Projection)                         |
 |     ├── schema/              (Granted view of the model: LinkML, JSON Schema, @context, SHACL, OWL) |
@@ -49,7 +49,6 @@ No arbitrary path extensions are permitted. The gateway routes exactly these (SP
 - `/cs/{space}/ngsi-ld/v1/`: Byte-for-byte implementation of the ETSI GS CIM 009 REST specification (SP-03).
 - `/cs/{space}/mcp`: Data-plane Model Context Protocol Streamable HTTP endpoint (SP-03, SP-14).
 - `/cs/{space}/schema/index.json` and `/cs/{space}/schema/v{major}/{artifact}`: the same schema surface an Endpoint serves (§1a), named by its space. `{major}` is `v` and a whole number; anything else answers `404`.
-- `/cs/{space}/dump/`: the space's dump, the `file.zip` bundle (EP-41) over everything in the space the caller's grants read, generated per request and projected as `ngsi-ld/v1/` projects it (SP-13). Past the byte or row ceiling it is `413` whole, never a truncated archive; nothing is stored, so there is no dated or `latest` dump to pin (T-2391).
 
 A space has no `access` child: the caller's grants are an Endpoint's (`/api/endpoint/{slug}/access`).
 
@@ -204,7 +203,6 @@ spec:
   enabledRepresentations:
     - ngsi-ld
     - mcp
-    - geojson
     - csv
     - ogc-features
     - sta
@@ -407,7 +405,6 @@ flowchart LR
         PROJ["PEP Policy Attribute Masking (R9)"]
         
         T_NGSI["ngsi-ld/v1: Normalized / Compacted LD"]
-        T_GEO["file.geojson: FeatureCollection"]
         T_CSV["file.csv: Flattened Tabular Stream"]
         T_OGC["ogc/features: OGC API Items"]
         T_STA["sta/v1.1: SensorThings Datastreams/Obs"]
@@ -416,7 +413,6 @@ flowchart LR
 
     RAW --> PROJ
     PROJ --> T_NGSI
-    PROJ --> T_GEO
     PROJ --> T_CSV
     PROJ --> T_OGC
     PROJ --> T_STA
@@ -427,8 +423,7 @@ flowchart LR
 
 | Path Segment | Representation | Transformation Mechanism | Missing / Unrepresentable Concepts |
 |---|---|---|---|
-| `/ngsi-ld/v1/` | Canonical NGSI-LD | Passes through broker response after attribute stripping (R9). Supported content types: `application/ld+json`, `application/json`. | Fully spec-native. |
-| `/file.geojson` | GeoJSON (RFC 7946) | Maps entity `location` or geometry property to GeoJSON `geometry`. All other properties become GeoJSON `properties`. | Multi-geometry entities require layer selection; relationships are stringified to target URNs. |
+| `/ngsi-ld/v1/` | Canonical NGSI-LD | Passes through broker response after attribute stripping (R9). Supported content types: `application/ld+json`, `application/json`, and `application/geo+json` for maps (EP-10). | Fully spec-native. |
 | `/file.csv` | Flat Tabular CSV | Flattens nested Property objects into dot-notated column headers (e.g. `temperature.value`). | An array of scalars gets one column per index (`coordinates[0]`); an array holding arrays or objects, such as a polygon's rings, is one cell carrying its JSON, so no geometry widens the table. |
 | `/ogc/features/` | OGC API – Features Part 1 | Exposes entity types as OGC Collections (`/collections/{type}/items`). Conformance classes: Core, OpenAPI 3.0, GeoJSON. | CQL-Text queries compile to NGSI-LD `q` parameters; transactions are read-only. |
 | `/sta/v1.1/` | OGC SensorThings API v1.1 | Maps SensorThings entities to NGSI-LD equivalents: `Things` → Entity, `Datastreams` → Entity Property, `Observations` → Temporal Property instances. | MultiDatastreams and MQTT batch ingestion are not mapped on read-only endpoints. |
@@ -487,8 +482,8 @@ The MCP façade is an encoder like the others: a tool call is turned into the NG
 
 | Field | Effect | When absent |
 |---|---|---|
-| `spec.enabledRepresentations` | The representations this Endpoint serves, beside `ngsi-ld`, `geojson` and `mcp`, which every Endpoint serves whether or not it lists them (EP-10, EP-24, T-2939). A listed manifest serves exactly that, and is the only way to serve SensorThings (`sta`). A path that is not served answers `404`, the same answer an unknown slug gets (EP-23). | Every standard but `sta`, less `spec.disabledRepresentations` (EP-104, T-3829). |
-| `spec.disabledRepresentations` | The standards an Endpoint with no `spec.enabledRepresentations` switches off, one by one (EP-104). Refused beside `spec.enabledRepresentations`, and for `ngsi-ld`, `geojson` and `mcp` (`spec.mcp: false` turns MCP off). | Nothing is switched off. |
+| `spec.enabledRepresentations` | The representations this Endpoint serves, beside `ngsi-ld` and `mcp`, which every Endpoint serves whether or not it lists them (EP-10, EP-24, T-2939). A listed manifest serves exactly that, and is the only way to serve SensorThings (`sta`). A path that is not served answers `404`, the same answer an unknown slug gets (EP-23). | Every standard but `sta`, less `spec.disabledRepresentations` (EP-104, T-3829). |
+| `spec.disabledRepresentations` | The standards an Endpoint with no `spec.enabledRepresentations` switches off, one by one (EP-104). Refused beside `spec.enabledRepresentations`, and for `ngsi-ld` and `mcp` (`spec.mcp: false` turns MCP off). A name the enum lost (`geojson`, `json`, `xlsx`, `parquet`, `zip`, T-4597) is refused in either list with a message naming the removal. | Nothing is switched off. |
 | `spec.mcp` | `false` turns off the Endpoint's MCP instance, the one child path that is on without being listed: every Endpoint, public or internal, serves `mcp` by default, gated by its own Policy like every other path (EP-24, T-2901). `false` beside `mcp` in `spec.enabledRepresentations` is refused. | `true`: the Endpoint serves `mcp`. |
 | `spec.rateLimits.requestsPerMinute`, `spec.rateLimits.burst` | Token bucket per consumer IP or authenticated identity, advertised in `RateLimit-*` headers (EP-20). Set only by choice: no door writes one the person did not ask for. | No limit: the gateway counts nothing and sends no `RateLimit-*` fields. The edge's anti-flood bucket still protects the node. |
 | `spec.creates.mintIds`, `spec.creates.perDay` | For anonymous creation, a public form's Endpoint (EP-97, T-3172): the gateway mints the id of every entity created through the Endpoint (`urn:ngsi-ld:{type}:{uuid}`, the body's `id` ignored, the minted one in `Location`) and answers `429` past `perDay` creates in one UTC day. Counted per gateway replica. | The caller's id is kept and nothing is counted beyond `spec.rateLimits`. |
@@ -504,8 +499,7 @@ The standards an Endpoint serves (EP-104). "Default" is what an Endpoint whose m
 |---|---|---|---|---|
 | NGSI-LD (ETSI GS CIM 009, TS 104 175) | `ngsi-ld` | `ngsi-ld/v1/` | always (EP-10) | what the Policy grants |
 | Model Context Protocol | `mcp` | `mcp` | always, `spec.mcp: false` turns it off (EP-24) | what the Policy grants |
-| GeoJSON | `geojson` | `file.geojson`, `ogc/features/` items | always (EP-10) | none |
-| CSV, XLSX, Parquet, JSON, ZIP | `csv`, `xlsx`, `parquet`, `json`, `zip` | `file.csv`, `file.xlsx`, `file.parquet`, `file.json`, `file.zip` | on | none |
+| CSV | `csv` | `file.csv`, the one file an Endpoint publishes (T-4597) | on | none |
 | OGC API - Features, Parts 1 to 5 | `ogc-features` | `ogc/features/` | on | none: every non-safe method answers `405` (EP-39) |
 | OData v4 | `odata` | `odata/v4/` | on | none yet: every non-safe method answers `405` until the gateway applies the Endpoint's write guards to it (T-3939); then what the Policy grants |
 | WebSocket notifications (TS 104 243 envelope, Antares ADR-0026) | `websocket` | `ws` | on | Subscriptions of the connection only, as the Policy grants `create_subscription`; never context data (EP-106) |
@@ -521,7 +515,7 @@ The two endpoints below illustrate the fields above; they are not manifests the 
 |---|---|---|
 | Space | air quality, one `AirQualityObserved` model | public transport, `Vehicle` and `PublicTransportStop` |
 | Endpoint | `public-air`, `audience: public` | `public-transport`, `audience: public` |
-| Representations | `ngsi-ld`, `geojson`, `csv`, `xlsx`, `sta`, `mcp` | `ngsi-ld`, `geojson`, `csv`, `ogc-features`, `mcp` |
+| Representations | `ngsi-ld`, `csv`, `sta`, `mcp` | `ngsi-ld`, `csv`, `ogc-features`, `mcp` |
 | Anonymous grant | read `AirQualityObserved`, `dateObserved` and the pollutant properties | read `Vehicle` and `PublicTransportStop`, live position and line |
 | Hidden from the public endpoint | the raw calibration attributes of the sensor | the driver identifier and the vehicle's internal fleet id |
 | Writes | the ingest ServiceAccount only, through `Policy` | the ingest ServiceAccount only, through `Policy` |
@@ -792,7 +786,7 @@ spec:
   contextSpaceRef: { kind: ContextSpace, name: air-quality }
   slug: zt4qm7ge2xdv6ksb3ncf5arw2y
   audience: public
-  enabledRepresentations: [ngsi-ld, geojson, csv, ogc-features, sta, mcp]
+  enabledRepresentations: [ngsi-ld, csv, ogc-features, sta, mcp]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: open-data }   # where to publish

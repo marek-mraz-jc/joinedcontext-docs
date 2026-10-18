@@ -361,7 +361,7 @@ curl -sS "https://{host}/api/endpoint/{slug}/ngsi-ld/v1/entities/urn:ngsi-ld:Veh
 The same data as a map layer, which is the quickest check that `location` is a GeoProperty and not a string:
 
 ```bash
-curl -sS "https://{host}/api/endpoint/{slug}/file.geojson" | head -40
+curl -sS -H "Accept: application/geo+json" "https://{host}/api/endpoint/{slug}/ngsi-ld/v1/entities?type={Type}" | head -40
 ```
 
 Whether the numbers are moving, on a private endpoint, with a ServiceAccount token:
