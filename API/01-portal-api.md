@@ -3161,7 +3161,9 @@ GET /api/v1/projects/{project}/spaces/{space}/usage     the space's entity count
 ```
 
 ```json
-{ "entities": 14232, "broker": "main", "observedAt": "2026-09-25T11:40:00Z" }
+{ "entities": 14232, "broker": "main", "observedAt": "2026-09-25T11:40:00Z",
+  "bytes": { "entities": 48211968, "attrInstances": 1203456,
+             "byType": { "https://smartdatamodels.org/dataModel.Environment/AirQualityObserved": 48211968 } } }
 ```
 
 - A space the broker has no tenant for yet holds nothing: `entities` is `0`.
@@ -3174,7 +3176,16 @@ GET /api/v1/projects/{project}/spaces/{space}/usage     the space's entity count
   the same for everyone who reads the space; which entities they are is the entity read's.
 - The per-type breakdown on the space's page is the gateway's own `count=true` per type, read
   with the person's token, so it narrows as the person's grants do.
-- The storage size in bytes is not answered yet: the broker has no surface for it (T-2890).
+- `bytes` is the storage the space takes, measured by the broker in its store (`GET
+  /q/tenants/{tenant}` `bytes`, T-2890), never estimated: `entities` the current state,
+  `attrInstances` the history, `byType` the current state by each Entity's first type as the
+  broker stores it (an expanded IRI), summing to `entities`. Like the count it is the space's,
+  the same for everyone who reads the space; the type names are the space's DataModels, which the
+  reader already sees. A broker that cannot measure leaves `bytes` out, and so does a space it has
+  no tenant for yet; the page then shows no size, never a zero.
+- The Context Spaces list and the space's page show the size in binary units (KiB, MiB, GiB) with
+  the locale's separators and the exact bytes in the tooltip; the space's per-type table adds the
+  size of each type beside its count. The list sorts by size.
 
 ## 30. Data views of a space (ADR-N-042, T-3104, T-3099)
 
