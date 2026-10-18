@@ -5,9 +5,9 @@ title: "Data Models & the LinkML Editor"
 
 # Data Models & the LinkML Editor
 
-Family **DM** (DM-01…DM-103). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **DM** (DM-01…DM-129). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
-This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-103**. Consumer classes per `00-index.md`.
+This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-129**. Consumer classes per `00-index.md`.
 
 ## 1. Source of truth and artifacts
 
@@ -173,10 +173,42 @@ The model says how its attributes are shown: in which order, which few matter mo
 - **DM-102** [S] — Order, key attributes and labels MUST be computed on the caller's granted projection, so a slot the Endpoint does not expose to that caller MUST NOT appear as a column, a label, a key attribute or a SHACL property.
 - **DM-103** — The SHACL of an Endpoint's schema surface (`schema/v{major}/model.shacl.ttl`) MUST carry the display order as `sh:order` on each property shape, two `sh:PropertyGroup`s, the key attributes and the rest, linked by `sh:group`, and each label as a language-tagged `sh:name`, so a SHACL-aware tool shows the same order and names.
 
+## 17. History, versions, provenance and personal data
+
+The decision and its reasons are in [ADR-N-054](../Decisions/adr-n-054-history-versions-provenance-gdpr.md); the retention rules they extend are §15.
+
+- **DM-104** — The broker MUST identify a measurement by (Entity, attribute, `datasetId`, `observedAt`) and MUST treat a write whose value equals, in canonical JSON, the stored instance of the same identity as a duplicate: no row, and `modifiedAt` unchanged.
+- **DM-105** — A write of an existing identity with another value MUST be stored as a new version of that measurement, keeping the version before as superseded, and MUST change the current state only when that measurement is the current one.
+- **DM-106** — A write whose `observedAt` is before the current state's MUST be stored in history only and MUST NOT change the current state.
+- **DM-107** — The broker MUST stamp a write without `observedAt` with the time it received it and record `observedAtSource: received` in the row's provenance.
+- **DM-108** — A retention rule MAY carry `record` (`every`, the default, or `onChange`) for its type and per attribute, `onChange` with a required `heartbeat` duration and an optional `deadband` (numbers, in the attribute's `unitCode`) or `minDistance` (metres, a GeoProperty).
+- **DM-109** [P] — Under `onChange` the broker MUST write a row only when the value differs from the attribute's last recorded row by more than `deadband` or `minDistance`, or at all in canonical JSON for any other value, or when `heartbeat` has passed since that row.
+- **DM-110** [S] — The Portal MUST refuse `record: onChange` for a slot the model annotates `quantity: perInterval`.
+- **DM-111** [S] — Every row the broker keeps, versions and tombstones included, MUST carry the provenance fields `channel`, `actor`, `operation`, `reason`, `requestId` and `writtenAt` and MUST NOT carry a value of the data in them.
+- **DM-112** [S] — The gateway MUST set `channel` and `actor` from the write's path and verified token, the edge MUST drop every inbound `JC-Provenance-*` header, and the broker MUST accept provenance headers only from the gateway's mesh identity.
+- **DM-113** [S] — A `correct`, a `delete` and every write from the Portal's UI MUST carry a `JC-Reason` of 1 to 500 characters, and a write without one MUST answer `400` with the problem type `reason-required`.
+- **DM-114** [S] — A temporal query MUST answer the latest version of each measurement, and `versions=all` MUST return each measurement's versions with their provenance and `supersededAt` only to a role the space's Policy grants `readVersions`.
+- **DM-115** — A delete MUST be stored as a tombstone version with `deletedAt` (ETSI GS CIM 009 5.6.12), and a revert as a new version with `operation: correct`; the broker MUST NOT rewrite a stored version in place except to redact or erase it (DM-125, DM-126).
+- **DM-116** — Under `onChange` a write that changes only provenance MUST add no row, and a correction MUST always add one.
+- **DM-117** — A temporal query over an `onChange` attribute MUST include the attribute's last row before `timeAt`.
+- **DM-118** — `avg`, `min` and `max` over an `onChange` attribute MUST be weighted by the time each value held, and `sum` and `totalCount` over one MUST answer `400` with the problem type `aggregation-not-meaningful`.
+- **DM-119** — `lastN` MUST count measurements, the latest version of each, never versions.
+- **DM-120** [S] — The Portal MUST refuse a Data Model whose class or slot annotates `personalData: true` and whose class lacks `legalBasis`, `purpose` or `maxRetention`; `dataSubjectRef` MAY name the slot that identifies the person.
+- **DM-121** [S] — The gateway MUST apply a personal slot's `ingest` before any write reaches the broker, on every channel: `drop` stores nothing, `keyedHash` stores the HMAC-SHA-256 of the value under the space's `spec.personalData.keyRef` secret.
+- **DM-122** [S] — The Portal and the Policy compiler MUST refuse an Endpoint with `audience: public` whose projection exposes a personal slot.
+- **DM-123** [S] — The broker MUST delete every row of a personal attribute, current state and every version, whose `observedAt` is older than its class's `maxRetention`.
+- **DM-124** [S] — The Portal MUST export, to a person the space's Policy grants `personalData`, every Entity naming a data subject: its current state, its versions with provenance and the read log entries of those Entities.
+- **DM-125** [S] — A rectification MUST store the new value as a correction and replace the old personal value of the superseded version by `null` with `redacted: true`, keeping its provenance.
+- **DM-126** [S] — An erasure MUST remove the subject's values from the current state, every version, the audit payloads, the CKAN DataStore copy, the CSV exports, the gateway's caches and the assistant's stored conversations, leaving one tombstone per Entity with `operation: erase` and no value.
+- **DM-127** [S] — The Portal MUST keep an erasure log of the subject's keyed hash, the space, the time and the counts per store, never a value, and MUST re-apply every logged erasure after a restore before the restored data is served.
+- **DM-128** [S] — The gateway MUST log every read of a personal attribute through an Endpoint with the reader, the time, the Endpoint and the Entities' URNs, never values.
+- **DM-129** — How long a row lives MUST be decided by the first that applies: an erasure, the class's personal `maxRetention`, the type's history rule and its layers (DM-97), the platform default `P28D`; audit metadata MUST keep its own retention, `P2Y` by default.
+
 ## Traceability
 
 | Requirements | Section | Architecture | Tests |
 |---|---|---|---|
+| DM-104…DM-129 | History, versions, provenance and personal data | [ADR-N-054](../Decisions/adr-n-054-history-versions-provenance-gdpr.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | DM-98…DM-103 | Display order, key attributes and labels | [04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md#display-order-key-attributes-and-labels) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-60 | Multi-dimensional indicators (RDF Data Cube) | [03-domain-model.md](../Architecture/03-domain-model.md) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-59 | Units and their QUDT anchor | [11-data-models.md](../Architecture/11-data-models.md) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
