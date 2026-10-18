@@ -58,6 +58,7 @@ flowchart TD
 10. **[Edge Routing & APISIX Standalone Specification](10-edge-routing-apisix.md):** ingress topology, route tables, `apisix.yaml` generation, plugin chains.
 11. **[Moving a Project Between Instances](11-moving-a-project.md):** exporting a project and importing it elsewhere.
 12. **[Branding and Naming](12-branding-and-naming.md):** what an operator may rename, and what the platform derives.
+13. **[Production Instance smartcity](14-production-smartcity.md):** the production installation, its backups, restore and patch window.
 
 ## Related
 
