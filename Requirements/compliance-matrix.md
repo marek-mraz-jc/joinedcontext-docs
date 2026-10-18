@@ -697,9 +697,9 @@ Generated 2026-10-18 from: `docs` 175dc72, `conformance` 934eff1, `deployment` 0
 | **EP-125** | [S] [A] | tested | ci-full | platform `crates/jc-core/tests/endpoint_tests.rs::ical_needs_event_with_start_date_and_name_required_and_nothing_else_needs_a_model`, platform `crates/jc-core/tests/endpoint_tests.rs::the_committed_surface_requirements_are_the_generated_ones`, platform `crates/jc-manifest/tests/surface_requirement_tests.rs::the_sdm_event_with_its_mandatory_attributes_required_is_accepted`, and 5 more |
 | **EP-126** | [S] | open |  |  |
 | **EP-124** | [A] | open |  |  |
-| **EP-130** | [H] [P] | built |  | `joinedcontext-deployment/charts/ckan/files/jc_theme/plugin.py` |
+| **EP-130** | [H] [P] | open |  |  |
 | **EP-131** | [S] | open |  |  |
-| **EP-132** | [H] [S] | built |  | `joinedcontext-deployment/charts/ckan/files/jc_theme/plugin.py` |
+| **EP-132** | [H] [S] | open |  |  |
 
 ### GW — Gateway firewall
 
