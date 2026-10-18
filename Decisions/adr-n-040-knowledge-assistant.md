@@ -93,6 +93,24 @@ The model is loaded once at start. The crawl worker and the chat API share it; a
 
 Measured 2026-10-06 (T-3053): the tokenizer estimate was wrong by an order of magnitude. XLM-R's 250,000-piece table and trie take 290 MB once loaded; the int8 model in ONNX Runtime 165 MB; the worker rests at 490 MB. fastembed was dropped for `tokenizers` and `ort` directly (it held a second tokenizer copy, 713 MB), and each text is embedded alone, because the int8 export scales its activations per input. [Architecture/22 §6](../Architecture/22-knowledge-assistant.md#6-memory) carries the current table.
 
+### 3.9 Stored conversations (amendment 2026-10-18, T-4670)
+
+The owner debugs the public assistants from the answers they gave, which a screenshot does not
+show: the route, the tools and their inputs, the model calls and their price. `jc-assistant`
+therefore stores every turn with its steps for the deployment's `transcriptRetention` (default
+30 days, `P0D` none), and only the assistant's administrators read them in the Portal (AG-99,
+API/05 §3.1). This replaces the first version's rule that no text is stored.
+
+- **Basis.** Legitimate interest (GDPR Art. 6(1)(f)): running the service, reviewing answers and
+  fixing errors. The storage is limited to that purpose, the retention is short and set per
+  deployment, and the visitor is told in the widget before asking (API/05 §1.6).
+- **Minimisation.** E-mail addresses, phone numbers, IBANs, Slovak birth numbers and card numbers
+  are replaced before the insert; no IP address is stored, only the origin and a salted daily
+  hash of the client for abuse (T-4653). The visitor is asked not to type sensitive data.
+- **Rights.** The deployment names `privacy.contact`; a conversation is erased with one call
+  (T-4668). Every read in the Portal is audited.
+- **Safety.** Stored inputs and outputs are untrusted text: shown escaped, never fed to a model.
+
 ## 4. Alternatives Considered
 
 - **ParadeDB `pg_search` for BM25.** The cluster's image does not carry it. Adding it means a custom Postgres image or a CloudNativePG image-volume extension, plus a legal review of AGPL-3.0 for an image the platform distributes. Postgres full-text search with `pgvector` and RRF needs neither. The decision is reopened only by T-3053's eval numbers.

@@ -29,7 +29,7 @@ description: The chat route of jc-assistant, its Server-Sent Events, and how the
 ```
 
 - `message` is 1 to 4,000 characters after trimming; `conversation`, when present, is an id this service issued; `history` holds at most 6 turns of `user` or `assistant`, each at most 4,000 characters; `connectors`, when present, is a subset of the deployment's connector Endpoints, and an empty list switches every connector off. Anything else answers `400` naming the field. The body is at most 64 KiB. (AG-98)
-- The service keeps no question or answer text: `history` is what the channel holds and sends back. A turn of `history` is the caller's own text, so the rules in §1.4 treat it as untrusted the same as the question. (AG-99)
+- The service keeps each turn, redacted, for the deployment's `transcriptRetention` (default 30 days) so its administrators can see what an answer did (§3.1); the visitor's chat still sends `history` back with each question, and a turn of `history` is the caller's own text, so the rules in §1.4 treat it as untrusted the same as the question. (AG-99)
 
 ### 1.2 Who may ask
 
@@ -128,7 +128,7 @@ A tool result longer than 20,000 characters reaches the model cut. On a deployme
 The page loads `/d/widget.js` and `/d/widget.css` from the same host and nothing else; it sets no
 cookie. It keeps the conversation's id and its visible turns in its own `sessionStorage` (the
 browser partitions it per host site and drops it with the tab), so the open conversation survives a
-page change on the host site; "Nová konverzácia" clears it. Nothing else is stored (T-4174). It shows the deployment's
+page change on the host site; "Nová konverzácia" clears it. The footer under the input reads "Dôležité informácie si prosím overte. · Súkromie" ("Please verify important information. · Privacy"); "Súkromie" opens the dialog "O tomto asistentovi" inside the widget (focus held inside, Escape closes): that answers come from AI and may be wrong, no sensitive personal data belongs in a question; a switch, off by default, "Zapamätať konverzáciu v tomto prehliadači", which keeps the conversation in `localStorage` for at most 90 days after its last change and restores it on the next visit, switching off deletes that copy at once (with the warning not to switch it on on a shared device); that the service keeps conversations for the deployment's `transcriptRetention` days for running the service, review and fixing errors; and, when the deployment names `privacy.contact`, whom to write for access, correction or erasure, with `privacy.documentsUrl` when set. Nothing else is stored in the browser (T-4174, T-4670). It shows the deployment's
 greeting and colour, a switch per connector, each answer formatted from a safe part of Markdown with
 its markers as superscript links to its sources, listed once per address by title (AG-117), a script and
 its output when there was one, and every `error` event as the sentence it carries. It is keyboard
@@ -260,6 +260,47 @@ one level of the tree, at most 100 pages of the whole source whose title or addr
 (case and diacritics ignored), the same fields. `GET …/knowledge/sources/{source}/search?q=&limit=`
 answers the hits §4 answers for that one source, with its visibility whatever it is: the
 administration sees what an internal deployment would read (UI-99, T-4659).
+
+### 3.1 Conversations (T-4670)
+
+Every turn of a deployment's conversations is stored at the end of the turn, a turn cut by the
+answer timeout too, with what it reached (AG-99). The Portal reads them for its administrators:
+
+```text
+GET    …/knowledge/conversations?deployment=&from=&to=&status=&feedback=&slow=&minCostUsd=&q=&sort=&cursor=&limit=
+GET    …/knowledge/conversations/{conversation}
+DELETE …/knowledge/conversations/{conversation}
+```
+
+| Field of a list row | Meaning |
+|---|---|
+| `id`, `deployment`, `origin`, `startedAt`, `lastAt` | the conversation; `origin` is the site it came from, `null` without one |
+| `firstQuestion`, `turns`, `routes` | the first question (redacted), the number of turns, the routes they took |
+| `totalMs`, `errors`, `timeouts` | the longest turn's time and the turns that ended in an error or the timeout |
+| `thumbsUp`, `thumbsDown` | the visitors' verdicts (§1.8) |
+| `costUsd`, `uncosted` | the sum of the priced model calls, and how many calls the provider sent no price for; with `uncosted > 0` the sum is a floor and the Portal says the price is unknown, never $0 |
+
+- `status` is `error`, `timeout` or `ok`; `feedback` is `up`, `down` or `none`; `slow=true` keeps
+  conversations with a turn over 15 seconds; `minCostUsd` keeps those whose sum is at least that;
+  `q` (2 to 100 characters) matches the questions and answers, case and diacritics ignored;
+  `sort` is `lastAt` (default, newest first) or `costUsd`. `limit` is 1 to 100, default 50, and
+  `nextCursor` continues.
+- The detail answers `{"id", "deployment", "origin", "client", "turns": [...]}`. A turn carries
+  `turn`, `at`, `question`, `answer`, `blocks` (the tables, chart and map specs it showed),
+  `language`, `route`, `history` (as the client sent it), `firstTokenMs`, `totalMs`, `error`
+  (`{status, title, detail}`) or `timedOut: true`, `verdict`, `costUsd`, `uncosted` and `steps`.
+  A step carries `kind` (`route`, `search`, `tool`, `model`, `answer`), `name`, `endpoint`,
+  `input`, `output` (at most 8 kB; `outputBytes` is the whole size), `status`, `startMs`,
+  `durationMs`, `error`, and for `model` the `stage` (`router`, `judge`, `data`, `answer`),
+  `model`, `provider`, `tokensIn`, `tokensOut`, `reasoningTokens` and `costUsd` (`null` when the
+  provider sent none). A turn's `costUsd` is the sum of its steps', a conversation's the sum of its
+  turns'.
+- Every text was redacted before it was stored: an e-mail address reads `[e-mail]`, a phone
+  number `[telefón]`, an IBAN `[IBAN]`, a birth number `[rodné číslo]`, a card number `[karta]`.
+  Inputs and outputs are untrusted text: the Portal shows them escaped and never sends them to a
+  model.
+- `DELETE` removes the conversation's turns and steps (erasure, T-4668) and answers `204`; an
+  unknown or another project's conversation is `404`.
 
 ## 4. Search for the MCP servers
 
