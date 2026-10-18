@@ -492,6 +492,28 @@ it is never ignored.
 data: a group counts as a write when any operation it stands for writes, which raises the review lane
 and never lowers it (AP-09).
 
+`actions` grants what CIM 009 has no operation for, the platform's two actions of
+[ADR-N-054](../Decisions/adr-n-054-history-versions-provenance-gdpr.md#24-versions) (T-4666). A Policy may
+name `actions` with `operations` or alone; `information`, `q` and the other constraints do not narrow an
+action, and a `prohibition` names an action to deny it.
+
+| Action | Grants | Read by |
+|---|---|---|
+| `readVersions` | `versions=all` on a temporal query: every version of a measurement with its provenance (DM-114) | the gateway, which then sends `JC-Read-Versions: true` to the broker |
+| `personalData` | the data subject's rights on the space: export, rectification, erasure (DM-124…DM-126) | the Portal |
+
+```yaml
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: bike-trips }
+  assigner: did:web:banskabystrica.sk
+  assignee: { kind: role, id: steward }
+  actions: [readVersions]
+```
+
+A name that is not one of these two is refused when the manifest is validated. The gateway never
+grants an action by role name: the steward and auditor defaults of ADR-N-054 are Policies the Portal
+writes for a new space (T-4667).
+
 ### ScopeDefinition
 
 ```yaml
