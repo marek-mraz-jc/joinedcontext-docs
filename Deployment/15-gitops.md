@@ -6,7 +6,7 @@ description: "How Argo CD keeps dev on main: the flow from a merge to a running 
 
 # GitOps for dev
 
-Argo CD keeps the `dev` cluster on `main` of `joinedcontext-deployment` ([ADR-N-054](../Decisions/adr-n-054-gitops-argo-cd-helmfile.md)). It renders the same helmfile deployment `just dev-apply` applies, through a plugin, so the hand path and Argo CD converge to the same objects. This page is the operator's: what happens after a merge, how to stop it, how to undo a change, what it needs and what it costs.
+Argo CD keeps the `dev` cluster on `main` of `joinedcontext-deployment` ([ADR-N-056](../Decisions/adr-n-056-gitops-argo-cd-helmfile.md)). It renders the same helmfile deployment `just dev-apply` applies, through a plugin, so the hand path and Argo CD converge to the same objects. This page is the operator's: what happens after a merge, how to stop it, how to undo a change, what it needs and what it costs.
 
 ## 1. From a merge to a running change
 
@@ -98,7 +98,7 @@ The repo server renders one component at a time (`parallelismLimit: 1`), so a co
 
 ## Related
 
-- [ADR-N-054](../Decisions/adr-n-054-gitops-argo-cd-helmfile.md): the decision and its alternatives.
+- [ADR-N-056](../Decisions/adr-n-056-gitops-argo-cd-helmfile.md): the decision and its alternatives.
 - [Upgrading & Version Management](06-updating.md): the component order the sync waves follow.
 - [Backup, Disaster Recovery & Restore](07-backup-restore.md): what protects the data Argo CD never deletes.
 - [Production Instance smartcity](14-production-smartcity.md): production keeps the hand promotion until it copies this pattern.

@@ -175,6 +175,31 @@ Every refusal is `application/problem+json` (RFC 7807) with a `type` under
 
 ---
 
+## 2b. History, versions and provenance
+
+The broker keeps one row per measurement and versions of a corrected one ([ADR-N-054](../Decisions/adr-n-054-history-versions-provenance-gdpr.md), DM-104…DM-119). What a caller sees of it on the NGSI-LD surface:
+
+| Request | Answer |
+|---|---|
+| a write with an `observedAt` already stored and the same value | `204`, nothing stored (a duplicate) |
+| a write with an `observedAt` already stored and another value | `204`, a correction: a new version; needs `JC-Reason` |
+| a write with an `observedAt` before the current one | `204`, history only; the current state is unchanged |
+| `DELETE` of an attribute or an Entity | `204`, a tombstone version with `deletedAt`; needs `JC-Reason` |
+| `GET …/temporal/entities…` | the latest version of each measurement |
+| `GET …/temporal/entities…&versions=all` | every version, oldest first, each with `supersededAt` and `provenance`; `403` without `readVersions` |
+| `GET …/temporal/entities…` over an `onChange` attribute | also its last row before `timeAt` |
+| `aggrMethods=sum` or `totalCount` over an `onChange` attribute | `400`, problem type `aggregation-not-meaningful` |
+
+Headers:
+
+| Header | Direction | Meaning |
+|---|---|---|
+| `JC-Reason` | request | why a correction, a delete or a UI edit is made, 1 to 500 characters of UTF-8, percent-encoded; without one such a write answers `400` with the problem type `reason-required` |
+| `X-Request-Id` | response | the id the row's `provenance.requestId` holds |
+| `JC-Provenance-*` | never | dropped at the edge; the gateway sets them for the broker (DM-112) |
+
+`lastN` counts measurements, not versions. Provenance is `channel`, `actor`, `operation`, `reason`, `requestId` and `writtenAt` ([ADR-N-054 §2.3](../Decisions/adr-n-054-history-versions-provenance-gdpr.md#23-provenance-on-every-write)).
+
 ## 3. GeoJSON for maps
 
 An Endpoint publishes no GeoJSON file (T-4597). A map reads GeoJSON from an API:

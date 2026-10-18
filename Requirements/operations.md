@@ -118,7 +118,7 @@ The family runs OPS-01…OPS-58 with two holes: no OPS-24 and no OPS-25 were eve
 
 ## 14. GitOps for dev
 
-- **OPS-54** — The `dev` cluster MUST follow `main` of the deployment repository without a hand command: Argo CD renders the helmfile deployment through its helmfile plugin, one Application per component in the environment's component order, and a merged deployment change MUST run on `dev` within 10 minutes of the merge; `just dev-apply` MUST stay the bootstrap and recovery path and converge to the same objects ([ADR-N-054](../Decisions/adr-n-054-gitops-argo-cd-helmfile.md)).
+- **OPS-54** — The `dev` cluster MUST follow `main` of the deployment repository without a hand command: Argo CD renders the helmfile deployment through its helmfile plugin, one Application per component in the environment's component order, and a merged deployment change MUST run on `dev` within 10 minutes of the merge; `just dev-apply` MUST stay the bootstrap and recovery path and converge to the same objects ([ADR-N-056](../Decisions/adr-n-056-gitops-argo-cd-helmfile.md)).
 - **OPS-55** [S] — Argo CD MUST NOT delete or overwrite data: every PersistentVolumeClaim, CNPG `Cluster`, Secret, Namespace and CustomResourceDefinition it applies MUST carry `Prune=false,Delete=false`, and the data of a Secret and of the APISIX standalone configuration MUST be created once and never re-applied from a render, so a generated password or a route the Portal composed survives every sync.
 - **OPS-56** — One file, `gitops/hold.yaml`, MUST stop every automatic sync with a `deny` sync window while `hold: true`, leave a manual sync to the deployer, and resume when it is `false`; the root Application MUST stay outside the window.
 - **OPS-57** [S] — An image MUST be pinned to `dev` only by digest, only for a commit of the source repository's `main` whose `ci` run is green, whose signature from that repository's `image.yml` verifies and whose dev render passes, and only as a commit on the deployment repository's `main`; no credential for it MUST live in the cluster.
@@ -142,7 +142,7 @@ The family runs OPS-01…OPS-58 with two holes: no OPS-24 and no OPS-25 were eve
 | OPS-51 | Readiness | [../Architecture/09-portal.md#1-portal-api-specification](../Architecture/09-portal.md#1-portal-api-specification) | [05-deployment-and-performance-tests.md](../Testing/05-deployment-and-performance-tests.md) |
 | OPS-52 | Vulnerability reporting | [../Deployment/10-edge-routing-apisix.md](../Deployment/10-edge-routing-apisix.md#2-public-url-surface-and-path-based-route-table) | [06-security-tests.md](../Testing/06-security-tests.md) |
 | OPS-53 | Validation Health | [../API/01-portal-api.md#26-validation-health-ops-53](../API/01-portal-api.md#26-validation-health-ops-53) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
-| OPS-54…OPS-58 | GitOps for dev | [../Decisions/adr-n-054-gitops-argo-cd-helmfile.md](../Decisions/adr-n-054-gitops-argo-cd-helmfile.md) | [05-deployment-and-performance-tests.md](../Testing/05-deployment-and-performance-tests.md) |
+| OPS-54…OPS-58 | GitOps for dev | [../Decisions/adr-n-056-gitops-argo-cd-helmfile.md](../Decisions/adr-n-056-gitops-argo-cd-helmfile.md) | [05-deployment-and-performance-tests.md](../Testing/05-deployment-and-performance-tests.md) |
 
 ## Related
 

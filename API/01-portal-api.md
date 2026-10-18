@@ -3803,6 +3803,29 @@ GET  /api/v1/projects/{project}/spaces/{space}/move                → 200
   the Portal's and name the administrator who started it. No address or token is part of an
   answer.
 
+## 46. Personal data of a space (DM-124…DM-127)
+
+For a space whose model marks personal data ([Architecture/11 §9](../Architecture/11-data-models.md#9-personal-data-in-a-model)), a person the space's Policy grants `personalData` (by default the owner role) runs the data subject's rights. `{subject}` is the value of the class's `dataSubjectRef` slot, or its keyed hash when the slot is ingested as `keyedHash`; the Portal hashes a value it is given with the space's key.
+
+```text
+GET    /api/v1/projects/{project}/spaces/{space}/subjects/{subject}/export         every Entity naming the subject, its versions and read log → 200
+POST   /api/v1/projects/{project}/spaces/{space}/subjects/{subject}/rectification  { "entity", "attribute", "value", "reason" } → 200
+POST   /api/v1/projects/{project}/spaces/{space}/erasures                          { "subject", "reason" } → 202, Location of the erasure
+GET    /api/v1/projects/{project}/spaces/{space}/erasures/{id}                     its state and counts per store → 200
+```
+
+```json
+{
+  "id": "er-2026-10-18-0001",
+  "state": "done",
+  "requestedAt": "2026-10-18T10:00:00Z",
+  "completedAt": "2026-10-18T10:00:41Z",
+  "counts": { "broker": 14, "versions": 52, "ckanDatastore": 14, "exports": 2, "caches": 3, "conversations": 0 }
+}
+```
+
+The erasure log holds the subject's keyed hash, never the value, and outlives backups: after a restore the reconciler re-applies it ([Deployment/07 §5](../Deployment/07-backup-restore.md#5-backups-and-erasure)). Every call is audited with its `reason`; a call without `reason` answers `400` with the problem type `reason-required`.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
