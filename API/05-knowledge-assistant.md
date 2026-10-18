@@ -319,20 +319,25 @@ alone. It takes no token: it answers only what is public.
 - It reads only the `visibility: public` passages of the named sources, ranks them by the chat's
   hybrid search (full text, and the local `multilingual-e5-small` embedding of the query, fused by
   reciprocal rank) and answers the best `limit`, with no model call. `publisher` keeps the
-  sources of that organization; `lang` prefers passages in that language.
+  sources of that project, the body that publishes them; `lang` keeps the passages in that
+  language and those whose language is unknown.
 - A source that does not exist, or is not public, is skipped as if it held nothing: the answer
   never says which sources exist.
 
 ```json
 {"hits": [{"title": "Klientske centrum", "url": "https://www.banskabystrica.sk/…", "publisher": "banskabystrica",
   "description": "…", "published": null, "modified": "2026-09-30T08:12:00Z", "language": "sk",
-  "text": "…", "score": 0.0325}],
- "languages": {"sk": 0.92, "en": 0.08}}
+  "text": "…", "score": 0.0325}]}
 ```
 
-`text` is at most 1,200 characters. `languages` is the share of the named sources' public passages
-per language, for the tool's description. The metadata is the page's or document's (AG-120),
-`null` where the source states none.
+`text` is at most 1,200 characters. The metadata is the page's or document's (AG-120), `null`
+where the source states none; a hit's `title` is the page's own, else the first heading of its
+first passage.
+
+`POST /internal/v1/sources` with `{"sources": [{"project", "source"}]}` (1 to 20) answers what the
+named sources hold in public, for the tool's description, under the same rules:
+`{"passages": 23140, "publishers": ["banskabystrica", "bbsk"], "languages": {"en": 0.08, "sk": 0.92}}`,
+the share of each language among the passages whose language is known.
 
 ## Related
 
