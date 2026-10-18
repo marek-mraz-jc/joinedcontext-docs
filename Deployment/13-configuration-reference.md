@@ -36,6 +36,8 @@ The enforcement point in front of every broker surface (`context-gateway`).
 | `JC_GATEWAY_EGRESS_PRIVATE_HOSTS` | — | no | Hosts inside the platform's own networks a subscription may still name as its target (`JC_GATEWAY_EGRESS_PRIVATE_HOSTS`, comma-separated); empty refuses them all (T-1302). |
 | `JC_GATEWAY_INTERNAL_BIND` | — | no | The internal listener, for the MQTT brokers' CONNECT checks only (`JC_GATEWAY_INTERNAL_BIND`, e.g. `0.0.0.0:8082`); absent serves none (ADR-N-048). |
 | `JC_GATEWAY_MQTT_RUNNER_HOST` | — | no | The pipeline runner's headless Service (`JC_GATEWAY_MQTT_RUNNER_HOST`, e.g. `pipeline-runner-pods.dev.svc.cluster.local`): a broker admits the runner's tokenless CONNECT only from an address this name resolves to; absent admits none (PL-76, T-4004). |
+| `JC_GATEWAY_OAUTH_KEY` | — | yes | The key the anonymous OAuth server signs with (`JC_GATEWAY_OAUTH_KEY`, from a `secretRef`, at least 32 bytes, ADR-N-052 §2.2.6); absent serves no `/oauth/*`. |
+| `JC_GATEWAY_OAUTH_REDIRECT_HOSTS` | — | no | The hosts that server redirects to (`JC_GATEWAY_OAUTH_REDIRECT_HOSTS`, comma-separated, default [`crate::oauth::DEFAULT_REDIRECT_HOSTS`], ADR-N-052 §2.3). |
 | `JC_GATEWAY_ORG_DOMAIN` | — | no | The organization's verified domain, the middle segment of every entity URN (`JC_GATEWAY_ORG_DOMAIN`). |
 | `JC_GATEWAY_PREVIEWS_DIR` | `/tmp/jc-previews` | no | Where the previews are written (`JC_GATEWAY_PREVIEWS_DIR`, default `/tmp/jc-previews`), a scratch directory the pod owns. |
 | `JC_GATEWAY_PREVIEWS_URL` | — | no | The Portal's list of running workspace previews (`JC_GATEWAY_PREVIEWS_URL`, its internal listener's `/internal/previews`); absent serves `main` alone (CC-78). |
