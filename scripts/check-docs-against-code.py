@@ -273,7 +273,8 @@ def problems_of(
                 continue
             bad.append(f"{relative}:{lineno}: nothing reads this variable: {name}")
 
-        for name in OPERATION.findall(line):
+        # A directory inside a path (`charts/ckan/files/jc_theme/plugin.py`) is no operation name.
+        for name in OPERATION.findall(BACKTICKED_PATH.sub("", line)):
             if name in code_text:
                 continue
             bad.append(f"{relative}:{lineno}: no such operation or metric: {name}")
@@ -425,9 +426,13 @@ def selftest() -> int:
         (docs / "Architecture" / "elsewhere.md").write_text(
             "---\ntitle: A page about another repository\n---\n\n"
             "# A page about another repository\n\n"
-            "The expected failures live in `tests/etsi-ttf/expected_failures.json`.\n",
+            "The expected failures live in `tests/etsi-ttf/expected_failures.json`.\n"
+            "The theme is `charts/ckan/files/jc_theme/plugin.py`.\n",
             encoding="utf-8",
         )
+        if any("no such operation" in problem for problem in check(docs, code)):
+            print("a directory inside a path was read as an operation name", file=sys.stderr)
+            return 1
         if any("no such file" in problem for problem in check(docs, code)):
             print(
                 "a path in a repository that was never fetched was called missing",
