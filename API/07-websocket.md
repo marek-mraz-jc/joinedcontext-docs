@@ -14,7 +14,7 @@ The broker side of this channel is Antares ADR-0026. This page describes what a 
 
 | | |
 |---|---|
-| URL | `wss://api.data.{domain}/api/endpoint/{endpointSlug}/ws`, on the same host as the Endpoint's REST URL (`api.data.dev.joinedcontext.com` on dev) |
+| URL | `wss://api.{domain}/api/endpoint/{endpointSlug}/ws`, on the same host as the Endpoint's REST URL (`api.dev.joinedcontext.com` on dev) |
 | Subprotocol | `ngsi-ld-ws`: optional for a client that sends no token or sends it in the header, required for the browser form below |
 | Public Endpoint | open without a token; you receive what the anonymous grant reads |
 | Any other Endpoint | a bearer access token for the Endpoint's audience, as for REST |
@@ -89,7 +89,7 @@ Each example below runs as it stands against the public transport Endpoint and p
 With [websocat](https://github.com/vi/websocat), type the subscription as the first line after the connection opens:
 
 ```bash
-websocat --protocol ngsi-ld-ws wss://api.data.dev.joinedcontext.com/api/endpoint/ajaezssvx3bwqgejgepmq4ig3frgan4e/ws
+websocat --protocol ngsi-ld-ws wss://api.dev.joinedcontext.com/api/endpoint/ajaezssvx3bwqgejgepmq4ig3frgan4e/ws
 {"metadata":{"x-op":"x-subscribe","x-id":"s1"},"body":{"type":"Subscription","entities":[{"type":"Vehicle"}],"notification":{"attributes":["speed","location"]}}}
 ```
 
@@ -104,7 +104,7 @@ With a token, add `-H "Authorization: Bearer $TOKEN"` before the address. The an
 In a browser, from a page the installation allows:
 
 ```js
-const url = "wss://api.data.dev.joinedcontext.com/api/endpoint/ajaezssvx3bwqgejgepmq4ig3frgan4e/ws";
+const url = "wss://api.dev.joinedcontext.com/api/endpoint/ajaezssvx3bwqgejgepmq4ig3frgan4e/ws";
 // With a token: new WebSocket(url, ["ngsi-ld-ws", `bearer.${token}`])
 const ws = new WebSocket(url, ["ngsi-ld-ws"]);
 ws.onopen = () => ws.send(JSON.stringify({
@@ -123,7 +123,7 @@ In Python, with the `websockets` package (version 14 or later), reconnecting and
 ```python
 import asyncio, json, os, websockets
 
-URL = "wss://api.data.dev.joinedcontext.com/api/endpoint/ajaezssvx3bwqgejgepmq4ig3frgan4e/ws"
+URL = "wss://api.dev.joinedcontext.com/api/endpoint/ajaezssvx3bwqgejgepmq4ig3frgan4e/ws"
 SUBSCRIBE = {"metadata": {"x-op": "x-subscribe", "x-id": "s1"},
              "body": {"type": "Subscription", "entities": [{"type": "Vehicle"}],
                       "notification": {"attributes": ["speed", "location"]}}}

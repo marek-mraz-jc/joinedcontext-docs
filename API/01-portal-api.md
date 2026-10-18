@@ -1912,8 +1912,8 @@ GET /api/v1/projects/{project}/ckan/status    catalogues, and what each endpoint
       "dataset": "kvalita-ovzdusia",
       "datasetUrl": "https://data.banskabystrica.sk/dataset/kvalita-ovzdusia",
       "resources": [
-        { "name": "NGSI-LD API", "url": "https://api.data.{domain}/api/endpoint/{endpointSlug}/ngsi-ld/v1/", "format": "NGSI-LD" },
-        { "name": "CSV", "url": "https://api.data.{domain}/api/endpoint/{endpointSlug}/file.csv", "format": "CSV" }
+        { "name": "NGSI-LD API", "url": "https://api.{domain}/api/endpoint/{endpointSlug}/ngsi-ld/v1/", "format": "NGSI-LD" },
+        { "name": "CSV", "url": "https://api.{domain}/api/endpoint/{endpointSlug}/file.csv", "format": "CSV" }
       ],
       "datastore": { "representation": "csv", "refresh": "onChange" }
     }
@@ -2002,13 +2002,13 @@ alternatives, filters combine with AND) and `page` (from 1, twenty datasets a pa
   "modified": "2026-09-21T05:52:34Z",
   "catalogueUrl": "https://data.{host}/dataset/bbsk-kpi",
   "resources": [
-    { "name": "CSV", "format": "CSV", "url": "https://api.data.{domain}/api/endpoint/{endpointSlug}/file.csv", "description": "…", "previewUrl": "https://data.{host}/dataset/bbsk-kpi/resource/{id}" }
+    { "name": "CSV", "format": "CSV", "url": "https://api.{domain}/api/endpoint/{endpointSlug}/file.csv", "description": "…", "previewUrl": "https://data.{host}/dataset/bbsk-kpi/resource/{id}" }
   ],
-  "endpoint": { "url": "https://api.data.{domain}/api/endpoint/{endpointSlug}/", "representations": ["ngsi-ld", "csv", "mcp"] },
+  "endpoint": { "url": "https://api.{domain}/api/endpoint/{endpointSlug}/", "representations": ["ngsi-ld", "csv", "mcp"] },
   "model": {
     "name": "key-performance-indicator",
     "classes": [{ "name": "KeyPerformanceIndicator", "description": "…" }],
-    "docsUrl": "https://api.data.{domain}/api/endpoint/{endpointSlug}/schema/1/key-performance-indicator.v1.md"
+    "docsUrl": "https://api.{domain}/api/endpoint/{endpointSlug}/schema/1/key-performance-indicator.v1.md"
   }
 }
 ```
@@ -2042,8 +2042,8 @@ Endpoint's page (`/d/{slug}` and the Endpoint page in the Portal, TS-19, T-4484)
       "representation": "ngsi-ld",
       "fields": ["name", "no2", "pm10"],
       "examples": [
-        { "kind": "equality", "field": "name", "url": "https://api.data.{domain}/api/endpoint/{endpointSlug}/ngsi-ld/v1/entities?type=AirQualityObserved&q=name%3D%3D%22Zvolen%22", "answered": 1 },
-        { "kind": "range", "field": "no2", "url": "https://api.data.{domain}/api/endpoint/{endpointSlug}/ngsi-ld/v1/entities?type=AirQualityObserved&q=no2%3E%3D21.5", "answered": 4 }
+        { "kind": "equality", "field": "name", "url": "https://api.{domain}/api/endpoint/{endpointSlug}/ngsi-ld/v1/entities?type=AirQualityObserved&q=name%3D%3D%22Zvolen%22", "answered": 1 },
+        { "kind": "range", "field": "no2", "url": "https://api.{domain}/api/endpoint/{endpointSlug}/ngsi-ld/v1/entities?type=AirQualityObserved&q=no2%3E%3D21.5", "answered": 4 }
       ]
     },
     { "representation": "ogc-features", "fields": ["name", "no2", "pm10"], "examples": [] }

@@ -273,7 +273,7 @@ be an invitation to invent one.
 
 Every read and every write goes through an Endpoint and its Policy. Endpoints are addressed by a
 minted slug, never by a name, so the paths below are the shape and not the literal URL
-(`https://api.data.{domain}/api/endpoint/{endpointSlug}/ngsi-ld/v1/entities`, EP-02, EP-22).
+(`https://api.{domain}/api/endpoint/{endpointSlug}/ngsi-ld/v1/entities`, EP-02, EP-22).
 
 One door per space, and the Policies on it decide who may read and who may write. A second
 endpoint for writing would be a second thing to keep in step with the first.

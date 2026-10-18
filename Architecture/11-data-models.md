@@ -449,11 +449,11 @@ Schema drift that silently alters the meaning of historical observations is proh
 - The Context Gateway serves published artifacts under version-pinned, immutable URLs on the Endpoint that publishes them (SP-13). The version segment is the model's **major**, never its full version (DM-22), and the file names are the ones the generator writes:
 
   ```text
-  https://api.data.{domain}/api/endpoint/{slug}/schema/index.json
-  https://api.data.{domain}/api/endpoint/{slug}/schema/v1/context.jsonld
-  https://api.data.{domain}/api/endpoint/{slug}/schema/v1/model.linkml.yaml
-  https://api.data.{domain}/api/endpoint/{slug}/schema/v1/model.schema.json
-  https://api.data.{domain}/api/endpoint/{slug}/schema/v1/model.shacl.ttl
+  https://api.{domain}/api/endpoint/{slug}/schema/index.json
+  https://api.{domain}/api/endpoint/{slug}/schema/v1/context.jsonld
+  https://api.{domain}/api/endpoint/{slug}/schema/v1/model.linkml.yaml
+  https://api.{domain}/api/endpoint/{slug}/schema/v1/model.schema.json
+  https://api.{domain}/api/endpoint/{slug}/schema/v1/model.shacl.ttl
   ```
 
   `model.owl.ttl`, `model.rdf.ttl` and `model.md` are served the same way. SP-04 gives a space a `schema/` child of its own beside `ngsi-ld/v1/`, `mcp` and `dump/`; the gateway routes `/cs/{space}`, `/cs/{space}/ngsi-ld/v1/*` and `/cs/{space}/mcp` and no more (`context-gateway` `src/app.rs`), so every URL above is the Endpoint's until the space's children are built. There is no unversioned alias and nothing redirects to "latest" — a caller reads `index.json` to learn which majors exist and then pins one, which is what makes a live subscription's `Link` header safe to keep.

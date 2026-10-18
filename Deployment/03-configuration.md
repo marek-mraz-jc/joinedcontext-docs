@@ -144,7 +144,7 @@ values; the binary refuses to start rather than run half-configured.
 | `JC_GATEWAY_BROKER_URL` | the broker service | scheme and authority of the broker it forwards to; required |
 | `JC_GATEWAY_BROKER_URL_TEMPLATE` | `http://context-broker-{broker}.{namespace}.svc:9090` | the address of every `ContextBroker` but `main`, `{broker}` in the authority; unset refuses a space on another broker instead of sending it to `main` (ADR-N-047) |
 | `JC_GATEWAY_ORG_DOMAIN` | `global.orgDomain` | the org-domain segment of every entity URN, checked on every write ([PF-42](../Requirements/platform.md)); required |
-| `JC_GATEWAY_PUBLIC_URL` | `https://api.data.{global.domain}` | the public data host ([EP-128](../Requirements/endpoints.md)); makes `https://api.data.{global.domain}/api/endpoint/{slug}` an accepted token audience next to the bare slug ([PF-45](../Requirements/platform.md)) |
+| `JC_GATEWAY_PUBLIC_URL` | `https://api.{global.domain}` | the public data host ([EP-128](../Requirements/endpoints.md)); makes `https://api.{global.domain}/api/endpoint/{slug}` an accepted token audience next to the bare slug ([PF-45](../Requirements/platform.md)) |
 | `JC_OIDC_ISSUER` | `https://idm.{global.domain}/realms/{global.instanceSlug}` | the `iss` every token must carry |
 | `JC_OIDC_JWKS_URL` | the in-cluster Keycloak service, plain `http://` | the realm keys, refreshed in the background; both OIDC variables or neither, and without them only endpoints with `audience: public` answer |
 | `JC_GATEWAY_EGRESS_CA_BUNDLE` | unset | a PEM file of extra roots the gateway's outbound client trusts on top of the public ones, for a broker behind the installation's own CA ([R46](../Requirements/policy-firewall.md)); unreadable or empty stops the gateway |

@@ -19,7 +19,7 @@ This specification establishes the public URL structure, tenancy abstraction, re
 |     └── dump/                (ZIP of what the caller's grants read, generated per request, SP-13) |
 |                                                                                                   |
 |  2. Shared & Public Endpoint Surface (Addons, Public APIs, External Consumers, Agents):          |
-|     https://api.data.{domain}/api/endpoint/{endpointSlug}/  (GET → DCAT-AP record)                |
+|     https://api.{domain}/api/endpoint/{endpointSlug}/  (GET → DCAT-AP record)                     |
 |     ├── ngsi-ld/v1/          (Policy-Narrowed Standard ETSI CIM 009 API)                          |
 |     ├── mcp                  (Façade MCP with Grants Rendered into Active Tool Annotations)       |
 |     ├── file.csv  (the one file download, EP-42…45; the others went with T-4597)                  |
@@ -542,7 +542,7 @@ Projects do not mount shared database volumes or share context broker credential
      alias: regional-air-data
    ```
 
-3. **Execution:** Workloads and Dashboards in Project B interact with `https://api.data.{domain}/api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/...` using Project B's authenticated service account token. The Context Gateway verifies Project B's membership in the endpoint's allowed project list.
+3. **Execution:** Workloads and Dashboards in Project B interact with `https://api.{domain}/api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/...` using Project B's authenticated service account token. The Context Gateway verifies Project B's membership in the endpoint's allowed project list.
 4. **Auditability:** The owning project retains complete visibility: revoking or updating the Endpoint in Project A immediately halts access for Project B without impacting underlying storage.
 5. **Schema discovery and mapping:** on apply, the reconciler reads the endpoint's `schema/` (LinkML, `@context`, example) and commits it into Project B as a read-only foreign DataModel; Project B then maps it to its own model with a `kind: Mapping`, used either to replicate the data through a pipeline or to translate live federated queries in the gateway (DM-48…DM-53). The same flow works across instances (another city, a company, a national platform), and Project A can publish ready-made mappings or a view endpoint that already speaks the consumer's model (EP-53, EP-54). Details: [Architecture/11 §7.5](11-data-models.md#75-mappings-across-context-spaces-and-instances-federation).
 

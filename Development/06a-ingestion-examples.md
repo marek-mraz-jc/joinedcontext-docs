@@ -347,27 +347,27 @@ Every recipe is verified the same way, through the Endpoint rather than the brok
 The entities of one type:
 
 ```bash
-curl -sS "https://api.data.{domain}/api/endpoint/{slug}/ngsi-ld/v1/entities?type=Vehicle&limit=5" \
+curl -sS "https://api.{domain}/api/endpoint/{slug}/ngsi-ld/v1/entities?type=Vehicle&limit=5" \
   -H 'Accept: application/ld+json'
 ```
 
 One entity by the id the mapping minted, which is the fastest way to see whether the URN scheme came out right:
 
 ```bash
-curl -sS "https://api.data.{domain}/api/endpoint/{slug}/ngsi-ld/v1/entities/urn:ngsi-ld:Vehicle:hel.fi:transport:22-787" \
+curl -sS "https://api.{domain}/api/endpoint/{slug}/ngsi-ld/v1/entities/urn:ngsi-ld:Vehicle:hel.fi:transport:22-787" \
   -H 'Accept: application/ld+json'
 ```
 
 The same data as a map layer, which is the quickest check that `location` is a GeoProperty and not a string:
 
 ```bash
-curl -sS -H "Accept: application/geo+json" "https://api.data.{domain}/api/endpoint/{slug}/ngsi-ld/v1/entities?type={Type}" | head -40
+curl -sS -H "Accept: application/geo+json" "https://api.{domain}/api/endpoint/{slug}/ngsi-ld/v1/entities?type={Type}" | head -40
 ```
 
 Whether the numbers are moving, on a private endpoint, with a ServiceAccount token:
 
 ```bash
-curl -sS "https://api.data.{domain}/api/endpoint/{slug}/ngsi-ld/v1/entities?type=AirQualityObserved&attrs=pm10&limit=3" \
+curl -sS "https://api.{domain}/api/endpoint/{slug}/ngsi-ld/v1/entities?type=AirQualityObserved&attrs=pm10&limit=3" \
   -H 'Accept: application/ld+json' \
   -H 'Authorization: Bearer eyJhbGciOi…'
 ```
