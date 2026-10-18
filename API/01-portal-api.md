@@ -3185,7 +3185,7 @@ GET /api/v1/projects/{project}/spaces/{space}/usage     the space's entity count
   no tenant for yet; the page then shows no size, never a zero.
 - The Context Spaces list and the space's page show the size in binary units (KiB, MiB, GiB) with
   the locale's separators and the exact bytes in the tooltip; the space's per-type table adds the
-  size of each type beside its count. The list sorts by size.
+  size of each type beside its count. The list still sorts by the entity count.
 
 ## 30. Data views of a space (ADR-N-042, T-3104, T-3099)
 
