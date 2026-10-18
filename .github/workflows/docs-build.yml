@@ -9,10 +9,11 @@ name: docs-build
 # missing images, invalid front matter, untraceable requirements, a drifted ADR register — and
 # uploads the corpus as the preview artifact. Replace the validate job with the real
 # `pnpm build` on the day a site lands in this repository.
-# On demand only for now: this repository is private, its Actions minutes are metered (T-0402,
-# T-0521), and ci.yml already runs every checker below on each push. Put `pull_request:` and
-# `push: { branches: [main] }` back under `on:` when the minutes are back.
+# On every pull request and push to main; the repository is public, so its minutes are not
+# metered (T-3289).
 on:
+  pull_request:
+  push: { branches: [main] }
   workflow_dispatch:
 permissions: { contents: read }
 concurrency: { group: "docs-build-${{ github.ref }}", cancel-in-progress: true }
