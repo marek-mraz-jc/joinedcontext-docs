@@ -47,6 +47,8 @@ The gateway accepts a redirect URI only on these hosts, configured as `JC_GATEWA
 
 The host is compared exactly after parsing the URI; a userinfo part, a fragment or another scheme is refused. Adding an assistant is a configuration change reviewed like any other.
 
+The deployment sets the variable to `oauth-redirect.googleusercontent.com` alone, on `dev` and in production, by owner order (2026-10-18T15:59Z, "oauth2 should be only for gemini"). The default above applies only where the variable is unset. Claude, ChatGPT and Grok read the public MCP servers without a token: a registration naming their hosts is refused `400 invalid_redirect_uri`, and an anonymous call never answers `401`, so no client is pushed into OAuth (T-4630).
+
 ### 2.4 What does not change
 
 "Identity is Keycloak only" still holds. This token names no one, and every decision about a person or a workload still starts from a Keycloak token. An Endpoint that is not anonymous-readable, a project's named server and a person's connector (`/api/mcp/me/{name}`) take Keycloak tokens only, as before.
