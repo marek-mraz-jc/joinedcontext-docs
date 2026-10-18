@@ -5,11 +5,11 @@ title: "Operations, Deployment & Reliability"
 
 # Operations, Deployment & Reliability
 
-Family **OPS** (OPS-01…OPS-52). Owning chapter: [13-security.md](../Architecture/13-security.md). Verified by: [05-deployment-and-performance-tests.md](../Testing/05-deployment-and-performance-tests.md).
+Family **OPS** (OPS-01…OPS-58). Owning chapter: [13-security.md](../Architecture/13-security.md). Verified by: [05-deployment-and-performance-tests.md](../Testing/05-deployment-and-performance-tests.md).
 
 This chapter specifies the operational, deployment, and Site Reliability Engineering (SRE) requirements for operating the federated digital twin platform in production Kubernetes environments.
 
-The family runs OPS-01…OPS-53 with two holes: no OPS-24 and no OPS-25 were ever issued.
+The family runs OPS-01…OPS-58 with two holes: no OPS-24 and no OPS-25 were ever issued.
 
 ## 1. Helmfile Component Architecture
 
@@ -116,6 +116,14 @@ The family runs OPS-01…OPS-53 with two holes: no OPS-24 and no OPS-25 were eve
 
 - **OPS-53** [H][S] — The Portal MUST show the organization's administrators one page, `/organization/health`, with a row per validation check (deployment drift and supply chain, conformance, the authorization matrix, performance budgets, backup and restore, the live sweep and the others that publish): its state (green, red, stale when it missed two of its runs, unreadable), its last run, its verdict counts, a seven-day trend and the failing results with the task each one filed, under one summary line; a result MUST carry only check keys, titles, verdicts, counts and task ids, never a detail, an evidence path, a secret or a person's data, and anyone who is not an administrator of the organization MUST be refused.
 
+## 14. GitOps for dev
+
+- **OPS-54** — The `dev` cluster MUST follow `main` of the deployment repository without a hand command: Argo CD renders the helmfile deployment through its helmfile plugin, one Application per component in the environment's component order, and a merged deployment change MUST run on `dev` within 10 minutes of the merge; `just dev-apply` MUST stay the bootstrap and recovery path and converge to the same objects ([ADR-N-056](../Decisions/adr-n-056-gitops-argo-cd-helmfile.md)).
+- **OPS-55** [S] — Argo CD MUST NOT delete or overwrite data: every PersistentVolumeClaim, CNPG `Cluster`, Secret, Namespace and CustomResourceDefinition it applies MUST carry `Prune=false,Delete=false`, and the data of a Secret and of the APISIX standalone configuration MUST be created once and never re-applied from a render, so a generated password or a route the Portal composed survives every sync.
+- **OPS-56** — One file, `gitops/hold.yaml`, MUST stop every automatic sync with a `deny` sync window while `hold: true`, leave a manual sync to the deployer, and resume when it is `false`; the root Application MUST stay outside the window.
+- **OPS-57** [S] — An image MUST be pinned to `dev` only by digest, only for a commit of the source repository's `main` whose `ci` run is green, whose signature from that repository's `image.yml` verifies and whose dev render passes, and only as a commit on the deployment repository's `main`; no credential for it MUST live in the cluster.
+- **OPS-58** [S] — Every sync MUST end with the smoke as a PostSync gate that waits for every Application to be Synced at the same revision and Healthy; a red smoke MUST mark the sync Failed, raise an alert, and never roll back by itself. Argo CD MUST log in through Keycloak only, give `role:admin` only to the realm role `platform-admin`, and keep no local `admin` account and no anonymous access.
+
 ## Traceability
 
 | Requirements | Section | Architecture | Tests |
@@ -134,10 +142,12 @@ The family runs OPS-01…OPS-53 with two holes: no OPS-24 and no OPS-25 were eve
 | OPS-51 | Readiness | [../Architecture/09-portal.md#1-portal-api-specification](../Architecture/09-portal.md#1-portal-api-specification) | [05-deployment-and-performance-tests.md](../Testing/05-deployment-and-performance-tests.md) |
 | OPS-52 | Vulnerability reporting | [../Deployment/10-edge-routing-apisix.md](../Deployment/10-edge-routing-apisix.md#2-public-url-surface-and-path-based-route-table) | [06-security-tests.md](../Testing/06-security-tests.md) |
 | OPS-53 | Validation Health | [../API/01-portal-api.md#26-validation-health-ops-53](../API/01-portal-api.md#26-validation-health-ops-53) | [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| OPS-54…OPS-58 | GitOps for dev | [../Decisions/adr-n-056-gitops-argo-cd-helmfile.md](../Decisions/adr-n-056-gitops-argo-cd-helmfile.md) | [05-deployment-and-performance-tests.md](../Testing/05-deployment-and-performance-tests.md) |
 
 ## Related
 
 - [Security Hardening & Phase-1 Baseline](../Deployment/08-security-hardening.md) — implementation guide for the deployment security baseline.
 - [Edge Routing & APISIX Standalone Specification](../Deployment/10-edge-routing-apisix.md) — declarative edge gateway configuration.
 - [Legacy Security Research](../Research/legacy-deployment-security-and-routing.md) — empirical research report on legacy security controls.
+- [GitOps for dev](../Deployment/15-gitops.md) — how Argo CD keeps `dev` on `main` (OPS-54…OPS-58).
 - [Requirements Index](00-index.md) — platform requirements taxonomy and overview.

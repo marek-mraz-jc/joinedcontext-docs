@@ -33,7 +33,7 @@ Generated 2026-10-18 from: `docs` 6f7e6eb, `conformance` 7f192f9, `deployment` f
 | **MF** — Manifests | 60 | 52 | 4 | 4 | 3 |
 | **MIM** — OASC interoperability | 76 | 1 | 4 | 71 | 0 |
 | **MP** — Model projections | 3 | 3 | 0 | 0 | 0 |
-| **OPS** — Operations and reliability | 51 | 45 | 2 | 4 | 1 |
+| **OPS** — Operations and reliability | 56 | 45 | 2 | 9 | 4 |
 | **PF** — Platform invariants | 116 | 98 | 8 | 10 | 3 |
 | **PL** — Pipelines | 79 | 62 | 11 | 6 | 2 |
 | **R** — Access control and federation | 60 | 23 | 9 | 28 | 0 |
@@ -41,7 +41,7 @@ Generated 2026-10-18 from: `docs` 6f7e6eb, `conformance` 7f192f9, `deployment` f
 | **SP** — Context-space surface | 22 | 18 | 2 | 2 | 0 |
 | **TS** — Testing and quality | 26 | 16 | 5 | 5 | 0 |
 | **UI** — Portal and user interface | 97 | 71 | 14 | 12 | 5 |
-| **Total** | 1342 | 973 | 112 | 257 | 66 |
+| **Total** | 1347 | 973 | 112 | 262 | 69 |
 
 ## 3. Requirement to test
 
@@ -1004,6 +1004,11 @@ Generated 2026-10-18 from: `docs` 6f7e6eb, `conformance` 7f192f9, `deployment` f
 | **OPS-51** | [H] | tested | ci-full, fast ci | deployment `tests/test_portal_readiness.py::test_readiness_reads_the_ready_route_and_liveness_the_health_route`, portal `src/ops/drafts.rs::a_notice_from_another_replica_is_delivered_and_its_own_is_not`, portal `src/pipeline_status.rs::a_follower_reads_what_the_leader_saved_while_it_is_fresh`, and 38 more |
 | **OPS-52** | [S] | tested | fast ci | deployment `tests/test_security_txt.py::test_dev_answers_security_txt_on_every_host_with_the_owners_contact`, deployment `tests/test_security_txt.py::test_the_dev_file_is_valid_for_a_month_and_at_most_a_year`, deployment `tests/test_security_txt.py::test_a_production_render_without_a_contact_stops` |
 | **OPS-53** | [H] [S] | tested | fast ci | deployment `tests/test_portal_health_mount.py::test_the_portal_mounts_the_published_results_read_only_and_optional`, portal `src/api/validation.rs::a_run_is_green_red_or_stale_by_its_counts_and_its_age`, portal `src/api/validation.rs::a_file_that_is_not_a_digest_is_unreadable_and_shows_nothing_of_itself`, and 6 more |
+| **OPS-54** |  | open |  |  |
+| **OPS-55** | [S] | open |  |  |
+| **OPS-56** |  | open |  |  |
+| **OPS-57** | [S] | open |  |  |
+| **OPS-58** | [S] | open |  |  |
 
 ### PF — Platform invariants
 
