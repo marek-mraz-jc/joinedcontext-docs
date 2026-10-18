@@ -482,8 +482,8 @@ GET    /api/v1/projects/{project}/drafts/events                the same changes 
 - `version` counts up on every save. Send the version you read as `expectedVersion` and a save
   against a newer draft is refused with `409 {"error": "draft_conflict", "current": 9}` instead of
   overwriting what the other window wrote; omit it and the last save wins.
-- `touchedBy` is the caller's username and `touchedKind` is how they reached it: `person`,
-  `api-key`, `mcp` or `run`, so a form can say the assistant wrote this, not you.
+- `touchedBy` is the caller's username and `touchedKind` is how they reached it: `person`, `mcp`
+  or `run`, so a form can say the assistant wrote this, not you.
 - A literal secret under one of the secret keys of section 5 is `400` here as it is on a write
   (MF-24): a draft is a manifest on its way to Git.
 - `?workspace={name}` addresses the drafts of one workspace (section 22). A draft of a workspace is
@@ -923,8 +923,14 @@ PUT /api/v1/preferences      replaces them whole; answers 200 with what is now s
 - `connectors` holds up to ten personal MCP connectors (UI-98, ADR-N-043 §7): a DNS-label `name`,
   unique in the list, and a `select` of the McpServer selector fields (MF-55) plus `endpoints`, up to
   50 Endpoint slugs; a slug the caller may not read when saved, an eleventh connector or a fifty-first
-  slug is a `400`. The gateway reads them for `/api/mcp/me/{name}` by the caller's `sub` alone (EP-123),
-  from `GET /internal/connectors/{sub}` on the internal listener (§22, beside `/internal/previews`).
+  slug is a `400`. The gateway reads them for `/api/mcp/me/{name}` by the caller's `sub` alone (EP-123):
+  `GET /internal/connectors/{sub}` on the Portal's internal listener answers
+  `{ "connectors": [ { "name": "my-air", "select": { … } } ] }`, an empty list for a `sub` with
+  none, with the same Keycloak ServiceAccount check as `/internal/previews` (the gateway's own
+  token, audience `portal-internal`; any other token or none is a `401`, and the NetworkPolicy
+  opens the listener to the gateway alone). The gateway keeps an answer at most 60 seconds per
+  `sub` and answers `503` while the Portal cannot be read, never an older list. `me` is
+  therefore no project a named server can be declared in.
 - `recent` holds the last ten item pages the person opened, newest first, and `favourites` up to
   fifty pages they starred (UI-90). Each place is a `path` inside the Portal, with its query and
   without `lang`, and the `title` the page had: a path that is not one of this Portal's (`//host`,
@@ -953,119 +959,15 @@ GET /api/v1/forms            every UiSchema manifest of portal/forms/, as a List
   field the schema lacks, a widget the Portal does not register, two manifests for one kind) is
   listed in the dialog itself, and the dialog's footer carries the `advancedMode` switch.
 
-## 9. ServiceAccounts and API keys (PF-34…PF-40)
+## 9. ServiceAccounts (PF-34…PF-40)
 
 A `ServiceAccount` manifest declares that a credential exists; the secret itself never enters Git
 (PF-36). The manifest is read and written through the resource API like every other kind
-(`/api/v1/projects/{project}/serviceaccounts`). The keys behind an `api-key` credential live in the
-Portal's PostgreSQL tier, and these routes are the only way to mint, rotate and revoke them:
-
-```text
-GET    /api/v1/projects/{project}/serviceaccounts/{name}/keys                  the account's keys, metadata only
-POST   /api/v1/projects/{project}/serviceaccounts/{name}/keys                  mint a key → 201, the token once
-POST   /api/v1/projects/{project}/serviceaccounts/{name}/keys/{keyId}/rotate   mint a successor, the old key keeps working for the overlap window → 201
-DELETE /api/v1/projects/{project}/serviceaccounts/{name}/keys/{keyId}          revoke now → 204
-```
-
-Minting takes the credential name from the manifest and, optionally, an expiry:
-
-```json
-{ "credential": "legacy-push", "expiresAt": "2027-03-01T00:00:00Z" }
-```
-
-The `201` answer is the only place the secret ever appears:
-
-```json
-{
-  "keyId": "3f9c2a7b1d4e8f06",
-  "token": "jc_3f9c2a7b1d4e8f06_Zm9vYmFyYmF6cXV4MTIzNDU2Nzg5MGFiY2RlZg",
-  "credential": "legacy-push",
-  "expiresAt": "2027-03-01T00:00:00Z"
-}
-```
-
-A listed key carries what an operator decides on and nothing that opens a door:
-
-```json
-{
-  "items": [
-    {
-      "keyId": "3f9c2a7b1d4e8f06",
-      "credential": "legacy-push",
-      "createdAt": "2026-09-06T18:20:11Z",
-      "createdBy": "jana.kovacova",
-      "expiresAt": "2027-03-01T00:00:00Z",
-      "lastUsedAt": null,
-      "revokedAt": null
-    }
-  ]
-}
-```
-
-- `token` is `jc_{keyId}_{secret}` (PF-37): `keyId` is 16 lowercase hex characters, the secret 32
-  random bytes in URL-safe base64 without padding. The Portal stores the Argon2id PHC string of the
-  secret, the key id, the expiry and the audit timestamps, never the secret (PF-36); a listed key
-  therefore has no `token`, and a lost token means a new key.
-- `credential` MUST name an `api-key` credential of the manifest; an `oauth-client` credential is
-  provisioned in Keycloak by the reconciler and has no key here (`400`).
-- `expiresAt` defaults to the credential's `expiresAt` in the manifest; without either the key does
-  not expire. It MUST NOT be in the past (`400`), and MUST NOT be later than the credential's own
-  `expiresAt` when the manifest declares one (`400`, naming that expiry): the manifest's expiry was
-  reviewed, so a key asked for in the Portal may end sooner, never later (T-3255).
-- Rotation (PF-38) mints a successor with the same credential and expiry and moves the old key's
-  expiry to `now + overlap`, `{ "overlapHours": 24 }` in the body, default 24, at most 168; an old key
-  that already expires sooner keeps its earlier expiry. Both keys are listed while both work.
-- Revocation is immediate: the key row is kept with `revokedAt` set for the audit trail and the
-  gateway refuses it on the next request (PF-38).
-- The caller MUST be the account's `spec.owner.user` or hold the `portal-approver` realm role
-  (CC-60); anyone else is `403`. An account the caller may not see is `404`, whether it exists or
-  not (R20).
-- `503` with `problem+json` when the Portal runs without its PostgreSQL tier, as for section 8.
-
-### 9.1 A key asked for over MCP: the claim (PF-104)
-
-A person's MCP client is driven by a model, and whatever an operation answers lands in that model's
-context and the client's transcript. So `jc_service_account_key_mint` and
-`jc_service_account_key_rotate` called over `/api/v1/mcp` mint nothing. They check the request as the
-routes above do (the account, the credential, the expiry, the key and the overlap), record a claim
-and answer it:
-
-```json
-{
-  "claim": {
-    "id": "c7e1f0a94b2d6e8f13a5c9d7b0e4f261",
-    "expiresAt": "2026-09-25T10:15:00Z",
-    "url": "https://portal.example.org/projects/bikes/settings/service-accounts?account=legacy-push&claim=c7e1f0a94b2d6e8f13a5c9d7b0e4f261"
-  },
-  "account": "legacy-push",
-  "action": "mint",
-  "credential": "legacy-push"
-}
-```
-
-`action` is `mint` or `rotate`; a rotation's answer also names `keyId`, the key it replaces, and
-`overlapHours`; an expiry asked for is `keyExpiresAt`. The
-answer carries no token and no key id of a key that does not exist yet. The person opens `url` in the
-Portal, signed in, sees what the claim will do and confirms it; only then is the key minted, or the
-rotation made, and the token shown once, exactly as a mint in the Portal shows it:
-
-```text
-GET  /api/v1/projects/{project}/serviceaccounts/{name}/keys/claims/{claimId}   what the claim will do → 200
-POST /api/v1/projects/{project}/serviceaccounts/{name}/keys/claims/{claimId}   mint or rotate now → 201 MintedKey, the claim spent
-```
-
-- A claim belongs to the person who asked for it. Anyone else, a claim that has expired and a claim
-  already spent answer `404`, the same answer as a claim that never existed (R20), so the link in a
-  transcript opens nothing for whoever reads it.
-- A claim lives 15 minutes and is spent by its first `POST`, whether the mint succeeds or not; a
-  second `POST` is `404`. Expired claims are deleted.
-- The caller MUST still be allowed to manage the account's keys when the claim is used, as for a
-  mint; a key rotated in between answers `409` as a direct rotation of a revoked key does.
-- The claim row holds what the claim will do and who asked for it, never a secret: nothing is minted
-  until the person confirms (PF-36).
-- `jc_service_account_key_revoke` answers no secret and revokes over MCP at once, as in the Portal.
-- The REST routes and the Portal mint directly; their answer reaches a person, not a model. A run is
-  refused all three operations (§21).
+(`/api/v1/projects/{project}/serviceaccounts`). Its credential is an `oauth-client`: the reconciler
+provisions the Keycloak client, and a program signs in with `client_credentials` or, inside the
+cluster, with its workload identity (PF-47). The Portal mints, stores and accepts no API key
+(PF-37; the key routes and the MCP key claim were removed with the keys, owner decision 2026-10-18,
+T-4362).
 
 ## 10. Export, import, revisions and sync (MF-16…MF-32, CC-49)
 
@@ -1141,7 +1043,7 @@ GET /api/v1/projects/{project}/apps/{name}/export
 - Grants apply as on the resource API: the bundle holds the kinds the caller may `read` in the
   project (PF-59), a project they may not read is `404`, and `omitted` in the index counts what
   was withheld without naming it (MF-18). Live entities and histories are
-  never part of a bundle (MF-19); they are the endpoint's `file.{json|csv|geojson}` representation.
+  never part of a bundle (MF-19); they are the endpoint's `file.csv` and its APIs.
 - `/revisions` is the history of `projects/{project}/` on the default branch, newest first, for the
   revision picker (Architecture/06 section 6): `sha`, `message`, `author`, `date`. `limit` is 1…100,
   default 20.
@@ -2038,6 +1940,7 @@ they carry is what the public catalogue already shows.
 GET /api/v1/catalogue                          search, facets and one page of datasets
 GET /api/v1/catalogue/datasets/{name}          one dataset
 GET /api/v1/catalogue/datasets/{name}/sample   up to ten rows, read through its Endpoint
+GET /api/v1/catalogue/endpoints/{slug}/standards  a public Endpoint's standards, fields and examples
 ```
 
 `GET /api/v1/catalogue` takes `q` (full text, passed to CKAN), the facet filters `publisher`,
@@ -2125,6 +2028,44 @@ model class, read anonymously through its NGSI-LD representation with `options=k
 `{ "type": "KeyPerformanceIndicator", "columns": ["id", "name", "value"], "rows": [["urn:…", "…", "12"]] }`.
 A dataset with no Endpoint of this installation, or one that does not serve `ngsi-ld`, answers
 `404`; an Endpoint that does not answer, `503`. Nested values are written as compact JSON.
+
+`GET /api/v1/catalogue/endpoints/{slug}/standards` answers the "Standards" part of a public
+Endpoint's page (`/d/{slug}` and the Endpoint page in the Portal, TS-19, T-4484):
+
+```json
+{
+  "slug": "{endpointSlug}",
+  "types": ["AirQualityObserved"],
+  "entityType": "AirQualityObserved",
+  "standards": [
+    {
+      "representation": "ngsi-ld",
+      "fields": ["name", "no2", "pm10"],
+      "examples": [
+        { "kind": "equality", "field": "name", "url": "https://{host}/api/endpoint/{endpointSlug}/ngsi-ld/v1/entities?type=AirQualityObserved&q=name%3D%3D%22Zvolen%22", "answered": 1 },
+        { "kind": "range", "field": "no2", "url": "https://{host}/api/endpoint/{endpointSlug}/ngsi-ld/v1/entities?type=AirQualityObserved&q=no2%3E%3D21.5", "answered": 4 }
+      ]
+    },
+    { "representation": "ogc-features", "fields": ["name", "no2", "pm10"], "examples": [] }
+  ]
+}
+```
+
+- Every read is anonymous, through the Endpoint on the gateway, so the answer holds what a
+  visitor without a token may read and nothing a view hides. A non-public or unknown slug answers
+  `404`.
+- `standards` lists the query standards the Endpoint serves, in this order: `ngsi-ld`,
+  `ogc-features`, `odata`, `sta`. `fields` are the names that standard filters on: the
+  attributes of one entity for `ngsi-ld` and `sta`, the collection's queryables for
+  `ogc-features`, and the properties of the entity type in `$metadata` for `odata`.
+- The examples are built from one real entity, the first of the first type in `types` that has
+  one (`entityType`): an `equality` on a text field with the entity's own value (no spaces or
+  quotes) and a `range` (`>=`) on a numeric field with its value, written in the standard's own
+  syntax (`q`, OGC `?{field}=` and CQL2 `filter`, OData and SensorThings `$filter`). Each one is
+  run once and kept only when it answers `200` with at least one entity; `answered` is the
+  number on its first page. No example is written by hand.
+- A standard whose surface does not answer, or an Endpoint with no entity, lists no examples.
+- The answer is kept an hour per Endpoint (`Cache-Control: public, max-age=3600`).
 
 ## 16b. Publish a dataset in one step (EP-83)
 
@@ -2315,7 +2256,7 @@ POST /api/v1/projects/{project}/assistant/propose-endpoint
   "name": "bikes-regional-transport",
   "audience": "project-list",
   "allowedProjects": ["regional-transport"],
-  "representations": ["ngsi-ld", "geojson"],
+  "representations": ["ngsi-ld", "csv"],
   "hiddenAttributes": ["maintenanceNote"],
   "entityTypes": ["BikeHireDockingStation"]
 }
@@ -2325,14 +2266,14 @@ POST /api/v1/projects/{project}/assistant/propose-endpoint
 {
   "lane": "yellow",
   "slug": "k7m2p9q4r6s8t3v5w7x2y4z6a8b3",
-  "endpoint": { "apiVersion": "joinedcontext.com/v1alpha1", "kind": "Endpoint", "metadata": { "name": "bikes-regional-transport", "namespace": "helsinki" }, "spec": { "contextSpaceRef": "helsinki", "slug": "k7m2p9q4r6s8t3v5w7x2y4z6a8b3", "audience": "project-list", "allowedProjects": ["regional-transport"], "enabledRepresentations": ["ngsi-ld", "geojson"], "projection": { "hiddenAttributes": ["maintenanceNote"] } } },
+  "endpoint": { "apiVersion": "joinedcontext.com/v1alpha1", "kind": "Endpoint", "metadata": { "name": "bikes-regional-transport", "namespace": "helsinki" }, "spec": { "contextSpaceRef": "helsinki", "slug": "k7m2p9q4r6s8t3v5w7x2y4z6a8b3", "audience": "project-list", "allowedProjects": ["regional-transport"], "enabledRepresentations": ["ngsi-ld", "csv"], "projection": { "hiddenAttributes": ["maintenanceNote"] } } },
   "policies": [ { "apiVersion": "joinedcontext.com/v1alpha1", "kind": "Policy", "metadata": { "name": "bikes-regional-transport-regional-transport", "namespace": "helsinki" }, "spec": { "contextSpaceRef": { "kind": "ContextSpace", "name": "helsinki" }, "assigner": "did:web:hel.fi", "assignee": { "kind": "group", "id": "regional-transport" }, "operations": ["retrieveOps"], "information": [ { "entities": [ { "type": "BikeHireDockingStation" } ] } ] } } ],
-  "prefill": { "name": "bikes-regional-transport", "contextSpaceRef": "helsinki", "slug": "k7m2p9q4r6s8t3v5w7x2y4z6a8b3", "audience": "project-list", "allowedProjects": ["regional-transport"], "enabledRepresentations": ["ngsi-ld", "geojson"], "hiddenAttributes": ["maintenanceNote"] }
+  "prefill": { "name": "bikes-regional-transport", "contextSpaceRef": "helsinki", "slug": "k7m2p9q4r6s8t3v5w7x2y4z6a8b3", "audience": "project-list", "allowedProjects": ["regional-transport"], "enabledRepresentations": ["ngsi-ld", "csv"], "hiddenAttributes": ["maintenanceNote"] }
 }
 ```
 
 - `audience` defaults to `project-list`; `project-list` needs at least one project in
-  `allowedProjects`; `representations` defaults to `ngsi-ld` and `geojson`; every name is a
+  `allowedProjects`; `representations` defaults to `ngsi-ld` and `csv`; every name is a
   DNS-1123 label and every attribute an identifier, or the answer is `400`.
 - `access` names what the new endpoint's Policy grants: absent, `retrieveOps` (a share); `read`,
   `update` or `full`, the operations of AP-132 for an endpoint an app proposes; `create`,
@@ -2430,7 +2371,7 @@ Verdict:
 Drafts (also operations: jc_draft_put, jc_draft_get, jc_draft_drop):
   { "project": "helsinki", "kind": "DataSource", "name": "hsl-citybikes-free",
     "manifest": {…}, "verdict": {…} | null, "version": 7,
-    "touchedBy": "jana.kovacova", "touchedKind": "person" | "api-key" | "mcp" | "run",
+    "touchedBy": "jana.kovacova", "touchedKind": "person" | "mcp" | "run",
     "updatedAt": "…" }                                 # the REST routes are §4
   Draft changes are `draft` events on the activity stream (§7 of Architecture/09).
   jc_draft_list (GET /projects/{project}/drafts) answers one line per draft and never the
@@ -2474,14 +2415,10 @@ route's problem document.
     → 202 { "changeId": "chg-00000081", "lane": "yellow", "url": "…", "change": { … "phase": "Rejected" } }
   An assistant or application run calling jc_change_approve or jc_change_reject is refused
   (AG-11): 403 problem "an agent never approves or rejects a change; a person does (AG-11)".
-  Five more operations are the person's in the same way, refused for a run whatever its profile
+  Four more operations are the person's in the same way, refused for a run whatever its profile
   names and so absent from its `GET …/ops` and its `tools/list`: jc_run_create, jc_run_cancel and
-  jc_run_publish (a run does not drive another run), jc_run_answer (a run does not answer the
-  question a run asked the person it acts for, AG-45), and jc_service_account_key_mint,
-  jc_service_account_key_rotate and jc_service_account_key_revoke (a run does not mint or retire
-  the credentials the platform authenticates with). Each refusal names its own act. Over `/api/v1/mcp`
-  a person's own client still calls jc_service_account_key_mint and jc_service_account_key_rotate,
-  and is answered a claim the person opens in the Portal instead of the token (§9.1, PF-104). Proposing a
+  jc_run_publish (a run does not drive another run) and jc_run_answer (a run does not answer the
+  question a run asked the person it acts for, AG-45). Each refusal names its own act. Proposing a
   deletion is not among them: jc_resource_delete and jc_project_delete stay open to a run and to
   an MCP client, because a deletion is a Red change a person still approves (AG-77, CC-39).
   The rejection's reason is written on the merge request beside who rejected it; the REST route
@@ -2618,8 +2555,6 @@ DELETE /api/v1/projects/{project}/workspaces/{name}/preview   → 204; stopping 
 ```
 
 The gateway reads the running previews from the Portal's internal listener, which the edge does not route and a NetworkPolicy opens to the gateway alone: the path `/internal/previews` answers `{ "items": [ { "prefix": "ws-bikes-cleanup-", "files": { "<path>": "<manifest>" } } ] }`, without the repository's encrypted secrets and without another project's files. The gateway presents its own Keycloak ServiceAccount token on that call — `client_credentials`, audience `portal-internal`, `azp` its own client — and the route refuses a call without one: the NetworkPolicy is the second control and never the only one (PF-46, [Architecture 13 §6](../Architecture/13-security.md)). A page of manifests is what the route answers, so a pod that reached the port through a policy mistake would otherwise read every project's configuration. The answer carries an `ETag`, a SHA-256 over the body: the gateway sends it back as `If-None-Match` on its next fetch, every ten seconds, and a list that did not change answers `304` with no body, so an idle instance moves no manifests (CC-78). Authentication comes first, so a call without the token learns nothing from a `304` either.
-
-The gateway reads one person's connectors (§8, EP-123) from the same listener with the same token: `GET /internal/connectors/{sub}` answers `{ "connectors": [ { "name": "my-air", "select": { … } } ] }`, the `connectors` of that `sub`'s preferences as stored, and `{ "connectors": [] }` for a `sub` with none or no row, so the answer never says whether a person exists. Only the gateway's own client is admitted: a person's token, another ServiceAccount's and a call without a token are `401`/`403` before the row is read. The route lists no `sub` and has no listing form; the gateway caches each answer for at most 60 seconds (UI-98).
 
 The gateway reads the domain verification of every Organization from the same listener, with the same token, the same `ETag` and the same ten-second fetch: `GET /internal/domain-verifications` answers `{ "items": [ { "organization": "hel", "domain": "hel.fi", "state": "verified" } ] }`, one item per Organization manifest of the repository, `state` one of `pending`, `verified`, `failed` and `pending` for an Organization the Portal has not checked yet. The challenge, the record and the reason stay off this route: the gateway decides on the state alone ([Architecture/03 §3](../Architecture/03-domain-model.md#3-identity-and-urn-specification)). Under `JC_GATEWAY_DOMAIN_VERIFICATION=enforce` a write to a space of an Organization that is not `verified`, or whose state the gateway does not know, answers `403` with the problem type `https://joinedcontext.com/errors/domain-not-verified` and a detail naming the Organization and its domain.
 
@@ -3638,7 +3573,7 @@ DELETE /api/v1/organization/people/{id}/consents/{client}          → 204
 ```json
 {"subject": {"serviceAccount": "ovzdusie-etl", "groups": [], "roles": []},
  "endpoints": [{"name": "air", "slug": "zt4qm7ge2xdv6ksb3ncf5arw2y", "title": "Air quality",
-                "space": "ovzdusie", "representations": ["ngsi-ld", "geojson", "mcp"],
+                "space": "ovzdusie", "representations": ["ngsi-ld", "csv", "mcp"],
                 "policies": ["public-air"],
                 "permissions": [{"resource": {"type": "AirQualityObserved"},
                                  "actions": ["queryEntity", "retrieveEntity"],
@@ -3659,7 +3594,7 @@ DELETE /api/v1/organization/people/{id}/consents/{client}          → 204
   `prohibitions` as the gateway answered them (types, actions, attributes, and the view
   restriction as `constraints` `q`, `scopeQ`, `geoQ`, `temporalQ`), `policies` naming the Policies
   in force for the subject, and `representations`, the surfaces the Endpoint serves (the list of
-  its manifest, then `ngsi-ld`, `geojson` and, unless `spec.mcp` is `false`, `mcp`). The page
+  its manifest, then `ngsi-ld` and, unless `spec.mcp` is `false`, `mcp`). The page
   builds each surface's URL under `/api/endpoint/{slug}` and the hub's at `/api/mcp`.
 - `mcpServers` names the project's McpServers (ADR-N-043) with a member among the rows.
 - The page is Project settings → Access explorer, `/projects/{project}/settings/explorer`, with

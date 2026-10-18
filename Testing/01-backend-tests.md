@@ -96,7 +96,7 @@ jcctl schema export [--out <dir>]
 - **Idempotency.** `crates/jcctl/tests/apply_tests.rs` applies a repository, then plans again and asserts the second plan is empty ([CC-18](../Requirements/city-as-code.md#3-reconciler-jcctl)).
 - **Determinism.** `crates/jcctl/tests/blueprint_tests.rs` re-renders a committed blueprint instance and asserts byte-identical output; maps are ordered before rendering, so two runs and two machines agree.
 - **Artifacts.** `crates/jcctl/tests/rebuild_tests.rs` rebuilds the artifacts of a space at a revision and compares them with the committed ones. The same comparison runs in the platform's fast lane as `jcctl model diff --repo-dir examples/datamodels` against a live generator.
-- **Pipelines.** `crates/jcctl/tests/bento_datasource_render_tests.rs` and its neighbours render a pipeline manifest into a Bento configuration; `bento lint` and `bento test` then run over `examples/ingestion/` in CI.
+- **Pipelines.** `crates/jc-manifest/tests/bento_datasource_render_tests.rs` and its neighbours render a pipeline manifest into a Bento configuration; `bento lint` and `bento test` then run over `examples/ingestion/` in CI.
 
 ---
 

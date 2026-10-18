@@ -27,7 +27,7 @@ Generated 2026-10-17 from: `docs` 84a13b5, `conformance` 1d4bd95, `deployment` 2
 | **CC** — Configuration as code | 90 | 73 | 8 | 9 | 0 |
 | **DM** — Data models | 96 | 80 | 9 | 7 | 1 |
 | **DS** — Data space connector | 20 | 13 | 3 | 4 | 0 |
-| **EP** — Endpoints and parity | 119 | 105 | 8 | 6 | 5 |
+| **EP** — Endpoints and parity | 121 | 105 | 8 | 8 | 7 |
 | **GW** — Gateway firewall | 35 | 25 | 3 | 7 | 2 |
 | **I** — Identity and credentials | 4 | 2 | 2 | 0 | 0 |
 | **MF** — Manifests | 53 | 49 | 4 | 0 | 0 |
@@ -41,7 +41,7 @@ Generated 2026-10-17 from: `docs` 84a13b5, `conformance` 1d4bd95, `deployment` 2
 | **SP** — Context-space surface | 22 | 19 | 1 | 2 | 0 |
 | **TS** — Testing and quality | 26 | 16 | 5 | 5 | 0 |
 | **UI** — Portal and user interface | 95 | 70 | 14 | 11 | 5 |
-| **Total** | 1274 | 956 | 110 | 208 | 38 |
+| **Total** | 1276 | 956 | 110 | 210 | 40 |
 
 ## 3. Requirement to test
 
@@ -354,8 +354,8 @@ Generated 2026-10-17 from: `docs` 84a13b5, `conformance` 1d4bd95, `deployment` 2
 | **CC-06** |  | tested | ci-full, fast ci | deployment `tests/test_artifact_store_credentials.py::test_the_portal_is_told_where_the_store_is_and_gets_the_root_key_by_reference`, deployment `tests/test_artifact_store_credentials.py::test_the_root_key_is_generated_where_the_store_and_the_reconciler_are_and_nowhere_else`, deployment `tests/test_artifact_store_credentials.py::test_no_workload_but_the_portal_reads_the_root_key`, and 127 more |
 | **CC-07** |  | tested | ci-full | platform `crates/jcctl/tests/seed_entities_tests.rs::every_seed_folder_of_every_space_is_read_in_path_order`, platform `crates/jcctl/tests/seed_entities_tests.rs::a_repository_that_seeds_nothing_is_no_entities_and_no_error`, platform `crates/jcctl/tests/seed_entities_tests.rs::a_file_that_is_not_an_entity_is_refused_by_name`, and 7 more |
 | **CC-08** |  | tested | ci-full, fast ci | deployment `tests/test_forge_bootstrap.py::test_the_job_may_touch_only_the_secrets_it_writes`, deployment `tests/test_forge_bootstrap.py::test_the_job_says_why_it_holds_an_api_token`, deployment `tests/test_forge_bootstrap.py::test_the_portal_gets_all_four_forge_variables_or_none`, and 91 more |
-| **CC-09** |  | built |  | `joinedcontext-platform/crates/jcctl/src/loader.rs` |
-| **CC-10** |  | built |  | `joinedcontext-platform/crates/jcctl/src/loader.rs` |
+| **CC-09** |  | built |  | `joinedcontext-platform/crates/jc-manifest/src/loader.rs` |
+| **CC-10** |  | built |  | `joinedcontext-platform/crates/jc-manifest/src/loader.rs` |
 | **CC-11** |  | tested | ci-full | platform `crates/jc-core/tests/data_source_serde_tests.rs::the_websocket_type_is_one_word` |
 | **CC-12** |  | tested | ci-full, fast ci | deployment `tests/test_runtime_policies.py::test_every_placeholder_is_substituted`, platform `crates/jcctl/tests/validate_tests.rs::a_repository_that_fails_to_load_yields_exactly_one_finding`, platform `crates/jcctl/tests/validate_tests.rs::run_reports_every_class_of_finding_at_once` |
 | **CC-13** |  | tested | ci-full | platform `crates/jcctl/tests/validate_tests.rs::a_valid_repository_has_no_findings`, platform `crates/jcctl/tests/validate_tests.rs::a_field_that_is_not_in_the_kind_is_refused`, platform `crates/jcctl/tests/validate_tests.rs::a_malformed_document_reports_its_line`, and 2 more |
@@ -537,6 +537,7 @@ Generated 2026-10-17 from: `docs` 84a13b5, `conformance` 1d4bd95, `deployment` 2
 | **DM-94** | [H] [S] | tested | ci-full, fast ci | portal `src/quality_checks.rs::the_metric_lines_are_read_by_their_labels_and_nothing_else`, portal `src/quality_checks.rs::no_reading_is_an_empty_answer_never_all_passing`, portal `src/quality_checks.rs::the_windows_count_what_grew_inside_them_and_name_the_attribute`, and 7 more |
 | **DM-95** |  | tested | ci-full | platform `crates/jcctl/tests/publish_ckan_tests.rs::the_quality_measurements_reach_the_record_and_the_dataset`, portal `tests/ckan_reconciler_tests.rs::the_measurements_are_the_spaces_pass_rate_and_freshness`, portal `tests/ckan_reconciler_tests.rs::a_datasets_measurements_are_read_by_its_spaces_segment` |
 | **DM-96** | [S] | open |  |  |
+| **DM-97** | [S] [P] | open |  |  |
 
 ### DS — Data space connector
 
@@ -624,6 +625,10 @@ Generated 2026-10-17 from: `docs` 84a13b5, `conformance` 1d4bd95, `deployment` 2
 | **EP-121** | [A] | open |  |  |
 | **EP-122** | [A][S] | open |  |  |
 | **EP-123** | [S] | open |  |  |
+| **EP-124** | [A] | open |  |  |
+| **EP-125** | [S][A] | open |  |  |
+| **EP-126** | [S] | open |  |  |
+| **EP-127** | [H] [P] [A] | open |  |  |
 | **EP-46** | [P] [A] | tested | ci-full, conformance, fast ci | conformance `tests/mcp/test_mcp_read_parity.py::test_a_document_tool_answers_what_its_rest_route_serves`, conformance `tests/schemathesis/test_gateway_endpoints.py::test_ep46_schema_directory_artifacts`, platform `crates/context-gateway/tests/describedby_link_tests.rs::an_endpoint_with_two_majors_names_four_documents`, and 12 more |
 | **EP-47** | [P] | tested | ci-full, conformance, fast ci | conformance `tests/models/test_endpoint_schema.py::test_dm46_pyshacl_accepts_an_entity_the_endpoint_serves`, deployment `tests/test_context_gateway.py::test_the_public_grant_hides_exactly_the_two_attributes_the_demo_shows_hidden`, platform `crates/context-gateway/src/handlers/schema.rs::a_prohibition_takes_back_a_type_or_the_attributes_it_names`, and 11 more |
 | **EP-48** | [P] | tested | ci-full, conformance | conformance `tests/schemathesis/test_gateway_endpoints.py::test_ep48_schema_etag_and_caching`, platform `crates/context-gateway/tests/mcp_schema_tests.rs::the_digest_in_the_summary_is_the_digest_of_the_document`, platform `crates/context-gateway/tests/schema_view_tests.rs::a_revalidation_is_the_brokers_304` |
@@ -746,7 +751,7 @@ Generated 2026-10-17 from: `docs` 84a13b5, `conformance` 1d4bd95, `deployment` 2
 |---|---|---|---|---|
 | **MF-01** |  | tested | ci-full, fast ci | deployment `tests/test_forge_bootstrap.py::test_the_seed_carries_the_organization_its_settings_and_a_project_manifest`, platform `crates/jc-core/tests/envelope_tests.rs::the_documented_manifest_round_trips_with_every_field_preserved`, platform `crates/jc-core/tests/envelope_tests.rs::the_commented_out_status_block_of_the_docs_deserializes_and_is_never_exported`, and 9 more |
 | **MF-02** |  | tested | ci-full, fast ci | platform `crates/jcctl/tests/service_account_reconciler_tests.rs::a_long_account_role_and_space_still_give_a_valid_policy_name`, portal `src/agents/oneshot/conversation.rs::an_endpoint_name_with_lines_of_its_own_adds_no_heading`, portal `src/agents/oneshot/conversation.rs::a_resource_name_containing_a_fenced_code_marker_does_not_break_out_of_its_json_block`, and 4 more |
-| **MF-03** |  | built |  | `joinedcontext-platform/crates/jcctl/src/loader.rs` |
+| **MF-03** |  | built |  | `joinedcontext-platform/crates/jc-manifest/src/loader.rs` |
 | **MF-04** |  | tested | ci-full, fast ci | platform `crates/jcctl/tests/export_tests.rs::system_metadata_is_stripped_and_hand_written_metadata_survives`, platform `crates/jcctl/tests/loader_tests.rs::the_build_status_of_an_app_survives_the_load`, portal `src/api/sync.rs::sync_status_anonymous_returns_401`, and 55 more |
 | **MF-05** |  | tested | ci-full, fast ci | platform `crates/jcctl/tests/loader_tests.rs::indented_separator_inside_a_block_scalar_does_not_split_the_document`, portal `src/api/import.rs::an_archive_that_expands_past_the_import_limit_is_refused`, portal `src/api/import.rs::entries_that_add_up_past_the_import_limit_are_refused_together`, and 24 more |
 | **MF-06** |  | tested | ci-full, fast ci | deployment `tests/test_seed_identity_contract.py::test_every_kind_is_seeded_to_one_repository_path`, platform `crates/jc-core/tests/ui_schema_tests.rs::the_documented_example_parses_and_validates`, platform `crates/jc-core/tests/ui_schema_tests.rs::a_field_the_manifest_does_not_know_is_refused_rather_than_ignored`, and 27 more |

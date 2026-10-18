@@ -5,9 +5,9 @@ title: "Data Models & the LinkML Editor"
 
 # Data Models & the LinkML Editor
 
-Family **DM** (DM-01…DM-96). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **DM** (DM-01…DM-97). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
-This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-96**. Consumer classes per `00-index.md`.
+This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-97**. Consumer classes per `00-index.md`.
 
 ## 1. Source of truth and artifacts
 
@@ -145,7 +145,7 @@ The owner, 2026-09-24: "write more tasks to validate everything" (T-2796). A wri
 
 The decision and its reasons are in [ADR-N-046](../Decisions/adr-n-046-data-lifecycle-and-quality.md).
 
-- **DM-82** [S] — A ContextSpace MAY declare `spec.retention`, at most one rule per entity type of its model, each with an optional `current` and an optional `history` ISO 8601 duration of days, hours, minutes and seconds (`PT5M`, `PT8H`, `P30D`, `P1DT12H`) from one minute to 3650 days; `history` MAY instead be `off`, which keeps the type's current state only, or `forever`, which MUST carry a non-empty `reason` (T-4275, owner 2026-10-16); the platform MUST NOT delete data of a type that has no rule in its space through retention.
+- **DM-82** [S] — A ContextSpace MAY declare `spec.retention`, at most one rule per entity type of its model, each with an optional `current` and an optional `history` ISO 8601 duration of days, hours, minutes and seconds (`PT5M`, `PT8H`, `P30D`, `P1DT12H`) from one minute to 3650 days; `history` MAY instead be `off`, which keeps the type's current state only, or `forever`, which MUST carry a non-empty `reason` (T-4275, owner 2026-10-16); one rule MAY name `entityType: "*"` with a `history` only, the space's default for every type without a history of its own (T-4414); the platform MUST NOT remove the current state of a type whose rule has no `current` through retention.
 - **DM-83** — The broker MUST remove, at least once a minute, every Entity of a ruled type not modified for the rule's `current` that carries no `expiresAt` of its own, so the clock restarts on every create, update, upsert and append; an `expiresAt` sent by the writer MUST win (TS 104 175 4.22).
 - **DM-84** [P] — The broker MUST delete the temporal instances of a ruled type in its tenant that are older than the rule's `history`, in bounded batches, at least once a minute while any rule is under an hour, and count each deletion in `antares_retention_deleted_total{tenant,type,kind}`. For a type whose `history` is `off`, the broker MUST record no temporal instance on any create, update, merge, upsert or append through the core API, MUST delete the instances it already holds in the same batches, and MUST answer a temporal query of that type with an empty history, not an error (T-4275).
 - **DM-85** [S][H] — The Portal MUST let only the space's owner role set or shorten a retention rule, MUST offer per type a history of Off or Keep for a duration and never Forever (T-4275), MUST show the count the broker reports a shortening or turning history off will delete and ask for confirmation before saving it, and MUST show every rule of a space with its deletion counts.
@@ -159,7 +159,8 @@ The decision and its reasons are in [ADR-N-046](../Decisions/adr-n-046-data-life
 - **DM-93** — The gateway, the pipeline's validation stage and the sweep MUST count every check in `jc_quality_checks_total`, labelled by space, type, rule and outcome, the outcome being `pass`, `reject`, `flag` or `quarantine`.
 - **DM-94** [H][S] — The space quality page MUST show, to whoever may read the space, per type and rule the checks and the pass rate over 24 hours and 7 days, the stale and quarantined counts, the latest rejected writes by rule and attribute without values, and the retention deletions (API/01 §27).
 - **DM-95** — `jcctl publish` MUST add to each dataset of the DCAT-AP record a `dqv:hasQualityMeasurement` for the pass rate of its space's quality checks over seven days and one for the freshness (the age of the newest change when the daily quality run read the space, API/01 §27), and the CKAN dataset MUST show both.
-- **DM-96** [S] — Every automatic removal of context data MUST be declared in a manifest of the space or of a pipeline (PL-64), MUST apply only to the space that declares it, and MUST be logged per sweep with its counts and never with values.
+- **DM-96** [S] — Every automatic removal of context data MUST be declared in a manifest of the space or of a pipeline (PL-64), by the Entity's own `historyRetention` or by the platform history default (both DM-97); a removal a manifest declares MUST apply only to the space that declares it, and every removal MUST be logged per sweep with its counts and never with values.
+- **DM-97** [S][P] — The broker MUST keep each attribute instance for the history retention of the most specific level that sets one: the Entity's own `historyRetention` Property (a duration or `off`), then the rule of one of its types in its tenant, then the tenant's `*` rule, then the broker's platform default `ANTARES_RETENTION_HISTORY_DEFAULT` (the platform deployment sets `P28D`); `forever` at the type or space level MUST hold back every level below it, an Entity's value that is neither a duration nor `off` MUST be ignored, an Entity whose value is `off` MUST record no temporal instance, an Entity removed by its own `expiresAt` MUST lose its history with it, and a weekly partition the sweeps emptied MUST be dropped without losing a row written into it concurrently (ADR-N-046 2.3, owner 2026-10-18).
 
 ## Traceability
 
@@ -185,7 +186,7 @@ The decision and its reasons are in [ADR-N-046](../Decisions/adr-n-046-data-life
 | DM-64…DM-73 | Relationships, strict like foreign keys | [11-data-models.md](../Architecture/11-data-models.md#12-relationships-between-classes-dm-64dm-73) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-74 | Stored data held to its model | [API/01 §27](../API/01-portal-api.md#27-data-quality-of-a-space-dm-74) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | DM-75…DM-79 | Organization and project models, shared upwards by an administrator | [ADR-N-039](../Decisions/adr-n-039-organization-and-project-data-models.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
-| DM-82…DM-96 | Data lifecycle and quality | [ADR-N-046](../Decisions/adr-n-046-data-lifecycle-and-quality.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
+| DM-82…DM-97 | Data lifecycle and quality | [ADR-N-046](../Decisions/adr-n-046-data-lifecycle-and-quality.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | DM-80 | Formula fields computed by a derived pipeline | [08-pipelines.md §3](../Architecture/08-pipelines.md#formula-fields-a-slot-computed-from-its-entity-dm-80-t-3133) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | DM-81 | Upload a CSV into a space, ranked against Smart Data Models | [09-portal.md](../Architecture/09-portal.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 

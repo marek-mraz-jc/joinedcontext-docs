@@ -28,7 +28,7 @@ We require a unified, accessible visualization engine embedded directly within t
 | Model-driven data flow | **Full** | Dashboards and layers defined as declarative `kind: Dashboard` manifests. |
 | Distributed architecture with unified UX | **Full** | Map and analytics dashboards rendered directly inside the single Portal SPA. |
 | Modular design | **Full** | Visual layer engine decoupled from underlying data queries. |
-| Integrability via defined interfaces | **Full** | Queries data exclusively through standard Endpoints (`file.geojson`, NGSI-LD). |
+| Integrability via defined interfaces | **Full** | Queries data exclusively through standard Endpoints (NGSI-LD; `file.geojson` until T-4597 moved layers to NGSI-LD's `application/geo+json`). |
 | Open source as default | **Full** | MapLibre GL JS (BSD-3-Clause) and deck.gl (MIT) are 100% open source. |
 | Cloud-native architecture | **Full** | Zero backend server footprint; visual rendering executes entirely on client WebGL. |
 | Standard solutions before custom code | **Full** | Leverages established open-source mapping and visualization libraries. |

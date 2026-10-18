@@ -59,7 +59,7 @@ A dataset carries three kinds of resource, and the choice is the Endpoint's, not
 
 - **A link per representation** is always written. The resource URL is that representation's own URL under the Endpoint, so a download passes the gateway and its policy set, and a restricted dataset's links are useless without a token. This is what makes the catalogue safe to publish at all.
 - **A DataStore sheet** is written when the Endpoint declares `spec.publish.ckan.datastore`. It gives the dataset page a preview, a filtered API and SQL over the rows, which a link alone cannot. The sheet is filled through the Endpoint's tabular representation as an ordinary consumer, one table per entity type, one row per entity, keyed by the entity's URN (`crates/jcctl/src/publish/ckan_datastore.rs`). A table's columns are the ones its rows fill plus every column the type's class in the Endpoint's `model.schema.json` declares, so an attribute no entity carries yet still has its column; a geometry also gets a `<attr>.geojson` text column. The schema is read as the same anonymous caller as the rows, so a column never names an attribute the grant hides. `refresh: onChange` upserts the entities a notification named, re-read through the Endpoint; `refresh: onReconcile` reloads the table on the reconcile tick, for a space with no subscription. A row whose entity the Endpoint no longer answers for is deleted by the same rule, so a deletion behind the Endpoint propagates instead of leaving a public copy.
-- **A file dump** is not written. The `csv` and `json` representations are already downloads of the same data, served through the policy set, and a third copy in CKAN's file store would be the one nobody rebuilds.
+- **A file dump** is not written. The `csv` representation is already a download of the same data, served through the policy set, and a third copy in CKAN's file store would be the one nobody rebuilds.
 
 The cadence a person reads on the dataset page is the `frequency` extra, which comes from the Endpoint's own record. A sheet says the same thing in the resource description, so a preview that is a day old does not read as live.
 
@@ -139,7 +139,7 @@ The flow writes nothing to CKAN and needs no CKAN credential: the Change is the 
 
 ## 8. The organization's DCAT-AP feed
 
-A national portal (data.gov.sk, data.europa.eu) harvests a catalogue, not a list of endpoints. The context gateway serves the installation's catalogue as one `dcat:Catalog` at `https://{host}/catalog.jsonld` and `https://{host}/catalog.ttl` (EP-84): its datasets are the records of EP-27 of every Endpoint whose audience is `public`, each as the anonymous caller would read it, so the feed carries nothing a public read would not. The same pinned SEMIC shapes that check each record check the feed in the fast CI lane. The catalogue host serves the same records a second time, as CKAN holds them (EP-91): `https://data.{domain}/catalog.ttl` and `/dataset/{id}.ttl`, written by `ckanext-dcat`'s `euro_dcat_ap_3` profile with the catalogue theme's own profile on top, which turns CKAN's strings into the vocabulary IRIs the shapes ask for and adds the catalogue's publisher from `global.branding`. That is the address another CKAN's DCAT RDF harvester is given, because it harvests a catalogue host and its dataset pages, and it carries the DataStore download the gateway's record does not. A harvester takes one of the two, never both: the datasets of the two feeds have different URIs and the same `dct:identifier`, the Endpoint's slug. The deployment repository's DCAT-AP check, which the `ckan` component README names for an operator, validates the catalogue host's feed against the pinned 3.0.1 shapes.
+A national portal (data.gov.sk, data.europa.eu) harvests a catalogue, not a list of endpoints. The context gateway serves the installation's catalogue as one `dcat:Catalog` at `https://{host}/catalog.jsonld` and `https://{host}/catalog.ttl` (EP-84): its datasets are the records of EP-27 of every Endpoint whose audience is `public`, each as the anonymous caller would read it, so the feed carries nothing a public read would not. The same pinned SEMIC shapes that check each record check the feed in the fast CI lane. The catalogue host serves the same records a second time, as CKAN holds them (EP-91): `https://data.{domain}/catalog.ttl` and `/dataset/{id}.ttl`, written by `ckanext-dcat`'s `euro_dcat_ap_3` profile with the catalogue theme's own profile on top, which turns CKAN's strings into the vocabulary IRIs the shapes ask for and adds the catalogue's publisher from `global.branding`. That is the address another CKAN's DCAT RDF harvester is given, because it harvests a catalogue host and its dataset pages, and it carries the DataStore download the gateway's record does not. A harvester takes one of the two, never both: the datasets of the two feeds have different URIs and the same `dct:identifier`, the Endpoint's slug. A national catalogue registers one local catalogue per publisher, so the gateway also serves a catalogue per Project that names its publisher, `https://{host}/catalog/{project}.jsonld` and `.ttl` (EP-127), in DCAT-AP or a national profile ([API/08 §6](../API/08-dcat-profiles.md#6-one-catalogue-per-publisher)); data.slovensko.sk and data.gov.cz are given that URL, not the installation's. The deployment repository's DCAT-AP check, which the `ckan` component README names for an operator, validates the catalogue host's feed against the pinned 3.0.1 shapes.
 
 ## 9. What every dataset lists
 
@@ -150,11 +150,13 @@ The owner set one rule for every dataset of the catalogue on 2026-10-16 (EP-118)
 | NGSI-LD API | always | `NGSI-LD` |
 | Model Context Protocol | always | `MCP` |
 | WebSocket | always | `WebSocket` |
-| CSV, JSON | always; a whole-file download up to 50 MB, a paged API link (`limit` and `offset`) above it | `CSV`, `JSON` |
+| CSV | always; a whole-file download up to 50 MB, a paged API link (`limit` and `offset`) above it | `CSV` |
 | The data model: JSON Schema, JSON-LD `@context`, LinkML, Markdown, OWL, RDF, SHACL | always | `JSON Schema`, `JSON-LD`, `LinkML`, `Markdown`, `OWL`, `RDF`, `SHACL` |
-| GeoJSON, OGC API - Features | when the rows carry a location | `GeoJSON`, `OGCFEAT` |
-| XLSX, OData | optional | `XLSX`, `OData` |
-| ZIP, Esri REST | never | |
+| OGC API - Features | when the rows carry a location | `OGCFEAT` |
+| OData | optional | `OData` |
+| ZIP, Esri REST, and `file.json`, `file.geojson`, `file.xlsx`, `file.parquet` | never: an Endpoint publishes one file, `file.csv` (T-4597) | |
+
+A map reads a located dataset's GeoJSON from OGC API - Features or from the NGSI-LD API with `Accept: application/geo+json` ([API/02](../API/02-endpoint-representations.md)), so the catalogue lists no GeoJSON file. Decided (worker-3, owner may override): EP-118 follows T-4597 and lists CSV as the one file, because a listed `file.json`, `file.geojson` or `file.xlsx` now answers 404 and would break the rule that every listed link answers 200; options: keep JSON and GeoJSON as API links under their old labels, which would name one surface twice.
 
 The labels are the ones `jcctl`'s publisher writes for an Endpoint's own dataset (`crates/jcctl/src/publish/ckan.rs`, `distribution`), so the format facet counts a harvested dataset and a published one under the same name. Every listed link answers 200 to an anonymous GET, because the catalogue lists public data only.
 
@@ -171,6 +173,8 @@ Publicly a dataset is a context space and its Endpoints are access paths (owner,
 | `DataService` | `urn:ngsi-ld:DataService:{slug}` | `title`, `description` | LanguageProperty | `dct:title`, `dct:description` per `@language` |
 | | | `accessLevel` | Property | the Endpoint's audience: `public`, `organization`, `project-list` |
 | | | `visibleBecause` | Property | why this caller sees it: `public`, `organization`, `project`, `grant`; `public` in the public catalogue |
+| | | `entityTypes` | Property | `[{type, count}]`, most first, read by the Portal as the anonymous caller from the Endpoint's `/types` and `count=true&limit=0`, once an hour (T-4526); absent while unread |
+| | | `nextQuery` | Property | `{tool: query_entities, arguments: {endpoint, type, limit}}`: the second call, on the largest type (T-4526) |
 | | | `identifier` | Property | `dct:identifier`, the slug a tool call names |
 | | | `endpointURL` | Property | the `dcat:DataService`'s `dcat:endpointURL` |
 | | | `accessURL` | Property, one object per distribution | `dcat:distribution`: `dcat:accessURL`, `dct:conformsTo`, `dcat:mediaType`; the access paths only, not the schema artifacts under `/schema/` |

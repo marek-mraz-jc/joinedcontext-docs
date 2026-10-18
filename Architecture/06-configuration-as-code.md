@@ -244,7 +244,7 @@ Rules that make bundles portable: identity is `(group, kind, namespace, name)` a
 | `SharedSpaceReference`| `projects/{p}/shared/` | `schema/kinds/SharedSpaceReference.json`| Context Gateway In-Memory Sharing Table |
 | `Blueprint` | `blueprints/{n}/blueprint.yaml` | `schema/kinds/Blueprint.json` | Portal API Flow Gallery |
 | `Mapping` | `projects/{p}/spaces/{s}/datamodels/mappings/` | `schema/kinds/Mapping.json` | Model Tools (validate, compile → `generated/*.blobl`); Bento via `Pipeline.spec.mappingRef` (DM-33…DM-42) |
-| `ServiceAccount` | `projects/{p}/access/serviceaccounts/` | `schema/kinds/ServiceAccount.json` | Keycloak client / Portal API key table (hashes only); Policy entities for grants (PF-34…PF-40) |
+| `ServiceAccount` | `projects/{p}/access/serviceaccounts/` | `schema/kinds/ServiceAccount.json` | Keycloak client; Policy entities for grants (PF-34…PF-40) |
 | `Environment` | `environments/` (org level) | `schema/kinds/Environment.json` | Merged by every loader before validation; red lane (CC-73…CC-75) |
 | `ContextBroker` | `brokers/` (org level) | `schema/kinds/ContextBroker.json` | Portal reconciler: one Antares release, database and Keycloak client per broker; spaces name it by `spec.brokerRef` (PF-110, PF-111, ADR-N-047) |
 | `Group` | `users/groups/` (org level) | `schema/kinds/Group.json` | Keycloak groups the reconciler manages, members pruned to the manifest (PF-62, PF-63) |
@@ -604,7 +604,7 @@ flowchart LR
 - Always re-importable: `status` stripped, secrets as `secretRef`, generated schema artifacts and native `bento.yaml`/LinkML files included next to their envelopes.
 - Self-describing: a whole-project download carries what its files mean. `schemas/kinds/{Kind}.schema.json` is the JSON Schema of every kind it holds, with the description of every field; `schemas/models/{name}/` holds every data model's LinkML source and JSON Schema; `README.md` lists each kind with what it is, how many resources it holds and where its schema is. A person or another tool reads the bundle without this platform's documentation, and an import leaves these files out of the project (MF-41).
 - Grants apply: a viewer's download omits what they may not read and says only how many objects were omitted.
-- Live entities and history are a separate *data export* through the space's endpoint (`file.{json|csv|geojson}`), so configuration bundles never carry state (CC-07).
+- Live entities and history are a separate *data export* through the space's endpoint (`file.csv` and its APIs), so configuration bundles never carry state (CC-07).
 
 ### Import (MF-20…MF-26)
 

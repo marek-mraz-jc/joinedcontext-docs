@@ -29,6 +29,7 @@ The enforcement point in front of every broker surface (`context-gateway`).
 | `JC_GATEWAY_BIND` | `0.0.0.0:8080` | no | The address to listen on (`JC_GATEWAY_BIND`, default `0.0.0.0:8080`). |
 | `JC_GATEWAY_BROKER_URL` | — | no | The broker to forward to, scheme and authority only (`JC_GATEWAY_BROKER_URL`): the implicit `main`, and every space when the organization declares no broker. |
 | `JC_GATEWAY_BROKER_URL_TEMPLATE` | — | no | The address of every other `ContextBroker`, `{broker}` replaced by its name (`JC_GATEWAY_BROKER_URL_TEMPLATE`, ADR-N-047); absent refuses the spaces that live on one rather than sending them to `main`. |
+| `JC_GATEWAY_CONNECTORS_URL` | — | no | The Portal's read of a person's connectors (`JC_GATEWAY_CONNECTORS_URL`, its internal listener's `/internal/connectors`); absent serves no `/api/mcp/me/{name}` (EP-123). |
 | `JC_GATEWAY_DOMAIN_VERIFICATION` | `report` | no | `report` or `enforce` (`JC_GATEWAY_DOMAIN_VERIFICATION`, default `report`): whether a write waits for the Organization's verified domain (PF-41, Architecture/03 §3). |
 | `JC_GATEWAY_DOMAIN_VERIFICATIONS_URL` | — | no | The Portal's list of domain states (`JC_GATEWAY_DOMAIN_VERIFICATIONS_URL`, its internal listener's `/internal/domain-verifications`); required under `enforce`. |
 | `JC_GATEWAY_EGRESS_CA_BUNDLE` | — | no | A PEM file of extra trust anchors the outbound client trusts on top of the public roots (`JC_GATEWAY_EGRESS_CA_BUNDLE`), for a broker behind the installation's own CA (R46). |
@@ -122,6 +123,7 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_PORTAL_BUILD_IMAGE_NODE` | — | no | Where an App's build pods run and on which runner images (`JC_PORTAL_BUILD_NAMESPACE` with `JC_PORTAL_BUILD_IMAGE_NODE`, `JC_PORTAL_BUILD_IMAGE_RUST` and the forge's API base; `JC_PORTAL_BUILD_CACHE_SIZE`, default `1Gi`; AP-130, AP-131). |
 | `JC_PORTAL_BUILD_IMAGE_RUST` | — | no | Where an App's build pods run and on which runner images (`JC_PORTAL_BUILD_NAMESPACE` with `JC_PORTAL_BUILD_IMAGE_NODE`, `JC_PORTAL_BUILD_IMAGE_RUST` and the forge's API base; `JC_PORTAL_BUILD_CACHE_SIZE`, default `1Gi`; AP-130, AP-131). |
 | `JC_PORTAL_BUILD_NAMESPACE` | — | no | Where build pods run (AP-130): nothing when `JC_PORTAL_BUILD_NAMESPACE` is unset, and every other part required once it is, because a namespace with no image would start pods that never run. |
+| `JC_PORTAL_COMMIT` | — | no | The release these pages belong to: the Portal's version and, in an image, the commit it was built from (the `JC_PORTAL_COMMIT` build argument, T-4483). |
 | `JC_PORTAL_COOKIE_KEY` | — | yes | The key every session cookie is sealed with (`JC_PORTAL_COOKIE_KEY`, at least 64 bytes). |
 | `JC_PORTAL_COOKIE_KEY_PREVIOUS` | — | yes | Keys a session cookie may still be sealed with, during a rotation (`JC_PORTAL_COOKIE_KEY_PREVIOUS`, comma-separated, each held to the same length as the active one; T-0973). |
 | `JC_PORTAL_DASHBOARDS` | — | no | Whether the Dashboards section is shown (`JC_PORTAL_DASHBOARDS`, the literal string `true` to show it; default hidden, the owner's call of 2026-09-25, T-2874). |

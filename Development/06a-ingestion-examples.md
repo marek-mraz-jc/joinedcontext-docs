@@ -85,7 +85,7 @@ spec:
   contextSpaceRef: transport
   slug: hs7v3k2mq4xd6bnr5tcf2aw3ye
   audience: public
-  enabledRepresentations: [ngsi-ld, geojson]
+  enabledRepresentations: [ngsi-ld, ogc-features]
 ```
 
 The mapping is the whole of `bento.yaml`. One topic tree carries several frame kinds, so the first processor keeps position reports and drops the rest, and the last one turns a frame into an entity:
@@ -161,7 +161,7 @@ spec:
   contextSpaceRef: air-quality
   slug: aq6r2m5ke7xd4bns3tcf2vw5yj
   audience: public
-  enabledRepresentations: [ngsi-ld, geojson, csv]
+  enabledRepresentations: [ngsi-ld, csv, ogc-features]
 ```
 
 Five minutes is past the thirty-second rule, so the reconciler renders a CronJob that scales to zero between runs (PL-26). One response carries the whole station list, so the pipeline splits it before mapping:
@@ -233,7 +233,7 @@ spec:
   contextSpaceRef: transport
   slug: pk3v7m2qe5xd6bnr4tcf2aw6yh
   audience: public
-  enabledRepresentations: [ngsi-ld, geojson, csv]
+  enabledRepresentations: [ngsi-ld, csv, ogc-features]
 ```
 
 Forty-five seconds is the interesting cadence. It is past the thirty-second rule but under the minute cron can express, so the reconciler renders a CronJob on `* * * * *` whose Bento input fetches once per period inside the run (PL-27). One fetch is one file, so the first processor splits it into rows:
@@ -294,7 +294,7 @@ spec:
   contextSpaceRef: transport
   slug: md5r3k7qe2xv6bns4tcf3aw2yl
   audience: public
-  enabledRepresentations: [ngsi-ld, geojson]
+  enabledRepresentations: [ngsi-ld, ogc-features]
 ```
 
 What the mapping sees is a decoded `FeedMessage` in protojson form, which matters for two reasons: field names are camelCase, so the proto's `trip_update` arrives as `tripUpdate`, and every 64-bit field including timestamps arrives as a string. A feed entity is a vehicle position, a trip update or a service alert, so the mapping switches on which one it is and produces a `Vehicle` or a `Trip`:
@@ -361,7 +361,7 @@ curl -sS "https://{host}/api/endpoint/{slug}/ngsi-ld/v1/entities/urn:ngsi-ld:Veh
 The same data as a map layer, which is the quickest check that `location` is a GeoProperty and not a string:
 
 ```bash
-curl -sS "https://{host}/api/endpoint/{slug}/file.geojson" | head -40
+curl -sS -H "Accept: application/geo+json" "https://{host}/api/endpoint/{slug}/ngsi-ld/v1/entities?type={Type}" | head -40
 ```
 
 Whether the numbers are moving, on a private endpoint, with a ServiceAccount token:

@@ -168,20 +168,20 @@ OGC_LANDING_URL=https://{host}/api/endpoint/{slug}/ogc/features jc-conformance o
 
 An endpoint with the SensorThings representation projects entities into the Sensing profile read path. OGC publishes no CITE suite for v1.1, so `tests/sta/` asserts the profile against the response bodies.
 
-`sta/v1.1/` advertises three requirement classes, from `crates/context-gateway/src/translators/sta.rs`: `http://www.opengis.net/spec/iot_sensing/1.1/req/datamodel`, `.../req/resource-path` and `.../req/request-data`.
+`sta/v1.1/` advertises three requirement classes, from the broker's `antares-sta` surface, which the gateway forwards the path to (`crates/context-gateway/src/handlers/ogc.rs`, T-4463): `http://www.opengis.net/spec/iot_sensing/1.1/req/datamodel`, `.../req/resource-path` and `.../req/request-data`.
 
 | Query option | State | How it is served |
 |---|---|---|
 | `$filter` | implemented | compiled into the NGSI-LD `q` and a temporal window; a predicate it cannot compile is a `400` |
 | `$expand` | implemented | parent to child relations, `Datastream/Observations` |
-| `$top`, `$skip` | implemented | one page per broker request, `$skip` becomes `lastN`, bounded by the gateway's own maximum |
+| `$top`, `$skip` | implemented | one page per broker request, `$skip` becomes `lastN`, bounded by the broker's own maximum |
 | `$count` | implemented | `@iot.count` on the collection |
 | `$orderby` | partly | newest first is honoured on the page; any other ordering is not |
 | `$select` | **not implemented** | the gateway reads no `$select`; it is neither transpiled to `attrs` nor refused |
 
 The last row is a claim this documentation set and `tests/sta/README.md` both made and the code does not keep. Until the gateway either serves `$select` or refuses it, `tests/sta/test_sta_sensing.py::test_ts08_select_returns_only_the_requested_fields` is a red case waiting for a dispatch, not a proven class.
 
-Not claimed: the DataArray extension, MultiDatastream, and Tasking or Actuation. Bulk reads leave through the file representations (`file.csv`, `file.xlsx`, `file.zip`, `file.geojson`), not through an STA array, and every write to `sta/v1.1/` is a `405`.
+Not claimed: the DataArray extension, MultiDatastream, and Tasking or Actuation. Bulk reads leave through `file.csv` and the NGSI-LD API, not through an STA array, and every write to `sta/v1.1/` is a `405`.
 
 ---
 

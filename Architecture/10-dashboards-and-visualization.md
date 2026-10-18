@@ -154,10 +154,11 @@ flowchart TD
 
 ## 3. Layer Queries
 
-A layer's query is its manifest's, not a control the viewer sets: the Portal takes the Layer's static `filter` (`q`, `scopeQ`, `geoQ`), adds the bounding box of the current viewport, and requests the Endpoint's GeoJSON projection (`ui/src/routes/DashboardsPage.tsx`):
+A layer's query is its manifest's, not a control the viewer sets: the Portal takes the Layer's static `filter` (`q`, `scopeQ`, `geoQ`), adds the bounding box of the current viewport, and requests the Endpoint's NGSI-LD API as GeoJSON (`ui/src/routes/DashboardsPage.tsx`, T-4597):
 
 ```text
-GET /api/endpoint/{endpointSlug}/file.geojson?type=AirQualityObserved&q=pm10>=25&scopeQ=/geo/FI/HKI/#
+GET /api/endpoint/{endpointSlug}/ngsi-ld/v1/entities?type=AirQualityObserved&q=pm10>=25&scopeQ=/geo/FI/HKI/#&options=keyValues
+Accept: application/geo+json
 ```
 
 The dashboard view has no filter panel. Changing what a layer shows is a change to its manifest.

@@ -233,19 +233,15 @@ spec:
   credentials:
     - kind: oauth-client         # Keycloak confidential client, client_credentials → short-lived JWT (preferred)
       name: main
-    - kind: api-key              # for systems that cannot do OAuth (devices, legacy ETL); hashed at rest, shown once
-      name: legacy-push
-      expiresAt: "2027-03-01T00:00:00Z"
-      ipAllowList: ["203.0.113.0/24"]
   limits: { requestsPerMinute: 1200 }
   # delegation: token-exchange  # only a client that reads for a person, e.g. jc-agent-proxy (ADR-N-038, AG-95)
-# status (never in Git): keycloak clientId, keyIds, lastUsedAt per credential, rotation state
+# status (never in Git): keycloak clientId, lastUsedAt per credential, rotation state
 ```
 
 - **ServiceAccount** is a principal like a user: it appears in `assignee` of compiled `Policy` entities, in audit logs and in the AuthZEN introspection endpoints. Grants come from the same role templates and scopes as humans; the manifest can only bind roles the requesting human holds (CC-60, as for Apps).
-- **Credentials** are never in Git. The manifest declares that a credential *exists*; the reconciler creates the Keycloak client or the API key, the secret is shown once in the Portal (or written to OpenBao for automation), and the Portal API stores only `argon2id(key)`, key id, expiry and last-used. API keys are prefixed `jc_{keyId}_…` so the gateway resolves the ServiceAccount by key id before hashing, and are accepted only as `Authorization: Bearer` over TLS; they never cross a request boundary as query parameters.
-- **Direct writers** reach the platform only through the gateway (`/cs/{space}/ngsi-ld/v1` for members, or an Endpoint with write grants); the broker, the database and the message bus have no external listener. MQTT devices go through the broker's MQTT bridge, which authenticates them with the same ServiceAccount credentials (username = account, password = api key) and applies the same Policy set.
-- **Rotation and revocation** are Portal actions: *Rotate* issues a new key with an overlap window (default 24 h) and shows both as active until the old one is dropped; *Revoke* is immediate at the gateway (the PDP's principal cache is invalidated by the Portal API event). Expiring keys notify the owner 14 and 3 days ahead; unused keys (90 days) are flagged.
+- **Credentials** are never in Git. The manifest declares that a credential *exists*; the reconciler creates the Keycloak client, and its secret is shown once in the Portal (or written to OpenBao for automation), or there is none at all for a workload identity or a key-pair client (PF-47). The platform mints and accepts no API key (PF-37, owner decision 2026-10-18, T-4362).
+- **Direct writers** reach the platform only through the gateway (`/cs/{space}/ngsi-ld/v1` for members, or an Endpoint with write grants); the broker, the database and the message bus have no external listener. MQTT devices go through the broker's MQTT bridge, which authenticates them with the same ServiceAccount credentials (username = account, password = a `client_credentials` JWT of its client) and applies the same Policy set.
+- **Rotation and revocation** happen on the Keycloak client: a rotated client secret keeps the old one valid for an overlap window, and a disabled client's tokens are refused at the gateway once they expire, within the 15-minute token lifetime (PF-37, PF-38).
 - **Delegation** (`spec.delegation: token-exchange`, absent by default) marks the one kind of account whose tokens may carry a person as their subject: a token its client obtained by exchanging a person's own (RFC 8693) is decided as that person, never with the account's roles, and a person-subject token from any other account is `403` (ADR-N-038, AG-95). The realm enables the exchange on that client alone.
 - **Pipelines** each run as their own principal `pl-{pipeline}`, a ServiceAccount the reconciler derives from the `Pipeline` manifest with the Policies of its outputs and sources (PL-19, PL-20, below), so a pipeline's identity appears on the same page as everything else.
 - **Autonomous agents** are ServiceAccounts with `roles` restricted to the lanes they may use (AG-xx) and short-lived OAuth 2.1 tokens.

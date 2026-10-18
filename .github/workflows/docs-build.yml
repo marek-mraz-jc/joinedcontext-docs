@@ -9,10 +9,11 @@ name: docs-build
 # missing images, invalid front matter, untraceable requirements, a drifted ADR register — and
 # uploads the corpus as the preview artifact. Replace the validate job with the real
 # `pnpm build` on the day a site lands in this repository.
-# On demand only for now: this repository is private, its Actions minutes are metered (T-0402,
-# T-0521), and ci.yml already runs every checker below on each push. Put `pull_request:` and
-# `push: { branches: [main] }` back under `on:` when the minutes are back.
+# On every pull request and push to main; the repository is public, so its minutes are not
+# metered (T-3289).
 on:
+  pull_request:
+  push: { branches: [main] }
   workflow_dispatch:
 permissions: { contents: read }
 concurrency: { group: "docs-build-${{ github.ref }}", cancel-in-progress: true }
@@ -54,7 +55,8 @@ jobs:
         # Pinned, not `main`: an unrelated platform push must not turn this lane red at a
         # random hour. Bump the tag when a new kind lands, which is the same moment the
         # "Schema not published yet" list on Development/04-manifest-kinds.md shortens.
-        env: { JC_SCHEMAS_TAG: 1e7043f7d53d344f2edee99b98272b5632b5e24f }
+        # 1e7043f -> platform main a2d0d5d (T-3289 re-enabled this lane): the same kinds ci.yml pins.
+        env: { JC_SCHEMAS_TAG: a2d0d5d681eafcdc522ba71b5d898ba5e56da131 }
         run: |
           set -eu
           curl -sSL "https://github.com/marek-mraz-jc/joinedcontext-platform/archive/${JC_SCHEMAS_TAG}.tar.gz" \
