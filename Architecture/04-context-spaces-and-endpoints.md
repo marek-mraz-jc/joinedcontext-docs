@@ -115,19 +115,19 @@ classes:
         rank: 2
         annotations:
           summary: true
-          label: { sk: Začiatok, cs: Začátek, fi: Alkaa, en: Start }
+          label: { tag: label, value: { sk: Začiatok, cs: Začátek, fi: Alkaa, en: Start } }
       name:
         rank: 1
         annotations:
           summary: true
-          label: { sk: Názov, cs: Název, fi: Nimi, en: Name }
+          label: { tag: label, value: { sk: Názov, cs: Název, fi: Nimi, en: Name } }
       source:
         annotations: { hidden: true }
 ```
 
 - **Order.** `rank`, lower first; then the class's own `slots` as written; then inherited slots; `id`, `type`, `location`, `dateCreated`, `dateModified` last unless ranked.
 - **Key attributes.** `summary: true` marks the three to five a popup, a mobile card and a short answer show; a class with none shows its first four.
-- **Labels.** `label` per language, then the model's default language, then English, then the slot's `title`, then the heuristic's label, then the readable name.
+- **Labels.** `label` per language, written in LinkML's expanded `tag`/`value` form (LinkML refuses a language map as a short-form annotation value; Model Tools hands it to the broker as JSON text), then the model's default language, then English, then the slot's `title`, then the heuristic's label, then the readable name.
 - **Hidden.** `hidden: true` keeps a slot off every table, popup, chart and CKAN column; it stays in the API.
 
 `jc_core::display_order` computes the result on the **granted projection** (the same class and slot set the schema surface serves the caller), so a slot the caller may not read is never a column, a label or a key attribute. Every consumer asks it and nothing else: the assistant's tables and charts, the map popup (key attributes first, the rest under "Viac"), the CKAN DataStore columns `jcctl publish` writes with each label and key flag in the field's `info`, and the CKAN map popup, which reads that `info` instead of a copy of the heuristic.
