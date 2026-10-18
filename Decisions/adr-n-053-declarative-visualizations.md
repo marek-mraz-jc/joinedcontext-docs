@@ -81,6 +81,15 @@ Only the Endpoint's editors publish a visualization, through the Portal or `jcct
 
 The assistant may draft a spec from a question and the Endpoint's schema. A human saves it in the Portal; no drafted spec is published without that save, and a drafted spec meets §2.3 like any other.
 
+### 2.9 Charts and maps in the assistant's answers
+
+A data answer of the knowledge assistant (API/05 §1.3) shows its rows as a chart or a map with the same renderer, never a second stack (T-4657). Code builds every spec from the rows the answer read; the model never writes one, so a spec holds no text the model made up beyond a title of at most 80 characters, shown as text.
+
+- **The map spec.** Maps on a basemap stay MapLibre, which a Vega spec cannot drive, so a map has a JSON form of its own with no expression and no style in it: `{"$schema": "urn:joinedcontext:map:v1", "title": "…", "data": {"type": "FeatureCollection", "features": […]}, "label": "name", "popup": [{"field": "pm10", "label": "PM10", "unit": "µg/m³"}], "time": "observedAt", "link": "https://data.{domain}/dataset/…"}`. A feature is a GeoJSON `Point`, `LineString`, `Polygon` or `Multi*` geometry with longitude in −180…180 and latitude in −90…90, rounded to 6 decimals, and properties that hold only the `label`, the `popup` fields and the `time`. At most 1,000 features; `link` only on our hosts (§2.3); any other member is refused. A click, a tap or Enter on a feature opens a popup with the label, each field's value with its unit, the time and a "Detail" link, all set as text.
+- **The map page** (`/map.html`) draws a map spec with MapLibre on our basemap (`tiles.{domain}`, T-4638), both scripts served from `viz.{domain}`. It sends `Content-Security-Policy: default-src 'none'; script-src https://viz.{domain}; style-src https://viz.{domain} 'unsafe-inline'; img-src https://viz.{domain} https://tiles.{domain} data: blob:; connect-src https://tiles.{domain}; worker-src blob: https://viz.{domain}; base-uri 'none'; form-action 'none'; frame-ancestors *`. It runs in the host page's origin, because the tiles answer CORS for the platform's own hosts and never for `Origin: null`; that is safe because a map spec carries no expression to run, and the page connects to nothing but the tiles.
+- **Inline mode.** The host page opened as `https://viz.{domain}/#inline` reads no view: it takes one message `{"type": "jc-viz-show", "spec": …, "rows": […], "lang": "sk"}` from its parent, only when the parent's origin is `https://{domain}` or `https://*.{domain}`, checks the spec (§2.3 for Vega, the rules above for a map), and hands it to the renderer or the map page. It answers `jc-viz-height` and `jc-viz-error` to that origin alone. The rule of §2.5 holds: only a page on our own hosts can make our host draw a spec.
+- **Who decides.** The model may ask for a chart with the tool `show_visualization` (API/05 §1.4); code checks the request against the answer's own tables and builds the spec. Rows with a location get a map without being asked.
+
 ## 3. Alternatives
 
 - **Custom JavaScript or HTML per dataset.** Any chart, and any script on the catalogue's origin. Rejected: the publisher's code would run next to the visitor's session.
@@ -94,6 +103,7 @@ The assistant may draft a spec from a question and the Endpoint's schema. A huma
 - The Endpoint kind gains `spec.catalog.visualizations` with its validation in `jc-core` and `jcctl validate`, and the reconciler publishes the views (EP-130, EP-132).
 - The deployment adds the `viz` component: a static renderer page on `viz.{domain}`, with the headers of §2.5, its route and its certificate name (T-4641).
 - The CKAN theme gains the `jc_visualization` view plugin, which embeds the frame and is hidden from the view-type list.
+- The `viz` component gains the map page with MapLibre and the PMTiles reader, and the host page its inline mode; the assistant's widget frames `viz.{domain}` and nothing else new (§2.9, T-4657).
 - A visualization shows nothing a visitor could not read with `curl` from the same Endpoint. The risks left are a bug in the interpreter, which the sandbox and the CSP contain, and a heavy spec, which the limits of §2.6 bound.
 
 ## Related
