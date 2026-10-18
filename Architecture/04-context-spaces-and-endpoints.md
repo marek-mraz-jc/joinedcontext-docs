@@ -94,6 +94,46 @@ The rendered documents name their terms in the model's own URN namespace, `urn:j
 
 Rendering is per request, from data already in memory, and the cost is a string build over a class list. The artifact store (Architecture/17) keeps the full unprojected set for the model's own lifecycle (DM-44); it is not what an endpoint serves.
 
+### Display order, key attributes and labels
+
+The model also says how its attributes are shown (DM-98…DM-103, [ADR-N-039](../Decisions/adr-n-039-organization-and-project-data-models.md) §3.5). Three layers decide, the first that speaks wins:
+
+| Layer | Where | Applies to |
+|---|---|---|
+| Default | the DataModel's LinkML | every type with a model class |
+| Override | an Endpoint's `spec.display` or a visualization's `fields` (EP-135) | the one Endpoint or chart that needs another order |
+| Fallback | the name heuristic, `crates/jc-core/data/field-order.json` | types without a model, and attributes the model does not list |
+
+The LinkML carries it in standard metaslots and annotations, so Model Tools and any LinkML tool keep it:
+
+```yaml excerpt
+classes:
+  Event:
+    slots: [name, description, startDate, endDate, eventStatus, address, contactPoint, source]
+    slot_usage:
+      startDate:
+        rank: 2
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: Začiatok, cs: Začátek, fi: Alkaa, en: Start } }
+      name:
+        rank: 1
+        annotations:
+          summary: true
+          label: { tag: label, value: { sk: Názov, cs: Název, fi: Nimi, en: Name } }
+      source:
+        annotations: { hidden: true }
+```
+
+- **Order.** `rank`, lower first; then the class's own `slots` as written; then inherited slots; `id`, `type`, `location`, `dateCreated`, `dateModified` last unless ranked.
+- **Key attributes.** `summary: true` marks the three to five a popup, a mobile card and a short answer show; a class with none shows its first four.
+- **Labels.** `label` per language, written in LinkML's expanded `tag`/`value` form (LinkML refuses a language map as a short-form annotation value; Model Tools hands it to the broker as JSON text), then the model's default language, then English, then the slot's `title`, then the heuristic's label, then the readable name.
+- **Hidden.** `hidden: true` keeps a slot off every table, popup, chart and CKAN column; it stays in the API.
+
+`jc_core::display_order` computes the result on the **granted projection** (the same class and slot set the schema surface serves the caller), so a slot the caller may not read is never a column, a label or a key attribute. Every consumer asks it and nothing else: the assistant's tables and charts, the map popup (key attributes first, the rest under "Viac"), the CKAN DataStore columns `jcctl publish` writes with each label and key flag in the field's `info`, and the CKAN map popup, which reads that `info` instead of a copy of the heuristic.
+
+The SHACL of the schema surface publishes the same result in the W3C vocabulary: `sh:order` on each property shape, two `sh:PropertyGroup`s (the key attributes, "Základné" / "Summary", and the rest, "Detail") linked by `sh:group`, and every label as a language-tagged `sh:name` (DM-103).
+
 ## 1b. Access surface of an Endpoint (`access`)
 
 Schemas say what the data *is*; the access surface says what *this caller may do with it*. Every space and every endpoint answers `GET …/access` with the caller's **effective grant document**: the Policy set of the space, partially evaluated with the subject, the endpoint and the time known and the resource unknown. What remains is a residual condition per type and operation, which is exactly what a client needs to pre-filter its own UI, push the filter into its own database, or decide before acting whether a write will succeed. An App with full rights sees `operations: ["*"]` and no residual; a public consumer sees three readable attributes and a geo constraint.
