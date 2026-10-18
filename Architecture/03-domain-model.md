@@ -413,6 +413,10 @@ metadata:
   title: "Ilmanlaatu"
 spec:
   organizationRef: { kind: Organization, name: helsinki }
+  domain: hel.fi                    # the publishing body's domain (PF-108)
+  catalog:                          # who publishes, for the project's own catalogue (EP-125, API/08 §6)
+    publisher: { name: { fi: "Helsingin kaupunki" }, uri: "https://www.hel.fi/" }
+    contactPoint: { name: "Avoin data", email: avoindata@example.org }
   quotas:                           # per Project (PF-17), at most the organization's default (PF-73), checked by Conftest (PF-18)
     contextSpaces: 5
     residentPipelines: 3
