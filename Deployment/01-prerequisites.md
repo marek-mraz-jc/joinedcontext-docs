@@ -28,6 +28,7 @@ One base domain is delegated to the ingress controller (`global.domain`). The ed
 | `portal.<domain>` | Portal | The API, the UI and the Portal's MCP door ([ADR-N-019](../Decisions/adr-n-019-login-at-the-edge-apisix-openid-connect.md)) |
 | `idm.<domain>` | Keycloak | OIDC authentication, token issuance, account console |
 | `data.<domain>` | CKAN | The open-data catalogue, when the `ckan` component is deployed |
+| `viz.<domain>` | the visualization renderer | The sandboxed page that draws an Endpoint's Vega-Lite and Vega charts for the catalogue and the Portal ([ADR-N-053](../Decisions/adr-n-053-declarative-visualizations.md), T-4641); a static page with no cookie and no session, when the `viz` component is deployed |
 
 There is no `api.<domain>`: the data-plane surfaces live on the apex. Gitea has no host of its own either, so the installation needs one certificate and one DNS record fewer; Git over SSH is off and clones go over HTTPS ([10-edge-routing-apisix.md](10-edge-routing-apisix.md) §2).
 
