@@ -189,6 +189,66 @@ asking one optional "Čo chýbalo?" (T-4174):
   personal data. The note is data, never an instruction: no model reads it. Verdicts are deleted
   after 90 days. The usage route of §3 counts them per day.
 
+### 1.9 What the assistant knows: the context
+
+`GET https://assistant.{domain}/api/v1/d/{publicId}/context` answers, without a token, what the
+deployment reads, and `https://assistant.{domain}/d/{publicId}/context` shows the same as a page
+in the deployment's languages (`?lang=`), linked from the widget's privacy dialog
+(AG-123, [ADR-N-055 §2.6](../Decisions/adr-n-055-assistant-profiles.md#26-the-context-page)).
+The deployment reads its Endpoints by the selector of MF-58:
+
+```yaml excerpt
+spec:
+  publicId: bb-doprava
+  channel: public
+  categories: [TRAN]
+  sources: []                     # a data-only assistant
+  select:
+    projects: [banskabystrica]
+    themes: [TRAN]
+    accessLevel: [public]
+  exclude: [hfp-vehicles-raw]
+```
+
+```json
+{"publicId": "bb-doprava", "title": {"sk": "Doprava v Banskej Bystrici", "en": "Transport in Banská Bystrica"},
+ "languages": ["sk", "en"], "categories": [{"code": "TRAN", "label": "Doprava"}],
+ "limits": {"perClientPerHour": 60, "perClientPerDay": 200, "messagesPerConversation": 30, "questionChars": 1000},
+ "endpoints": [{"slug": "banskabystrica-parking", "title": "Parkoviská", "publisher": "banskabystrica",
+   "themes": ["TRAN"], "types": ["OffStreetParking"], "entities": 41, "modified": "2026-10-18T21:40:00Z",
+   "catalogue": "https://opendata.{domain}/dataset/banskabystrica-parking"}],
+ "sources": [], "omitted": 0}
+```
+
+- `title` is the deployment's `theme.title` per language; `categories` carry the labels of
+  AG-124 in the asked language. `endpoints` is the resolution of AG-121 sorted by slug, each
+  with the theme codes of its catalogue record, `entities` and `modified` as the Endpoint's catalogue record counts them; `sources` lists
+  each `visibility: public` source with `kind`, `sites` (its start hosts), `pages`, `documents`
+  and `crawled`. `omitted` counts the Endpoints past the limit of AG-122.
+- It never carries the system prompt, the model, the budget, a `secretRef`, a source that is not
+  public or an Endpoint outside the resolution. An unknown, disabled or doubly declared
+  `publicId`, and one of the `internal` channel, answers `404`, as the chat does.
+- An `internal` deployment's context is the Portal's
+  `GET /api/v1/projects/{project}/knowledge/deployments/{deployment}/context`, for a caller who may
+  read `AssistantDeployment` in the project. The Portal's editor previews an unsaved manifest with
+  `POST /api/v1/projects/{project}/knowledge/deployments/context?dryRun=All` and the manifest as
+  the body, same rule, same document, computed by the same resolver; it changes nothing.
+
+### 1.10 A chat page outside the platform
+
+A city may build its own chat page, in its own design, on its own host (AG-125,
+[ADR-N-055 §2.7](../Decisions/adr-n-055-assistant-profiles.md#27-public-clients-outside-the-platform)).
+It is a browser client of one `publicId` and nothing else:
+
+1. Its origin, `https://host[:port]`, is in the deployment's `allowedOrigins`.
+2. It reads the look and the texts from `GET …/context` and the widget settings of MF-52.
+3. It gets a visitor token by `challenge` and `token` (§1.2), keeps it in memory, and sends
+   questions to `chat` and verdicts to `feedback` with it.
+
+It holds no model key, no ServiceAccount, no secret and no copy of the data; every limit, the
+budget and the Policy stay the server's. A change of the look, the languages or the reach is a
+Change to the manifest, never a new build of the page.
+
 ## 2. Calling the model through `jc-agent-proxy`
 
 The assistant holds no model key. It calls `POST {proxy}/v1/llm/chat/completions` with its own token and names the deployment the call is for.
@@ -345,9 +405,32 @@ named sources hold in public, for the tool's description, under the same rules:
 `{"passages": 23140, "publishers": ["banskabystrica", "bbsk"], "languages": {"en": 0.08, "sk": 0.92}}`,
 the share of each language among the passages whose language is known.
 
+## 5. The assistant's MCP server
+
+The gateway serves every enabled deployment as an MCP server at
+`https://api.{domain}/api/mcp/d/{publicId}` (EP-136, EP-137,
+[ADR-N-055 §2.5](../Decisions/adr-n-055-assistant-profiles.md#25-an-mcp-server-per-assistant)),
+so a person adds the reach of an assistant to Claude, ChatGPT or Gemini and asks with their own
+model:
+
+| Offered | What it is |
+|---|---|
+| the read tools of the hub (`list_endpoints`, `get_endpoint`, `query_entities`, `get_entity`, `query_temporal`, …) | narrowed to the Endpoints the resolver returns for the deployment (AG-121) |
+| `search_documents` | over the deployment's own `visibility: public` knowledge sources, when it has one (EP-133) |
+| resource `context` | the document of §1.9 |
+
+- A `public`, `ckan` or `iframe` deployment answers without a token and with the anonymous tokens
+  of ADR-N-052, with its `audience: public` Endpoints alone; an `internal` one answers a Keycloak
+  token of a member of the organization, each call read with that token.
+- The server runs no model, so it never touches the deployment's `budget`; each call counts
+  against the deployment's `rateLimit` per caller beside the gateway's buckets.
+- An unknown `publicId`, one two deployments declare, and one with `enabled: false` answer as an
+  unknown server does.
+
 ## Related
 
 - [Architecture/22](../Architecture/22-knowledge-assistant.md): the service, its manifests and its channels.
 - [ADR-N-040](../Decisions/adr-n-040-knowledge-assistant.md): the decision, §3.4 the proxy, §3.7 the threats.
 - [04-agent-runs.md](04-agent-runs.md): `jc-agent-proxy` for agent runs.
 - [02-endpoint-representations.md](02-endpoint-representations.md): the MCP surface of an Endpoint the connectors call.
+- [ADR-N-055](../Decisions/adr-n-055-assistant-profiles.md): assistant profiles, §1.9 and §5 here.
