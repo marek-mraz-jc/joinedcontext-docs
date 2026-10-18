@@ -59,7 +59,7 @@ A dataset carries three kinds of resource, and the choice is the Endpoint's, not
 
 - **A link per representation** is always written. The resource URL is that representation's own URL under the Endpoint, so a download passes the gateway and its policy set, and a restricted dataset's links are useless without a token. This is what makes the catalogue safe to publish at all.
 - **A DataStore sheet** is written when the Endpoint declares `spec.publish.ckan.datastore`. It gives the dataset page a preview, a filtered API and SQL over the rows, which a link alone cannot. The sheet is filled through the Endpoint's tabular representation as an ordinary consumer, one table per entity type, one row per entity, keyed by the entity's URN (`crates/jcctl/src/publish/ckan_datastore.rs`). A table's columns are the ones its rows fill plus every column the type's class in the Endpoint's `model.schema.json` declares, so an attribute no entity carries yet still has its column; a geometry also gets a `<attr>.geojson` text column. The schema is read as the same anonymous caller as the rows, so a column never names an attribute the grant hides. `refresh: onChange` upserts the entities a notification named, re-read through the Endpoint; `refresh: onReconcile` reloads the table on the reconcile tick, for a space with no subscription. A row whose entity the Endpoint no longer answers for is deleted by the same rule, so a deletion behind the Endpoint propagates instead of leaving a public copy.
-- **A file dump** is not written. The `csv` and `json` representations are already downloads of the same data, served through the policy set, and a third copy in CKAN's file store would be the one nobody rebuilds.
+- **A file dump** is not written. The `csv` representation is already a download of the same data, served through the policy set, and a third copy in CKAN's file store would be the one nobody rebuilds.
 
 The cadence a person reads on the dataset page is the `frequency` extra, which comes from the Endpoint's own record. A sheet says the same thing in the resource description, so a preview that is a day old does not read as live.
 
@@ -150,11 +150,13 @@ The owner set one rule for every dataset of the catalogue on 2026-10-16 (EP-118)
 | NGSI-LD API | always | `NGSI-LD` |
 | Model Context Protocol | always | `MCP` |
 | WebSocket | always | `WebSocket` |
-| CSV, JSON | always; a whole-file download up to 50 MB, a paged API link (`limit` and `offset`) above it | `CSV`, `JSON` |
+| CSV | always; a whole-file download up to 50 MB, a paged API link (`limit` and `offset`) above it | `CSV` |
 | The data model: JSON Schema, JSON-LD `@context`, LinkML, Markdown, OWL, RDF, SHACL | always | `JSON Schema`, `JSON-LD`, `LinkML`, `Markdown`, `OWL`, `RDF`, `SHACL` |
-| GeoJSON, OGC API - Features | when the rows carry a location | `GeoJSON`, `OGCFEAT` |
-| XLSX, OData | optional | `XLSX`, `OData` |
-| ZIP, Esri REST | never | |
+| OGC API - Features | when the rows carry a location | `OGCFEAT` |
+| OData | optional | `OData` |
+| ZIP, Esri REST, and `file.json`, `file.geojson`, `file.xlsx`, `file.parquet` | never: an Endpoint publishes one file, `file.csv` (T-4597) | |
+
+A map reads a located dataset's GeoJSON from OGC API - Features or from the NGSI-LD API with `Accept: application/geo+json` ([API/02](../API/02-endpoint-representations.md)), so the catalogue lists no GeoJSON file. Decided (worker-3, owner may override): EP-118 follows T-4597 and lists CSV as the one file, because a listed `file.json`, `file.geojson` or `file.xlsx` now answers 404 and would break the rule that every listed link answers 200; options: keep JSON and GeoJSON as API links under their old labels, which would name one surface twice.
 
 The labels are the ones `jcctl`'s publisher writes for an Endpoint's own dataset (`crates/jcctl/src/publish/ckan.rs`, `distribution`), so the format facet counts a harvested dataset and a published one under the same name. Every listed link answers 200 to an anonymous GET, because the catalogue lists public data only.
 
