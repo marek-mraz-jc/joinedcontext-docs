@@ -292,6 +292,7 @@ spec:
         description: { en: Events of the City of Helsinki, as Linked Events publishes them }
     pipelineRef: { kind: Pipeline, name: helsinki-events }
     applicableLegislation: ["http://data.europa.eu/eli/reg_impl/2023/138/oj"]
+    personalData: does-not-contain       # or contains; the national profiles state it (API/08)
 ```
 
 | `spec.catalog` | Record term | Rule |
@@ -308,6 +309,7 @@ spec:
 | `source` | `dct:source` | the original open dataset the pipeline reads, as a `dcat:Dataset` with its own title and description, which DCAT-AP requires of every dataset it names |
 | `pipelineRef` | `prov:wasGeneratedBy` | a `prov:Activity` naming the pipeline of this project that fills the space |
 | `applicableLegislation` | `dcatap:applicableLegislation` | an ELI IRI, for a high-value dataset the Implementing Regulation (EU) 2023/138 |
+| `personalData` | `leg:personalDataContainmentType`, `pu:osobní-údaje` | `contains` or `does-not-contain`, stated by whoever publishes the Endpoint and never read from the data; only the DCAT-AP-SK and DCAT-AP-CZ renderings carry it ([API/08](../API/08-dcat-profiles.md) section 5) |
 
 The Endpoint itself is a `dcat:DataService`: its `dcat:endpointURL` is the endpoint's own URL, it `dcat:servesDataset` the record, and every representation distribution names it in `dcat:accessService`. Both serialisations carry the same graph, and the Turtle is written from the JSON-LD so they cannot drift apart. The JSON-LD keeps its compact keys (`dct:title`, `dcat:accessURL`) and declares their prefixes and IRI-valued terms in its own `@context`, so a reader that reads keys and a reader that expands to RDF see the same record; the classes DCAT-AP requires of a referenced value (`dct:LicenseDocument`, `dct:RightsStatement`, `dct:MediaType`, `dct:Standard`, `skos:Concept` with its label) are stated in `@included`. `dcat:mediaType` is the IANA media-type IRI (`https://www.iana.org/assignments/media-types/application/ld+json`) and `dct:format` the EU file-type IRI, because DCAT-AP ranges both over IRIs; a reader that wants the bare media type takes the part after `media-types/`. A dataset with no description of its own, on the endpoint or the space, says which space it serves, because DCAT-AP makes `dct:description` mandatory. The platform pins the SEMIC DCAT-AP 3.0 SHACL shapes in its repository and the fast CI lane validates both serialisations of every record variant against them (EP-78).
 
