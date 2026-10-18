@@ -888,7 +888,7 @@ A public MCP server, the hub or any server an anonymous caller may read, needs n
 | Authorize | `GET /oauth/authorize?response_type=code&client_id=…&redirect_uri=…&code_challenge=…&code_challenge_method=S256&state=…&resource=…` | `302` to the `redirect_uri` with a `code` valid 60 seconds and the same `state`; no login, no consent. A failed check answers an error page here and never redirects |
 | Token | `POST /oauth/token` with `grant_type=authorization_code`, `code`, `redirect_uri`, `client_id`, `code_verifier` | an access token valid one hour and a refresh token valid 30 days; `grant_type=refresh_token` answers a new pair |
 
-The redirect allowlist is `oauth-redirect.googleusercontent.com`, `claude.ai`, `claude.com` and `chatgpt.com` over `https`, and `localhost`, `127.0.0.1` and `[::1]` on any port over `http` (`JC_GATEWAY_OAUTH_REDIRECT_HOSTS`). The token carries no subject and grants exactly what a call without a token gets, inside the anonymous rate-limit allowance, on the resource its `aud` names. A server that is not anonymous-readable lists Keycloak alone and refuses this token.
+The redirect allowlist is `oauth-redirect.googleusercontent.com`, `claude.ai`, `claude.com` and `chatgpt.com` over `https`, and `localhost`, `127.0.0.1` and `[::1]` on any port over `http`, configurable ([ADR-N-052 §2.3](../Decisions/adr-n-052-anonymous-oauth-public-mcp.md#23-the-redirect-allowlist)). The token carries no subject and grants exactly what a call without a token gets, inside the anonymous rate-limit allowance, on the resource its `aud` names. A server that is not anonymous-readable lists Keycloak alone and refuses this token.
 
 ## 8a. WebSocket (`ws`)
 
