@@ -73,8 +73,8 @@ Database `assistant` on the platform's CloudNativePG cluster (`pgvector` 0.8.6 i
 | Table | Key columns |
 |---|---|
 | `sites` | `id`, `org`, `source` (manifest name), `visibility`, `last_crawl` |
-| `pages` | `id`, `site_id`, `url` unique per site, `etag`, `last_modified`, `content_hash`, `status`, `fetched_at` |
-| `documents` | `id`, `page_id` (where it was linked), `url`, `mime`, `bytes`, `pages`, `content_hash` |
+| `pages` | `id`, `site_id`, `url` unique per site, `etag`, `last_modified`, `content_hash`, `status`, `fetched_at`, and what the page states of itself: `title`, `description`, `published`, `modified` (AG-120) |
+| `documents` | `id`, `page_id` (where it was linked), `url`, `mime`, `bytes`, `pages`, `content_hash`, and from the PDF's document information `title`, `description`, `published`, `modified` (AG-120) |
 | `links` | `from_page`, `to_url`, `kind` (`page`, `pdf`, `external`), for the administration's page tree |
 | `chunks` | `id`, `site_id`, `page_id` or `document_id`, `ordinal`, `text`, `lang`, `fts tsvector`, `embedding vector(384)`, `visibility` |
 | `jobs` | `id`, `source`, `state`, `claimed_by`, `attempts`, `error`, `run_after` |
@@ -84,6 +84,8 @@ Database `assistant` on the platform's CloudNativePG cluster (`pgvector` 0.8.6 i
 Indexes: GIN on `chunks.fts`, HNSW on `chunks.embedding` (`vector_cosine_ops`), btree on `(visibility, site_id)`. The `fts` column uses `english` or `finnish` where Postgres has the stemmer, `simple` with `unaccent` for Slovak and Czech.
 
 Retrieval is one statement: the candidate set is filtered by the deployment's sources and visibility, the top 50 of each ranking are fused by `Σ 1/(60 + rank)`, and the best 8 chunks go to the model with their URLs.
+
+The same statement answers the MCP servers' `search_documents` (EP-133, [ADR-N-043 §8](../Decisions/adr-n-043-named-mcp-servers.md#8-amendment-2026-10-18-knowledge-sources-on-a-server-t-4659)): the gateway posts the server's attached public sources to `/internal/v1/search` ([API/05 §4](../API/05-knowledge-assistant.md#4-search-for-the-mcp-servers)), and the hits go back with their page's metadata and no model call, for the caller's own model to read.
 
 ## 4. Channels
 

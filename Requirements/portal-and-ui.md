@@ -6,7 +6,7 @@ description: Normative requirements for the Portal API and React 19 single-page 
 
 # Portal & User Interface
 
-Family **UI** (UI-01…UI-98; UI-43 is unassigned). Owning chapters: [Architecture/09-portal.md](../Architecture/09-portal.md) and [Architecture/19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
+Family **UI** (UI-01…UI-99; UI-43 is unassigned). Owning chapters: [Architecture/09-portal.md](../Architecture/09-portal.md) and [Architecture/19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
 
 ## 1. Schema-Driven Forms and UI Schemas
 
@@ -172,6 +172,7 @@ One spreadsheet-like component reads, filters, compares and edits NGSI-LD entiti
 - **UI-96** [H] — Every Policy MUST read as a sentence of who may (or may not) do what, to which types and attributes, in which space, under which filters and for how long, on the Policies page and live in its form beside the YAML view (T-3276).
 - **UI-97** [H] — Project settings MUST offer a search over every setting by what it is called or what it changes, each result naming its tab, and its danger tab MUST say how the project is handed over (binding someone to its administrator role) beside its deletion (T-3277).
 - **UI-98** [S] — A person MUST be able to create, edit and delete up to ten personal connectors in the Portal, each a DNS-label name, a `select` (MF-55) and up to 50 favourite Endpoints (`endpoints`, slugs the person may read when starred), stored in their own preferences (API/01 §8) and never in Git; the Portal MUST show each one's address `/api/mcp/me/{name}`, its current reach and a copy-ready client configuration, and MUST offer the organization's servers and `org/all` to pick from beside them; no page, API or audit view MUST show one person's connectors to another ([ADR-N-043 §7](../Decisions/adr-n-043-named-mcp-servers.md#7-amendment-2026-10-17-connector-profiles-t-4504)).
+- **UI-99** [H] — A project's knowledge sources page MUST list each source with its pages, documents and passages, their languages and its last crawl; a source MUST open to its pages and documents, searchable by title or address, each with its title, address, language, last change and whether it is included; and a "Vyskúšať vyhľadávanie" box MUST run the search `search_documents` runs (EP-133) over that source and show its hits. The McpServer form MUST offer the project's public knowledge sources to attach (MF-57) (T-4659).
 
 ## Traceability
 
@@ -208,6 +209,7 @@ One spreadsheet-like component reads, filters, compares and edits NGSI-LD entiti
 | UI-87 | [Architecture/09-portal.md#14-organization-and-project-management](../Architecture/09-portal.md#14-organization-and-project-management) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-twice](../Testing/03-frontend-and-e2e-tests.md#2-playwright-twice) |
 | UI-88…UI-92 | [Architecture/09-portal.md#15-finding-and-coming-back](../Architecture/09-portal.md#15-finding-and-coming-back) | [Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest) |
 | UI-94…UI-97 | [Architecture/09-portal.md#17-collaborating](../Architecture/09-portal.md#17-collaborating) | [Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest) |
+| UI-99 | [API/01 §34](../API/01-portal-api.md#34-knowledge-assistant-administration-t-3057-mf-51-mf-52) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | UI-98 | [ADR-N-043 §7](../Decisions/adr-n-043-named-mcp-servers.md#7-amendment-2026-10-17-connector-profiles-t-4504) | [Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest) |
 | UI-93 | [Architecture/10-dashboards-and-visualization.md](../Architecture/10-dashboards-and-visualization.md) | [Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest) |
 

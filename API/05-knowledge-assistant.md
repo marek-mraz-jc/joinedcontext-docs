@@ -216,6 +216,7 @@ naming `jc-assistant`. Anything else is `401`.
 | `status` | `pending`, `fetched`, `failed`, `skipped` |
 | `included` | whether its passages are indexed; `excludedBy` says `pattern` or `administrator` when not |
 | `language`, `fetchedAt`, `children`, `documents`, `passages` | what it holds |
+| `title`, `description`, `published`, `modified` | what the page states of itself (AG-120); `null` when it does not |
 
 Files of a `source: upload` go to `POST …/knowledge/sources/{source}/files?name={file name}` with the file itself as the request body, one file per request, at most `upload.maxBytes`; are listed by `GET …/files`; and are removed by `DELETE …/files/{id}`. The Portal fronts the same paths under `/api/v1` with `propose` on the `KnowledgeSource`. A file's type is checked by its content, never by its name or `Content-Type`: a PDF, a DOCX, an XLSX, or UTF-8 text, read as CSV or Markdown when the name ends in `.csv` or `.md`. A DOCX or XLSX whose archive unpacks past 200 MiB or 5,000 entries is refused. The name is 1 to 200 characters with no `/`, `\` or control character. Uploading a name again replaces that file. Its passages are data, never instructions (AG-105). (T-4184)
 
@@ -250,7 +251,47 @@ in it. A source not crawled yet answers `404`.
 down that carry a note (§1.8).
 
 A document carries `id`, `url`, `pageId`, `mime`, `bytes`, `pages`, `offDomain`, `status`,
-`included`, `excludedBy` and `passages`. A passage carries `ordinal`, `text`, `lang` and `url`.
+`included`, `excludedBy`, `passages`, and from its document information `title`, `description`
+(its `Subject`), `published` and `modified` (AG-120). A passage carries `ordinal`, `text`, `lang`
+and `url`.
+
+`GET …/knowledge/sources/{source}/pages?q=` with a `q` of 2 to 100 characters answers, instead of
+one level of the tree, at most 100 pages of the whole source whose title or address holds `q`
+(case and diacritics ignored), the same fields. `GET …/knowledge/sources/{source}/search?q=&limit=`
+answers the hits §4 answers for that one source, with its visibility whatever it is: the
+administration sees what an internal deployment would read (UI-99, T-4659).
+
+## 4. Search for the MCP servers
+
+`POST /internal/v1/search` answers the Context Gateway's `search_documents` (EP-133, AG-119,
+T-4659). It is on the cluster network only: a request that carries `X-Forwarded-For` or
+`Forwarded` came through a proxy and is answered `404`, and a NetworkPolicy admits the gateway
+alone. It takes no token: it answers only what is public.
+
+```json
+{"query": "úradné hodiny klientskeho centra", "sources": [{"project": "banskabystrica", "source": "web"}],
+ "publisher": "banskabystrica", "lang": "sk", "limit": 5}
+```
+
+- `query` 1 to 300 characters; `sources` 1 to 20; `limit` 1 to 10 (default 5); `publisher` and
+  `lang` optional. Anything else in the body is `400`.
+- It reads only the `visibility: public` passages of the named sources, ranks them by the chat's
+  hybrid search (full text, and the local `multilingual-e5-small` embedding of the query, fused by
+  reciprocal rank) and answers the best `limit`, with no model call. `publisher` keeps the
+  sources of that organization; `lang` prefers passages in that language.
+- A source that does not exist, or is not public, is skipped as if it held nothing: the answer
+  never says which sources exist.
+
+```json
+{"hits": [{"title": "Klientske centrum", "url": "https://www.banskabystrica.sk/…", "publisher": "banskabystrica",
+  "description": "…", "published": null, "modified": "2026-09-30T08:12:00Z", "language": "sk",
+  "text": "…", "score": 0.0325}],
+ "languages": {"sk": 0.92, "en": 0.08}}
+```
+
+`text` is at most 1,200 characters. `languages` is the share of the named sources' public passages
+per language, for the tool's description. The metadata is the page's or document's (AG-120),
+`null` where the source states none.
 
 ## Related
 
