@@ -363,7 +363,7 @@ DELETE …/knowledge/conversations/{conversation}
   `costUsd` (`null` when the provider sent none). `kind` is also `visual` (a table, chart or map
   the visitor was shown: `name` is `table`, `chart` or `map`, `input` its spec, `rows` its row
   count) and `untracked` (the time between steps no step accounts for), so the steps' durations
-  add up to `totalMs`. `output` is whole up to 64 kB, beyond that its first 20 rows, with
+  add up to the turn's time from the question's arrival, the connectors' setup included. `output` is whole up to 64 kB, beyond that its first 20 rows, with
   `outputBytes` the whole size (T-4681). A turn's `costUsd` is the sum of its steps', a
   conversation's the sum of its turns'.
 - `GET …/knowledge/conversations/{conversation}/turns/{turn}/same` lists the stored turns of the
