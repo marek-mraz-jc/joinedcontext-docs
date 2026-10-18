@@ -308,6 +308,7 @@ spec:
 | `pipelineRef` | `prov:wasGeneratedBy` | a `prov:Activity` naming the pipeline of this project that fills the space |
 | `applicableLegislation` | `dcatap:applicableLegislation` | an ELI IRI, for a high-value dataset the Implementing Regulation (EU) 2023/138 |
 | `personalData` | `leg:personalDataContainmentType`, `pu:osobní-údaje` | `contains` or `does-not-contain`, stated by whoever publishes the Endpoint and never read from the data; only the DCAT-AP-SK and DCAT-AP-CZ renderings carry it ([API/08](../API/08-dcat-profiles.md) section 5) |
+| `visualizations` | a CKAN resource view, not a record term | up to 20 Vega-Lite 5 or Vega 5 charts over the Endpoint's own sources, published as CKAN visualization views (below, EP-130…EP-132) |
 
 The Endpoint itself is a `dcat:DataService`: its `dcat:endpointURL` is the endpoint's own URL, it `dcat:servesDataset` the record, and every representation distribution names it in `dcat:accessService`. Both serialisations carry the same graph, and the Turtle is written from the JSON-LD so they cannot drift apart. The JSON-LD keeps its compact keys (`dct:title`, `dcat:accessURL`) and declares their prefixes and IRI-valued terms in its own `@context`, so a reader that reads keys and a reader that expands to RDF see the same record; the classes DCAT-AP requires of a referenced value (`dct:LicenseDocument`, `dct:RightsStatement`, `dct:MediaType`, `dct:Standard`, `skos:Concept` with its label) are stated in `@included`. `dcat:mediaType` is the IANA media-type IRI (`https://www.iana.org/assignments/media-types/application/ld+json`) and `dct:format` the EU file-type IRI, because DCAT-AP ranges both over IRIs; a reader that wants the bare media type takes the part after `media-types/`. A dataset with no description of its own, on the endpoint or the space, says which space it serves, because DCAT-AP makes `dct:description` mandatory. The platform pins the SEMIC DCAT-AP 3.0 SHACL shapes in its repository and the fast CI lane validates both serialisations of every record variant against them (EP-78).
 
@@ -324,6 +325,87 @@ A licence is a policy too, and the record states it as one. `odrl:hasPolicy` car
 A non-public Endpoint's offer adds a constraint on `odrl:recipient`, `isPartOf` the organization, and its audience class in the `ngsi-ld:` profile (`organization` or `project-list`); it never names a project, a group or a person, because the record is read by callers who hold none of them (EP-69, R20). A restricted Endpoint's record keeps the pointer to its own `access` document beside the offer, so its `odrl:hasPolicy` names both. The access surface's ODRL `Set` (§1b) carries the same duties on every permission, so the offer and the grants cannot tell a consumer two different things (EP-57, DS-03).
 
 The Portal's endpoint page shows the record as a card — who publishes it, under what licence, how often it updates, where it comes from — and the offer as plain sentences ("Anyone may use this data if they credit the City of Helsinki"), with the raw JSON-LD, Turtle and ODRL one link away. The endpoint form has a Catalogue section with a picker for each table-coded member.
+
+### Visualizations (EP-130…EP-132)
+
+A chart on the dataset is part of the Endpoint, so it is reviewed, versioned and withdrawn with it. `spec.catalog.visualizations` lists Vega-Lite 5 or Vega 5 specifications, the open declarative grammar of vega.github.io, from a bar chart to layered, faceted and brushed views ([ADR-N-053](../Decisions/adr-n-053-declarative-visualizations.md)). A spec never says where its rows come from: it reads the one named dataset `source`, and `data` names which of the Endpoint's own sources fills it.
+
+| `data.source` | Reads, on the Endpoint's URL | Parameters |
+|---|---|---|
+| `csv` | `file.csv` | `type` |
+| `ogc` | `ogc/features/collections/{collection}/items` | `collection`; optional `filter` (CQL2 text), `properties` |
+| `odata` | `odata/v4/{entitySet}` | `entitySet`; optional `$filter`, `$select`, `$apply`, `$orderby` |
+| `temporal` | NGSI-LD Query Temporal Evolution of Entities | `type`, `attrs`, `last` (ISO 8601 duration, at most `P31D`); optional `aggrMethod`, `aggrPeriod` |
+
+OData and OGC read the current value of each entity; a line over time reads `temporal`. The weather Endpoint of Banská Bystrica, which serves the SHMÚ stations as `WeatherObserved`, carries a bar chart of the temperature now at each station, from `odata`, and the temperature of each station over the last 24 hours, from `temporal`:
+
+```yaml excerpt
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: weather-public
+  namespace: banskabystrica
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: banskabystrica-verejne }
+  audience: public
+  catalog:
+    license: CC_BY_4_0
+    attribution: { sk: "Zdroj: SHMÚ", en: "Source: SHMÚ" }
+    visualizations:
+      - name: temperature-now
+        title: { sk: Teplota na staniciach teraz, en: Temperature at the stations now }
+        description:
+          sk: Posledná nameraná teplota vzduchu na každej stanici SHMÚ v okolí Banskej Bystrice.
+          en: The latest air temperature at each SHMÚ station around Banská Bystrica.
+        data:
+          source: odata
+          entitySet: WeatherObserved
+          $select: name,temperature,dateObserved
+          $filter: temperature ne null
+          $orderby: temperature desc
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: bar
+          encoding:
+            y: { field: name, type: nominal, sort: "-x", title: null }
+            x: { field: temperature, type: quantitative, title: "°C" }
+            tooltip:
+              - { field: name, type: nominal }
+              - { field: temperature, type: quantitative, format: ".1f" }
+              - { field: dateObserved, type: temporal, timeUnit: hoursminutes }
+      - name: temperature-24h
+        title: { sk: Teplota za posledných 24 hodín, en: Temperature over the last 24 hours }
+        description:
+          sk: Hodinový priemer teploty vzduchu na každej stanici; kliknutím na legendu stanicu zvýrazníte.
+          en: Hourly mean air temperature per station; click the legend to highlight one.
+        data:
+          source: temporal
+          type: WeatherObserved
+          attrs: [temperature]
+          last: PT24H
+          aggrMethod: avg
+          aggrPeriod: PT1H
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          params:
+            - name: station
+              select: { type: point, fields: [name] }
+              bind: legend
+          mark: { type: line, point: true }
+          encoding:
+            x: { field: observedAt, type: temporal, title: null }
+            y: { field: temperature, type: quantitative, title: "°C", scale: { zero: false } }
+            color: { field: name, type: nominal, title: null }
+            opacity:
+              condition: { param: station, value: 1 }
+              value: 0.2
+```
+
+The renderer hands a spec flat rows: one row per entity for `csv`, `ogc` and `odata`, with each Property's value under its attribute name and `name` in the language of the page; one row per instant and entity for `temporal`, with `observedAt` (the start of the period when aggregated) and the attribute's value. A spec over more than 50,000 rows aggregates on the server, as the second one does.
+
+`jcctl validate` and the Portal check each spec against the pinned JSON Schema and refuse a `url` under `data`, `usermeta`, loader options, and an `href` or `image` that can leave our hosts, naming the JSON pointer of the member. The Portal's Endpoint form shows each chart live beside its JSON, rendered by the same sandboxed page the catalogue uses. The reconciler publishes each item as a visualization view of the dataset (§7); the view holds the spec, its `data` block and the Endpoint slug and embeds `https://viz.{domain}/#{viewId}`. The page there reads the view through CKAN's anonymous API, checks the spec again, reads the rows from the Endpoint itself on `api.{domain}` without a token, and hands both to a sandboxed frame that may connect nowhere and draws them.
 
 ---
 
@@ -821,6 +903,7 @@ spec:
 | One resource for the schema | the schema surface (§1a) | `schema/index.json`, which lists `model.schema.json`, the SHACL and the rest per model version, so a consumer can validate what it downloaded without the publisher knowing which versions exist |
 | One resource per schema artifact | the record's schema distributions (§3a) | every formalism the endpoint serves — LinkML, JSON Schema, `@context`, SHACL, OWL, RDF, the generated documentation — becomes a resource of its own, carrying the sha256 the record declares in CKAN's `hash` field so a download can be checked without asking the endpoint again (EP-68) |
 | The dataset's visibility | `spec.audience` | a `public` endpoint becomes a public dataset, anything narrower a private dataset of the organization; the mapping is closed by default, so an audience the publisher does not recognise is private (EP-69, PF-45) |
+| One view per visualization | `spec.catalog.visualizations` (§3a) | a CKAN resource view of the visualization type (ADR-N-053), titled and described per item, that embeds the sandboxed renderer on `viz.{domain}`; views the list no longer names are removed in the same run, and CKAN's UI does not offer the type (EP-132) |
 | Optional DataStore table | the tabular representation | filled through the endpoint's `file.csv`, every row upserted on each `jcctl publish ckan` run (EP-65) |
 | The organization | `spec.publish.ckan.organization` | created, when it does not exist, with the `CkanInstance`'s `metadata.title`, else the branding `organisation` name ([Deployment/12](../Deployment/12-branding-and-naming.md)) |
 
@@ -842,6 +925,7 @@ A CKAN DataStore table gives the catalogue a preview, a filtered API and a SQL s
 
 ## Related
 
+- [ADR-N-053](../Decisions/adr-n-053-declarative-visualizations.md) — the visualizations of §3a and their safety model.
 - [API/02](../API/02-endpoint-representations.md) — referenced above.
 - [Testing/02](../Testing/02-conformance-tests.md) — referenced above.
 - [Architecture/11 §7.5](11-data-models.md) — referenced above.
