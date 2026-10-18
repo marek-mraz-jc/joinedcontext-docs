@@ -103,7 +103,7 @@ Applying and smoking `dev` belong to the hourly batch, not to a push.
 | endurance: failed requests, memory growth | under 0.01 %, no growth verdict | TS-22 |
 | export: time to first byte, p95 | under 1 s | EP-44 |
 | export: whole download | under 300 s, no timeout | EP-44 |
-| endpoint: `file.geojson` time to first byte, p95 | under 1 s | EP-05 |
+| endpoint: `file.csv` time to first byte, p95 | under 1 s | EP-05 |
 | endpoint: answers missing the `RateLimit` field | none | EP-20 |
 | endpoint: 429s | none under the limit, at least one in a deliberate burst | EP-20 |
 
