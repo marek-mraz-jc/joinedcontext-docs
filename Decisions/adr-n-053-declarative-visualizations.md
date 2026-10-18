@@ -34,7 +34,7 @@ A visualization is a Vega-Lite 5 or Vega 5 specification: the open, BSD-licensed
 | `odata` | one OData entity set | `entitySet`; optional `$filter`, `$select`, `$apply`, `$orderby` |
 | `temporal` | NGSI-LD Query Temporal Evolution of Entities | `type`, `attrs`, `last` (an ISO 8601 duration up to `P31D`); optional `aggrMethod` and `aggrPeriod` |
 
-The renderer resolves the source against the Endpoint's URL on `api.{domain}`, fetches it, and hands the rows to the spec as its one named dataset `source`. A spec reads `{"data": {"name": "source"}}`; it never states where the rows come from.
+The view holds the Endpoint slug beside the spec; the renderer resolves the source against that Endpoint's URL on `api.{domain}`, fetches it, and hands the rows to the spec as its one named dataset `source`. A spec reads `{"data": {"name": "source"}}`; it never states where the rows come from.
 
 Decided (worker-2, owner may override): `temporal` joins the three sources the task named, because OData and OGC read the current snapshot of each entity (Antares' `antares-odata` reads no history), so a line over the last 24 hours, which the task asks for as its example, has no other source on the Endpoint. It reads the same Endpoint, under the same Policy, as an NGSI-LD client would.
 
@@ -58,10 +58,10 @@ The renderer parses every spec with Vega's CSP-safe expression interpreter (`veg
 
 Specs render in an iframe with `sandbox="allow-scripts"` and without `allow-same-origin`, served from a host of its own: `viz.{domain}` (`viz.dev.joinedcontext.com` on `dev`, `viz.joinedcontext.com` in production, T-4641). The frame runs in an opaque origin: it reads no cookie, no storage and no DOM of CKAN, the Portal or the assistant, and a hostile spec that escaped §2.3 and §2.4 would still be stuck in a frame that owns nothing. The renderer page sends:
 
-- `Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; connect-src https://api.{domain}; img-src data: https://*.{domain}; frame-ancestors https://data.{domain} https://portal.{domain}`;
+- `Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src https://api.{domain} https://data.{domain}; img-src 'self' data:; frame-ancestors *`. Styles may be inline because `vega-embed` writes its tooltip and menu styles at run time, and a style cannot run script under `script-src 'self'`. Any page may frame the renderer, because the page holds no secret: that is what lets a city put a chart on its own site (the "Embed on a website" snippet, as the map widget does, T-4639);
 - `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`, `Cross-Origin-Opener-Policy: same-origin`.
 
-The page that embeds the frame passes it the Endpoint slug and the visualization name, never the spec or a URL; the renderer reads the spec from the Endpoint's own record on `api.{domain}`.
+The page that embeds the frame passes it one CKAN resource view id in the fragment (`https://viz.{domain}/#{viewId}`), never a spec or a URL. The renderer reads that view anonymously through CKAN's public API (`resource_view_show` on `data.{domain}`), so it renders only what an editor published through the reconciler (§2.7), and CKAN refuses a view of a private dataset to an anonymous caller. The renderer checks the spec against §2.3 again before it draws: the publisher's check is not trusted alone. Decided (worker-2, owner may override): the spec comes from CKAN's API by view id rather than in the fragment, because a spec in the fragment would let anyone craft a link that draws any chart on our host; options: the CKAN view (chosen), the spec in the fragment, the Endpoint's DCAT-AP record (would need a gateway change for no gain).
 
 ### 2.6 Data limits
 
