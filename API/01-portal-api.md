@@ -3287,6 +3287,9 @@ POST /api/v1/projects/{project}/knowledge/sources/{source}/recrawl         queue
 GET  /api/v1/projects/{project}/knowledge/sources/{source}/errors          the pages and documents the last crawls could not read
 GET  /api/v1/projects/{project}/knowledge/deployments/{deployment}/usage   requests and tokens per day, 30 days
 POST /api/v1/projects/{project}/knowledge/deployments/{deployment}/chat    ask the assistant as the signed-in person
+GET  /api/v1/projects/{project}/knowledge/conversations                    stored conversations, filtered (API/05 §3.1)
+GET  /api/v1/projects/{project}/knowledge/conversations/{conversation}     one conversation, every turn with its steps
+DELETE /api/v1/projects/{project}/knowledge/conversations/{conversation}   erase one conversation
 ```
 
 - The read routes answer only a caller who may read `KnowledgeSource` in the project (the usage
@@ -3302,6 +3305,12 @@ POST /api/v1/projects/{project}/knowledge/deployments/{deployment}/chat    ask t
   person's own access token on for an `internal` deployment's connectors and keeps no copy
   ([API/05 §1.7](05-knowledge-assistant.md#17-in-the-portal), AG-115).
 - `recrawl` answers `202` with the queued job, or `409` when one is already queued or running.
+- The `conversations` routes answer only a caller with `approve` on `AssistantDeployment` in the
+  project (the assistant's administrator; `org-admin` holds it), anyone else `403` naming it, and
+  `DELETE` needs `delete` on `AssistantDeployment`. Every call writes an audit record naming the
+  caller, the project and the conversation (or the filter of a list). The Portal page Asistent →
+  Konverzácie is shown to those callers only, and "Kopírovať ako test" copies a turn as the JSON
+  fixture of the assistant eval sets (T-4656, T-4670).
 - The index status of a source is in its row of `sources`: `passages`, `embedded` and `pending`
   (passages not embedded yet), `failed` (pages and documents that could not be read), and the last
   job with its `startedAt` and `finishedAt`. `errors` lists at most 50 of the failed pages and

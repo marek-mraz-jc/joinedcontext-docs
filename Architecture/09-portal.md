@@ -314,6 +314,7 @@ The vocabulary is closed because a filter over free text is not a filter:
 | `person.changed` | portal | a people administrator created, edited, disabled, enabled, reset, signed out or deleted a person (PF-90): the actor, the action and the person's id, never a credential; filed under the project `org` |
 | `pipeline.run` | portal | a steward started one run of a queued pipeline now (T-4349, PL-78): the actor, the run and the pipeline as `object` |
 | `model.key` | portal | the model key became invalid, ran out of credit, fell below 20 % of its limit or recovered, as the agent proxy reported it (AG-96): the state and the credits, never the key; filed under the project `org` |
+| `assistant.transcript` | portal | an assistant administrator listed, read or erased stored conversations (AG-99, T-4670): the actor, the action and the conversation id or the list's filter, never a question or an answer |
 
 The `pipeline.*`, `endpoint.traffic`, `access.denied` and `federation.*` kinds are part of the vocabulary and the collector's ingest route accepts them, but no pipeline runner, gateway or broker emits them yet; `mcp.tool` arrives from the Portal's own MCP only.
 
