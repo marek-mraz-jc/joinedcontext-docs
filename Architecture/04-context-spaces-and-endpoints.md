@@ -12,7 +12,7 @@ This specification establishes the public URL structure, tenancy abstraction, re
 |                                 CONTEXT SPACES & ENDPOINTS SURFACE                                |
 |                                                                                                   |
 |  1. Canonical Context Space Root (Project Owners & Administrators Only):                          |
-|     https://{host}/cs/{space}/                                                                    |
+|     https://api.{domain}/cs/{space}/                                                              |
 |     ├── ngsi-ld/v1/          (Standard ETSI CIM 009 Tree: entities, subscriptions, types)        |
 |     ├── mcp                  (Direct Data-Plane Model Context Protocol Streamable HTTP)           |
 |     ├── schema/              (index.json, then v{major}/: LinkML, JSON Schema, @context, SHACL…)  |
@@ -36,7 +36,7 @@ This specification establishes the public URL structure, tenancy abstraction, re
 Every Context Space is accessible to project owners via a stable, deterministic base path:
 
 ```text
-https://{host}/cs/{space}/
+https://api.{domain}/cs/{space}/
 ```
 
 Where `{space}` is the Context Space name (SP-01). It is the space of every entity under the path; an entity URN never names it, even when a prefixed URN happens to carry the same name (ADR-N-041, Architecture/03 §3).

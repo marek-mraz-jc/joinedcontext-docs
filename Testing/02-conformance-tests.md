@@ -11,7 +11,7 @@ This page is for whoever has to prove that a surface still speaks its standard: 
 Run one suite through the runner's entrypoint, which takes suite folder names and writes its reports under `JC_REPORTS_DIR`:
 
 ```bash
-NGSILD_URL=https://{host}/cs/{space}/ngsi-ld/v1 jc-conformance etsi
+NGSILD_URL=https://api.{domain}/cs/{space}/ngsi-ld/v1 jc-conformance etsi
 ```
 
 The suites with a runner today are `etsi`, `etsi-ttf`, `ogc`, `sta`, `mcp`, `dsp`, `schemathesis`, `security`, `models`, `ckan`, `chaos`, `pipelines`, `e2e`, `playwright` and `k6`. Each has a `workflow_dispatch` lane of its own in the conformance repository, with the target URL as an input; the fast lane there proves the runners rather than the platform.
@@ -87,7 +87,7 @@ are rendered `application/problem+json` with platform error types, where clause 
 `400` where clause 6.3.2 requires `415`. Matrices 1 and 2 report none of them.
 
 ```bash
-docker run --rm -e NGSILD_URL=https://{host}/cs/{space}/ngsi-ld/v1 \
+docker run --rm -e NGSILD_URL=https://api.{domain}/cs/{space}/ngsi-ld/v1 \
   -v "$PWD/reports:/reports" ghcr.io/marek-mraz-jc/joinedcontext-conformance:main etsi
 ```
 
@@ -98,7 +98,7 @@ narrows the run, and the `etsi-ttf` workflow's own default input leaves `Distrib
 out, so a dispatch with the defaults runs four of the five:
 
 ```bash
-docker run --rm -e NGSILD_URL=https://{host}/cs/{space}/ngsi-ld/v1 \
+docker run --rm -e NGSILD_URL=https://api.{domain}/cs/{space}/ngsi-ld/v1 \
   -e TTF_LEGS="CommonBehaviours ContextInformation" \
   -v "$PWD/reports:/reports" ghcr.io/marek-mraz-jc/joinedcontext-conformance:main etsi-ttf
 ```

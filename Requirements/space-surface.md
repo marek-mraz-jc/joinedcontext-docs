@@ -23,7 +23,7 @@ for the **SP-01…SP-22** family.
 ## 1. URL scheme
 
 - **SP-01** — Every context space MUST be exposed under one stable base
-  URL on the platform host: `https://{host}/cs/{space}`. `{space}` MUST
+  URL on the public data host: `https://api.{domain}/cs/{space}`. `{space}` MUST
   be the Context Space name of PF-09 (`^[a-z0-9-]+$`, unique in the
   Organization); no second identifier scheme for spaces may be minted.
 - **SP-02** — An entity's address MUST be `/cs/{space}/ngsi-ld/v1/entities/{urn}`: the space
