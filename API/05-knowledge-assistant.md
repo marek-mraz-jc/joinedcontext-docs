@@ -29,7 +29,7 @@ description: The chat route of jc-assistant, its Server-Sent Events, and how the
 ```
 
 - `message` is 1 to 4,000 characters after trimming; `conversation`, when present, is an id this service issued; `history` holds at most 6 turns of `user` or `assistant`, each at most 4,000 characters; `connectors`, when present, is a subset of the deployment's connector Endpoints, and an empty list switches every connector off. Anything else answers `400` naming the field. The body is at most 64 KiB. (AG-98)
-- The service keeps no question or answer text: `history` is what the channel holds and sends back. A turn of `history` is the caller's own text, so the rules in §1.4 treat it as untrusted the same as the question. (AG-99)
+- The service keeps each turn, redacted, for the deployment's `transcriptRetention` (default 30 days) so its administrators can see what an answer did (§3.1); the visitor's chat still sends `history` back with each question, and a turn of `history` is the caller's own text, so the rules in §1.4 treat it as untrusted the same as the question. (AG-99)
 
 ### 1.2 Who may ask
 
@@ -83,7 +83,8 @@ Both routes follow the `Origin` rules of §1.2, and the preflight allows `GET`, 
 | `stage` | `{"stage": "understanding" \| "searching" \| "reading" \| "history" \| "schema" \| "answering", "topic": "otváracie hodiny knižnice"}`; `topic` is the search query, the entity type read (`reading`, `history`) or the Endpoint whose types or schema are read (`schema`), absent otherwise | before each step of the answer; the chat shows the latest as one line until the first `delta` or the `answer` (T-4155, T-4294) |
 | `tool` | `{"name": "search", "status": "started" \| "done" \| "failed"}`; a connector's tool adds `"endpoint"` | around each tool call |
 | `script` | `{"code": "…", "output": "…"}`, or `"error"` in place of `"output"` | after a `run_script` call (§1.5) |
-| `data` | `{"endpoint": "ovzdusie-verejne", "type": "AirQualityObserved", "columns": ["name", "pm10", "observedAt"], "units": [null, "µg/m³", null], "rows": [["Námestie SNP", 21, "2026-10-15T18:00:00Z"]], "dataset": "https://…/dataset/public-air", "download": "https://…/api/endpoint/…/ngsi-ld/v1/entities?type=…"}` | after a data round, before `delta`; at most 50 rows. The columns come by importance (T-4650): `name` (else `id`), the attributes the query named, measured values (a number with a `unitCode` or an `observedAt`), other numbers, categories, the record's metadata, and last one `observedAt`, the row's newest measurement. `units` holds, per column, the symbol (else the name) of the `unitCode` it carries, or `null`. The chat labels each column in the visitor's language with its unit, aligns numbers right and formats numbers, yes/no and times for that language |
+| `data` | `{"endpoint": "ovzdusie-verejne", "type": "AirQualityObserved", "columns": ["name", "pm10", "observedAt"], "units": [null, "µg/m³", null], "rows": [["Námestie SNP", 21, "2026-10-15T18:00:00Z"]], "dataset": "https://…/dataset/public-air", "download": "https://…/api/endpoint/…/ngsi-ld/v1/entities?type=…"}` | after a data round, before `delta`; at most 50 rows. The columns come by importance (T-4650): `name` (else `id`), the attributes the query named, measured values (a number with a `unitCode` or an `observedAt`), other numbers, categories, the record's metadata, and last one `observedAt`, the row's newest measurement. `units` holds, per column, the symbol (else the name) of the `unitCode` it carries, or `null`. The chat labels each column in the visitor's language with its unit, aligns numbers right and formats numbers, yes/no and times for that language. When rows carry a GeoJSON `location` and the deployment has a `viz.{domain}`, `map` holds the map spec of ADR-N-053 §2.9 built from them (the label, up to four of the values the table leads with, and `observedAt`), and the chat offers "Table \| Map", the map first when every row has a location (T-4657) |
+| `visualization` | `{"spec": {…}, "rows": [{"name": "…", "pm10": 21}]}`: a Vega-Lite 5 spec over `rows`, or a map spec (ADR-N-053 §2.9) with no `rows` | after a `show_visualization` call the service accepted, at most once per answer; the chat draws it in a frame of `https://viz.{domain}/#show` (T-4657) |
 | `delta` | `{"text": "…"}` | zero or more, the answer's next characters as the answering model streams them |
 | `answer` | `{"text": "… [1] … [2]"}` | once, the whole answer, after the last `delta` |
 | `citations` | `[{"n": 1, "url": "https://…/page#page=4", "title": "Ovzdušie"}, {"n": 2, "tool": "query_entities", "endpoint": "ovzdusie-verejne", "url": "https://…/dataset/ovzdusie", "title": "Kvalita ovzdušia"}]` | after `answer` |
@@ -104,7 +105,7 @@ Both routes follow the `Origin` rules of §1.2, and the preflight allows `GET`, 
 - A connector calls `POST /api/endpoint/{slug}/mcp` on the Context Gateway without a token. On these channels a connector whose Endpoint is not `audience: public` is never offered, and `search` reads `visibility: public` passages of the deployment's `sources` only. (AG-106)
 - A connector of another project, `{project}/{endpoint}` with `{project}` in the deployment's `scope.projects`, is offered on every channel only while that Endpoint is `audience: public`, is called without a token, and keeps that name in its `tool` and `data` events. An Endpoint of a project outside `scope.projects` is never reached. (MF-52, T-4177)
 - A source of another project, `{project}/{source}` with `{project}` in the deployment's `scope.projects`, is searched in that project's own scope, with the same visibility rule as the deployment's own sources: `public` passages alone on every channel but `internal`. Each project's passages are ranked in their project and the rankings merged by fused score; a citation of another project's page carries that page's own address. A source of a project outside `scope.projects` is never read, and a project the deployment names no source of is never searched. (MF-52, T-4281)
-- A data question runs a bounded loop on the server (T-4294, AG-107): the reads the router named are its first steps, then the answering model is offered the connectors' read-only tools and calls them as it needs (a filter, a count, history, a type's attributes), at most `answer.maxDataSteps` tool calls per question in all (default 10, up to 25) and within `answer.maxDataSeconds` of the question (default 20, up to 60); the whole answer may take that time plus 25 seconds, at least 30; a reply without a tool call is the answer, which arrives as one `answer` event without `delta`s. At the last call or the time limit the service asks for the answer from what was read, and the answer says what it could not read. A name not offered, arguments past 4,096 characters or against the tool's schema, and a call past the last are refused to the model and never sent; a call repeated with the same arguments is answered from the question's own results. Each `query_entities` result is also a `data` event. A question the router sends to the sources alone keeps the routed answer of one streamed call.
+- A data question runs a bounded loop on the server (T-4294, AG-107): the reads the router named are its first steps, then the answering model is offered the connectors' read-only tools and calls them as it needs (a filter, a count, history, a type's attributes), at most `answer.maxDataSteps` tool calls per question in all (default 10, up to 25) and within `answer.maxDataSeconds` of the question (default 20, up to 60); the whole answer may take that time plus 25 seconds, at least 30; a reply without a tool call is the answer, which arrives as one `answer` event without `delta`s. At the last call or the time limit the service asks for the answer from what was read, and the answer says what it could not read. A name not offered, arguments past 4,096 characters or against the tool's schema, and a call past the last are refused to the model and never sent; a call repeated with the same arguments is answered from the question's own results. Each `query_entities` result is also a `data` event. When the deployment has a `viz.{domain}`, the loop also offers `show_visualization`: `{"kind": "map" | "line" | "bar", "data": n, "label": "<column>", "value": "<column>", "time": "<column>", "title": "<at most 80 characters>"}`, `n` the number of a table the answer read, `label`, `value` and `time` columns of it (`value` numeric; `time` required for `line`, optional otherwise), and `map` only for a table whose rows carry a location. The service builds the spec from that table's rows and sends it as a `visualization` event; an unknown table, a column the table lacks, a map without a location or a second call in one answer is refused to the model, which answers without it. The call counts as one of the question's tool calls. (T-4657) A question the router sends to the sources alone keeps the routed answer of one streamed call.
 - `answer.routes` decides what one answer may use: `both` (default) lets the router search the sources and call the connectors; `rag` offers no connector and calls no tool, and its `data` and `tool` events never occur; `data` runs no `search` round and answers from the connectors' results alone. (MF-52, T-4281)
 - With `feedback: false` the chat shows no verdict buttons and `POST /api/v1/d/{publicId}/feedback` answers `404`. (MF-52, T-4281)
 - A question takes one routing call of the router model (route `rag`, `data` or both, and up to 3 search queries), at most 3 retrieval rounds the service runs itself (a follow-up round asks the router once more, with the passages' titles only), and one streamed call of the answer model. (AG-107)
@@ -128,7 +129,7 @@ A tool result longer than 20,000 characters reaches the model cut. On a deployme
 The page loads `/d/widget.js` and `/d/widget.css` from the same host and nothing else; it sets no
 cookie. It keeps the conversation's id and its visible turns in its own `sessionStorage` (the
 browser partitions it per host site and drops it with the tab), so the open conversation survives a
-page change on the host site; "Nová konverzácia" clears it. Nothing else is stored (T-4174). It shows the deployment's
+page change on the host site; "Nová konverzácia" clears it. The footer under the input reads "Dôležité informácie si prosím overte. · Súkromie" ("Please verify important information. · Privacy"); "Súkromie" opens the dialog "O tomto asistentovi" inside the widget (focus held inside, Escape closes): that answers come from AI and may be wrong, no sensitive personal data belongs in a question; a switch, off by default, "Zapamätať konverzáciu v tomto prehliadači", which keeps the conversation in `localStorage` for at most 90 days after its last change and restores it on the next visit, switching off deletes that copy at once (with the warning not to switch it on on a shared device); that the service keeps conversations for the deployment's `transcriptRetention` days for running the service, review and fixing errors; and, when the deployment names `privacy.contact`, whom to write for access, correction or erasure, with `privacy.documentsUrl` when set. Nothing else is stored in the browser (T-4174, T-4670). It shows the deployment's
 greeting and colour, a switch per connector, each answer formatted from a safe part of Markdown with
 its markers as superscript links to its sources, listed once per address by title (AG-117), a script and
 its output when there was one, and every `error` event as the sentence it carries. It is keyboard
@@ -136,7 +137,8 @@ operable and announces answers to a screen reader.
 
 - The widget page MUST answer only for a deployment of the `public`, `ckan` or
   `iframe` channel, with `Content-Security-Policy: frame-ancestors` naming exactly the deployment's
-  `allowedOrigins` and allowing scripts, styles and requests from its own host alone; it MUST set
+  `allowedOrigins` and allowing scripts, styles and requests from its own host alone, and frames
+  from `https://viz.{domain}` alone when the deployment has one (ADR-N-053 §2.9); it MUST set
   no cookie. The chat route MUST accept the widget's own origin (`JC_ASSISTANT_PUBLIC_ORIGIN`)
   beside the deployment's, and every limit stays the server's (AG-100, AG-101, AG-110, AG-114).
 
@@ -264,6 +266,47 @@ one level of the tree, at most 100 pages of the whole source whose title or addr
 (case and diacritics ignored), the same fields. `GET …/knowledge/sources/{source}/search?q=&limit=`
 answers the hits §4 answers for that one source, with its visibility whatever it is: the
 administration sees what an internal deployment would read (UI-99, T-4659).
+
+### 3.1 Conversations (T-4670)
+
+Every turn of a deployment's conversations is stored at the end of the turn, a turn cut by the
+answer timeout too, with what it reached (AG-99). The Portal reads them for its administrators:
+
+```text
+GET    …/knowledge/conversations?deployment=&from=&to=&status=&feedback=&slow=&minCostUsd=&q=&sort=&cursor=&limit=
+GET    …/knowledge/conversations/{conversation}
+DELETE …/knowledge/conversations/{conversation}
+```
+
+| Field of a list row | Meaning |
+|---|---|
+| `id`, `deployment`, `origin`, `startedAt`, `lastAt` | the conversation; `origin` is the site it came from, `null` without one |
+| `firstQuestion`, `turns`, `routes` | the first question (redacted), the number of turns, the routes they took |
+| `totalMs`, `errors`, `timeouts` | the longest turn's time and the turns that ended in an error or the timeout |
+| `thumbsUp`, `thumbsDown` | the visitors' verdicts (§1.8) |
+| `costUsd`, `uncosted` | the sum of the priced model calls, and how many calls the provider sent no price for; with `uncosted > 0` the sum is a floor and the Portal says the price is unknown, never $0 |
+
+- `status` is `error`, `timeout` or `ok`; `feedback` is `up`, `down` or `none`; `slow=true` keeps
+  conversations with a turn over 15 seconds; `minCostUsd` keeps those whose sum is at least that;
+  `q` (2 to 100 characters) matches the questions and answers, case and diacritics ignored;
+  `sort` is `lastAt` (default, newest first) or `costUsd`. `limit` is 1 to 100, default 50, and
+  `nextCursor` continues.
+- The detail answers `{"id", "deployment", "origin", "client", "turns": [...]}`. A turn carries
+  `turn`, `at`, `question`, `answer`, `blocks` (the tables, chart and map specs it showed),
+  `language`, `route`, `history` (as the client sent it), `firstTokenMs`, `totalMs`, `error`
+  (`{status, title, detail}`) or `timedOut: true`, `verdict`, `costUsd`, `uncosted` and `steps`.
+  A step carries `kind` (`route`, `search`, `tool`, `model`, `answer`), `name`, `endpoint`,
+  `input`, `output` (at most 8 kB; `outputBytes` is the whole size), `status`, `startMs`,
+  `durationMs`, `error`, and for `model` the `stage` (`router`, `judge`, `data`, `answer`),
+  `model`, `provider`, `tokensIn`, `tokensOut`, `reasoningTokens` and `costUsd` (`null` when the
+  provider sent none). A turn's `costUsd` is the sum of its steps', a conversation's the sum of its
+  turns'.
+- Every text was redacted before it was stored: an e-mail address reads `[e-mail]`, a phone
+  number `[telefón]`, an IBAN `[IBAN]`, a birth number `[rodné číslo]`, a card number `[karta]`.
+  Inputs and outputs are untrusted text: the Portal shows them escaped and never sends them to a
+  model.
+- `DELETE` removes the conversation's turns and steps (erasure, T-4668) and answers `204`; an
+  unknown or another project's conversation is `404`.
 
 ## 4. Search for the MCP servers
 
