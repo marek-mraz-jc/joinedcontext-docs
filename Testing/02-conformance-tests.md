@@ -157,7 +157,7 @@ Not claimed: HTML output. A CQL2 construct the broker does not evaluate is refus
 `tests/ogc/` runs the query contract the platform owns (`test_cql2_filtering.py`: the advertised class list, `bbox`, `datetime`, CQL2 comparison and its refusals, pagination, `404` on an unknown feature, `405` on every write) and then the official `ets-ogcapi-features10` Abstract Test Suite through TEAM Engine, whose image is pinned by digest in `run.sh`. `tests/ogc/check_ogc_results.py` turns the TestNG document into the verdict, because the runtime exits `0` even when cases failed.
 
 ```bash
-OGC_LANDING_URL=https://{host}/api/endpoint/{slug}/ogc/features jc-conformance ogc
+OGC_LANDING_URL=https://api.{domain}/api/endpoint/{slug}/ogc/features jc-conformance ogc
 ```
 
 `OGC_COLLECTIONS` bounds how many collections the Abstract Test Suite walks (three by default, `-1` for all), and `TE_BASE_URL` points the run at a TEAM Engine that is already up instead of starting one.

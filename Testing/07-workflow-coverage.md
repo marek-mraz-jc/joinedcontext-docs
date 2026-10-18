@@ -210,7 +210,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | `detach` | `joinedcontext-portal/src/sync/state.rs` | `tests/edge_sync_detach_webhook_tests.rs` | `ui/tests/sync_sources_view.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "9b. a sync source syncs, pauses and resumes, refuses an unsigned webhook, and is detached" | `jc_syncsource_detach` |
 | `webhook` | `joinedcontext-portal/src/sync/webhook_secrets.rs` | `tests/sync_webhook_secrets_tests.rs` | `ui/tests/sync_sources_view.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "9b. a sync source syncs, pauses and resumes, refuses an unsigned webhook, and is detached" | person only: a webhook is the remote repository calling in with its signature; no person or agent takes this step by hand |
 | `retire` | `joinedcontext-portal/src/api/delete.rs` | `tests/resource_delete_tests.rs` | `ui/tests/resource_delete.test.tsx` | `ui/e2e/live/kind-syncsources.spec.ts` › "SyncSource: created, changed and removed through the page by a person" | `jc_resource_delete` |
-| `refused-no-permission` | `joinedcontext-portal/src/permissions.rs` | `tests/edge_keys_sync_tests.rs` | `ui/tests/sync_sources_view.test.tsx` | `ui/e2e/live/kind-syncsources.spec.ts` › "SyncSource: a viewer finds every write control disabled with its reason, and the door answers 403" | `jc_syncsource_sync` |
+| `refused-no-permission` | `joinedcontext-portal/src/permissions.rs` | `tests/edge_sync_source_tests.rs` | `ui/tests/sync_sources_view.test.tsx` | `ui/e2e/live/kind-syncsources.spec.ts` › "SyncSource: a viewer finds every write control disabled with its reason, and the door answers 403" | `jc_syncsource_sync` |
 | `refused-secret` | `joinedcontext-portal/src/sync/webhook_secrets.rs` | `tests/sync_webhook_secrets_tests.rs` | `ui/tests/secret_ref_name.test.ts` | `ui/e2e/live/secrets.spec.ts` › "a token pasted into the secret name is refused by the name of the field" | `jc_resource_propose` |
 
 ### 3.15 Dashboards, layers and KPIs (`dashboard`)
@@ -237,12 +237,9 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 
 | step | unit | API | mocked UI | live journey | assistant |
 |---|---|---|---|---|---|
-| `create` | `joinedcontext-portal/src/api/service_accounts.rs` | `tests/service_account_api_tests.rs` | `ui/tests/serviceaccount_form.test.tsx` | `ui/e2e/live/kind-serviceaccounts.spec.ts` › "ServiceAccount: created, changed and removed through the page by a person" | `jc_resource_propose` |
-| `mint-key` | `joinedcontext-portal/src/api/service_accounts.rs` | `tests/ops_service_account_keys_tests.rs` | `ui/tests/service_accounts_view.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "9a. a service account's API key is minted, rotated and revoked" | person only: a key is a credential shown once to the person who minted it; an agent never receives one (AG-11) |
-| `rotate-key` | `joinedcontext-portal/src/api/service_accounts.rs` | `tests/ops_service_account_keys_tests.rs` | `ui/tests/service_accounts_view.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "9a. a service account's API key is minted, rotated and revoked" | person only: a rotated key is a new credential shown once to a person, never to an agent (AG-11) |
-| `revoke-key` | `joinedcontext-portal/src/api/service_accounts.rs` | `tests/edge_key_store_tests.rs` | `ui/tests/service_accounts_view.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "9a. a service account's API key is minted, rotated and revoked" | `jc_service_account_key_revoke` |
+| `create` | `joinedcontext-portal/src/api/mutate.rs` | `tests/service_account_api_tests.rs` | `ui/tests/serviceaccount_form.test.tsx` | `ui/e2e/live/kind-serviceaccounts.spec.ts` › "ServiceAccount: created, changed and removed through the page by a person" | `jc_resource_propose` |
 | `retire` | `joinedcontext-portal/src/api/delete.rs` | `tests/resource_delete_tests.rs` | `ui/tests/resource_delete.test.tsx` | `ui/e2e/live/kind-serviceaccounts.spec.ts` › "ServiceAccount: created, changed and removed through the page by a person" | `jc_resource_delete` |
-| `refused-no-permission` | `joinedcontext-portal/src/api/service_accounts.rs` | `tests/attack_person_only_operations_tests.rs` | `ui/tests/service_accounts_view.test.tsx` | `ui/e2e/live/kind-serviceaccounts.spec.ts` › "ServiceAccount: a viewer finds every write control disabled with its reason, and the door answers 403" | `jc_service_account_key_mint` |
+| `refused-no-permission` | `joinedcontext-portal/src/permissions.rs` | `tests/attack_person_only_operations_tests.rs` | `ui/tests/service_accounts_view.test.tsx` | `ui/e2e/live/kind-serviceaccounts.spec.ts` › "ServiceAccount: a viewer finds every write control disabled with its reason, and the door answers 403" | `jc_resource_propose` |
 
 ### 3.18 Open data on CKAN (`ckan`)
 
@@ -402,11 +399,7 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 | `DELETE /api/v1/alerts/{id}` | `pipeline/alerts` |
 | `POST /api/v1/alerts/{id}/mute` | `pipeline/alerts` |
 | `POST /api/v1/alerts/notices/{id}/read` | `pipeline/alerts` |
-| `POST /api/v1/projects/{project}/serviceaccounts/{name}/keys` | `serviceaccount/mint-key` |
-| `POST /api/v1/projects/{project}/serviceaccounts/{name}/keys/claims/{claimId}` | `serviceaccount/mint-key` |
-| `DELETE /api/v1/projects/{project}/serviceaccounts/{name}/keys/{keyId}` | `serviceaccount/revoke-key` |
 | `DELETE /api/v1/projects/{project}/spaces/{space}/comments/{id}` | `space/comments` |
-| `POST /api/v1/projects/{project}/serviceaccounts/{name}/keys/{keyId}/rotate` | `serviceaccount/rotate-key` |
 | `POST /api/v1/projects/{project}/syncsources/{name}/detach` | `syncsource/detach` |
 | `POST /api/v1/projects/{project}/syncsources/{name}/pause` | `syncsource/pause` |
 | `POST /api/v1/projects/{project}/syncsources/{name}/sync` | `syncsource/sync-now` |
