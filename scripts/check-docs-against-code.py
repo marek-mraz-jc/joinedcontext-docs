@@ -19,6 +19,10 @@ to it:
   reason;
 * **an operation name** — a `jc_*` name must exist in the tree. This is the operation
   registry and the metrics beside it (ADR-N-021);
+* **the problem pages** — `API/09-errors.md` has one ``### `{slug}` {#slug}`` section for every
+  slug of jc-core's `PROBLEM_TYPES` and the Portal's `PORTAL_PROBLEM_TYPES` (each a
+  `ProblemType { slug: "…"`), and no section for a slug neither has; the Portal links the
+  section from every error it shows (T-4485). Judged once both repositories are checked out;
 * **a problem type** — a printed `https://joinedcontext.com/errors/{slug}` must have its slug
   as a string in the tree, and a `…/problems/{slug}` must be there whole. A client branches on
   `type`, so a slug nothing produces sends it down a branch that never runs; this is how
@@ -143,6 +147,27 @@ OPERATION = re.compile(r"\b(jc_[a-z][a-z0-9_]{2,})(?![-\w])")
 # The `type` of a problem document. `{slug}` itself is a page explaining the form, not a claim
 # about one refusal, and the pattern does not match it.
 PROBLEM_TYPE = re.compile(r"https://joinedcontext\.com/(errors|problems)/([a-z0-9][a-z0-9-]*)")
+
+
+CATALOGUED = re.compile(r'ProblemType \{ slug: "([a-z0-9][a-z0-9-]*)"')
+PROBLEM_SECTION = re.compile(r"^### `([a-z0-9][a-z0-9-]*)` \{#([a-z0-9-]+)\}$", re.MULTILINE)
+PROBLEM_PAGE = pathlib.PurePath("API/09-errors.md")
+
+
+def problem_pages(docs: pathlib.Path, code_text: str, checkouts: frozenset[str]) -> list[str]:
+    """Every catalogued slug has its section on the problem page, and every section a slug."""
+    if not {"joinedcontext-platform", "joinedcontext-portal"} <= checkouts:
+        return []
+    slugs = set(CATALOGUED.findall(code_text))
+    page = docs / PROBLEM_PAGE
+    if not page.is_file():
+        return [f"{PROBLEM_PAGE}: missing, and the code has {len(slugs)} problem types"] if slugs else []
+    sections = PROBLEM_SECTION.findall(page.read_text(encoding="utf-8"))
+    bad = [f"{PROBLEM_PAGE}: the section of `{slug}` has the anchor #{anchor}" for slug, anchor in sections if slug != anchor]
+    written = {slug for slug, _ in sections}
+    bad += [f"{PROBLEM_PAGE}: no section for the problem type {slug}" for slug in sorted(slugs - written)]
+    bad += [f"{PROBLEM_PAGE}: nothing answers with {slug}" for slug in sorted(written - slugs)]
+    return bad
 
 
 def walk(root: pathlib.Path):
@@ -287,6 +312,7 @@ def check(docs: pathlib.Path, code: pathlib.Path) -> list[str]:
                 checkouts,
             )
         )
+    bad.extend(problem_pages(docs, code_text, checkouts))
     return bad
 
 
@@ -446,6 +472,33 @@ def selftest() -> int:
             )
             return 1
         page.unlink()
+
+        # The problem page holds to both catalogues: a slug with no section and a section with
+        # no slug are findings, in either repository (T-4485).
+        (code / "joinedcontext-platform" / "crates" / "context-gateway" / "src" / "error.rs").write_text(
+            'ProblemType { slug: "forbidden", status: 403 },\n', encoding="utf-8"
+        )
+        (code / "joinedcontext-portal" / "ui" / "src" / "error.rs").write_text(
+            'ProblemType { slug: "quota", status: 429 },\n', encoding="utf-8"
+        )
+        if not any("missing" in problem for problem in problem_pages(docs, inventory(code, docs)[1], frozenset(present(code)))):
+            print("a code tree with problem types and no problem page passed", file=sys.stderr)
+            return 1
+        (docs / "API").mkdir(exist_ok=True)
+        (docs / PROBLEM_PAGE).write_text(
+            "# Problem Types\n\n### `forbidden` {#forbidden}\n\n### `quota` {#quota}\n", encoding="utf-8"
+        )
+        if problem_pages(docs, inventory(code, docs)[1], frozenset(present(code))):
+            print("a problem page with every slug was refused", file=sys.stderr)
+            return 1
+        (docs / PROBLEM_PAGE).write_text(
+            "# Problem Types\n\n### `forbidden` {#forbidden}\n\n### `gone` {#gone}\n", encoding="utf-8"
+        )
+        found = problem_pages(docs, inventory(code, docs)[1], frozenset(present(code)))
+        if not (any("no section for the problem type quota" in p for p in found) and any("nothing answers with gone" in p for p in found)):
+            print("a problem page out of step with the code passed:", *found, sep="\n  ", file=sys.stderr)
+            return 1
+        (docs / PROBLEM_PAGE).unlink()
 
         # And with no code tree at all the checker reports nothing rather than everything.
         if check(docs, root / "nowhere"):
