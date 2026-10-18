@@ -57,11 +57,13 @@ spec:
     - entityType: Vehicle
       current: PT5M        # an entity not written for 5 minutes expires
       history: PT8H        # temporal instances older than 8 hours are deleted
-    - entityType: GtfsStop # no durations: kept forever, stated explicitly
+    - entityType: GtfsStop # no durations: current state kept; history takes the space default
+    - entityType: "*"      # the space default for every type without a history of its own
+      history: P90D
 ```
 
 - Durations are ISO 8601 in days, hours, minutes and seconds (`PT5M`, `PT8H`, `P30D`, `P1DT12H`), from one minute to 3650 days, the form the broker's `/q/retention` reads (years and months have no fixed length, so they are refused); the Portal form writes them from plain units ("keep current values 5 minutes", "keep history 8 hours", "keep forever").
-- A type without a rule, and a space without `spec.retention`, loses nothing to retention. Deletion is opt-in per space and per type (DM-82).
+- A type without a rule takes the space's default rule (`entityType: "*"`, history only), and a space without one takes the platform default of 28 days of history (2.3, owner 2026-10-18, T-4414). Current state is still removed only for a type whose rule says `current` (DM-82).
 - Decided (worker-3, owner may override): the rule lives on the Space, because retention is an operational choice of the place that holds the data. The same organization model (DM-75) is imported by several spaces that keep data for different lengths; a LinkML annotation on the class would force one length on all of them. A new kind was rejected as one more file for two numbers.
 
 ### 2.2 Current state expires in the broker, by `modifiedAt`
@@ -74,9 +76,22 @@ PL-64 stays: it is a pipeline's hourly sweep in hours and days, run under the pi
 
 ### 2.3 History is deleted by the broker per tenant and type
 
-The same rule's `history` is executed by the broker's maintenance job: temporal instances of that type in that tenant older than `history` are deleted in bounded batches, at least once a minute while any rule is under an hour (DM-84). `ANTARES_TEMPORAL_RETENTION_DAYS` stays the broker-wide fallback for a deployment that sets it; the platform's deployment leaves it unset, so a space that declares nothing keeps its history. Each sweep logs, per tenant and type, the count it deleted, never ids of history instances and never values, and counts in `antares_retention_deleted_total{tenant,type,kind}` (`kind` = `entity` or `history`).
+The same rule's `history` is executed by the broker's maintenance job: temporal instances of that type in that tenant older than `history` are deleted in bounded batches, at least once a minute while any rule is under an hour (DM-84). `ANTARES_TEMPORAL_RETENTION_DAYS` stays the broker-wide hard ceiling that drops whole partitions for a deployment that sets it; the platform's deployment leaves it unset, because a ceiling below a type's own `history` would cut that type short. Each sweep logs, per tenant and type, the count it deleted, never ids of history instances and never values, and counts in `antares_retention_deleted_total{tenant,type,kind}` (`kind` = `entity` or `history`).
 
 `history: off` (T-4275, owner 2026-10-16: "When history does not matter, do not set expires at all and so it won't save temporal values") keeps a type's current state only: the reconciler writes the rule as `"history": "off"`, the broker's write path records no temporal instance for an entity with that type in that tenant, and the sweep deletes what the type already holds, which frees the disk. `history: forever` keeps everything and carries a `reason`, for the rare type whose whole history is the point; the Portal offers Off and Keep for a duration only. Decided (worker-7, owner may override): an absent rule still keeps everything, so no space loses data by upgrading; the seed states a value for every type it ruled (measurement series `P30D`, everything else `off`).
+
+**Layers (owner, 2026-10-18, T-4414).** History retention is set at every level and the most specific wins (DM-97):
+
+| Level | Where it is set | Values |
+|---|---|---|
+| 1. One entity | the entity's own Property `historyRetention` (`https://uri.etsi.org/ngsi-ld/default-context/historyRetention`), beside NGSI-LD `expiresAt`, which ends the entity itself | a duration, or `off` |
+| 2. Its entity type in the space | the type's rule in `spec.retention` | a duration, `off`, or `forever` with a `reason` |
+| 3. The space | the rule `entityType: "*"` in `spec.retention`, `history` only | a duration, `off`, or `forever` with a `reason` |
+| 4. The platform | the broker's `ANTARES_RETENTION_HISTORY_DEFAULT` | a duration; unset keeps everything not ruled above |
+
+The platform's deployment sets 28 days (`P28D`). An entity with a rule of its own is left out of the sweeps of its type, its space and the platform; a type with a rule is left out of its space's and the platform's sweep; a space with a default is left out of the platform's. `forever` at level 2 or 3 holds back every level below it. An entity whose `historyRetention` is `off` records no temporal instance from its next write on, and the sweep deletes what it holds; an entity's value that is neither a duration nor `off` (a typo, `forever`) is ignored, so its type's rule applies, and the broker logs the entity once per sweep without its value. The reconciler sends the space default as the rule `{"type": "*", "history": …}` and `forever` as `"history": "forever"`, so the broker can tell a type kept forever from a type without a rule.
+
+Decided (worker-4, owner may override): an entity may not say `forever`, because a writer with write access would then hold history past every rule the space's owner set, and the Portal offers only the owner a Forever (DM-85). The sweep deletes rows in batches like the type rules (DM-84), and the broker's partition job drops a weekly partition older than the pre-created window once the sweeps have emptied it, under an `ACCESS EXCLUSIVE` lock taken with `NOWAIT`, so the disk is returned to the node and a late write into that week is never lost: rows deleted from a partition that still holds a row free no disk, because new writes go to the current week's partition.
 
 ### 2.4 Quality rules: the model's constraints plus three rule kinds
 
@@ -179,7 +194,7 @@ Every automatic removal, current state or history, is declared in a manifest of 
 
 ## 6. Requirements
 
-- DM-82…DM-96: retention, the current-state sweep, the history sweep, the rules, the outcomes, the sweep, the bounds, the metric, the page, DQV, and deletion as declared data loss.
+- DM-82…DM-97: retention, the current-state sweep, the history sweep, the rules, the outcomes, the sweep, the bounds, the metric, the page, DQV, and deletion as declared data loss.
 
 ## Related
 
