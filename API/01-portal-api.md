@@ -3289,6 +3289,7 @@ GET  /api/v1/projects/{project}/knowledge/deployments/{deployment}/usage   reque
 POST /api/v1/projects/{project}/knowledge/deployments/{deployment}/chat    ask the assistant as the signed-in person
 GET  /api/v1/projects/{project}/knowledge/conversations                    stored conversations, filtered (API/05 §3.1)
 GET  /api/v1/projects/{project}/knowledge/conversations/{conversation}     one conversation, every turn with its steps
+GET  /api/v1/projects/{project}/knowledge/conversations/{conversation}/turns/{turn}/same  stored turns of the same question
 DELETE /api/v1/projects/{project}/knowledge/conversations/{conversation}   erase one conversation
 ```
 
@@ -3310,7 +3311,19 @@ DELETE /api/v1/projects/{project}/knowledge/conversations/{conversation}   erase
   `DELETE` needs `delete` on `AssistantDeployment`. Every call writes an audit record naming the
   caller, the project and the conversation (or the filter of a list). The Portal page Asistent →
   Konverzácie is shown to those callers only, and "Kopírovať ako test" copies a turn as the JSON
-  fixture of the assistant eval sets (T-4656, T-4670).
+  fixture of the assistant eval sets (T-4656, T-4670). A conversation of another project, or one
+  that does not exist, answers `404`. A caller gets at most 60 calls a minute on these routes,
+  then `429`; more than 20 `404`s of one caller in 5 minutes writes an `assistant.transcript`
+  audit record with the action `probe` (T-4681).
+- "Porovnať" opens two turns side by side (`?a={conversation}/{turn}&b={conversation}/{turn}`, ids
+  only, never a token): a header line with each turn's steps, tool and model calls, time, price
+  and cached share; the steps aligned by kind, each with its arguments, rows, time, tokens and
+  price and the model's reasoning text; the tables, charts and maps each turn showed, drawn from
+  their stored specs, with the changes between them named; and the two answers as a word diff.
+  "Rovnaká otázka" lists the turns `…/same` answers. Every stored text is shown as text: markdown
+  through the widget's renderer with raw HTML off and `https:` links only (`rel="noopener
+  noreferrer nofollow"`), no image loaded from a stored address, bidi and zero-width characters
+  shown as visible markers, and a JSON view cut at 64 kB with "Zobraziť viac" (T-4681).
 - The index status of a source is in its row of `sources`: `passages`, `embedded` and `pending`
   (passages not embedded yet), `failed` (pages and documents that could not be read), and the last
   job with its `startedAt` and `finishedAt`. `errors` lists at most 50 of the failed pages and

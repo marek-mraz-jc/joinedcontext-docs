@@ -29,7 +29,7 @@ description: The chat route of jc-assistant, its Server-Sent Events, and how the
 ```
 
 - `message` is 1 to 4,000 characters after trimming; `conversation`, when present, is an id this service issued; `history` holds at most 6 turns of `user` or `assistant`, each at most 4,000 characters; `connectors`, when present, is a subset of the deployment's connector Endpoints, and an empty list switches every connector off. Anything else answers `400` naming the field. The body is at most 64 KiB. (AG-98)
-- The service keeps each turn, redacted, for the deployment's `transcriptRetention` (default 30 days) so its administrators can see what an answer did (§3.1); the visitor's chat still sends `history` back with each question, and a turn of `history` is the caller's own text, so the rules in §1.4 treat it as untrusted the same as the question. (AG-99)
+- The service keeps each turn, with its secrets masked, for the deployment's `transcriptRetention` (default 90 days) so its administrators can see what an answer did (§3.1); the visitor's chat still sends `history` back with each question, and a turn of `history` is the caller's own text, so the rules in §1.4 treat it as untrusted the same as the question. (AG-99)
 
 ### 1.2 Who may ask
 
@@ -358,11 +358,22 @@ DELETE …/knowledge/conversations/{conversation}
   A step carries `kind` (`route`, `search`, `tool`, `model`, `answer`), `name`, `endpoint`,
   `input`, `output` (at most 8 kB; `outputBytes` is the whole size), `status`, `startMs`,
   `durationMs`, `error`, and for `model` the `stage` (`router`, `judge`, `data`, `answer`),
-  `model`, `provider`, `tokensIn`, `tokensOut`, `reasoningTokens` and `costUsd` (`null` when the
-  provider sent none). A turn's `costUsd` is the sum of its steps', a conversation's the sum of its
-  turns'.
-- Every text was redacted before it was stored: an e-mail address reads `[e-mail]`, a phone
-  number `[telefón]`, an IBAN `[IBAN]`, a birth number `[rodné číslo]`, a card number `[karta]`.
+  `model`, `provider`, `effort`, `promptVersion`, `tokensIn`, `tokensOut`, `cachedTokens`,
+  `reasoningTokens`, `reasoning` (the text the provider returned, else `null`), `finishReason` and
+  `costUsd` (`null` when the provider sent none). `kind` is also `visual` (a table, chart or map
+  the visitor was shown: `name` is `table`, `chart` or `map`, `input` its spec, `rows` its row
+  count) and `untracked` (the time between steps no step accounts for), so the steps' durations
+  add up to `totalMs`. `output` is whole up to 64 kB, beyond that its first 20 rows, with
+  `outputBytes` the whole size (T-4681). A turn's `costUsd` is the sum of its steps', a
+  conversation's the sum of its turns'.
+- `GET …/knowledge/conversations/{conversation}/turns/{turn}/same` lists the stored turns of the
+  project whose question reads the same (case, diacritics and spacing ignored, matched by a hash),
+  newest first, at most 50: `conversation`, `turn`, `at`, `deployment`, `totalMs`, `costUsd`,
+  `steps` (their number), so the Portal compares two answers to one question side by side.
+- Before a turn is stored, an access token or API key reads `[token]`, a password `[heslo]`, a
+  private key `[kľúč]` and a card number `[karta]`; under `transcriptRedaction: personal` an
+  e-mail address also reads `[e-mail]`, a phone number `[telefón]`, an IBAN `[IBAN]` and a birth
+  number `[rodné číslo]`.
   Inputs and outputs are untrusted text: the Portal shows them escaped and never sends them to a
   model.
 - `DELETE` removes the conversation's turns and steps (erasure, T-4668) and answers `204`; an
