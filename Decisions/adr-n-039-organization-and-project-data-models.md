@@ -73,6 +73,12 @@ An organization model is edited only at the organization level, by Changes to th
 
   The import preview shows which of the two happens to each model before the person proposes. An import never writes into the destination's organization repository and never replaces an organization model. A carried model that is neither mapped nor landed refuses the import, naming the model.
 
+### 3.5 The model says how its attributes are shown (T-4672, owner 2026-10-18)
+
+The order of a type's attributes, its three to five key attributes and their labels per language belong to the model, beside the slots they describe, so a publisher states them once and every table, popup, chart and CKAN column follows (DM-98…DM-103). They are written as LinkML's `rank` metaslot and the slot annotations `summary`, `label` and `hidden`; the SHACL of the schema surface carries them as `sh:order`, `sh:group` and language-tagged `sh:name`. An Endpoint or a visualization may only reorder and narrow that result (EP-135). The name heuristic of `field-order.json`, which ordered columns before (T-4650, T-4661), stays as the fallback for types without a model and attributes the model does not list.
+
+Considered and not taken: a display block per Endpoint as the default, which would make every Endpoint of one type repeat the same order; and keeping the heuristic as the default, which guesses wrong on the first attribute name it does not know.
+
 ## 4. Alternatives Considered
 
 - **One organization-wide catalogue, no project models.** Every department would wait on an administrator to model anything. The owner kept the project level.

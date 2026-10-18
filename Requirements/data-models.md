@@ -5,9 +5,9 @@ title: "Data Models & the LinkML Editor"
 
 # Data Models & the LinkML Editor
 
-Family **DM** (DM-01…DM-97). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **DM** (DM-01…DM-103). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
-This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-97**. Consumer classes per `00-index.md`.
+This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-103**. Consumer classes per `00-index.md`.
 
 ## 1. Source of truth and artifacts
 
@@ -162,10 +162,22 @@ The decision and its reasons are in [ADR-N-046](../Decisions/adr-n-046-data-life
 - **DM-96** [S] — Every automatic removal of context data MUST be declared in a manifest of the space or of a pipeline (PL-64), by the Entity's own `historyRetention` or by the platform history default (both DM-97); a removal a manifest declares MUST apply only to the space that declares it, and every removal MUST be logged per sweep with its counts and never with values.
 - **DM-97** [S][P] — The broker MUST keep each attribute instance for the history retention of the most specific level that sets one: the Entity's own `historyRetention` Property (a duration or `off`), then the rule of one of its types in its tenant, then the tenant's `*` rule, then the broker's platform default `ANTARES_RETENTION_HISTORY_DEFAULT` (the platform deployment sets `P28D`); `forever` at the type or space level MUST hold back every level below it, an Entity's value that is neither a duration nor `off` MUST be ignored, an Entity whose value is `off` MUST record no temporal instance, an Entity removed by its own `expiresAt` MUST lose its history with it, and a weekly partition the sweeps emptied MUST be dropped without losing a row written into it concurrently (ADR-N-046 2.3, owner 2026-10-18).
 
+## 16. Display order, key attributes and labels
+
+The model says how its attributes are shown: in which order, which few matter most, and what each is called in each language. Every table, popup, chart and CKAN column of the platform reads it from there, so one edit in the model reorders all of them ([ADR-N-039](../Decisions/adr-n-039-organization-and-project-data-models.md) §3.5, [Architecture/04 §1a](../Architecture/04-context-spaces-and-endpoints.md#display-order-key-attributes-and-labels), T-4672).
+
+- **DM-98** [H] — The display order of a class MUST be computed from its LinkML model: slots with a `rank` (on the slot or in the class's `slot_usage`) first, lower first; then the class's own `slots` in their written order; then the slots it inherits through `is_a` and `mixins`, nearest ancestor first; the system attributes `id`, `type`, `location`, `dateCreated` and `dateModified` last unless ranked. An attribute the model does not list MUST follow, sorted by the name heuristic of `crates/jc-core/data/field-order.json`, and a type without a model class MUST be ordered by that heuristic alone.
+- **DM-99** [H] — The slots annotated `summary: true` MUST be a class's key attributes, the ones a map popup, a mobile card and a short answer show first; a class that annotates none MUST take the first four of its display order.
+- **DM-100** [H] — An attribute's label in a language MUST be the first of: the slot's `annotations.label` in that language, in the model's default language, in English; the slot's `title`; the label of the name heuristic in that language; the name made readable. A label MUST be shown as text, never as markup.
+- **DM-101** [S] — A slot annotated `hidden: true` MUST NOT appear in any table, popup, chart or CKAN column the platform draws; it MUST stay in every API and schema answer.
+- **DM-102** [S] — Order, key attributes and labels MUST be computed on the caller's granted projection, so a slot the Endpoint does not expose to that caller MUST NOT appear as a column, a label, a key attribute or a SHACL property.
+- **DM-103** — The SHACL of an Endpoint's schema surface (`schema/v{major}/model.shacl.ttl`) MUST carry the display order as `sh:order` on each property shape, two `sh:PropertyGroup`s, the key attributes and the rest, linked by `sh:group`, and each label as a language-tagged `sh:name`, so a SHACL-aware tool shows the same order and names.
+
 ## Traceability
 
 | Requirements | Section | Architecture | Tests |
 |---|---|---|---|
+| DM-98…DM-103 | Display order, key attributes and labels | [04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md#display-order-key-attributes-and-labels) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-60 | Multi-dimensional indicators (RDF Data Cube) | [03-domain-model.md](../Architecture/03-domain-model.md) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-59 | Units and their QUDT anchor | [11-data-models.md](../Architecture/11-data-models.md) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-01…DM-06 | Source of truth and artifacts | [11-data-models.md](../Architecture/11-data-models.md) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |

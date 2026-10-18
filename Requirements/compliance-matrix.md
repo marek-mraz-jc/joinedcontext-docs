@@ -540,6 +540,12 @@ Generated 2026-10-18 from: `docs` 175dc72, `conformance` 934eff1, `deployment` 0
 | **DM-95** |  | tested | ci-full | platform `crates/jcctl/tests/publish_ckan_tests.rs::the_quality_measurements_reach_the_record_and_the_dataset`, portal `tests/ckan_reconciler_tests.rs::the_measurements_are_the_spaces_pass_rate_and_freshness`, portal `tests/ckan_reconciler_tests.rs::a_datasets_measurements_are_read_by_its_spaces_segment` |
 | **DM-96** | [S] | open |  |  |
 | **DM-97** | [S] [P] | tested | fast ci | portal `src/reconciler/views.rs::forever_and_the_spaces_default_reach_the_broker_as_written`, portal `ui/tests/space_retention_panel.test.tsx::the space's default covers the types without a history rule and is saved as * (DM-97)` |
+| **DM-98** | [H] | open |  |  |
+| **DM-99** | [H] | open |  |  |
+| **DM-100** | [H] | open |  |  |
+| **DM-101** | [S] | open |  |  |
+| **DM-102** | [S] | open |  |  |
+| **DM-103** |  | open |  |  |
 
 ### DS — Data space connector
 
@@ -704,6 +710,7 @@ Generated 2026-10-18 from: `docs` 175dc72, `conformance` 934eff1, `deployment` 0
 | **EP-132** | [H] [S] | open |  |  |
 | **EP-133** | [A] [S] | open |  |  |
 | **EP-134** | [S] | open |  |  |
+| **EP-135** | [H] | open |  |  |
 
 ### GW — Gateway firewall
 
