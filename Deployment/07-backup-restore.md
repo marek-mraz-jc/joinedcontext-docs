@@ -162,6 +162,21 @@ jcctl plan \
 
 The artifact store (RustFS, ADR-N-015) holds only rendered objects. Back it up last: after a loss, `jcctl artifacts rebuild --repo-dir {checkout} --out-dir {dir} [--space {s}] --revision {sha}` writes every object the repository declares (each model's LinkML source and generated artifacts under `schemas/{org}/{project}/{space}/{model}/v{major}/`, each mapping's compiled Bloblang under `mappings/…`, with an `index.json` naming the bytes, the SHA-256 and the commit), and the store's own client mirrors that directory into the bucket with the scoped credential (PF-32); the CLI never holds a store key. An artifact the repository does not hold is named on stderr, not invented: run `jcctl model generate` first. Nothing in it needs its own backup: a space's dump is generated per request and never stored (SP-13).
 
+## 5. Backups and erasure
+
+A backup cannot be edited, so an erasure of personal data ([ADR-N-054 §2.6](../Decisions/adr-n-054-history-versions-provenance-gdpr.md#26-personal-data)) reaches it in two ways:
+
+1. **Expiry.** Keep `postgres.cluster.backups.retentionPolicy` at `30d` or shorter; that period is the one the city states to a data subject as the time an erased value can survive in a backup.
+2. **Re-apply after a restore.** The Portal keeps an erasure log (keyed hash of the subject, space, time, counts per store, never a value) in its own database. After Step 4 of the recovery procedure, before you open the edge again, check that the reconciler has re-applied it:
+
+```bash
+kubectl -n <env> logs deploy/portal | grep 'erasure log re-applied'
+```
+
+The line names the number of erasures re-applied and the restore point. Without it, keep the edge closed and read [09-troubleshooting.md](09-troubleshooting.md).
+
+Audit metadata, the erasure log and the read log of personal data are kept for `JC_AUDIT_RETENTION` (default `P2Y`) and hold no personal value.
+
 ## Related
 
 - [01-runbooks](../Operations/01-runbooks.md) — Runbook 6 is the step-by-step PITR this page summarises.

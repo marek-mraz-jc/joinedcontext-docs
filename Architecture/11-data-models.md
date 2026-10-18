@@ -873,6 +873,22 @@ Everything comes out of one Model Tools run with one recorded generator version,
 
 Rendering happens at publish time, not per request. The reconciler runs Model Tools after merge and uploads the set to the platform's **artifact store**, an S3-compatible object store whose default implementation is **RustFS** (Apache-2.0, Rust, S3 API; ADR-N-015). The gateway serves `schema/` by streaming objects from the store with the sha256 from `index.json` as `ETag` and an in-memory LRU in front (the artifacts are small and immutable). Keys are deterministic (`schemas/{org}/{project}/{space}/{model}/v{n}/…`, `endpoints/{slug}/schema/v{n}/…`), published prefixes are object-locked, and `jcctl artifacts rebuild` regenerates everything from Git byte-identically, so the store is a derivative that can be lost and rebuilt (PF-29…PF-33). The same store holds compiled Bloblang mappings (§7), RDF dumps, cached `file.*` exports, app build outputs and export bundles: one component for every rendered thing, Git for every authored thing. Details in [Architecture/17](17-artifact-store.md).
 
+## 9. Personal data in a model
+
+A model says which of its classes and slots hold personal data, the way it says which slots are required: as LinkML annotations, carried into the JSON Schema and the SHACL of the schema surface ([ADR-N-054 §2.6](../Decisions/adr-n-054-history-versions-provenance-gdpr.md#26-personal-data), DM-120…DM-123).
+
+| Annotation | On | Values | What reads it |
+|---|---|---|---|
+| `personalData` | class, slot | `true` | the Portal's model check, the Policy compiler (never on a public Endpoint), the broker's retention |
+| `legalBasis` | class | `consent`, `contract`, `legal-obligation`, `vital-interest`, `public-task`, `legitimate-interest` (GDPR Art. 6(1)) | the export and the Portal's space page |
+| `purpose` | class | text per language | the export and the Portal's space page |
+| `maxRetention` | class | an ISO 8601 duration | the broker, over current state and every version |
+| `dataSubjectRef` | class | the name of the slot that identifies the person | export, rectification and erasure |
+| `ingest` | slot | `keep` (default), `drop`, `keyedHash` | the gateway, before a write reaches the broker |
+| `quantity` | slot | `perInterval` | the Portal, which then refuses `record: onChange` for the slot (DM-110) |
+
+A class that marks personal data without `legalBasis`, `purpose` and `maxRetention` does not save. `keyedHash` uses the space's key, `spec.personalData.keyRef`, a `secretRef`; a model never holds a key.
+
 ## Related
 
 - [Architecture/17](17-artifact-store.md) — referenced above.
