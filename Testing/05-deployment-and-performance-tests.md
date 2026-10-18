@@ -158,7 +158,40 @@ Every cost but the request path grows linearly with the tree. At 10,000 the thre
 
 A request does not pay any of these: the slug table is a hash map swapped whole, so a lookup costs the same at 10 and at 10,000. Before T-4443 the load at 10,000 took 14.4 s. Two costs were removed: a scan of every resource for each space, and a second parse of the assembled tree.
 
-### 6.1 Finding one of 10,000 datasets in CKAN and the Portal
+### 6.1 Finding one dataset among 10,000
+
+`mod scale` in `crates/context-gateway/tests/mcp_hub_catalog_tests.rs` generates a catalogue a person would search, seeded so a seed gives the same catalogue each run (T-4497). Each Dataset has one public Endpoint and is built from:
+
+- one of 14 Smart Data Model topics, with titles and descriptions in Slovak and English;
+- one of 518 places: the names of dev's AdministrativeArea entities, in `tests/fixtures/places-dev.txt`;
+- a year from 2023 to 2026;
+- a publisher.
+
+Near-duplicates differ by a year or a place only. The measurement asks 200 questions through the in-process hub:
+
+- a third in Slovak with diacritics;
+- a third in Slovak without them;
+- a third in English.
+
+It does not run in CI:
+
+```bash
+cargo test --release -p context-gateway --test mcp_hub_catalog_tests ten_thousand_generated -- --ignored --nocapture
+```
+
+Sandbox host (12 cores), 10,000 Datasets, seed 4497:
+
+| path | p50 | p95 | target p95 |
+|---|---|---|---|
+| MCP `search` | 47 ms | 52 ms | < 100 ms |
+| `list_endpoints`, first page | 41 ms | 44 ms | < 100 ms |
+| `list_endpoints`, cursor 9,000 and on | 41 ms | 45 ms | < 100 ms |
+| catalog `query_entities`, `searchText` | 65 ms | 73 ms | < 200 ms |
+| catalog `query_entities`, `theme` | 61 ms | 67 ms | < 200 ms |
+
+The target Dataset ranks in the first three hits for 30 of 30 known-target questions. About 41 ms of each call is the hub's per-caller reach over 10,000 Endpoints. Before T-4542, `list_endpoints` described every Endpoint it reached on every call, so its first page took 264 ms at p95. Section 6.2 measures CKAN `package_search` and the Portal's Endpoint list.
+
+### 6.2 Finding one of 10,000 datasets in CKAN and the Portal
 
 T-4544 measures the paths a person searches with outside the gateway, offline and never on `dev`. The catalogue comes from T-4497's generator: seed 4497, the 14 SDM topics, the 518 place names read from dev, and the years 2023 to 2026. Three measurements read it:
 
