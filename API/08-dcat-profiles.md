@@ -12,9 +12,9 @@ Every Endpoint serves a DCAT-AP 3.0 record ([EP-27](../Requirements/endpoints.md
 
 | Profile | Version pinned | Based on | Official text | Machine-readable shapes |
 |---|---|---|---|---|
-| DCAT-AP | 3.0.0 | DCAT 3 | https://semiceu.github.io/DCAT-AP/releases/3.0.0/ | SEMIC SHACL, vendored |
-| DCAT-AP-SK | 2.0.1 | DCAT-AP 2.1.1 | https://datova-kancelaria.github.io/dcat-ap-sk-2.0/ (repository `datova-kancelaria/dcat-ap-sk-2.0` at `ef7713876fdb4f319f0ae692e306b55d03b2410e`) | none published; DCAT-AP 2.1.1 SHACL plus our `sk-additions.shacl.ttl` |
-| DCAT-AP-CZ | 2026-09-23 | DCAT-AP 3.0.0 | https://ofn.gov.cz/dcat-ap-cz-otevřená-data/2026-09-23/ (open data), https://ofn.gov.cz/dcat-ap-cz-hvd/2026-09-23/ (high-value datasets), https://ofn.gov.cz/dcat-ap-cz-rozhraní-katalogů-dat/2026-09-23/ (catalogue interface) | OFN `shacl.ttl` per specification, vendored; plus our `cz-additions.shacl.ttl` for the cardinalities |
+| DCAT-AP | 3.0.0 | DCAT 3 | <https://semiceu.github.io/DCAT-AP/releases/3.0.0/> | SEMIC SHACL, vendored |
+| DCAT-AP-SK | 2.0.1 | DCAT-AP 2.1.1 | <https://datova-kancelaria.github.io/dcat-ap-sk-2.0/> (repository `datova-kancelaria/dcat-ap-sk-2.0` at `ef7713876fdb4f319f0ae692e306b55d03b2410e`) | none published; DCAT-AP 2.1.1 SHACL plus our `sk-additions.shacl.ttl` |
+| DCAT-AP-CZ | 2026-09-23 | DCAT-AP 3.0.0 | <https://ofn.gov.cz/dcat-ap-cz-otevřená-data/2026-09-23/> (open data), <https://ofn.gov.cz/dcat-ap-cz-hvd/2026-09-23/> (high-value datasets), <https://ofn.gov.cz/dcat-ap-cz-rozhraní-katalogů-dat/2026-09-23/> (catalogue interface) | OFN `shacl.ttl` per specification, vendored; plus our `cz-additions.shacl.ttl` for the cardinalities |
 
 **Which Slovak version data.slovensko.sk validates against today.** DCAT-AP 2.1.1, through DCAT-AP-SK 2.0.1. The catalogue's SPARQL endpoint (`https://data.slovensko.sk/api/sparql`, queried 2026-10-17) answers:
 
@@ -31,7 +31,7 @@ One row: 13,646 resources declare `dct:conformsTo <https://joinup.ec.europa.eu/c
 
 ## 2. DCAT-AP-SK 2.0.1: what it adds
 
-Each row is mandatory ("Povinná") in the Slovak text and optional or absent in DCAT-AP 3.0. The source column is the section anchor on https://datova-kancelaria.github.io/dcat-ap-sk-2.0/.
+Each row is mandatory ("Povinná") in the Slovak text and optional or absent in DCAT-AP 3.0. The source column is the section anchor on <https://datova-kancelaria.github.io/dcat-ap-sk-2.0/>.
 
 | Class | Property | Obligation | Value and vocabulary | Source |
 |---|---|---|---|---|
