@@ -113,7 +113,7 @@ Decided (worker-2, T-4499, owner may override): a profile is a query parameter, 
 
 ## 6. One catalogue per publisher
 
-A national catalogue registers one local catalogue per publisher: data.slovensko.sk a body by its IČO, data.gov.cz a body of the RPP register. One installation hosts the data of several publishers (a city, its region, a state network), each a Project naming its body in `spec.domain` ([Architecture/03](../Architecture/03-domain-model.md)), so the gateway serves a catalogue per Project that names its publisher (EP-125):
+A national catalogue registers one local catalogue per publisher: data.slovensko.sk a body by its IČO, data.gov.cz a body of the RPP register. One installation hosts the data of several publishers (a city, its region, a state network), each a Project naming its body in `spec.domain` ([Architecture/03](../Architecture/03-domain-model.md)), so the gateway serves a catalogue per Project that names its publisher (EP-127):
 
 - **Address.** `https://{host}/catalog/{project}.jsonld` and `https://{host}/catalog/{project}.ttl`, anonymous, with `?profile=` as in section 5. The catalogue's IRI is `https://{host}/catalog/{project}`. A project that names no publisher, a project without a public Endpoint, and a name that is no project all answer the same 404.
 - **Content.** One `dcat:Catalog` holding the record of every Endpoint of the project whose audience is `public`, as the anonymous caller reads it, and nothing of any other project; each dataset is an IRI that dereferences to its complete record, which is the "DCAT-AP Dokumenty" interface both national catalogues harvest.
@@ -153,11 +153,11 @@ These rules hold for every profile, so a record meeting a national catalogue nev
 - **EP-68** [P][A] — every artifact a `dcat:distribution` with checksum and `dcterms:conformsTo`.
 - **EP-78** [H][P][A] — the licence the record and the CKAN dataset carry.
 - **EP-84** [H][P][A] — the installation's catalogue for harvesters.
-- **EP-125** [H][P][A] — one catalogue per publisher, in the national profiles.
+- **EP-127** [H][P][A] — one catalogue per publisher, in the national profiles.
 
 ## Related
 
 - [API/02-endpoint-representations](02-endpoint-representations.md) — the record itself and every representation an Endpoint serves.
 - [Architecture/21-open-data-catalogue](../Architecture/21-open-data-catalogue.md) — the catalogue the record is published to.
-- [Requirements/endpoints](../Requirements/endpoints.md) — EP-27, EP-46, EP-68, EP-78, EP-84, EP-125.
+- [Requirements/endpoints](../Requirements/endpoints.md) — EP-27, EP-46, EP-68, EP-78, EP-84, EP-127.
 - [User-Guide/13-national-open-data-portals](../User-Guide/13-national-open-data-portals.md) — registering a publisher's catalogue with data.slovensko.sk and data.gov.cz.

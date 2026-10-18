@@ -986,6 +986,39 @@ Path: `wss://{host}/api/endpoint/{endpointSlug}/ws`
 
 One connection carries NGSI-LD Subscriptions made over the socket and the Notifications they produce, in the TS 104 243 `{metadata, body}` envelope (EP-106). The gateway authenticates the upgrade like any request and forwards it to the broker view's `/x/views/{view}/ws`, so a notification carries only what the caller's grant reads. Messages, limits, resume and client examples are on their own page: [API/07](07-websocket.md).
 
+## 8b. Domain standards and the data model they need
+
+A domain standard, such as iCalendar, is a representation of one Smart Data Models type in another standard's terms. It is served only where `spec.enabledRepresentations` lists it (never by the EP-104 default), and only on an Endpoint whose Context Space's data model has that type with every attribute the standard's mandatory fields come from, each one a slot marked `required: true` (EP-125). The requirement is code: the platform's `Representation::requirement()` declares it, and [`schemas/surface-requirements.md`](https://github.com/marek-mraz-jc/joinedcontext-platform/blob/main/schemas/surface-requirements.md) in the platform repository is generated from it and checked against it by the platform's tests. This section quotes that file.
+
+### iCalendar (`ical`, RFC 5545)
+
+Smart Data Models type: `Event` (`https://smartdatamodels.org/dataModel.Event/Event`).
+
+| Field | Standard | Source attribute | Mandatory |
+|---|---|---|---|
+| `UID` | RFC 5545 §3.6.1, §3.8.4.7 | entity `id` | yes |
+| `DTSTAMP` | RFC 5545 §3.6.1, §3.8.7.2 | entity `modifiedAt` (system) | yes |
+| `DTSTART` | RFC 5545 §3.6.1, §3.8.2.4 | `startDate` | yes |
+| `SUMMARY` | RFC 5545 §3.8.1.12 | `name` | yes (a calendar entry without a title is of no use) |
+| `DTEND` | RFC 5545 §3.8.2.2 | `endDate` | no: absent, the event has no end |
+| `DESCRIPTION` | RFC 5545 §3.8.1.5 | `description` | no |
+| `LOCATION`, `GEO` | RFC 5545 §3.8.1.7, §3.8.1.6 | `address`, `location` | no |
+| `URL` | RFC 5545 §3.8.4.6 | `url` | no |
+
+`id` and `modifiedAt` belong to every entity, so the model has to declare `startDate` and `name` as required slots of `Event`.
+
+### The refusal
+
+```text
+Endpoint banskabystrica/banskabystrica-podujatia: `ical` needs the type Event with the required attribute(s) startDate in the data model of space banskabystrica-verejne (EP-125)
+```
+
+### An entity that lacks a mandatory attribute
+
+An entity read without `startDate` or `name` is left out of the feed and counted in `antares_surface_records_skipped_total{surface="ical", attribute="startDate"}`; the feed stays valid RFC 5545 (EP-126).
+
+---
+
 ## 9. The Endpoints a token reaches (`GET /api/endpoints`)
 
 Path: `/api/endpoints`, on the gateway's host, outside any one Endpoint.
