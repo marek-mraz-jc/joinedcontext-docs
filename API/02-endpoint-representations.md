@@ -884,7 +884,7 @@ A public MCP server, the hub or any server an anonymous caller may read, needs n
 | Step | Request | Answer |
 |---|---|---|
 | Discovery | `GET /api/mcp/.well-known/oauth-protected-resource`, then `GET /.well-known/oauth-authorization-server` | the resource's metadata, listing this server first and Keycloak second; the server's endpoints, `S256`, public clients only |
-| Registration | `POST /oauth/register` with `redirect_uris` | `201` with a `client_id` signed over those URIs, valid 365 days; `400 invalid_redirect_uri` for a host outside the allowlist, `400 invalid_client_metadata` for more than 5 URIs or one over 2048 bytes |
+| Registration | `POST /oauth/register` with `redirect_uris` | `201` with a `client_id` signed over those URIs, valid 365 days; `400 invalid_redirect_uri` for a host outside the allowlist (`JC_GATEWAY_OAUTH_REDIRECT_HOSTS`), for none or more than eight URIs, or for one over 512 bytes; `400 invalid_client_metadata` for a body that is not a JSON object |
 | Authorize | `GET /oauth/authorize?response_type=code&client_id=…&redirect_uri=…&code_challenge=…&code_challenge_method=S256&state=…&resource=…` | `302` to the `redirect_uri` with a `code` valid 60 seconds and the same `state`; no login, no consent. A failed check answers an error page here and never redirects |
 | Token | `POST /oauth/token` with `grant_type=authorization_code`, `code`, `redirect_uri`, `client_id`, `code_verifier` | an access token valid one hour and a refresh token valid 30 days; `grant_type=refresh_token` answers a new pair |
 
