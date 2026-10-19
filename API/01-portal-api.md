@@ -3290,6 +3290,8 @@ GET  /api/v1/projects/{project}/knowledge/sources/{source}/errors          the p
 GET  /api/v1/projects/{project}/knowledge/deployments/{deployment}/usage   requests and tokens per day, 30 days
 POST /api/v1/projects/{project}/knowledge/deployments/{deployment}/chat    ask the assistant as the signed-in person
 GET  /api/v1/projects/{project}/knowledge/conversations                    stored conversations, filtered (API/05 §3.1)
+GET  /api/v1/projects/{project}/knowledge/conversations/usage               the usage summary of the filtered turns (API/05 §3.1)
+GET  /api/v1/projects/{project}/knowledge/conversations/export              the filtered turns as CSV (API/05 §3.1)
 GET  /api/v1/projects/{project}/knowledge/conversations/{conversation}     one conversation, every turn with its steps
 GET  /api/v1/projects/{project}/knowledge/conversations/{conversation}/turns/{turn}/same  stored turns of the same question
 DELETE /api/v1/projects/{project}/knowledge/conversations/{conversation}   erase one conversation
