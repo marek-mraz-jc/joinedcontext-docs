@@ -19,7 +19,7 @@ The platform replaces the legacy platform's JVM services and Kafka event buses w
 - **Edge**: **Apache APISIX** in standalone declarative mode. Routes are rendered to a file mount; the platform runs no etcd and exposes no APISIX Admin API.
 - **Ingestion and transformation**: **Bento** (`ghcr.io/warpstreamlabs/bento`), as resident Streams-mode runners and as Kubernetes CronJobs, from `components/pipeline-runner`.
 - **Configuration-as-Code forge**: **Gitea**, holding the Organization repository that is the single source of truth. Gitea Actions and the package registry build and keep the applications: every application repository's workflow runs on the `gitea-runner` component (ADR-N-028).
-- **Platform management**: the **Portal**, one Rust process serving the API and the reconciler, with the React UI in its own `portal-ui` image that the process reads the pages from that applies the forge's manifests to the cluster. `jcctl` is the command-line tool over the same manifests, shipped in the platform image; no reconciler runs as a daemon of its own.
+- **Platform management**: the **Portal**, one Rust process serving the API and the reconciler that applies the forge's manifests to the cluster, with the React UI in its own `portal-ui` image that the process reads the pages from. `jcctl` is the command-line tool over the same manifests, shipped in the platform image; no reconciler runs as a daemon of its own.
 
 ```mermaid
 flowchart TD
