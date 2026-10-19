@@ -58,7 +58,7 @@ The enforcement point in front of every broker surface (`context-gateway`).
 
 ## 2. Portal
 
-The management application: the API, the embedded UI and the in-process reconciler.
+The management application: the API, the UI it reads from `portal-ui`, and the in-process reconciler.
 
 | Variable | Default | Secret | What it is |
 |---|---|---|---|
