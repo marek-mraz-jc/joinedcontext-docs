@@ -40,7 +40,7 @@ spec:
   maxDepth: 3
   maxPages: 2000
   pdf: { policy: include, maxBytes: 52428800, maxPages: 500 }
-  offDomainDocuments: false     # a PDF on another host is skipped unless this is true
+  offDomainDocuments: false     # a PDF on another host is skipped unless this is true; when true, read under that host's own robots.txt
   schedule: "0 3 * * *"
   languages: [sk]
   visibility: public            # public | internal
@@ -76,13 +76,19 @@ Database `assistant` on the platform's CloudNativePG cluster (`pgvector` 0.8.6 i
 | Table | Key columns |
 |---|---|
 | `sites` | `id`, `org`, `source` (manifest name), `visibility`, `last_crawl` |
-| `pages` | `id`, `site_id`, `url` unique per site, `etag`, `last_modified`, `content_hash`, `status`, `fetched_at`, and what the page states of itself: `title`, `description`, `published`, `modified` (AG-120) |
-| `documents` | `id`, `page_id` (where it was linked), `url`, `mime`, `bytes`, `pages`, `content_hash`, and from the PDF's document information `title`, `description`, `published`, `modified` (AG-120) |
+| `pages` | `id`, `site_id`, `url` unique per site, `etag`, `last_modified`, `content_hash`, `status`, `fetched_at`, `failed_runs`, and what the page states of itself: `title`, `description`, `published`, `modified` (AG-120) |
+| `documents` | `id`, `page_id` (where it was linked), `url`, `mime`, `bytes`, `pages`, `content_hash`, `fetched_at`, `failed_runs`, and from the PDF's document information `title`, `description`, `published`, `modified` (AG-120) |
 | `links` | `from_page`, `to_url`, `kind` (`page`, `pdf`, `external`), for the administration's page tree |
 | `chunks` | `id`, `site_id`, `page_id` or `document_id`, `ordinal`, `text`, `lang`, `fts tsvector`, `embedding vector(384)`, `visibility` |
 | `jobs` | `id`, `source`, `state`, `claimed_by`, `attempts`, `error`, `run_after` |
 | `conversations` | `id`, `deployment`, `channel`, `created_at`; no personal data for the public channel |
 | `usage` | `deployment`, `day`, `requests`, `tokens_in`, `tokens_out` |
+
+Dates (T-4749). `published` and `modified` come from the page's own tags (`article:*_time`, `dcterms.*`, `DC.date.*`, then its JSON-LD), the first one that reads as a date, or from the PDF's document information; `modified` then falls back to the sitemap's `<lastmod>` and last to the server's `Last-Modified`. `fetched_at` is when the crawl last read it. A search hit and a passage's citation carry all three.
+
+Removal (T-4749). A page or document that answers `404` or `410` is deleted in that run, its chunks and links with it. One that fails otherwise (a `5xx`, a timeout) is kept, and so is one that a complete crawl no longer reaches; `failed_runs` counts such runs in a row, a successful read or a skip resets it, and at 3 the row and its chunks are deleted. A crawl that stopped at `maxPages`, could not read robots.txt or read no page at all counts nothing as unreached. Every deletion is scoped to the site's own rows.
+
+A start address that redirects to its `www.`/apex twin (same scheme and port) is crawled under the twin; a redirect to any other host is not followed.
 
 Indexes: GIN on `chunks.fts`, HNSW on `chunks.embedding` (`vector_cosine_ops`), btree on `(visibility, site_id)`. The `fts` column uses `english` or `finnish` where Postgres has the stemmer, `simple` with `unaccent` for Slovak and Czech.
 
