@@ -214,6 +214,7 @@ The same server lists resources (`resources/list`, `resources/read`):
 | `ngsi-ld://{space}/entities/{id}` | one entity, projected to the grant |
 | `schema://{endpointSlug}/v{n}/{artifact}` | a rendered schema artifact; `{artifact}` is the `format` name the summary publishes (`linkml`, `json-schema`, `context`, `shacl`, `owl`, `rdf`, `markdown`, `qb`), and the REST file name (`model.shacl.ttl`) names the same document (EP-52) |
 | `access://{endpointSlug}` | the caller's effective grant document (EP-60) |
+| `card://{endpointSlug}` | the Endpoint's NGSI-LD query card, `text/plain`: the query rules naming the read tools the caller's grants cover, then each type the caller may read with its attributes as compact lines (`attr:range[unit]`, `attr:a\|b`, `attr:Type`, `attr[]`) and one example `q`; past 1,500 tokens the types with their attribute counts. Made by `jc_core::query_card` from the LinkML the caller is served; listed and read only by a caller who reads something on the Endpoint, otherwise an unknown resource. The Portal's Endpoint page shows it and its assistant puts it in the prompt (T-4759, T-4760, AG-05) |
 
 The Portal's own server addresses its resources under `jc://` (AG-81):
 
