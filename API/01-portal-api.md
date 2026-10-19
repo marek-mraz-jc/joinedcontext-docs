@@ -3828,6 +3828,7 @@ For a space whose model names its data subject ([Architecture/11 §9](../Archite
 POST   /api/v1/projects/{project}/spaces/{space}/subjects/export           { "subject", "reason" } → 200, Cache-Control: no-store
 POST   /api/v1/projects/{project}/spaces/{space}/subjects/{subject}/rectification  { "entity", "attribute", "value", "reason" } → 200
 POST   /api/v1/projects/{project}/spaces/{space}/erasures                  { "subject", "reason" } → 202, Location of the erasure
+POST   /api/v1/projects/{project}/spaces/{space}/erasures?dryRun=All       the same body → 200 { "dryRun": true, "entities", "groups": [{ "class", "entities", "attrs" }] }, nothing erased or logged
 GET    /api/v1/projects/{project}/spaces/{space}/erasures/{id}             its state and counts per store → 200
 ```
 
