@@ -41,6 +41,7 @@ The enforcement point in front of every broker surface (`context-gateway`).
 | `JC_GATEWAY_OAUTH_KEY` | — | yes | The key the anonymous OAuth server signs with (`JC_GATEWAY_OAUTH_KEY`, from a `secretRef`, at least 32 bytes, ADR-N-052 §2.2.6); absent serves no `/oauth/*`. |
 | `JC_GATEWAY_OAUTH_REDIRECT_HOSTS` | — | no | The hosts that server redirects to (`JC_GATEWAY_OAUTH_REDIRECT_HOSTS`, comma-separated, default [`crate::oauth::DEFAULT_REDIRECT_HOSTS`], ADR-N-052 §2.3). |
 | `JC_GATEWAY_ORG_DOMAIN` | — | no | The organization's verified domain, the middle segment of every entity URN (`JC_GATEWAY_ORG_DOMAIN`). |
+| `JC_GATEWAY_PERSONAL_KEYS` | — | no | The directory the reconciler mounts each space's `spec.personalData.keyRef` in, one file per space (`JC_GATEWAY_PERSONAL_KEYS`, DM-121); absent refuses every write a model hashes. |
 | `JC_GATEWAY_PREVIEWS_DIR` | `/tmp/jc-previews` | no | Where the previews are written (`JC_GATEWAY_PREVIEWS_DIR`, default `/tmp/jc-previews`), a scratch directory the pod owns. |
 | `JC_GATEWAY_PREVIEWS_URL` | — | no | The Portal's list of running workspace previews (`JC_GATEWAY_PREVIEWS_URL`, its internal listener's `/internal/previews`); absent serves `main` alone (CC-78). |
 | `JC_GATEWAY_PROJECTS_DIR` | — | no | The project checkouts of a layout 2 organization, one directory per registry slug at its pinned ref (`JC_GATEWAY_PROJECTS_DIR`); a layout 1 repository needs none (CC-86). |
