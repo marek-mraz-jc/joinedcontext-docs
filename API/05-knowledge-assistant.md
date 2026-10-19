@@ -390,7 +390,8 @@ DELETE …/knowledge/conversations/{conversation}
   `outputBytes` the whole size (T-4681). A turn's `costUsd` is the sum of its steps', a
   conversation's the sum of its turns'.
 - `GET …/knowledge/conversations/usage` sums every turn in the filter (`deployment`, `from`
-  inclusive, `to` exclusive, `route`) in one aggregate (T-4728): `questions`, `timeouts`,
+  inclusive, `to` exclusive, both RFC 3339, `route`; another parameter is `400`) in one aggregate
+  (T-4728): `questions`, `timeouts`,
   `errors` (an error that is not the timeout), `uncostedQuestions` (turns with a call the provider
   sent no price for: they never count as $0), and over the other turns `costUsd` with `total`,
   `mean`, `p50` and `p90`. `tokens` holds the means per question of `in`, `out` and `cached`, and
@@ -401,13 +402,14 @@ DELETE …/knowledge/conversations/{conversation}
   its `stage` (a timed-out turn's calls included): `stage`, `calls`, `costUsd` (`null` when no
   call of it was priced) and `uncostedCalls`; a stage the assistant starts recording (follow-ups,
   embeddings) appears there by itself. `days` lists up to the 14 newest UTC days of the filter with
-  `day`, `questions`, `costUsd`, `uncostedQuestions`, `p50TotalMs`, `timeouts` and `errors`.
+  `day`, `questions`, `costUsd`, `uncostedQuestions`, `p50TotalMs`, `timeouts` and `errors`. A
+  value nothing was measured for is `null`, never 0.
 - `GET …/knowledge/conversations/export` answers the same turns as `text/csv` (UTF-8, CRLF), one
   row per turn, newest first: `at`, `deployment`, `conversation`, `turn`, `route`, `question`,
   `firstTokenMs`, `totalMs`, `tokensIn`, `tokensOut`, `cachedTokens`, `models`, `costUsd` (empty
   when a call was unpriced), `uncosted`, `timedOut`, `error`. The question is the stored,
   redacted text; a cell holding a quote, comma or line break is quoted, and one starting with
-  `=`, `+`, `-` or `@` gets a leading `'` so a spreadsheet never runs it. More than 20,000 turns
+  `=`, `+`, `-`, `@`, a tab or a CR gets a leading `'` so a spreadsheet never runs it. More than 20,000 turns
   is `400`: narrow the range.
 - `GET …/knowledge/conversations/{conversation}/turns/{turn}/same` lists the stored turns of the
   project whose question reads the same (case, diacritics and spacing ignored, matched by a hash),
@@ -419,23 +421,6 @@ DELETE …/knowledge/conversations/{conversation}
   number `[rodné číslo]`.
   Inputs and outputs are untrusted text: the Portal shows them escaped and never sends them to a
   model.
-- `usage` adds up the turns of the range in one query (T-4728). `from` (inclusive) and `to`
-  (exclusive) are RFC 3339 times, `route` the route the turns took; another parameter is `400`.
-  It answers `questions`, `timeouts`, `errors` (a timeout is not an error) and
-  `uncostedQuestions`; `costUsd` with `total`, `mean`, `p50` and `p90` over the priced turns
-  only, so a turn the provider sent no price for is counted apart and never as $0; `tokens` with
-  the mean `in`, `out` and `cached` per question and `cachedShare` (cached of the input tokens of
-  the turns that reported caching); `firstTokenMs`, `totalMs` and `phases` (`route`: the router
-  call; `work`: search, tools and the data, judge and agent calls; `answer`: the answer call),
-  each as `p50`, `p90` and `max`; and `days`, the newest 14 days (UTC) with `day`, `questions`,
-  `costUsd`, `uncostedQuestions`, `p50TotalMs`, `timeouts` and `errors`. A value nothing was
-  measured for is `null`, never 0.
-- `export` answers the same turns as `text/csv` (RFC 4180), newest first, one row per turn with
-  `at`, `deployment`, `conversation`, `turn`, `route`, `question` (as stored, so redacted),
-  `firstTokenMs`, `totalMs`, `tokensIn`, `tokensOut`, `cachedTokens`, `models`, `costUsd`,
-  `uncosted`, `timedOut` and `error`. A cell starting with `=`, `+`, `-` or `@` gets a leading
-  `'`, so a spreadsheet never runs a question as a formula. More than 20,000 turns is `400`,
-  asking for a narrower range.
 - `DELETE` removes the conversation's turns and steps (erasure, T-4668) and answers `204`; an
   unknown or another project's conversation is `404`.
 
