@@ -327,6 +327,10 @@ the service's own tables (T-4197):
 `reason` is `HTTP {status}` or the network error, at most 300 characters; no content of a page is
 in it. A source not crawled yet answers `404`.
 
+`DELETE …/knowledge/deployments/{deployment}/answers` forgets the answers the deployment keeps
+(Architecture/23 §4) and answers `200` `{"forgotten": n}`, `n` the answers forgotten, 0 when it
+kept none; a project or deployment it does not know forgets nothing and answers the same (T-4731).
+
 `GET …/knowledge/deployments/{deployment}/usage` answers `{"items": [{"day", "requests", "tokensIn",
 "tokensOut", "thumbsUp", "thumbsDown", "notes"}]}` for the last 30 days; `notes` counts the thumbs
 down that carry a note (§1.8).
