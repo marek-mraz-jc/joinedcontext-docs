@@ -3826,11 +3826,12 @@ For a space whose model names its data subject ([Architecture/11 §9](../Archite
 
 ```text
 POST   /api/v1/projects/{project}/spaces/{space}/subjects/export           { "subject", "reason" } → 200, Cache-Control: no-store
-POST   /api/v1/projects/{project}/spaces/{space}/subjects/{subject}/rectification  { "entity", "attribute", "value", "reason" } → 200
 POST   /api/v1/projects/{project}/spaces/{space}/erasures                  { "subject", "reason" } → 202, Location of the erasure
 POST   /api/v1/projects/{project}/spaces/{space}/erasures?dryRun=All       the same body → 200 { "dryRun": true, "entities", "groups": [{ "class", "entities", "attrs" }] }, nothing erased or logged
 GET    /api/v1/projects/{project}/spaces/{space}/erasures/{id}             its state and counts per store → 200
 ```
+
+Rectification (Art. 16) has no route of its own yet: the corrected value is written through the space's Endpoint like any other write, and its superseded version keeps the old value until a rectification route redacts it.
 
 The export answers every Entity of the space naming the subject, each with its class, its current state and its stored history, to the caller's session only. The read log of those Entities joins it once the gateway keeps one (DM-128, T-4666).
 
