@@ -108,7 +108,7 @@ For each dataset it checks the distributions the dataset itself lists. The entit
 | CKAN datastore | `datastore_search?resource_id=…&limit=0` on the dataset's first datastore table | `total` at least 1 and within 1 % of the platform's count of the same rows. A dataset with no datastore table is a `ko`, read from the inventory at no request |
 | WebSocket | `ws`, through `scripts/smoke-ws.py` | the dataset lists it: `101` and an `x-subscribe` answered `201`. It does not: the `404` [API/02](../API/02-endpoint-representations.md) names for a representation the Endpoint does not serve. Any other answer is `ko` |
 | Map | `https://opendata.{domain}/map/{dataset}` | 200 with at least one map layer; `skip` without OGC |
-| CSV | `file.csv` | 200, `text/csv`, a header line |
+| CSV | `file.csv?type={type}&limit=1` | 200, `text/csv`, a header line |
 
 The platform's count for the datastore check is the OGC `numberMatched` of the dataset's own `isPartOf` filter when the dataset lists one, and the OData `@odata.count` otherwise. When the type is shared by several datasets of one Endpoint with no `isPartOf`, the check is a `skip` that names them: no per-dataset count exists. A datastore's `last_modified` is no staleness signal, because the harvest writes nothing when its source is unchanged (T-4644). A harvest that stopped shows as the failed CronJob that `_smoke` already reports.
 
