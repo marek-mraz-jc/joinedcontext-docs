@@ -79,7 +79,7 @@ Both routes follow the `Origin` rules of §1.2, and the preflight allows `GET`, 
 
 | Event | Data | When |
 |---|---|---|
-| `conversation` | `{"id": "<uuid>", "at": "2026-10-16T12:17:05Z"}`; `at` is the server's moment of the question in UTC, the one every model call of the answer is told (T-4339) | first, always |
+| `conversation` | `{"id": "<uuid>", "at": "2026-10-16T12:17:05Z", "turn": "<uuid>"}`; `at` is the server's moment of the question in UTC, the one every model call of the answer is told (T-4339); `turn` names this answer for `resume` (§1.6.2) and is present on a visitor's stream alone, one that carried a visitor token (T-4685) | first, always |
 | `stage` | `{"stage": "understanding" \| "searching" \| "reading" \| "history" \| "schema" \| "answering", "topic": "otváracie hodiny knižnice"}`; `topic` is the search query, the entity type read (`reading`, `history`) or the Endpoint whose types or schema are read (`schema`), absent otherwise | before each step of the answer; the chat shows the latest as one line until the first `delta` or the `answer` (T-4155, T-4294). A public chat never shows `topic` as written except for `searching`: a type read is named in words, an Endpoint slug never; the "Postup" list gives each step its words and its time (T-4682) |
 | `tool` | `{"name": "search", "status": "started" \| "done" \| "failed"}`; a connector's tool adds `"endpoint"` | around each tool call |
 | `script` | `{"code": "…", "output": "…"}`, or `"error"` in place of `"output"` | after a `run_script` call (§1.5) |
@@ -141,6 +141,24 @@ operable and announces answers to a screen reader.
   from `https://viz.{domain}` alone when the deployment has one (ADR-N-053 §2.9); it MUST set
   no cookie. The chat route MUST accept the widget's own origin (`JC_ASSISTANT_PUBLIC_ORIGIN`)
   beside the deployment's, and every limit stays the server's (AG-100, AG-101, AG-110, AG-114).
+
+#### 1.6.1 Docked beside the catalogue (T-4685)
+
+The catalogue's theme frames the widget with `?embed=1&dock=1`; `dock=1` marks a host that can dock it.
+
+- **The panel.** On a screen at least 1100 px wide the header offers a dock button beside full screen. The widget posts `{"type": "jc-assistant-size", "size": "dock" | "panel" | "full"}` to its host. Docked, the host pins the frame to the right edge at full height, 34 % of the window by default. The visitor drags its left edge between 360 px and 50 % of the window, or moves it with the arrow keys; the host keeps the width in `localStorage` (`jc-dock-width`) and the open and docked state in `sessionStorage`. The page gets a right margin as wide as the panel, so the panel never covers it, and search, filters, maps and tables stay usable. Narrower screens keep the floating panel and full screen.
+- **A link clicked on the page.** Every catalogue link stays a normal page load: the address bar, Back and bookmarks keep working. The theme declares `@view-transition { navigation: auto; }` and names the frame `view-transition-name: jc-assistant`, so the browser holds the panel in place while the page beside it cross-fades in about 150 ms (no animation under `prefers-reduced-motion`). The host opens the panel again before its first paint. The widget writes its draft, caret and scroll to `sessionStorage` (`jc-chat-view:{publicId}`) on `pagehide` and restores them, with the conversation, when it loads. An answer still streaming at the page change continues through `resume` (§1.6.2), neither restarted nor repeated. A browser without cross-document view transitions gets the same restore without the cross-fade.
+- **Opening the dataset an answer is about.** When an answer is `done`, the widget checks its citations. If they link exactly one catalogue dataset page (a path `/dataset/{name}`, every such citation the same page, the first citation among them), the input is empty and the visitor's switch "Otvárať dataset automaticky" is on, the widget posts `{"type": "jc-assistant-dataset", "url": "…", "title": "…"}`. The switch lives in the "Súkromie" dialog, is shown on a docking host alone, is on by default and is kept in `localStorage` (`jc-chat-follow:{publicId}`). The host navigates only when the URL's origin is its own and its path is `/dataset/{name}`, when it is not the page already open, no text is selected and no field of the page has focus. It first answers `{"type": "jc-assistant-opened", "url": "…"}`. The widget then shows "Otvoril som dataset {title} · Späť" under the answer, and a screen reader hears "Stránka zmenená na dataset {title}" once. "Späť" posts `{"type": "jc-assistant-back"}` and the host goes back one page. A broad answer that links several datasets, or none, never navigates. A host that frames the widget on another site ignores the message, and the citation stays a link.
+- The host trusts these messages only from its own frame and the assistant's origin. The widget sends them to the framing origin alone. They carry a URL and a title, never a token.
+
+#### 1.6.2 Resuming an answer (T-4685)
+
+`GET https://assistant.{domain}/api/v1/d/{publicId}/turns/{turn}/resume?after={n}` with the header `X-JC-Visitor`.
+
+- A visitor's answer runs to its end on the server even when its reader leaves (a link on the host page, a closed tab, Stop), and its turn is stored as usual (§3.1). The service keeps the turn's events in memory until 2 minutes after `done`.
+- `after` is the number of events after `conversation` the widget already handled, 0 by default. The answer is `200`, `text/event-stream`, `Cache-Control: no-store`: the events from index `after` on, in the order and shape of §1.3, the ones still to come as they come, ending with `done`. Each event carries its index as the SSE `id`.
+- The turn belongs to the visitor whose token asked: another token's visitor, another deployment or an unknown id answers `404`. The turn id is a random UUID and never the authorization. A missing or expired token answers `401`, an origin the deployment does not allow `403`, a turn past its 2 minutes `410` (for 10 minutes more, `404` after that), a 21st resume in a minute from one address `429`.
+- At most 1,000 turns are held at once; past that, the oldest finished turn is dropped first.
 
 ### 1.7 In the Portal
 
