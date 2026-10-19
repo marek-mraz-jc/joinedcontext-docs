@@ -365,14 +365,14 @@ DELETE …/knowledge/conversations/{conversation}
 | `totalMs`, `errors`, `timeouts` | the longest turn's time and the turns that ended in an error or the timeout |
 | `thumbsUp`, `thumbsDown` | the visitors' verdicts (§1.8) |
 | `costUsd`, `uncosted` | the sum of the priced model calls, and how many calls the provider sent no price for; with `uncosted > 0` the sum is a floor and the Portal says the price is unknown, never $0 |
-| `tokensIn`, `tokensOut`, `cachedTokens` | the turns' tokens; `cachedTokens` is `null` when no step reported any (T-4728) |
-| `firstTokenMs`, `models` | the first turn's time to its first word, and the models the steps called (T-4728) |
+| `tokensIn`, `tokensOut`, `cachedTokens` | the turns' prompt and completion tokens, and the prompt tokens the provider read from its cache (`null` when no call reported any, T-4728) |
+| `firstTokenMs`, `models` | the first turn's time to its first token (`null` when none came), and the models its calls used |
 
 - `status` is `error`, `timeout` or `ok`; `feedback` is `up`, `down` or `none`; `slow=true` keeps
   conversations with a turn over 15 seconds; `minCostUsd` keeps those whose sum is at least that;
   `q` (2 to 100 characters) matches the questions and answers, case and diacritics ignored;
-  `sort` is `lastAt` (default, newest first), `costUsd`, `tokens` (in and out) or `totalMs` (the
-  longest turn), each the largest first. `limit` is 1 to 100, default 50, and
+  `sort` is `lastAt` (default, newest first), `costUsd`, `tokens` (in plus out) or `totalMs`
+  (the longest turn), each largest first. `limit` is 1 to 100, default 50, and
   `nextCursor` continues.
 - The detail answers `{"id", "deployment", "origin", "client", "turns": [...]}`. A turn carries
   `turn`, `at`, `question`, `answer`, `blocks` (the tables, chart and map specs it showed),
@@ -389,6 +389,26 @@ DELETE …/knowledge/conversations/{conversation}
   add up to the turn's time from the question's arrival, the connectors' setup included. `output` is whole up to 64 kB, beyond that its first 20 rows, with
   `outputBytes` the whole size (T-4681). A turn's `costUsd` is the sum of its steps', a
   conversation's the sum of its turns'.
+- `GET …/knowledge/conversations/usage` sums every turn in the filter (`deployment`, `from`
+  inclusive, `to` exclusive, `route`) in one aggregate (T-4728): `questions`, `timeouts`,
+  `errors` (an error that is not the timeout), `uncostedQuestions` (turns with a call the provider
+  sent no price for: they never count as $0), and over the other turns `costUsd` with `total`,
+  `mean`, `p50` and `p90`. `tokens` holds the means per question of `in`, `out` and `cached`, and
+  `cachedShare` (cached of all prompt tokens, `null` with none). `firstTokenMs`, `totalMs` and
+  `phases` (`route`: the router call; `work`: search, tools and the data, judge and agent calls;
+  `answer`: the answer call; each the sum of its steps' durations in a turn) hold `p50`, `p90` and
+  `max`, `null` with no turn. `costByStage` splits the cost of every model call of those turns by
+  its `stage` (a timed-out turn's calls included): `stage`, `calls`, `costUsd` (`null` when no
+  call of it was priced) and `uncostedCalls`; a stage the assistant starts recording (follow-ups,
+  embeddings) appears there by itself. `days` lists up to the 14 newest UTC days of the filter with
+  `day`, `questions`, `costUsd`, `uncostedQuestions`, `p50TotalMs`, `timeouts` and `errors`.
+- `GET …/knowledge/conversations/export` answers the same turns as `text/csv` (UTF-8, CRLF), one
+  row per turn, newest first: `at`, `deployment`, `conversation`, `turn`, `route`, `question`,
+  `firstTokenMs`, `totalMs`, `tokensIn`, `tokensOut`, `cachedTokens`, `models`, `costUsd` (empty
+  when a call was unpriced), `uncosted`, `timedOut`, `error`. The question is the stored,
+  redacted text; a cell holding a quote, comma or line break is quoted, and one starting with
+  `=`, `+`, `-` or `@` gets a leading `'` so a spreadsheet never runs it. More than 20,000 turns
+  is `400`: narrow the range.
 - `GET …/knowledge/conversations/{conversation}/turns/{turn}/same` lists the stored turns of the
   project whose question reads the same (case, diacritics and spacing ignored, matched by a hash),
   newest first, at most 50: `conversation`, `turn`, `at`, `deployment`, `totalMs`, `costUsd`,
