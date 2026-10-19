@@ -397,7 +397,10 @@ DELETE …/knowledge/conversations/{conversation}
   `cachedShare` (cached of all prompt tokens, `null` with none). `firstTokenMs`, `totalMs` and
   `phases` (`route`: the router call; `work`: search, tools and the data, judge and agent calls;
   `answer`: the answer call; each the sum of its steps' durations in a turn) hold `p50`, `p90` and
-  `max`, `null` with no turn. `days` lists up to the 14 newest UTC days of the filter with
+  `max`, `null` with no turn. `costByStage` splits the cost of every model call of those turns by
+  its `stage` (a timed-out turn's calls included): `stage`, `calls`, `costUsd` (`null` when no
+  call of it was priced) and `uncostedCalls`; a stage the assistant starts recording (follow-ups,
+  embeddings) appears there by itself. `days` lists up to the 14 newest UTC days of the filter with
   `day`, `questions`, `costUsd`, `uncostedQuestions`, `p50TotalMs`, `timeouts` and `errors`.
 - `GET …/knowledge/conversations/export` answers the same turns as `text/csv` (UTF-8, CRLF), one
   row per turn, newest first: `at`, `deployment`, `conversation`, `turn`, `route`, `question`,
