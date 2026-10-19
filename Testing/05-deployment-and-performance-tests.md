@@ -105,11 +105,11 @@ For each dataset it checks the distributions the dataset itself lists. The entit
 | OData | `odata/v4/{type}?$top=1&$count=true` | 200, `@odata.count` at least 1 |
 | OGC API Features | `ogc/features/collections/{type}/items?limit=1`, with the dataset's own `isPartOf` when it lists one | 200, `application/geo+json`, at least one feature. A dataset with no OGC distribution is a `skip` when its sample carries no `location` and a `ko` when it does |
 | Data model | `schema/index.json` | 200, and a model lists every type the dataset serves |
+| Data | the NGSI-LD sample, and the Endpoint's `schema/v{version}/model.schema.json` of the model `schema/index.json` lists the type under | every sampled row passes the data rules below |
 | CKAN datastore | `datastore_search?resource_id=…&limit=0` on the dataset's first datastore table | `total` at least 1 and within 1 % of the platform's count of the same rows. A dataset with no datastore table is a `ko`, read from the inventory at no request |
 | WebSocket | `ws`, through `scripts/smoke-ws.py` | the dataset lists it: `101` and an `x-subscribe` answered `201`. It does not: the `404` [API/02](../API/02-endpoint-representations.md) names for a representation the Endpoint does not serve. Any other answer is `ko` |
 | Map | `https://opendata.{domain}/map/{dataset}` | with an OGC distribution: 200, at least one map layer, and an OGC cell that is not `ko`, so the map has a feature to show. Without one: a `ko` when the sample carries a `location`, and otherwise the `404` that means the dataset page shows no map link |
 | CSV | `file.csv?type={type}&limit=1` | 200, `text/csv`, a header line |
-| Data | the NGSI-LD sample, and the Endpoint's `schema/v{version}/model.schema.json` of the model `schema/index.json` lists the type under | every sampled row passes the data rules below |
 
 The data check (T-4743) reads the rows themselves, because every interface can answer while the rows are wrong: a municipality with its population sat in the BBSK type `Organization` (T-4740). A row fails it when:
 
@@ -130,7 +130,7 @@ Production limits (owner, T-4716):
 - `limit=1` or `$top=1` on every read, except the NGSI-LD sample of 20 rows, and 20 seconds per request.
 - A `429` or `503` waits out its `Retry-After` inside the same budget. A timeout is a `ko` with its time.
 
-Within that budget, every run checks the core five on every dataset: NGSI-LD, MCP, OData, OGC and the data model. An answer that several datasets share, such as one Endpoint's `tools/list`, is fetched once. The data, datastore, WebSocket, map and CSV checks rotate: each run takes the datasets the previous run's table checked least recently, the data check across all of them first, until the budget ends. A rotated cell reads `not this run (last: {time} {verdict})`, and running out of budget is never a `ko`.
+Within that budget, every run checks the core six, least recently checked dataset first: NGSI-LD, MCP, OData, OGC, the data model and the data. A run that ends before the last dataset leaves the rest to the next run: on `dev` (98 datasets, 2026-10-19, before the data check) one run reached 64 of them in 9 min 40 s and no rotating check. An answer that several datasets share, such as one Endpoint's `tools/list`, is fetched once. The datastore, WebSocket, map and CSV checks rotate: each run takes the datasets the previous run's table checked least recently, until the budget ends. A rotated cell reads `not this run (last: {time} {verdict})`, and running out of budget is never a `ko`.
 
 The run writes one table, `smoke-catalogue-{env}-{time}.tsv` in `.smoke/` (gitignored, which an apply leaves alone: `_dev-assemble` deletes `deployment/`): a dataset per row, an interface per column, and the totals ("97 datasets, 93 complete, 4 ko"). It also prints the request count and the duration, and exits 1 on any `ko`. `tests/test_smoke_catalogue.py` replays recorded answers for every verdict and runs in `ci.yml` with the other script tests.
 
