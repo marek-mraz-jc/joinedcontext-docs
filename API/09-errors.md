@@ -48,7 +48,7 @@ What to do: Correct the attribute the detail names: a quality rule of the space 
 
 **Reason Required**, status 400.
 
-A delete of context data through an Endpoint (an Entity, an Attribute, a batch or temporal instances) names no reason in `JC-Reason` (DM-113, ADR-N-054), so nothing was deleted. A delete from the Portal's own UI is not asked for one yet; that half of DM-113 comes with the Portal's reason field (T-4667).
+A delete through an Endpoint names no reason in `JC-Reason` (DM-113, ADR-N-054), so nothing was changed. The gateway asks it of every delete except the Portal UI's own, which follows once the UI sends a reason; DM-113 extends it to corrections and every UI write.
 
 What to do: Send the same request again with a `JC-Reason` header of 1 to 500 characters that says why.
 
