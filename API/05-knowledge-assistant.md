@@ -94,6 +94,7 @@ Both routes follow the `Origin` rules of §1.2, and the preflight allows `GET`, 
 
 - Every model call of the answer reads the moment of the question beside it, local first: the deployment's weekday, date, time to the minute and zone abbreviation (CET or CEST, EET or EEST, from the IANA zone on that date), then UTC. The zone is that of the deployment's first city language (`sk` Europe/Bratislava, `cs` Europe/Prague, `fi` Europe/Helsinki), UTC alone without one. "Today", "now" and "this week" resolve against it, and a question about the date or time is answered from it, like "Je piatok 16. októbra 2026, 14:17 (CEST)." The chat shows the time of each message, the question's from `at`, in the visitor's time zone, with the UTC minute beside it. (T-4339)
 - Every numbered marker `[n]` in `answer` has its entry in `citations`: a passage cites its page URL (a PDF passage with `#page=N`), a tool result cites the tool and its Endpoint. (AG-102)
+- A passage's citation also carries `published`, `modified` and `crawled` of its page or document, RFC 3339 in UTC, each left out when unknown ([Architecture/22 §3](../Architecture/22-knowledge-assistant.md#3-database-sketch)); the answer call sees the same three dates beside each passage. (T-4749)
 - `title` is the first heading of the cited page or document, when it opens with one. A tool result's citation also carries the `url` and `title` of the page the deployment's sources hold about its Endpoint (the catalogue's or its dataset's, found by the Endpoint's address), when one exists. Both come from the deployment's own sources, public ones alone on a public channel. A channel shows the title and never the tool's name. (AG-117)
 - A passage citation may carry `cards`, what the cited passage itself publishes, read from its text and links without a model call: `{"kind": "contact", "name": "Klientske centrum", "phones": ["+421 48 4330 111"], "emails": ["podatelna@example.org"]}`, `{"kind": "place", "address": "Československej armády 26, 974 01 Banská Bystrica"}` or `{"kind": "procedure", "steps": ["Vyplňte žiadosť.", "…"]}`. `name` is the passage's last heading; empty lists and absent fields are left out; at most 3 cards per citation, 5 phones or e-mails per contact, 10 steps. The chat links a phone as `tel:`, an e-mail as `mailto:` and an address to an OpenStreetMap search only when each is well formed, and shows it as text otherwise. (T-4155)
 - The answer is in the language of the question; the deployment's `languages` only choose the greeting and the search stemmers. (AG-103)
@@ -456,12 +457,13 @@ alone. It takes no token: it answers only what is public.
 
 ```json
 {"hits": [{"title": "Klientske centrum", "url": "https://www.banskabystrica.sk/…", "publisher": "banskabystrica",
-  "description": "…", "published": null, "modified": "2026-09-30T08:12:00Z", "language": "sk",
+  "description": "…", "published": null, "modified": "2026-09-30T08:12:00Z", "crawled": "2026-10-19T03:12:40Z", "language": "sk",
   "text": "…", "score": 0.0325}]}
 ```
 
 `text` is at most 1,200 characters. The metadata is the page's or document's (AG-120), `null`
-where the source states none; a hit's `title` is the page's own, else the first heading of its
+where the source states none; `modified` falls back to the sitemap's `<lastmod>`, then the
+server's `Last-Modified`, and `crawled` is when the crawl last read it (T-4749); a hit's `title` is the page's own, else the first heading of its
 first passage.
 
 `POST /internal/v1/sources` with `{"sources": [{"project", "source"}]}` (1 to 20) answers what the
