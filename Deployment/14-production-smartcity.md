@@ -67,7 +67,10 @@ The restore is tested once before user data arrives, and then once a month, as [
 - `just prod-apply` and `just prod-smoke` from `joinedcontext-deployment`, with the production kubeconfig named per command. The recipe `_prod-guard` compares the kube context's server with the node address `prod_node_ip` of the justfile and refuses any other cluster, `dev` included.
 - **Images:** only digests that passed `dev-smoke`, signed, never a tag alone.
 - **Smoke:** `just prod-smoke` runs `scripts/smoke.sh` against the instance without the endpoint write round trip, because the instance carries no conformance account. For the same reason the ETSI smoke `tests/etsi/smoke.robot` runs on `dev` only; the full ETSI TTF suite never runs against a live instance.
-- **Argo CD** later takes over the apply and syncs only the promoted revision (T-4674, T-4678). `just prod-apply` then remains for disaster recovery.
+- **Argo CD** of this cluster (`argocd.smartcity.joinedcontext.com`, Keycloak login) follows the deployment repository's `release` branch, never `main`. It reads the public repository without a key. `just prod-apply` installs it and stays for disaster recovery.
+- **Promotion:** after a green `just dev-apply` and `just dev-smoke`, `just dev-green <sha>` moves the `dev-green` branch to that commit. `just promote <sha>` refuses any commit outside `dev-green`, moves `release` forward to it and tags it `prod-<UTC>`; Argo CD syncs it within minutes.
+- **Rollback:** `just rollback prod-<UTC>` commits that tag's tree on top of `release`. No branch is ever force-pushed; Argo CD's own rollback is for an admin in the UI.
+- **Hold:** `gitops/hold-smartcity.yaml` with `hold: true` stops the automatic syncs of this instance only; `gitops/hold.yaml` holds every instance. A manual sync stays open to the operator. The first adoption runs under the hold until every Application shows an empty diff.
 
 ## 7. Patching and hold rules
 
