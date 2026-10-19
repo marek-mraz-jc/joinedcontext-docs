@@ -333,7 +333,7 @@ A route's components are labelled by its place, `route_{i}`, `route_{i}_{j}` and
 The rules, checked by jc-core before a Change is proposed:
 
 - `name` is a DNS label, unique among the routes; `routes` holds at most 8.
-- `when` passes the same author-Bloblang check as a `bloblang` step: no `env()`, no `file()`, nothing the runner refuses in a mapping. It runs inside the runner, which has no shell and no exec.
+- `when` passes the same author-Bloblang check as a `bloblang` step: no `env()`, no `file()`, nothing the runner refuses in a mapping. It runs inside the runner, whose image has a shell: the processors that can reach it or the runner's files (`command`, `subprocess`, `awk`, `javascript`, `template`, `file`) are refused in every step (PL-52, T-3833).
 - A route's `steps` hold no `switch` processor, so routing is one level deep, and no `container` step, which runs only as a Job.
 - A route has at least one output, and every route output is checked against the pipeline's grant like the outputs of `spec.outputs` (PL-55): a route cannot write where the pipeline may not.
 - `routes` needs `apiVersion: joinedcontext.com/v1alpha2`; a `v1alpha1` Pipeline has none.
