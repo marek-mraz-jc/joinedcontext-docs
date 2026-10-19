@@ -82,6 +82,10 @@ Landed with the amendment of section 7:
 - `Requirements/manifests.md`: **MF-55**, **MF-56**.
 - `Requirements/portal-and-ui.md`: **UI-98**.
 
+Landed with the amendment of section 9:
+
+- `Requirements/endpoints.md`: **EP-141**.
+
 ## 7. Amendment 2026-10-17: Connector Profiles (T-4504)
 
 The owner, 2026-10-17: each group of people, each assistant and each agent gets a connector that shows the part of the platform it needs, filtered by access and preference. A hand-kept list of ten members does not reach that at 10,000 Endpoints, and nothing gave an organization or an assistant a connector of its own.
@@ -121,6 +125,22 @@ Decided (worker-4, owner may override): the server names its sources, and the ga
 | Instructions planted in a crawled page | Hits are data: the tool's description and every hit say the text is quoted content of the publishers' pages. The calling assistant's own rules apply, as for a web search. |
 | The internal route reached from outside | The edge routes `/api/v1/d/*` alone; the assistant refuses a proxied request with `404`, and a NetworkPolicy admits the gateway alone. |
 | CPU spent on embeddings by a burst | The per-caller and global buckets of §8.4. |
+
+## 9. Amendment 2026-10-19: A Public Server Reads Only (T-4750)
+
+The owner, 2026-10-19: a public assistant points at one server whose Endpoints and sources a person picked, and it must not be able to run anything harmful or call out through the `endpoint` argument.
+
+Decided (worker-6, owner may override): a public server is read-only for every caller, and `endpoint` stays a name inside the caller's reach; options: read-only only without a token (today's rule; a steward's token could write through a server built for the public), a per-server `readOnly` flag (one more field whose wrong value opens writes).
+
+1. **Read tools only.** A server with `audience: public` lists the tools an anonymous caller may call and refuses every other tool by name before it resolves an Endpoint, whoever calls. A member that grants writes is written through its own URL, under its own Policy (EP-141).
+2. **`endpoint` is a name.** It resolves among the caller's reach alone (§2.6), by slug, title or space; it is never parsed as an address and never fetched. A miss answers the same sentence whether the name is unknown, outside the reach or not a name at all, with the closest names of the reach.
+3. **No outbound call.** No tool takes a URL; the gateway asks the member's broker on the cluster network, and an answer or error names no cluster-internal host.
+
+| Threat | Control |
+|---|---|
+| A write through a public server with a steward's token | §9.1: the tool is refused by name before routing. |
+| `endpoint` as a URL, `../`, an IP or another project's slug | §9.2: resolved inside the reach only; a miss sends no broker request. |
+| A planted instruction asks the model to call an outside host | §9.3: no tool takes a URL; the model reaches only the server's read tools on its reach. |
 
 ## Related
 
