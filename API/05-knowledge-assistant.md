@@ -399,7 +399,11 @@ DELETE …/knowledge/conversations/{conversation}
   `errors` (an error that is not the timeout), `uncostedQuestions` (turns with a call the provider
   sent no price for: they never count as $0), and over the other turns `costUsd` with `total`,
   `mean`, `p50` and `p90`. `tokens` holds the means per question of `in`, `out` and `cached`, and
-  `cachedShare` (cached of all prompt tokens, `null` with none). `firstTokenMs`, `totalMs` and
+  `cachedShare` (cached of all prompt tokens, `null` with none). `answerCache` holds `hits` (the
+  turns answered from the kept answers, route `cached`, T-4731), `hitShare` (hits of all
+  questions, `null` with none), and two estimates, `null` when the hits or the other turns are
+  none: `savedMs`, hits × (the other turns' mean `totalMs` − the hits' mean), and `savedUsd`,
+  hits × the other priced turns' mean cost. `firstTokenMs`, `totalMs` and
   `phases` (`route`: the router call; `work`: search, tools and the data, judge and agent calls;
   `answer`: the answer call; each the sum of its steps' durations in a turn) hold `p50`, `p90` and
   `max`, `null` with no turn. `costByStage` splits the cost of every model call of those turns by
