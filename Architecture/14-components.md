@@ -165,7 +165,7 @@ The `joinedcontext-platform` workspace has four layers. A crate depends only on 
 
 | Layer | Crates | May depend on |
 |---|---|---|
-| core | `jc-core`; `jc-manifest` and `jc-dcat` on top of it | `jc-core` only (`jc-core` itself on no workspace crate); `jc-manifest` and `jc-dcat` never on each other |
+| core | `jc-core`; `jc-manifest`, `jc-dcat` and `jc-relationships` on top of it | `jc-core` only (`jc-core` itself on no workspace crate); `jc-manifest`, `jc-dcat` and `jc-relationships` never on each other |
 | runtime | `wasm-host`, `functions` | core |
 | services | `context-gateway`, `assistant`, `agent-proxy`, `token-sidecar` | core, runtime; never another service |
 | tools | `jcctl`, `camera-sim`, `jc-app-sdk` | core; never a service or the runtime |
