@@ -167,13 +167,14 @@ The artifact store (RustFS, ADR-N-015) holds only rendered objects. Back it up l
 A backup cannot be edited, so an erasure of personal data ([ADR-N-054 §2.6](../Decisions/adr-n-054-history-versions-provenance-gdpr.md#26-personal-data)) reaches it in two ways:
 
 1. **Expiry.** Keep `postgres.cluster.backups.retentionPolicy` at `30d` or shorter; that period is the one the city states to a data subject as the time an erased value can survive in a backup.
-2. **Re-apply after a restore.** The Portal keeps an erasure log (keyed hash of the subject, space, time, counts per store, never a value) in its own database. After Step 4 of the recovery procedure, before you open the edge again, check that the reconciler has re-applied it:
+2. **Re-apply after a restore.** The broker keeps a content-free record of each erasure beside its data and applies every record again when it starts; the Portal keeps the erasure log (keyed hash of the subject, the space, the Entities, the counts per store, never a value) in its own database and, when it starts and every hour after, sends again each erasure whose record a broker no longer holds. After Step 4 of the recovery procedure, before you open the edge again, restart the Portal and check the line:
 
 ```bash
+kubectl -n <env> rollout restart deploy/portal
 kubectl -n <env> logs deploy/portal | grep 'erasure log re-applied'
 ```
 
-The line names the number of erasures re-applied and the restore point. Without it, keep the edge closed and read [09-troubleshooting.md](09-troubleshooting.md).
+The line names how many logged erasures were sent again (`resent`) of how many the log holds (`logged`). Without it, keep the edge closed and read [09-troubleshooting.md](09-troubleshooting.md). A restore of the Portal's own database to a point before an erasure loses that erasure's log row: restore the two databases to the same point, or erase again from the request's record.
 
 Audit metadata, the erasure log and the read log of personal data are kept for the audit retention, two years by default (ADR-N-054 §2.7), and hold no personal value.
 
