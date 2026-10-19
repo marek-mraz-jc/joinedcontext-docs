@@ -50,7 +50,7 @@ SERVICES = [
         "Portal",
         "joinedcontext-portal",
         "src",
-        "The management application: the API, the embedded UI and the in-process reconciler.",
+        "The management application: the API, the UI it reads from `portal-ui`, and the in-process reconciler.",
     ),
     (
         "Agent proxy",
