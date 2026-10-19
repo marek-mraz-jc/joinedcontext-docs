@@ -157,7 +157,7 @@ The catalogue's theme frames the widget with `?embed=1&dock=1`; `dock=1` marks a
 
 - A visitor's answer runs to its end on the server even when its reader leaves (a link on the host page, a closed tab, Stop), and its turn is stored as usual (§3.1). The service keeps the turn's events in memory until 2 minutes after `done`.
 - `after` is the number of events after `conversation` the widget already handled, 0 by default. The answer is `200`, `text/event-stream`, `Cache-Control: no-store`: the events from index `after` on, in the order and shape of §1.3, the ones still to come as they come, ending with `done`. Each event carries its index as the SSE `id`.
-- The turn belongs to the visitor whose token asked: another token's visitor, another deployment or an unknown id answers `404`. The turn id is a random UUID and never the authorization. A missing or expired token answers `401`, an origin the deployment does not allow `403`, a turn past its 2 minutes `410` (for 10 minutes more, `404` after that), a 21st resume in a minute from one address `429`.
+- The turn belongs to the address that asked (its salted daily hash, as the limits of §1.2 key it): a resume carries any current visitor token, since the token lives in the page's memory and the next page earns a new one. Another address, another deployment or an unknown id answers `404`. The turn id is a random UUID and never the authorization. A missing or expired token answers `401`, an origin the deployment does not allow `403`, a turn past its 2 minutes `410` (for 10 minutes more, `404` after that), a 21st resume in a minute from one address `429`.
 - At most 1,000 turns are held at once; past that, the oldest finished turn is dropped first.
 
 ### 1.7 In the Portal
