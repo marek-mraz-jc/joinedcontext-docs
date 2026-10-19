@@ -742,6 +742,7 @@ Generated 2026-10-18 from: `docs` 6f7e6eb, `conformance` 7f192f9, `deployment` f
 | **EP-136** | [A] [S] | open |  |  |
 | **EP-137** | [S] | open |  |  |
 | **EP-138** | [H] | open |  |  |
+| **EP-139** | [H] [P] | open |  |  |
 | **EP-130** | [H] [P] | built |  | `joinedcontext-deployment/charts/ckan/files/jc_theme/plugin.py` |
 | **EP-131** | [S] | open |  |  |
 | **EP-132** | [H] [S] | built |  | `joinedcontext-deployment/charts/ckan/files/jc_theme/plugin.py` |
