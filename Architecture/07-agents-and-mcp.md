@@ -67,6 +67,7 @@ Since T-3647 an Endpoint's `/mcp` is the broker's MCP surface of its view, and t
 |---|---|---|---|---|
 | Query Entities | `GET /entities` | `query_entities` | `readOnlyHint: true` | every selector and representation argument of the table below |
 | Query Entities (POST) | `POST /entityOperations/query` | `batch_query` | `readOnlyHint: true` | the same, as the Query body; `type` is required |
+| Query Entities, as a profile (Antares T-4680) | `GET /entities`, paged by the broker | `summarize` | `readOnlyHint: true` | `type` (exactly one), `q`, `scopeQ`, `georel`, `geometry`, `coordinates`, `geoproperty`, `lang`; it answers the broker's count of what the caller reads and per-attribute statistics over at most 1,000 of those entities (fewer when the broker is busy, `basis` says which), plus five of them, never the rows; it runs `query_entities`' operation and grant, so it is listed wherever `query_entities` is |
 | Retrieve Entity | `GET /entities/{id}` | `get_entity` | `readOnlyHint: true` | `id`, plus the projection and representation arguments |
 | Query Temporal Evolution | `GET /temporal/entities` | `query_temporal` | `readOnlyHint: true` | the selector table, plus the temporal grammar |
 | Query Temporal Evolution (POST) | `POST /temporal/entityOperations/query` | `batch_query_temporal` | `readOnlyHint: true` | the same, as the Query body; the grant operation is `queryTemporal`, and the body is narrowed like the entity batch's |
