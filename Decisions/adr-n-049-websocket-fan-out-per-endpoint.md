@@ -121,6 +121,17 @@ Landed with this decision:
 
 - `Requirements/endpoints.md`: **EP-106** reworded; **EP-114**, **EP-115**.
 
+## 7. Amendment: the Upstream Speaks as the Caller (T-4755, 2026-10-19)
+
+The broker view and its policy engine decide context data (ADR-N-050 decision 1), and item 7 kept a second decision in the gateway: `grants::shown` cut each delivery from an upstream that read the union of the Endpoint's grants. That cut did not see what a Policy narrows beyond types and attributes as the broker compiles it, and it was one more filter to keep equal to the broker's. T-4755 removes it:
+
+1. **One upstream per Endpoint and caller identity.** The hub is keyed by the Endpoint and the verified identity the gateway pins on a REST request (`tenancy::pin_caller`: subject, client, roles, audience). Its upstream carries those headers, so the broker's view and policy engine decide it as they decide the same caller's REST read, and `pre_notify` cuts every notification under that caller (Antares ADR-0026 rule 8). Every anonymous caller of a public Endpoint shares one upstream, and so does every connection of one signed-in caller.
+2. **Watching is a read.** The broker decides a Subscription whose endpoint is the socket making it as Query Entities (Antares ADR-0026 rule 4, amended by T-4755), so a Policy that grants `queryEntity` lets its caller watch over WebSocket without a Create Subscription grant. The gateway's account no longer opens any upstream.
+3. **Item 7 is withdrawn.** The gateway keeps the client's filters, the index, the deltas and the queues of items 3 to 6, and matches them on what the broker already cut. It holds no grant view per connection. A grant revoked by a policy reload stops the next notification at the broker.
+4. **Item 10 holds per upstream.** A refusal now names the caller's own Policy: a caller who may not read the Endpoint's types gets the 1011 close, and other callers of the same Endpoint keep streaming.
+
+Decided (worker-4, owner may override): one upstream per Endpoint and identity, because one decision point (ADR-N-050) leaves no second filter to drift and the shared anonymous upstream keeps the owner's case of 1,000 public sockets on one broker connection. Options: per identity (chosen); per Endpoint under the gateway's account with the gateway's own cut (item 7 as written); one broker Subscription per socket (the ADR-0026 relay).
+
 ## Related
 
 - [API/07-websocket.md](../API/07-websocket.md): the client's view of the WebSocket.
