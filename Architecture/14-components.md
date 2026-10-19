@@ -159,10 +159,27 @@ Specialized workloads connect to the platform strictly through standard Endpoint
 
 For detailed addon integration patterns and deployment configurations, see [Deployment/04-components-and-addons.md](../Deployment/04-components-and-addons.md).
 
+## 4. Crate layers of the platform workspace
+
+The `joinedcontext-platform` workspace has four layers. A crate depends only on a crate of a layer its row allows; `scripts/ci/check-crate-layers.py` reads `cargo metadata` in the `ci.yml` rust job and fails on any other edge, and on a member no layer names (T-4770).
+
+| Layer | Crates | May depend on |
+|---|---|---|
+| core | `jc-core`; `jc-manifest` and `jc-dcat` on top of it | `jc-core` only (`jc-core` itself on no workspace crate); `jc-manifest` and `jc-dcat` never on each other |
+| runtime | `wasm-host`, `functions` | core |
+| services | `context-gateway`, `assistant`, `agent-proxy`, `token-sidecar` | core, runtime; never another service |
+| tools | `jcctl`, `camera-sim`, `jc-app-sdk` | core; never a service or the runtime |
+
+- A dev-dependency may also reach a tool (a test fixture, such as `jcctl::bench_org` in the gateway's store tests) or the crate itself (a test feature), never a crate that depends back on it.
+- Code two crates of one layer share moves down into core; a service never reaches into another service's modules. The one edge against the rule today, `assistant` → `agent-proxy` (the public-address resolver and the secret redaction), is listed as an exception in the check and leaves when both move into `jc-core` (T-4776).
+- Policy and Role types are defined in `jc-core` (`kinds`). A Policy's grants are evaluated in `context-gateway` (`pdp`) only. The runtime, `agent-proxy`, `assistant` and `jcctl` narrow a path or a host and forward the caller's token to the gateway; none of them decides a grant ([12 §2a](12-identity-and-access.md#2a-roles-as-code)).
+- A new crate is placed in this table in the same change that adds it to the workspace.
+
 ## Related
 
 - [01-overview.md](01-overview.md) — high-level platform architecture and operational areas.
 - [05-context-gateway.md](05-context-gateway.md) — Context Gateway internals and query rewriting.
+- [12-identity-and-access.md](12-identity-and-access.md) — roles, grants and service identities.
 - [17-artifact-store.md](17-artifact-store.md) — S3-compatible artifact store architecture.
 - [../Deployment/04-components-and-addons.md](../Deployment/04-components-and-addons.md) — component packaging, language matrix, and resource sizing.
 - [../Deployment/10-edge-routing-apisix.md](../Deployment/10-edge-routing-apisix.md) — edge routing and APISIX standalone configuration.
