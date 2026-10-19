@@ -3315,15 +3315,17 @@ DELETE /api/v1/projects/{project}/knowledge/conversations/{conversation}   erase
   that does not exist, answers `404`. A caller gets at most 60 calls a minute on these routes,
   then `429`; more than 20 `404`s of one caller in 5 minutes writes an `assistant.transcript`
   audit record with the action `probe` (T-4681).
-- "Porovnať" opens two turns side by side (`?a={conversation}/{turn}&b={conversation}/{turn}`, ids
-  only, never a token): a header line with each turn's steps, tool and model calls, time, price
-  and cached share; the steps aligned by kind, each with its arguments, rows, time, tokens and
-  price and the model's reasoning text; the tables, charts and maps each turn showed, drawn from
-  their stored specs, with the changes between them named; and the two answers as a word diff.
-  "Rovnaká otázka" lists the turns `…/same` answers. Every stored text is shown as text: markdown
-  through the widget's renderer with raw HTML off and `https:` links only (`rel="noopener
-  noreferrer nofollow"`), no image loaded from a stored address, bidi and zero-width characters
-  shown as visible markers, and a JSON view cut at 64 kB with "Zobraziť viac" (T-4681).
+- "Porovnať" opens two turns side by side, picked from "Rovnaká otázka" (the turns `…/same`
+  answers); `?open={conversation}&compare={conversation}` (UUIDs only, never a token) opens one
+  conversation and compares its last turn with the other's, the link the opendata eval writes per
+  question, this run against the previous. The view shows a header line with each turn's steps,
+  tool and model calls, time, price and cached share; the steps aligned by kind, each with its
+  arguments, rows, time, tokens and price and the model's reasoning text; the changes between the
+  tables, charts and maps each turn showed, named from their stored specs (kind, chart type,
+  units, row count; the stored spec holds no data, so nothing is redrawn); and the two answers as
+  a word diff. Every stored text is shown as React text, never markup: no stored HTML, markdown
+  or link runs, bidi and zero-width characters show as visible markers, and a step shows its
+  first 64 kB until "Zobraziť viac" (T-4681).
 - The index status of a source is in its row of `sources`: `passages`, `embedded` and `pending`
   (passages not embedded yet), `failed` (pages and documents that could not be read), and the last
   job with its `startedAt` and `finishedAt`. `errors` lists at most 50 of the failed pages and
