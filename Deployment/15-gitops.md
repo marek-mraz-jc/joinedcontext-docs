@@ -13,7 +13,7 @@ Argo CD keeps the `dev` cluster on `main` of `joinedcontext-deployment` ([ADR-N-
 ```mermaid
 flowchart LR
   A[merge to deployment main] --> B[Argo CD polls, 3 min]
-  P[merge to platform or portal main] --> I[image.yml: build, sign]
+  P[merge to platform or portal main] --> I[ship: build, smoke, sign]
   I --> W[pin-images.yml, every 10 min]
   W -->|ci green, signed, renders| C[pin commit on deployment main]
   C --> B
