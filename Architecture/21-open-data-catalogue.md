@@ -100,7 +100,7 @@ The publisher is a library and a command. The Portal's reconciler holds the libr
 
 ## 6. The Portal's catalogue page
 
-`data.{host}` is CKAN's own site, and a person working in the Portal should not have to leave it to find what the installation publishes. The Portal therefore carries one catalogue page, `/catalogue`, linked from the sidebar and readable without signing in, so a link to it can be handed to a citizen (EP-81).
+`opendata.{host}` is CKAN's own site, and a person working in the Portal should not have to leave it to find what the installation publishes. The Portal therefore carries one catalogue page, `/catalogue`, linked from the sidebar and readable without signing in, so a link to it can be handed to a citizen (EP-81).
 
 **Source.** The page reads CKAN, never the manifests: what it lists is what the catalogue holds, and the two views cannot disagree. The Portal collects the distinct `spec.url` of every `CkanInstance` of the installation and calls `package_search` on each as an anonymous caller, with no API token. CKAN answers an anonymous caller with public datasets only, and the Portal drops any dataset still marked `private`, so a restricted dataset can only be absent from the page (EP-67, EP-69). Several catalogues are merged into one list.
 

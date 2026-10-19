@@ -2002,9 +2002,9 @@ alternatives, filters combine with AND) and `page` (from 1, twenty datasets a pa
   "temporal": { "start": "2020-01-01", "end": null },
   "contact": { "name": "Open data desk", "email": "opendata@example.org" },
   "modified": "2026-09-21T05:52:34Z",
-  "catalogueUrl": "https://data.{host}/dataset/bbsk-kpi",
+  "catalogueUrl": "https://opendata.{host}/dataset/bbsk-kpi",
   "resources": [
-    { "name": "CSV", "format": "CSV", "url": "https://api.{domain}/api/endpoint/{endpointSlug}/file.csv", "description": "…", "previewUrl": "https://data.{host}/dataset/bbsk-kpi/resource/{id}" }
+    { "name": "CSV", "format": "CSV", "url": "https://api.{domain}/api/endpoint/{endpointSlug}/file.csv", "description": "…", "previewUrl": "https://opendata.{host}/dataset/bbsk-kpi/resource/{id}" }
   ],
   "endpoint": { "url": "https://api.{domain}/api/endpoint/{endpointSlug}/", "representations": ["ngsi-ld", "csv", "mcp"] },
   "model": {

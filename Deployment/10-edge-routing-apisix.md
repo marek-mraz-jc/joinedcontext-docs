@@ -47,7 +47,7 @@ In Topology Option B, APISIX acts as the primary external ingress gateway:
 
 ## 2. Public URL Surface and Path-Based Route Table
 
-The platform consolidates external routing under a primary domain `{host}` (for example `city.example.com`). The Portal has a host of its own, `portal.{host}`; Keycloak is on `idm.{host}`, the open-data catalogue on `data.{host}`, and every surface that serves data to the outside, `/api/endpoint/*`, the MCP hub `/api/mcp*`, the space surface `/cs/*` and the harvesting feed `/catalog*`, on `api.{host}` ([ADR-N-052](../Decisions/adr-n-052-anonymous-oauth-public-mcp.md)). The apex and the Portal host redirect those paths to `api.{host}`; the Portal host still serves them to a request that carries its edge session, for the Portal's own screens. The apex redirects everything else to the Portal host (ADR-N-019).
+The platform consolidates external routing under a primary domain `{host}` (for example `city.example.com`). The Portal has a host of its own, `portal.{host}`; Keycloak is on `idm.{host}`, the open-data catalogue on `opendata.{host}` (its old host `data.{host}` answers only a `301` to the same path and query there, T-4679), and every surface that serves data to the outside, `/api/endpoint/*`, the MCP hub `/api/mcp*`, the space surface `/cs/*` and the harvesting feed `/catalog*`, on `api.{host}` ([ADR-N-052](../Decisions/adr-n-052-anonymous-oauth-public-mcp.md)). The apex and the Portal host redirect those paths to `api.{host}`; the Portal host still serves them to a request that carries its edge session, for the Portal's own screens. The apex redirects everything else to the Portal host (ADR-N-019).
 
 Every row below is one entry of `components/<component>/apisix-routes.yaml` with its plugin config in `components/<component>/apisix-plugins.yaml`. Priority decides which route wins when two patterns match; APISIX takes the highest.
 
@@ -74,9 +74,10 @@ Every row below is one entry of `components/<component>/apisix-routes.yaml` with
 | `catalog-feed` | `/catalog*` (the gateway answers `/catalog.jsonld`, `/catalog.ttl` and a publisher's `/catalog/{project}.jsonld` and `.ttl` (EP-127), 404 on anything else) | `api.{host}` | 20 | `context-gateway:8080` | Anonymous: the feed reads no token and lists public Endpoints only (EP-84) | Class 1 | `proxy-rewrite` |
 | `gitea-forge` | `/git/*` | `{host}` | 10 | `gitea-http:3000` | Basic or token, verified by Gitea | Class 2 | `proxy-rewrite` |
 | `grafana` | `/grafana*` | `{host}` | 5 | `grafana:3000` | Grafana's own OIDC login | Class 2 | `proxy-rewrite` |
-| `ckan` | `/*` | `data.{host}` | default | `ckan:5000` | CKAN's own login | Class 1 | `proxy-rewrite` |
+| `ckan` | `/*` | `opendata.{host}` | default | `ckan:5000` | CKAN's own login | Class 1 | `proxy-rewrite` |
 | `basemap` | `/*` | `tiles.{host}` | default | `basemap-tiles:8080` | Anonymous; nginx answers `GET`, `HEAD` and the CORS preflight from the installation's own hosts and refuses every other method (T-4638) | 1,200 per minute per client IP: a map view asks for tens of tiles | `limit-count`, `proxy-rewrite` |
-| `ckan-redirect` | `/ckan*` | `{host}` | 5 | terminates at the edge | none | none | `redirect` to `https://data.{host}/` |
+| `ckan-redirect` | `/ckan*` | `{host}` | 5 | terminates at the edge | none | none | `redirect` to `https://opendata.{host}/` |
+| `ckan-old-host` | `/*` | `data.{host}` | default | terminates at the edge | none | Class 1 | `redirect` `301` to `https://opendata.{host}` with the same path and query (T-4679) |
 | `keycloak` | `/*` | `idm.{host}` | default | `keycloak-app-keycloakx-http:80` | Identity provider | none at the edge | `proxy-rewrite` |
 | `app-{name}` | `/*` | `{name}.apps.{host}` | 30 | `app-{name}` in `{release}-{project}-apps` (`ui-rust`, `ui-node`) or `portal:8080` (`ui`) | Session of the App's own client `app-{name}`; `unauth_action: pass` for `visibility: public` | Class 1 | `openid-connect`, a host-only cookie of its own, logout `/logout` (AP-26…AP-29, AP-112, AP-133) |
 | `app-{name}-endpoint` | `/api/endpoint/{slug}/*`, the App's own slugs only | `{name}.apps.{host}` | 35 | `context-gateway:8080` | The App's session becomes the bearer; anonymous stays anonymous | Class 3 and Class 4 | client `app-{name}` (AP-112, AP-133) |
