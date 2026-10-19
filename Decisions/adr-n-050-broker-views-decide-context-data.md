@@ -21,7 +21,7 @@ The documents still described the earlier split: `ARCHITECTURE.md`, the overview
 
 1. **The broker decides.** The broker's view of an Endpoint and its policy engine are the decision point for context data: they decide every NGSI-LD read and write, and narrow what an answer holds, under the subject the gateway verified. The same view serves the broker's other surfaces of that Endpoint (MCP, OGC, OData, LinkML, access, WebSocket views).
 2. **The gateway verifies, maps and checks writes.** The gateway verifies the token (Keycloak only), strips client-sent `x-jc-*` and tenant headers, maps the slug to the view and the broker (ADR-N-047), and keeps the checks that are not grant decisions: the identifier and type of a write (PF-43, PF-44, DM-61), the model's units and relationships (DM-70, DM-71), minted ids and daily creates of a form, the domain gate and the media type. It serves `file.*`, STA and DCAT and forwards everything else.
-3. **What the gateway still decides, until it moves.** The gateway's in-process PDP still answers four questions: which spaces a caller may discover (SP-11), which schema a caller sees, which change a WebSocket fan-out delivers (ADR-N-049), and whether a write rule may touch an entity the caller could not have changed by hand (DM-71). Each moves to the broker in its own task or stays by an owner decision; none of them projects or rewrites an NGSI-LD answer.
+3. **What the gateway still decides, until it moves.** The gateway's in-process PDP still answers three questions: which spaces a caller may discover (SP-11), which schema a caller sees, and whether a write rule may touch an entity the caller could not have changed by hand (DM-71). Each moves to the broker in its own task or stays by an owner decision; none of them projects or rewrites an NGSI-LD answer. The WebSocket fan-out moved in T-4755: its upstream speaks as the caller and the broker cuts each notification ([ADR-N-049](adr-n-049-websocket-fan-out-per-endpoint.md) §7).
 4. **A replacement broker offers the views and the engine.** Antares stays the default broker. A broker that replaces it MUST offer the views, the rule documents and the subject headers above; a vanilla CIM 009 broker alone is not enough (amends ADR-N-008).
 
 ## 3. Alternatives Considered
@@ -44,6 +44,6 @@ The documents still described the earlier split: `ARCHITECTURE.md`, the overview
 
 - [ADR-N-003](adr-n-003-context-gateway-in-rust.md) — the gateway decision this record supersedes in part.
 - [ADR-N-008](adr-n-008-antares-default-broker.md) — the default broker, amended by decision 4.
-- [ADR-N-049](adr-n-049-websocket-fan-out-per-endpoint.md) — the WebSocket fan-out, one of the decisions still in the gateway.
+- [ADR-N-049](adr-n-049-websocket-fan-out-per-endpoint.md) — the WebSocket fan-out, decided by the broker since T-4755.
 - [05-context-gateway](../Architecture/05-context-gateway.md) — the gateway's request stages, forwarding to the view.
 - [00-register](00-register.md) — all decisions and their status.
