@@ -352,6 +352,8 @@ answer timeout too, with what it reached (AG-99). The Portal reads them for its 
 
 ```text
 GET    …/knowledge/conversations?deployment=&from=&to=&status=&feedback=&slow=&minCostUsd=&q=&sort=&cursor=&limit=
+GET    …/knowledge/conversations/usage?deployment=&from=&to=&route=
+GET    …/knowledge/conversations/export?deployment=&from=&to=&route=
 GET    …/knowledge/conversations/{conversation}
 DELETE …/knowledge/conversations/{conversation}
 ```
@@ -363,11 +365,14 @@ DELETE …/knowledge/conversations/{conversation}
 | `totalMs`, `errors`, `timeouts` | the longest turn's time and the turns that ended in an error or the timeout |
 | `thumbsUp`, `thumbsDown` | the visitors' verdicts (§1.8) |
 | `costUsd`, `uncosted` | the sum of the priced model calls, and how many calls the provider sent no price for; with `uncosted > 0` the sum is a floor and the Portal says the price is unknown, never $0 |
+| `tokensIn`, `tokensOut`, `cachedTokens` | the turns' tokens; `cachedTokens` is `null` when no step reported any (T-4728) |
+| `firstTokenMs`, `models` | the first turn's time to its first word, and the models the steps called (T-4728) |
 
 - `status` is `error`, `timeout` or `ok`; `feedback` is `up`, `down` or `none`; `slow=true` keeps
   conversations with a turn over 15 seconds; `minCostUsd` keeps those whose sum is at least that;
   `q` (2 to 100 characters) matches the questions and answers, case and diacritics ignored;
-  `sort` is `lastAt` (default, newest first) or `costUsd`. `limit` is 1 to 100, default 50, and
+  `sort` is `lastAt` (default, newest first), `costUsd`, `tokens` (in and out) or `totalMs` (the
+  longest turn), each the largest first. `limit` is 1 to 100, default 50, and
   `nextCursor` continues.
 - The detail answers `{"id", "deployment", "origin", "client", "turns": [...]}`. A turn carries
   `turn`, `at`, `question`, `answer`, `blocks` (the tables, chart and map specs it showed),
@@ -394,6 +399,23 @@ DELETE …/knowledge/conversations/{conversation}
   number `[rodné číslo]`.
   Inputs and outputs are untrusted text: the Portal shows them escaped and never sends them to a
   model.
+- `usage` adds up the turns of the range in one query (T-4728). `from` (inclusive) and `to`
+  (exclusive) are RFC 3339 times, `route` the route the turns took; another parameter is `400`.
+  It answers `questions`, `timeouts`, `errors` (a timeout is not an error) and
+  `uncostedQuestions`; `costUsd` with `total`, `mean`, `p50` and `p90` over the priced turns
+  only, so a turn the provider sent no price for is counted apart and never as $0; `tokens` with
+  the mean `in`, `out` and `cached` per question and `cachedShare` (cached of the input tokens of
+  the turns that reported caching); `firstTokenMs`, `totalMs` and `phases` (`route`: the router
+  call; `work`: search, tools and the data, judge and agent calls; `answer`: the answer call),
+  each as `p50`, `p90` and `max`; and `days`, the newest 14 days (UTC) with `day`, `questions`,
+  `costUsd`, `uncostedQuestions`, `p50TotalMs`, `timeouts` and `errors`. A value nothing was
+  measured for is `null`, never 0.
+- `export` answers the same turns as `text/csv` (RFC 4180), newest first, one row per turn with
+  `at`, `deployment`, `conversation`, `turn`, `route`, `question` (as stored, so redacted),
+  `firstTokenMs`, `totalMs`, `tokensIn`, `tokensOut`, `cachedTokens`, `models`, `costUsd`,
+  `uncosted`, `timedOut` and `error`. A cell starting with `=`, `+`, `-` or `@` gets a leading
+  `'`, so a spreadsheet never runs a question as a formula. More than 20,000 turns is `400`,
+  asking for a narrower range.
 - `DELETE` removes the conversation's turns and steps (erasure, T-4668) and answers `204`; an
   unknown or another project's conversation is `404`.
 
