@@ -86,6 +86,43 @@ The deployment half is deliberately not in this script: the k3d lane above alrea
 
 Applying and smoking `dev` belong to the hourly batch, not to a push.
 
+### 4.1 The catalogue smoke
+
+`scripts/smoke-catalogue.py` checks the catalogue as a whole, after every apply: `just dev-smoke` and `just prod-smoke` run it from `_smoke`, and `just catalogue-smoke dev|smartcity` runs it alone (T-4716). It reads only public data, anonymously, with no token and no write.
+
+It takes the inventory from two sides: every CKAN dataset (`https://opendata.{domain}/api/3/action/package_search`) and every public Endpoint in the gateway's DCAT feed (`https://api.{domain}/catalog.jsonld`). Each of these is a `ko`:
+
+- a dataset with no Endpoint distribution;
+- a public Endpoint that no dataset names;
+- a distribution on another installation's host, such as `api.dev.` in the production catalogue.
+
+For each dataset it checks the distributions the dataset itself lists. The entity type comes from the dataset's OData, OGC or resource name, and otherwise from the Endpoint's `ngsi-ld/v1/types`.
+
+| Interface | Request | `ok` when |
+|---|---|---|
+| NGSI-LD | `ngsi-ld/v1/entities?type={type}&limit=1` | 200, JSON or JSON-LD, one entity |
+| MCP | POST `mcp` `tools/list`, `Accept: application/json, text/event-stream` | 200, at least one tool |
+| OData | `odata/v4/{type}?$top=1&$count=true` | 200, `@odata.count` at least 1 |
+| OGC API Features | `ogc/features/collections/{type}/items?limit=1`, with the dataset's own `isPartOf` when it lists one | 200, `application/geo+json`, at least one feature; `skip` when the dataset lists no OGC distribution, because its type has no location |
+| Data model | `schema/index.json` | 200, and a model lists every type the dataset serves |
+| CKAN datastore | `datastore_search?resource_id=…&limit=0` on the dataset's first datastore table | `total` at least 1 and within 1 % of the platform's count of the same rows. A dataset with no datastore table is a `ko`, read from the inventory at no request |
+| WebSocket | `ws`, through `scripts/smoke-ws.py` | the dataset lists it: `101` and an `x-subscribe` answered `201`. It does not: the `404` [API/02](../API/02-endpoint-representations.md) names for a representation the Endpoint does not serve. Any other answer is `ko` |
+| Map | `https://opendata.{domain}/map/{dataset}` | 200 with at least one map layer; `skip` without OGC |
+| CSV | `file.csv?type={type}&limit=1` | 200, `text/csv`, a header line |
+
+The platform's count for the datastore check is the OGC `numberMatched` of the dataset's own `isPartOf` filter when the dataset lists one, and the OData `@odata.count` otherwise. When the type is shared by several datasets of one Endpoint with no `isPartOf`, the check is a `skip` that names them: no per-dataset count exists. A datastore's `last_modified` is no staleness signal, because the harvest writes nothing when its source is unchanged (T-4644). A harvest that stopped shows as the failed CronJob that `_smoke` already reports.
+
+Production limits (owner, T-4716):
+
+- One request at a time, at most 50 a minute, every request counted, retries and WebSocket connects included.
+- At most 10 minutes and 500 requests a run.
+- `limit=1` or `$top=1` on every read, and 20 seconds per request.
+- A `429` or `503` waits out its `Retry-After` inside the same budget. A timeout is a `ko` with its time.
+
+Within that budget, every run checks the core five on every dataset: NGSI-LD, MCP, OData, OGC and the data model. An answer that several datasets share, such as one Endpoint's `tools/list`, is fetched once. The datastore, WebSocket, map and CSV checks rotate: each run takes the datasets the previous run's table checked least recently, until the budget ends. A rotated cell reads `not this run (last: {time} {verdict})`, and running out of budget is never a `ko`.
+
+The run writes one table, `smoke-catalogue-{env}-{time}.tsv` in `.smoke/` (gitignored, which an apply leaves alone: `_dev-assemble` deletes `deployment/`): a dataset per row, an interface per column, and the totals ("97 datasets, 93 complete, 4 ko"). It also prints the request count and the duration, and exits 1 on any `ko`. `tests/test_smoke_catalogue.py` replays recorded answers for every verdict and runs in `ci.yml` with the other script tests.
+
 ---
 
 ## 5. The k6 budgets
