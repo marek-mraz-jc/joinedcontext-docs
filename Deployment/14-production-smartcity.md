@@ -26,13 +26,14 @@ Every name is a subdomain of `smartcity.joinedcontext.com`. A records for the ap
 | `portal.` | the Portal's own host |
 | `idm.` | Keycloak, the realm of this instance |
 | `api.` | public data, NGSI-LD, OGC, OData and MCP |
-| `data.` | the CKAN open-data catalogue |
+| `opendata.` | the CKAN open-data catalogue |
+| `data.` | answers 301 to `opendata.` with the same path (T-4679) |
 | `assistant.` | the public assistant channel |
 | `tiles.` | the background map |
 | `viz.` | the chart renderer |
 | `*.apps.` | one host per published App |
 
-Certificates come from `letsencrypt-staging` for the first apply and from `letsencrypt-prod` once every staging certificate is Ready. `dev` and this instance share the registered domain `joinedcontext.com`, so they share the Let's Encrypt limits: issue production certificates once, never in a retry loop.
+Certificates came from `letsencrypt-staging` for the first apply and come from `letsencrypt-prod` since every staging certificate was Ready (2026-10-18). `dev` and this instance share the registered domain `joinedcontext.com`, so they share the Let's Encrypt limits: issue production certificates once, never in a retry loop.
 
 ## 3. What it carries
 
@@ -47,8 +48,9 @@ Certificates come from `letsencrypt-staging` for the first apply and from `letse
 
 ## 4. Backups
 
-- **PostgreSQL:** CloudNativePG writes a base backup every day and archives the WAL continuously to a Hetzner Object Storage bucket, through the Secret `postgres-backup-s3`. It keeps 30 days.
-- **No user data before the first backup.** Until the bucket exists and one base backup has completed, the instance runs only the components that hold no user data.
+- **PostgreSQL, target:** CloudNativePG writes a base backup every day and archives the WAL continuously to a Hetzner Object Storage bucket, through the Secret `postgres-backup-s3`. It keeps 30 days. Off until the owner supplies the bucket keys.
+- **PostgreSQL, until then:** the CronJob `postgres-cluster-local-backup` writes a `pg_dumpall` of the platform cluster every night at 02:30 UTC onto a volume of the node and keeps 7 days (`postgres.databases.localBackup`). It covers a dropped table or a broken migration. It does not cover the loss of the node: **the instance has no off-site backup yet.**
+- **Restore from a dump:** copy the newest `*.sql.gz` out of the volume and feed it to `psql` as the cluster's superuser against `postgres-cluster-rw`; the dump drops and recreates every object it carries.
 - **Configuration:** the forge repositories are the source of truth for every object the Portal manages. Back them up as [07-backup-restore.md](07-backup-restore.md) section 3 describes.
 
 ## 5. Restore runbook
@@ -64,7 +66,7 @@ The restore is tested once before user data arrives, and then once a month, as [
 
 - `just prod-apply` and `just prod-smoke` from `joinedcontext-deployment`, with the production kubeconfig named per command. The recipe `_prod-guard` compares the kube context's server with the node address `prod_node_ip` of the justfile and refuses any other cluster, `dev` included.
 - **Images:** only digests that passed `dev-smoke`, signed, never a tag alone.
-- **Smoke:** `scripts/smoke.sh` against the instance and the ETSI smoke `tests/etsi/smoke.robot`. The full ETSI TTF suite never runs against a live instance.
+- **Smoke:** `just prod-smoke` runs `scripts/smoke.sh` against the instance without the endpoint write round trip, because the instance carries no conformance account. For the same reason the ETSI smoke `tests/etsi/smoke.robot` runs on `dev` only; the full ETSI TTF suite never runs against a live instance.
 - **Argo CD** later takes over the apply and syncs only the promoted revision (T-4674, T-4678). `just prod-apply` then remains for disaster recovery.
 
 ## 7. Patching and hold rules
