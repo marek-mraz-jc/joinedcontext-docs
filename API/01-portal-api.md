@@ -1261,6 +1261,7 @@ is ready only once its first sync has landed (T-4453 removed `GET /api/v1/sync`,
 POST /api/v1/webhooks/gitea    the forge's own hook: signed, no session
 GET  /api/v1/health            liveness; public
 GET  /api/v1/ready             readiness; public
+GET  /api/v1/version           the commits of the binary and of the UI bundle; public
 ```
 
 - `/webhooks/gitea` is what makes a merged change visible without waiting for the next tick. The
@@ -1270,6 +1271,7 @@ GET  /api/v1/ready             readiness; public
   any other event answers `204`; a body that is not JSON is `400`, a missing or wrong signature
   `401`, and an instance with no webhook secret configured `503`, because a hook nobody can
   authenticate is refused rather than trusted.
+- `/version` answers `{"portal": {"commit", "openapi"}, "ui": {"commit", "openapi"} | null, "contract"}` (T-2485): `openapi` is the sha256 of the OpenAPI document, the binary's own and the `ui/openapi.json` the bundle was built against, and `contract` is `match` when they agree, `mismatch` when they differ and `unknown` when the bundle is unreachable or names no hash. `dev-smoke` warns on anything but `match`.
 - `/health` answers `{"name": …, "version": …, "status": "ok"}` whenever the process serves, and
   it is the liveness probe. `/ready` is the readiness probe (OPS-51): `503 {"status": "loading"}`
   until this replica's mirror holds the repository, `200 {"status": "ready"}` afterwards. A Portal
@@ -3289,6 +3291,7 @@ GET  /api/v1/projects/{project}/knowledge/deployments/{deployment}/usage   reque
 POST /api/v1/projects/{project}/knowledge/deployments/{deployment}/chat    ask the assistant as the signed-in person
 GET  /api/v1/projects/{project}/knowledge/conversations                    stored conversations, filtered (API/05 §3.1)
 GET  /api/v1/projects/{project}/knowledge/conversations/{conversation}     one conversation, every turn with its steps
+GET  /api/v1/projects/{project}/knowledge/conversations/{conversation}/turns/{turn}/same  stored turns of the same question
 DELETE /api/v1/projects/{project}/knowledge/conversations/{conversation}   erase one conversation
 ```
 
@@ -3310,7 +3313,21 @@ DELETE /api/v1/projects/{project}/knowledge/conversations/{conversation}   erase
   `DELETE` needs `delete` on `AssistantDeployment`. Every call writes an audit record naming the
   caller, the project and the conversation (or the filter of a list). The Portal page Asistent →
   Konverzácie is shown to those callers only, and "Kopírovať ako test" copies a turn as the JSON
-  fixture of the assistant eval sets (T-4656, T-4670).
+  fixture of the assistant eval sets (T-4656, T-4670). A conversation of another project, or one
+  that does not exist, answers `404`. A caller gets at most 60 calls a minute on these routes,
+  then `429`; more than 20 `404`s of one caller in 5 minutes writes an `assistant.transcript`
+  audit record with the action `probe` (T-4681).
+- "Porovnať" opens two turns side by side, picked from "Rovnaká otázka" (the turns `…/same`
+  answers); `?open={conversation}&compare={conversation}` (UUIDs only, never a token) opens one
+  conversation and compares its last turn with the other's, the link the opendata eval writes per
+  question, this run against the previous. The view shows a header line with each turn's steps,
+  tool and model calls, time, price and cached share; the steps aligned by kind, each with its
+  arguments, rows, time, tokens and price and the model's reasoning text; the changes between the
+  tables, charts and maps each turn showed, named from their stored specs (kind, chart type,
+  units, row count; the stored spec holds no data, so nothing is redrawn); and the two answers as
+  a word diff. Every stored text is shown as React text, never markup: no stored HTML, markdown
+  or link runs, bidi and zero-width characters show as visible markers, and a step shows its
+  first 64 kB until "Zobraziť viac" (T-4681).
 - The index status of a source is in its row of `sources`: `passages`, `embedded` and `pending`
   (passages not embedded yet), `failed` (pages and documents that could not be read), and the last
   job with its `startedAt` and `finishedAt`. `errors` lists at most 50 of the failed pages and

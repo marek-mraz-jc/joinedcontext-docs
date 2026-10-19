@@ -28,7 +28,7 @@ A **Core** component makes up a working installation and is in the shipped `comp
 | **pipeline-runner** | Core | Bento | yes | The resident streams runner and the CronJobs for scheduled pipelines |
 | **context-gateway** | Core | Rust (Axum) | yes | The Policy Enforcement Point, the query rewriter, the representation translators and the Data MCP server |
 | **model-tools** | Core | Python (LinkML) | yes | Stateless generator behind the model editor: LinkML artifacts, schema-automator imports, mapping compilation |
-| **portal** | Core | Rust + React | yes | One process: the Portal API, the embedded UI and the reconciler |
+| **portal** | Core | Rust + React | yes | Two images of one commit: the Portal API with the reconciler, and `portal-ui`, the UI bundle it serves |
 | **jcctl** | Core | Rust | part of `portal` | No workload of its own. The reconciler runs inside the Portal process, and `jcctl` is the CLI over the same manifests, shipped in the platform image |
 | **observability** | Core | OpenTelemetry Collector | yes | Accepts OTLP, drops what is not on the allow-list, forwards the rest to the Portal's Activity stream |
 | **audit-logging** | Core | Rust (Vector) | yes | Node collector shipping the audit stream of the gateway, Keycloak and the forge to object-locked storage, 90 days (OPS-42) |

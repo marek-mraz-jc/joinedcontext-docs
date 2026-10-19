@@ -98,15 +98,19 @@ Measured 2026-10-06 (T-3053): the tokenizer estimate was wrong by an order of ma
 The owner debugs the public assistants from the answers they gave, which a screenshot does not
 show: the route, the tools and their inputs, the model calls and their price. `jc-assistant`
 therefore stores every turn with its steps for the deployment's `transcriptRetention` (default
-30 days, `P0D` none), and only the assistant's administrators read them in the Portal (AG-99,
-API/05 §3.1). This replaces the first version's rule that no text is stored.
+90 days since T-4681, `P0D` none), and only the assistant's administrators read them in the
+Portal (AG-99, API/05 §3.1). This replaces the first version's rule that no text is stored.
 
 - **Basis.** Legitimate interest (GDPR Art. 6(1)(f)): running the service, reviewing answers and
   fixing errors. The storage is limited to that purpose, the retention is short and set per
   deployment, and the visitor is told in the widget before asking (API/05 §1.6).
-- **Minimisation.** E-mail addresses, phone numbers, IBANs, Slovak birth numbers and card numbers
-  are replaced before the insert; no IP address is stored, only the origin and a salted daily
-  hash of the client for abuse (T-4653). The visitor is asked not to type sensitive data.
+- **Minimisation.** The owner debugs from the turn as it was (owner 2026-10-18, T-4681): the
+  question and the answer are stored verbatim, and what has no debugging value and would be a
+  breach to hold is masked before the insert: access tokens, API keys, passwords, private keys
+  and card numbers. A deployment that sets `transcriptRedaction: personal` also masks e-mail
+  addresses, phone numbers, IBANs and Slovak birth numbers. No IP address is stored, only the
+  origin and a salted daily hash of the client for abuse (T-4653). The visitor is told the 90
+  days before asking and asked not to type sensitive data.
 - **Rights.** The deployment names `privacy.contact`; a conversation is erased with one call
   (T-4668). Every read in the Portal is audited.
 - **Safety.** Stored inputs and outputs are untrusted text: shown escaped, never fed to a model.

@@ -58,7 +58,7 @@ The enforcement point in front of every broker surface (`context-gateway`).
 
 ## 2. Portal
 
-The management application: the API, the embedded UI and the in-process reconciler.
+The management application: the API, the UI it reads from `portal-ui`, and the in-process reconciler.
 
 | Variable | Default | Secret | What it is |
 |---|---|---|---|
@@ -164,6 +164,7 @@ The management application: the API, the embedded UI and the in-process reconcil
 | `JC_PORTAL_SMTP_URL` | — | yes | The mail relay App mail is sent through (`JC_PORTAL_SMTP_URL`), a secret the deployment takes from a `secretRef`: `smtp://host:1025` without TLS for the in-cluster catcher, `smtps://user:password@host:465` or `smtp://user:password@host:587?tls=required` for a relay (T-3583, AP-168). |
 | `JC_PORTAL_SOPS_AGE_KEY_FILE` | — | a path to one | `JC_PORTAL_SOPS_AGE_KEY_FILE` names the age key file and chooses SOPS; otherwise `JC_PORTAL_OPENBAO_ADDR` and `JC_PORTAL_OPENBAO_ROLE` choose OpenBao, with `JC_PORTAL_OPENBAO_JWT_PATH` (default `/var/run/secrets/kubernetes.io/serviceaccount/token`) for the ServiceAccount token it logs in with. |
 | `JC_PORTAL_SYNC_INTERVAL` | `60` | no | How often the reconciler re-reads the configuration repository (`JC_PORTAL_SYNC_INTERVAL`, whole seconds, default `60`). |
+| `JC_PORTAL_UI_URL` | — | no | Base URL of the `portal-ui` bundle the pages are read from (`JC_PORTAL_UI_URL`), e.g. `http://portal-ui.jc-portal.svc.cluster.local:8080`, without a trailing slash (T-2485). |
 | `JC_PORTAL_WASM_HOST_NAMESPACE` | — | no | The namespace the WASM host's shards run in, `JC_PORTAL_WASM_HOST_NAMESPACE`, where the reconciler writes each shard's placement and store key (AP-157, AP-158). |
 | `JC_PORTAL_WASM_SHARDS` | — | no | How many shards the WASM host runs, `JC_PORTAL_WASM_SHARDS`, default 2. |
 | `JC_SETUP_BACKUPS` | — | no | The databases are backed up to an object store (`JC_SETUP_BACKUPS`, the literal `true`). |
