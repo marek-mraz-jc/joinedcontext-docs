@@ -5,10 +5,10 @@ title: "Portal Architecture (UI & API)"
 
 # Portal Architecture (UI & API)
 
-The joinedcontext Portal is **one application** (repository `joinedcontext-portal`): a single Rust binary that serves the embedded React build, the REST and resource APIs, and runs the reconciler loop (the `jcctl` library) in-process. The two layers below are parts of that binary, not separate deployables:
+The joinedcontext Portal is **one application** (repository `joinedcontext-portal`) shipped as **two deploy artifacts from the same commit**: the Rust binary, which answers every path of the Portal host, serves the REST and resource APIs and runs the reconciler loop (the `jcctl` library) in-process, and the `portal-ui` image, the Vite build behind a static server. The binary's fallback reads the shell and `/assets/*` from `portal-ui` inside the cluster (`JC_PORTAL_UI_URL`), so the Content Security Policy, the framing headers and the session refresh stay the binary's, and a UI-only change rolls `portal-ui` without restarting the API (T-2485):
 
 - **Portal API:** the stateless backend layer in **Rust** (`axum`, `sqlx`, `utoipa`).
-- **Portal UI:** the web layer in **React 19**, **Vite**, and **TypeScript**, built in `ui/` and embedded into the binary at build time.
+- **Portal UI:** the web layer in **React 19**, **Vite**, and **TypeScript**, built in `ui/` into the `portal-ui` image. `GET /api/v1/version` names both commits and whether the bundle was built against the API the binary serves (the sha256 of `ui/openapi.json` against the binary's own spec).
 
 ```text
 +---------------------------------------------------------------------------------------------------+

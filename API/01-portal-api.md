@@ -1261,6 +1261,7 @@ is ready only once its first sync has landed (T-4453 removed `GET /api/v1/sync`,
 POST /api/v1/webhooks/gitea    the forge's own hook: signed, no session
 GET  /api/v1/health            liveness; public
 GET  /api/v1/ready             readiness; public
+GET  /api/v1/version           the commits of the binary and of the UI bundle; public
 ```
 
 - `/webhooks/gitea` is what makes a merged change visible without waiting for the next tick. The
@@ -1270,6 +1271,7 @@ GET  /api/v1/ready             readiness; public
   any other event answers `204`; a body that is not JSON is `400`, a missing or wrong signature
   `401`, and an instance with no webhook secret configured `503`, because a hook nobody can
   authenticate is refused rather than trusted.
+- `/version` answers `{"portal": {"commit", "openapi"}, "ui": {"commit", "openapi"} | null, "contract"}` (T-2485): `openapi` is the sha256 of the OpenAPI document, the binary's own and the `ui/openapi.json` the bundle was built against, and `contract` is `match` when they agree, `mismatch` when they differ and `unknown` when the bundle is unreachable or names no hash. `dev-smoke` warns on anything but `match`.
 - `/health` answers `{"name": …, "version": …, "status": "ok"}` whenever the process serves, and
   it is the liveness probe. `/ready` is the readiness probe (OPS-51): `503 {"status": "loading"}`
   until this replica's mirror holds the repository, `200 {"status": "ready"}` afterwards. A Portal
