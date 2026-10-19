@@ -121,7 +121,7 @@ Production limits (owner, T-4716):
 
 Within that budget, every run checks the core five on every dataset: NGSI-LD, MCP, OData, OGC and the data model. An answer that several datasets share, such as one Endpoint's `tools/list`, is fetched once. The datastore, WebSocket, map and CSV checks rotate: each run takes the datasets the previous run's table checked least recently, until the budget ends. A rotated cell reads `not this run (last: {time} {verdict})`, and running out of budget is never a `ko`.
 
-The run writes one table, `smoke-catalogue-{env}-{time}.tsv` in `deployment/`: a dataset per row, an interface per column, and the totals ("97 datasets, 93 complete, 4 ko"). It also prints the request count and the duration, and exits 1 on any `ko`. `tests/test_smoke_catalogue.py` replays recorded answers for every verdict and runs in `ci.yml` with the other script tests.
+The run writes one table, `smoke-catalogue-{env}-{time}.tsv` in `.smoke/` (gitignored, which an apply leaves alone: `_dev-assemble` deletes `deployment/`): a dataset per row, an interface per column, and the totals ("97 datasets, 93 complete, 4 ko"). It also prints the request count and the duration, and exits 1 on any `ko`. `tests/test_smoke_catalogue.py` replays recorded answers for every verdict and runs in `ci.yml` with the other script tests.
 
 ---
 
