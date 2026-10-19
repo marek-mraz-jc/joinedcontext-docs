@@ -166,12 +166,33 @@ A harvested source dataset (`charts/ckan/files/harvest-hub.py`, `harvest-nkod.py
 
 ## 10. The catalogue as an NGSI-LD Endpoint
 
-An agent asks the catalogue first and the dataset second (T-4500, ADR-N-025). The catalogue it asks is one more public Endpoint: the Endpoint named `catalog` on the space named `catalog`, read with the normal NGSI-LD tools (`type=Dataset`, `q=searchText~="bystrica"`, `georel=near`). Nothing in it is authored: the Portal reconciler writes it from the feed of §8, which is built by the same function as each Endpoint's own record (EP-27), so CKAN, a harvester and the NGSI-LD catalogue read one source.
+An agent asks the catalogue first and the dataset second (T-4500, ADR-N-025). The catalogue it asks is one more public Endpoint: the Endpoint named `catalog` on the space named `catalog`, read with the normal NGSI-LD tools (`type=Dataset`, `q=searchText~="bystrica"`, `georel=near`). Nothing in it is authored: the Portal reconciler writes it from CKAN and from the feed of §8, which is built by the same function as each Endpoint's own record (EP-27).
 
-Publicly a dataset is a context space and its Endpoints are access paths (owner, 2026-10-17). So the catalogue holds one `Dataset` per context space with at least one public Endpoint, and one `DataService` per public Endpoint, both Smart Data Models DCAT-AP subject types. An organization or private Endpoint never enters it; a caller with grants finds those in its own catalogue on the MCP hub (below).
+The catalogue mirrors the open-data catalogue a person browses (owner, 2026-10-19, T-4746): one `Dataset` per public CKAN dataset, with the same name, one `Organization` per CKAN organization that publishes one, and one `DataService` per public Endpoint, all Smart Data Models DCAT-AP and organization subject types. It replaces the dataset per context space of 2026-10-17, so a count, a title or a citation from the catalogue is the one CKAN shows. "List all organizations" is one query (`type=Organization`), and "the datasets of hel-fi" is one more (`type=Dataset&q=refPublisher=="urn:ngsi-ld:Organization:hel-fi"`).
 
-| Entity | Id | Attribute | Type | Source in the record of the feed |
+The set is read, never listed in code: the Portal reads the CKAN instance's `package_search` and `organization_list` anonymously on each run, so it holds only public datasets, and the gateway's feed of §8 for the Endpoints. A CKAN dataset names its Endpoint through its resources (`/api/endpoint/{slug}/…`, the same slug for every resource of a dataset), and a harvested one also names the rows that are its own, the `type` and `q` of its NGSI-LD resource URL (§3). A CKAN dataset whose Endpoint has no `DataService` here (not public, or `harvest: false`, EP-139) is left out, so no Relationship points at nothing. A dataset added, renamed or withdrawn in CKAN appears, moves or disappears at the next run, and an organization whose last dataset went leaves no entity.
+
+| Entity | Id | Attribute | Type | Source |
 |---|---|---|---|---|
+| `Organization` | `urn:ngsi-ld:Organization:{name}`, the CKAN organization's name | `name` | Property | the organization's `title` |
+| | | `identifier` | Property | the organization's `name` |
+| | | `url` | Property | `https://opendata.{domain}/organization/{name}` |
+| | | `datasetCount` | Property | the `Dataset` entities of this catalogue that name it |
+| | | `searchText` | Property | name and title, lowercased, diacritics folded |
+| `Dataset` | `urn:ngsi-ld:Dataset:{name}`, the CKAN dataset's name | `name`, `description` | Property | CKAN `title` and `notes`, as CKAN shows them |
+| | | `title` | LanguageProperty | `dct:title` per `@language` of the Endpoint's record, when the dataset is that Endpoint's own (its `identifier` extra is the slug) |
+| | | `identifier` | Property | the CKAN name, the slug of the dataset page |
+| | | `url` | Property | `https://opendata.{domain}/dataset/{name}` |
+| | | `keyword` | Property, a list | CKAN tags |
+| | | `theme`, `spatial` | Property, a list of IRIs | the `theme` and `spatial_uri` extras |
+| | | `license` | Property | `license_url` |
+| | | `issued`, `modified` | Property | the `issued` and `modified` extras, else `metadata_created` and `metadata_modified` |
+| | | `source` | Property | the `source_url` extra of a harvested dataset |
+| | | `location` | GeoProperty, a polygon | the `area` rule of its Endpoint's space (DM-87), when it declares one |
+| | | `refPublisher` | Relationship | its `Organization` |
+| | | `refDataService` | Relationship | the `DataService` of its Endpoint |
+| | | `nextQuery` | Property | `{tool: query_entities, arguments: {endpoint, type, q, limit}}`: the call that reads its rows, `type` and `q` those of its NGSI-LD resource, absent when the dataset is the whole Endpoint |
+| | | `searchText` | Property | name, description, tags, organization and the record's titles, lowercased, diacritics folded |
 | `DataService` | `urn:ngsi-ld:DataService:{slug}` | `title`, `description` | LanguageProperty | `dct:title`, `dct:description` per `@language` |
 | | | `accessLevel` | Property | the Endpoint's audience: `public`, `organization`, `project-list` |
 | | | `visibleBecause` | Property | why this caller sees it: `public`, `organization`, `project`, `grant`; `public` in the public catalogue |
@@ -181,23 +202,17 @@ Publicly a dataset is a context space and its Endpoints are access paths (owner,
 | | | `endpointURL` | Property | the `dcat:DataService`'s `dcat:endpointURL` |
 | | | `accessURL` | Property, one object per distribution | `dcat:distribution`: `dcat:accessURL`, `dct:conformsTo`, `dcat:mediaType`; the access paths only, not the schema artifacts under `/schema/` |
 | | | `accessRights`, `license` | Property | `dct:accessRights`, `dct:license` |
-| | | `servesDataset` | Relationship | the `Dataset` of the Endpoint's space |
-| `Dataset` | `urn:ngsi-ld:Dataset:{space}`, the space's `{space}` segment | `title`, `description` | LanguageProperty | those of the space's first public Endpoint by slug |
-| | | `keyword` | Property, a list | `dcat:keyword` of every public Endpoint of the space |
-| | | `theme` | Property, a list of IRIs | `dcat:theme`, EU data-theme table (T-4498) |
-| | | `spatial` | Property, a list of IRIs | `dct:spatial`, NUTS and LAU codes |
-| | | `location` | GeoProperty, a polygon | the space's `area` quality rule (DM-87), when it declares one |
-| | | `temporal` | Property `{startDate, endDate}` | `dct:temporal` |
-| | | `frequency` | Property | `dct:accrualPeriodicity` |
-| | | `publisher` | Property `{id, name}` | `dct:publisher`: its IRI and `foaf:name` per language |
-| | | `dataService` | Property, one `{id, identifier, endpointURL}` per public Endpoint | the space's `DataService` entities |
-| | | `searchText` | Property | titles, descriptions, keywords and the space name, lowercased, diacritics folded |
+| | | `refDataset` | ListRelationship | every `Dataset` that names it, in name order; absent when none does |
+
+Each organization also publishes its own slice (owner addendum, 2026-10-19): a project that declares a public Endpoint named `catalog` on its space `{project}-catalog` gets, written by the same run, its CKAN organization's `Organization`, that organization's `Dataset` entities and the `DataService` entities they name, the same entities as in the installation's catalogue. An agent that knows the publisher asks it with `type=Dataset` alone. That Endpoint is published to CKAN like any other (`{organization}-katalog`, "{title}: katalóg dát / data catalogue"), so the catalogue lists it too; it names itself in `refDataService` and is the one dataset not counted in `datasetCount`.
+
+A non-public Endpoint is in no CKAN dataset. A caller that reaches one finds it on the MCP hub (below) as its `DataService` and one `Dataset` built from its record, `urn:ngsi-ld:Dataset:{slug}` with the record's `title` and `description` and no `refPublisher`, so a private dataset never adds to an organization's count or name.
 
 Attributes the record does not carry are left out, never written empty. The ids never carry a title, so a renamed Endpoint changes its entities in place.
 
-The reconciler reads the feed once per run and writes only the entities that changed, through the `catalog` Endpoint as the Portal's own client, in batches of 100; an entity it wrote whose Endpoint is gone or no longer public is deleted in the same run. After a restart, and once an hour, it lists what the catalogue holds instead of trusting its memory, so an entity left by a run that stopped halfway is still removed. The `catalog` Endpoint's Policy grants reads to everyone and writes only to the Portal's ServiceAccount: every write to context data goes through an Endpoint and its Policy, this one included.
+The reconciler reads the feed once per run and writes only the entities that changed, through the `catalog` Endpoint as the Portal's own client, in batches of 100; an entity it wrote whose CKAN dataset, organization or Endpoint is gone or no longer public is deleted in the same run. After a restart, and once an hour, it lists what the catalogue holds instead of trusting its memory, so an entity left by a run that stopped halfway is still removed. The `catalog` Endpoint's Policy grants reads to everyone and writes only to the Portal's ServiceAccount: every write to context data goes through an Endpoint and its Policy, this one included.
 
-On the MCP hub and on every named server, `endpoint: catalog` is the caller's own catalogue (T-4503, ADR-N-025): the gateway builds it per request from the Endpoints the request reaches, by the same function (`jc_core::ngsi_catalog`) from the same records, without a broker read. The anonymous caller's catalogue is the public one entity for entity; a signed-in caller's adds the organization and granted Endpoints it reads, each saying why in `visibleBecause`; a named server's holds only its members. The catalogue answers `query_entities` (`type`, `id`, `idPattern`, `q`, `georel`, `geometry`, `coordinates`, `attrs`, `pick`, `format`, `count`, `limit`, `cursor`), `get_entity` and `list_types`; every other tool belongs to the Endpoint a Dataset lists in `dataService`. An Endpoint outside the caller's reach gives no entity, no word of `searchText` and no count.
+On the MCP hub and on every named server, `endpoint: catalog` is the caller's own catalogue (T-4503, ADR-N-025). The gateway builds the `DataService` entities and the Datasets of non-public Endpoints per request from the Endpoints the request reaches, by the same function (`jc_core::ngsi_catalog`) from the same records. The CKAN-shaped `Dataset` and `Organization` entities exist only where the Portal wrote them, so the gateway reads those two types from the public catalogue, at most once a minute, and keeps a `Dataset` only when the caller reaches its `refDataService`, and an `Organization` only when it keeps one of its Datasets, its `datasetCount` counted again from those. That is the one broker read of the hub. The anonymous caller's catalogue is the public one entity for entity; a signed-in caller's adds the organization and granted Endpoints it reads, each saying why in `visibleBecause`; a named server's holds only its members. The catalogue answers `query_entities` (`type`, `id`, `idPattern`, `q`, `georel`, `geometry`, `coordinates`, `attrs`, `pick`, `format`, `count`, `limit`, `cursor`), `get_entity` and `list_types`; every other tool belongs to the Endpoint a Dataset names in `refDataService`. An Endpoint outside the caller's reach gives no entity, no word of `searchText` and no count.
 
 Not yet in the entities: the entity types an Endpoint holds with their counts, first and last `observedAt`, and the ready-to-run second call per type (`nextQuery`, T-4486). They need one broker read per Endpoint and land in a follow-up task.
 
