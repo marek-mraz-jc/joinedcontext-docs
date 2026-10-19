@@ -81,6 +81,16 @@ The restore is tested once before user data arrives, and then once a month, as [
   - no `dev` secret, fixture or account copied over;
   - a red `prod-smoke` stops the next promotion until it is fixed.
 
+## 8. The BBSK demo beside the platform
+
+The demo the owner sends to the Banská Bystrica self-governing region (T-4687) runs on this cluster at `https://bbsk.smartcity.joinedcontext.com`, and as a preview on `dev` at `https://bbsk-demo.apps.dev.joinedcontext.com`. It is outside the platform's deployment:
+
+- **Its own unit:** `demos/bbsk/` in the deployment repository, a helmfile of its own with the environments `dev` and `smartcity`, namespace `demo-bbsk`. `just demo-bbsk-apply <env>` installs or updates it and `just demo-bbsk-destroy <env>` removes its releases, volumes and namespace; both refuse a cluster that is not the environment's own, through `_dev-guard` and `_prod-guard`. The platform's `helmfile -e smartcity` renders none of its objects, and its Argo CD Applications do not list it.
+- **What it runs:** a CKAN catalogue of the platform's chart and pinned images, its own Postgres (the platform's pinned cluster image, one instance, no CNPG) and the Secrets it generates on the first install. It holds no platform secret and reaches no platform database.
+- **Only BB and BBSK:** the catalogue harvests the two organizations' sources (the national catalogue for the city, the ArcGIS Hub for the region) with the publish gate's hidden list for their packages, both read from the platform's catalogue values. Its assistant is the AssistantDeployment `bbsk/bbsk-demo` (publicId `bbsk-demo`), which reads the two bodies' public sources and Endpoints with read-only tools and nothing else.
+- **DEMO everywhere:** the branding block's `ribbon` and `noindex` ([12-branding-and-naming.md](12-branding-and-naming.md)), `DEMO` in the site title, the footer and the assistant's greeting, and `X-Robots-Tag: noindex, nofollow` on every answer of its edge.
+- **Edge:** a Traefik Ingress with one certificate by HTTP-01 for its one host and the platform's TLS policy, not an APISIX route, so removing the demo touches no platform route. NetworkPolicies close the namespace to everything but the ingress controller, DNS, public `443` for the harvests and the Kubernetes API for the API token Job.
+
 ## Related
 
 - [Installation Guide](02-installation.md): the procedure every instance follows.
