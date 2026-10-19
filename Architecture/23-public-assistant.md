@@ -25,7 +25,7 @@ Two assistants exist, and only one of them is the public one.
 | Model path | `jc-assistant` → `jc-agent-proxy` `/v1/llm/*` → OpenRouter, model from env `JC_ASSISTANT_LLM` (`src/bin/jc-assistant.rs:145`), today `google/gemini-3.8-flash` | **Down on dev**: the proxy runs with `replicaCount: 0` (deployment `components/agent-runner/values/proxy/development-values.yaml.gotmpl:9`) since the spend guard tripped on 2026-10-08; only the owner sets it back. |
 | Admin | portal `ui/src/pages/knowledge/KnowledgePage.tsx:55`, `SourcePage.tsx`, deployment form `ui/src/schemas/knowledge.ts:91-182` | Sources, page tree, include/exclude, recrawl, usage, embed snippet. No model field, no suggestions, no disclaimer, no file upload; the form offers only `website` and `ckan` sources (`knowledge.ts:21`). |
 | Banská Bystrica seeds | deployment `components/context-gateway/seed/banskabystrica/banskabystrica-assistant-knowledge.yaml` (`channel: internal`, `publicId: banskabystrica-knowledge`), `banskabystrica-knowledge-web.yaml` (start URL `https://www.banskabystrica.sk/`), `banskabystrica-knowledge-catalogue-ngsi.yaml` | Internal channel only. BBSK (project `bbsk`) has no assistant seed. |
-| Open data portal (CKAN) | `https://data.dev.joinedcontext.com`, deployed by `components/ckan` | Public, 12 datasets in 5 organizations: `bbsk` (2), `banskabystrica` (2), `hel-fi` (4), `praha` (1), `zilina` (3) (`/api/3/action/package_search`, 2026-10-15). |
+| Open data portal (CKAN) | `https://opendata.dev.joinedcontext.com`, deployed by `components/ckan` | Public, 12 datasets in 5 organizations: `bbsk` (2), `banskabystrica` (2), `hel-fi` (4), `praha` (1), `zilina` (3) (`/api/3/action/package_search`, 2026-10-15). |
 
 ## 2. Public surfaces today
 
@@ -37,7 +37,7 @@ Two assistants exist, and only one of them is the public one.
 | Named MCP servers | `/api/mcp/{project}/{name}` | Anyone when the server's audience is public (`mcp/server.rs:75-84`) | Hub limit per server |
 | Context Space MCP | `/cs/{space}/mcp` | Per the space's audience | No gateway limit (`rate_limit.rs:250-255`); APISIX keyed on `Authorization`, so every anonymous caller shares one bucket |
 | DCAT-AP catalogue | `/catalog.jsonld`, `/catalog.ttl` | Anyone | 300/60 s per IP |
-| CKAN | `data.{domain}` | Anyone | 300/60 s per IP |
+| CKAN | `opendata.{domain}` | Anyone | 300/60 s per IP |
 
 The anonymous hub's `tools/list` on dev includes `create_subscription`, `update_subscription` and `delete_subscription`. Whether a call succeeds depends on each Endpoint's Policy (`app.rs:3319-3325`), not on the route, so a public surface is read-only only when every member's Policy is. Section 7 turns each gap into a task.
 
@@ -107,7 +107,7 @@ The city (`banskabystrica`) and the region (`bbsk`) are two projects on dev, eac
 
 Decided (worker-1, owner may override): one public deployment `banskabystrica` in project `banskabystrica`, whose spec names the other projects it may read (`bbsk`) explicitly; the reconciler admits only public Endpoints of the listed projects, and the CKAN source takes an organization filter (`banskabystrica`, `bbsk`); because the scope is then fixed server-side in a manifest, and Helsinki, Praha and Žilina stay unreachable by construction; options: two deployments and two widgets (the resident would have to know which body answers), or a deployment that reads any public Endpoint (Helsinki reachable).
 
-Web sources: `https://www.banskabystrica.sk/` and `https://www.bbsk.sk/` (approved in T-3067; the BBSK server's missing intermediate certificate is handled since T-3298). Links in answers go only to these domains, `data.{domain}` and the platform's own Endpoint URLs.
+Web sources: `https://www.banskabystrica.sk/` and `https://www.bbsk.sk/` (approved in T-3067; the BBSK server's missing intermediate certificate is handled since T-3298). Links in answers go only to these domains, `opendata.{domain}` and the platform's own Endpoint URLs.
 
 ## 7. Keep, change, add
 

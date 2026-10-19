@@ -27,7 +27,8 @@ One base domain is delegated to the ingress controller (`global.domain`). The ed
 | `{name}.apps.<domain>` | APISIX, one host per published App | The App, its endpoint calls and its functions ([ADR-N-037](../Decisions/adr-n-037-an-origin-per-app.md)); covered by the `*.<domain>` record and one HTTP-01 certificate per App, or by a delegated `apps.<domain>` zone and the wildcard certificate `*.apps.<domain>` when `global.ingress.appsWildcard` is on |
 | `portal.<domain>` | Portal | The API, the UI and the Portal's MCP door ([ADR-N-019](../Decisions/adr-n-019-login-at-the-edge-apisix-openid-connect.md)) |
 | `idm.<domain>` | Keycloak | OIDC authentication, token issuance, account console |
-| `data.<domain>` | CKAN | The open-data catalogue, when the `ckan` component is deployed |
+| `opendata.<domain>` | CKAN | The open-data catalogue, when the `ckan` component is deployed |
+| `data.<domain>` | APISIX data plane | Only a `301` to the same path and query on `opendata.<domain>`, for links shared before the catalogue moved (T-4679); it keeps its certificate so the redirect answers on HTTPS |
 | `tiles.<domain>` | nginx, read-only | The background map every map draws on: one Protomaps PMTiles extract, its style, fonts and sprites, refreshed monthly from the cluster's own volume, when the `basemap` component is deployed (T-4638) |
 | `viz.<domain>` | the visualization renderer | The sandboxed page that draws an Endpoint's Vega-Lite and Vega charts for the catalogue and the Portal ([ADR-N-053](../Decisions/adr-n-053-declarative-visualizations.md), T-4641); a static page with no cookie and no session, when the `viz` component is deployed |
 

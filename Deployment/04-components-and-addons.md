@@ -34,7 +34,7 @@ A **Core** component makes up a working installation and is in the shipped `comp
 | **audit-logging** | Core | Rust (Vector) | yes | Node collector shipping the audit stream of the gateway, Keycloak and the forge to object-locked storage, 90 days (OPS-42) |
 | **sandbox-reaper** | Core | CronJob (kubectl) | yes | Deletes sandbox namespaces past their TTL, 14 day ceiling (OPS-44, PF-19) |
 | **monitoring** | Core | Prometheus Operator | yes | No workload: one ServiceMonitor per component that exports metrics, and the edge PrometheusRule. Last in the list, because it scrapes the ones above it (OPS-16, TS-22) |
-| **ckan** | Add-on | Python | no | The open-data catalogue on `data.<domain>`, with DCAT-AP publication (EP-62…EP-67) |
+| **ckan** | Add-on | Python | no | The open-data catalogue on `opendata.<domain>`, with DCAT-AP publication (EP-62…EP-67) |
 | **grafana** | Add-on | Go | no | Infrastructure observability and public data dashboards over Endpoint STA representations |
 | **agent-runner** | Add-on | Rust | no | `jc-agent-proxy` from the platform image: the credential-free internal proxy an agent run reaches ([ADR-N-020](../Decisions/adr-n-020-agent-runner-and-credential-proxy.md), [Architecture/19](../Architecture/19-agent-runner.md)) |
 | **functions** | Add-on | Rust | no | `jc-functions`, the QuickJS runtime of a generated application's serverless functions, called by the Portal alone ([Architecture/20 §3](../Architecture/20-app-sdk.md#3-functions-and-their-runtime)) |
