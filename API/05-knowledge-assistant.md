@@ -88,7 +88,7 @@ Both routes follow the `Origin` rules of §1.2, and the preflight allows `GET`, 
 | `delta` | `{"text": "…"}` | zero or more, the answer's next characters as the answering model streams them |
 | `answer` | `{"text": "… [1] … [2]"}` | once, the whole answer, after the last `delta` |
 | `citations` | `[{"n": 1, "url": "https://…/page#page=4", "title": "Ovzdušie"}, {"n": 2, "tool": "query_entities", "endpoint": "ovzdusie-verejne", "url": "https://…/dataset/ovzdusie", "title": "Kvalita ovzdušia"}]` | after `answer` |
-| `followups` | `{"questions": ["Kde je zberný dvor?", "…"]}` | after `citations`, at most once: up to 3 questions of at most 120 characters each that the router call proposed (T-4139), no extra model call; absent for a cached answer |
+| `followups` | `{"questions": ["Kde je zberný dvor?", "…"]}` | after `citations`, at most once: up to 3 questions of at most 120 characters each that the router call proposed (T-4139), no extra model call; a cached answer replays the ones it was sent with (T-4731) |
 | `error` | `{"status": 429, "title": "Budget Spent", "detail": "…"}` | instead of `answer` |
 | `done` | `{"tokens": 1834, "tokensIn": 1600, "tokensOut": 234, "modelCalls": 2, "firstTokenMs": 900, "totalMs": 3100, "cached": false, "costUsd": 0.000412, "stagesMs": {"route": 420, "search": 40, "judge": 380, "answer": 2100}, "judgeSkipped": false, "providers": {"route": "Groq", "judge": "Groq", "answer": "Google Vertex"}, "reasoningTokens": {"route": 0, "judge": 0, "answer": 64}}` | last, always; the token counts are the sums of each model response's `usage` (`prompt_tokens`, `completion_tokens`), `tokens` their total; `costUsd` is the sum of each response's `usage.cost`, present only when every call reported one, and 0 for a cached answer or one that made no call (T-4178); `stagesMs` is the wall time of each stage that ran, in milliseconds: `route` the router call, `search` and `judge` summed over the rounds, `answer` the streamed answer call from request to last token. A stage that did not run is absent. The question's own search and its judgement run beside the router call, so the stages may add up to more than `totalMs` (T-4293); `judgeSkipped` is true when the first round's passages covered the question and were not judged; `providers` names, per stage, the OpenRouter provider that served its last call, and `reasoningTokens` the reasoning tokens its calls spent (`usage.completion_tokens_details.reasoning_tokens`), each stage only when a call reported it (T-4360) |
 
@@ -419,6 +419,23 @@ DELETE …/knowledge/conversations/{conversation}
   number `[rodné číslo]`.
   Inputs and outputs are untrusted text: the Portal shows them escaped and never sends them to a
   model.
+- `usage` adds up the turns of the range in one query (T-4728). `from` (inclusive) and `to`
+  (exclusive) are RFC 3339 times, `route` the route the turns took; another parameter is `400`.
+  It answers `questions`, `timeouts`, `errors` (a timeout is not an error) and
+  `uncostedQuestions`; `costUsd` with `total`, `mean`, `p50` and `p90` over the priced turns
+  only, so a turn the provider sent no price for is counted apart and never as $0; `tokens` with
+  the mean `in`, `out` and `cached` per question and `cachedShare` (cached of the input tokens of
+  the turns that reported caching); `firstTokenMs`, `totalMs` and `phases` (`route`: the router
+  call; `work`: search, tools and the data, judge and agent calls; `answer`: the answer call),
+  each as `p50`, `p90` and `max`; and `days`, the newest 14 days (UTC) with `day`, `questions`,
+  `costUsd`, `uncostedQuestions`, `p50TotalMs`, `timeouts` and `errors`. A value nothing was
+  measured for is `null`, never 0.
+- `export` answers the same turns as `text/csv` (RFC 4180), newest first, one row per turn with
+  `at`, `deployment`, `conversation`, `turn`, `route`, `question` (as stored, so redacted),
+  `firstTokenMs`, `totalMs`, `tokensIn`, `tokensOut`, `cachedTokens`, `models`, `costUsd`,
+  `uncosted`, `timedOut` and `error`. A cell starting with `=`, `+`, `-` or `@` gets a leading
+  `'`, so a spreadsheet never runs a question as a formula. More than 20,000 turns is `400`,
+  asking for a narrower range.
 - `DELETE` removes the conversation's turns and steps (erasure, T-4668) and answers `204`; an
   unknown or another project's conversation is `404`.
 
