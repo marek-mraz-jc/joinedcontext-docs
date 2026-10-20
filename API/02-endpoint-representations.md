@@ -148,6 +148,38 @@ that attribute: it is admitted only when the grant covers the attribute and the 
 hide it, and is otherwise `400` naming the parameter. The MCP surface refuses both in the same
 words (§8).
 
+### Page size: default and maximum
+
+One read answers a bounded page (T-4804, owner 2026-10-20). The numbers are the broker's settings
+and its `/q/health` publishes them under `limits`:
+
+| Read | Without the parameter | Ask for more | Maximum | Past the page |
+|---|---|---|---|---|
+| `GET …/ngsi-ld/v1/entities` | 100 Entities (`defaultLimit`) | `limit=` up to 1,000 | 1,000 (`maxLimit`); `limit=1001` answers `403` `TooManyResults` | `Link: <…offset=100…>; rel="next"` names the next page; `count=true` adds `NGSILD-Results-Count` |
+| `GET …/ngsi-ld/v1/temporal/entities…` | 100 values per Attribute (`temporalDefaultInstances`) | `lastN=` up to 1,000 | 1,000 per Attribute (`temporalInstanceLimit`) | `206 Partial Content` with a `Content-Range` that ends at the last instant served; call again with `timeAt` at that instant for the rest |
+
+Worked example, entities:
+
+```bash
+curl -i 'https://api.example.org/api/endpoint/{endpointSlug}/ngsi-ld/v1/entities?type=Bridge'
+# 200, 100 Entities and Link: <…type=Bridge&limit=100&offset=100>; rel="next"
+curl -i 'https://api.example.org/api/endpoint/{endpointSlug}/ngsi-ld/v1/entities?type=Bridge&limit=1000'
+# 200, up to 1,000 Entities
+```
+
+Worked example, history of one station:
+
+```bash
+curl -i 'https://api.example.org/api/endpoint/{endpointSlug}/ngsi-ld/v1/temporal/entities/urn:ngsi-ld:WeatherObserved:shmu-11898?timerel=after&timeAt=2026-10-01T00:00:00Z'
+# 206, 100 values per Attribute (10-minute readings),
+# Content-Range: date-time 2026-10-01T00:00:00Z-2026-10-01T16:30:00Z/*
+curl -i '…/temporal/entities/urn:ngsi-ld:WeatherObserved:shmu-11898?timerel=after&timeAt=2026-10-01T00:00:00Z&lastN=1000'
+# up to 1,000 values per Attribute: the newest 1,000 of the window
+```
+
+The MCP tools say the same in their descriptions and schemas (`"default": 100`, `"maximum": 1000`
+on `limit` and `lastN`), on the Endpoint's own server, the hub and every named server (section 8).
+
 ### Problem types
 
 Every refusal is `application/problem+json` (RFC 7807) with a `type` under
@@ -819,7 +851,7 @@ Exposes the endpoint as an autonomous tool server for AI agents ([SP-14](../Requ
 
 One `POST` carries one JSON-RPC message, one response comes back, and nothing is kept between calls: the next `tools/list` already reflects a grant that changed a second ago (SP-19). A notification, a message with no `id`, is answered `202` with an empty body.
 
-**The broker's MCP surface (T-3647).** The gateway verifies the caller, applies the Endpoint's rate limit and the domain gate on a write, and forwards each request to the broker's MCP surface of the Endpoint's view (`/x/views/{endpointSlug}/mcp`; `/cs/{space}/mcp` to `cs-{space}`) under the verified caller. The tools, their input schemas, paging and write confirmation are the broker's (Antares `docs/src/mcp.md`): `type` is a list, `cursor` is the opaque `nextCursor` of the previous answer passed back unchanged (no cursor on a first page), `batch_upsert` replaces `upsert_entity`, and a write is confirmed by the person through the 2026-07-28 multi round-trip request (`InputRequiredResult`, then the same call with `inputResponses` and `requestState`). The gateway still answers `describe_access`, `describe_schema` and the `access://` and `schema://` resources itself, added to the broker's `tools/list` and `resources/list`; it caps `joinLevel` at 3 and `lastN` at 1000 as on the NGSI-LD surface, and asks the broker with `Accept: application/json, text/event-stream` whatever the client sent. An Endpoint with a view mapping, a caller holding a data-space agreement and a space that federates registrations stay on the gateway's own tools until the hub forwards too (T-3808).
+**The broker's MCP surface (T-3647).** The gateway verifies the caller, applies the Endpoint's rate limit and the domain gate on a write, and forwards each request to the broker's MCP surface of the Endpoint's view (`/x/views/{endpointSlug}/mcp`; `/cs/{space}/mcp` to `cs-{space}`) under the verified caller. The tools, their input schemas, paging and write confirmation are the broker's (Antares `docs/src/mcp.md`): `type` is a list, `cursor` is the opaque `nextCursor` of the previous answer passed back unchanged (no cursor on a first page), `batch_upsert` replaces `upsert_entity`, and a write is confirmed by the person through the 2026-07-28 multi round-trip request (`InputRequiredResult`, then the same call with `inputResponses` and `requestState`). The gateway still answers `describe_access`, `describe_schema` and the `access://` and `schema://` resources itself, added to the broker's `tools/list` and `resources/list`; it caps `joinLevel` at 3 and `lastN` at 1000 as on the NGSI-LD surface (page defaults and maxima: section 2a), and asks the broker with `Accept: application/json, text/event-stream` whatever the client sent. An Endpoint with a view mapping, a caller holding a data-space agreement and a space that federates registrations stay on the gateway's own tools until the hub forwards too (T-3808).
 
 ```bash
 curl -sS -X POST "https://api.{domain}/api/endpoint/{endpointSlug}/mcp" \
