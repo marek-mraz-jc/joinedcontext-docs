@@ -100,8 +100,18 @@ A vehicle feed sends a position every second while the vehicle runs and nothing 
 
 In the editor's **Lifetime** step, choose **Whole entity expires** and **From a field**, pick `observedAt` as **Field** and enter `5` `minutes` as **Plus**. The manifest gets:
 
-```yaml excerpt
+```yaml title="projects/helsinki/pipelines/vehicle-positions/pipeline.yaml"
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: vehicle-positions
+  namespace: helsinki
+  title: { en: "Live vehicle positions" }
 spec:
+  class: auto
+  source:
+    dataSourceRef: { kind: DataSource, name: vehicle-positions }
+  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all
   lifetime:
     - type: Vehicle
       entity: { from: observedAt, plus: PT5M }
@@ -144,8 +154,19 @@ An alert or a roadwork carries the time it stops applying. Use it as the entity'
 
 In the **Lifetime** step, choose **Whole entity expires** and **From a field**, pick `validTo` as **Field**, leave **Plus** at `0` and set **At most after the write** to `30 days`:
 
-```yaml excerpt
+```yaml title="projects/helsinki/pipelines/service-alerts/pipeline.yaml"
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: service-alerts
+  namespace: helsinki
+  title: { en: "Service alerts" }
 spec:
+  class: auto
+  period: 5m
+  source:
+    dataSourceRef: { kind: DataSource, name: service-alerts }
+  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all
   lifetime:
     - type: Alert
       entity: { from: validTo, notAfter: P30D }
@@ -167,8 +188,19 @@ The city publishes road closures for a Christmas market. Every closure ends when
 
 In the **Lifetime** step, choose **Whole entity expires** and **On a fixed date**, and enter the date and time in the project's time zone. The editor shows it in UTC and refuses a date that has already passed:
 
-```yaml excerpt
+```yaml title="projects/helsinki/pipelines/market-closures/pipeline.yaml"
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: market-closures
+  namespace: helsinki
+  title: { en: "Christmas market road closures" }
 spec:
+  class: auto
+  period: 1h
+  source:
+    dataSourceRef: { kind: DataSource, name: market-closures }
+  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all
   lifetime:
     - type: RoadClosure
       entity: { at: "2026-12-31T22:00:00Z" }
@@ -182,8 +214,18 @@ A parked bus keeps its line, its operator and its last delay, but its position i
 
 In the **Lifetime** step, choose **Only some fields expire**, pick `location` as **Field**, choose **After each write** and enter `5` `minutes`:
 
-```yaml excerpt
+```yaml title="projects/helsinki/pipelines/vehicle-status/pipeline.yaml"
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: vehicle-status
+  namespace: helsinki
+  title: { en: "Vehicle status, position while reporting" }
 spec:
+  class: auto
+  source:
+    dataSourceRef: { kind: DataSource, name: vehicle-positions }
+  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all
   lifetime:
     - type: Vehicle
       attributes:
