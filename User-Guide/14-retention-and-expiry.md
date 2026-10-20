@@ -1,7 +1,7 @@
 ---
 sidebar_position: 16
 title: Retention & Expiry
-description: How long a context space keeps current values and history, every way data is removed, which one wins, and recipes for buses, alerts, sensors and imported files.
+description: How long a context space keeps current values and history, every way data is removed, which one wins, and recipes for buses, alerts, events, single fields, sensors and imported files.
 ---
 
 # Retention & Expiry
@@ -14,7 +14,7 @@ A space you create keeps:
 
 | Part | Kept | Until you change it with |
 |---|---|---|
-| Current values | for ever: nothing removes an entity on its own | an end time on the entity (`expiresAt`), a space rule **Current values**, or pipeline expiry |
+| Current values | for ever: nothing removes an entity on its own | a pipeline's **Lifetime**, an end time on the entity (`expiresAt`), a space rule **Current values**, or pipeline expiry |
 | History | 28 days, the platform default | a space rule **History**, the **All other types** row, or an entity's own `historyRetention` |
 | Pipeline expiry | off | **Remove entities the source no longer sends** on the pipeline |
 
@@ -24,8 +24,9 @@ The Helsinki sample project also carries an older settings file that says histor
 
 | Mechanism | Removes | Where you set it |
 |---|---|---|
-| Entity `expiresAt` | the whole entity at that moment; reads stop showing it at once | in the data the pipeline writes, one value per entity |
-| Attribute `expiresAt` | one attribute of an entity | in the data, on that attribute |
+| Pipeline **Lifetime** | the whole entity, or only the fields you pick, when the end time it writes passes | the pipeline editor, **Lifetime** step; saved as `spec.lifetime` |
+| Entity `expiresAt` | the whole entity at that moment; reads stop showing it at once | written by the pipeline's **Lifetime**, or by a mapping line |
+| Attribute `expiresAt` | one attribute of an entity | written by the pipeline's **Lifetime** (**Only some fields expire**), or by a mapping line |
 | Space rule **Current values** | an entity of that type not updated for the duration, unless it has its own `expiresAt` | space, **Retention**, per type |
 | Pipeline expiry | entities of the named types not updated for the window, checked once an hour | the pipeline, **Remove entities the source no longer sends** |
 | Space rule **History** | history rows of that type older than the duration; `off` records none, **Keep forever** keeps all and asks why | space, **Retention**, per type |
@@ -37,7 +38,7 @@ The Helsinki sample project also carries an older settings file that says histor
 
 ### Which one wins
 
-For current values, an `expiresAt` on the entity wins over the space rule: the space rule only touches entities without one. Pipeline expiry is a separate sweep and removes what it names regardless of the space rule.
+For current values, an `expiresAt` on the entity wins over the space rule, whether a **Lifetime** or a mapping line wrote it: the space rule only touches entities without one. Pipeline expiry is a separate sweep and removes what it names regardless of the space rule.
 
 For history, the most specific setting wins, in this order:
 
@@ -53,7 +54,8 @@ Personal data adds a limit of its own. A data model that marks an attribute as p
 
 Start from what the source tells you:
 
-- *The source says when an item ends* (a vehicle position is stale after minutes, an alert has a valid-to time, a permit has an end date): set `expiresAt` in the pipeline mapping. Every write renews it, and the entity goes the moment it passes.
+- *The source says when an item ends* (a vehicle position is stale after minutes, an alert has a valid-to time, a permit has an end date): give the pipeline a **Lifetime**. Every write renews it, and the entity goes the moment it passes.
+- *Only one field goes stale, the item stays* (a vehicle's position, a parking space's occupancy): a **Lifetime** with **Only some fields expire**.
 - *The source sends the whole list every run and stops listing an item* (stations, a register, a catalogue export): switch on pipeline expiry with a window a few runs long.
 - *Every entity of a type goes stale after a fixed time without an update, whoever wrote it*: a space rule **Current values** for that type.
 - *History grows too large*: shorten the type's **History**, set it to **Off** for types where only now matters, or record on change so a sensor that reads the same value all night writes one row an hour.
@@ -72,17 +74,46 @@ Two settings that look alike behave differently. A space rule **Current values**
 
 Recording on change has no form field: set it in the space manifest as the recipes below show, and propose the file as a change.
 
-## 4. Recipe: Buses and Live Vehicles
+## 4. The Lifetime Step of the Pipeline Editor
 
-A vehicle feed sends a position every second while the vehicle runs and nothing when it parks. Give each position an end time ten minutes after it was observed, so a bus that stopped reporting is gone ten minutes later, and keep a light history.
+The **Lifetime** step of the pipeline editor offers five choices. The editor saves the choice as `spec.lifetime` in the pipeline manifest, beside the mapping, so it reads it back after you edit the mapping by hand.
 
-Add one line to the pipeline's mapping, after it builds the entity. `tst` is the observation time the high-frequency positioning feed sends:
+| Choice | What it writes | Use it for |
+|---|---|---|
+| **Keep entities** | no end time | sensors, registers, anything that stays until the source or a person removes it |
+| **From a field** | the field's time, plus a margin, at most a cap after the write | vehicles (observation time), alerts (valid-to time) |
+| **After each write** | the write time plus a duration, renewed at every write | anything that is gone when the feed stops mentioning it |
+| **On a fixed date** | one date and time for every entity the pipeline writes | an event, a season, a campaign |
+| **Only some fields expire** | an end time on each field you pick; the entity stays | a position or an occupancy that is stale after minutes |
 
-```coffee title="bento.yaml, the mapping of the vehicle pipeline"
-root.expiresAt = (this.tst.ts_unix() + 600).ts_format("2006-01-02T15:04:05Z", "UTC")
+Before **Propose change** is enabled, click **Check**. The Portal runs the sample records through the same rules the write path uses: the space's data model, what the target endpoint lets the pipeline write, and the lifetime each record gets. Each problem names the record, the field and the rule. **Propose change** stays disabled until the check of this draft is green, and the Portal refuses a proposal without one, even one sent by `jcctl` or the API.
+
+The editor refuses a field that is not in the written type, a fixed date that has already passed, and a duration under one minute or over ten years. A record whose field is empty or not a time is written without an end time and counted in the pipeline's problems, so a feed that stops sending the field shows up instead of filling the space.
+
+A lifetime needs no extra permission. The pipeline never deletes anything for it: the broker removes the entity or field when its end time passes, which the endpoint's write permission already allows the pipeline to set.
+
+Until your Portal shows the **Lifetime** step, write the end time in the mapping with the line each recipe gives. Do not use both for the same type: the Portal refuses a pipeline whose mapping sets `expiresAt` and whose **Lifetime** covers the same entity or field.
+
+## 5. Recipe: Buses and Live Vehicles
+
+A vehicle feed sends a position every second while the vehicle runs and nothing when it parks. Give each vehicle an end time five minutes after its last observation, so a bus that stopped reporting is gone five minutes later, and keep a light history.
+
+In the editor's **Lifetime** step, choose **Whole entity expires** and **From a field**, pick `observedAt` as **Field** and enter `5` `minutes` as **Plus**. The manifest gets:
+
+```yaml excerpt
+spec:
+  lifetime:
+    - type: Vehicle
+      entity: { from: observedAt, plus: PT5M }
 ```
 
-A position observed at `2026-10-20T15:00:00.123Z` gets `expiresAt` `2026-10-20T15:10:00Z`. A separate cleanup pipeline that reads the vehicles back and deletes the old ones is no longer needed.
+`observedAt` is the newest observation time among the vehicle's fields. A position observed at `2026-10-20T15:00:00.123Z` gets `expiresAt` `2026-10-20T15:05:00Z`. A separate cleanup pipeline that reads the vehicles back and deletes the old ones is no longer needed.
+
+Without the **Lifetime** step, add one line to the mapping after it builds the entity. `tst` is the observation time the high-frequency positioning feed sends:
+
+```coffee title="bento.yaml, the mapping of the vehicle pipeline"
+root.expiresAt = (this.tst.ts_unix() + 300).ts_format("2006-01-02T15:04:05Z", "UTC")
+```
 
 For the history, record a position only when the vehicle moved 50 metres, and at least every five minutes while it stands, and keep a week:
 
@@ -107,19 +138,61 @@ spec:
 
 When only the live map matters, write `history: "off"` instead and leave out the three recording lines: the space then keeps no history of vehicles at all.
 
-## 5. Recipe: Alerts and Roadworks
+## 6. Recipe: Alerts and Roadworks
 
-An alert or a roadwork carries the time it stops applying. Use it as the entity's end time, and leave entities without one alone:
+An alert or a roadwork carries the time it stops applying. Use it as the entity's end time, and cap it, so an alert with a mistyped year does not stay for decades.
+
+In the **Lifetime** step, choose **Whole entity expires** and **From a field**, pick `validTo` as **Field**, leave **Plus** at `0` and set **At most after the write** to `30 days`:
+
+```yaml excerpt
+spec:
+  lifetime:
+    - type: Alert
+      entity: { from: validTo, notAfter: P30D }
+```
+
+`2026-10-21T06:00:00+03:00` becomes `2026-10-21T03:00:00Z`. A `validTo` of `2062-10-21` becomes 30 days after the write, and every write of the alert moves that cap on. An alert without `validTo`, or with a value that is not a time, gets no end time, stays until the source withdraws it and is counted in the pipeline's problems. An alert whose `validTo` already passed is written and disappears at once. This replaces a cleanup pipeline that deleted ended alerts.
+
+Without the **Lifetime** step, the mapping line has no cap:
 
 ```coffee title="bento.yaml, the mapping of the alerts pipeline"
 root.expiresAt = this.validTo.ts_format("2006-01-02T15:04:05Z", "UTC").catch(deleted())
 ```
 
-`2026-10-21T06:00:00+03:00` becomes `2026-10-21T03:00:00Z`. An alert without `validTo`, or with a value that is not a time, gets no end time and stays until the source withdraws it. An alert whose `validTo` already passed is written and disappears at once. This replaces a cleanup pipeline that deleted ended alerts.
+When the source withdraws alerts by leaving them out of its list instead, use pipeline expiry as in section 9.
 
-When the source withdraws alerts by leaving them out of its list instead, use pipeline expiry as in the next section.
+## 7. Recipe: An Event That Ends on a Date
 
-## 6. Recipe: A Full List Such as Stations
+The city publishes road closures for a Christmas market. Every closure ends when the market closes, whatever the feed says, so give every entity the pipeline writes the same end time.
+
+In the **Lifetime** step, choose **Whole entity expires** and **On a fixed date**, and enter the date and time in the project's time zone. The editor shows it in UTC and refuses a date that has already passed:
+
+```yaml excerpt
+spec:
+  lifetime:
+    - type: RoadClosure
+      entity: { at: "2026-12-31T22:00:00Z" }
+```
+
+At midnight in Helsinki on New Year's Eve every closure of this pipeline is gone. To run the market again next year, change the date and propose the pipeline again.
+
+## 8. Recipe: Only the Position Expires
+
+A parked bus keeps its line, its operator and its last delay, but its position is only true while it reports. Let the position go five minutes after the last write and keep the vehicle.
+
+In the **Lifetime** step, choose **Only some fields expire**, pick `location` as **Field**, choose **After each write** and enter `5` `minutes`:
+
+```yaml excerpt
+spec:
+  lifetime:
+    - type: Vehicle
+      attributes:
+        - { names: [location], rolling: PT5M }
+```
+
+Each write renews the position's end time. Five minutes after the last one the vehicle has no position, and the map stops drawing it, while a query by line still finds the vehicle. Pick several fields in one row when they go stale together, and add a row for fields with another duration. A field lifetime combines with a whole-entity lifetime and with pipeline expiry.
+
+## 9. Recipe: A Full List Such as Stations
 
 A station list arrives whole every five minutes. A station missing from it for two days has closed:
 
@@ -143,7 +216,7 @@ spec:
 
 The window is whole hours or days, from `1h` to `365d`, for one to twenty types. Make it several runs long, so one failed run does not empty the space. The Portal refuses expiry while a second pipeline writes into the same space, and while no Policy lets the pipeline delete those types. The steps in the Portal are in [Pipelines & Ingestion](./04-pipelines.md#7-removing-entities-the-source-dropped).
 
-## 7. Recipe: Air-Quality Sensors
+## 10. Recipe: Air-Quality Sensors
 
 A sensor's current value stays until the next reading, so set no current-value rule. Keep 30 days of history, write a row only when a value moves, and still write one row an hour so a flat line is visible:
 
@@ -172,11 +245,11 @@ spec:
 
 `deadband` is in the attribute's own unit: here a PM10 reading is recorded when it moves by more than 1 µg/m³. An attribute the rule does not name records on any change. The last rule is the **All other types** row: every other type in this space keeps 90 days of history instead of the platform's 28.
 
-## 8. Recipe: Data Imported From a File
+## 11. Recipe: Data Imported From a File
 
 To load a CSV or JSON file into a space, complete the space from the file (see [Organizations, Projects & Context Spaces](./02-organizations-projects-spaces.md#4-completing-a-space-from-a-sample)): the Portal drafts a data source and a pipeline that read it. The **Import** page under Export does something else: it imports configuration bundles, never entity data.
 
-Imported entities never expire on their own, and the space's history setting applies to them like to any other write. When rows of the file have an end, add a column, for example `validUntil` with dates such as `2027-12-31`, and set it as the end time in the pipeline's mapping:
+Imported entities never expire on their own, and the space's history setting applies to them like to any other write. When rows of the file have an end, add a column, for example `validUntil` with dates such as `2027-12-31`, and pick it in the **Lifetime** step as **From a field**, or set it as the end time in the pipeline's mapping:
 
 ```coffee title="bento.yaml, the mapping of the import pipeline"
 root.expiresAt = this.validUntil.ts_parse("2006-01-02").ts_format("2006-01-02T15:04:05Z", "UTC").catch(deleted())
@@ -184,13 +257,13 @@ root.expiresAt = this.validUntil.ts_parse("2006-01-02").ts_format("2006-01-02T15
 
 A row with an empty `validUntil` stays. Pipeline expiry does not suit a one-off file: the file is read once, so after the window every entity would look abandoned and be deleted.
 
-## 9. Recipe: Personal Data
+## 12. Recipe: Personal Data
 
 Mark the attribute as personal in the data model, with its legal basis, purpose and maximum retention; the Portal refuses the model without them. Until the platform deletes personal values by that maximum on its own, set the type's **History** in the space no longer than the maximum, and send a person's erasure request through erasure, which removes their values from the current state, the history and every copy.
 
 ## Related
 
-- [Pipelines & Ingestion](./04-pipelines.md): building the pipeline and its mapping that sets `expiresAt`.
+- [Pipelines & Ingestion](./04-pipelines.md): building the pipeline, its **Lifetime** and its mapping.
 - [Organizations, Projects & Context Spaces](./02-organizations-projects-spaces.md): creating the space whose rules this page sets.
 - [Data Modeling](./03-data-models.md): the types a retention rule names, and personal attributes.
 - [Users, Roles & Approvals](./07-users-roles-approvals.md): approving a retention or expiry change.
