@@ -7,7 +7,8 @@ title: "ADR-N-048: MQTT Edge Brokers per Project, RMQTT as Is, Keycloak Tokens C
 
 Date: 2026-10-12  
 Status: Accepted  
-Decision Makers: product owner (orders of 2026-10-11 ~19:15Z and ~19:35Z, T-3836); the choices of section 2 were delegated in the order and taken by worker-2 (owner may override)
+Amended: 2026-10-20, items 9 to 12 of section 2 (T-4858)  
+Decision Makers: product owner (orders of 2026-10-11 ~19:15Z and ~19:35Z, T-3836); the choices of section 2 were delegated in the order and taken by worker-2 (owner may override). Amendment: product owner, 2026-10-20 ~19:20Z ("only admin can assign one mqtt with certification to the project, and then user can add and there is limit of mqtt brokers"; "just mqtt inbound without actually having values"); the choices were delegated and taken by the supervisor and worker-t4858 (owner may override)
 
 ## 1. Context
 
@@ -39,8 +40,9 @@ A project declares **MQTT edge brokers** as manifests, `kind: MqttBroker`. Each 
    - `roles`: a list of `{name, serviceAccounts, publish, subscribe}`. `serviceAccounts` names ServiceAccounts of the same project. `publish` and `subscribe` are topic filters that may use `${clientid}`.
    - `limits`: `maxMessageBytes` (default 65536, at most 1 MiB), `messagesPerSecond` per client (default 10, at most 1000), `maxConnections` (default 1000, at most 10000).
    - `port`: optional, see item 5.
+   - `mode`, `address`, `hostname` and `deviceAuth`: see items 10 to 12.
 
-   A device role may hold `subscribe` filters only under its own `${clientid}`. The reconciler refuses a filter that is `#` or begins with `$`.
+   A device role may hold `subscribe` filters only under its own `${clientid}`, and only in `relay` mode (item 10). The reconciler refuses a filter that is `#` or begins with `$`.
 2. **The engine, as is.** RMQTT 0.24.0, pinned by the digest above and mirrored and signed by the deployment like every other third-party image. We write no broker code, only configuration: listener limits from `spec.limits`, `max_qos_allowed = 1`, `max_session_expiry_interval = 0`, no retainer, no session storage, no message storage, `rmqtt-auth-http` pointed at the gateway with `deny_if_error = true` and `disconnect_if_expiry = true`, `http_acl_req` off (the ACL comes back at CONNECT, so no publish costs an HTTP call), and `rmqtt-acl` holding the one rule `["deny", "all"]`. Clean sessions only, QoS 0 and 1 kept in memory: a restart loses the messages in flight and nothing else.
 3. **Devices: a Keycloak token, checked by the gateway.** A camera is a `ServiceAccount` (PF-45, PF-47). It connects with the client id and username of its Keycloak client `{project}-{sa}` and an access token as the password. RMQTT's own JWT plugin would need the realm key as a static PEM and could not follow a key rotation, so the token is checked where tokens are already checked: `rmqtt-auth-http` posts the CONNECT to the gateway's internal route `POST /internal/mqtt/auth`. The gateway allows the connection only when every check below holds:
    - the token verifies against the realm JWKS;
@@ -52,10 +54,42 @@ A project declares **MQTT edge brokers** as manifests, `kind: MqttBroker`. Each 
 
    The answer carries the role's `publish` and `subscribe` filters as the RMQTT `acl` list (`retain: false`, `qos: [0, 1]`), `superuser: false`, and `expire_at` set to the token's `exp`, so the broker drops the connection when the token expires and the device reconnects with a new one. The gateway learns which broker is asking from the caller's mesh identity (Linkerd `l5d-client-id`, the broker's Kubernetes ServiceAccount `mqtt-{project}-{name}`), never from a request field, so no broker can ask with another broker's ACL. Only the broker pods reach the route; it is not on APISIX.
 4. **Pipelines: the internal listener, by mesh identity.** A `DataSource` of `type: mqtt` may name a broker of its own project with `spec.mqtt.brokerRef: {kind: MqttBroker, name}` in place of `urls`. The reconciler renders the broker's internal Service URL on port 1883 and, as the username, the runner's identity name. The DataSource carries no password and no `passwordRef`. The internal listener admits the runner's Kubernetes ServiceAccount alone: a Linkerd `Server` with an `AuthorizationPolicy` (MeshTLSAuthentication) and a NetworkPolicy from the runner namespace. The gateway allows a CONNECT without a password only for that username and only from the address of one of the runner's pods: it resolves the runner's headless Service (`pipeline-runner-pods`, `JC_GATEWAY_MQTT_RUNNER_HOST`) per such CONNECT. Every connection to the public listener arrives through Traefik with the PROXY protocol, so its `ipaddr` is the client's own address, public, or a pod's for a cluster workload that dials the public host. Neither is a runner pod's, and such a CONNECT is refused there (T-4004: a private address alone let any cluster pod pass as the runner). The answer's `acl` grants `subscribe` on the topic filters of the DataSources that reference this broker and nothing else, with no `publish` and no `expire_at`. This is the ceiling the shared runner already sets for the token service ([Architecture/12 §One principal per pipeline](../Architecture/12-identity-and-access.md)): a stream on the runner can name what another stream may read. One runner per project lifts it later. The pipeline writes onward as every pipeline does, through an Endpoint and its Policy (CC-61).
-5. **Addresses.** The default is TLS on 8883 through a Traefik TCP router matching `HostSNI(<name>.<project>.mqtt.<domain>)`. Traefik terminates TLS with a certificate cert-manager issues for that one hostname by HTTP-01, never a wildcard, and forwards plain TCP with the PROXY protocol to the broker's external listener. One port serves every broker and nothing collides. The hostname is derived from the name and the project, so it is unique across the platform by construction. `port: <n>` asks for a dedicated port from the reserved range 18830–18849: the reconciler refuses a port another broker holds, naming that broker, and RMQTT then terminates TLS itself on a LoadBalancer Service. Plain 1883 is never published outside the cluster.
+5. **Addresses.** The default is TLS on 8883 through a Traefik TCP router matching `HostSNI(<name>.<project>.mqtt.<domain>)`. Traefik terminates TLS with a certificate cert-manager issues for that one hostname by HTTP-01, never a wildcard, and forwards plain TCP with the PROXY protocol to the broker's external listener. One port serves every broker and nothing collides. The hostname is derived from the name and the project, so it is unique across the platform by construction. `port: <n>` asks for a dedicated port from the reserved range 18830–18849, and only a port an org admin assigned to the project (item 11): the reconciler refuses a port another broker holds, naming that broker, and RMQTT then terminates TLS itself on a LoadBalancer Service. Plain 1883 is never published outside the cluster.
 6. **One release per broker.** Each broker has its own Keycloak client `mqtt-{project}-{name}` (the audience, no secret, bearer-only), its own Deployment, ConfigMap, Service and Kubernetes ServiceAccount in `{instance}-mqtt`, and its own metrics. Two brokers of one project share no client, no ACL and no credential, and a token minted for one broker's audience is refused by every other.
 7. **Configuration as code.** The Portal edits the manifest through a commit, in the review lane where the project uses one. `jcctl apply` and a hand-edited file in Git do the same. The reconciler renders the release, the Keycloak client and the Traefik route, and deletes all three with the manifest. Secrets stay `secretRef` only: a broker needs none of its own.
 8. **Measured by the Portal, read-only.** Each broker starts RMQTT's `rmqtt-http-api` on 6060 with no token, only where the instance runs the service mesh, and nothing else may call it: a Linkerd `Server` on 6060 admits the Portal's Kubernetes ServiceAccount alone (MeshTLSAuthentication), and an `HTTPRoute` beside it routes only `GET /api/v1/metrics/history/sum` and `GET /api/v1/clients`, so the API's publish, subscribe and kick routes answer nobody. A NetworkPolicy lets the Portal's pods reach 6060 and nothing else. Without the mesh the plugin stays off and the Portal shows "not measured" ([API/01 §44](../API/01-portal-api.md), T-4043).
+9. **An allowance per project, set by an org admin (amendment 2026-10-20).** MQTT is off for every project until an org admin turns it on. The switch and the limits are one entry of the organization limits catalog ([ADR-N-035](adr-n-035-organization-policies-and-limits.md)): `Organization.spec.limits.mqtt` is the allowance every project gets, and `Project.spec.quotas.mqtt` replaces it for one project as a whole object. The catalog default is `enabled: false`. The fields:
+
+   | Field | Meaning | Default once `enabled: true` | Built-in bound |
+   |---|---|---|---|
+   | `enabled` | the project may declare brokers at all | `false` | — |
+   | `brokers` | how many `MqttBroker` manifests the project may hold | 1 | 20 |
+   | `connections` | the sum of `spec.limits.maxConnections` over the project's brokers | 1000 | 20000 |
+   | `messagesPerSecond` | the sum over the project's brokers of `maxConnections` × `messagesPerSecond`, the most the brokers may accept in one second | 1000 | 100000 |
+   | `maxMessageBytes` | the ceiling of each broker's `spec.limits.maxMessageBytes` | 65536 | 1048576 |
+   | `modes` | the broker modes the project may use (item 10) | `[ingest]` | `ingest`, `capture`, `relay` |
+   | `addresses` | the address kinds the project may use (item 11) | `[platform]` | `platform`, `dedicatedPort`, `customHostname` |
+   | `ports` | dedicated ports from 18830–18849 assigned to this project | `[]` | each port held by one project |
+   | `customHostnames` | `{name, certificateRef}` entries the project may use (item 11) | `[]` | 10 |
+   | `deviceAuth` | how devices may authenticate (item 12) | `[token]` | `token`, `clientCertificate` |
+   | `clientCaRef` | the secretRef of the project's device client CA (item 12) | none | required when `deviceAuth` holds `clientCertificate` |
+
+   The bounds are the operator's (`portal.organizationBounds`), each at most the built-in bound and the MF-54 ceilings. Who writes what:
+   - Only an org admin changes `spec.limits.mqtt` or a project's `spec.quotas.mqtt`. Both are red-lane Changes an `org-admin` approves (PF-98). A Change that raises any value, adds a mode, an address kind, a port, a hostname or a device authentication needs the approval of an org admin other than the one who proposed it (four-eyes, T-4833). A project role never writes either field, whatever its verbs on `Project`.
+   - Unlike the other project overrides of the catalog, `spec.quotas.mqtt` may exceed the organization's value: the organization's value is the default, and enabling one project while the rest stay off is the common case. The operator's bound is the ceiling for both.
+   - Inside the allowance, a project member with `propose` on `MqttBroker` adds, edits and deletes brokers as today (item 7). Nobody asks an admin per broker.
+
+   The Portal's verdict refuses, on every door before a `Change` exists, a broker that would exceed what is left, and the reconciler checks it again before it renders. The refusal names the limit, its value, the usage and who can raise it (PF-101), for example "the project may run 2 MQTT brokers (2 in use); an org admin can raise this in Organization settings > Projects > helsinki". A lowered allowance refuses the next broker and stops none that runs (PF-100). Disabling MQTT for a project refuses every new broker and every edit that is not a deletion; running brokers keep running until a Change deletes them, and the project's usage shows them over the allowance.
+10. **Broker modes.** `spec.mode` says what the broker does with a message. A mode outside the allowance's `modes` is refused.
+    - `ingest` (the default): devices publish and nothing else. No device role holds `subscribe` filters, the only subscriber is the project's pipeline runner on the internal listener (item 4), and the broker keeps nothing. With no DataSource on the broker, a message reaches nobody and is dropped: a project can run MQTT inbound before it has a model or a pipeline. The Portal still shows the connected devices and the message rate (item 8).
+    - `capture`: `ingest`, plus the Portal keeps the newest messages so a steward can design a mapping before a model exists. `spec.capture` holds `messagesPerTopic` (default 20, at most 1000) and `window` (an ISO 8601 duration, default `PT1H`, at most `PT24H`). The Portal reads the broker on its internal listener by its own mesh identity, admitted like the runner's (item 4) with `subscribe` on the publish filters of the broker's roles and nothing else. It keeps at most `messagesPerTopic` messages per topic, 1000 messages and 8 MiB per broker, each for `window` from its arrival, in the Portal's database, and deletes them when the window passes, when the broker leaves `capture`, and when the broker is deleted. The captured messages are served only to a person whose binding holds `approve` on `MqttBroker` in the project (the steward, the project administrator, an org admin); a person who reads the manifest and holds no `approve` gets `404`, the same answer as a broker that does not exist. A steward may delete the capture at once. A payload is never written to a log, an activity entry or a metric.
+    - `relay`: devices may also subscribe, each only under its own `${clientid}` prefix (item 1), as before this amendment. A manifest that holds a device `subscribe` filter and sets no `mode` is refused with a message that names `spec.mode: relay`, so no broker changes behaviour silently.
+11. **Addresses and server certificates.** `spec.address` picks one kind, from the allowance's `addresses`:
+    - `platform` (the default): `<name>.<project>.mqtt.<domain>` on 8883, its certificate issued for that hostname by HTTP-01 (item 5).
+    - `dedicatedPort`: `spec.port` names one of the ports in the allowance's `ports`. An org admin assigns a port to one project; a project member only picks among its own. The reconciler refuses a port assigned to no project or to another project, and a port another broker of the project holds, naming that broker. A port is never claimed by a user: there are 20, and the allowance is how they are shared.
+    - `customHostname`: `spec.hostname` names one entry of the allowance's `customHostnames`, a name the city owns (`mqtt.city.example`). The city points a CNAME at the edge; the Traefik route matches `HostSNI` on that name. With `certificateRef` empty, cert-manager issues the certificate by HTTP-01 once the name resolves to the edge, and the Portal shows the broker as waiting for DNS until then. With `certificateRef` set, the edge serves the certificate the org admin stored there (a `secretRef`, never inline), and the Portal shows its expiry date and warns 30 days before it.
+    A hostname is assigned to one project at a time: the Portal refuses a `customHostnames` entry another project's allowance holds, naming that project.
+12. **Devices by client certificate.** Some devices cannot run an OAuth flow. When the allowance's `deviceAuth` holds `clientCertificate` and the broker's `spec.deviceAuth` names it, the broker's external listener asks for a client certificate signed by the project's client CA (`clientCaRef`, uploaded by the org admin as a secret, never inline). TLS then terminates in RMQTT for that broker, on a dedicated port or behind a TCP passthrough route on 8883, so the certificate reaches the broker; Traefik does not see it. The certificate's subject common name is the device's ServiceAccount name, the gateway receives it as the CONNECT username with no password, and the gateway allows the CONNECT only when that ServiceAccount holds a role of the broker, the certificate is within its validity and not on the CRL the CA secret carries, and the client id equals `{project}-{serviceAccount}`. The ACL and the role checks are the same as for a token, and `expire_at` is one hour after the CONNECT or the certificate's `notAfter`, whichever comes first, so the device reconnects every hour and each reconnect is checked again. Revoking a device means listing its certificate on the CRL or removing its ServiceAccount from the role; an open connection ends within the hour. A broker without `clientCertificate` asks for no client certificate, and a token is still accepted on a broker that names both.
 
 ## 3. Security Analysis
 
@@ -71,7 +105,11 @@ The build tasks (T-3837…T-3839) inherit each row as a failing test.
 | An outside client or a cluster pod posing as the runner | A CONNECT without a password is allowed only for the runner's name from the address of a runner pod. Traffic to the public listener carries its source address through the PROXY protocol, which Traefik writes; the public listener admits Traefik alone. The internal listener admits the runner's mesh identity alone. |
 | Plain text from outside | TLS only from outside: Traefik terminates TLS on 8883 and a dedicated port terminates TLS in RMQTT; plain 1883 is a ClusterIP Service. |
 | The broker's HTTP API, which can publish and disconnect | It runs only under the mesh and admits one identity, the Portal's, on two read routes (`HTTPRoute` with `GET` only); a NetworkPolicy lets no other pod reach 6060. It carries no static token: the mesh identity is the credential, as on 1883. |
-| A secret typed into the manifest | The schema has no field that could hold a credential; the broker uses none, and a DataSource with `brokerRef` refuses `passwordRef`. |
+| A secret typed into the manifest | The schema has no field that could hold a credential; the broker uses none, and a DataSource with `brokerRef` refuses `passwordRef`. The allowance's `certificateRef` and `clientCaRef` are `secretRef`s only. |
+| A project member raising its own allowance, picking a port or a hostname | `spec.quotas.mqtt` and `spec.limits.mqtt` are written only through a red-lane Change an `org-admin` approves, and a raise needs a second org admin (item 9). A broker may name only a port or hostname its project's allowance holds (item 11). |
+| MQTT on in a project nobody decided | The catalog default is `enabled: false`; the verdict and the reconciler refuse every broker of a project whose allowance is off. |
+| Captured payloads holding personal data | A capture lives at most `window` (at most 24 hours) and at most 1000 messages and 8 MiB per broker, is deleted with the mode or the broker, is served only to a person with `approve` on `MqttBroker` in the project, and never reaches a log, an activity entry or a metric (item 10). |
+| A device with a stolen client certificate | The CA is the project's own, so a certificate is worth one project; the CRL in the CA secret and the role binding refuse its next CONNECT, every connection is checked again within an hour, and the CN must match the client id (item 12). |
 
 ## 4. Alternatives Considered
 
@@ -84,6 +122,10 @@ The build tasks (T-3837…T-3839) inherit each row as a failing test.
 | The pipeline authenticated by a token in the password | Bento's `mqtt` input reads the password once, so the first reconnect after `exp` fails. A refreshing stream would need a forked runner. |
 | The pipeline authenticated by its client secret | A static key between cluster services, which the platform does not use. |
 | One wildcard certificate for `*.mqtt.<domain>` | Needs a DNS API; certificates are issued per hostname by HTTP-01. |
+| Every broker approved by an admin, with no allowance (amendment) | An admin in the loop for every broker a project adds. Kept only for raising an allowance, where a second org admin approves (item 9). |
+| An admin-made address object assigned to a project, which users attach brokers to (amendment) | A second kind for what the allowance's `ports` and `customHostnames` already say; the address part of the allowance is that object. |
+| One shared platform broker, a topic prefix per project (amendment) | One RMQTT for every project breaks the per-broker audience and client isolation of item 6. |
+| A bring-your-own external broker as a DataSource (amendment) | It stays, behind the existing host allow-list (MF-35, PL-39); it is not an edge broker of the platform. |
 
 ## 5. Consequences
 
@@ -93,6 +135,7 @@ The build tasks (T-3837…T-3839) inherit each row as a failing test.
 - **The deployment** mirrors and signs the RMQTT image, adds the `{instance}-mqtt` namespace, the Traefik `mqtts` entrypoint on 8883, and the NetworkPolicies and Linkerd policies of section 2 (T-3837).
 - **The Portal** lists, creates and edits brokers as Changes and shows each broker's address and a copy-ready client configuration (T-3838).
 - **The camera demo** publishes through a broker into a space (T-3839).
+- **The amendment (items 9 to 12)**: jc-core gains `limits.mqtt` and `quotas.mqtt`, and `MqttBroker` gains `mode`, `capture`, `address`, `hostname` and `deviceAuth`; the Portal's verdict and the reconciler enforce the allowance, the gateway admits the Portal's capture subscriber and certificate devices, and the reconciler renders custom hostnames and client CAs (T-4859, T-4861). The Portal shows the allowance in Organization settings and on the project's MQTT page, and the capture to stewards (T-4860). A broker committed before the amendment with device `subscribe` filters needs `mode: relay`; one without them becomes `ingest` and behaves as before.
 
 ## 6. Requirements
 
@@ -101,10 +144,19 @@ Landed with this decision:
 - `Requirements/manifests.md`: **MF-54**.
 - `Requirements/pipelines.md`: **PL-74**…**PL-77**.
 
+Landed with the amendment of 2026-10-20:
+
+- `Requirements/platform.md`: **PF-117**…**PF-120**.
+- `Requirements/manifests.md`: **MF-62**.
+- `Requirements/pipelines.md`: **PL-86**…**PL-89**.
+
 ## Related
 
+- [ADR-N-035](adr-n-035-organization-policies-and-limits.md): the organization limits catalog that holds the MQTT allowance.
 - [ADR-N-043](adr-n-043-named-mcp-servers.md): a manifest kind that the reconciler renders into a Keycloak client of its own.
 - [Architecture/08-pipelines.md](../Architecture/08-pipelines.md): DataSource and the pipeline runner.
 - [Architecture/12-identity-and-access.md](../Architecture/12-identity-and-access.md): service identities and one principal per pipeline.
-- [Requirements/manifests.md](../Requirements/manifests.md): MF-35, MF-54.
-- [Requirements/pipelines.md](../Requirements/pipelines.md): PL-39, PL-74…PL-77.
+- [Requirements/manifests.md](../Requirements/manifests.md): MF-35, MF-54, MF-62.
+- [Requirements/pipelines.md](../Requirements/pipelines.md): PL-39, PL-74…PL-77, PL-86…PL-89.
+- [Requirements/platform.md](../Requirements/platform.md): PF-96…PF-102, PF-117…PF-120.
+- [API/01-portal-api.md §47](../API/01-portal-api.md): the allowance and capture routes.

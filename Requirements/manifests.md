@@ -6,7 +6,7 @@ description: Kubernetes-style resource envelope, resource API, and download, imp
 
 # Manifest Model, Import, Sync & Download
 
-Family **MF** (MF-01…MF-61). Owning chapter: [Architecture/06-configuration-as-code.md](../Architecture/06-configuration-as-code.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
+Family **MF** (MF-01…MF-62). Owning chapter: [Architecture/06-configuration-as-code.md](../Architecture/06-configuration-as-code.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
 
 ## 1. Resource Envelope
 
@@ -112,6 +112,7 @@ Family **MF** (MF-01…MF-61). Owning chapter: [Architecture/06-configuration-as
 - **MF-58** [S] — An AssistantDeployment's optional `spec.select` MUST take the grammar of MF-55 with the field of MF-61, and `jcctl validate` MUST refuse, on every channel but `internal`, an `accessLevel` value other than `public`, and on every channel a `projects` value or a `spaces` project that is neither the deployment's own project nor one of `scope.projects`, each finding naming the field ([ADR-N-055 §2.3](../Decisions/adr-n-055-assistant-profiles.md#23-a-selector-only-narrows)).
 - **MF-59** [S] — An AssistantDeployment's optional `spec.exclude` MUST be a list of at most 50 Endpoints, each named as a connector is (its name in the own project, `{project}/{endpoint}` in another), no name twice; an excluded Endpoint MUST NOT be resolved, whatever `connectors`, `select` or `mcpServer` says, and `jcctl validate` MUST refuse a name the repository does not declare (ADR-N-055 §2.2).
 - **MF-60** [H] — A `KnowledgeSource` and an `AssistantDeployment` MAY carry `spec.categories`, a list of 1 to 13 distinct EU data-theme codes (`AGRI`, `ECON`, `EDUC`, `ENER`, `ENVI`, `GOVE`, `HEAL`, `INTR`, `JUST`, `REGI`, `SOCI`, `TECH`, `TRAN`), and `jcctl validate` MUST refuse any other value, naming the field and the codes it accepts ([ADR-N-055 §2.4](../Decisions/adr-n-055-assistant-profiles.md#24-one-category-list-the-eu-data-themes)).
+- **MF-62** [S] — `kind: MqttBroker` MUST accept `spec.mode` ∈ {`ingest`, `capture`, `relay`} (default `ingest`), `spec.capture` (`messagesPerTopic` 1…1000, default 20; `window` an ISO 8601 duration up to `PT24H`, default `PT1H`) only in `capture` mode, `spec.address` ∈ {`platform`, `dedicatedPort`, `customHostname`} (default `platform`) with `spec.port` required for `dedicatedPort` and `spec.hostname` required for `customHostname` and each refused otherwise, and `spec.deviceAuth` a non-empty subset of {`token`, `clientCertificate`} (default `[token]`); a device role's `subscribe` filter MUST be refused outside `relay` mode, naming `spec.mode: relay` ([ADR-N-048 §2.10–2.12](../Decisions/adr-n-048-mqtt-edge-brokers.md)).
 - **MF-61** [S] — The `select` grammar of MF-55 MUST also accept `types`, 1 to 50 NGSI-LD entity type short names, matched against the types the Endpoint serves, in an McpServer and in an AssistantDeployment alike (ADR-N-055 §2.2).
 
 ## Traceability
@@ -139,6 +140,7 @@ Family **MF** (MF-01…MF-61). Owning chapter: [Architecture/06-configuration-as
 | MF-53 | [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | MF-55…MF-57 | [ADR-N-043 §7](../Decisions/adr-n-043-named-mcp-servers.md#7-amendment-2026-10-17-connector-profiles-t-4504) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
 | MF-58…MF-61 | [ADR-N-055](../Decisions/adr-n-055-assistant-profiles.md) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
+| MF-62 | [ADR-N-048](../Decisions/adr-n-048-mqtt-edge-brokers.md) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
 | MF-54 | [ADR-N-048](../Decisions/adr-n-048-mqtt-edge-brokers.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | MF-51…MF-52 | [Architecture/22-knowledge-assistant.md#2-two-manifest-kinds](../Architecture/22-knowledge-assistant.md#2-two-manifest-kinds), [ADR-N-040](../Decisions/adr-n-040-knowledge-assistant.md) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
 

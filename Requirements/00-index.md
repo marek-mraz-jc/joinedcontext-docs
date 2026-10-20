@@ -29,10 +29,10 @@ The ID range of each family is its lowest and highest live ID, not a count: a re
 
 | Family Prefix | Family Name | Requirement Range | Specification File | Owning Architecture Chapter | Test Family |
 |---|---|---|---|---|---|
-| **PF** | Platform & Domain Invariants | PF-01…PF-106 | [platform.md](platform.md) | [Architecture/03-domain-model.md](../Architecture/03-domain-model.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
-| **MF** | Manifest Model, Import/Sync/Download | MF-01…MF-54 | [manifests.md](manifests.md) | [Architecture/06-configuration-as-code.md](../Architecture/06-configuration-as-code.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
+| **PF** | Platform & Domain Invariants | PF-01…PF-120 | [platform.md](platform.md) | [Architecture/03-domain-model.md](../Architecture/03-domain-model.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
+| **MF** | Manifest Model, Import/Sync/Download | MF-01…MF-62 | [manifests.md](manifests.md) | [Architecture/06-configuration-as-code.md](../Architecture/06-configuration-as-code.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | **EP** | Endpoints & Representations | EP-01…EP-96 | [endpoints.md](endpoints.md) | [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md) | [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md) |
-| **PL** | Pipeline Execution | PL-01…PL-85 | [pipelines.md](pipelines.md) | [Architecture/08-pipelines.md](../Architecture/08-pipelines.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
+| **PL** | Pipeline Execution | PL-01…PL-89 | [pipelines.md](pipelines.md) | [Architecture/08-pipelines.md](../Architecture/08-pipelines.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | **AG** | Agent & MCP Governance | AG-01…AG-115 | [agents.md](agents.md) | [Architecture/07-agents-and-mcp.md](../Architecture/07-agents-and-mcp.md) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
 | **UI** | Portal & User Interface | UI-01…UI-86 | [portal-and-ui.md](portal-and-ui.md) | [Architecture/09-portal.md](../Architecture/09-portal.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | **TS** | Testing & Quality Assurance | TS-01…TS-26 | [testing.md](testing.md) | [Architecture/01-overview.md](../Architecture/01-overview.md) | [Testing/00-strategy.md](../Testing/00-strategy.md) |

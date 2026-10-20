@@ -30,18 +30,18 @@ Generated 2026-10-20 from: `conformance` 21a1cec, `deployment` 900fb60, `platfor
 | **EP** — Endpoints and parity | 141 | 122 | 8 | 11 | 9 |
 | **GW** — Gateway firewall | 35 | 25 | 3 | 7 | 2 |
 | **I** — Identity and credentials | 4 | 2 | 2 | 0 | 0 |
-| **MF** — Manifests | 60 | 55 | 5 | 0 | 1 |
+| **MF** — Manifests | 61 | 55 | 5 | 1 | 2 |
 | **MIM** — OASC interoperability | 76 | 1 | 3 | 72 | 0 |
 | **MP** — Model projections | 3 | 3 | 0 | 0 | 0 |
 | **OPS** — Operations and reliability | 56 | 46 | 6 | 4 | 3 |
-| **PF** — Platform invariants | 116 | 98 | 7 | 11 | 3 |
-| **PL** — Pipelines | 89 | 66 | 11 | 12 | 8 |
+| **PF** — Platform invariants | 120 | 98 | 7 | 15 | 6 |
+| **PL** — Pipelines | 93 | 66 | 11 | 16 | 12 |
 | **R** — Access control and federation | 60 | 23 | 6 | 31 | 0 |
 | **SDK** — App SDK | 42 | 34 | 3 | 5 | 1 |
 | **SP** — Context-space surface | 22 | 18 | 2 | 2 | 0 |
 | **TS** — Testing and quality | 26 | 16 | 4 | 6 | 0 |
 | **UI** — Portal and user interface | 97 | 72 | 14 | 11 | 5 |
-| **Total** | 1362 | 1008 | 114 | 240 | 60 |
+| **Total** | 1371 | 1008 | 114 | 249 | 68 |
 
 ## 3. Requirement to test
 
@@ -863,6 +863,7 @@ Generated 2026-10-20 from: `conformance` 21a1cec, `deployment` 900fb60, `platfor
 | **MF-58** | [S] | tested | ci-full, fast ci | platform `crates/jc-core/tests/assistant_tests.rs::a_selector_alone_makes_a_data_only_assistant`, platform `crates/jc-core/tests/assistant_tests.rs::a_public_deployment_selects_public_endpoints_only`, platform `crates/jc-core/tests/assistant_tests.rs::a_selector_names_projects_in_reach`, and 6 more |
 | **MF-59** | [S] | tested | ci-full | platform `crates/jc-core/tests/assistant_tests.rs::exclude_names_endpoints_once_in_the_connector_form`, platform `crates/jc-manifest/tests/validate_tests.rs::an_assistant_selects_inside_its_reach_and_excludes_declared_endpoints` |
 | **MF-60** | [H] | tested | ci-full | platform `crates/jc-core/tests/assistant_tests.rs::categories_are_eu_data_theme_codes` |
+| **MF-62** | [S] | open |  |  |
 | **MF-61** | [S] | built |  | `joinedcontext-platform/crates/context-gateway/src/mcp/server.rs`, `joinedcontext-platform/crates/jc-core/src/kinds/mcp_server.rs`, `joinedcontext-platform/crates/jc-core/src/reach.rs`, and more |
 
 ### MIM — OASC interoperability
@@ -1132,6 +1133,10 @@ Generated 2026-10-20 from: `conformance` 21a1cec, `deployment` 900fb60, `platfor
 | **PF-101** | [H] | tested | ci-full | portal `tests/organization_limits_tests.rs::every_entry_carries_its_bound_its_value_and_where_the_value_comes_from`, portal `tests/organization_limits_tests.rs::each_project_shows_whose_quota_is_in_force_and_what_it_uses`, portal `tests/organization_limits_tests.rs::a_person_who_reads_no_project_gets_the_catalog_and_no_project` |
 | **PF-102** | [H] | tested | ci-full, fast ci | portal `src/api/organization_limits.rs::the_upload_size_is_the_organizations_the_default_or_the_ceiling`, portal `tests/organization_limits_tests.rs::every_entry_carries_its_bound_its_value_and_where_the_value_comes_from`, portal `tests/organization_limits_tests.rs::each_project_shows_whose_quota_is_in_force_and_what_it_uses`, and 1 more |
 | **PF-103** | [S] | tested | ci-full, fast ci | portal `src/api/mutate.rs::a_new_public_app_is_refused_while_the_organization_refuses_public_apps`, portal `tests/public_apps_policy_tests.rs::a_public_app_is_refused_before_a_change_exists_while_the_organization_refuses_them`, portal `tests/public_apps_policy_tests.rs::an_app_kept_to_its_project_is_proposed_while_public_apps_are_refused`, and 1 more |
+| **PF-117** | [S] | open |  |  |
+| **PF-118** | [S] [H] | open |  |  |
+| **PF-119** | [S] | open |  |  |
+| **PF-120** | [H] | open |  |  |
 | **PF-105** | [S] | tested | ci-full, conformance, fast ci | conformance `tests/security/test_forge_side_door.py::test_pf51_the_protection_rule_pins_the_pusher_and_drops_an_approval_a_new_commit_invalidates`, deployment `tests/test_forge_identities.py::test_main_takes_only_the_portals_push_and_merge_never_over_an_outdated_base`, deployment `tests/test_forge_identities.py::test_the_seed_commits_as_the_portal_and_never_as_the_administrator`, and 7 more |
 | **PF-106** | [S] | tested | ci-full, fast ci | deployment `tests/test_forge_identities.py::test_each_token_is_minted_on_a_machine_user_that_administers_nothing`, deployment `tests/test_forge_identities.py::test_the_administrators_tokens_are_retired_after_their_readers_restart`, deployment `tests/test_forge_identities.py::test_the_applications_move_to_their_own_organization_and_machine_user`, and 8 more |
 | **PF-107** | [S] [H] | tested | ci-full, fast ci | deployment `tests/test_ckan_admin_seed.py::test_the_seed_has_instances_to_hand_out`, deployment `tests/test_ckan_admin_seed.py::test_each_instance_has_its_own_role_constrained_to_it_alone`, deployment `tests/test_ckan_admin_seed.py::test_no_ckan_admin_role_is_bound_by_the_seed`, and 4 more |
@@ -1217,6 +1222,10 @@ Generated 2026-10-20 from: `conformance` 21a1cec, `deployment` 900fb60, `platfor
 | **PL-75** | [S] | tested | ci-full, fast ci | platform `crates/context-gateway/src/mqtt.rs::a_connect_debug_never_shows_the_password`, platform `crates/context-gateway/src/mqtt.rs::a_mesh_identity_names_its_broker_by_its_first_label`, platform `crates/context-gateway/src/mqtt.rs::the_runner_is_the_addresses_its_name_resolves_to_and_nothing_else`, and 13 more |
 | **PL-76** | [S] | tested | ci-full, fast ci | deployment `tests/test_mqtt_brokers.py::test_each_broker_is_one_release_with_its_own_identity`, deployment `tests/test_mqtt_brokers.py::test_the_last_acl_rule_denies_everything_and_nothing_is_stored`, deployment `tests/test_mqtt_brokers.py::test_only_the_two_plain_listeners_are_open`, and 27 more |
 | **PL-77** | [S] | tested | fast ci | deployment `tests/test_mqtt_brokers.py::test_each_broker_is_one_release_with_its_own_identity`, deployment `tests/test_mqtt_brokers.py::test_the_last_acl_rule_denies_everything_and_nothing_is_stored`, deployment `tests/test_mqtt_brokers.py::test_only_the_two_plain_listeners_are_open`, and 15 more |
+| **PL-86** | [S] | open |  |  |
+| **PL-87** | [S] | open |  |  |
+| **PL-88** | [S] | open |  |  |
+| **PL-89** | [S] | open |  |  |
 | **PL-78** | [H] [S] | tested | ci-full, fast ci | portal `src/config.rs::each_pipeline_lane_runs_one_at_a_time_unless_configured`, portal `src/reconciler/run_queue.rs::only_sources_that_wait_for_pushes_are_resident`, portal `src/reconciler/run_queue.rs::a_clock_is_the_period_else_the_schedule_else_once`, and 15 more |
 | **PL-79** | [S] | tested | ci-full, fast ci | platform `crates/jc-core/tests/pipeline_tests.rs::a_replace_meets_the_outputs_whose_ids_can_be_its_own`, platform `crates/jc-core/tests/pipeline_v1alpha2_tests.rs::an_output_mode_is_upsert_replace_or_update_attrs`, platform `crates/jc-manifest/tests/validate_tests.rs::a_replace_whose_ids_another_pipeline_mints_alike_is_refused_naming_both`, and 2 more |
 | **PL-80** | [S] | open |  |  |
