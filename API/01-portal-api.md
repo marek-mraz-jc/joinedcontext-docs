@@ -3110,6 +3110,8 @@ DELETE /api/v1/projects/{project}/spaces/{space}/views/{id}     delete it → 20
     "group": "status",
     "hidden": ["dateLastReported"],
     "width": { "name": 240 },
+    "order": ["name", "availableBikeNumber"],
+    "labels": { "availableBikeNumber": "Bikes" },
     "colour": [{ "when": "availableBikeNumber==0", "colour": "danger" }],
     "settings": {}
   },
@@ -3124,7 +3126,11 @@ DELETE /api/v1/projects/{project}/spaces/{space}/views/{id}     delete it → 20
   (`^[A-Za-z][A-Za-z0-9_-]*$`), `kind` one of `grid`, `gallery`, `kanban`, `calendar`, `timeline`,
   `form`, `mode` one of `personal`, `collaborative`, `locked`, `title` 1 to 120 characters.
 - `config`: `q` is an NGSI-LD query of at most 4,096 characters, sent as the person's own `q`
-  when the view opens; `sort` names at most 3 attributes; `hidden` and `width` name attributes;
+  when the view opens; `sort` names at most 3 attributes; `hidden` and `width` name attributes,
+  a width between 40 and 2,000 pixels; `order` lists at most 256 attributes in the order the grid
+  shows them, the rest after them in the display order (DM-98); `labels` gives at most 256
+  attributes a label of the view's own, 1 to 80 characters without control characters, shown as
+  text and never written to the model (T-4827);
   `colour` holds at most 20 rules, each a `q` and one of the colour tokens `neutral`, `info`,
   `success`, `warning`, `danger`, evaluated in the page on the rows it shows (terms joined by `;`
   and `|`, without parentheses; a rule the page cannot evaluate marks nothing and the editor says
