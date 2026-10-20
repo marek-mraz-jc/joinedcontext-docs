@@ -35,13 +35,13 @@ Generated 2026-10-20 from: `docs` 6487e98, `conformance` 21a1cec, `deployment` 9
 | **MP** — Model projections | 3 | 3 | 0 | 0 | 0 |
 | **OPS** — Operations and reliability | 56 | 46 | 6 | 4 | 3 |
 | **PF** — Platform invariants | 120 | 98 | 8 | 14 | 6 |
-| **PL** — Pipelines | 89 | 62 | 11 | 16 | 12 |
+| **PL** — Pipelines | 95 | 62 | 11 | 22 | 17 |
 | **R** — Access control and federation | 60 | 23 | 9 | 28 | 0 |
 | **SDK** — App SDK | 42 | 34 | 3 | 5 | 1 |
 | **SP** — Context-space surface | 22 | 18 | 2 | 2 | 0 |
 | **TS** — Testing and quality | 26 | 16 | 5 | 5 | 0 |
 | **UI** — Portal and user interface | 97 | 72 | 14 | 11 | 5 |
-| **Total** | 1367 | 1004 | 121 | 242 | 68 |
+| **Total** | 1373 | 1004 | 121 | 248 | 73 |
 
 ## 3. Requirement to test
 
@@ -1234,6 +1234,12 @@ Generated 2026-10-20 from: `docs` 6487e98, `conformance` 21a1cec, `deployment` 9
 | **PL-83** | [S] | open |  |  |
 | **PL-84** | [S] | open |  |  |
 | **PL-85** | [H] [S] | open |  |  |
+| **PL-90** | [S] | open |  |  |
+| **PL-91** | [S] | open |  |  |
+| **PL-92** | [S] | open |  |  |
+| **PL-93** | [S] | open |  |  |
+| **PL-94** | [S] | open |  |  |
+| **PL-95** | [H] | open |  |  |
 
 ### R — Access control and federation
 
