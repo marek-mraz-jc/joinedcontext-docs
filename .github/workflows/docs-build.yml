@@ -56,7 +56,8 @@ jobs:
         # random hour. Bump the tag when a new kind lands, which is the same moment the
         # "Schema not published yet" list on Development/04-manifest-kinds.md shortens.
         # 1e7043f -> platform main a2d0d5d (T-3289 re-enabled this lane): the same kinds ci.yml pins.
-        env: { JC_SCHEMAS_TAG: a2d0d5d681eafcdc522ba71b5d898ba5e56da131 }
+        # a2d0d5d -> platform main e6d8253 (T-4820): ContextSpace retention `record`, `heartbeat`, `deadband`, `minDistance`, `attributes` (T-4669) are documented.
+        env: { JC_SCHEMAS_TAG: e6d82530c396ccea712d8cf2cc3d8b9849499e34 }
         run: |
           set -eu
           curl -sSL "https://github.com/marek-mraz-jc/joinedcontext-platform/archive/${JC_SCHEMAS_TAG}.tar.gz" \
