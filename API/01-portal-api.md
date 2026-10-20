@@ -3868,6 +3868,38 @@ An erasure finds the Entities naming the subject in each such class and erases, 
 
 The erasure answers at once and stays `open` until every store reports `done`: a store that does not answer is asked again each minute, the CKAN DataStore at each reconciler run, and after an hour of refusals it is `failed`, which leaves the erasure for a person to read why. The erasure log keeps the subject's keyed hash, the Entities and the counts, never a value, outside the broker's database; when the Portal starts and every hour after, it sends again every erasure whose record a broker no longer holds, after that broker's database was restored from an older backup ([Deployment/07 §5](../Deployment/07-backup-restore.md#5-backups-and-erasure)). Every call is audited with its `reason`; a call without one answers `400` naming `reason-required`.
 
+## 47. Pipeline access requests (PL-90…PL-93)
+
+A pipeline that reads or writes a Context Space it has no grant on asks the space's owner for one. The request lives in the owning project and grants nothing until an owner there approves it; approval proposes the grant as a Change of the owning project, through its lane.
+
+```text
+POST   /api/v1/projects/{project}/pipelines/{pipeline}/access-requests   { "endpoint": { "project", "name" }, "operations": "read"|"write", "types": [{ "type", "attrs": [...] }], "until"?, "reason" } → 201
+GET    /api/v1/projects/{project}/pipelines/{pipeline}/access-requests   the pipeline's requests, outgoing → 200
+GET    /api/v1/projects/{project}/access-requests                        the requests into this project's spaces, incoming → 200
+POST   /api/v1/projects/{project}/access-requests/{id}/approve           {} → 202, the Change
+POST   /api/v1/projects/{project}/access-requests/{id}/decline           { "reason" } → 200
+POST   /api/v1/projects/{project}/access-requests/{id}/revoke            { "reason" } → 202, the Change
+```
+
+Filing needs `propose` on the Pipeline in `{project}`; the incoming list, approve, decline and revoke need `approve` on the Endpoint's ContextSpace in the owning project, and a caller without it reads `404` for a request of a space they cannot read. An outgoing request shows the owning project's name, the Endpoint's name, the types and attributes asked for and the state (`pending`, `approved`, `declined`, `revoked`, `ended`), never the space's data. Approving or revoking answers the Change (MF-12); its lane is the owning project's, and its approval follows the four-eyes rule there. The requester approving their own request answers `403 self-approval`.
+
+```json
+{
+  "id": "ar-0a1b2c3d4e5f",
+  "pipeline": { "project": "city-kpis", "name": "air-index" },
+  "account": "city-kpis/pl-air-index",
+  "endpoint": { "project": "helsinki", "name": "air-quality" },
+  "operations": "read",
+  "types": [{ "type": "AirQualityObserved", "attrs": ["pm10", "pm25", "dateObserved"] }],
+  "until": "2027-01-31T23:59:59Z",
+  "state": "pending",
+  "requestedBy": "jana",
+  "requestedAt": "2026-10-20T19:40:00Z",
+  "decidedBy": null,
+  "change": null
+}
+```
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
