@@ -52,6 +52,8 @@ The enforcement point in front of every broker surface (`context-gateway`).
 | `JC_GATEWAY_REPO_DIR` | — | no | The manifest repository the endpoint table is built from (`JC_GATEWAY_REPO_DIR`); absent means an empty table until one is loaded. |
 | `JC_GATEWAY_WRITE_BUDGET_MIB` | `16` | no | How many MiB of write bodies may be in the gateway at once (`JC_GATEWAY_WRITE_BUDGET_MIB`, default `16`, [`crate::app::WRITE_BUDGET_MIB`]); a write past it is answered 503 with `Retry-After` (T-4077). |
 | `JC_GATEWAY_WS_ENTITIES` | — | no | `JC_GATEWAY_WS_ENTITIES`, the entity table's bound per Endpoint (ADR-N-049 §2.2). |
+| `JC_GATEWAY_WS_HUBS` | — | no | `JC_GATEWAY_WS_HUBS`: the hubs, and so the broker connections, of this replica (default 64, API/07 §3). |
+| `JC_GATEWAY_WS_HUBS_PER_SPACE` | — | no | `JC_GATEWAY_WS_HUBS_PER_SPACE`: the hubs one space may hold in this replica (default 32, under the broker's 50 per tenant). |
 | `JC_GATEWAY_WS_PER_SPACE` | — | no | `JC_GATEWAY_WS_PER_SPACE`: the space cap, raised for a measurement (the `ws-fanout` rig). |
 | `JC_OIDC_CLIENT_ASSERTION_FILE` | — | no | How the gateway proves its own Keycloak client (`JC_OIDC_CLIENT_SECRET` or `JC_OIDC_CLIENT_ASSERTION_FILE`, PF-47). |
 | `JC_OIDC_CLIENT_ID` | — | no | The gateway's own Keycloak client and how it proves it (`JC_OIDC_CLIENT_ID` with `JC_OIDC_CLIENT_ASSERTION_FILE` or `JC_OIDC_CLIENT_SECRET`): the identity it presents when it calls the Portal's internal listener (PF-46, PF-47, AG-52). |
