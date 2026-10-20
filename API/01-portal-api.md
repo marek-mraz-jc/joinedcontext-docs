@@ -3023,7 +3023,7 @@ GET /api/v1/organization/limits     the catalog, its bounds and the values in fo
 ```
 
 - `entries` lists every numeric entry of the catalog in its order. `section` is one of
-  `projects`, `applications`, `edge`, `signIn`, `people`, `agents`, `pipelinesAndData`.
+  `projects`, `applications`, `edge`, `signIn`, `people`, `agents`, `pipelinesAndData`, `mqtt`.
   `security` is `true` for an entry whose bound the operator may only tighten.
 - `min` and `max` are the range an organization may set: the operator's bound where
   `portal.organizationBounds` sets one, else the catalog's own. `max` is `null` where neither
@@ -3035,6 +3035,11 @@ GET /api/v1/organization/limits     the catalog, its bounds and the values in fo
   `default` (neither, so no limit). `quota` holds each dimension: `limit` is `null` for no
   limit, and `used` is the manifest count for the four countable dimensions (PF-75), `null` for
   a limit enforced at run time.
+- The MQTT allowance (PF-117, ADR-N-048 §2.9) is in `entries` under section `mqtt`, one entry
+  per number (`spec.limits.mqtt.brokers`, `connections`, `messagesPerSecond`,
+  `maxMessageBytes`); `enabled` and the lists are read from §47 per project. A project row's
+  `quota` carries `mqttBrokers`, `mqttConnections` and `mqttMessagesPerSecond` with `limit` and
+  `used`, and `origin` `project` when its `spec.quotas.mqtt` is set.
 - Any signed-in person reads the route: the catalog and the bounds are the installation's, not
   a project's. A project the caller may not read is left out of `projects`, so nothing of its
   size is said (R20).
@@ -3867,6 +3872,59 @@ An erasure finds the Entities naming the subject in each such class and erases, 
 ```
 
 The erasure answers at once and stays `open` until every store reports `done`: a store that does not answer is asked again each minute, the CKAN DataStore at each reconciler run, and after an hour of refusals it is `failed`, which leaves the erasure for a person to read why. The erasure log keeps the subject's keyed hash, the Entities and the counts, never a value, outside the broker's database; when the Portal starts and every hour after, it sends again every erasure whose record a broker no longer holds, after that broker's database was restored from an older backup ([Deployment/07 §5](../Deployment/07-backup-restore.md#5-backups-and-erasure)). Every call is audited with its `reason`; a call without one answers `400` naming `reason-required`.
+
+## 47. MQTT allowance and capture (PF-117…PF-120, MF-62, PL-87, ADR-N-048 §2.9–2.10)
+
+What a project may run as MQTT edge brokers, what its brokers use of it, and, in `capture` mode,
+the newest messages a broker received. The allowance is written only as a field of a manifest:
+`Organization.spec.limits.mqtt` or `Project.spec.quotas.mqtt`, through a red-lane Change an
+`org-admin` approves (PF-98, PF-117). There is no write route for it here.
+
+```text
+GET    /api/v1/projects/{project}/mqtt/allowance                       → 200
+GET    /api/v1/projects/{project}/mqttbrokers/{name}/captured?topic=&limit=   → 200
+DELETE /api/v1/projects/{project}/mqttbrokers/{name}/captured          → 204
+```
+
+```json
+{"enabled": true, "origin": "project",
+ "raise": "an org admin can raise this in Organization settings > Projects > helsinki",
+ "modes": ["ingest", "capture"], "addresses": ["platform", "dedicatedPort"],
+ "ports": [18831], "customHostnames": [], "deviceAuth": ["token"],
+ "brokers": {"limit": 2, "used": 1, "left": 1},
+ "connections": {"limit": 2000, "used": 1000, "left": 1000},
+ "messagesPerSecond": {"limit": 20000, "used": 10000, "left": 10000},
+ "maxMessageBytes": {"limit": 65536},
+ "portsInUse": [{"port": 18831, "broker": "cameras"}]}
+```
+
+```json
+{"broker": "cameras", "mode": "capture", "window": "PT1H", "messagesPerTopic": 20,
+ "messages": [{"topic": "cams/cam-west/frame-meta", "receivedAt": "2026-10-20T19:41:02Z",
+               "clientId": "helsinki-cam-west", "bytes": 212,
+               "payload": "{\"seq\": 4411, \"objects\": 3}", "encoding": "utf-8"}],
+ "truncated": false}
+```
+
+- `origin` is `project` (the Project's `spec.quotas.mqtt`), `organization`
+  (`spec.limits.mqtt`) or `default` (neither: `enabled: false` and every number `0`). `raise`
+  is the sentence the verdict uses when it refuses a broker (PF-101).
+- `used` sums the project's committed `MqttBroker` manifests, not the connected devices:
+  `connections` sums `spec.limits.maxConnections`, `messagesPerSecond` sums
+  `maxConnections` × `messagesPerSecond` of each broker (ADR-N-048 §2.9). `left` is never below
+  `0`; a project over a lowered allowance shows `used` above `limit` (PF-100).
+- Who may read the allowance: whoever may read the project. `clientCaRef` and the hostnames'
+  `certificateRef` are not part of the answer; a hostname with a stored certificate carries its
+  `notAfter` instead.
+- `captured` answers the broker's kept messages, newest first, at most `limit` (1…1000, default
+  100), only of `topic` when given (an exact topic, no wildcard). `payload` is the message as
+  UTF-8 text when it decodes, else base64 with `encoding: "base64"`. A broker not in `capture`
+  mode answers an empty `messages` and its `mode`.
+- Who may read or delete the capture: a person whose binding holds `approve` on `MqttBroker`
+  in the project (PL-87). Anybody else, a reader of the manifest included, gets `404`, the
+  same answer as a broker the project does not declare (PF-59). `DELETE` removes every kept
+  message of the broker at once and records who did it in the activity log, without the
+  payloads.
 
 ## Related
 

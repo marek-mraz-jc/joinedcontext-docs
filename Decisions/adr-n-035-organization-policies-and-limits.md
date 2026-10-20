@@ -82,8 +82,16 @@ An organization that wants a lower rate for the web, a shorter invitation, a cap
 | Pipelines and data | `spec.limits.pipelines.rejectedKept` | 1000 per pipeline | 10000 | the Portal's pipeline outcomes |
 | Pipelines and data | `spec.limits.pipelines.sampleMegabytes` | 5 | 50, and at most the edge body | the Portal and jcctl pipeline test |
 | Pipelines and data | `spec.limits.data.uploadMegabytes` | 16 | at most the edge body | the Portal's upload and import routes |
+| MQTT | `spec.limits.mqtt.enabled` | `false` | — | the Portal's verdict and the reconciler (PF-117) |
+| MQTT | `spec.limits.mqtt.brokers` | 1 per project | 20 | the Portal's verdict and the reconciler (PF-118) |
+| MQTT | `spec.limits.mqtt.connections` | 1000 per project | 20000 | the Portal's verdict and the reconciler (PF-118) |
+| MQTT | `spec.limits.mqtt.messagesPerSecond` | 1000 per project | 100000 | the Portal's verdict and the reconciler (PF-118) |
+| MQTT | `spec.limits.mqtt.maxMessageBytes` | 65536 per broker | 1048576 | the Portal's verdict and the reconciler (PF-118) |
+| MQTT | `spec.limits.mqtt.modes`, `addresses`, `ports`, `customHostnames`, `deviceAuth`, `clientCaRef` | `[ingest]`, `[platform]`, none, none, `[token]`, none | the reserved ports 18830–18849, 10 hostnames | the Portal's verdict, the reconciler and the gateway (PF-119, PF-120) |
 
 Model spend is counted in the currency the agent proxy's provider bills in, with the day and the month in UTC. When a limit is reached, the agent proxy refuses the next model call, and the run ends with that reason.
+
+The MQTT entries are the allowance of [ADR-N-048 §2.9](adr-n-048-mqtt-edge-brokers.md): the organization's value is the default of every project, and a project's `spec.quotas.mqtt`, written only by an `org-admin`, replaces it as a whole and may exceed it, which item 7 above otherwise forbids. The operator's bound caps both (amendment 2026-10-20, T-4858).
 
 Two entries of the owner's list are deliberately left out:
 
