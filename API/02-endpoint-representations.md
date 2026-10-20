@@ -170,10 +170,12 @@ curl -i 'https://api.example.org/api/endpoint/{endpointSlug}/ngsi-ld/v1/entities
 Worked example, history of one station:
 
 ```bash
-curl -i 'https://api.example.org/api/endpoint/{endpointSlug}/ngsi-ld/v1/temporal/entities/urn:ngsi-ld:WeatherObserved:shmu-11898?timerel=after&timeAt=2026-10-01T00:00:00Z'
+curl -i --get 'https://api.example.org/api/endpoint/{endpointSlug}/ngsi-ld/v1/temporal/entities/urn:ngsi-ld:WeatherObserved:shmu-11898' \
+  -d timerel=after -d timeAt=2026-10-01T00:00:00Z
 # 206, 100 values per Attribute (10-minute readings),
 # Content-Range: date-time 2026-10-01T00:00:00Z-2026-10-01T16:30:00Z/*
-curl -i '…/temporal/entities/urn:ngsi-ld:WeatherObserved:shmu-11898?timerel=after&timeAt=2026-10-01T00:00:00Z&lastN=1000'
+curl -i --get '…/temporal/entities/urn:ngsi-ld:WeatherObserved:shmu-11898' \
+  -d timerel=after -d timeAt=2026-10-01T00:00:00Z -d lastN=1000
 # up to 1,000 values per Attribute: the newest 1,000 of the window
 ```
 
