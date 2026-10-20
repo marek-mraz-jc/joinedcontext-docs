@@ -358,6 +358,27 @@ spec:
 - **Only its own entities.** Nothing on an entity records which pipeline wrote it, and a closed model forbids adding such a field, so the scope is the space: the Portal refuses expiry on a pipeline with more than one output, and while another Pipeline of the project writes into the same space. An entity of a listed type that a person created in that space by hand is swept like the rest, which the form says before saving.
 - **The grant is the author's.** The write Policy the Portal drafts for a pipeline grants `upsertBatch`, `createBatch` and `queryBatch` and no delete. Expiry needs `deleteBatch` beside `queryBatch` on the listed types in that space, and the Portal refuses the proposal until a Policy grants it, naming the Policy to extend; it never widens a grant on its own. A pipeline that is disabled, or removed, stops its sweep with it.
 
+### Entity and attribute lifetime (PL-80…PL-85)
+
+Where the stale sweep above deletes what a source stopped sending, a lifetime ends what a source says is over: the write carries an NGSI-LD `expiresAt` (TS 104 175 4.22) and the broker removes the entity or the attribute when it passes. The choice is a field of the manifest, so the editor reads it back after any hand edit of the mapping:
+
+```yaml excerpt
+spec:
+  lifetime:
+    - type: Vehicle
+      entity: { from: observedAt, plus: PT5M }               # or { rolling: PT10M } or { at: "2026-12-31T23:00:00Z" }
+      attributes:
+        - { names: [location], rolling: PT5M }
+    - type: Alert
+      entity: { from: validTo, notAfter: P30D }              # min(validTo, write time + 30 days)
+```
+
+- **Computed at the write.** The reconciler renders, after the author's steps and before the output, one Bloblang step that sets each end time (PL-82). A record whose `from` field is missing keeps going without an end time and is counted with the reason `lifetime-from`, so a feed that drops `validTo` shows up in the run's problems instead of growing the space silently.
+- **One writer of `expiresAt` per target.** A mapping that sets `expiresAt` itself and a lifetime for the same target are refused together, and so are an entity lifetime and `spec.expiry` for one type (PL-83). Attribute lifetimes combine with both.
+- **No new grant.** The pipeline never calls delete for a lifetime; the broker drops the data on its own clock. The Policy the Portal drafts for the pipeline stays `upsertBatch`, `createBatch` and `queryBatch` (PL-84).
+- **One list of system members.** `expiresAt`, `observedAt` and the other members of DM-130 are no Attributes for the model, the view, the Policy or the daily revalidation, so a lifetime never trips a closed shape or an attribute grant (DM-131).
+- **The editor check.** The sample records go through the space's compiled model, the Endpoint's view and Policy and the lifetime, the three verdicts of the write path, before a proposal; the Portal stores the verdict against the manifest, model and Policy digests and refuses a proposal without a green one with `409` (PL-85).
+
 ### Model-to-model mappings in a pipeline
 
 A pipeline's own Bloblang handles the last mile (unpacking the source frame, splitting batches, timestamps). The step that produces the target entity SHOULD be a `kind: Mapping` (LinkML-Map, [Architecture/11 §7](11-data-models.md#7-mappings-with-linkml-map)) referenced from the compute step (`spec.compute.mappingRef`), so the target entity is schema-checked by construction. The reconciler does not deploy a `mapping` pipeline yet (see *What runs today*); the excerpt shows the manifest and what the rendering is meant to produce:

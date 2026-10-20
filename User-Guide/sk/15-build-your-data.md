@@ -260,7 +260,7 @@ Súbor nepotrebuje zdroj údajov ani pipeline: Portál ho prečíta vo vašom pr
 4. Vyberte **Kontextový priestor** a potom **Navrhnúť zmenu**. Jedna zmena navrhne všetko, čo riadky potrebujú: typ v modeli priestoru, endpoint a vaše právo zapisovať.
 5. Keď ju schvaľovateľ schváli a je živá, stránka ponúkne zápis riadkov. Opätovný zápis toho istého súboru aktualizuje tie isté entity, lebo id každého riadku pochádza zo súboru.
 
-Predvolené: nahraté riadky nikdy neexpirujú a ich história sa riadi pravidlom priestoru, 28 dní, ak priestor nehovorí inak. Súbor, ktorého riadky majú koniec (povolenie platné do dátumu), potrebuje ten koniec v každom riadku; recept je v [Retention & Expiry](../14-retention-and-expiry.md#8-recipe-data-imported-from-a-file).
+Predvolené: nahraté riadky nikdy neexpirujú a ich história sa riadi pravidlom priestoru, 28 dní, ak priestor nehovorí inak. Súbor, ktorého riadky majú koniec (povolenie platné do dátumu), potrebuje ten koniec v každom riadku; recept je v [Retention & Expiry](../14-retention-and-expiry.md#11-recipe-data-imported-from-a-file).
 
 **Chyba:** nahrať novú verziu súboru, ktorej riadky stratili stĺpec s id. Každý riadok potom dostane nové id a priestor drží obe verzie. Držte stabilný stĺpec id, alebo staré riadky najprv odstráňte.
 

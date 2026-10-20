@@ -260,7 +260,7 @@ A file needs no data source and no pipeline: the Portal reads it in your browser
 4. Pick the **Context Space**, then **Propose the change**. One change proposes what the rows need: the type in the space's model, the endpoint and your right to write.
 5. Once an approver has approved it and it is live, the page offers to write the rows. Writing the same file again updates the same entities, because each row's id comes from the file.
 
-Defaults: uploaded rows never expire and their history follows the space's rule, 28 days unless the space says otherwise. A file whose rows have an end (a permit valid until a date) needs that end in each row; the recipe is in [Retention & Expiry](./14-retention-and-expiry.md#8-recipe-data-imported-from-a-file).
+Defaults: uploaded rows never expire and their history follows the space's rule, 28 days unless the space says otherwise. A file whose rows have an end (a permit valid until a date) needs that end in each row; the recipe is in [Retention & Expiry](./14-retention-and-expiry.md#11-recipe-data-imported-from-a-file).
 
 **The mistake:** uploading a new version of a file whose rows lost an id column. Every row then gets a new id, and the space holds both versions. Keep a stable id column, or remove the old rows first.
 
