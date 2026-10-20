@@ -222,6 +222,29 @@ There is no run of the W3C JSON-LD 1.1 test suite here. The `@context` documents
 
 The platform half of the protocol is covered in the Portal rather than here: portal `tests/agreement_rules_tests.rs` asserts that an accepted agreement yields exactly the Policies its offer names and that an agreement cannot exceed the endpoint's ceiling, and the dataspace token files assert what a foreign token may reach.
 
+## 7. Standards coverage
+
+One row per standard a surface serves (T-4879): where it is served, the published suite, the lane that runs it, and the last result. "Dispatch" is a `workflow_dispatch` lane of the conformance repository; "fast" is its `ci.yml`, which proves the verdict scripts go red on a planted break. Results dated 2026-10-20 were measured for T-4879.
+
+| Standard | Version | Served at | Suite | Lane | Last result |
+|---|---|---|---|---|---|
+| NGSI-LD | ETSI GS CIM 009 1.9.1 | `/ngsi-ld/v1` of every Endpoint and space, Antares | ETSI TTF robot suite, section 1 | Antares `etsi-*` jobs, baseline `dev/etsi-baseline.json`; `etsi-smoke` against dev | per train, against the baseline |
+| OGC API - Features Part 1 | 1.0 | `{endpoint}/ogc/features`, `antares-ogc` | `ets-ogcapi-features10` 1.8 on TEAM Engine 5.7 | Antares `ogc-compliance-external`, per view, baselines `ci/ogc-compliance/*.json`; prod nightly (T-4877) | `all` view: 67 pass, 4 skip, 0 fail |
+| OGC API - Features Part 2 (CRS by Reference) | 1.0 | the same; CRS84 and CRS84h only | the ETS's "Coordinate Reference Systems by Reference" group (25 cases) | the same jobs | in the counts above |
+| OGC API - Features Part 3 (filtering, CQL2) | 1.0, CQL2 1.0 | the same, `ogc-cql2` crate | OGC publishes no ETS for Part 3 or CQL2 | `tests/ogc/test_cql2_filtering.py` (dispatch) and the crate's tests | no published suite |
+| GeoJSON | RFC 7946 | OGC items pages, NGSI-LD `application/geo+json` | `tests/prod-nightly/compare.py geojson` | fast (self-test); prod nightly (T-4877) | dev, 6 OGC items pages of 6 Endpoints: valid |
+| SensorThings API | 1.1 | `{endpoint}/sta/v1.1`, `antares-sta` | `tests/sta` (own); the official ETS is T-4878 | dispatch; prod nightly read path | section 3 |
+| OData | 4.01 | `{endpoint}/odata/v4`, `antares-odata` | NLstn suite v1.0.3 | Antares `odata-compliance-external`, baseline `ci/odata-compliance-baseline.json` | per train, against the baseline |
+| WebSocket | RFC 6455 | `{endpoint}/ws` (gateway fan-out), `/x/views/{view}/ws` (Antares) | `tests/ws/rfc6455_probe.py` (the Autobahn sections that need no echo server; the Autobahn fuzzingclient marks all 247 cases FAILED because the channel sends its own `welcome`) | fast (self-test); Antares `ws-conformance` runs `tests/ws` | dev gateway and Antares dev-17: 2 of 15 pass; neither answered a close frame (fixed in the T-4879 branches, red until they deploy) |
+| WebSocket channel contract | the broker's AsyncAPI document | the same | `tests/ws` (AsyncAPI-validated sessions) | Antares `ws-conformance` | per train |
+| iCalendar | RFC 5545 | `{endpoint}/ical/v1/events.ics`, `antares-ical` | `tests/prod-nightly/compare.py ical` | fast (self-test); prod nightly | dev: no Endpoint serves a feed (0 of 81 in the catalogue); the first is T-4895 |
+| MQTT | 3.1.1 and 5 | project edge brokers, RMQTT 0.24.0 (ADR-N-048) | Eclipse Paho interoperability tests, pinned commit | `mqtt.yml` (dispatch), baseline `tests/mqtt/baseline.json` | 3.1.1: 5 of 10, MQTT 5: 16 of 27; every failure is a choice of the chart (no retainer, no sessions, QoS 1) or a feature no device uses, listed in `tests/mqtt/README.md`. A dev run needs a gateway-admitted device (T-4857) |
+| DCAT-AP, DCAT-AP-SK, DCAT-AP-CZ | 3.0.0, 3.0.0, OFN 2026-09-23 | CKAN `catalog.ttl`, the Endpoint record (EP-27) | official SHACL shapes, vendored by digest in `dcat/shapes` | fast (`tests/ckan`, every committed record); prod nightly (catalogue feed) | fast lane green |
+| OpenAPI | 3.0 / 3.1 | Portal API, gateway management surface | `schemathesis` 4 (`tests/schemathesis`) | dispatch, against a throwaway system only; a dev run needs a scratch-project test token | per dispatch |
+| Model Context Protocol | 2025-06-18 | gateway per space and Endpoint, Portal | `tests/mcp` (own) | dispatch; Antares `mcp-conformance` | section 4 |
+| JSON-LD | 1.1 | every `@context` the platform serves | none run: section 5 expands the committed examples instead of the W3C suite | `tests/models` | section 5 |
+| Dataspace Protocol | DSP 2025-1 (TCK `dsp-tck` 1.0.2) | not served: the connector addon is post-MVP with no engine chosen ([DS-06](../Requirements/data-space.md), parked as T-0037) | Eclipse DSP TCK, pinned by digest | `dsp.yml` (dispatch), ready for the first connector | not served |
+
 ## Related
 
 - [00-strategy.md](00-strategy.md) — the lanes, and which of these suites the hourly batch runs.
