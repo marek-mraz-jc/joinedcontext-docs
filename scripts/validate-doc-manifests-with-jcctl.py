@@ -50,6 +50,8 @@ CROSS_REFERENCE = (
     "which the repository does not",
     "which the repository holds no",
     "declares no Project",
+    # A space whose model the page does not print; one naming another printed model still fails.
+    "which is not a model of this space (DM-61)",
 )
 ORG_NAMESPACE = "org"
 # The scaffolding a page never prints: one organization and one project per namespace used.
@@ -230,6 +232,14 @@ spec:
 NO_NAMESPACE = GOOD.replace("  namespace: helsinki\n", "")
 # An excerpt is not a manifest anybody applies, so it is not run.
 EXCERPT_PAGE = GOOD.replace("```yaml", "```yaml excerpt")
+# A space's model lives in its own folder, which a page about retention does not reprint.
+MODEL_ELSEWHERE = GOOD.replace(
+    "  urnSegment: airquality\n",
+    "  urnSegment: airquality\n  dataModelRef: { kind: DataModel, name: air-quality }\n"
+    "  retention:\n    - entityType: AirQualityObserved\n      history: P30D\n",
+)
+# A misspelt retention field is refused, not ignored (deny_unknown_fields).
+BROKEN_RETENTION = MODEL_ELSEWHERE.replace("history: P30D", "histroy: P30D")
 
 
 def selftest(jcctl: str | None) -> int:
@@ -253,6 +263,8 @@ def selftest(jcctl: str | None) -> int:
         for name, page, expected in [
             ("a valid manifest", GOOD, False),
             ("a manifest with no namespace", NO_NAMESPACE, True),
+            ("a space whose model the page does not print", MODEL_ELSEWHERE, False),
+            ("a retention rule with a misspelt field", BROKEN_RETENTION, True),
         ]:
             with tempfile.TemporaryDirectory() as temporary:
                 docs = pathlib.Path(temporary)

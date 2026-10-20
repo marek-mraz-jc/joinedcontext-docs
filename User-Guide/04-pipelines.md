@@ -153,6 +153,8 @@ Use it for full-snapshot sources: a vehicle list, a register of stations, a cata
 
 Leave it off for incremental and event feeds: sensor readings, change streams, a feed that only sends what changed. There a quiet entity has nothing new to say, and expiry would delete it. That is why expiry is off unless you switch it on.
 
+When the source gives each item an end time, set `expiresAt` in the mapping instead; [Retention & Expiry](./14-retention-and-expiry.md#3-which-one-do-i-pick) compares the ways data is removed.
+
 ### Switch On Expiry
 
 #### By hand
@@ -168,3 +170,4 @@ Leave it off for incremental and event feeds: sensor readings, change streams, a
 - [Data Modeling](./03-data-models.md): authoring schemas for pipeline validation.
 - [Endpoints & Sharing](./05-endpoints-and-sharing.md): publishing ingested context data.
 - [Users, Roles & Approvals](./07-users-roles-approvals.md): reviewing pipeline change proposals.
+- [Retention & Expiry](./14-retention-and-expiry.md): ending entities from the mapping with `expiresAt`, and when to pick expiry instead.
