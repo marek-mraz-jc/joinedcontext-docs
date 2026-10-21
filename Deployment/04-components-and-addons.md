@@ -186,9 +186,7 @@ component "context-broker" needs "postgres", which componentProfile "broker-only
 
 **Measured.** The broker image `broker-only` runs (`antares-broker-jc` dev-17) on PostgreSQL in Docker, with the profile's pool of 10, passed the 31 cases of the ETSI smoke suite (`tests/etsi/smoke.robot` of the conformance repository) and then held 7 MiB, its PostgreSQL 68 MiB (2026-10-21, T-4856). On a cluster, ci-full's `deployment-profiles` job installs each profile into a fresh k3d cluster with `scripts/test-deployment-variants.sh --components <profile> --footprint <file>`, smokes it (`minimal` at the edge, `broker-only` over NGSI-LD through a port-forward) and writes the peak and settled memory and CPU of its pods, requests, limits and PVCs, with the run id, into the job summary and the `footprint-<profile>` artifact. The first run:
 
-| Profile | Variant | Pods | Peak memory MiB | Settled memory MiB | Peak CPU m | Settled CPU m | Memory requests MiB | Memory limits MiB | PVC MiB | Run |
-|---|---|---|---|---|---|---|---|---|---|---|
-| minimal | 0,0,0 | 10 | 1276 | 1062 | 1109 | 47 | 2928 | 8848 | 1024 | 39537767356 |
+- `minimal`, variant 0,0,0 (ci-full run 39537767356): 10 pods; memory peak 1276 MiB, settled 1062 MiB; CPU peak 1109 m, settled 47 m; memory requests 2928 MiB, limits 8848 MiB; PVC 1024 MiB.
 
 The sums include Kyverno, which `minimal` needs installed. `minimal` settles at about 1.1 GiB and peaks at 1.3 GiB, inside the 4 GB node. In the same run `broker-only` failed its NGSI-LD smoke with 403, because it still ran the `joinedcontext` engine, so it wrote no row; its row comes from the next `deployment-profiles` run.
 
