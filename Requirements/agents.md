@@ -196,6 +196,15 @@ The contract is [API/05-knowledge-assistant.md](../API/05-knowledge-assistant.md
 - **AG-124** [H] — `jc-core` MUST hold the one table of the 13 EU data-theme codes with a label in sk, en, cs, hu, de, fi and uk, and the Portal, the context page, the widget and the CKAN groups MUST read their category labels from it; a code MUST NOT change once published ([ADR-N-055 §2.4](../Decisions/adr-n-055-assistant-profiles.md#24-one-category-list-the-eu-data-themes)).
 - **AG-125** [S] — A public assistant client outside the platform MUST reach the platform only through the `challenge`, `token`, `chat`, `feedback` and `context` routes of one `publicId`, from an origin in that deployment's `allowedOrigins`, and MUST hold no model key, ServiceAccount credential or copy of the data; the visitor token MUST live in the page's memory alone ([ADR-N-055 §2.7](../Decisions/adr-n-055-assistant-profiles.md#27-public-clients-outside-the-platform)).
 
+## 24. The Agent Registry
+
+The contract is [API/01 §49](../API/01-portal-api.md#49-the-agent-registry-t-4849-ag-126ag-129); the page is Administration → **Agents** ([Architecture/09 §14.1](../Architecture/09-portal.md#141-the-administration-page)).
+
+- **AG-126** [H][S] — `GET /api/v1/organization/agents` MUST list in one answer every agent identity the caller may read: the `AssistantDeployment`, `AgentProfile`, `McpServer` and `ServiceAccount` manifests of the organization and of every project, and the agent runs not yet ended, each with its name, kind, project, owner (a person or the project), whom it acts as (`self`, its own service account, or `caller`, the person or client that called it, AG-94, AG-115), the spaces and Endpoints it reaches, its last activity, its spend against its cap and its state. A kind the caller may not read in a namespace MUST be left out of that namespace with nothing counted, a run MUST be listed only to its starter or an approver of its project (as `GET …/agent-runs` lists it), and a caller who reads no agent kind in any namespace MUST be answered `403` with a sentence that names who can grant it.
+- **AG-127** [S] — The registry and its page MUST NOT carry a token, a credential, a key, a `secretRef`, a system prompt or a run's prompt; a service account's credentials MUST appear only as their count.
+- **AG-128** [H] — Each row MUST open the agent's own page with the tabs Overview, Access, Activity and Settings (model, limits and the link to its manifest), and the page MUST work by keyboard and at 400 px.
+- **AG-129** [A][S] — An `AssistantDeployment` MUST be paused and resumed as a Change of its `spec.enabled` that the person sends for review from the agent's page; only a caller who may propose `AssistantDeployment` in its project sees **Pause** or **Resume**, anybody else sees its state alone. A kind without an off switch MUST say so on its page and name the page where it is removed.
+
 ## Assistant paths
 
 Decided in [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) (T-2691).
@@ -256,6 +265,7 @@ Decided in [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) (T-2691).
 | AG-121…AG-125 | [ADR-N-055](../Decisions/adr-n-055-assistant-profiles.md) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 | AG-94…AG-95 | [ADR-N-038](../Decisions/adr-n-038-an-agent-run-reads-as-its-person.md) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 | AG-87…AG-93 | [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
+| AG-126…AG-129 | [Architecture/09-portal.md#141-the-administration-page](../Architecture/09-portal.md#141-the-administration-page) | [Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest) |
 
 ## Related
 
