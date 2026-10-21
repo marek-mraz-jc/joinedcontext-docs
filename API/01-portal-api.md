@@ -4001,6 +4001,49 @@ GET /api/v1/organization/agents                                    → 200
   its dry run, like any edit (AG-129); the answer is the Change, which the project's review
   merges.
 
+## 49. What an agent account may do (T-4850, AG-130…AG-133)
+
+The Access view of one `ServiceAccount`, the identity an agent acts as when it acts as itself:
+each grant, where it holds, until when, and what it gives in the Portal.
+
+```text
+GET  /api/v1/projects/{project}/serviceaccounts/{name}/access     → 200
+POST /api/v1/projects/{project}/serviceaccounts/{name}/revoke     → 202 Change
+```
+
+```json
+{"account": "vendor-ci", "project": "helsinki", "delegates": false,
+ "mayPropose": true, "mayRevoke": true,
+ "grants": [
+   {"index": 0, "role": "pipeline-admin", "scope": "project:helsinki", "state": "active",
+    "notAfter": "2026-11-01T00:00:00Z",
+    "rules": [{"kinds": ["Pipeline"], "verbs": ["propose", "delete"]}]},
+   {"index": 1, "role": "space-reader", "scope": "contextSpace:air", "state": "expired",
+    "notAfter": "2026-10-20T00:00:00Z", "rules": []}
+ ]}
+```
+
+- `state` is `active` (no window, or now inside it), `pending` (`notBefore` ahead) or `expired`
+  (`notAfter` passed); only an `active` grant gives anything, here and at the gateway (AG-131).
+- `rules` are the rules of the `Role` the grant names, without `approve`, which no account holds
+  (PF-58); a role that names no `Role` (a gateway template, CC-60) has none and acts on data
+  alone, through the Policies of the Endpoints the account reaches (§41 shows those).
+- `delegates` is `true` for an account with `spec.delegation: token-exchange`: a person's token
+  its client exchanged is decided as that person, not with these grants (AG-95).
+- Who may read: `read` on `ServiceAccount` in the project; otherwise `403`, and `404` for no such
+  account. `mayRevoke` is `true` for a Portal session with `propose` and `approve` on it.
+- Revoke takes `{"index": 1, "role": "space-reader"}`, the grant's position and its role, so a
+  list that moved since the page read it removes nothing: a mismatch is `409`, and so is the
+  account's last grant (delete the account to take all its access away). The Portal writes the
+  Change and merges it at once when the manifest on the main branch differs from it by removed
+  grants alone; otherwise the Change waits for a second person like every access change. A
+  bearer token is `403`. Each revoke is an `access.revoked` activity event (AG-132).
+- Widening (a new grant, a wider scope, a later or removed `notAfter`) uses no route of its own:
+  the page proposes the account's manifest like any edit, a red-lane Change that someone other
+  than its proposer approves (PF-58, T-4833).
+- `POST /api/v1/projects/{project}/changes/{id}/approve` and `/reject` refuse every bearer token
+  with `403` (AG-133).
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
