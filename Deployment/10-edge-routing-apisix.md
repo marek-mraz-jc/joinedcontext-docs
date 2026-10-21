@@ -390,18 +390,15 @@ spec:
         - alert: APISIXConfigReloadFailed
           expr: apisix_yaml_configuration_load_status == 0
           for: 1m
-          labels:
-            severity: critical
+          labels: { severity: critical }
           annotations:
-            summary: "APISIX standalone failed to reload apisix.yaml (check #END marker)"
+            summary: 'APISIX standalone failed to reload apisix.yaml (check #END marker)'
 
         - alert: APISIXHigh5xxRate
           expr: sum(rate(apisix_http_status{code=~"5.."}[5m])) / sum(rate(apisix_http_status[5m])) > 0.01
           for: 2m
-          labels:
-            severity: warning
-          annotations:
-            summary: "APISIX edge 5xx error rate exceeded 1%"
+          labels: { severity: warning }
+          annotations: { summary: APISIX edge 5xx error rate exceeded 1% }
 ```
 
 ## 8. Failure Modes and Operational Troubleshooting

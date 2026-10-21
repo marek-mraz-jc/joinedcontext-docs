@@ -85,9 +85,9 @@ metadata:
   name: endpoint
   namespace: org
 spec:
-  for: Endpoint                      # the kind whose form this arranges
+  for: Endpoint # the kind whose form this arranges
   order: [name, slug, audience, enabledRepresentations, caching]
-  groups:                            # visual grouping of a flat schema
+  groups: # visual grouping of a flat schema
     - title: Basics
       fields: [name, slug]
     - title: Access
@@ -97,14 +97,13 @@ spec:
     slug:
       widget: text
       help: The unguessable address other people use; the Portal makes it, you never type it
-      placeholder: "dhiw4735mzyvwkrmszljpxcvvgv32q33"
-      columns: 6                     # of twelve
+      placeholder: dhiw4735mzyvwkrmszljpxcvvgv32q33
+      columns: 6 # of twelve
       readOnly: false
       advanced: false
-    enabledRepresentations:
-      widget: checkboxes
+    enabledRepresentations: { widget: checkboxes }
     commitMessage:
-      advanced: true                 # hidden outside the advanced mode (CC-29)
+      advanced: true # hidden outside the advanced mode (CC-29)
 ```
 
 `columns` is a twelfth of the row, so `6` is half.

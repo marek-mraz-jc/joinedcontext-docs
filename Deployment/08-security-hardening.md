@@ -330,8 +330,7 @@ metadata:
   namespace: prod
 spec:
   podSelector:
-    matchLabels:
-      app.kubernetes.io/name: apisix
+    matchLabels: { app.kubernetes.io/name: apisix }
   port: 9080
   proxyProtocol: HTTP/1
   accessPolicy: all-authenticated

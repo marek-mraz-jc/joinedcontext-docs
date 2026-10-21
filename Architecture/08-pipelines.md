@@ -134,16 +134,14 @@ metadata:
   name: smart-meter-mqtt
   namespace: helsinki
 spec:
-  class: resident             # resident | scheduled | auto
-  enabled: true               # false pauses it: the stream leaves the runner (PL-40)
+  class: resident # resident | scheduled | auto
+  enabled: true # false pauses it: the stream leaves the runner (PL-40)
   targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:energy:ep-smart-meters
   secretRefs:
     - name: mqtt-credentials
       key: password
       envVar: MQTT_PASSWORD
-  quotas:
-    maxMemoryMb: 128
-    cpuMillicores: 250
+  quotas: { maxMemoryMb: 128, cpuMillicores: 250 }
 ```
 
 `spec.enabled: false` is how the Portal's Pause button and an author in Git stop a pipeline without deleting it: the change goes through the same review as any other edit (CC-35), the reconciler deletes the stream from the runner, and `status` says phase `Pending` with the reason `Paused`; flipping it back starts the pipeline again (PL-40).
@@ -220,7 +218,9 @@ spec:
         root = this
         root.id = "urn:ngsi-ld:%v:%v:%v:%v".format("BikeHireDockingStation", env("JC_ORG_DOMAIN"), "helsinki", this.station_id)
     - processor:
-        dedupe: { cache: pipeline_changes, key: '${! json("id") }' }
+        dedupe:
+          cache: pipeline_changes
+          key: ${! json("id") }
   outputs:
     - targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:ep-bikes-ops
     - targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki-kpi:ep-kpi-write
@@ -459,20 +459,23 @@ metadata:
   namespace: helsinki
 spec:
   class: scheduled
-  schedule: "10 0 * * *"                   # once a day, after midnight
+  schedule: '10 0 * * *' # once a day, after midnight
   source:
-    endpointRef: { kind: Endpoint, name: air-quality-internal }   # read grant, same or another space
-    query: { type: AirQualityObserved, attrs: [pm10, pm25, refDistrict], temporalQ: { window: P1D } }
+    endpointRef: { kind: Endpoint, name: air-quality-internal } # read grant, same or another space
+    query:
+      type: AirQualityObserved
+      attrs: [pm10, pm25, refDistrict]
+      temporalQ: { window: P1D }
     # add ids: [urn:ngsi-ld:AirQualityObserved:hel.fi:air-quality:station-kallio-01, …] to read only those entities (PL-42)
     # resident alternative: trigger: { subscription: { type: AirQualityObserved, watchedAttributes: [pm10, pm25] } }
   compute:
-    kind: wasm                             # bloblang | mapping | wasm | container
-    module: ./compute                      # Rust crate beside the pipeline, built in CI to wasm32-wasip1
+    kind: wasm # bloblang | mapping | wasm | container
+    module: ./compute # Rust crate beside the pipeline, built in CI to wasm32-wasip1
     function: process
-  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:air-quality:ep-derived   # write grant; may point into another space
+  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:air-quality:ep-derived # write grant; may point into another space
   output:
     type: AirQualityIndexDaily
-    mode: upsert                           # upsert (merge) | replace (whole entity) | update-attrs (PL-79)
+    mode: upsert # upsert (merge) | replace (whole entity) | update-attrs (PL-79)
 ```
 
 **Not deployed today.** The Portal reconciler deploys only `bloblang` compute. It renders an endpoint query as a `generate` clock followed by an `http` processor that fetches `…/entities` with `limit=1000`, ignores `temporalQ`, and renders a `trigger.subscription` as a change gate on the polled page, not as a subscription (`src/reconciler/streams.rs`). The rest of this subsection is the renderer in `crates/jcctl/src/pipelines_derived.rs`, which nothing outside its tests calls yet.
@@ -607,10 +610,12 @@ metadata:
   namespace: helsinki
 spec:
   class: scheduled
-  schedule: "*/15 * * * *"
+  schedule: '*/15 * * * *'
   source:
     endpointRef: { kind: Endpoint, name: helsinki-all }
-    query: { type: BikeHireDockingStation, attrs: [availableBikeNumber] }
+    query:
+      type: BikeHireDockingStation
+      attrs: [availableBikeNumber]
   compute:
     kind: bloblang
     bloblang: |
@@ -632,9 +637,7 @@ spec:
       root.derivedFrom = { "type": "Property", "value": "urn:ngsi-ld:Endpoint:%v:helsinki:helsinki-all".format($domain) }
       root.computedBy = { "type": "Property", "value": "urn:ngsi-ld:Pipeline:%v:helsinki:bikes-available-avg".format($domain) }
   targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki-kpi:kpi-writer
-  output:
-    type: KeyPerformanceIndicator
-    mode: upsert
+  output: { type: KeyPerformanceIndicator, mode: upsert }
 ```
 
 `C62` is the UN/CEFACT code for "one" (a count); an empty page writes `0` rather than dividing by it. The studio tests this mapping on a page of `helsinki-all` before Propose is enabled (PL-43, PL-49): `sample.url` is the endpoint's own entities URL with the query, `format: json`, and the trace shows the one entity the fold produced and the validation `jc-core` applies to an indicator (PF-43).
@@ -682,7 +685,7 @@ metadata:
   name: pipeline-bikes-available-avg
   namespace: helsinki
 spec:
-  schedule: "*/15 * * * *"
+  schedule: '*/15 * * * *'
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
@@ -695,16 +698,30 @@ spec:
           containers:
             - name: compute
               image: ghcr.io/marek-mraz-jc/joinedcontext-analysis-runner-python@sha256:…
-              args: ["/compute/main.py"]
+              args: [/compute/main.py]
               env:
-                - { name: JC_ORG_DOMAIN, value: hel.fi }
-                - { name: JC_SOURCE_URL, value: "https://context-gateway.joinedcontext.svc.cluster.local/api/endpoint/{source-slug}/ngsi-ld/v1/entities?type=BikeHireDockingStation&attrs=availableBikeNumber" }
-                - { name: JC_TARGET_URL, value: "https://context-gateway.joinedcontext.svc.cluster.local/api/endpoint/{target-slug}/ngsi-ld/v1/entityOperations/upsert?options=update" }
-                - { name: JC_CLIENT_ID, valueFrom: { secretKeyRef: { name: pipeline-bikes-available-avg-sa, key: client-id } } }
-                - { name: JC_CLIENT_SECRET, valueFrom: { secretKeyRef: { name: pipeline-bikes-available-avg-sa, key: client-secret } } }
-              volumeMounts: [{ name: compute, mountPath: /compute, readOnly: true }]
-              resources: { limits: { cpu: "1", memory: 512Mi } }
-              securityContext: { runAsNonRoot: true, readOnlyRootFilesystem: true, allowPrivilegeEscalation: false }
+                - name: JC_ORG_DOMAIN
+                  value: hel.fi
+                - name: JC_SOURCE_URL
+                  value: https://context-gateway.joinedcontext.svc.cluster.local/api/endpoint/{source-slug}/ngsi-ld/v1/entities?type=BikeHireDockingStation&attrs=availableBikeNumber
+                - name: JC_TARGET_URL
+                  value: https://context-gateway.joinedcontext.svc.cluster.local/api/endpoint/{target-slug}/ngsi-ld/v1/entityOperations/upsert?options=update
+                - name: JC_CLIENT_ID
+                  valueFrom:
+                    secretKeyRef: { name: pipeline-bikes-available-avg-sa, key: client-id }
+                - name: JC_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef: { name: pipeline-bikes-available-avg-sa, key: client-secret }
+              volumeMounts:
+                - name: compute
+                  mountPath: /compute
+                  readOnly: true
+              resources:
+                limits: { cpu: '1', memory: '512Mi' }
+              securityContext:
+                runAsNonRoot: true
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
           volumes:
             - name: compute
               configMap: { name: pipeline-bikes-available-avg-compute }
@@ -871,16 +888,17 @@ kind: DataSource
 metadata:
   name: mqtt-mesto
   namespace: helsinki
-  title: { fi: "Kaupungin MQTT-välittäjä", en: "City MQTT broker" }
+  title: { fi: Kaupungin MQTT-välittäjä, en: City MQTT broker }
 spec:
-  type: mqtt                 # mqtt | http | websocket | gtfs-rt | any input the runner ships (PL-50)
+  type: mqtt # mqtt | http | websocket | gtfs-rt | any input the runner ships (PL-50)
   mqtt:
-    urls: ["tls://mqtt.hel.fi:8883"]
-    topics: ["sensors/aq/+/reading"]
+    urls:
+      - tls://mqtt.hel.fi:8883
+    topics: [sensors/aq/+/reading]
     qos: 1
     cleanSession: false
     username: hki-collector
-    passwordRef: { name: mqtt-mesto, key: password }   # secretRef, never a literal (CC-06)
+    passwordRef: { name: mqtt-mesto, key: password } # secretRef, never a literal (CC-06)
   tls:
     insecureSkipVerify: false
     caCertRef: { name: city-ca, key: ca.crt }

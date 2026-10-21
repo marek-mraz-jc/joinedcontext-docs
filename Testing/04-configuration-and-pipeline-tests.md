@@ -20,8 +20,7 @@ kind: ContextSpace
 metadata:
   name: ovzdusie
   namespace: banskabystrica
-  title:
-    sk: Ovzdušie
+  title: { sk: Ovzdušie }
 spec:
   urnSegment: ovzdusie
 ```

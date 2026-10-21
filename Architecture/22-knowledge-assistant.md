@@ -27,38 +27,49 @@ Both are project manifests, proposed like every other one (MF-51, MF-52). A proj
 ```yaml
 apiVersion: joinedcontext.com/v1alpha1
 kind: KnowledgeSource
-metadata: { name: bb-web, namespace: banskabystrica }
+metadata:
+  name: bb-web
+  namespace: banskabystrica
 spec:
-  source: website               # website | ckan
-  startUrls: [https://www.banskabystrica.sk/]
+  source: website # website | ckan
+  startUrls:
+    - https://www.banskabystrica.sk/
   sitemap: true
   # A WordPress site's own content list: each type's /wp-json/wp/v2/{type} links, newest first,
   # read beside the sitemap (T-4154). The pages themselves are crawled like any other.
   wordpressTypes: [pages, newses, life_situations, regulations]
-  include: ["/zivot-v-meste/**", "/samosprava/**"]
-  exclude: ["/**/tlac/**"]
+  include: [/zivot-v-meste/**, /samosprava/**]
+  exclude: [/**/tlac/**]
   maxDepth: 3
   maxPages: 2000
   pdf: { policy: include, maxBytes: 52428800, maxPages: 500 }
-  offDomainDocuments: false     # a PDF on another host is skipped unless this is true; when true, read under that host's own robots.txt
-  schedule: "0 3 * * *"
+  offDomainDocuments: false # a PDF on another host is skipped unless this is true; when true, read under that host's own robots.txt
+  schedule: '0 3 * * *'
   languages: [sk]
-  visibility: public            # public | internal
+  visibility: public # public | internal
 ---
 apiVersion: joinedcontext.com/v1alpha1
 kind: AssistantDeployment
-metadata: { name: bb-public, namespace: banskabystrica }
+metadata:
+  name: bb-public
+  namespace: banskabystrica
 spec:
   publicId: bb-public
-  channel: public               # public | internal | ckan | iframe
+  channel: public # public | internal | ckan | iframe
   systemPrompt: Odpovedaj stručne a vždy uveď zdroj.
   sources: [bb-web]
   connectors:
-    - { endpoint: mesto-verejne, tools: [query_entities], timeoutSeconds: 20 }
-  allowedOrigins: [https://www.banskabystrica.sk]
+    - endpoint: mesto-verejne
+      tools: [query_entities]
+      timeoutSeconds: 20
+  allowedOrigins:
+    - https://www.banskabystrica.sk
   rateLimit: { requestsPerMinute: 60, perClientPerMinute: 10 }
   budget: { tokensPerDay: 2000000, tokensPerConversation: 40000 }
-  theme: { title: Banská Bystrica, primaryColor: "#0b5394", greeting: "Dobrý deň, s čím vám pomôžem?" }
+  theme:
+    title: Banská Bystrica
+    primaryColor: '#0b5394'
+    greeting: Dobrý deň, s čím vám pomôžem?
   # optional: subtitle: "Otvorené dáta mesta", font: "\"Roboto\", Arial, sans-serif"
   widget: { language: browser, languageToggle: true }
   languages: [sk, en]
