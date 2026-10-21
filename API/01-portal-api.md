@@ -4098,7 +4098,63 @@ GET /api/v1/projects/{project}/flow-map[?space={space}]          → 200
   (`opaque: true`) unless the caller reads that project. A DataSource shows its hosts without
   user, path or query, never a secret or a token.
 
-## 51. What an agent account may do (T-4850, AG-130…AG-133)
+## 51. Agent activity (T-4851, AG-134…AG-136)
+
+An agent's Activity tab: what its runs did, step by step, and the alerts an administrator acts
+on.
+
+```text
+GET /api/v1/organization/agents/activity?profile=builder&verdict=refused&limit=20  → 200
+```
+
+```json
+{"runs": [
+  {"id": "run-7f3a", "project": "helsinki", "profile": "builder",
+   "title": "Air quality dashboard", "startedBy": "jana@example.org", "status": "building",
+   "createdAt": "2026-10-21T02:10:00Z", "spaces": ["air"], "tokens": 41000,
+   "costUsd": 0.0125, "refusals": 1, "writes": 0, "mayStop": true,
+   "steps": [
+     {"at": "2026-10-21T02:10:04Z", "tool": "jc_resource_list", "target": "Endpoint",
+      "verdict": "ok", "write": false, "durationMs": 9},
+     {"at": "2026-10-21T02:10:09Z", "tool": "jc_endpoint_propose", "target": "air",
+      "verdict": "refused", "write": true, "reason": "forbidden: missing role steward"}
+   ]}
+ ],
+ "nextCursor": "2026-10-21T02:10:00Z|run-7f3a",
+ "alerts": [
+   {"kind": "spendShare", "project": "helsinki", "profile": "builder", "runId": "run-7f3a",
+    "runTitle": "Air quality dashboard", "count": 85, "at": "2026-10-21T02:10:00Z"}
+ ],
+ "choices": {"people": ["jana@example.org"], "spaces": ["air"]}}
+```
+
+- Filters, each optional: `project`, `profile` (an agent profile's name), `run` (a run id),
+  `person` (the starter), `space` (a Context Space one of its Endpoints is in), `verdict` (`ok`:
+  no refused step, `refused`: at least one), `since` and `until` (RFC 3339, on the start),
+  `limit` (1–50, default 20) and `cursor` (`nextCursor` of the previous page). Any other
+  parameter, or a malformed value, is `400`.
+- `choices` lists the starters and the Context Spaces of the runs the caller sees for this
+  agent or run, whatever the other filters; the Activity tab offers `person` and `space` only
+  from it. A `person` or `space` outside it is `403` naming the field.
+- Who sees what: the runs of every project the caller reads, their own, or every person's where
+  they approve (AG-93); a caller who reads no project gets `403`. The answer reads the 500 newest
+  of those runs.
+- A step is one tool call: `target` is the Endpoint, resource, page or space it named, never its
+  arguments; `write` is true for an operation that is not read-only; `reason` is a refusal's
+  problem text or the reason a write gave, masked and cut at 400 characters. Its input and output
+  are never part of the answer (MF-52 `transcriptRedaction`). `costUsd` sums the costs the
+  provider reported and is absent when none did.
+- `mayStop` is true for a run in flight that the caller may cancel with
+  `POST /api/v1/projects/{project}/agent-runs/{id}/cancel`; that run's event stream then says
+  who stopped it (AG-135).
+- `alerts`, newest first, over the runs the filters select before paging: `refusalSpike` per
+  agent profile with 5 or more refused steps in the last hour (`count` the refusals),
+  `spendShare` per run at 80 % or more of its profile's `model.maxTokensPerRun` (`count` the
+  percent), `offHoursWrite` per run that wrote outside Monday to Friday 06:00–18:00 UTC
+  (`count` the writes); a run alert carries `runId` and `runTitle`, the title the run's card shows.
+- Every read is logged with the caller and the filters.
+
+## 52. What an agent account may do (T-4850, AG-130…AG-133)
 
 The Access view of one `ServiceAccount`, the identity an agent acts as when it acts as itself:
 each grant, where it holds, until when, and what it gives in the Portal.
