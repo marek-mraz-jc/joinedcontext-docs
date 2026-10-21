@@ -236,30 +236,17 @@ metadata:
   namespace: helsinki
 spec:
   contextSpaceRef: air-quality
-  slug: zt4qm7ge2xdv6ksb3ncf5arw2y  # Random base32 >= 128-bit
-  audience: public        # project-list | organization | public
-  allowedProjects: []     # Populated when audience: project-list
+  slug: zt4qm7ge2xdv6ksb3ncf5arw2y # Random base32 >= 128-bit
+  audience: public # project-list | organization | public
+  allowedProjects: [] # Populated when audience: project-list
   policyRef: urn:ngsi-ld:Policy:hel.fi:air-quality:public-air-quality
-  enabledRepresentations:
-    - ngsi-ld
-    - mcp
-    - csv
-    - ogc-features
-    - sta
-  rateLimits:
-    requestsPerMinute: 600
-    burst: 50
-  fileLimits:            # Ceiling of one file.* download (EP-44)
-    maxFileRows: 50000
-    maxFileBytes: 33554432
-  caching:
-    maxAgeSeconds: 60
-  projection:            # Never served here, whatever the Policy allows (EP-61)
-    hiddenAttributes:
-      - calibrationOffset
-  viewMappingRef:        # Serve this space as another model, read only (EP-54)
-    kind: Mapping
-    name: hki-air-quality-to-sdm
+  enabledRepresentations: [ngsi-ld, mcp, csv, ogc-features, sta]
+  rateLimits: { requestsPerMinute: 600, burst: 50 }
+  fileLimits: { maxFileRows: 50000, maxFileBytes: 33554432 } # Ceiling of one file.* download (EP-44)
+  caching: { maxAgeSeconds: 60 }
+  projection: # Never served here, whatever the Policy allows (EP-61)
+    hiddenAttributes: [calibrationOffset]
+  viewMappingRef: { kind: Mapping, name: hki-air-quality-to-sdm } # Serve this space as another model, read only (EP-54)
 ```
 
 ### Opaque Slug Resolution
@@ -478,14 +465,13 @@ metadata:
   namespace: helsinki
 spec:
   contextSpaceRef: fleet
-  dataModelRef: { kind: DataModel, name: fleet, version: "3" }
+  dataModelRef: { kind: DataModel, name: fleet, version: '3' }
   classes:
     - name: Vehicle
       slots: [id, name, type]
     - name: User
       slots: [id, name, type, age]
-  filter:                 # Optional; intersected like a REWRITE constraint (GW10)
-    q: category=="public"
+  filter: { q: category=="public" } # Optional; intersected like a REWRITE constraint (GW10)
 ```
 
 A class absent from `spec.classes` is not exposed at all; a class listed with an empty `slots` list is exposed with identity only (`id`, `type`). CI and `jcctl plan` refuse a projection that names a class or slot version 3 of `fleet` does not have, every offending name listed at once, so an Endpoint that exposes nothing cannot look like one that works.
@@ -690,13 +676,13 @@ kind: ContextSourceRegistration
 metadata:
   name: transport
   namespace: helsinki
-  title: "Transport"
+  title: Transport
 spec:
   # The space whose broker learns about the source. The registration is written into this
   # space's tenant and nowhere else.
   contextSpaceRef: hub
   # Where the data actually is. Exactly one of the two.
-  endpointRef: { kind: Endpoint, name: transport-internal }   # a space on this platform
+  endpointRef: { kind: Endpoint, name: transport-internal } # a space on this platform
   # endpoint: https://other.example/ngsi-ld/v1                # or a broker elsewhere
   # What the source is claimed to hold, in CIM 009's own shape: this is the `information`
   # array of a csourceRegistration, and it is what the broker matches a query against.
@@ -766,8 +752,8 @@ kind: ContextSpace
 metadata:
   name: hub
   namespace: helsinki
-  title: "Helsinki now"
-  description: "No entities of its own: registrations to transport and air-quality"
+  title: Helsinki now
+  description: 'No entities of its own: registrations to transport and air-quality'
 spec:
   isSandbox: false
 ---
@@ -781,9 +767,7 @@ spec:
   slug: ljjrcgyemyy5t23ps25gcsfyazyqd5yc
   audience: public
   policyRef: urn:ngsi-ld:Policy:hel.fi:hub:public-read
-  enabledRepresentations:
-    - ngsi-ld
-    - mcp
+  enabledRepresentations: [ngsi-ld, mcp]
 ```
 
 Nothing about the hub is a new code path. The gateway applies the hub Endpoint's policy set and
@@ -912,11 +896,11 @@ spec:
   enabledRepresentations: [ngsi-ld, csv, ogc-features, sta, mcp]
   publish:
     ckan:
-      instanceRef: { kind: CkanInstance, name: open-data }   # where to publish
-      organization: helsingin-kaupunki                    # the CKAN organization slug
-      name: ilmanlaatu                                 # optional; the endpoint name by default
-      license: cc-by                                   # optional; a CKAN licence id (CC-BY 4.0)
-      datastore: { representation: csv, refresh: onChange }  # optional row mirror
+      instanceRef: { kind: CkanInstance, name: open-data } # where to publish
+      organization: helsingin-kaupunki # the CKAN organization slug
+      name: ilmanlaatu # optional; the endpoint name by default
+      license: cc-by # optional; a CKAN licence id (CC-BY 4.0)
+      datastore: { representation: csv, refresh: onChange } # optional row mirror
 ```
 
 The licence is the one member that may say something the endpoint's record does not: the CKAN licence id the organization chose, used when the Endpoint declares no `spec.catalog.license` and the record therefore names none (§3a).

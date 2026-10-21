@@ -214,3 +214,6 @@ jobs:
           set -eu
           python3 scripts/validate-doc-manifests-with-jcctl.py --selftest
           python3 scripts/validate-doc-manifests-with-jcctl.py
+      - name: every manifest the pages print is in the layout jcctl fmt writes (T-5052)
+        env: { JC_JCCTL: "${{ runner.temp }}/platform/target/debug/jcctl" }
+        run: git ls-files -z '*.md' | xargs -0 "$JC_JCCTL" fmt --check

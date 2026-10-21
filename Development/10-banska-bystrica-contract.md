@@ -68,7 +68,7 @@ metadata:
   name: ovzdusie
   namespace: banskabystrica
 spec:
-  urnSegment: ovzdusie      # predates PF-84; pinned so no published id changes
+  urnSegment: ovzdusie # predates PF-84; pinned so no published id changes
   defaultLocale: sk
 ```
 
@@ -312,14 +312,14 @@ kind: SharedSpaceReference
 metadata:
   name: mesto-kpi
   namespace: bbsk
-  title: "Indicators of Mesto Banská Bystrica"
+  title: Indicators of Mesto Banská Bystrica
 spec:
-  alias: mesto-kpi                 # how bbsk addresses it locally
+  alias: mesto-kpi # how bbsk addresses it locally
   endpointRef:
     project: banskabystrica
-    name: banskabystrica-kpi       # audience project-list, [bbsk], see section 7
+    name: banskabystrica-kpi # audience project-list, [bbsk], see section 7
   schedule:
-    interval: 24h                  # how often the peer's schema surface is mirrored (DM-49)
+    interval: 24h # how often the peer's schema surface is mirrored (DM-49)
 ```
 
 Two things follow and both are deliberate. The region reads the city's indicators and cannot

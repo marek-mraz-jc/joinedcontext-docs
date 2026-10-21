@@ -201,15 +201,14 @@ Every configuration file (except native `bento.yaml` and LinkML models, which ar
 apiVersion: joinedcontext.com/v1alpha1
 kind: ContextSpace
 metadata:
-  name: air-quality                 # DNS-1123, unique per kind in the namespace
-  namespace: helsinki          # = project slug ("org" for organization-level kinds)
-  labels:
-    joinedcontext.com/domain: environment
+  name: air-quality # DNS-1123, unique per kind in the namespace
+  namespace: helsinki # = project slug ("org" for organization-level kinds)
+  title: Air quality
+  description: Air-quality observations
+  labels: { joinedcontext.com/domain: environment }
   annotations:
-    joinedcontext.com/managed-attributes: "title,description,tags"
-    joinedcontext.com/imported-from: "https://udp.example.fi/helsinki@3f9c2e1"
-  title: "Air quality"
-  description: "Air-quality observations"
+    joinedcontext.com/managed-attributes: title,description,tags
+    joinedcontext.com/imported-from: https://udp.example.fi/helsinki@3f9c2e1
 spec:
   isSandbox: false
   defaultLocale: sk
@@ -277,25 +276,26 @@ apiVersion: joinedcontext.com/v1alpha1
 kind: Subscription
 metadata:
   name: air-quality-alerts
-  namespace: helsinki               # = project slug
-  title: "Air-quality alerts"
+  namespace: helsinki # = project slug
+  title: Air-quality alerts
 spec:
   contextSpaceRef: { kind: ContextSpace, name: air-quality }
   entities:
-    - type: AirQualityObserved      # a type, an id or an idPattern; at least one of them
+    - type: AirQualityObserved # a type, an id or an idPattern; at least one of them
   watchedAttributes: [airQualityIndex]
-  q: "airQualityIndex>50"
+  q: airQualityIndex>50
   notification:
     endpoint:
       uri: https://alerts.example.fi/hooks/air-quality
       accept: application/json
       receiverInfo:
-        - { key: X-Space, value: air-quality }
+        - key: X-Space
+          value: air-quality
       secretRef: { name: alerts-webhook, key: token }
     attributes: [airQualityIndex, location]
     format: normalized
-  throttling: 60                    # seconds between two notifications
-  expiresAt: "2027-01-01T00:00:00Z" # optional; open-ended without it
+  throttling: 60 # seconds between two notifications
+  expiresAt: '2027-01-01T00:00:00Z' # optional; open-ended without it
   isActive: true
 ```
 
@@ -378,21 +378,24 @@ kind: Blueprint
 metadata:
   name: threshold-alert
   namespace: org
-  title: "Threshold alert"
+  title: Threshold alert
 spec:
-  version: 1.2.0                  # SemVer; an upgrade never rewrites instances (CC-26)
-  category: alerting              # gallery grouping (CC-30)
-  riskClass: green                # green | yellow | red, the merge lane (CC-59, CC-63)
-  allowedRoles: [domain-editor, approver, org-admin]   # who sees it (CC-59)
-  parameterSchema:                # JSON Schema draft-07, the complete user surface (CC-24);
-                                  # `x-jc-widget` on a property names a picker that fills its
-                                  # choices from the platform's own state (Development/05 2.1)
+  version: 1.2.0 # SemVer; an upgrade never rewrites instances (CC-26)
+  category: alerting # gallery grouping (CC-30)
+  riskClass: green # green | yellow | red, the merge lane (CC-59, CC-63)
+  allowedRoles: [domain-editor, approver, org-admin] # who sees it (CC-59)
+  parameterSchema: # JSON Schema draft-07, the complete user surface (CC-24);
+    # `x-jc-widget` on a property names a picker that fills its
+    # choices from the platform's own state (Development/05 2.1)
     type: object
     required: [entityType, thresholdValue]
     properties:
-      entityType: { type: string, title: "Entity type", enum: [AirQualityObserved] }
-      thresholdValue: { type: number, title: "Threshold" }
-  templates:                      # each renders exactly one manifest (CC-23)
+      entityType:
+        type: string
+        title: Entity type
+        enum: [AirQualityObserved]
+      thresholdValue: { type: number, title: Threshold }
+  templates: # each renders exactly one manifest (CC-23)
     - name: subscription
       template: |
         apiVersion: joinedcontext.com/v1alpha1
@@ -629,13 +632,15 @@ One repository, every environment (CC-73…CC-75). What differs between `dev`, `
 # environments/staging.yaml
 apiVersion: joinedcontext.com/v1alpha1
 kind: Environment
-metadata: { name: staging, namespace: org }
+metadata:
+  name: staging
+  namespace: org
 spec:
   orgDomain: staging.banskabystrica.sk
   hosts: { portal: portal.staging.bb.example, gateway: api.staging.bb.example }
   images:
-    context-gateway: "sha256:3f786850e387550fdab836ed7e6dc881de23001b6c2a1e2d48d37fca4b2f1e39"
-    portal: "sha256:89e6c98d92887913cadf06b2adb97f26cde4849b1f1a58e18e2a1c2a7b8d1d0f"
+    context-gateway: sha256:3f786850e387550fdab836ed7e6dc881de23001b6c2a1e2d48d37fca4b2f1e39
+    portal: sha256:89e6c98d92887913cadf06b2adb97f26cde4849b1f1a58e18e2a1c2a7b8d1d0f
   secrets: { backend: openbao, mount: jc/staging }
   features: { publicEndpoints: false }
 ```
@@ -663,16 +668,20 @@ metadata:
   namespace: helsinki
 spec:
   source:
-    git: { url: https://git.region.sk/udp/datamodels.git, ref: main, path: models/transport, secretRef: { name: region-git-ro } }
-  schedule: { webhook: true }        # pushed by its origin; or { interval: 30m } and no webhook block
-  mode: mirror                       # source wins inside the synced subtree; local edits show as drift
+    git:
+      url: https://git.region.sk/udp/datamodels.git
+      ref: main
+      path: models/transport
+      secretRef: { name: region-git-ro }
+  schedule: { webhook: true } # pushed by its origin; or { interval: 30m } and no webhook block
+  mode: mirror # source wins inside the synced subtree; local edits show as drift
   selector: { joinedcontext.com/tier: standard }
   conflictPolicy: replace
-  prune: false                       # deletions are never implied (CC-19)
-  autoMerge: false                   # true = green lane for this subtree; enabling it is a red-lane change (CC-70)
-  webhook:                           # required by schedule: { webhook: true }, refused beside an interval
-    secretRef: { name: region-hook }              # what the origin signs the request body with
-    previousSecretRef: { name: region-hook-old }  # optional: accepted while the origin's hook is moved
+  prune: false # deletions are never implied (CC-19)
+  autoMerge: false # true = green lane for this subtree; enabling it is a red-lane change (CC-70)
+  webhook: # required by schedule: { webhook: true }, refused beside an interval
+    secretRef: { name: region-hook } # what the origin signs the request body with
+    previousSecretRef: { name: region-hook-old } # optional: accepted while the origin's hook is moved
 ```
 
 A webhook-driven source is pushed by its origin rather than polled, and the credential for that is the source's own.

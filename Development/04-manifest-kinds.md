@@ -32,6 +32,8 @@ spec:
 
 Typed references (`{kind, name, namespace?}`) instead of paths or ids keep bundles importable into another namespace (MF-07). Multi-document YAML and `kind: List` are accepted everywhere a manifest is (MF-05).
 
+Every manifest in Git has one layout, the one `jcctl fmt` writes (T-5052): the sections in the order `apiVersion`, `kind`, `metadata` (`name`, `namespace`, `title`, `description`, `labels`, then the rest), `spec`, then the rest; two spaces per level with sequences indented under their key; below the sections, a map of at most three scalars as one flow line `{ en: Mobility }` and a list of scalars as `[read, write]` when the line fits 100 columns; quotes only where YAML needs them, and on a string a YAML 1.1 reader would take for a boolean, a null or a number (`'yes'`, `'012'`); comments stay where they are. The formatter never changes a value: it refuses an output that does not parse to the same documents, and refuses anchors, aliases and tags. The Portal commits every YAML file in this layout, so a Portal change and a hand edit read the same in a diff. `jcctl fmt --check <file or dir>...` lists the files that differ and exits 1; without `--check` it rewrites them. In a Markdown page it formats each ` ```yaml ` block that holds a whole manifest. A generated seed keeps its generator's layout, and the deployment's seed check names those generators.
+
 ## 2. Standard Kind Catalog
 
 | Kind | Target Directory | Engine Consumer | Description |
