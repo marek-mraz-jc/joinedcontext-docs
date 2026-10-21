@@ -29,7 +29,9 @@ A token in the query string is refused with `400`. A browser page opens the sock
 
 A plain `GET` of the address without an upgrade (a browser tab, `curl`) answers `426 Upgrade Required` with `Upgrade: websocket` and `Link: <https://{host}/docs/API/07-websocket>; rel="help"`: an HTML page for a browser (`Accept: text/html`) and a problem+json (`upgrade-required`) otherwise, naming the address, the subprotocol, whether a token is needed, one `x-subscribe` message for a type the Endpoint serves and a websocat line. The Endpoint's DCAT record lists the WebSocket distribution at the same address, with a one-sentence `dct:description` in the Endpoint's languages, `foaf:page` and `dct:conformsTo` both naming this page.
 
-The connection's identity is fixed when it opens. A connection opened with a token ends after 300 seconds, the lifetime of an access token: reconnect with a fresh token and resume (§4). An anonymous connection to a public Endpoint has no token to expire and lasts up to 24 hours.
+The connection's identity is fixed when it opens. A connection opened with a token ends when the token expires (its `exp`), and after 300 seconds at the latest: reconnect with a fresh token and resume (§4). An anonymous connection to a public Endpoint has no token to expire and lasts up to 24 hours.
+
+A connection never outlives a change to what admitted it. When the Endpoint is changed in any way (its audience, roles, Policies, hidden attributes or projection, a Policy granted or withdrawn) or the App client the token was issued to loses the Endpoint, every open connection of the Endpoint gets `x-closing` with `x-reason: endpoint-changed` and closes with code `1000` as soon as the gateway loads the change; nothing queued behind the close is sent. A deleted Endpoint, or one that stops serving the WebSocket, closes its connections the same way with `x-reason: view-removed`. The reason names no detail of the change. Reconnect: the new connection is admitted, or refused, under the Endpoint as it is now; a resume (§4) of the closed connection restores no Subscription, so subscribe again. A change that widens access never reaches an open connection.
 
 ## 2. Messages
 
@@ -45,7 +47,7 @@ Every message, in both directions, is one text frame holding one JSON object wit
 | `x-result` | server | the created or updated Subscription, or a ProblemDetails; `metadata.x-status` is the HTTP status the same request would get over REST, `x-id` echoes yours |
 | `x-notification` | server | the NGSI-LD Notification (TS 104 175 §5.2.6.9.1), the same body an HTTP subscriber would receive; `metadata.x-seq` counts from 1 per connection |
 | `x-gap` | server | none; notifications `x-from` to `x-to` were lost, so read the entities again over REST |
-| `x-closing` | server, before it closes | none; `x-reason` is `lifetime`, `overflow`, `view-removed`, `shutdown`, `idle` or `rate` |
+| `x-closing` | server, before it closes | none; `x-reason` is `lifetime`, `overflow`, `view-removed`, `endpoint-changed`, `shutdown`, `idle` or `rate` |
 
 A Subscription made over the socket lives on that connection only. The gateway serves your sockets of an Endpoint from one broker subscription made as you, which the Endpoint's Policy decides as a read, and matches your filters itself ([ADR-N-049](../Decisions/adr-n-049-websocket-fan-out-per-endpoint.md)), so `GET {endpointUrl}/ngsi-ld/v1/subscriptions` does not list it. It ends 30 seconds after the connection closes unless you resume. Keep its id from `x-result`; it is the `x-subscription` of every `x-update` and `x-unsubscribe`.
 
@@ -65,7 +67,7 @@ A notification carries only the attributes your grant reads. A change to an attr
 | Message the server sends | one entity per notification, up to 1 MiB | the gateway does not read the change, and every socket of the Endpoint gets `x-gap` |
 | Idle time (no message and no Subscription) | 60 s | `x-closing: idle` |
 | Unread notifications queued | 256 (an installation may set fewer) | `x-gap`, then `x-closing: overflow` |
-| Connection lifetime | 300 s with a token, 24 h anonymous | `x-closing: lifetime`; reconnect and resume |
+| Connection lifetime | the token's `exp`, at most 300 s, with a token; 24 h anonymous | `x-closing: lifetime`; reconnect and resume |
 
 The 64 KiB bound applies only to what you send. A notification carries one entity and may be up to 1 MiB.
 
