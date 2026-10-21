@@ -52,6 +52,8 @@ CROSS_REFERENCE = (
     "declares no Project",
     # A space whose model the page does not print; one naming another printed model still fails.
     "which is not a model of this space (DM-61)",
+    # A Pipeline aimed at an Endpoint another page prints (PL-111); one the page prints still fails.
+    "declares no Endpoint",
 )
 ORG_NAMESPACE = "org"
 # The scaffolding a page never prints: one organization and one project per namespace used.
