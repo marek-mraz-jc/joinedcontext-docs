@@ -3109,7 +3109,7 @@ GET /api/v1/projects/{project}/spaces/{space}/usage     the space's entity count
 
 A saved way of looking at one entity type of a space: which attributes show, the filter, the
 order, the grouping and the colours, and the view kind (grid, gallery, kanban, calendar, timeline,
-form). The view is the Portal's own record in its database (`data_views`); the rows it shows are
+map, form). The view is the Portal's own record in its database (`data_views`); the rows it shows are
 the space's entities, read with the person's own session, so a view narrows what the person may
 read and never widens it (ADR-N-042 §3.2).
 
@@ -3148,7 +3148,7 @@ DELETE /api/v1/projects/{project}/spaces/{space}/views/{id}     delete it → 20
 - The body of `POST` is `type`, `kind`, `mode`, `title` and `config`; of `PUT` the same without
   `type`, plus `expectedVersion`. Unknown keys are `400`. `type` is an NGSI-LD type name
   (`^[A-Za-z][A-Za-z0-9_-]*$`), `kind` one of `grid`, `gallery`, `kanban`, `calendar`, `timeline`,
-  `form`, `mode` one of `personal`, `collaborative`, `locked`, `title` 1 to 120 characters.
+  `map` (the rows placed by a GeoProperty, T-4884), `form`, `mode` one of `personal`, `collaborative`, `locked`, `title` 1 to 120 characters.
 - `config`: `q` is an NGSI-LD query of at most 4,096 characters, sent as the person's own `q`
   when the view opens; `sort` names at most 3 attributes; `hidden` and `width` name attributes,
   a width between 40 and 2,000 pixels; `order` lists at most 256 attributes in the order the grid
@@ -4048,6 +4048,56 @@ GET /api/v1/organization/agents                                    → 200
   `spec.enabled` flipped by `PUT /api/v1/projects/{project}/assistantdeployments/{name}`, after
   its dry run, like any edit (AG-129); the answer is the Change, which the project's review
   merges.
+
+## 50. The data flow map (T-4862, PL-31…PL-33, PL-45, PL-52, PL-76)
+
+The Pipelines page draws every path data takes through a project: MQTT broker or DataSource,
+pipeline, Endpoint, Context Space, and on through derived and KPI pipelines into the next space.
+The Portal builds it from the manifests it mirrors and the runs it logged; it asks neither the
+runner nor the broker.
+
+```text
+GET /api/v1/projects/{project}/flow-map[?space={space}]          → 200
+```
+
+```json
+{"project": "helsinki",
+ "nodes": [{"id": "helsinki/DataSource/hsl-hfp", "kind": "DataSource", "name": "hsl-hfp",
+            "project": "helsinki", "opaque": false, "sourceType": "mqtt",
+            "hosts": ["mqtt.hsl.fi:8883"], "topics": ["/hfp/v2/journey/ongoing/vp/#"]},
+           {"id": "helsinki/Pipeline/stop-delays", "kind": "Pipeline", "name": "stop-delays",
+            "project": "helsinki", "opaque": false, "role": "derived", "phase": "Live",
+            "enabled": true, "lastRun": {"at": "2026-10-21T04:00:00Z", "sent": 310,
+            "rejected": 0, "failed": 0, "perMinute": 5.2}}],
+ "edges": [{"from": "helsinki/Pipeline/stop-delays", "to": "helsinki/Endpoint/stops-write",
+            "relation": "writes",
+            "grant": {"state": "missing", "endpoint": "stops-write", "operation": "upsertBatch",
+                      "fix": "add a Policy on space stops that grants the ServiceAccount pipelines upsertBatch"}}]}
+```
+
+- `kind` is one of `MqttBroker`, `DataSource`, `Pipeline`, `Endpoint`, `ContextSpace`; `id` is
+  `{project}/{kind}/{name}`, which the edges name. `relation` is `connects` (a broker a
+  DataSource reads by `mqtt.brokerRef`), `feeds` (a DataSource a pipeline reads), `exposes` (a
+  space an Endpoint serves), `reads` (an Endpoint a pipeline reads), `writes` (an Endpoint a
+  pipeline writes) or `stores` (the space an Endpoint writes into).
+- Every `reads` and `writes` edge carries its `grant`: `granted` names the Policy that gives the
+  `pipelines` ServiceAccount `upsertBatch` (a write) or `queryEntity`/`queryBatch` (a read) on the
+  Endpoint's space (the name only to a caller who reads Policy in that space; others see
+  `granted` without it); `missing` says which Policy to add, and the runner is refused there;
+  `external` marks an Endpoint of another project, whose owner's grant decides (PL-32).
+- A pipeline's `role` is `kpi` when it writes a space ending in `-kpi` or the type
+  `KeyPerformanceIndicator` (PL-45, PF-54), `derived` when it reads an Endpoint, else `ingest`.
+  `phase` is the reconciler's, `enabled: false` a paused pipeline, `lastRun` the newest run
+  (PL-62) with `perMinute` over runs of a minute or more, read only for the pipelines on the
+  map; a run log that cannot be read leaves that pipeline without `lastRun`.
+- `space` keeps only the pipelines that read or write that space, with their sources, Endpoints
+  and spaces; without it the map also lists the brokers, DataSources and spaces no pipeline uses
+  yet. A value that is not a space name is `400`.
+- Who may read: whoever may read the project; each node only when the caller may read its kind
+  there (a pipeline, Endpoint or space in the space a binding names). Anybody else gets `404`
+  (PF-59). An Endpoint of another project a pipeline reads is a node with its name alone
+  (`opaque: true`) unless the caller reads that project. A DataSource shows its hosts without
+  user, path or query, never a secret or a token.
 
 ## Related
 
