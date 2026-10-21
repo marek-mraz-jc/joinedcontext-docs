@@ -373,7 +373,7 @@ spec:
       entity: { from: validTo, notAfter: P30D }              # min(validTo, write time + 30 days)
 ```
 
-- **Computed at the write.** The reconciler renders, after the author's steps and before the output, one Bloblang step that sets each end time (PL-82). A record whose `from` field is missing keeps going without an end time and is counted with the reason `lifetime-from`, so a feed that drops `validTo` shows up in the run's problems instead of growing the space silently.
+- **Computed at the write.** The reconciler renders, after the author's steps and before the output, one Bloblang step that sets each end time (PL-82). A record whose `from` field is missing ends at the write time plus `notAfter` when the mode sets one, and keeps going without an end time when it does not; either way it is counted with the reason `lifetime-from`, so a feed that drops `validTo` shows up in the run's problems instead of growing the space silently.
 - **One writer of `expiresAt` per target.** A mapping that sets `expiresAt` itself and a lifetime for the same target are refused together, and so are an entity lifetime and `spec.expiry` for one type (PL-83). Attribute lifetimes combine with both.
 - **No new grant.** The pipeline never calls delete for a lifetime; the broker drops the data on its own clock. The Policy the Portal drafts for the pipeline stays `upsertBatch`, `createBatch` and `queryBatch` (PL-84).
 - **One list of system members.** `expiresAt`, `observedAt` and the other members of DM-130 are no Attributes for the model, the view, the Policy or the daily revalidation, so a lifetime never trips a closed shape or an attribute grant (DM-131).
