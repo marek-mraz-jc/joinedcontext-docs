@@ -15,7 +15,7 @@ Decision Makers: product owner (direction of 2026-09-22, T-2589)
 
 The owner's direction of 2026-09-22: "i need to add oidc/oauth2 login to applications via keycloak with roles, etc.. and assign roles to applications, etc... so i can create complex applications". The login is there: every `/apps/{name}/*` route carries the APISIX `openid-connect` session against the Keycloak client `edge` (ADR-N-019, AP-26, AP-29). What an application cannot do is tell one signed-in person from another:
 
-- The static host decides who may open an app with `visibility == public || authenticated` (portal `src/apps/static_host.rs`, `may_read`), so `private`, `project` and `organization` all mean "signed in".
+- The static host decides who may open an app with `visibility == public || authenticated` (portal `src/apps/static_host.rs`, `may_read`), so `private`, `project` and `organization` all mean "signed in". (Since T-4910 each means its own audience: [Architecture/16 §1](../Architecture/16-apps-on-demand.md).)
 - `#jc-config` carries no person. The SDK's `JcUser.roles` (`sdk/src/sdk/config.ts`) is a field nothing fills.
 - A write in `dataNeeds` is granted to everyone the endpoint admits, so an application cannot keep an editor's button from a viewer except by hiding it.
 - The grant itself matches nobody on a `project` or `organization` app. The reconciler assigns each data need's `Policy` to the role `app-{name}` (portal `src/apps/reconciler.rs`, `assignee`), and the Context Gateway fills a human's roles from `realm_access.roles` alone (`context-gateway/src/app.rs`, `roles_on`). No token carries `app-{name}`, so every read through such an app's endpoint is refused.
