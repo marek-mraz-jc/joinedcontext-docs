@@ -750,6 +750,47 @@ Streams mode renders it as a change gate in front of the compute: the clock read
 
 `onChange: true` (with `watchedAttributes`, the folded attribute when omitted) takes the place of `every`. The Portal writes the Bloblang of the preset above for the aggregate, drafts the Pipeline, and, when `transportation-kpi` does not exist yet, drafts its `ContextSpace`, its `Endpoint` and the two Policies (the runner writes, `public` reads); it tests the pipeline on a page of the source read through the run's endpoint (an empty page when the source is another endpoint) and keeps the verdict on the draft; then it opens the pipeline form on the draft. The person proposes the set; nothing runs before the change is approved. The indicator card of `compute_kpi` offers **Keep it updated**, which sends the same request with the card's type, attribute and aggregate filled in.
 
+### Indicators over several sources (PL-102…PL-105)
+
+One indicator often needs two subjects at once: occupied parking places per transit stop of a district, or the share of the hour a district's PM2.5 stayed under its limit. A `kpi` step names its inputs by the sources' `name`s and says how their rows meet; jc-core checks it at admission and compiles it to the stream's one mapping, so nobody writes Bloblang for it.
+
+```yaml excerpt
+# pipeline.yaml
+apiVersion: joinedcontext.com/v1alpha2
+kind: Pipeline
+metadata: { name: parking-per-stop, namespace: helsinki }
+spec:
+  class: scheduled
+  schedule: "0 * * * *"
+  sources:
+    - name: parking
+      endpointRef: { kind: Endpoint, name: helsinki-parking }
+      query: { type: ParkingSite, attrs: [occupiedSpotNumber, totalSpotNumber, district] }
+    - name: stops
+      endpointRef: { kind: Endpoint, name: helsinki-transit }
+      query: { type: TransitStop, attrs: [district] }
+  steps:
+    - kind: kpi
+      kpi:
+        name: parking-per-stop
+        title: Occupied parking places per transit stop
+        formula: sum(parking.occupiedSpotNumber) / count(stops)
+        unitCode: C62
+        join: { by: area, keys: { parking: district, stops: district } }
+  outputs:
+    - targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki-kpi:kpi-writer
+```
+
+**Joins.** `by: time` folds every row each source returned in the run into one value. `by: entity` and `by: area` group each source by its key attribute (the value of a Property, the `object` of a Relationship, or `id`), keep the keys every source has, and write one indicator per key, `parking-per-stop-kallio`. An area is the value of an attribute the sources share, a district name or code; a join by polygon containment is not offered.
+
+**Rendering.** Each source keeps its own read with the pipeline's token (PL-55, no borrowed rights) and wraps its page as `{input, entities}`, or `{input, error}` when the read failed; the `broker` input batches one message per source and archives the batch into one array, which the compiled mapping folds. A missing input, a read error, a division by zero or an average over no values throws, and the stream reports the reason as the run's failed line and writes nothing (PL-104): a parking feed that lost its grant shows "input parking: unexpected response code (403)" in the run log, not a smaller indicator.
+
+**Provenance.** Each indicator carries `derivedFrom` with every source Endpoint's URN, and its `calculationFormula` names each input after the formula: `sum(parking.occupiedSpotNumber) / count(stops); parking: ParkingSite from urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-parking, 12 rows; stops: TransitStop from …, 40 rows`. A reader of the KPI space sees which spaces, queries and how many rows produced the number, with no attribute beyond Architecture/03 §2, so every indicator space's model keeps accepting it.
+
+**Units.** The units come from each slot's `unit_code` in the space's model; `sum(a.x) + sum(b.y)` with `x` in minutes and `y` in hours is refused, a ratio of two equal units is dimensionless and takes `C62` or `P1`, and `count()` is `C62`. A slot without a unit takes the declared `unitCode` on trust.
+
+**Editor.** The Portal's KPI editor (PL-105) offers count, sum, average, share of two sums, per area and per entity as choices, writes the formula from them, and keeps the typed formula under **Advanced**. Each field is checked by the same jc-core rules as it is typed, and **Preview** computes the value on the sources' current pages before Propose.
+
 ## 4. Scheduled Ingestion Example: CronJob CSV Fetch
 
 Periodic batch loads run today as the `pipeline-runner` component's `scheduled` release: one CronJob per entry of its Helm values `pipelines:`, running `/bento -c /config/bento.yaml` (`components/pipeline-runner/charts/cronjob/templates/pipelines.yaml`). The chart renders `input.generate` as the trigger of each run, so the configuration carries no `input` of its own and the fetch is the first processor; a configuration with an `input` is refused when the chart renders (PL-27). The reconciler does not create these CronJobs from `Pipeline` manifests yet.
