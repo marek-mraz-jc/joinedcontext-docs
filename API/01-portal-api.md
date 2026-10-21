@@ -1741,7 +1741,10 @@ GET /api/v1/projects/{project}/activity            the list, newest first, paged
 GET /api/v1/projects/{project}/activity/stream     the same filter, as Server-Sent Events
 ```
 
-Both take the same query parameters, so a view switches between them without rewriting anything:
+Both take the same query parameters, so a view switches between them without rewriting anything.
+Both answer readers of the project (`404` otherwise). An event of a Context Space reaches only a
+reader whose bindings reach that space (a project or organization binding, or one scoped to that
+space); the stream checks each event against the bindings of that moment (T-4876).
 
 | Parameter | Meaning |
 |---|---|
@@ -3203,12 +3206,12 @@ DELETE /api/v1/projects/{project}/spaces/{space}/trash/{id}          forget a co
 - A project or a space the caller may not read is `404`, as in §27. A person keeps at most 1,000
   copies per space; the oldest goes first. A copy older than 30 days is gone.
 
-## 32. Live updates of a space's entities (ADR-N-042 §3.4, T-3105)
+## 32. Live updates of a space's entities (ADR-N-042 §3.4, T-3105, T-4876)
 
 An open data view hears when an entity of its type changes, from anyone and through any door,
 without polling. The Portal holds one NGSI-LD subscription per space and type that a view has
-open, created through the space surface with the Portal's own ServiceAccount, and passes each
-notification on to the views that show that space and type.
+open, created through the space surface with the Portal's own ServiceAccount, and tells the views
+that show that project, space and type that it changed.
 
 ```text
 GET  /api/v1/projects/{project}/spaces/{space}/live?type={type}    the changes of one type, as server-sent events → 200
@@ -3216,17 +3219,23 @@ POST /live-notify/{liveKey}                                        where the gat
 ```
 
 - `GET …/live` follows the space's read rule (`404` for a space the caller may not read) and needs
-  `type`, an NGSI-LD type name (`400` otherwise). Each event is `changed` with
-  `{"type": "…", "ids": ["urn:…"], "attrs": ["…"]}`: which entities and attributes changed, never
-  their values. A view reads the changed rows again with the person's own session, so an event
-  shows nobody anything their grants do not; a keep-alive comment comes every 20 seconds.
+  `type`, an NGSI-LD type name (`400` otherwise). Each event is `changed` with `{"type": "…"}` and
+  nothing else: no entity id, no attribute name, no value. The notification was read under the
+  Portal's ServiceAccount, whose grants are not the reader's, so the Portal cannot tell which rows and
+  attributes the reader's row and attribute grants cover. The view reads the rows again with the
+  person's own session, which the gateway narrows to those grants; a keep-alive comment comes every
+  20 seconds.
+- Channels are keyed by project, space and type: a space of the same name in another project
+  never reaches the view.
 - The subscription watches `entities: [{type}]`, notifies with `attributes` only by name
   (`notification.format: keyValues` of `id`, `type` and the changed attributes is what the broker
-  sends; the Portal keeps the names) and expires 24 hours after it was written; a view opened
+  sends; the Portal reads none of it) and expires 24 hours after it was written; a view opened
   after half of that writes it again. Nothing else removes it.
 - `POST /live-notify/{liveKey}` is outside `/api/v1`: the broker that calls it through the gateway holds
-  no token. `liveKey` is an HMAC of the space and type under a secret only this Portal holds, so a key
-  names one subscription and cannot be made up; an unknown key is `404`. A body larger than 1 MiB
+  no token. `liveKey` is an HMAC of the project, space and type under a secret only this Portal process holds
+  (drawn from the CSPRNG at start, never stored or logged), so a key names one subscription and
+  cannot be made up; it is compared with each watched pair's HMAC in constant time, and an unknown
+  key is `404`. A body larger than 1 MiB
   is `413`. A forged notification can only make a view read again.
 - The process that receives a notification passes it on to its own views. With several replicas
   the edge hands each notification to one of them, so a view on another replica hears it on that
@@ -3888,9 +3897,11 @@ the newest messages a broker received. The allowance is written only as a field 
 
 ```text
 GET    /api/v1/projects/{project}/mqtt/allowance                       → 200
-GET    /api/v1/projects/{project}/mqttbrokers/{name}/captured?topic=&limit=   → 200
-DELETE /api/v1/projects/{project}/mqttbrokers/{name}/captured          → 204
 ```
+
+Not served yet: `GET /api/v1/projects/{project}/mqttbrokers/{name}/captured?topic=&limit=` → 200
+and `DELETE /api/v1/projects/{project}/mqttbrokers/{name}/captured` → 204 arrive with the capture
+subscriber (T-4880). The rest of this section describes them as they will be served.
 
 ```json
 {"enabled": true, "origin": "project",
