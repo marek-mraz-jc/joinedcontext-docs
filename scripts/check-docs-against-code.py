@@ -52,6 +52,7 @@ import argparse
 import os
 import pathlib
 import re
+import subprocess
 import sys
 import tempfile
 
@@ -321,6 +322,23 @@ def present(code: pathlib.Path) -> list[str]:
     return [name for name in REPOSITORIES if (code / name).is_dir()]
 
 
+def report(bad: list[str], code: pathlib.Path, checkouts: list[str]) -> str:
+    """The failure text: what disagrees, which code commits it was read against, what to do."""
+    heads = []
+    for name in checkouts:
+        head = subprocess.run(
+            ["git", "-C", str(code / name), "rev-parse", "--short", "HEAD"],
+            capture_output=True, text=True, check=False,
+        ).stdout.strip()
+        heads.append(f"{name}@{head}" if head else name)
+    return "\n  ".join(
+        [f"{len(bad)} claim(s) the code does not support:", *bad]
+    ) + (
+        f"\nread against {', '.join(heads)}. If the code half of this change is not merged yet, "
+        "merge the docs after it and rerun this job; otherwise correct the page."
+    )
+
+
 SAFE_PAGE = """---
 title: A page that is true
 ---
@@ -505,6 +523,12 @@ def selftest() -> int:
             return 1
         (docs / PROBLEM_PAGE).unlink()
 
+        # A failure names the code commits it read and the merge-order way out (T-4925).
+        text = report(["API/09-errors.md: nothing answers with gone"], code, present(code))
+        if not ("joinedcontext-platform" in text and "merge the docs after it" in text and "1 claim(s)" in text):
+            print("the failure report lost its checkouts or its next step:", text, sep="\n  ", file=sys.stderr)
+            return 1
+
         # And with no code tree at all the checker reports nothing rather than everything.
         if check(docs, root / "nowhere"):
             print("a missing code tree produced findings", file=sys.stderr)
@@ -544,12 +568,7 @@ def main(argv: list[str]) -> int:
 
     bad = check(docs, code)
     if bad:
-        print(
-            f"{len(bad)} claim(s) the code does not support:",
-            *bad,
-            sep="\n  ",
-            file=sys.stderr,
-        )
+        print(report(bad, code, checkouts), file=sys.stderr)
         return 1
     print(f"the docs agree with {', '.join(checkouts)}")
     return 0
