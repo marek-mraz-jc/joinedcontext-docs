@@ -35,13 +35,13 @@ Generated 2026-10-21 from: `docs` cfe7498, `conformance` 239c701, `deployment` 8
 | **MP** — Model projections | 3 | 3 | 0 | 0 | 0 |
 | **OPS** — Operations and reliability | 56 | 46 | 6 | 4 | 3 |
 | **PF** — Platform invariants | 120 | 100 | 9 | 11 | 4 |
-| **PL** — Pipelines | 95 | 72 | 11 | 12 | 8 |
+| **PL** — Pipelines | 101 | 72 | 11 | 18 | 13 |
 | **R** — Access control and federation | 60 | 23 | 9 | 28 | 0 |
 | **SDK** — App SDK | 42 | 34 | 3 | 5 | 1 |
 | **SP** — Context-space surface | 22 | 18 | 2 | 2 | 0 |
 | **TS** — Testing and quality | 26 | 16 | 5 | 5 | 0 |
 | **UI** — Portal and user interface | 97 | 72 | 14 | 11 | 5 |
-| **Total** | 1377 | 1021 | 126 | 230 | 61 |
+| **Total** | 1383 | 1021 | 126 | 236 | 66 |
 
 ## 3. Requirement to test
 
@@ -1244,6 +1244,12 @@ Generated 2026-10-21 from: `docs` cfe7498, `conformance` 239c701, `deployment` 8
 | **PL-91** | [S] | tested | ci-full, fast ci | portal `src/access_requests.rs::the_approval_grants_exactly_the_requested_types_to_the_pipelines_own_account`, portal `tests/access_requests_tests.rs::a_request_is_approved_in_the_owning_project_and_revoked_there`, portal `tests/access_requests_tests.rs::the_requester_does_not_approve_their_own_request`, and 4 more |
 | **PL-92** | [S] | tested | fast ci | platform `crates/context-gateway/src/pdp/evaluator.rs::a_qualified_service_account_assignee_matches_only_that_projects_account` |
 | **PL-93** | [S] [H] | tested | ci-full, fast ci | portal `src/access_requests.rs::an_end_date_is_in_the_future_or_absent`, portal `src/access_requests.rs::revoking_ends_the_grant_and_unlists_the_project_when_nothing_else_names_it`, portal `src/access_requests.rs::a_grant_already_held_makes_the_request_pointless`, and 12 more |
+| **PL-96** | [S] | open |  |  |
+| **PL-97** | [S] | open |  |  |
+| **PL-98** | [S] | open |  |  |
+| **PL-99** | [S] | open |  |  |
+| **PL-100** | [S] | open |  |  |
+| **PL-101** | [H] | open |  |  |
 
 ### R — Access control and federation
 
