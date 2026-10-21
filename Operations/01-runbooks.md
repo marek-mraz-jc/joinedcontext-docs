@@ -251,6 +251,7 @@ The value is never printed and never put on a command line. A Secret that carrie
 | Platform OIDC client secrets | `keycloak-client-<client>` | the platform operator | `scripts/rotate-secret.sh --instance <env> --secret keycloak-client-<client> --idm https://idm.<domain> --realm <realm>`: the generator makes a new secret and keycloak-config-cli writes it to the client | a `client_credentials` grant with the old secret answers `401` |
 | Database passwords | `db-portal`, `db-keycloak`, `db-gitea`, `db-ckan`, `db-ckan-datastore-read`, `db-antares` | the platform operator | `scripts/rotate-secret.sh --instance <env> --secret db-<name>`: CloudNativePG applies the new role password from the Secret | a login with the old password on the primary fails, and one with the new password succeeds |
 | Forge tokens | `gitea-token-portal`, `gitea-token-gateway`, `gitea-token-lane-secret` | the platform operator | `scripts/rotate-secret.sh --instance <env> --secret gitea-token-<name> --forge https://<domain>/git`: the forge bootstrap deletes the old token in Gitea by name and mints one | `/api/v1/user` answers `401` to the old token |
+| Catalogue API token | `ckan-api-token` | the platform operator | `scripts/rotate-secret.sh --instance <env> --secret ckan-api-token --catalogue https://opendata.<domain>`: the catalogue release's token Job finds the Secret gone, revokes the `jcctl` token in CKAN by name and mints a new one; the Portal restarts with it. The Portal's CKAN writes fail for the seconds between the revocation and its restart and the next reconcile repeats them; catalogue reads never use the token (T-5106) | `api_token_list` with the old token answers `403`, as for anonymous |
 | The Portal's session key | `portal-cookie-key` | the platform operator | `scripts/rotate-secret.sh --instance <env> --secret portal-cookie-key`: the old key stays in the Secret as `previous`, which the Portal reads as `JC_PORTAL_COOKIE_KEY_PREVIOUS`, so nobody is signed out (T-2842). Once the session lifetime has passed, `--drop-previous` removes it and restarts the Portal (Deployment/08, *Rotating the Portal's session key*). The next rotation replaces `previous`, so one retired key at most is held. | nothing outside the cluster to ask; the script checks that every copy changed |
 | Session and signing keys | `apisix-oidc-session`, `ckan-session`, `artifact-store-root` | the platform operator | `scripts/rotate-secret.sh --instance <env> --secret <name>`, then every reader restarts. Rotating these ends every session they signed: the edge sessions, CKAN's sessions and API tokens (its token Job mints a new one). A new artifact-store root re-derives every organization's keys. | nothing outside the cluster to ask; the script checks that every copy changed |
 | Demo people | `keycloak-user-<name>` (development profile only) | the platform operator | `scripts/rotate-secret.sh --instance <env> --secret keycloak-user-<name>`: keycloak-config-cli writes the new password | the person's next login needs the new password |
@@ -259,11 +260,39 @@ The value is never printed and never put on a command line. A Secret that carrie
 | Administrators | `gitea-admin-credentials`, `keycloak-admin-user` | the platform operator | written once at install and never reset by an apply (`initialOnlyNoReset`): change the password in Gitea or Keycloak first, then write the same value into every copy of the Secret, since keycloak-config-cli and the forge bootstrap log in with it. The script refuses them. | the old password fails the application's own login |
 | Runner registration | `gitea-runner-registration` | the platform operator | reset the registration token in Gitea (site administration, runners), delete every copy of the Secret, apply `gitea-bootstrap`, restart the runner | the runner registers with the new token only |
 | SOPS age key | the operators' `.secrets/` and the CI secret | the platform operator | the procedure above | a render with the new key alone succeeds |
-| Model key | `agent-runner-model-key` | the owner, in the OpenRouter account | create a new key, write it with `kubectl create secret generic agent-runner-model-key --from-file=key=<file> --dry-run=client -o yaml \| kubectl apply -f -`, restart the agent proxy, then delete the old key in OpenRouter | the provider answers `401` to the deleted key |
+| Model key | `agent-runner-model-key` | the owner, in the OpenRouter account | create a new key and save it to a file (mode 600, outside any repository), then `scripts/rotate-secret.sh --instance <env> --secret agent-runner-model-key --from-file <file> --model-base https://openrouter.ai/api/v1`: the script checks the new key at the provider's `GET /key` before it changes anything, writes it into every copy and restarts the agent proxy. Then delete the old key in OpenRouter and the file (T-5106) | the script reports whether the old key still answers `200`; after the deletion the provider answers `401` |
 | GitHub token of the board and the mirror | `.secrets/` and `github-app-mirror` | the owner, in the GitHub account | create the new token, replace the file and the Secret, restart the mirror, revoke the old token | GitHub answers `401` to the revoked token |
 | Image signing | none | nobody | signing is keyless (GitHub OIDC in `reusable-container-sign.yml`), so there is no key to rotate; the trust is the workflow identity | not applicable |
 
 `tests/test_rotate_secret.py` holds the script to this table against stubs. Proving each class on a running cluster is the ci-full `k3d-deploy` case: rotate, see the old value refused and the new one accepted.
+
+Every run takes `--dry-run`: it reads the cluster, prints which copies it would delete, which release it would apply, which workloads it would restart and how it would measure, and changes nothing. Run it first on production.
+
+### The quarterly rotation drill
+
+Once a quarter the operator rehearses one credential of each kind on dev, so a leaked secret is rotated from a practised procedure (T-5106). On dev every kind has a recipe in `joinedcontext-deployment` (with `KUBECONFIG=.secrets/kubeconfig-dev.yaml`; each takes `dry=true`):
+
+| Kind | Recipe |
+|---|---|
+| Keycloak client secret | `just dev-rotate-client <client>` (default `activity-ingest`) |
+| Database role password | `just dev-rotate-db <role>` (default `portal`) |
+| Forge token | `just dev-rotate-forge-token <holder>` (default `gateway`) |
+| Catalogue API token | `just dev-rotate-ckan-token` |
+| Model key | `just dev-rotate-model-key <file>` |
+| All of them, with probes | `just dev-rotation-drill [<model key file>]` |
+
+`just dev-rotation-drill` runs `scripts/rotation-drill.py`: it rotates `keycloak-client-activity-ingest`, `db-portal`, `gitea-token-gateway`, `ckan-api-token` and, when a new model key file is given, `agent-runner-model-key`, one after the other. During the rotations it reads the Portal's `/api/v1/health`, the realm's OpenID configuration and the catalogue's `status_show` every two seconds. Any answer other than 2xx or 3xx fails the drill. The recipe writes `deployment/rotation-drill.json` and publishes it as the check `secret-rotation` on the Portal's Health tab. The tab marks the check stale when no drill was published for 62 days (twice the 744-hour cadence, the longest the tab accepts), so a missed quarter shows there before the next one starts.
+
+Announce the drill in `AI_shared_folder.md` first: it restarts the Portal, the collector, the agent proxy and the forge clients.
+
+### Production
+
+Production has no rotation recipes: a mistake there must take a deliberate command. Rotate on production with the script directly, one credential at a time, with the production kubeconfig and environment:
+
+1. `export KUBECONFIG=.secrets/kubeconfig-prod.yaml`, then `just _prod-guard` and `just _dev-assemble`.
+2. Run the row's command with `--instance smartcity` and the production hosts (`idm.smartcity.joinedcontext.com`, `opendata.smartcity.joinedcontext.com`, realm `smartcity`), first with `--dry-run`. Read the plan: the copies, the release, the restarted workloads.
+3. Run it again without `--dry-run`. It ends with "the old value is refused" or names what failed. Run `just prod-smoke` after the last one.
+4. A failed run names the step that stopped. Stopped after the delete, the Secret is gone: apply the release the dry run named (`helmfile -f deployment/helmfile.yaml -e smartcity -l <selector> sync`), which makes it again, then run the command once more. Stopped at the measurement, the new value is in place: find the reader that still holds the old one (`kubectl rollout status`) before running again.
 
 ### Verification
 
