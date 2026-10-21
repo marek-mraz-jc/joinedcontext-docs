@@ -164,6 +164,28 @@ The `gitea-runner` component runs the forge's runner (`gitea-runner` 3.5.0, form
 
 `just dev-smoke` waits up to a minute for a runner of the organization to show `online` in the forge's API and prints how long it waited. A probe pod with the runner's label must resolve names and must not reach an address on the internet.
 
+## 7. Component Profiles (`componentProfile`)
+
+`componentProfile` in an environment's `global.yaml.gotmpl` picks the component list. `full`, the default, deploys the environment's `components` list. `minimal` and `broker-only` deploy the list of the same name in `componentProfiles` of `defaults/environment/global.yaml`, whatever the environment's own list says, and take the smaller sizes of `componentProfileValues`; a value the environment sets itself wins over the profile's.
+
+| Profile | Components, and the node it is for | Memory requests / limits, PVC |
+|---|---|---|
+| full | the environment's list (19 in the default list); the reference node, 16 GiB | 6736Mi / 18960Mi, 32Gi (`local`) |
+| minimal | prepare, secrets, networkpolicies, runtime-policies, postgres, keycloak, apisix, context-broker, portal; a 4 GB node | 2608Mi / 8080Mi, 1Gi |
+| broker-only | prepare, secrets, networkpolicies, postgres, context-broker; a 1 GB node | 512Mi / 1936Mi, 1Gi |
+
+The requests and limits are the sums over the rendered Deployments, StatefulSets and the CloudNativePG instance. The node also runs k3s itself, about 500 MiB, and `minimal` needs Kyverno installed for its runtime policies. `broker-only` sizes PostgreSQL for one database: 16 connections, 64MB shared buffers and a broker pool of 10, a worst case of about 700MiB under its 1Gi limit.
+
+`componentDependencies` lists what each component cannot run without. A render whose list deploys a component without one of them stops and names both, for every profile and for an environment's own list alike:
+
+```text
+component "context-broker" needs "postgres", which componentProfile "broker-only" does not deploy
+```
+
+**Security.** `minimal` keeps the default-deny NetworkPolicies, the Kyverno runtime policies, non-root pods, generated secrets by `secretRef` and TLS at the APISIX edge. `broker-only` has no edge and no identity provider: nothing authenticates a request in front of the broker. Its Service is `ClusterIP`, nothing publishes it, and its NetworkPolicies admit no client namespace, so it answers `kubectl port-forward` and any workload an operator adds a NetworkPolicy for. Put an authenticating proxy in front of it before opening it to anyone.
+
+**Measured.** The broker image `broker-only` runs (`antares-broker-jc` dev-17) on PostgreSQL in Docker, with the profile's pool of 10, passed the 31 cases of the ETSI smoke suite (`tests/etsi/smoke.robot` of the conformance repository) and then held 7 MiB, its PostgreSQL 68 MiB (2026-10-21, T-4856). On a cluster, ci-full's `deployment-profiles` job installs each profile into a fresh k3d cluster with `scripts/test-deployment-variants.sh --components <profile> --footprint <file>`, smokes it (`minimal` at the edge, `broker-only` over NGSI-LD through a port-forward) and writes the peak and settled memory and CPU of its pods, requests, limits and PVCs, with the run id, into the job summary and the `footprint-<profile>` artifact.
+
 ## Related
 
 - [00-intro](00-intro.md) — deployment chapter order.
