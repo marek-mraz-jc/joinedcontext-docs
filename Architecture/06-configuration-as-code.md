@@ -324,6 +324,15 @@ Three rules make the manifest the truth without the reconciler owning the broker
   while the Portal is down leaves its subscription behind, an orphan a person can see and
   delete, rather than deleting someone else's (CC-72).
 
+The token is the `portal-reconciler` client's, the Portal's data-plane identity: the gateway
+decides it as the user `service-account-portal-reconciler`, and its one audience beyond the
+realm's is `context-gateway`, which every gateway door verifies (T-4866). After each write the
+reconciler reads the subscription back and keeps what the space reports of its deliveries in
+`status.notifications`: `status` (`ok` or `failed`), `timesSent`, `timesFailed`,
+`lastNotification`, `lastSuccess` and `lastFailure` (CIM 009 clause 5.2.14). Never the
+endpoint, a header or a payload; a member that is not well formed is left out. The
+Subscriptions page shows it as the row's deliveries, refreshed on every reconciler run.
+
 ### A registration is written at the broker, not through the space surface (T-0345, PF-48)
 
 A `ContextSourceRegistration` is projected by the same reconciler, and by the one other route
