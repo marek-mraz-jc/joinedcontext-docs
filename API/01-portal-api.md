@@ -3976,12 +3976,14 @@ GET /api/v1/projects/{project}/flow-map[?space={space}]          → 200
   pipeline writes) or `stores` (the space an Endpoint writes into).
 - Every `reads` and `writes` edge carries its `grant`: `granted` names the Policy that gives the
   `pipelines` ServiceAccount `upsertBatch` (a write) or `queryEntity`/`queryBatch` (a read) on the
-  Endpoint's space; `missing` says which Policy to add, and the runner is refused there;
+  Endpoint's space (the name only to a caller who reads Policy in that space; others see
+  `granted` without it); `missing` says which Policy to add, and the runner is refused there;
   `external` marks an Endpoint of another project, whose owner's grant decides (PL-32).
 - A pipeline's `role` is `kpi` when it writes a space ending in `-kpi` or the type
   `KeyPerformanceIndicator` (PL-45, PF-54), `derived` when it reads an Endpoint, else `ingest`.
   `phase` is the reconciler's, `enabled: false` a paused pipeline, `lastRun` the newest run
-  (PL-62) with `perMinute` over runs of a minute or more.
+  (PL-62) with `perMinute` over runs of a minute or more, read only for the pipelines on the
+  map; a run log that cannot be read leaves that pipeline without `lastRun`.
 - `space` keeps only the pipelines that read or write that space, with their sources, Endpoints
   and spaces; without it the map also lists the brokers, DataSources and spaces no pipeline uses
   yet. A value that is not a space name is `400`.
