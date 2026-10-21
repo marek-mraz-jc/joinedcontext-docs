@@ -64,7 +64,20 @@ Gaps: a Policy holds one rule where ODRL and Cedar hold many; an Endpoint binds 
 
 5. **`jcctl validate` refuses a write nobody can make** (T-5035, this task). It reports as errors (a) every permission that grants a write operation and is bound by no Endpoint of its project, and (b) every Pipeline output whose `targetEndpoint` does not exist in the Pipeline's project or does not bind that output's derived write Policy. Binding follows the gateway's rule: same space, and the Endpoint names the Policy by reference or names none, and an App's generated Endpoint takes only its own grants and the prohibitions. Both are errors, not warnings, because `validate` is the CI gate of every deployment repository and a warning nobody read is how the bbsk defect reached dev. The Portal's change review runs the same check on a proposal (T-5040).
 
-## 4. Security
+## 4. Performance Budgets
+
+The owner asked on 2026-10-21 that these Endpoints stay fast. On dev from the swarm host, `…/access` answered in 113-127 ms and an NGSI-LD query of 10 or 100 entities in 119-131 ms, of which an edge 404 already takes 106 ms; the server side is about 5-20 ms. Each change of section 3 holds these budgets, measured before and after (T-5042):
+
+| Measure | Budget |
+|---|---|
+| PDP decision in process, 50 Policies of 5 rules on one space | p99 < 1 ms (criterion bench in ci-full, fails on a 20 % regression) |
+| `…/access`, server time | p95 < 20 ms |
+| `…/access/v1/evaluations` with 100 items, server time | p95 < 30 ms |
+| an NGSI-LD or OGC read through a Policy with `idPattern`, `q` and `geoQ` | within 10 % of the same read without residual constraints |
+
+The k6 script runs against dev at 1, 10 and 50 concurrent clients, never the full ETS, and against production only inside the night window of T-4877, read-only. A read over 200 ms p95 becomes its own task.
+
+## 5. Security
 
 - Deny by default holds per rule: a rule grants only what it lists, and a Policy whose rules grant nothing grants nothing.
 - A prohibition rule wins over every permission of every Policy an Endpoint binds, wherever it is written, which is ODRL's `conflict: prohibit` and today's GW4.
@@ -72,20 +85,20 @@ Gaps: a Policy holds one rule where ODRL and Cedar hold many; an Endpoint binds 
 - The AuthZEN calls disclose no more than `…/access`: a decision about the caller alone, no Policy names, and a denied type answers `false`, not why (R20).
 - ODRL input cannot widen a grant: what does not map is refused.
 
-## 5. Alternatives Considered
+## 6. Alternatives Considered
 
 - **Keep one rule per Policy and allow several `policyRef` only.** Rejected: the owner's case then needs two files that change together and one review per file.
 - **Adopt Cedar as the policy language.** Rejected: a second language beside the NGSI-LD query strings the broker's engine already evaluates (EP-56), and Cedar has no geo or temporal operand.
 - **Lint as a warning, an error only with a strict flag.** Rejected: the bbsk seed passed CI with a warning-free run; a second mode is a second behaviour to test.
 - **Bind a Pipeline's derived Policies past `policyRef`.** Rejected in T-5033: a public read Endpoint would then list writes.
 
-## 6. Consequences
+## 7. Consequences
 
 - jc-core's `PolicySpec` gains `rules`, `EndpointSpec` gains `policyRefs`; the gateway, the broker's view compiler and the Portal read the normalized list, so each has one code path.
 - The access documents of §1b gain one entry per rule; consumers of the AuthZEN and ODRL shapes see no new member.
 - Seed repositories pass `jcctl validate` unchanged after T-5033; a repository with a write Policy no Endpoint binds fails until the Endpoint or the Policy is fixed.
 
-## 7. Requirements
+## 8. Requirements
 
 - **EP-14**, **GW4**, **GW5**, **GW8**: binding and conflict, unchanged in meaning.
 - **R51**, **R52**, **EP-06**, **EP-103**: the AuthZEN and ODRL shapes and their parity.
