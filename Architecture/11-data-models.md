@@ -470,19 +470,19 @@ kind: DataModel
 metadata:
   name: hki-air-quality
   namespace: helsinki
-  title: { fi: "Ilmanlaatu", en: "Air quality" }
+  title: { fi: Ilmanlaatu, en: Air quality }
 spec:
-  contextSpaceRef: air-quality              # the space this model belongs to; with metadata.namespace it
-                                         # determines the repository path projects/{p}/spaces/{s}/datamodels/ (MF-06)
-  linkml: ./hki-air-quality.linkml.yaml   # the authoring source, relative to this manifest (DM-01)
-  version: 2.1.0                         # semantic version; the major is the served schema/v{major} (DM-22)
-  lifecycle: published                   # draft | published | deprecated | retired (DM-26)
-  classes: [AirQualityObserved]          # NGSI-LD entity types this model defines
-  source:                                # provenance of an imported model (DM-08); absent for a hand-authored one
+  contextSpaceRef: air-quality # the space this model belongs to; with metadata.namespace it
+  # determines the repository path projects/{p}/spaces/{s}/datamodels/ (MF-06)
+  linkml: ./hki-air-quality.linkml.yaml # the authoring source, relative to this manifest (DM-01)
+  version: 2.1.0 # semantic version; the major is the served schema/v{major} (DM-22)
+  lifecycle: published # draft | published | deprecated | retired (DM-26)
+  classes: [AirQualityObserved] # NGSI-LD entity types this model defines
+  source: # provenance of an imported model (DM-08); absent for a hand-authored one
     repository: https://github.com/smart-data-models/dataModel.Environment
     path: AirQualityObserved
     commit: 9f1c2b7d4e6a8c0b2d4f6a8c0e2b4d6f8a0c2e4b
-  artifacts:                             # generated beside the source in the same commit (DM-02)
+  artifacts: # generated beside the source in the same commit (DM-02)
     jsonSchema: ./json-schema/hki-air-quality.v2.json
     context: ./context/hki-air-quality.v2.jsonld
     docs: ./docs/hki-air-quality.md
@@ -689,35 +689,37 @@ kind: Mapping
 metadata:
   name: sdm-airquality-to-bb
   namespace: helsinki
-  title: { fi: "SDM AirQualityObserved → HKI ilmanlaatu", en: "SDM AirQualityObserved → HKI air quality" }
+  title:
+    fi: SDM AirQualityObserved → HKI ilmanlaatu
+    en: SDM AirQualityObserved → HKI air quality
 spec:
-  contextSpaceRef: air-quality       # the space this mapping belongs to (MF-06)
-  source: { kind: DataModel, name: sdm-airqualityobserved, version: "1" }
-  target: { kind: DataModel, name: hki-air-quality, version: "2" }
-  transformation:                 # verbatim LinkML-Map TransformationSpecification
+  contextSpaceRef: air-quality # the space this mapping belongs to (MF-06)
+  source: { kind: DataModel, name: sdm-airqualityobserved, version: '1' }
+  target: { kind: DataModel, name: hki-air-quality, version: '2' }
+  transformation: # verbatim LinkML-Map TransformationSpecification
     id: https://hel.example.fi/mappings/sdm-airquality-to-bb
     class_derivations:
       BBAirQuality:
         populated_from: AirQualityObserved
         slot_derivations:
-          id:          { populated_from: id }
-          pm10:        { populated_from: pm10 }
-          pm25:        { populated_from: pm2p5 }                     # rename
+          id: { populated_from: id }
+          pm10: { populated_from: pm10 }
+          pm25: { populated_from: pm2p5 } # rename
           temperatureC:
             populated_from: temperature
-            unit_conversion: { target_unit: Cel }                  # source declares its unit in LinkML
-          observedAt:  { populated_from: dateObserved }
-          label:
-            expr: "{stationName} + ' (' + {areaServed} + ')'"
+            unit_conversion: { target_unit: Cel } # source declares its unit in LinkML
+          observedAt: { populated_from: dateObserved }
+          label: { expr: "{stationName} + ' (' + {areaServed} + ')'" }
           qualityBand:
             populated_from: airQualityLevel
-            value_mappings: { good: A, moderate: B, unhealthy: C }  # enum_derivation
-  vocabularyAlignment: { sssomRef: { kind: Mapping, name: sdm-to-hki-terms } }   # optional SSSOM set
-  artifacts:                      # the two compiled forms of this one specification (DM-52)
-    bloblang: generated/sdm-airquality-to-bb.blobl     # what Bento runs
-    gatewayIr: generated/sdm-airquality-to-bb.ir.json  # what the Context Gateway interprets
+            value_mappings: { good: A, moderate: B, unhealthy: C } # enum_derivation
+  vocabularyAlignment: # optional SSSOM set
+    sssomRef: { kind: Mapping, name: sdm-to-hki-terms }
+  artifacts: # the two compiled forms of this one specification (DM-52)
+    bloblang: generated/sdm-airquality-to-bb.blobl # what Bento runs
+    gatewayIr: generated/sdm-airquality-to-bb.ir.json # what the Context Gateway interprets
   tests:
-    - input:  examples/sdm-example.jsonld
+    - input: examples/sdm-example.jsonld
       expect: examples/hki-example.jsonld
 ```
 

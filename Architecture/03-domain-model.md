@@ -384,21 +384,21 @@ Titles and descriptions on manifests are single plain-text strings in the author
 apiVersion: joinedcontext.com/v1alpha1
 kind: Organization
 metadata:
-  name: helsinki              # DNS-1123 label, unique in the Instance
+  name: helsinki # DNS-1123 label, unique in the Instance
   # The examples in this documentation use Helsinki open data as their demonstration
   # instance. It is an illustration, not a deployment of or for the City of Helsinki.
   namespace: org
-  title: "Helsingin kaupunki"
-  description: "Pääkaupunki"
+  title: Helsingin kaupunki
+  description: Pääkaupunki
 spec:
-  domain: hel.fi         # verified internet domain, the {orgDomain} of every URN (PF-41)
+  domain: hel.fi # verified internet domain, the {orgDomain} of every URN (PF-41)
   gitRepositoryUrl: https://forge.hel.fi/kaupunki/config.git
-  locales: [sk, en, de, cs]         # ordered, most preferred first (PF-25)
-  defaultLocale: sk                 # the fallback locale, MUST be one of spec.locales (PF-25, PF-26)
-  dcatProfiles: [dcat-ap-sk]        # national DCAT-AP profiles its records are also served in (API/08); DCAT-AP 3.0 always
+  locales: [sk, en, de, cs] # ordered, most preferred first (PF-25)
+  defaultLocale: sk # the fallback locale, MUST be one of spec.locales (PF-25, PF-26)
+  dcatProfiles: [dcat-ap-sk] # national DCAT-AP profiles its records are also served in (API/08); DCAT-AP 3.0 always
   contacts:
-    - role: administrative          # administrative | technical | data-protection | security | open-data
-      name: "Odbor digitalizácie"
+    - role: administrative # administrative | technical | data-protection | security | open-data
+      name: Odbor digitalizácie
       email: digital@example.org
 ```
 
@@ -410,14 +410,16 @@ kind: Project
 metadata:
   name: air-quality
   namespace: org
-  title: "Ilmanlaatu"
+  title: Ilmanlaatu
 spec:
   organizationRef: { kind: Organization, name: helsinki }
-  domain: hel.fi                    # the publishing body's domain (PF-108)
-  catalog:                          # who publishes, for the project's own catalogue (EP-127, API/08 §6)
-    publisher: { name: { fi: "Helsingin kaupunki" }, uri: "https://www.hel.fi/" }
-    contactPoint: { name: "Avoin data", email: avoindata@example.org }
-  quotas:                           # per Project (PF-17), at most the organization's default (PF-73), checked by Conftest (PF-18)
+  domain: hel.fi # the publishing body's domain (PF-108)
+  catalog: # who publishes, for the project's own catalogue (EP-127, API/08 §6)
+    publisher:
+      name: { fi: Helsingin kaupunki }
+      uri: https://www.hel.fi/
+    contactPoint: { name: Avoin data, email: avoindata@example.org }
+  quotas: # per Project (PF-17), at most the organization's default (PF-73), checked by Conftest (PF-18)
     contextSpaces: 5
     residentPipelines: 3
     publicEndpoints: 2
@@ -425,7 +427,7 @@ spec:
     apps: 3
     agentRunsPerDay: 20
     entitiesPerSpace: 200000
-    requestsPerMinute: 600          # per Endpoint
+    requestsPerMinute: 600 # per Endpoint
 ```
 
 In layout 2 the project repository's `project.yaml` also carries the project's version and its deployment knobs (CC-88); the schema of the pinned platform tag does not know the two fields yet:
@@ -453,24 +455,24 @@ kind: Policy
 metadata:
   name: public-air-quality
   namespace: helsinki
-  title: "Julkinen ilmanlaatudata"
+  title: Julkinen ilmanlaatudata
 spec:
   contextSpaceRef: { kind: ContextSpace, name: air-quality }
-  effect: permission                          # permission (default) | prohibition (GW4, GW8)
+  effect: permission # permission (default) | prohibition (GW4, GW8)
   assigner: did:web:hel.fi
-  assignee: { kind: role, id: public }        # user | group | role | serviceAccount | did
-  operations: [queryEntity, retrieveEntity, queryTemporal]   # CIM 009 names only (R8)
-  information:                                # RegistrationInfo shape (R6)
+  assignee: { kind: role, id: public } # user | group | role | serviceAccount | did
+  operations: [queryEntity, retrieveEntity, queryTemporal] # CIM 009 names only (R8)
+  information: # RegistrationInfo shape (R6)
     - entities:
         - type: AirQualityObserved
-          idPattern: "^urn:ngsi-ld:AirQualityObserved:hel\\.fi:air-quality:.*$"
+          idPattern: ^urn:ngsi-ld:AirQualityObserved:hel\.fi:air-quality:.*$
       propertyNames: [pm10, pm25, dateObserved, location]
       relationshipNames: [refDistrict]
-  q: "pm10>=0"
-  scopeQ: "/geo/FI/HKI"
-  geoQ: "georel=within;geometry=Polygon;coordinates=[[[19.10,48.70],[19.20,48.70],[19.20,48.76],[19.10,48.76],[19.10,48.70]]]"
-  temporalQ: "timerel=after;timeAt=P-1D"
-  validity: { from: "2026-09-01T00:00:00Z", to: "2027-09-01T00:00:00Z" }
+  q: pm10>=0
+  scopeQ: /geo/FI/HKI
+  geoQ: georel=within;geometry=Polygon;coordinates=[[[19.10,48.70],[19.20,48.70],[19.20,48.76],[19.10,48.76],[19.10,48.70]]]
+  temporalQ: timerel=after;timeAt=P-1D
+  validity: { from: '2026-09-01T00:00:00Z', to: '2027-09-01T00:00:00Z' }
 ```
 
 `operations` takes the CIM 009 Table 4.20-1 operation names, and the five **named operation groups**
@@ -522,11 +524,11 @@ kind: ScopeDefinition
 metadata:
   name: geo-fi-hki-kallio
   namespace: helsinki
-  title: "Kallio"
+  title: Kallio
 spec:
-  scopeString: /geo/FI/HKI/Kallio    # one of the three roots of section 4
+  scopeString: /geo/FI/HKI/Kallio # one of the three roots of section 4
   isRoot: false
-  isChildOf: /geo/FI/HKI             # absent when isRoot is true (ADR 005, R19)
+  isChildOf: /geo/FI/HKI # absent when isRoot is true (ADR 005, R19)
 ```
 
 ## Related

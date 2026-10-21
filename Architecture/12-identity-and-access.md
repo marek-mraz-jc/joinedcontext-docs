@@ -78,12 +78,15 @@ Who may change configuration is itself configuration: three kinds in `users/` of
 # users/groups/air-quality-team.yaml
 apiVersion: joinedcontext.com/v1alpha1
 kind: Group
-metadata: { name: air-quality-team, namespace: org }
+metadata:
+  name: air-quality-team
+  namespace: org
 spec:
   description: The air quality domain, measurement and modelling
   members:
-    - { user: jana.kovacova@example.org }
-    - { user: peter.novak@example.org }     # not in Keycloak yet: a warning, in force at first login
+    - user: jana.kovacova@example.org
+    # not in Keycloak yet: a warning, in force at first login
+    - user: peter.novak@example.org
 ```
 
 A `Group` is the people a binding names at once (PF-62). The reconciler owns the Keycloak group it creates for each manifest, marked `managed-by: joinedcontext`: members are added and pruned to match, a rename follows the manifest, and an edit made in the Keycloak console is overwritten on the next reconcile and reported as drift, the same shape as every other drift the reconciler reports (PF-63). A Keycloak group without the mark is somebody else's and is left alone. So a fresh environment recreates membership from the repository, a membership change is a merge request in the red lane like a `Role` or a `RoleBinding`, and a `subjects[].group` in a binding or a `ServiceAccount` names a manifest, refused at validation when none exists (PF-64), where today it would silently match nobody. A group the identity provider owns, such as the realm's default group every signed-in person joins, is bound with `{ group: platform-readers, source: provider }`: the mark is in the manifest, reviewed in the red lane with the binding, validation accepts that group without a manifest, and the reconciler never creates, edits or prunes it (PF-64, PF-63). Only a `RoleBinding` subject carries the mark; an App's or an Endpoint's roles name `Group` manifests alone. The one binding still read from Keycloak is the bootstrap administrators' group of the platform settings file (PF-52), because it has to exist before the first manifest does.
@@ -92,25 +95,33 @@ A `Group` is the people a binding names at once (PF-62). The reconciler owns the
 # users/roles/pipeline-developer.yaml
 apiVersion: joinedcontext.com/v1alpha1
 kind: Role
-metadata: { name: pipeline-developer, namespace: org }
+metadata:
+  name: pipeline-developer
+  namespace: org
 spec:
   rules:
     - kinds: [Pipeline, DataSource, Mapping]
-      verbs: [propose]                       # read | propose | approve | delete; propose implies read; Person also create | update | disable
+      verbs: [propose] # read | propose | approve | delete; propose implies read; Person also create | update | disable
     - kinds: [Endpoint]
       verbs: [propose]
       constraints:
-        - { field: spec.audience, notIn: [public] }   # a public endpoint is another role's
+        # a public endpoint is another role's
+        - field: spec.audience
+          notIn: [public]
 ---
 # users/assignments/ovzdusie-developers.yaml
 apiVersion: joinedcontext.com/v1alpha1
 kind: RoleBinding
-metadata: { name: ovzdusie-developers, namespace: org }
+metadata:
+  name: ovzdusie-developers
+  namespace: org
 spec:
-  subjects: [{ group: air-quality-team }, { user: jana.kovacova@example.org }]
+  subjects:
+    - group: air-quality-team
+    - user: jana.kovacova@example.org
   role: pipeline-developer
-  scope: { project: ovzdusie }              # organization | project | contextSpace
-  validity: { notAfter: "2026-12-31T23:59:59Z" }
+  scope: { project: ovzdusie } # organization | project | contextSpace
+  validity: { notAfter: '2026-12-31T23:59:59Z' }
 ```
 
 A right on one resource is a role whose rule names that resource and a binding of it, nothing more (PF-107). Managing the CKAN instance `open-data-2` of project `helsinki` is `ckan-admin-helsinki-open-data-2`, bound in that project (an instance is a project's manifest, and two projects may name theirs alike); the Access panel of the instance proposes both files in one red-lane Change, and adding or removing a subject edits `spec.subjects` of the one binding:
@@ -119,31 +130,41 @@ A right on one resource is a role whose rule names that resource and a binding o
 # users/roles/ckan-admin-helsinki-open-data-2.yaml
 apiVersion: joinedcontext.com/v1alpha1
 kind: Role
-metadata: { name: ckan-admin-helsinki-open-data-2, namespace: org }
+metadata:
+  name: ckan-admin-helsinki-open-data-2
+  namespace: org
 spec:
   rules:
     - kinds: [CkanInstance]
       verbs: [propose, approve, delete]
       constraints:
-        - { field: metadata.name, in: [open-data-2] }   # this instance only; empty or missing is refused
+        # this instance only; empty or missing is refused
+        - field: metadata.name
+          in: [open-data-2]
 ---
 # users/assignments/ckan-admin-helsinki-open-data-2.yaml
 apiVersion: joinedcontext.com/v1alpha1
 kind: RoleBinding
-metadata: { name: ckan-admin-helsinki-open-data-2, namespace: org }
+metadata:
+  name: ckan-admin-helsinki-open-data-2
+  namespace: org
 spec:
-  subjects: [{ group: ckan-editors }, { user: demo.steward@hel.fi }]
+  subjects:
+    - group: ckan-editors
+    - user: demo.steward@hel.fi
   role: ckan-admin-helsinki-open-data-2
   scope: { project: helsinki }
 ---
 # users/groups/ckan-editors.yaml
 apiVersion: joinedcontext.com/v1alpha1
 kind: Group
-metadata: { name: ckan-editors, namespace: org }
+metadata:
+  name: ckan-editors
+  namespace: org
 spec:
   description: The people who look after the open-data-2 catalogue
   members:
-    - { user: demo.steward@hel.fi }
+    - user: demo.steward@hel.fi
 ```
 
 A binding carries no constraint of its own: the role is what narrows, so a person reading `users/assignments/` sees whom, and `users/roles/` what. `org-admin` changes every instance anyway; publishing an Endpoint *to* an instance stays the `publisher`'s right (PF-71).
@@ -178,19 +199,24 @@ Roles per project (PF-68…PF-70). A project's steward writes the roles their ow
 # projects/ovzdusie/roles/pipeline-author.yaml
 apiVersion: joinedcontext.com/v1alpha1
 kind: Role
-metadata: { name: pipeline-author, namespace: ovzdusie }
+metadata:
+  name: pipeline-author
+  namespace: ovzdusie
 spec:
   rules:
     - kinds: [Pipeline, DataSource]
-      verbs: [propose]            # the steward holds propose on both here, so this is within their rights
+      verbs: [propose] # the steward holds propose on both here, so this is within their rights
 ---
 # users/assignments/ovzdusie-authors.yaml
 apiVersion: joinedcontext.com/v1alpha1
 kind: RoleBinding
-metadata: { name: ovzdusie-authors, namespace: org }
+metadata:
+  name: ovzdusie-authors
+  namespace: org
 spec:
-  subjects: [{ group: air-quality-team }]
-  role: pipeline-author           # resolved in the project the scope names
+  subjects:
+    - group: air-quality-team
+  role: pipeline-author # resolved in the project the scope names
   scope: { project: ovzdusie }
 ```
 
@@ -224,14 +250,18 @@ kind: ServiceAccount
 metadata:
   name: vendorx-parking-push
   namespace: helsinki
-  title: { fi: "VendorX pysäköinti – suora kirjoitus", en: "VendorX parking – direct write" }
+  title: { fi: VendorX pysäköinti – suora kirjoitus, en: VendorX parking – direct write }
 spec:
-  owner: { user: "jana.k@bb" }                    # accountable human, notified on expiry/anomaly
-  purpose: "VendorX cloud pushes ParkingSpot updates every 10 s"
-  roles:                                          # same role templates as humans (§2), scoped
-    - { role: space-writer, scope: { contextSpace: parking }, types: [ParkingSpot], operations: [createEntity, updateAttrs] }   # CIM 009 clause 4.20 names only (R8)
+  owner: { user: jana.k@bb } # accountable human, notified on expiry/anomaly
+  purpose: VendorX cloud pushes ParkingSpot updates every 10 s
+  roles: # same role templates as humans (§2), scoped
+    # CIM 009 clause 4.20 names only (R8)
+    - role: space-writer
+      scope: { contextSpace: parking }
+      types: [ParkingSpot]
+      operations: [createEntity, updateAttrs]
   credentials:
-    - kind: oauth-client         # Keycloak confidential client, client_credentials → short-lived JWT (preferred)
+    - kind: oauth-client # Keycloak confidential client, client_credentials → short-lived JWT (preferred)
       name: main
   limits: { requestsPerMinute: 1200 }
   # delegation: token-exchange  # only a client that reads for a person, e.g. jc-agent-proxy (ADR-N-038, AG-95)

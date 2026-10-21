@@ -44,8 +44,7 @@ kind: DataSource
 metadata:
   name: hsl-hfp
   namespace: helsinki
-  title:
-    en: HSL high-frequency positioning
+  title: { en: HSL high-frequency positioning }
 spec:
   type: mqtt
   mqtt:
@@ -68,9 +67,7 @@ spec:
   source:
     dataSourceRef: { kind: DataSource, name: hsl-hfp }
   targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:transport:ep-vehicles
-  quotas:
-    maxMemoryMb: 128
-    cpuMillicores: 250
+  quotas: { maxMemoryMb: 128, cpuMillicores: 250 }
 ```
 
 `class: auto` with no `period` means push-based, so the thirty-second rule keeps this pipeline in the project's resident runner rather than starting a pod (PL-26). The entities land through an ordinary Endpoint:
@@ -126,8 +123,7 @@ spec:
   http:
     url: https://opendata.hel.fi/api/v1/air-quality/stations.json
     verb: GET
-    headers:
-      Accept: application/json
+    headers: { Accept: application/json }
     authorization:
       scheme: Bearer
       headerRef: { name: aq-opendata, key: token }
@@ -146,9 +142,7 @@ spec:
   source:
     dataSourceRef: { kind: DataSource, name: aq-opendata }
   targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:air-quality:ep-air
-  quotas:
-    maxMemoryMb: 64
-    cpuMillicores: 100
+  quotas: { maxMemoryMb: 64, cpuMillicores: 100 }
 ```
 
 ```yaml
@@ -201,8 +195,7 @@ spec:
   http:
     url: https://opendata.hel.fi/parking/occupancy.csv
     verb: GET
-    headers:
-      Accept: text/csv
+    headers: { Accept: text/csv }
     timeout: 15s
 ```
 
@@ -218,9 +211,7 @@ spec:
   source:
     dataSourceRef: { kind: DataSource, name: parking-csv }
   targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:transport:ep-parking
-  quotas:
-    maxMemoryMb: 64
-    cpuMillicores: 100
+  quotas: { maxMemoryMb: 64, cpuMillicores: 100 }
 ```
 
 ```yaml
@@ -279,9 +270,7 @@ spec:
   source:
     dataSourceRef: { kind: DataSource, name: hsl-gtfs-rt }
   targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:transport:ep-transit
-  quotas:
-    maxMemoryMb: 128
-    cpuMillicores: 200
+  quotas: { maxMemoryMb: 128, cpuMillicores: 200 }
 ```
 
 ```yaml

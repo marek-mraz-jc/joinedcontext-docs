@@ -34,26 +34,24 @@ metadata:
   name: air-quality-overview
   namespace: helsinki
 spec:
-  title: "Air Quality Overview"
-  visibility: public        # private | project | organization | public
+  title: Air Quality Overview
+  visibility: public # private | project | organization | public
   pages:
-    - title: "Mapa staníc"
+    - title: Mapa staníc
       layout: full-map
-      layers:
-        - air-quality-stations
-        - organisational-districts
-    - title: "Analýzy"
+      layers: [air-quality-stations, organisational-districts]
+    - title: Analýzy
       layout: grid-2x2
       widgets:
         - widgetType: temporal-chart
           endpointRef: ep-air-quality
-          entityId: "urn:ngsi-ld:AirQualityObserved:hel.fi:air-quality:station-01"
+          entityId: urn:ngsi-ld:AirQualityObserved:hel.fi:air-quality:station-01
           property: pm10
         - widgetType: bar-chart
           endpointRef: ep-air-quality
           entityType: AirQualityObserved
           property: airQualityLevel
-          q: 'pm10>0'
+          q: pm10>0
         - widgetType: histogram
           endpointRef: ep-air-quality
           entityType: AirQualityObserved
@@ -68,8 +66,7 @@ spec:
               - attr: temperature
                 format: number
             pageSize: 25
-            history:
-              enabled: true
+            history: { enabled: true }
 ```
 
 A widget of `widgetType: grid` is the entity grid the Portal's data explorer and a generated
@@ -99,22 +96,19 @@ metadata:
 spec:
   sourceEndpointRef: ep-air-quality
   entityType: AirQualityObserved
-  style: circle             # circle | heatmap | hexagon | icon | line | fill
+  style: circle # circle | heatmap | hexagon | icon | line | fill
   visible: true
   filter:
-    q: 'pm10>0'
-    scopeQ: '/geo/FI/HKI/#'
+    q: pm10>0
+    scopeQ: /geo/FI/HKI/#
   colorBy:
     property: pm10
-    palette: "YlOrRd"
+    palette: YlOrRd
     domain: [0, 100]
   sizeBy:
     property: pm10
     range: [4, 18]
-  popupProperties:
-    - stationName
-    - pm10
-    - temperature
+  popupProperties: [stationName, pm10, temperature]
 ```
 
 Both kinds are typed in `jc-core` and validated wherever a manifest is written or loaded (MF-09, `schemas/kinds/Dashboard.json`, `schemas/kinds/Layer.json`): a dashboard has at least one page and every page names a layer or a widget; a `grid` widget names its Endpoint and a PascalCase entity type, and its `grid` object is checked by the same rules the SDK's `parseGridConfig` applies; a `bar-chart` or `histogram` names its Endpoint, a PascalCase entity type and a property, and its `q` is at most 1 024 characters; a layer names its Endpoint by `metadata.name`, a PascalCase entity type, ordered `domain`/`range` pairs and non-empty popup properties; `visibility` defaults to `private`, `style` to `circle`, `visible` to `true`. Whether a `visibility: public` dashboard reads only through `audience: public` Endpoints (UI-19) is checked by the Portal, which sees both manifests, and again by the dashboard view before it asks for data.

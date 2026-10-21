@@ -47,26 +47,30 @@ kind: App
 metadata:
   name: air-quality-today
   namespace: helsinki
-  title: "Air quality today"
+  title: Air quality today
   annotations:
-    joinedcontext.com/generated-by: "agent:app-builder@bb"     # attribution (AG-17)
-    joinedcontext.com/prompt-digest: "sha256:…"               # the request that produced it, stored in apps/{name}/PROMPT.md
+    joinedcontext.com/generated-by: agent:app-builder@bb # attribution (AG-17)
+    joinedcontext.com/prompt-digest: sha256:… # the request that produced it, stored in apps/{name}/PROMPT.md
 spec:
-  kind: ui-rust                      # ui | ui-rust (AP-124)
-  source: { path: ./src }            # or { git: {url, ref, path} }
-  build: { rust: "1.90", node: "22" }   # Rust axum backend + Vite/React UI in one image
+  kind: ui-rust # ui | ui-rust (AP-124)
+  source: { path: './src' } # or { git: {url, ref, path} }
+  build: { rust: '1.90', node: '22' } # Rust axum backend + Vite/React UI in one image
   visibility: public
   dataNeeds:
     - contextSpaceRef: { kind: ContextSpace, name: air-quality }
       types: [AirQualityObserved, District]
       attrs: [pm10, pm25, airQualityIndex, location, name, refDistrict]
-      operations: [queryEntity, retrieveEntity, queryTemporal]      # CIM 009 names (R8)
-      temporalQ: { window: P1D }                                     # today only
-      geoQ: { within: { scopeRef: /geo/FI/HKI } }
-      representations: [ngsi-ld, csv]               # Endpoint.enabledRepresentations vocabulary (EP-08)
+      operations: [queryEntity, retrieveEntity, queryTemporal] # CIM 009 names (R8)
+      temporalQ: { window: P1D } # today only
+      geoQ:
+        within: { scopeRef: /geo/FI/HKI }
+      representations: [ngsi-ld, csv] # Endpoint.enabledRepresentations vocabulary (EP-08)
   limits: { requestsPerMinute: 600, maxFileRows: 20000 }
-  csp: { connectSrc: [self], frameAncestors: [], frameSrc: [] }     # defaults; only the app's own endpoint is reachable, only the Portal frames it, it frames only itself
-  egress: []                                                         # a server pod's destinations besides its endpoint: {cidr, ports}, red lane (AP-134)
+  csp: # defaults; only the app's own endpoint is reachable, only the Portal frames it, it frames only itself
+    connectSrc: [self]
+    frameAncestors: []
+    frameSrc: []
+  egress: [] # a server pod's destinations besides its endpoint: {cidr, ports}, red lane (AP-134)
 ```
 
 Rendering rules:
@@ -213,12 +217,12 @@ kind: App
 metadata:
   name: air-quality
   namespace: helsinki
-  title: "Air quality"
-  description: "Stations, their latest values and 24 hours of history; a steward may add a note."
+  title: Air quality
+  description: Stations, their latest values and 24 hours of history; a steward may add a note.
 spec:
   kind: ui-rust
-  source: { path: ./apps/air-quality }
-  build: { rust: "1.90", node: "22" }
+  source: { path: './apps/air-quality' }
+  build: { rust: '1.90', node: '22' }
   visibility: project
   dataNeeds:
     - contextSpaceRef: { kind: ContextSpace, name: air-quality }
@@ -238,12 +242,12 @@ kind: App
 metadata:
   name: hsl-transport
   namespace: helsinki
-  title: "Buses live"
-  description: "The position of 30 buses on a map, updated as they move."
+  title: Buses live
+  description: The position of 30 buses on a map, updated as they move.
 spec:
   kind: ui-rust
-  source: { path: ./apps/hsl-transport }
-  build: { rust: "1.90", node: "22" }
+  source: { path: './apps/hsl-transport' }
+  build: { rust: '1.90', node: '22' }
   visibility: public
   dataNeeds:
     - contextSpaceRef: { kind: ContextSpace, name: transport }

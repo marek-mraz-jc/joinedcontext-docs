@@ -189,7 +189,8 @@ jobs:
     # 4362451 -> platform main 634bc01 (T-4586): Project `catalog`.
     # 634bc01 -> platform main e6d8253 (T-4820): ContextSpace retention recording (T-4669).
     # e6d8253 -> platform branch tip b8f81f7 (T-4838): Pipeline `lifetime`.
-    env: { JC_PLATFORM_TAG: b8f81f7616fabd2bc4cf65c83ec79c860a7b3e02 }
+    # b8f81f7 -> platform branch tip 8ee1dd1 (T-5052): `jcctl fmt --check` for the snippet layout.
+    env: { JC_PLATFORM_TAG: 8ee1dd10af5e1c2393b5d613666438a00f08a981 }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
@@ -214,3 +215,6 @@ jobs:
           set -eu
           python3 scripts/validate-doc-manifests-with-jcctl.py --selftest
           python3 scripts/validate-doc-manifests-with-jcctl.py
+      - name: every manifest the pages print is in the layout jcctl fmt writes (T-5052)
+        env: { JC_JCCTL: "${{ runner.temp }}/platform/target/debug/jcctl" }
+        run: git ls-files -z '*.md' | xargs -0 "$JC_JCCTL" fmt --check
