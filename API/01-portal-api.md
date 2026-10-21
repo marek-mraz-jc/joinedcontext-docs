@@ -4073,7 +4073,8 @@ GET /api/v1/organization/agents/activity?profile=builder&verdict=refused&limit=2
  "alerts": [
    {"kind": "spendShare", "project": "helsinki", "profile": "builder", "runId": "run-7f3a",
     "runTitle": "Air quality dashboard", "count": 85, "at": "2026-10-21T02:10:00Z"}
- ]}
+ ],
+ "choices": {"people": ["jana@example.org"], "spaces": ["air"]}}
 ```
 
 - Filters, each optional: `project`, `profile` (an agent profile's name), `run` (a run id),
@@ -4081,6 +4082,9 @@ GET /api/v1/organization/agents/activity?profile=builder&verdict=refused&limit=2
   no refused step, `refused`: at least one), `since` and `until` (RFC 3339, on the start),
   `limit` (1–50, default 20) and `cursor` (`nextCursor` of the previous page). Any other
   parameter, or a malformed value, is `400`.
+- `choices` lists the starters and the Context Spaces of the runs the caller sees for this
+  agent or run, whatever the other filters; the Activity tab offers `person` and `space` only
+  from it. A `person` or `space` outside it is `403` naming the field.
 - Who sees what: the runs of every project the caller reads, their own, or every person's where
   they approve (AG-93); a caller who reads no project gets `403`. The answer reads the 500 newest
   of those runs.
