@@ -1250,6 +1250,10 @@ Generated 2026-10-21 from: `docs` cfe7498, `conformance` 239c701, `deployment` 8
 | **PL-99** | [S] | open |  |  |
 | **PL-100** | [S] | open |  |  |
 | **PL-101** | [H] | open |  |  |
+| **PL-102** | [S] | open |  |  |
+| **PL-103** | [S] | open |  |  |
+| **PL-104** | [S] | open |  |  |
+| **PL-105** | [S] [H] | open |  |  |
 
 ### R — Access control and federation
 
