@@ -3897,9 +3897,11 @@ the newest messages a broker received. The allowance is written only as a field 
 
 ```text
 GET    /api/v1/projects/{project}/mqtt/allowance                       → 200
-GET    /api/v1/projects/{project}/mqttbrokers/{name}/captured?topic=&limit=   → 200
-DELETE /api/v1/projects/{project}/mqttbrokers/{name}/captured          → 204
 ```
+
+Not served yet: `GET /api/v1/projects/{project}/mqttbrokers/{name}/captured?topic=&limit=` → 200
+and `DELETE /api/v1/projects/{project}/mqttbrokers/{name}/captured` → 204 arrive with the capture
+subscriber (T-4880). The rest of this section describes them as they will be served.
 
 ```json
 {"enabled": true, "origin": "project",
