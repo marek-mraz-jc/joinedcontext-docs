@@ -3950,13 +3950,14 @@ A pipeline that reads or writes a Context Space it has no grant on asks the spac
 ```text
 POST   /api/v1/projects/{project}/pipelines/{name}/access-requests   { "endpoint": { "project", "name" }, "operations": "read"|"write", "types": [{ "type", "attrs": [...] }], "until"?, "reason" } → 201
 GET    /api/v1/projects/{project}/pipelines/{name}/access-requests   the pipeline's requests, outgoing → 200
+GET    /api/v1/projects/{project}/pipelines/{name}/access-requests/endpoints   the Endpoints the request may name → 200
 GET    /api/v1/projects/{project}/access-requests                        the requests into this project's spaces, incoming → 200
 POST   /api/v1/projects/{project}/access-requests/{id}/approve           {} → 202, the Change
 POST   /api/v1/projects/{project}/access-requests/{id}/decline           { "reason" } → 200
 POST   /api/v1/projects/{project}/access-requests/{id}/revoke            { "reason" } → 202, the Change
 ```
 
-Filing needs `propose` on the Pipeline in `{project}`; the incoming list, approve, decline and revoke need `approve` on the Endpoint's ContextSpace in the owning project, and a caller without it reads `404` for a request of a space they cannot read. An outgoing request shows the owning project's name, the Endpoint's name, the types and attributes asked for and the state (`pending`, `approved`, `declined`, `revoked`, `ended`), never the space's data. Approving or revoking answers the Change (MF-12); its lane is the owning project's, and its approval follows the four-eyes rule there. The requester approving their own request answers `403 self-approval`.
+Filing needs `propose` on the Pipeline in `{project}`, and so does the `endpoints` list the request form picks from: every Endpoint of another Context Space (in this project or another) with the classes of its space's compiled model and their attribute names, as `{ "items": [{ "project", "name", "space", "types": [{ "type", "attrs": [...] }] }] }`, names only and never data. Filing applies the same rule to what it is sent: an Endpoint the list would not offer (the pipeline's own space, a project or Endpoint that does not exist) answers `404` naming `endpoint.name`, and a type or attribute the Endpoint's model does not hold answers `400` with one `errors` line per value naming `types[i].type` or `types[i].attrs`; a space with no compiled model lists no type, and its owner judges the names. The incoming list, approve, decline and revoke need `approve` on the Endpoint's ContextSpace in the owning project, and a caller without it reads `404` for a request of a space they cannot read. An outgoing request shows the owning project's name, the Endpoint's name, the types and attributes asked for and the state (`pending`, `approved`, `declined`, `revoked`, `ended`), never the space's data. Approving or revoking answers the Change (MF-12); its lane is the owning project's, and its approval follows the four-eyes rule there. The requester approving their own request answers `403 self-approval`.
 
 ```json
 {
