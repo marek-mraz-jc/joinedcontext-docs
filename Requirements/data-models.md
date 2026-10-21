@@ -5,7 +5,7 @@ title: "Data Models & the LinkML Editor"
 
 # Data Models & the LinkML Editor
 
-Family **DM** (DM-01…DM-131). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **DM** (DM-01…DM-132). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
 This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-129**. Consumer classes per `00-index.md`.
 
@@ -181,7 +181,7 @@ The decision and its reasons are in [ADR-N-054](../Decisions/adr-n-054-history-v
 - **DM-105** — A write of an existing identity with another value MUST be stored as a new version of that measurement, keeping the version before as superseded, and MUST change the current state only when that measurement is the current one.
 - **DM-106** — A write whose `observedAt` is before the current state's MUST be stored in history only and MUST NOT change the current state.
 - **DM-107** — The broker MUST stamp a write without `observedAt` with the time it received it and record `observedAtSource: received` in the row's provenance.
-- **DM-108** — A retention rule MAY carry `record` (`every`, the default, or `onChange`) for its type and per attribute, `onChange` with a required `heartbeat` duration and an optional `deadband` (numbers, in the attribute's `unitCode`) or `minDistance` (metres, a GeoProperty).
+- **DM-108** — A retention rule MAY carry `record` (`every`, `observed`, `never` or `onChange`; unset, `observed` under DM-132) for its type and per attribute, `onChange` with a required `heartbeat` duration and an optional `deadband` (numbers, in the attribute's `unitCode`) or `minDistance` (metres, a GeoProperty).
 - **DM-109** [P] — Under `onChange` the broker MUST write a row only when the value differs from the attribute's last recorded row by more than `deadband` or `minDistance`, or at all in canonical JSON for any other value, or when `heartbeat` has passed since that row.
 - **DM-110** [S] — The Portal MUST refuse `record: onChange` for a slot the model annotates `quantity: perInterval`.
 - **DM-111** [S] — Every row the broker keeps, versions and tombstones included, MUST carry the provenance fields `channel`, `actor`, `operation`, `reason`, `requestId` and `writtenAt` and MUST NOT carry a value of the data in them.
@@ -210,12 +210,14 @@ NGSI-LD gives an Entity and each of its Attributes members that describe the dat
 
 - **DM-130** [S] — The NGSI-LD system members MUST be exactly these, held in one list that every checker reads. Entity members: `id`, `type`, `scope`, `@context`, `createdAt`, `modifiedAt`, `deletedAt`, `expiresAt`. Attribute members: `type`, `value`, `object`, `objectType`, `languageMap`, `vocab`, `json`, `valueList`, `objectList` (the value members of a JsonProperty, ListProperty and ListRelationship, TS 104 175 4.5), `observedAt`, `unitCode`, `datasetId`, `expiresAt`, `createdAt`, `modifiedAt`, `instanceId`. An entity member is never an Attribute of the Entity, and an attribute member is never a sub-Attribute of its Attribute.
 - **DM-131** [S] — The model's compiled shape (PL-59, DM-28, DM-43), the gateway's slot and quality checks (DM-86, DM-87), the broker's view rules, the Policy's attribute grants and the daily revalidation (DM-74) MUST NOT count a system member of DM-130 as an Attribute: a closed shape admits it, a view or a grant never needs to list it, and a revalidation never reports it. A Policy cannot forbid a system member, because these members carry the identity and the lifetime of data the writer was granted, not data of their own; who may write the Entity decides who may set its `expiresAt` (PL-84). Each member's own form stays checked: an `expiresAt`, `observedAt`, `createdAt`, `modifiedAt` or `deletedAt` that is not an RFC 3339 instant MUST be refused with `400`.
+- **DM-132** [P] — The platform broker MUST record no history row for an Entity unless its own `historyRetention`, the retention rule of one of its types or its space's `*` rule gives `history` a duration or `forever`; inside such a type it MUST record `observed` unless the rule names another `record`, writing a row only for an `observedAt` newer than the one the instance replaces, and nothing for an attribute whose `record` is `never`; a temporal read of an existing Entity that records no history MUST answer it with no Attribute, not as absent; and no write payload MUST be able to turn history on (T-5056, ADR-N-054 2.2).
 
 ## Traceability
 
 | Requirements | Section | Architecture | Tests |
 |---|---|---|---|
 | DM-130…DM-131 | NGSI-LD system members | [08-pipelines.md](../Architecture/08-pipelines.md#entity-and-attribute-lifetime-pl-80pl-85) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
+| DM-132 | History opt-in | [ADR-N-054](../Decisions/adr-n-054-history-versions-provenance-gdpr.md) | [04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | DM-104…DM-129 | History, versions, provenance and personal data | [ADR-N-054](../Decisions/adr-n-054-history-versions-provenance-gdpr.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | DM-98…DM-103 | Display order, key attributes and labels | [04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md#display-order-key-attributes-and-labels) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-60 | Multi-dimensional indicators (RDF Data Cube) | [03-domain-model.md](../Architecture/03-domain-model.md) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
