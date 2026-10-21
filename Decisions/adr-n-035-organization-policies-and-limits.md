@@ -85,7 +85,7 @@ An organization that wants a lower rate for the web, a shorter invitation, a cap
 | MQTT | `spec.limits.mqtt.enabled` | `false` | — | the Portal's verdict and the reconciler (PF-117) |
 | MQTT | `spec.limits.mqtt.brokers` | 1 per project | 20 | the Portal's verdict and the reconciler (PF-118) |
 | MQTT | `spec.limits.mqtt.connections` | 1000 per project | 20000 | the Portal's verdict and the reconciler (PF-118) |
-| MQTT | `spec.limits.mqtt.messagesPerSecond` | 1000 per project | 100000 | the Portal's verdict and the reconciler (PF-118) |
+| MQTT | `spec.limits.mqtt.messagesPerSecond` | 10000 per project, one broker at its own defaults | 100000 | the Portal's verdict and the reconciler (PF-118) |
 | MQTT | `spec.limits.mqtt.maxMessageBytes` | 65536 per broker | 1048576 | the Portal's verdict and the reconciler (PF-118) |
 | MQTT | `spec.limits.mqtt.modes`, `addresses`, `ports`, `customHostnames`, `deviceAuth`, `clientCaRef` | `[ingest]`, `[platform]`, none, none, `[token]`, none | the reserved ports 18830–18849, 10 hostnames | the Portal's verdict, the reconciler and the gateway (PF-119, PF-120) |
 
