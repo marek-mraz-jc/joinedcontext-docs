@@ -408,6 +408,31 @@ spec:
 - **The grant is explicit.** `snapshot` and `events` send `entityOperations/delete` through the pipeline's output Endpoint, so the Policy must grant `deleteBatch` and `queryBatch` on the written types; the Portal refuses the proposal until one does and never widens a grant. Every delete is a tombstone with `deletedAt` (DM-115) whose provenance names the pipeline and the reason `source-snapshot` or `source-event` (DM-111). `lease` needs no grant (PL-84).
 - **Refused at admission.** `jc-core` refuses a snapshot on a pipeline with no `period` or `schedule`, and `check_class` one whose DataSource never ends (MQTT, WebSocket, a broker input); events without `deletedWhen`; lease without a rolling entity lifetime; and any `sourceDeletes` beside `spec.expiry` (PL-99).
 
+### History rows per attribute (PL-102…PL-106)
+
+A lifetime says when data ends; a history plan says which rows the broker keeps while it lives. The person picks one of three plain choices per attribute in the editor's Target step, and the manifest carries it:
+
+```yaml excerpt
+spec:
+  history:
+    - type: Vehicle
+      attributes:
+        - { names: [location], keep: changes, heartbeat: PT15M, observedAt: observedOn }
+        - { names: [speed], keep: latest }
+        - { names: [delay], keep: every, observedAt: observedOn }
+```
+
+| Editor choice | `keep` | Broker rule | Rows |
+|---|---|---|---|
+| Keep every reading | `every` | `record: every` | one per new `observedAt` |
+| Keep only changes | `changes` | `record: onChange`, `heartbeat` | one per change and one per heartbeat |
+| Keep the latest value only | `latest` | the type's `history: off` | none, current value only |
+
+- **The time of a row.** `observedAt` names a date-time slot of the type picked from the sample record; a step rendered after the author's and before the lifetime step copies its value into each named attribute's `observedAt` (PL-103), so the lifetime's `from: observedAt` sees the same time. `received` drops the mapping's `observedAt` and the broker stamps the receive time (DM-107).
+- **Kept by the space's retention document.** The reconciler folds `every` and `changes` into the space's document the broker reads (DM-82, DM-108) for attributes the space's rule leaves unset; the space's own attribute recording wins, and two pipelines that disagree on one attribute leave it to the space (PL-104). The broker has no per-attribute `history: off`, so `latest` is only a promise where the space turns the type's history off.
+- **Refused before a proposal.** The record check (PL-85) names each attribute whose plan the space or the broker cannot keep, with the rule: latest under a type that keeps history, a plan under `history: off`, every reading without a time of its own, a plan against the space's or another pipeline's recording, a time slot that holds no date-time (PL-105). The Target card shows the same verdict per attribute in its History column, beside the temporal audit's (T-4844).
+- **No new grant.** The plan only shapes the rows of attributes the pipeline already writes; changing it is a change to the Pipeline, under the Pipeline's write grant (PL-106).
+
 ### Model-to-model mappings in a pipeline
 
 A pipeline's own Bloblang handles the last mile (unpacking the source frame, splitting batches, timestamps). The step that produces the target entity SHOULD be a `kind: Mapping` (LinkML-Map, [Architecture/11 §7](11-data-models.md#7-mappings-with-linkml-map)) referenced from the compute step (`spec.compute.mappingRef`), so the target entity is schema-checked by construction. The reconciler does not deploy a `mapping` pipeline yet (see *What runs today*); the excerpt shows the manifest and what the rendering is meant to produce:
