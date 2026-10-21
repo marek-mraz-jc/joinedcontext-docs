@@ -379,6 +379,35 @@ spec:
 - **One list of system members.** `expiresAt`, `observedAt` and the other members of DM-130 are no Attributes for the model, the view, the Policy or the daily revalidation, so a lifetime never trips a closed shape or an attribute grant (DM-131).
 - **The editor check.** The sample records go through the space's compiled model, the Endpoint's view and Policy and the lifetime, the three verdicts of the write path, before a proposal; the Portal stores the verdict against the manifest, model and Policy digests and refuses a proposal without a green one with `409` (PL-85).
 
+### When the source deletes a record (PL-96…PL-101)
+
+The stale sweep and the rolling lifetime guess a removal from silence. A source that can say what exists, or what it removed, gets an exact rule in `spec.sourceDeletes`:
+
+```yaml excerpt
+spec:
+  schedule: "0 * * * *"
+  sourceDeletes:
+    mode: snapshot          # never | snapshot | events | lease
+    misses: 2               # snapshot: consecutive complete runs an id is missing from, 1 to 10
+    maxShare: 10            # snapshot: most of the ledger one run deletes, percent; more holds the run
+  # mode: events
+  # deletedWhen: 'this.status.value == "withdrawn"'   # Bloblang on the mapped record
+```
+
+| Mode | The source tells a removal by | Fits |
+|---|---|---|
+| `never` | nothing; removed records stay, and the editor says so | an archive, an event log |
+| `snapshot` | leaving the id out of a complete read | a CKAN or DCAT catalogue, a station register, a CSV export |
+| `events` | a record marked deleted (`status: withdrawn`, a CKAN harvest delete, an NGSI-LD notification with `deletedAt`, an empty MQTT message mapped to a marker) | a change feed, a broker topic |
+| `lease` | not renewing it: a rolling entity lifetime (PL-80) ends it | live vehicles, sensors that only send what is current |
+
+- **The source ledger decides, not the last writer.** The runner keeps one row per pipeline and entity it wrote: source key, entity id, first seen, last seen in a complete run, and the run id. Only ledger rows are candidates. Last-writer provenance would flip when a person or another pipeline touched the entity and would delete a shared entity whole, so it is never read (PL-100).
+- **A complete run, or nothing.** A snapshot run counts only when it read every page without an error and, where the source states a total, exactly that many records. A failed or partial run deletes nothing and is no miss. An id goes after `misses` complete runs without it, so one flaky page never removes a record (PL-97).
+- **The share guard.** A run that would delete more than `maxShare` of the ledger deletes nothing: it is held with the reason `share-exceeded` and the pipeline's alert subscribers hear of it (PL-71). A source outage that answers an empty list therefore holds the run instead of emptying the space. A person with `approve` on `Pipeline` releases a held run once; the dry run lists what the next complete run would delete.
+- **Shared entities.** Where two pipelines write attributes of one entity, each writes its own instances with the `datasetId` `urn:jc:pipeline:<name>`. A source delete removes that pipeline's instances; the entity goes only when no other dataset holds an attribute. An entity a person edited after the pipeline's last write is reported in the run, not deleted.
+- **The grant is explicit.** `snapshot` and `events` send `entityOperations/delete` through the pipeline's output Endpoint, so the Policy must grant `deleteBatch` and `queryBatch` on the written types; the Portal refuses the proposal until one does and never widens a grant. Every delete is a tombstone with `deletedAt` (DM-115) whose provenance names the pipeline and the reason `source-snapshot` or `source-event` (DM-111). `lease` needs no grant (PL-84).
+- **Refused at admission.** `jc-core` refuses a snapshot on a pipeline with no `period` or `schedule`, and `check_class` one whose DataSource never ends (MQTT, WebSocket, a broker input); events without `deletedWhen`; lease without a rolling entity lifetime; and any `sourceDeletes` beside `spec.expiry` (PL-99).
+
 ### History rows per attribute (PL-102…PL-106)
 
 A lifetime says when data ends; a history plan says which rows the broker keeps while it lives. The person picks one of three plain choices per attribute in the editor's Target step, and the manifest carries it:
