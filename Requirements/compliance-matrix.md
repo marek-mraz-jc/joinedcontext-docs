@@ -1254,11 +1254,11 @@ Generated 2026-10-21 from: `docs` a945334, `conformance` 5e5aa0f, `deployment` 0
 | **PL-99** | [S] | tested | ci-full | platform `crates/jc-core/tests/pipeline_source_deletes_tests.rs::absent_means_nothing_deleted_and_nothing_written_back`, platform `crates/jc-core/tests/pipeline_source_deletes_tests.rs::never_is_explicit_and_round_trips`, platform `crates/jc-core/tests/pipeline_source_deletes_tests.rs::a_snapshot_defaults_to_two_misses_and_ten_percent`, and 10 more |
 | **PL-100** | [S] | built |  | `joinedcontext-platform/crates/jc-core/src/kinds/pipeline.rs`, `joinedcontext-platform/crates/jc-core/src/kinds/pipeline_source_deletes.rs` |
 | **PL-101** | [H] | open |  |  |
-| **PL-102** | [S] | open |  |  |
-| **PL-103** | [S] | open |  |  |
-| **PL-104** |  | open |  |  |
-| **PL-105** | [S] | open |  |  |
 | **PL-106** | [S] | open |  |  |
+| **PL-107** | [S] | open |  |  |
+| **PL-108** |  | open |  |  |
+| **PL-109** | [S] | open |  |  |
+| **PL-110** | [S] | open |  |  |
 
 ### R — Access control and federation
 
