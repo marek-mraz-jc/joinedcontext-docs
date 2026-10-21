@@ -7,6 +7,7 @@ title: "ADR-N-042: Data Views Are Portal Views over Context-Space Entities"
 
 Date: 2026-10-06  
 Status: Accepted  
+Amended: 2026-10-21, T-4884: a `map` view kind places the rows by a GeoProperty; board, calendar and timeline moves carry the person's optional reason (`JC-Reason`) and are offered only where an Endpoint grant names the attribute.  
 Decision Makers: product owner (orders of 2026-10-06, T-3094; study T-3093)
 
 ## 1. Context
@@ -54,7 +55,7 @@ row that refers to an entity carries `(project, space, urn)`.
 ### 3.2 The view model
 
 One `data_views` row per view: project, space, entity type, `kind` (`grid`, `gallery`, `kanban`,
-`calendar`, `timeline`, `form`), `mode` (`personal`, `collaborative`, `locked`), owner, title and a
+`calendar`, `timeline`, `map`, `form`), `mode` (`personal`, `collaborative`, `locked`), owner, title and a
 JSON `config`:
 
 - `q` (an NGSI-LD query), `sort`, `group`, `hidden` attributes, per-attribute `width`;

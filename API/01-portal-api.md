@@ -3107,7 +3107,7 @@ GET /api/v1/projects/{project}/spaces/{space}/usage     the space's entity count
 
 A saved way of looking at one entity type of a space: which attributes show, the filter, the
 order, the grouping and the colours, and the view kind (grid, gallery, kanban, calendar, timeline,
-form). The view is the Portal's own record in its database (`data_views`); the rows it shows are
+map, form). The view is the Portal's own record in its database (`data_views`); the rows it shows are
 the space's entities, read with the person's own session, so a view narrows what the person may
 read and never widens it (ADR-N-042 §3.2).
 
@@ -3146,7 +3146,7 @@ DELETE /api/v1/projects/{project}/spaces/{space}/views/{id}     delete it → 20
 - The body of `POST` is `type`, `kind`, `mode`, `title` and `config`; of `PUT` the same without
   `type`, plus `expectedVersion`. Unknown keys are `400`. `type` is an NGSI-LD type name
   (`^[A-Za-z][A-Za-z0-9_-]*$`), `kind` one of `grid`, `gallery`, `kanban`, `calendar`, `timeline`,
-  `form`, `mode` one of `personal`, `collaborative`, `locked`, `title` 1 to 120 characters.
+  `map` (the rows placed by a GeoProperty, T-4884), `form`, `mode` one of `personal`, `collaborative`, `locked`, `title` 1 to 120 characters.
 - `config`: `q` is an NGSI-LD query of at most 4,096 characters, sent as the person's own `q`
   when the view opens; `sort` names at most 3 attributes; `hidden` and `width` name attributes,
   a width between 40 and 2,000 pixels; `order` lists at most 256 attributes in the order the grid
