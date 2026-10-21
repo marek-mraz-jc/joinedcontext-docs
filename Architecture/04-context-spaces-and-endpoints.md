@@ -240,7 +240,7 @@ spec:
   audience: public # project-list | organization | public
   allowedProjects: [] # Populated when audience: project-list
   policyRef: urn:ngsi-ld:Policy:hel.fi:air-quality:public-air-quality
-  enabledRepresentations: [ngsi-ld, mcp, csv, ogc-features, sta]
+  enabledRepresentations: [ngsi-ld, mcp, csv, ogc-features] # sta also needs a type whose numeric attribute declares its unit (EP-125)
   rateLimits: { requestsPerMinute: 600, burst: 50 }
   fileLimits: { maxFileRows: 50000, maxFileBytes: 33554432 } # Ceiling of one file.* download (EP-44)
   caching: { maxAgeSeconds: 60 }
