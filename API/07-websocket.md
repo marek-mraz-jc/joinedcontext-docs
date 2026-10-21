@@ -58,7 +58,7 @@ A notification carries only the attributes your grant reads. A change to an attr
 | Open connections per client address, at the edge | 50 | the upgrade answers `429` |
 | Connections per caller (token subject, or client address when anonymous) | 10 | the upgrade answers `429` |
 | Connections per Endpoint's space | 1 000 (an installation may set fewer) | the upgrade answers `503` |
-| Endpoint fan-outs (Endpoint and caller identity, each one broker connection) per gateway replica | 64, at most 32 per space (an installation may set others) | a fan-out without a client gives way; when every one has a client, the upgrade answers `503` |
+| Endpoint fan-outs (Endpoint and caller identity, each one broker connection) per gateway replica | 64, at most 32 per space (an installation may set others) | a fan-out without a client gives way; when every one has a client, the upgrade answers `503` [`fan-out-full`](09-errors.md#fan-out-full) |
 | Subscriptions per connection | 64 (an installation may set fewer) | `x-result` with `x-status: 400` |
 | Message you send | 64 KiB (16 KiB per frame) | the connection closes with code `1009` |
 | Frames you send (messages, Pings and Pongs) | 100 at once, then 20 a second | `x-closing: rate`, then the connection closes with code `1008` |
