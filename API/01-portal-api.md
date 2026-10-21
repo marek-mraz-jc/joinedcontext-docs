@@ -3961,7 +3961,7 @@ GET /api/v1/organization/agents                                    → 200
    "lastActivity": null, "spend": {"used": null, "cap": 200000, "per": "day"},
    "state": "active", "runId": null},
   {"kind": "AgentRun", "name": "Air quality dashboard", "project": "helsinki",
-   "title": null, "owner": {"type": "person", "name": "jana@hel.fi"},
+   "title": null, "owner": {"type": "person", "name": "jana@example.org"},
    "actsAs": "caller", "spaces": ["air"], "endpoints": ["air-quality"],
    "lastActivity": "2026-10-21T02:10:00Z", "spend": {"used": 41000, "cap": 400000, "per": "run"},
    "state": "running", "runId": "run-7f3a", "profile": "builder"}
