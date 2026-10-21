@@ -1226,6 +1226,8 @@ Generated 2026-10-20 from: `docs` 868d239, `conformance` 21a1cec, `deployment` 9
 | **PL-87** | [S] | open |  |  |
 | **PL-88** | [S] | open |  |  |
 | **PL-89** | [S] | open |  |  |
+| **PL-94** | [S] | open |  |  |
+| **PL-95** | [S] | open |  |  |
 | **PL-78** | [H] [S] | tested | ci-full, fast ci | portal `src/config.rs::each_pipeline_lane_runs_one_at_a_time_unless_configured`, portal `src/reconciler/run_queue.rs::only_sources_that_wait_for_pushes_are_resident`, portal `src/reconciler/run_queue.rs::a_clock_is_the_period_else_the_schedule_else_once`, and 15 more |
 | **PL-79** | [S] | tested | ci-full, fast ci | platform `crates/jc-core/tests/pipeline_tests.rs::a_replace_meets_the_outputs_whose_ids_can_be_its_own`, platform `crates/jc-core/tests/pipeline_v1alpha2_tests.rs::an_output_mode_is_upsert_replace_or_update_attrs`, platform `crates/jc-manifest/tests/validate_tests.rs::a_replace_whose_ids_another_pipeline_mints_alike_is_refused_naming_both`, and 2 more |
 | **PL-80** | [S] | open |  |  |
