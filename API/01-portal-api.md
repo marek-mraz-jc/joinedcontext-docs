@@ -3989,6 +3989,64 @@ Filing needs `propose` on the Pipeline in `{project}`; the incoming list, approv
 }
 ```
 
+## 49. The agent registry (T-4849, AG-126…AG-129)
+
+Administration → Agents: every agent identity of the organization and its projects in one
+answer, so an administrator sees which agents exist, whom each acts as, what it reaches and
+which ones run now.
+
+```text
+GET /api/v1/organization/agents                                    → 200
+```
+
+```json
+{"items": [
+  {"kind": "AssistantDeployment", "name": "city-chat", "project": "helsinki",
+   "title": "City chat", "owner": {"type": "project", "name": "helsinki"},
+   "actsAs": "self", "spaces": ["air"], "endpoints": ["air-quality"],
+   "lastActivity": null, "spend": {"used": null, "cap": 200000, "per": "day"},
+   "state": "active", "runId": null},
+  {"kind": "AgentRun", "name": "Air quality dashboard", "project": "helsinki",
+   "title": null, "owner": {"type": "person", "name": "jana@example.org"},
+   "actsAs": "caller", "spaces": ["air"], "endpoints": ["air-quality"],
+   "lastActivity": "2026-10-21T02:10:00Z", "spend": {"used": 41000, "cap": 400000, "per": "run"},
+   "state": "running", "runId": "run-7f3a", "profile": "builder"}
+]}
+```
+
+- `kind` is `AssistantDeployment`, `AgentProfile`, `McpServer`, `ServiceAccount` or `AgentRun`;
+  `project` is `org` for the organization's own manifests (agent profiles, organization service
+  accounts and MCP servers). Items come namespace by namespace, the organization first, then
+  kind by kind in the order above and by name, a project's runs after its manifests, newest
+  first.
+- `owner` is the service account's `spec.owner.user` or the run's starter (`type: person`), else
+  the project that holds the manifest (`type: project`).
+- `actsAs` is `self` for a service account and for a deployment on a channel other than
+  `internal` (it calls with the `jc-assistant` service account), and `caller` for an `internal`
+  deployment (the person's own token, AG-115), an agent profile and its runs (AG-94) and an MCP
+  server (each client's own token).
+- `endpoints` names the Endpoints an item reaches as far as its manifest says: a deployment's
+  `connectors` and `mcpServer`, an MCP server's `Endpoint` members, a run's endpoints; `spaces`
+  adds their `contextSpaceRef` and a service account's role scopes.
+- `spend` is in tokens: a deployment's `budget.tokensPerDay` as its `cap` per `day` with `used`
+  `null`, since the day's count lives in `jc-agent-proxy` (AG-110); an agent profile's `used` sums
+  today's (UTC) runs of it that the caller sees, with no `cap`; a run's `used` is its tokens so far
+  and its `cap` its profile's `model.maxTokensPerRun`. Service accounts and MCP servers carry
+  `null` for all three.
+- `state` is `active`, `paused` (a deployment with `enabled: false`), `running` or `waiting` (a
+  run interviewing its person or awaiting approval). `lastActivity` is a run's latest timestamp,
+  and for a deployment or a profile the newest of its runs the caller sees, else `null`.
+- Who may read: any signed-in person, who gets per namespace only the kinds their bindings read
+  there (`read` on the kind; a binding to one space reads only the manifests of that space), and
+  a run only when they started it or approve in its project; nothing they may not read is
+  counted. A caller who reads no agent kind anywhere gets `403` with the sentence that names who
+  can grant it. No token, credential, key, `secretRef`, system prompt or
+  prompt is part of the answer (AG-127).
+- Pause and resume use no route of their own: the page proposes the deployment's manifest with
+  `spec.enabled` flipped by `PUT /api/v1/projects/{project}/assistantdeployments/{name}`, after
+  its dry run, like any edit (AG-129); the answer is the Change, which the project's review
+  merges.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
