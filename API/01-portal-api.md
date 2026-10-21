@@ -2093,8 +2093,14 @@ proposes; it writes nothing. The caller needs `propose` on `Endpoint` in the pro
     "publisher": { "name": { "sk": "Banskobystrický samosprávny kraj" } },
     "contactPoint": { "name": "Open data desk", "email": "opendata@example.org" }
   },
-  "publish": { "ckan": { "instanceRef": { "kind": "CkanInstance", "name": "bbsk" } } },
-  "missing": ["spatial", "frequency"]
+  "publish": { "ckan": { "instanceRef": { "kind": "CkanInstance", "name": "bbsk" },
+                         "datastore": { "representation": "csv" } } },
+  "missing": ["spatial", "frequency"],
+  "attributes": [
+    { "type": "KeyPerformanceIndicator", "name": "kpiValue" },
+    { "type": "KeyPerformanceIndicator", "name": "reporterEmail", "withheld": "personal" }
+  ],
+  "datastoreAvailable": true
 }
 ```
 
@@ -2107,6 +2113,14 @@ proposes; it writes nothing. The caller needs `propose` on `Endpoint` in the pro
   with a publisher's approval (EP-76, PF-72).
 - The UI proposes the Change through the resource API (`PUT …/endpoints/{name}`, §4) with the two
   blocks merged into the Endpoint's manifest.
+- `attributes` lists each slot of the space model's classes (`id` and `type` left out) with
+  `withheld` when a public dataset cannot carry it: `personal` for a slot the model marks
+  `personalData` (DM-122), `hidden` for one the Endpoint's `projection.hiddenAttributes` names
+  already. The UI never offers a withheld slot, adds every personal one and each slot the person
+  leaves out to `projection.hiddenAttributes`, and asks for the Endpoint's name typed back before
+  it proposes a public publication (EP-142).
+- `datastoreAvailable` is `true` when the Endpoint serves `csv`, the one representation a DataStore
+  mirror reads (EP-65); a drafted `publish.ckan` then carries `datastore`.
 - `404` for an unknown Endpoint; `409` naming `CkanInstance` when the project has none to publish to.
 
 ## 17. Federation registrations and the graph (MF-36, UI-27, UI-28, EP-71, PF-48)
