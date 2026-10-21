@@ -148,6 +148,8 @@ GET    /api/v1/projects/{project}/registry              the project's registry e
 PUT    /api/v1/projects/{project}/registry              pin another ref or set other parameter values → 202 + red-lane Change on the organization repository (PF-86, CC-88)
 GET    /api/v1/projects/{project}/permissions/me        the caller's effective rules here (PF-51, PF-61)
 GET    /api/v1/projects/{project}/apps/{name}/me        the caller's roles in one published App, for a fullstack backend (AP-109)
+GET    /api/v1/projects/{project}/apps/{name}/audience  how many people each visibility of the App reaches, for the Share dialog: `read` on `App` (AP-173)
+GET    /api/v1/shared-apps                              the published Apps of other projects shared with the caller's organization that the caller may open (AP-174)
 ```
 
 `DELETE /api/v1/projects/{project}` proposes one red-lane `Change` whose merge request removes
