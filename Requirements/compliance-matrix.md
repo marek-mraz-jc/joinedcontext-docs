@@ -1240,6 +1240,10 @@ Generated 2026-10-20 from: `docs` 868d239, `conformance` 21a1cec, `deployment` 9
 | **PL-91** | [S] | tested | ci-full, fast ci | portal `src/access_requests.rs::the_approval_grants_exactly_the_requested_types_to_the_pipelines_own_account`, portal `tests/access_requests_tests.rs::a_request_is_approved_in_the_owning_project_and_revoked_there`, portal `tests/access_requests_tests.rs::the_requester_does_not_approve_their_own_request`, and 4 more |
 | **PL-92** | [S] | tested | fast ci | platform `crates/context-gateway/src/pdp/evaluator.rs::a_qualified_service_account_assignee_matches_only_that_projects_account` |
 | **PL-93** | [S] [H] | tested | ci-full, fast ci | portal `src/access_requests.rs::an_end_date_is_in_the_future_or_absent`, portal `src/access_requests.rs::revoking_ends_the_grant_and_unlists_the_project_when_nothing_else_names_it`, portal `src/access_requests.rs::a_grant_already_held_makes_the_request_pointless`, and 6 more |
+| **PL-102** | [S] | open |  |  |
+| **PL-103** | [S] | open |  |  |
+| **PL-104** | [S] | open |  |  |
+| **PL-105** | [S] [H] | open |  |  |
 
 ### R — Access control and federation
 
