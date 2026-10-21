@@ -54,6 +54,28 @@ spec:
 EOF
 ```
 
+### The monthly restore drill
+
+The CronJob `postgres-cluster-dr-drill` (04:00 UTC on the 1st, `postgres.databases.drDrill`)
+proves the archive restores, in every environment with backups on, the production one
+included (OPS-11, OPS-12):
+
+1. It counts every table of every database on the primary and notes the instant after the last
+   count.
+2. It restores the latest base backup and WAL into a throwaway `Cluster`, compares each
+   database's total rows with the source, and checks that the realm holds an enabled person and
+   that the Portal's schema sits at the source's last migration.
+3. It deletes that copy and restores to the instant of step 1. Every table must hold the count
+   step 1 read, within `tolerancePercent` (5 %) and at least one row.
+4. It writes RTO (each restore's time to Ready) and RPO (now minus the last transaction the
+   latest restore replayed) into the ConfigMap `postgres-cluster-dr-drill`, deletes the copy
+   and fails the Job when a count or a check is short.
+
+The copy has no ingress (its NetworkPolicy admits only the CNPG operator; the drill counts through
+`kubectl exec`), reads the bucket through the same `existingSecret`, and is deleted however the drill ends. A
+production RTO and RPO are those the drill measured; until the production instance archives to
+object storage, the drill there records `no-backup` and no number exists.
+
 ## 3. Disaster Recovery Procedure
 
 To restore an entire organisational instance from scratch on a blank Kubernetes cluster:
