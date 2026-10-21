@@ -82,11 +82,15 @@ A notification carries only the attributes your grant reads. A change to an attr
 | Message the server sends | one entity per notification, up to 1 MiB | the gateway does not read the change, and every socket of the Endpoint gets `x-gap` |
 | Idle time (no message and no Subscription) | 60 s | `x-closing: idle` |
 | Unread notifications queued | 256 (an installation may set fewer) | `x-gap`, then `x-closing: overflow` |
+| A frame the server sends that your socket does not take | 10 s | the connection is dropped as `overflow`; reconnect and resume |
+| Compression | `permessage-deflate` and other extensions are not negotiated | a compressed frame (RSV1 set) closes the connection with code `1002` |
 | Connection lifetime | the token's `exp`, at most 300 s, with a token; 24 h anonymous | `x-closing: lifetime`; reconnect and resume |
 
 The 64 KiB bound applies only to what you send. A notification carries one entity and may be up to 1 MiB.
 
 The `ws-fanout` rig (EP-115) measures one gateway replica on a 4-vCPU GitHub runner, its clients in the same process, every notification checked against the ground truth. At 20 changes a second, the rate of dev's transit stream: 1 000 sockets p50 7 ms and p99 15 ms from change to socket; 5 000 sockets p50 25 ms and p99 237 ms, with 2.4 GiB resident. At 200 changes a second, 1 000 sockets reach p50 3.4 s and p99 6.5 s: the stream outruns one replica, and coalescing keeps each socket's latest state.
+
+The `ws-abuse` rig (T-4902, platform `crates/context-gateway/tests/ws_abuse_rig.rs`, job `abuse` of `ws-fanout-rig.yml`) holds these limits under abuse against one gateway replica, its clients in the same process. A control client's p99 from change to socket is measured alone, then beside each abuser, and must stay within twice that baseline plus 20 ms; the process stays under 512 MiB resident and no task panics. First run (2026-10-21, debug build on the shared 12-core host, 200 changes a second): baseline p99 45 ms; 10 000 upgrades from one address keep 10 sockets and answer 9 990 with `429`, 109 MiB resident; a subscriber that stops reading at 1 000 changes a second is dropped after the 10 s send bound and its address opens 10 sockets again; a 1 MiB message closes with `1009`; the `permessage-deflate` offer is not taken and a compressed frame closes with `1002`; a subscribe flood is closed with `x-closing: rate` and `1008` after 105 frames; 2 000 upgrades and closes 50 at a time from one address answer 644 upgrades and 1 356 `429`, then the address holds exactly 10 again. The control p99 stayed between 21 and 47 ms in every scenario. The conformance suite runs the 1009, 1002 and 1008 cases against a deployed Endpoint (`tests/ws/test_gateway_ws.py`).
 
 The server pings every 30 seconds and closes a connection that sent no pong for 60 seconds. Client libraries answer pings by themselves.
 
