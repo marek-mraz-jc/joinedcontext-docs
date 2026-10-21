@@ -172,7 +172,7 @@ spec:
       entity: { from: validTo, notAfter: P30D }
 ```
 
-`2026-10-21T06:00:00+03:00` becomes `2026-10-21T03:00:00Z`. A `validTo` of `2062-10-21` becomes 30 days after the write, and every write of the alert moves that cap on. An alert without `validTo`, or with a value that is not a time, gets no end time, stays until the source withdraws it and is counted in the pipeline's problems. An alert whose `validTo` already passed is written and disappears at once. This replaces a cleanup pipeline that deleted ended alerts.
+`2026-10-21T06:00:00+03:00` becomes `2026-10-21T03:00:00Z`. A `validTo` of `2062-10-21` becomes 30 days after the write, and every write of the alert moves that cap on. An alert without `validTo`, or with a value that is not a time, ends 30 days after the write, the **At most after the write** value, and is counted in the pipeline's problems. Without that value such an alert gets no end time and stays until the source withdraws it. An alert whose `validTo` already passed is written and disappears at once. This replaces a cleanup pipeline that deleted ended alerts.
 
 Without the **Lifetime** step, the mapping line has no cap:
 
