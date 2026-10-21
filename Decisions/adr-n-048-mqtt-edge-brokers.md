@@ -65,7 +65,7 @@ A project declares **MQTT edge brokers** as manifests, `kind: MqttBroker`. Each 
    | `enabled` | the project may declare brokers at all | `false` | — |
    | `brokers` | how many `MqttBroker` manifests the project may hold | 1 | 20 |
    | `connections` | the sum of `spec.limits.maxConnections` over the project's brokers | 1000 | 20000 |
-   | `messagesPerSecond` | the sum over the project's brokers of `maxConnections` × `messagesPerSecond`, the most the brokers may accept in one second | 1000 | 100000 |
+   | `messagesPerSecond` | the sum over the project's brokers of `maxConnections` × `messagesPerSecond`, the most the brokers may accept in one second | 10000, one broker at its own defaults (1000 connections × 10) | 100000 |
    | `maxMessageBytes` | the ceiling of each broker's `spec.limits.maxMessageBytes` | 65536 | 1048576 |
    | `modes` | the broker modes the project may use (item 10) | `[ingest]` | `ingest`, `capture`, `relay` |
    | `addresses` | the address kinds the project may use (item 11) | `[platform]` | `platform`, `dedicatedPort`, `customHostname` |
