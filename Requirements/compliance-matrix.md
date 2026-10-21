@@ -1236,6 +1236,11 @@ Generated 2026-10-20 from: `docs` 6487e98, `conformance` 21a1cec, `deployment` 9
 | **PL-83** | [S] | open |  |  |
 | **PL-84** | [S] | open |  |  |
 | **PL-85** | [H] [S] | open |  |  |
+| **PL-102** | [S] | open |  |  |
+| **PL-103** | [S] | open |  |  |
+| **PL-104** |  | open |  |  |
+| **PL-105** | [S] | open |  |  |
+| **PL-106** | [S] | open |  |  |
 
 ### R — Access control and federation
 
