@@ -7,6 +7,7 @@ title: "ADR-N-054: History Recording Modes, Versions of a Measurement, Provenanc
 
 Date: 2026-10-18  
 Status: Accepted  
+Amended: 2026-10-21, T-5056 (owner: "when I just update the values from another source it should not create temporal values"): history is opt-in, `observed` its default record mode, and `never` per attribute (2.2)  
 Decision Makers: product owner (history design of 2026-10-18 17:58–18:02Z: "a new measurement without changes must be saved", "sometimes no new measurement and still updated", "sometimes i want to create a old value", "with every version, manualy, with pipeline, inserted", "GDPR compliance for certain records", "and also manually with UI", then "all that are proposed"); the shape proposed by the supervisor, recorded by worker-3 (T-4664), owner may override
 
 This record says what the broker keeps when a value is written: which writes become history rows, how a corrected or late value relates to the one it replaces, who and what wrote each row, and how attributes that identify a person are kept, shown, exported and erased. It extends the retention rules of [ADR-N-046](adr-n-046-data-lifecycle-and-quality.md) and binds the broker (T-4665), the gateway and its Policy (T-4666), the Portal (T-4667) and every store that holds a copy of context data (T-4668). Requirements DM-104…DM-129.
@@ -63,7 +64,11 @@ spec:
 |---|---|---|
 | `every` (default) | every write with a new `observedAt`, even with the same value: a new measurement is a fact | measurements, counts, sums |
 | `onChange` | the value differs from the last recorded row of that attribute by more than `deadband` (numbers, in the attribute's `unitCode`) or `minDistance` (metres, a GeoProperty), or differs at all in canonical JSON (everything else), or `heartbeat` has passed since the last recorded row (DM-109) | states and levels: a spot's status, a door, a position at rest |
+| `observed` | the write carries an `observedAt` newer than the one it replaces; a value re-sent or changed under its old `observedAt`, or sent without one, adds no row | readings a source re-sends between measurements |
+| `never` | never, for one attribute | bookkeeping such as `dateModified` |
 | `off` | never (`history: off`, ADR-N-046) | current state only |
+
+History is opt-in (T-5056, DM-132): the platform broker runs `ANTARES_TEMPORAL_RECORD=ruled`, so a type records rows only when the space's retention gives it a `history` duration or `forever`, by its own rule or the space's `*` rule. Inside such a type `observed` is the default (owner 2026-10-21: "when observedAt is set, then it will create a historical value"); `onChange` stays for a type whose source sends no `observedAt`, `never` marks a bookkeeping attribute, and expiresAt stays the lifetime of the current Entity, never a history trigger. A type the retention does not name keeps its current state only, and a temporal read of one of its Entities answers with no Attribute rather than a 404. A writer cannot turn history on: only the retention the space owner edits on the Portal's Retention tab, or in Git, decides it.
 
 A quantity per interval (a count of vehicles in five minutes, rain in an hour) is meaningless with rows left out. A model marks such a slot `annotations: { quantity: perInterval }`, and the Portal refuses `onChange` for it (DM-110). `heartbeat` is required with `onChange`, so a value that never changes still shows up in history at least once per heartbeat and a chart can tell "unchanged" from "the sensor went quiet".
 
