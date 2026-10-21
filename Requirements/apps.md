@@ -5,9 +5,9 @@ title: "Apps on Demand"
 
 # Apps on Demand
 
-Family **AP** (AP-01…AP-87, AP-90…AP-172). Owning chapters: [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) and [19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
+Family **AP** (AP-01…AP-87, AP-90…AP-175). Owning chapters: [16-apps-on-demand.md](../Architecture/16-apps-on-demand.md) and [19-agent-runner.md](../Architecture/19-agent-runner.md). Verified by: [03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md).
 
-Requirement family **AP-01…AP-87, AP-90…AP-172** for AI-generated, purpose-built applications that consume context data through a dedicated, least-privilege Endpoint. Architecture in [Architecture/16-apps-on-demand](../Architecture/16-apps-on-demand.md) and [Architecture/19-agent-runner](../Architecture/19-agent-runner.md).
+Requirement family **AP-01…AP-87, AP-90…AP-175** for AI-generated, purpose-built applications that consume context data through a dedicated, least-privilege Endpoint. Architecture in [Architecture/16-apps-on-demand](../Architecture/16-apps-on-demand.md) and [Architecture/19-agent-runner](../Architecture/19-agent-runner.md).
 
 ## 1. Manifest and source
 
@@ -298,6 +298,12 @@ ADR-N-045 decides that an App declares the platform services it uses and calls o
 
 - **AP-172** [S] — An App MAY list in `spec.hostnames` at most three lowercase DNS names, each its Organization's `spec.domain` or a name under it and none under the installation's own domain; every write door MUST refuse any other name, a name another App holds, and a name while the Organization's domain is not `verified` (PF-41). The reconciler MUST route a listed hostname only while that domain is `verified`, exactly as the App's own host (AP-133): the same two routes bound to the hostname alone, the login of `app-{name}` redirecting back to it with a host-only cookie there (AP-29), the hostname a redirect URI and web origin of the client (AP-111), and an Ingress and certificate of its own by HTTP-01 through `letsencrypt-prod`, created once and deleted when the hostname is removed, the domain lapses or the App is retired (ADR-N-037 §7).
 
+## 32. Sharing an App
+
+- **AP-173** [S] — The Apps page and the App's page MUST offer **Share** on an App the person may `propose`: the current visibility and each choice with who it reaches in plain words and a count of people (`private` "Only you", `project` the project's members, `organization` everyone in the Organization by its name, `roles` the holders of the App's roles, `public` anyone without a login), from `GET /api/v1/projects/{project}/apps/{name}/audience`, which needs `read` on `App` and counts people from the bindings in force and the members of the `Group`s they name. A choice MUST be proposed as a `Change` of `spec.visibility`, never written live; `roles` is offered only when the App declares a role, `public` only while the Organization allows public Apps (PF-103). The dialog MUST copy the App's address.
+- **AP-174** [S] — `GET /api/v1/shared-apps` MUST list, for a signed-in person, the published Apps of projects they are no member of that are visible to the `organization` and that they may open (AP-18, T-4910's one check): project, name, title and description. An App that is `private`, `project`, `roles`, not published, or that the person may not open MUST NOT appear, and nothing in the answer names it; an anonymous caller gets `401`. The Portal home lists the answer as **Shared with me**.
+- **AP-175** [S] — A Change that makes an App `public` MUST be approved by a person holding `publisher` or `org-admin` who did not propose it: the proposer is refused even as an administrator, a service account's token is refused, and an approval by the assistant, an agent or MCP is refused, as a public publication of data (EP-142).
+
 ## Traceability
 
 | Requirements | Section | Architecture | Tests |
@@ -345,6 +351,7 @@ ADR-N-045 decides that an App declares the platform services it uses and calls o
 | AP-160…AP-170 | Platform services for Apps: the closed `services` list, three layers that switch them, quotas, and no credential in an App | [16-apps-on-demand.md §14](../Architecture/16-apps-on-demand.md#14-platform-services-for-apps), [ADR-N-045](../Decisions/adr-n-045-platform-services-for-apps.md) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
 | AP-171 | Restoring an earlier build as a merge request on the App's repository | [../API/01-portal-api.md#12a-the-build-of-an-application-ap-100-ap-103-adr-n-028](../API/01-portal-api.md#12a-the-build-of-an-application-ap-100-ap-103-adr-n-028) | [Testing/06-security-tests.md](../Testing/06-security-tests.md) |
 | AP-172 | An App on a hostname of its Organization's verified domain | [ADR-N-037 §7](../Decisions/adr-n-037-an-origin-per-app.md#7-amendment-2026-10-10-hostnames-on-the-organizations-own-domain) | [06-security-tests.md](../Testing/06-security-tests.md) |
+| AP-173…AP-175 | Sharing an App: the Share dialog, Shared with me, a second person for public | [../API/01-portal-api.md](../API/01-portal-api.md), [User-Guide/11-apps.md](../User-Guide/11-apps.md) | [06-security-tests.md](../Testing/06-security-tests.md) |
 
 ## Related
 
