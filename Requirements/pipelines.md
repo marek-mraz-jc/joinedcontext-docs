@@ -6,7 +6,7 @@ description: Normative requirements for data integration, transformation, and in
 
 # Pipeline Execution & Processing
 
-Family **PL** (PL-01…PL-93). Owning chapter: [Architecture/08-pipelines.md](../Architecture/08-pipelines.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
+Family **PL** (PL-01…PL-95). Owning chapter: [Architecture/08-pipelines.md](../Architecture/08-pipelines.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
 
 ## 1. Manifest Envelope and Native Payloads
 
