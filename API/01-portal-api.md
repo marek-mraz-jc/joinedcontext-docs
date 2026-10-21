@@ -3948,8 +3948,8 @@ subscriber (T-4880). The rest of this section describes them as they will be ser
 A pipeline that reads or writes a Context Space it has no grant on asks the space's owner for one. The request lives in the owning project and grants nothing until an owner there approves it; approval proposes the grant as a Change of the owning project, through its lane.
 
 ```text
-POST   /api/v1/projects/{project}/pipelines/{pipeline}/access-requests   { "endpoint": { "project", "name" }, "operations": "read"|"write", "types": [{ "type", "attrs": [...] }], "until"?, "reason" } → 201
-GET    /api/v1/projects/{project}/pipelines/{pipeline}/access-requests   the pipeline's requests, outgoing → 200
+POST   /api/v1/projects/{project}/pipelines/{name}/access-requests   { "endpoint": { "project", "name" }, "operations": "read"|"write", "types": [{ "type", "attrs": [...] }], "until"?, "reason" } → 201
+GET    /api/v1/projects/{project}/pipelines/{name}/access-requests   the pipeline's requests, outgoing → 200
 GET    /api/v1/projects/{project}/access-requests                        the requests into this project's spaces, incoming → 200
 POST   /api/v1/projects/{project}/access-requests/{id}/approve           {} → 202, the Change
 POST   /api/v1/projects/{project}/access-requests/{id}/decline           { "reason" } → 200
