@@ -29,6 +29,21 @@ A token in the query string is refused with `400`. A browser page opens the sock
 
 A plain `GET` of the address without an upgrade (a browser tab, `curl`) answers `426 Upgrade Required` with `Upgrade: websocket` and `Link: <https://{host}/docs/API/07-websocket>; rel="help"`: an HTML page for a browser (`Accept: text/html`) and a problem+json (`upgrade-required`) otherwise, naming the address, the subprotocol, whether a token is needed, one `x-subscribe` message for a type the Endpoint serves and a websocat line. The Endpoint's DCAT record lists the WebSocket distribution at the same address, with a one-sentence `dct:description` in the Endpoint's languages, `foaf:page` and `dct:conformsTo` both naming this page.
 
+An AI agent finds the socket through the Endpoint's MCP surface (T-5045). Where the Endpoint serves the WebSocket, `initialize.instructions` names the address, and `describe_access` (format `permissions`) and the `access://{endpointSlug}` resource carry `liveUpdates`:
+
+| Member | Content |
+|---|---|
+| `address` | the `wss://` address above, on the gateway's public host |
+| `protocol` | `ngsi-ld-ws` |
+| `token` | whether a token is needed and where it goes; never a token |
+| `subscribe` | one `x-subscribe` message for a type the Endpoint serves |
+| `welcome` | the `x-welcome` first message and its resume members (§4) |
+| `limits` | `connectionsPerCaller`, `connectionsPerSpace`, `maxMessageBytes`, `maxFrameBytes`, and `lifetime` with `tokenSeconds` and, on a public Endpoint, `anonymousSeconds`: the values the gateway enforces (§3) |
+| `httpSubscription` | the alternative: notifications to your own HTTPS URL through `create_subscription` or `POST {endpointUrl}/ngsi-ld/v1/subscriptions`, where your grants list `createSubscription` |
+| `guide` | this page |
+
+An Endpoint that does not serve the WebSocket has no `liveUpdates`, and its `/ws` answers `404`.
+
 The connection's identity is fixed when it opens. A connection opened with a token ends when the token expires (its `exp`), and after 300 seconds at the latest: reconnect with a fresh token and resume (§4). An anonymous connection to a public Endpoint has no token to expire and lasts up to 24 hours.
 
 A connection never outlives a change to what admitted it. When the Endpoint is changed in any way (its audience, roles, Policies, hidden attributes or projection, a Policy granted or withdrawn) or the App client the token was issued to loses the Endpoint, every open connection of the Endpoint gets `x-closing` with `x-reason: endpoint-changed` and closes with code `1000` as soon as the gateway loads the change; nothing queued behind the close is sent. A deleted Endpoint, or one that stops serving the WebSocket, closes its connections the same way with `x-reason: view-removed`. The reason names no detail of the change. Reconnect: the new connection is admitted, or refused, under the Endpoint as it is now; a resume (§4) of the closed connection restores no Subscription, so subscribe again. A change that widens access never reaches an open connection.
