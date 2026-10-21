@@ -976,6 +976,37 @@ Smart Data Models type: `Event` (`https://smartdatamodels.org/dataModel.Event/Ev
 
 `id` and `modifiedAt` belong to every entity, so the model has to declare `startDate` and `name` as required slots of `Event`.
 
+### SensorThings (`sta`, OGC 18-088 v1.1)
+
+No fixed type: the broker reads each entity as a Thing and each numeric Property as a Datastream with its Observations (`docs/analysis/sta-mapping.md` in Antares). The model must give at least one class a slot that is a measurement:
+
+| Field | Standard | Source | Mandatory |
+|---|---|---|---|
+| `Thing` | STA §9.2.1 | the entity (`id`, `name`) | yes |
+| `Datastream`, `Observation.result` | STA §9.2.5, §9.2.7 | a slot with `range` `integer`, `float`, `double` or `decimal` | yes |
+| `Datastream.unitOfMeasurement` | STA §9.2.5 | that slot's `unit` (served from the instance's `unitCode`) | yes |
+| `Observation.phenomenonTime` | STA §9.2.7 | the instance's `observedAt` (system) | yes |
+| `ObservedProperty` | STA §9.2.4 | the slot's IRI (system) | yes |
+| `Location`, `HistoricalLocation` | STA §9.2.2, §9.2.3 | `location` | no |
+
+An air-quality model with `pm10: {range: float, unit: {ucum_code: ug/m3}}` passes; a model of articles with only texts and dates is refused:
+
+```text
+Endpoint bb/clanky: `sta` needs a type with a numeric attribute that declares its unit in the data model of space clanky (EP-125)
+```
+
+### Surfaces that serve any type
+
+`ngsi-ld`, `mcp`, `csv`, `websocket`, `ogc-features` and `odata` need nothing of the model. OGC API Features offers a type without a GeoProperty as a collection whose features have `geometry: null` (OGC 17-069r4 §7.16.2). OData mangles every name to a CSDL simple identifier one-to-one, so no two attributes collide. The catalogue record (DCAT-AP) is the Endpoint's `spec.catalog`, checked by its own rules (EP-62, EP-63), not by the model.
+
+### Only a published model
+
+The model checked is a `published` or `deprecated` version of the space's DataModel (DM-26). A space whose models are all `draft` or `retired` is refused for every representation of this section:
+
+```text
+Endpoint bb/podujatia: `ical` needs a published data model in space podujatia; its model is draft (EP-125, DM-26)
+```
+
 ### The refusal
 
 ```text
