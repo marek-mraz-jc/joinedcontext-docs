@@ -205,6 +205,15 @@ The contract is [API/01 §49](../API/01-portal-api.md#49-the-agent-registry-t-48
 - **AG-128** [H] — Each row MUST open the agent's own page with the tabs Overview, Access, Activity and Settings (model, limits and the link to its manifest), and the page MUST work by keyboard and at 400 px.
 - **AG-129** [A][S] — An `AssistantDeployment` MUST be paused and resumed as a Change of its `spec.enabled` that the person sends for review from the agent's page; only a caller who may propose `AssistantDeployment` in its project sees **Pause** or **Resume**, anybody else sees its state alone. A kind without an off switch MUST say so on its page and name the page where it is removed.
 
+## 25. What an agent may do
+
+The contract is [API/01 §51](../API/01-portal-api.md#51-what-an-agent-account-may-do-t-4850-ag-130ag-133); the account manifest is in [Architecture/12 §3](../Architecture/12-identity-and-access.md).
+
+- **AG-130** [H][S] — `GET /api/v1/projects/{project}/serviceaccounts/{name}/access` MUST answer, to a caller with `read` on `ServiceAccount`, every grant of the account with its role, scope, window and state (`active`, `pending`, `expired`) and the Portal rules its `Role` carries without `approve`; the page MUST draw them as a kind × verb matrix (read, propose, delete, approve) whose every cell names the grant that gives it or why it is refused, and the approve column MUST read that an account never approves.
+- **AG-131** [S] — A `ServiceAccount` grant MAY carry `validity` (`notBefore`, `notAfter`); outside it the grant MUST give nothing in the Portal and at the gateway from that second on, and the Portal MUST remove an ended grant from the manifest within a minute, except the account's last grant, which stays and gives nothing. An edit in the Portal MUST keep a grant's window.
+- **AG-132** [A][S] — `POST /api/v1/projects/{project}/serviceaccounts/{name}/revoke` MUST let a person with `propose` and `approve` on `ServiceAccount` remove one grant at once: the Portal writes the Change and merges it only when the manifest on the main branch differs from it by removed grants alone, records an `access.revoked` event, and MUST refuse the account's last grant (`409`) and any bearer token (`403`). Adding or widening a grant stays a red-lane Change that a second person approves (PF-58).
+- **AG-133** [A][S] — The approve and reject routes of a Change MUST refuse every bearer token, a service account's and one an agent obtained by exchanging a person's (AG-94), with `403`: a person decides a Change with their own Portal session (PF-58, AG-11).
+
 ## Assistant paths
 
 Decided in [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) (T-2691).
@@ -266,6 +275,7 @@ Decided in [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) (T-2691).
 | AG-94…AG-95 | [ADR-N-038](../Decisions/adr-n-038-an-agent-run-reads-as-its-person.md) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 | AG-87…AG-93 | [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 | AG-126…AG-129 | [Architecture/09-portal.md#141-the-administration-page](../Architecture/09-portal.md#141-the-administration-page) | [Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest](../Testing/03-frontend-and-e2e-tests.md#1-component-tests-with-vitest) |
+| AG-130…AG-133 | [Architecture/12-identity-and-access.md](../Architecture/12-identity-and-access.md) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 
 ## Related
 
