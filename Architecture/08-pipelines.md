@@ -960,7 +960,7 @@ spec:
 
 **Rendering.** One KeyPerformanceIndicator per cell that carries a number, id `urn:ngsi-ld:KeyPerformanceIndicator:{orgDomain}:{space}:{cube}-{area}-{period}-{indicator}[-{keys}][-{unit}]`, attributes `dataSet`, `indicator`, `name`, `refArea`, `refPeriod`, `dimensionKey`, `kpiValue` (observed at the release), `unitText`, `source`, `isPartOf`, `dateObserved`. A converted pipeline renders byte for byte the mapping it ran as copied Bloblang, so its entities keep their URNs and no history forks; jc-core's golden tests hold three committed pipelines to that.
 
-**Checks.** jc-core refuses an unknown member, a cube code the decoder cannot find, a dimension name outside `[A-Za-z0-9_]`, a `source` or `datasetPage` that is not https or holds a quote, backslash or `%`, and an `update` that is not a date, each naming its field, before a parameter reaches the mapping; every parameter enters it as a quoted literal. The sources keep their DataSource's allow-listed address, timeout and size cap (§6).
+**Checks.** jc-core refuses an unknown member, a cube code the decoder cannot find, a dimension name outside `[A-Za-z0-9_]`, a `source` or `datasetPage` that is not https or holds a quote, backslash, `%` or a brace (bar the one `{cube}`), and an `update` that is not a date, each naming its field, before a parameter reaches the mapping; every parameter enters it as a quoted literal, and the rendered mapping passes the same author guard as an inline `bloblang` step (PL-16, PL-50). The sources keep their DataSource's allow-listed address, timeout and size cap (§6).
 ### What each type becomes
 
 The reconciler renders the connection into the Bento input the runner speaks. Bento's own field
