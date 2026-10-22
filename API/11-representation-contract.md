@@ -26,14 +26,14 @@ Every surface of an Endpoint (OData, the LinkML schema surface, OGC API Features
 
 ## 4. Named outputs per format
 
-- **EP-159** [A][H] — `spec.representations.<format>` (feed, ical, ogc, geojson, csv, sta, odata, widget) MUST be a list of named outputs. Each output carries `name` (a DNS-1123 label, unique on the Endpoint, part of the URL), `title` and `description` per language, `version`, `sources` (one or more model classes, from one LinkML model or from several; each with a `preset` or an explicit role mapping), an optional `filter` (NGSI-LD `q`, `scopeQ` or geo) that only narrows the view while the Policy still decides per entity, and optional `lang`, `sort` and `limit`. At most 20 outputs per format and Endpoint; a duplicate name or a 21st output is refused when the Endpoint is saved. With no list a format serves one output per type as today, except feed and iCal, which serve nothing until an output is listed (EP-150, EP-151).
+- **EP-159** [A][H] — `spec.representations.<format>` (feed, ical, ogc, geojson, csv, sta, odata, widget) MUST be a list of named outputs. Each output carries `name` (a DNS-1123 label, unique on the Endpoint, part of the URL), `title` and `description` per language, `version`, `sources` (one or more model classes, from one LinkML model or from several; each `{type, preset}` or `{type, mapping}`, where `mapping` maps a role to an attribute path or to a list of paths of which the first with a value wins), an optional `filter` object (`q`, `scopeQ`, `georel`, `geometry`, `coordinates`, `geoproperty`) that only narrows the view, sent as `(filter);(caller's q)`, while the Policy still decides per entity, and optional `lang`, `sort` and `limit`. An unknown member refuses that output, never the whole view. At most 20 outputs per format and Endpoint; a duplicate name or a 21st output is refused when the Endpoint is saved. With no list a format serves one output per type as today, except feed and iCal, which serve nothing until an output is listed (EP-150, EP-151).
 
 The roles a source maps, per format:
 
 | Format | Roles of one source | URL of an output |
 |---|---|---|
-| feed | title, updated, published, summary, content, link, author, category, place | `/feed/v1/{name}/{atom.xml\|rss.xml\|feed.json}` (EP-150) |
-| ical | summary, start, end or duration, time zone, location, geo, url, organizer, categories, status | `/ical/v1/{name}.ics`; `/ical/v1/events.ics` stays an alias of the first iCal output, deprecated |
+| feed | title and updated (required), summary, content, link, published, author, category, image; presets `event`, `article`, `generic`; `sort` `updated` or `published`, `limit` 1..200 (50) | `/feed/v1/{name}/{atom.xml\|rss.xml\|feed.json}` (EP-150) |
+| ical | the RFC 5545 fields of API/02 §8b (SUMMARY, DTSTART, DTEND or DURATION, LOCATION, GEO, URL, ORGANIZER, CATEGORIES, STATUS); `timezone` (default `Europe/Bratislava`); `sort` `start` or `-start` | `/ical/v1/{name}.ics`; `/ical/v1/events.ics` stays an alias of the first iCal output, deprecated |
 | ogc, geojson | the geometry (`location`, `observationSpace`, `operationSpace` or a model GeoProperty), the time instant or interval, the served properties | OGC `collections/{name}`; GeoJSON `/geojson/v1/{name}` |
 | csv | columns in order with labels; one CSV per type, or a union with a `type` column | `/csv/v1/{name}.csv` |
 | sta | the attributes that become Datastreams | `/sta/v1.1/` with the output's Things |
@@ -62,13 +62,13 @@ spec:
         title: {sk: Miesta konania, en: Venues}
         sources:
           - type: Event
-            roles: {geometry: location, instant: startDate}
+            mapping: {geometry: location, instant: startDate}
       - name: catchment
         version: 1
         title: {sk: Spádové územie, en: Catchment area}
         sources:
           - type: Event
-            roles: {geometry: operationSpace}
+            mapping: {geometry: operationSpace}
 ```
 
 ## 5. One IR version across the platform
