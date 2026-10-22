@@ -85,6 +85,28 @@ Three planes hold what happened, and they are correlated by time and by the iden
 
 None of the three stays in a pod. The `audit-logging` component runs a Vector daemonset that reads the container logs of the Context Gateway, Keycloak and the forge, and writes gzipped newline-delimited JSON to `audit/{component}/{date}/` in the artifact store's bucket, which is object-locked (OPS-42, PF-29). A record joins the trail because of the pod it came from, so no component can drop itself out of the trail by changing what it logs.
 
+### In the Portal
+
+A steward needs no shell for the two questions an auditor asks most (T-5114):
+
+- **Who changed a manifest, a Policy or an Endpoint.** Approvals → History lists every merged or rejected change of the project, newest first: what it changed, who proposed it, who decided it, when, and the rejection reason. Filter by kind, name, proposer and days; **Export CSV** downloads the same rows (`GET /api/v1/projects/{project}/changes/history/export`, up to 200 closed changes per file, `JC-Next-Page` names the page that continues it). The file carries names, never the proposer's e-mail, and a cell a spreadsheet would run as a formula starts with `'`.
+- **Who wrote an entity.** The Endpoint's data view opens an entity's History; with "Every version, with who changed it and why" ticked it lists each version with its channel, actor, operation, `JC-Reason` and time (ADR-N-054 §2.3). Only a role the space's Policy grants `readVersions` sees it.
+
+A member reads the trail of their own project and nothing else: another project answers `404`, as if it did not exist (R20), and a change to a kind the person may not read is not listed. An organization administrator reads every project's.
+
+How long each part of the trail is kept:
+
+| Record | Where it lives | Kept |
+| --- | --- | --- |
+| Configuration changes: author, approver, message, time | the organization repository's history | as long as the repository |
+| Rejection reasons | review comments on the closed merge request | as long as the repository |
+| Entity versions with provenance and `JC-Reason` | the broker, per space | the space's history retention for the type, `P28D` where no rule names it (DM-97) |
+| Tombstones of deletes and erasures | the broker | `P2Y` (ADR-N-054 §2.6) |
+| Gateway, Keycloak and forge logs | the object-locked audit bucket | 90 days, compliance mode (OPS-42) |
+| Activity feed | the Portal database | 7 days of events (OPS-49) |
+
+An erasure removes the personal values from every version and leaves one content-free tombstone with actor, reason and time (DM-126), so the trail still says who erased what and why.
+
 ### Who changed a pipeline
 
 ```bash
