@@ -260,7 +260,7 @@ list serves every standard but SensorThings, less `spec.disabledRepresentations`
 is the `Representation` enum of the Endpoint kind (`crates/jc-core/src/kinds/endpoint.rs`), which is
 what the published `schemas/kinds/Endpoint.json` validates a manifest against.
 
-`file.csv` accepts the NGSI-LD `GET /entities` query parameters and stream the result as an attachment:
+`file.csv` accepts the NGSI-LD `GET /entities` query parameters and returns the result as an attachment:
 
 ```http
 GET /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/file.csv?type=WeatherObserved&q=temperature>20&humanHeaders=true
@@ -270,15 +270,20 @@ GET /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/file.csv?type=WeatherObserved&q=tem
 HTTP/1.1 200 OK
 Content-Type: text/csv; charset=utf-8; header=present
 Content-Disposition: attachment; filename="zt4qm7ge2xdv6ksb3ncf5arw2y.csv"
+ETag: "9f2c…"
+Cache-Control: no-cache
 ```
 
 The file is named after the endpoint slug and the extension, which are both literals the gateway
-controls, so nothing a caller sent reaches the `Content-Disposition` header. A download carries no
-`ETag`: the body is a whole query answered afresh, and a validator over a paged export would have to
-be computed by running the export. Limits: `spec.fileLimits.maxFileRows` /
+controls, so nothing a caller sent reaches the `Content-Disposition` header. A download carries a
+strong `ETag`, the SHA-256 of the bytes, and answers `304 Not Modified` with no body when
+`If-None-Match` names it (EP-43): the export still runs, the transfer does not. Limits: `spec.fileLimits.maxFileRows` /
 `spec.fileLimits.maxFileBytes` on the Endpoint manifest (413 when exceeded).
 
-Exports entities as flat tabular data with RFC 4180 compliance.
+Exports entities as flat tabular data with RFC 4180 compliance. The answer is always normalized
+NGSI-LD before it is flattened: `options` and `format` are dropped from the query, so `keyValues`
+cannot rename the columns. `lang=sk` stays: each LanguageProperty then arrives as one Property in
+that language.
 
 ### Flattening Rules
 
@@ -287,12 +292,21 @@ One entity is one row. A column is the dot-joined path to a leaf value in the en
 - `id` and `type` are the first two columns, in that order, and carry the entity URN and its NGSI-LD type.
 - Nested members are joined with `.`: a Property's value is `temperature.value`, its metadata `temperature.observedAt`, a sub-property `temperature.accuracy.value`.
 - An array whose members are all scalars gives each member a column with its index in brackets: `location.value.coordinates[0]`, `location.value.coordinates[1]`.
-- An array that holds an array or an object (the rings of a `Polygon`, the points of a `LineString`, the instances of a multi-attribute) is one cell carrying the array as JSON, in the column named by the array's path: `location.value.coordinates`. A table's width never grows with a geometry's vertex count, so a polygon layer still fits a spreadsheet and the 1600-column table of a CKAN DataStore mirror (EP-65). An answer mixing Points and Polygons carries both the indexed columns and the one JSON column.
-- The structural discriminator of an attribute (`"type": "Property"`, `"GeoProperty"`, `"Relationship"`, `"LanguageProperty"`, `"VocabProperty"`, `"JsonProperty"`, `"ListProperty"`) is not data and gets no column. The `type` of a GeoJSON geometry does, because it says which geometry it is.
+- An attribute with several instances (CIM 009 4.5.5) keeps its default instance, the one without a `datasetId`, in the attribute's own columns; each other instance gets its own columns, named `speed[datasetId=…].value` with the instance's `datasetId` in the brackets.
+- Any other array that holds an array or an object (the rings of a `Polygon`, the points of a `LineString`) is one cell carrying the array as JSON, in the column named by the array's path: `location.value.coordinates`. A table's width never grows with a geometry's vertex count, so a polygon layer still fits a spreadsheet and the 1600-column table of a CKAN DataStore mirror (EP-65). An answer mixing Points and Polygons carries both the indexed columns and the one JSON column.
+- The structural discriminator of an attribute (`"type": "Property"`, `"GeoProperty"`, `"Relationship"`, `"ListRelationship"`, `"LanguageProperty"`, `"VocabProperty"`, `"JsonProperty"`, `"ListProperty"`, or any `type` beside an attribute's own members `value`, `object`, `languageMap`, `vocab`, `json`, `valueList` or `objectList`) is not data and gets no column. The `type` of a GeoJSON geometry does, because it says which geometry it is.
 - A Relationship is its target URN as a string, in the column `refDistrict.object` (EP-08).
 - `@context` and the other JSON-LD keywords get no column.
-- Columns appear in the order the rows first mention them, so two runs over the same answer produce the same header.
-- The encoding is UTF-8 and the separator is a comma; a field carrying a comma, a quote or a newline is quoted per RFC 4180.
+- The columns come from the model, not from the rows (T-5209): `id`, `type`, then each attribute of the space's model (of the classes `type` names, or of every class the Endpoint serves) in the model's order, with the columns its kind always has: a scalar Property `x.value` (and `x.unitCode` when the model gives a unit), a GeoProperty `x.value.type`, `x.value.coordinates[0]` and `[1]`, a Relationship `x.object`, a VocabProperty `x.vocab`. The Endpoint's projection and `hiddenAttributes` narrow that list as they narrow the answer. Inside one attribute, paths the rows add (an object's members, a list's items) follow in natural order (`[2]` before `[10]`); attributes the model does not name come last, by name. A `q` that narrows the rows, or leaves none, keeps the header; an Endpoint serving a view of another model, or a space with no generated schema, has `id,type` and the rows' attributes by name.
+- The encoding is UTF-8 and the separator is a comma; a field carrying the separator, a quote or a newline is quoted per RFC 4180.
+- A text field starting with `=`, `+`, `-`, `@`, a tab or a carriage return gets a `'` in front and is quoted, so a spreadsheet opens it as text instead of running it as a formula (OWASP CSV Injection). A number, such as `-12.5`, stays as it is. The rule applies to headers too.
+- An entity that a later page repeats (an insert shifted the offsets while the download paged) is written once.
+
+`delimiter` picks the separator: `comma` (default), `semicolon` for a spreadsheet whose locale writes decimals with a comma (Slovak Excel), or `tab`. `bom=true` starts the file with the UTF-8 byte order mark Excel needs to read diacritics; it is on by default with `humanHeaders=true` and off otherwise, because a program would read the mark as part of the first column's name. Any other value of either parameter is a `400` naming it.
+
+```http
+GET /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/file.csv?humanHeaders=true&delimiter=semicolon
+```
 
 ```csv
 id,type,location.value.type,location.value.coordinates[0],location.value.coordinates[1],temperature.value,temperature.observedAt,refDistrict.object
@@ -301,16 +315,16 @@ urn:ngsi-ld:WeatherObserved:hel.fi:air-quality:station-01,WeatherObserved,Point,
 
 ### Human headers and units (EP-45)
 
-`humanHeaders=true` asks for a header row a person reads instead of a path a program parses. Each column then loses its trailing `.value`, and a Property that carries a `unitCode` (the UN/CEFACT common code of CIM 009, declared in the model per DM-06) gets that code appended in brackets. The `unitCode` column itself is dropped, because it has moved into the header.
+`humanHeaders=true` asks for a header row a person reads instead of a path a program parses. Each column then loses the members NGSI-LD wraps a value in (`.value`, `.object`, `.languageMap`, `.vocab`, `.json`, `.valueList`, `.objectList`), so `address.value.addressCountry` reads `address.addressCountry` and `name.languageMap.sk` reads `name.sk`. A Property that carries a `unitCode` (the UN/CEFACT common code of CIM 009, declared in the model per DM-06) gets the unit's symbol from the platform's Rec 20 table appended in brackets, `no2 [µg/m³]`, or the code itself when the table gives no symbol. The `unitCode` column itself is dropped, because it has moved into the header.
 
 ```csv
-id,type,temperature [CEL],temperature.observedAt
+id,type,temperature [°C],temperature.observedAt
 urn:ngsi-ld:WeatherObserved:hel.fi:air-quality:station-01,WeatherObserved,22.4,2026-08-15T12:00:00Z
 ```
 
 ### Paging and limits (EP-44)
 
-The gateway pages through the broker with `limit` and `offset` and appends each page to the answer as it arrives, so the response size is bounded by the endpoint's limits and not by one broker page. `spec.fileLimits.maxFileRows` and `spec.fileLimits.maxFileBytes` are checked while the rows are being written: the first row that would cross either limit ends the download with `413 Payload Too Large` rather than a truncated file that looks complete. An endpoint that declares neither falls back to the gateway's own ceiling.
+The gateway pages through the broker with `limit` and `offset` and appends each page to the table as it arrives, dropping the page's parsed entities, so the gateway's memory is bounded by the endpoint's limits and not by one broker page. The body is sent once it is complete: a strong `ETag` needs every byte, and a refusal has to come before the first one. `spec.fileLimits.maxFileRows` and `spec.fileLimits.maxFileBytes` are checked while the rows are being written: the first row that would cross either limit ends the download with `413 Payload Too Large` rather than a truncated file that looks complete. An endpoint that declares neither falls back to the gateway's own ceiling.
 
 ---
 
