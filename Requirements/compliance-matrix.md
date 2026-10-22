@@ -596,6 +596,7 @@ Generated 2026-10-22 from: `docs` 697d0dc, `conformance` 60ae0fc, `deployment` d
 | **DM-132** | [P] | tested | fast ci | deployment `tests/test_seed_retention_history.py::test_every_seeded_retention_rule_names_its_history`, deployment `tests/test_seed_retention_history.py::test_the_measured_types_keep_their_history` |
 | **DM-133** | [S] | tested | fast ci | portal `ui/tests/endpoint_data_view.test.tsx::DM-133: opens where the class's model says, for any type, and ignores what the endpoint does not answer` |
 | **DM-134** | [S] | tested | fast ci | portal `ui/tests/endpoint_data_view.test.tsx::DM-134: the presentation resolves from the model's annotations, then labels, then field-order.json, then the name` |
+| **DM-135** | [S] | tested | fast ci | portal `ui/tests/endpoint_data_view.test.tsx::builds the card from the model: class label, labels in table order, units, enum titles, hidden slots`, portal `ui/tests/endpoint_data_view.test.tsx::says a default filter in the reader's words`, portal `ui/tests/endpoint_data_view.test.tsx::shows the default filter as a chip; removing it widens the rows and the link, restore brings it back`, and 2 more |
 
 ### DS — Data space connector
 
