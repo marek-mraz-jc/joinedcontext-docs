@@ -1093,6 +1093,8 @@ URLs, on the broker and mirrored on the Endpoint's public path (`/api/endpoint/{
 | `/x/views/{view}/feed/v1/{name}/rss.xml` | `application/rss+xml; charset=utf-8` |
 | `/x/views/{view}/feed/v1/{name}/feed.json` | `application/feed+json; charset=utf-8` |
 
+On the Endpoint's path the gateway admits the caller as for every other representation (audience, Policy, rate limit; a non-public Endpoint answers `401` without a token and `403` to a caller its Policy does not admit), forwards the request read-only to the view, and writes every link, `tag:` id and the feed's author on its public host, so an id stays the same wherever the broker runs. An Endpoint without an output answers `404` on `feed/v1/…`. The Endpoint's DCAT-AP record lists one `dcat:Distribution` per output and format (title `{output title} (Atom)`, `dcat:mediaType` as above, `dct:format` ATOM, RSS or JSON), its HTML page carries one `<link rel="alternate">` per output and format, and a published CKAN dataset one resource per output and format (EP-150, EP-151, T-5203).
+
 Parameters: `q`, `scopeQ`, `georel`, `geometry`, `coordinates`, `geoproperty`, `lang`, `attrs` and `type` as the iCalendar surface reads them, plus `limit` (default the output's, at most 200) and `offset` (default 0). The output's `filter` and the request's `q` are joined with `;` (both hold), and a request `q` with unbalanced parentheses is `400`, so a request never widens the filter. An output whose filter names a geometry refuses a request geometry. Any other parameter, a repeated one or a `type` that is not one of the output's sources is `400`; any method but `GET` and `HEAD` is `405`; an unknown view, a view without a feed member and an unknown output name answer the same `404`.
 
 Entries:
