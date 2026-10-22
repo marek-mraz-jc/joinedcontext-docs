@@ -1165,6 +1165,10 @@ Generated 2026-10-22 from: `docs` 697d0dc, `conformance` 60ae0fc, `deployment` d
 | **PF-118** | [S] [H] | built |  | `joinedcontext-platform/crates/jc-core/src/kinds/mqtt_allowance.rs`, `joinedcontext-portal/src/api/mqtt_allowance.rs`, `joinedcontext-portal/src/api/mutate.rs`, and more |
 | **PF-119** | [S] | tested | ci-full, fast ci | platform `crates/jc-core/src/kinds/mqtt_allowance.rs::off_by_default_and_every_number_is_zero_then`, platform `crates/jc-core/src/kinds/mqtt_allowance.rs::once_on_the_catalog_defaults_hold`, platform `crates/jc-core/src/kinds/mqtt_allowance.rs::the_broker_past_the_count_is_refused_with_the_count_and_the_usage`, and 15 more |
 | **PF-120** | [H] | open |  |  |
+| **PF-121** | [S] | open |  |  |
+| **PF-122** | [S] | open |  |  |
+| **PF-123** | [S] | open |  |  |
+| **PF-124** | [S] [H] | open |  |  |
 | **PF-105** | [S] | tested | ci-full, conformance, fast ci | conformance `tests/security/test_forge_side_door.py::test_pf51_the_protection_rule_pins_the_pusher_and_drops_an_approval_a_new_commit_invalidates`, deployment `tests/test_forge_identities.py::test_main_takes_only_the_portals_push_and_merge_never_over_an_outdated_base`, deployment `tests/test_forge_identities.py::test_the_seed_commits_as_the_portal_and_never_as_the_administrator`, and 7 more |
 | **PF-106** | [S] | tested | ci-full, fast ci | deployment `tests/test_forge_identities.py::test_each_token_is_minted_on_a_machine_user_that_administers_nothing`, deployment `tests/test_forge_identities.py::test_the_administrators_tokens_are_retired_after_their_readers_restart`, deployment `tests/test_forge_identities.py::test_the_applications_move_to_their_own_organization_and_machine_user`, and 8 more |
 | **PF-107** | [S] [H] | tested | ci-full, fast ci | deployment `tests/test_ckan_admin_seed.py::test_the_seed_has_instances_to_hand_out`, deployment `tests/test_ckan_admin_seed.py::test_each_instance_has_its_own_role_constrained_to_it_alone`, deployment `tests/test_ckan_admin_seed.py::test_no_ckan_admin_role_is_bound_by_the_seed`, and 4 more |

@@ -131,11 +131,11 @@ classDiagram
 
 ### Instance
 
-The physical Kubernetes deployment boundary running on a single domain. An Instance maps directly to a dedicated Keycloak realm and Linkerd mesh scope. One Instance serves one Organization (a city, a utility, a company): one configuration repository, one Keycloak subtree, one gateway org domain (PF-01). A neighbouring town or a utility that wants its own configuration runs its own instance, and the two share data through Endpoints under policy, the same way any two twins do.
+The physical Kubernetes deployment boundary running on a single domain. An Instance maps directly to a dedicated Keycloak realm and Linkerd mesh scope. One Instance serves one or more Organizations (a city, a utility, a company) from one configuration repository, one realm and one gateway org domain; each Organization has its own Keycloak group subtree, its own administrators and its own CKAN organisation, and exactly one of them is the installation Organization that owns what the Instance has once (PF-01, PF-121, [ADR-N-058](../Decisions/adr-n-058-several-organizations-per-installation.md)). A town that wants its own configuration repository or domain still runs its own instance, and the two share data through Endpoints under policy, the same way any two twins do.
 
 ### Organization
 
-The primary organizational boundary (e.g. `helsingin-kaupunki`). It owns user accounts, organizational groups, global role templates, and exactly one Git repository (the Org Repository) hosted in Gitea.
+The primary organizational boundary (e.g. `helsingin-kaupunki`). It owns user accounts, organizational groups and its projects; its manifest lives at `organizations/{name}.yaml` of the Org Repository in Gitea, which the Organizations of an Instance share. A Project belongs to the Organization its `spec.organizationRef` names, and a binding scoped to an Organization grants on that Organization and its projects only (PF-122, PF-123).
 
 ### Project
 
