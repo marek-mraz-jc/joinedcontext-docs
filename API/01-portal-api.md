@@ -4229,7 +4229,7 @@ POST /api/v1/projects/{project}/serviceaccounts/{name}/revoke     → 202 Change
 - `POST /api/v1/projects/{project}/changes/{id}/approve` and `/reject` refuse every bearer token
   with `403` (AG-133).
 
-## 53. Usage per Endpoint (T-5118)
+## 54. Usage per Endpoint (T-5118)
 
 What each Endpoint answered, per UTC day and surface, for its publisher. Every gateway replica
 counts the calls it answered with a status below 400, by the Endpoint slug of the path and the
