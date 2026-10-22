@@ -4357,6 +4357,44 @@ GET  /api/v1/projects/{project}/usage/endpoints/export?month=2026-10 → 200 tex
 - Nothing personal is kept: the gateway sends no address, token, person, query or entity id, and
   `endpoint_usage_daily` has no column for one.
 
+## 55. Checking a KPI over several sources (PL-102…PL-105, T-4935)
+
+The KPI editor sends its `joinedcontext.com/v1alpha2` Pipeline draft each time typing rests. The
+answer names every field jc-core refuses, with the units the sources' space models give, and
+says of each source whether the pipeline's account may read it. `preview: true` also computes
+the indicator on each source Endpoint's current page. Nothing is stored or written.
+
+```text
+POST /api/v1/projects/{project}/kpis/check   {pipeline, preview?}   → 200 KpiChecked
+```
+
+```json
+{"problems": [],
+ "sources": [{"name": "parking", "endpoint": "helsinki-parking", "readable": false},
+             {"name": "stops", "endpoint": "helsinki-transit", "readable": true}],
+ "preview": {"values": [{"key": "kallio", "name": "parking-per-stop-kallio", "value": 7.5}],
+             "rows": {"parking": 100, "stops": 40}}}
+```
+
+- `problems` holds `{field, reason}` per refusal: the manifest rules of every Pipeline, then the
+  `kpi` step's (PL-102, PL-103) with each attribute's `unitCode` from the model of the source
+  Endpoint's space. A draft with problems is still `200`; the editor shows each reason beside
+  its field. `preview` is computed only for a draft without problems.
+- A source must name an Endpoint of the same project in a Context Space the caller may read;
+  any other is refused as `no Endpoint '<name>' in project '<project>' that you may read`, the
+  same words as one that does not exist, and is never read.
+- `readable` is true when a Policy grants the account `{project}/pl-{name}` `retrieveOps` on the
+  source's type, or the Endpoint is public. A source it cannot read is asked for with the
+  pipeline access request (§48, PL-90) once the pipeline exists; the run would fail with the
+  source's `403` until then (PL-104).
+- The preview reads at most 100 rows per source through the Endpoint's compiled view, as the
+  person (the anonymous caller on a public Endpoint), the filter preview's way (§40, EP-85):
+  the query is the source's type, `q`, its `attrs` and the join key. `rows` counts what each
+  page held; `problem` says in words why nothing was computed (a division by zero, an average
+  over nothing, a source that did not answer, PL-104).
+- Who may call: a person with `propose` on `Pipeline` in the project; anyone else gets `403`,
+  and so does a workload token, whose reading is its ServiceAccount's grants.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
