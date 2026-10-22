@@ -82,6 +82,11 @@ A screenshot in the User Guide is one the Portal's live journeys took, in Englis
 `scripts/check-guide-shots.py` refuses an image from anywhere else, a shot that does not exist,
 one without its twin in the other language or without alt text, and a shot no page shows.
 
+Every page of the Portal has a guide page in English and Slovak: a guide page names the Portal
+addresses it explains under `routes:` in its front matter, and `scripts/check-guide-routes.py`
+fails a router address no page names, a named address the router lost, and a page without its
+`User-Guide/sk/` twin.
+
 ## 7. Working here
 
 Read `STYLE.md` before writing a page, and run the checkers before pushing: they are cheap and

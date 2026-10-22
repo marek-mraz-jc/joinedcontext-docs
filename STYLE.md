@@ -9,7 +9,7 @@ Every page in this documentation set follows these rules. Bigshot passes and rev
 
 ## Page skeleton
 
-1. Front matter with `sidebar_position` (integer, unique inside its folder) and `title` (short noun phrase). Optional `description` (one sentence). A page of the public chapters (`API/`, `User-Guide/`) whose sections document a broker surface built behind a Cargo feature carries `surfaces:` with one `name=heading-id` pair per such section (`surfaces: sta=7-ogc-sensorthings-api-sta-v11`), the name as the broker's `/q/health` lists it under `surfaces`: the Portal's `/docs` leaves out the section and every link to it when the broker it reads does not mount that surface (TS-19, T-4484).
+1. Front matter with `sidebar_position` (integer, unique inside its folder) and `title` (short noun phrase). Optional `description` (one sentence). A page of the public chapters (`API/`, `User-Guide/`) whose sections document a broker surface built behind a Cargo feature carries `surfaces:` with one `name=heading-id` pair per such section (`surfaces: sta=7-ogc-sensorthings-api-sta-v11`), the name as the broker's `/q/health` lists it under `surfaces`: the Portal's `/docs` leaves out the section and every link to it when the broker it reads does not mount that surface (TS-19, T-4484). A `User-Guide/` page lists under `routes:` each Portal address it explains, as the Portal's router writes it (`/projects/$project/spaces`), and has a Slovak twin `User-Guide/sk/<same file>` with the same list; `scripts/check-guide-routes.py` fails a router address no page names (T-5110).
 2. One H1 equal to the title.
 3. A one-paragraph lead: what the page covers and who reads it. No "Introduction" heading.
 4. Numbered H2 sections (`## 1. …`). H3 without numbers. Never deeper than H3.
