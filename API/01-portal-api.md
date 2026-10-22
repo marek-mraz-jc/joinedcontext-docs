@@ -4221,6 +4221,41 @@ POST /api/v1/projects/{project}/serviceaccounts/{name}/revoke     → 202 Change
 - `POST /api/v1/projects/{project}/changes/{id}/approve` and `/reject` refuse every bearer token
   with `403` (AG-133).
 
+## 53. Usage per Endpoint (T-5118)
+
+What each Endpoint answered, per UTC day and surface, for its publisher. Every gateway replica
+counts the calls it answered with a status below 400, by the Endpoint slug of the path and the
+surface of the route (`ngsi-ld`, `ogc`, `odata`, `sta`, `ical`, `mcp`, `websocket`, `download`
+for `file.csv`), and posts what it counted since its last post every five minutes. The Portal
+adds the counts into one row per project, Endpoint, surface and day and keeps rows 400 days.
+
+```text
+GET  /api/v1/projects/{project}/endpoints/{name}/usage?days=30    → 200 EndpointUsage
+GET  /api/v1/projects/{project}/usage/endpoints?days=30           → 200 ProjectUsage
+GET  /api/v1/projects/{project}/usage/endpoints/export?month=2026-10 → 200 text/csv
+```
+
+```json
+{"name": "air", "from": "2026-09-23", "to": "2026-10-22",
+ "days": [{"day": "2026-10-22", "calls": {"ngsi-ld": 120, "download": 3}, "total": 123}],
+ "totals": {"ngsi-ld": 120, "download": 3}, "total": 123}
+```
+
+- The gateway posts to the internal listener's `/internal/usage` (`204`); the body is `{"counts": [{"endpoint": "<slug>", "surface": "ogc", "count": 7}]}`, at most
+  5,000 lines and 10,000,000 per line; any other member, an unknown surface or a slug that is no
+  DNS-1123 name refuses the whole post with `400`. A slug no Endpoint has is dropped. The route
+  is on the internal listener and answers the gateway's own workload token alone (PF-46); any
+  other caller gets `401` before the body is read.
+- `days` is 1 to 90, 30 when absent; every day of the window is in `days`, an empty one with
+  `total: 0`. `ProjectUsage` lists every Endpoint the caller may read, with `daily` holding one
+  total per day, oldest first.
+- The export is `day,endpoint,surface,calls`, one line per day, Endpoint and surface with calls,
+  for the Endpoints the caller may read; `month` other than `YYYY-MM` is `400`.
+- Who may read: whoever may read the Endpoint (`read` on `Endpoint` in its Context Space); a
+  project the caller cannot read, or an Endpoint they cannot read, is `404`.
+- Nothing personal is kept: the gateway sends no address, token, person, query or entity id, and
+  `endpoint_usage_daily` has no column for one.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.

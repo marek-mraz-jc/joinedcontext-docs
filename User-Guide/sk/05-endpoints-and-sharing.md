@@ -177,6 +177,14 @@ Registrácia oznámi brokerovi priestoru, že časť jeho údajov má iný zdroj
 6. V časti Schéma zrkadlenia a expirácia **Interval zrkadlenia schém** určuje, ako často sa schémy zdroja kopírujú sem, napríklad `24h`; ak zostane prázdne, raz denne. **Platí do** zabezpečí, že broker sa k danému dátumu prestane zdroja pýtať.
 7. Kliknite na **Skontrolovať**, potom na **Navrhnúť zmenu**. Po tom, čo ju schvaľovateľ prijme, sa na dopyty na priestor odpovedá aj zo zdroja.
 
+## 9. Ako sa endpoint používa
+
+Stránka každého endpointu má časť **Využitie** a stránka endpointov projektu uvádza každý endpoint, ktorý smiete čítať, s počtom volaní. Jeden stĺpec je jeden deň; pod stĺpcami sú volania podľa spôsobu čítania: NGSI-LD API, OGC API Features, OData, SensorThings, kalendár, asistenti cez MCP, živé klienty WebSocket a stiahnutia CSV. Vyberte **Obdobie**, napríklad posledných 30 dní. Na správu za mesiac zvoľte **Mesiac na stiahnutie**, napríklad `2026-10`, a vyberte **Stiahnuť CSV**: jeden riadok za deň, endpoint a spôsob čítania, `day,endpoint,surface,calls`.
+
+Brána počíta každé zodpovedané volanie a posiela počty do Portálu každých päť minút, takže nové volanie sa ukáže zhruba do piatich minút. Odmietnuté volanie (chýbajúce právo, neznáma adresa) sa nepočíta. Dni sú dni v UTC a uchovávajú sa 400 dní. Vidíte využitie práve tých endpointov, ktoré smiete čítať.
+
+Ochrana súkromia (GDPR): počty sú anonymná štatistika. Brána neuchováva IP adresu, nenastavuje cookie a k počtu neukladá osobu, token, dopyt ani entitu; riadok drží len endpoint, spôsob čítania, deň a číslo. Na využitie sa nespracúvajú osobné údaje, preto preň netreba súhlas s cookies.
+
 ## Súvisiace
 
 - [Začíname](01-getting-started.md): prvé kroky v Portáli.
