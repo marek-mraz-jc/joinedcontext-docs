@@ -134,6 +134,12 @@ Platform components are cleanly partitioned between core services and pluggable 
 - **Interfaces:** OTLP in; OTLP over HTTP to the Portal, authenticated as its own Keycloak client.
 - **State & Failure Behavior:** Stateless and deliberately thin. It holds no database credential, writes no row and decides nothing about what an event means, so a collector that is down loses activity records and cannot corrupt the stream. See [Deployment/05 §5](../Deployment/05-monitoring-logging.md#5-the-activity-pipeline).
 
+### Metrics Stack (`prometheus`)
+
+- **Primary Role:** Runs the Prometheus that evaluates the monitoring component's monitors and rules: the Prometheus Operator, Prometheus with 31 days of samples, Alertmanager, kube-state-metrics and node-exporter (OPS-16, T-5154).
+- **Interfaces:** Scrapes every component's metrics port inside the cluster; no route at the edge. Grafana reads Prometheus; the cluster-watch host job reads Alertmanager's active alerts through the API server and posts each change as a note to the deployer.
+- **State & Failure Behavior:** Samples on one volume, bounded by age and size, so a cardinality surprise loses old history rather than the Prometheus. A Prometheus that is down fires nothing: the probes and the status page keep answering from outside. See [Deployment/05 §1](../Deployment/05-monitoring-logging.md#1-metrics-architecture).
+
 ### Metrics Configuration (`monitoring`)
 
 - **Primary Role:** Deploys no workload. It renders one `ServiceMonitor` per component that exports Prometheus metrics on its Service and has none of its own, and the `PrometheusRule` of the edge runbook (OPS-16, TS-22).
