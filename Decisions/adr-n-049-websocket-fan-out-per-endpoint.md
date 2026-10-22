@@ -7,6 +7,7 @@ title: "ADR-N-049: WebSocket Fan-out per Endpoint, Filters Matched in the Gatewa
 
 Date: 2026-10-12  
 Status: Accepted  
+Amended: 2026-10-22 (T-5182): the table is read at the first filter, not at the upstream's start (§8)  
 Decision Makers: product owner (order of 2026-10-12T23:05Z, T-4133: "one subscription that would already carry the data notification ... a filter between WebSocket and the live entities that live in the endpoint, not from Postgres ... 1,000 custom WebSocket filters in that endpoint"); the shape below was decided by worker-6, owner may override
 
 ## 1. Context
@@ -131,6 +132,18 @@ The broker view and its policy engine decide context data (ADR-N-050 decision 1)
 4. **Item 10 holds per upstream.** A refusal now names the caller's own Policy: a caller who may not read the Endpoint's types gets the 1011 close, and other callers of the same Endpoint keep streaming.
 
 Decided (worker-4, owner may override): one upstream per Endpoint and identity, because one decision point (ADR-N-050) leaves no second filter to drift and the shared anonymous upstream keeps the owner's case of 1,000 public sockets on one broker connection. Options: per identity (chosen); per Endpoint under the gateway's account with the gateway's own cut (item 7 as written); one broker Subscription per socket (the ADR-0026 relay).
+
+## 8. Amendment: the Table Is Read at the First Filter (T-5182, 2026-10-22)
+
+Item 2 read the view into the table when the upstream started. On dev a sweep that opened and closed `/ws` on every Endpoint, with no `x-subscribe`, started one upstream per Endpoint, and each held its whole view for the 60 s linger. The gateway reached 1.3 GiB and was OOMKilled 14 times in 80 minutes. The table serves only the deltas of item 5, and nothing reads it while no filter exists, so:
+
+1. **No filter, no table.** A hub reads the view at its first filter, then again after a gap or a failed resume. A hub with connections but no filter keeps no entity, and a notification it receives then is dropped.
+2. **The table leaves with the last filter.** When the last filter of a hub goes (`x-unsubscribe`, a close, a reload), the table is dropped, and the next filter reads it again.
+3. **Two reads at a time.** At most two hubs of a replica read their views at once; the others wait their turn, so a sweep that subscribes on many Endpoints holds at most two pages in flight.
+
+A filter's first change on an entity the read has not reached yet counts as new, as an evicted entity does (item 2). The bound `JC_GATEWAY_WS_ENTITIES` is unchanged.
+
+Decided (worker-t5182, owner may override): read at the first filter, because the probe and the anonymous sweeps open sockets without filters, and a measured sweep over 20 Endpoints of 3,000 entities fell from 843 MiB to 5 MiB held. Options: lazy read (chosen); one shared, capped table across hubs (it still holds every Endpoint a sweep touches); a smaller `JC_GATEWAY_WS_ENTITIES` (it cuts real subscribers' deltas and leaves the sweep's cost per Endpoint).
 
 ## Related
 
