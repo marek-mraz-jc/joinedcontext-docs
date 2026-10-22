@@ -3983,11 +3983,9 @@ the newest messages a broker received. The allowance is written only as a field 
 
 ```text
 GET    /api/v1/projects/{project}/mqtt/allowance                       → 200
+GET    /api/v1/projects/{project}/mqttbrokers/{name}/captured?topic=&limit= → 200
+DELETE /api/v1/projects/{project}/mqttbrokers/{name}/captured          → 204
 ```
-
-Not served yet: `GET /api/v1/projects/{project}/mqttbrokers/{name}/captured?topic=&limit=` → 200
-and `DELETE /api/v1/projects/{project}/mqttbrokers/{name}/captured` → 204 arrive with the capture
-subscriber (T-4880). The rest of this section describes them as they will be served.
 
 ```json
 {"enabled": true, "origin": "project",
@@ -4022,7 +4020,16 @@ subscriber (T-4880). The rest of this section describes them as they will be ser
 - `captured` answers the broker's kept messages, newest first, at most `limit` (1…1000, default
   100), only of `topic` when given (an exact topic, no wildcard). `payload` is the message as
   UTF-8 text when it decodes, else base64 with `encoding: "base64"`. A broker not in `capture`
-  mode answers an empty `messages` and its `mode`.
+  mode answers an empty `messages` and its `mode`, without `window` and `messagesPerTopic`.
+  `clientId` is the device a topic names where a publish filter of the broker holds
+  `${clientid}` as a whole level; MQTT 3.1.1 carries no publisher, so it is absent otherwise. A
+  `topic` with `+` or `#`, or a `limit` outside 1…1000, answers `400` naming it; a capture store
+  that does not answer, `503`.
+- The capture subscriber runs on the reconciler's leader: one MQTT connection per `capture`
+  broker to its internal listener, username `jc-portal-capture` and no password, from a Portal
+  pod (the gateway resolves `JC_GATEWAY_MQTT_PORTAL_HOST`), subscribed to the publish filters of
+  the broker's roles with each `${clientid}` level widened to `+`. It writes what arrived once a
+  second and trims the broker to its caps in the same transaction.
 - Who may read or delete the capture: a person whose binding holds `approve` on `MqttBroker`
   in the project (PL-87). Anybody else, a reader of the manifest included, gets `404`, the
   same answer as a broker the project does not declare (PF-59). `DELETE` removes every kept
