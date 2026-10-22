@@ -48,7 +48,7 @@ Every rollback starts the same way: `just rollback <prod tag of step 2.2>` commi
 
 ### 5.1 Portal
 
-The Portal image goes back with its pin. Its migrations follow the broker's rule (§5.3): the previous Portal boots on the newer schema and logs `the database holds migrations [...] of a newer release, none marked breaking: serving it as a rollback`, unless a migration of the release starts with `breaking_`. A Portal built before T-5105 refuses every newer migration: treat it as breaking. Check `GET /api/health` and one sign-in.
+The Portal image goes back with its pin. Its migrations follow the broker's rule (§5.3): the previous Portal boots on the newer schema and logs `the database holds migrations [...] of a newer release, none marked breaking: serving it as a rollback`, unless a migration of the release starts with `breaking_`. A Portal built before T-5105 refuses every newer migration: treat it as breaking. Check `GET /api/v1/health` and one sign-in.
 
 ### 5.2 Platform images (gateway, jcctl jobs, pipeline runner)
 
