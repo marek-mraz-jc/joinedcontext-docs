@@ -3946,6 +3946,8 @@ GET    /api/v1/projects/{project}/spaces/{space}/erasures/{id}             its s
 
 Rectification (Art. 16) has no route of its own yet: the corrected value is written through the space's Endpoint like any other write, and its superseded version keeps the old value until a rectification route redacts it.
 
+The Portal finds those Entities on the space's own surface, `/cs/{space}`, as its `portal-reconciler` account. The gateway grants that account read access (`retrieveOps`, `queryTemporal`, `retrieveTemporal`) on the classes whose attributes the model marks `personalData`, through the Policy `portal-personal-data` it derives for each such space; no space owner writes it, and it grants no write. A surface that refuses the Portal (`404`) or fails is a `503`, never an answer of no Entities.
+
 The export answers every Entity of the space naming the subject, each with its class, its current state and its stored history, to the caller's session only. The read log of those Entities joins it once the gateway keeps one (DM-128, T-4666).
 
 An erasure finds the Entities naming the subject in each such class and erases, from every store that holds a copy, the class's Attributes marked `personalData` and the subject slot itself, or the whole Entity of a class marked `personalData` as a whole:
