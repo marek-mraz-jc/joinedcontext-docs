@@ -324,7 +324,7 @@ urn:ngsi-ld:WeatherObserved:hel.fi:air-quality:station-01,WeatherObserved,22.4,2
 
 ### Paging and limits (EP-44)
 
-The gateway pages through the broker with `limit` and `offset` and appends each page to the table as it arrives, dropping the page's parsed entities, so the gateway's memory is bounded by the endpoint's limits and not by one broker page. The body is sent once it is complete: a strong `ETag` needs every byte, and a refusal has to come before the first one. `spec.fileLimits.maxFileRows` and `spec.fileLimits.maxFileBytes` are checked while the rows are being written: the first row that would cross either limit ends the download with `413 Payload Too Large` rather than a truncated file that looks complete. An endpoint that declares neither falls back to the gateway's own ceiling.
+The gateway pages through the broker with `limit` and `offset` and appends each page to the table as it arrives, dropping the page's parsed entities, so the gateway's memory is bounded by the endpoint's limits and not by one broker page. The body is sent once it is complete: a strong `ETag` needs every byte, and a refusal has to come before the first one. This is a proposed amendment of EP-44 (T-5209), which still asks for streamed rows until the owner accepts it. `spec.fileLimits.maxFileRows` and `spec.fileLimits.maxFileBytes` are checked while the rows are being written: the first row that would cross either limit ends the download with `413 Payload Too Large` rather than a truncated file that looks complete. An endpoint that declares neither falls back to the gateway's own ceiling.
 
 ---
 
