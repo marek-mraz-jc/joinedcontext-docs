@@ -24,7 +24,9 @@ Each probe ran the pinned image with a fake secret in its environment and a file
 | `awk` processor | `getline` read the file, `ENVIRON` the secret, `system()` ran a shell | refused |
 | `javascript` processor | `require` loaded the file; `bento.v0_fetch` fetches a URL built at run time | refused |
 | Bloblang `file_rel_json` | returned the file | refused |
-| `python` processor | no environment, `No such file` | allowed |
+| Bloblang `"""…"""` string before `env("…")` | hid the call from a quote-tracking scan; Bento printed the variable (T-5223) | refused: the scan reads strings and comments too |
+| Bloblang `import "…"`, `from "…"` | loaded a mapping from the runner's disk (T-5223) | refused |
+| `python` processor | no environment, `No such file`; `while True: pass` held a core and the runner's streams API (T-5223) | refused: no CPU or memory cap per stream |
 | `sql_raw` with `duckdb` | the image is not built with DuckDB | n/a |
 | `sql_raw` with `sqlite` | `readfile()` is not loaded | allowed |
 
@@ -156,7 +158,7 @@ Each probe ran the pinned image with a fake secret in its environment and a file
 | `parse_log` | allowed; every string through the Bloblang host rule, `${VAR}` and URL host checks | `pipeline_escape_tests`, `pipeline_sweep_tests` |
 | `processors` | allowed; every string through the Bloblang host rule, `${VAR}` and URL host checks | `pipeline_escape_tests`, `pipeline_sweep_tests` |
 | `protobuf` | allowed; `import_paths` is `/proto` in the seeds | `pipeline_escape_tests`, `pipeline_sweep_tests` |
-| `python` | allowed; WASM runtime with no environment and no files (measured on the pin) | `pipeline_escape_tests`, `pipeline_sweep_tests` |
+| `python` | refused; WASM runtime with no environment and no files, but no CPU or memory cap in the shared runner (T-5223) | `pipeline_escape_tests` |
 | `rate_limit` | allowed; every string through the Bloblang host rule, `${VAR}` and URL host checks | `pipeline_escape_tests`, `pipeline_sweep_tests` |
 | `redis` | allowed; every string through the Bloblang host rule, `${VAR}` and URL host checks | `pipeline_escape_tests`, `pipeline_sweep_tests` |
 | `redis_script` | allowed; every string through the Bloblang host rule, `${VAR}` and URL host checks | `pipeline_escape_tests`, `pipeline_sweep_tests` |
