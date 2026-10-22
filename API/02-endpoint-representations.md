@@ -1060,7 +1060,7 @@ spec:
         filter: { q: 'category=="kultúra"' }   # narrows the view, never widens it
         lang: sk                       # the feed's language unless the request names one
         limit: 50                      # the default page size, 1 to 200
-        sort: updated                  # updated (default) or published; newest first
+        sort: updated                  # the only order: newest first by updated, what a feed reader expects
 ```
 
 | Role | Atom (RFC 4287) | RSS 2.0 | JSON Feed 1.1 | Level |
@@ -1097,7 +1097,7 @@ Parameters: `q`, `scopeQ`, `georel`, `geometry`, `coordinates`, `geoproperty`, `
 
 Entries:
 
-- are sorted newest first by the output's `sort` role, then by entity id; the surface reads at most the broker's residual-scan cap of entities per request and answers `413` past it;
+- are sorted newest first by `updated`, then by entity id; the surface reads at most the broker's residual-scan cap of entities per request and answers `413` past it;
 - carry the id `tag:{host},2026:{view}/{entity id}` (RFC 4151; `{host}` is the host of `ANTARES_PUBLIC_URL`), the same in all three formats and in every output of the view;
 - `updated` of the feed is the newest entry's (`1970-01-01T00:00:00Z` for an empty feed);
 - the feed's language (`xml:lang`, RSS `language`, JSON Feed `language`) is `lang` of the request, else of the output; the feed's title and description are the output's in that language, else its first;
