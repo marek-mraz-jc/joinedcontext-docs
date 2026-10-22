@@ -1208,6 +1208,7 @@ A surface the Endpoint stops serving, by `spec.disabledRepresentations` or an ex
 
 ## Related
 
+- [API/11 Mapping and Representation Contract](11-representation-contract.md): versions, named outputs and the open/strict member rules every representation here follows (EP-152…EP-160).
 - [SP-03](../Requirements/space-surface.md) — referenced above.
 - [00-intro](00-intro.md) — all API surfaces.
 - [07-websocket](07-websocket.md) — live updates over one WebSocket.

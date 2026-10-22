@@ -594,6 +594,8 @@ Generated 2026-10-22 from: `docs` 697d0dc, `conformance` 60ae0fc, `deployment` d
 | **DM-130** | [S] | tested | ci-full, fast ci | platform `crates/context-gateway/tests/model_constraint_tests.rs::system_members_pass_and_a_malformed_instant_is_refused`, platform `crates/jc-core/src/system_members.rs::only_the_exact_terms_are_members`, platform `crates/jc-manifest/src/model_schema.rs::system_members_pass_a_closed_class_and_keep_their_own_form`, and 1 more |
 | **DM-131** | [S] | tested | ci-full, fast ci | platform `crates/context-gateway/tests/edge_pdp_projection_ungranted_tests.rs::a_write_that_carries_a_broker_generated_member_is_not_granted_it`, platform `crates/context-gateway/tests/model_constraint_tests.rs::system_members_pass_and_a_malformed_instant_is_refused`, platform `crates/context-gateway/tests/projection_tests.rs::a_system_member_needs_no_grant_and_a_look_alike_still_does`, and 3 more |
 | **DM-132** | [P] | tested | fast ci | deployment `tests/test_seed_retention_history.py::test_every_seeded_retention_rule_names_its_history`, deployment `tests/test_seed_retention_history.py::test_the_measured_types_keep_their_history` |
+| **DM-133** | [S] | tested | fast ci | portal `ui/tests/endpoint_data_view.test.tsx::DM-133: opens where the class's model says, for any type, and ignores what the endpoint does not answer` |
+| **DM-134** | [S] | tested | fast ci | portal `ui/tests/endpoint_data_view.test.tsx::DM-134: the presentation resolves from the model's annotations, then labels, then field-order.json, then the name` |
 
 ### DS — Data space connector
 
