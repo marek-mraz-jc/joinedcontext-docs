@@ -2,6 +2,8 @@
 sidebar_position: 1
 title: Postavte si dáta od začiatku do konca
 description: Jeden zdroj od nuly po entity, ktoré si prečítate, v poradí, ktoré Portál potrebuje (kontextový priestor, dátový model, endpoint, zdroj údajov, pipeline), s predvolenými hodnotami každého kroku a chybou, ktorú ľudia v ňom robia.
+routes:
+  - /projects/$project/spaces/upload
 ---
 
 # Postavte si dáta od začiatku do konca
