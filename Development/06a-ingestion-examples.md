@@ -106,7 +106,7 @@ pipeline:
         }
 ```
 
-The full file adds the `@context`, the route, and a thirty-vehicle cap: thirty slot keys in a Bento memory cache, each taken with `add` by one bus and refreshed by every frame it sends, so the demo follows the same thirty buses instead of flickering between hundreds. A bus silent for the cache's ttl frees its slot for the next one. A slot handed out by `counter()` is never handed out again, and that feed went silent half an hour after a start (T-2961). `tests/test_hfp_fleet_cap.py` in the deployment repository asserts the cap and the reuse.
+The full file adds the `@context`, the route, and the rest of the feed: every HSL vehicle in every mode, its current position written once a second in one batch upsert, while the space records its history at one point per 30 s per vehicle. A `rate_limit` of 5,000 reports a second is the total safety valve: a flood slows the read and never reaches the gateway. A per-vehicle slot cache handed out by `counter()` went silent half an hour after a start (T-2961), so the pipeline keeps no slots. `tests/test_hfp_vehicles.py` in the deployment repository asserts the per-second writes, the dropped malformed frames and the safety valve.
 
 ## 3. HTTP: polling a JSON API
 
