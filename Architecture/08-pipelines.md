@@ -929,6 +929,38 @@ before the stream reaches the runner (T-3163). No `secretRef` takes an `envVar` 
 `JC_`, the runner's own prefix. A public name that resolves to loopback is not caught at
 admission; one runner per project is the boundary for that.
 
+
+### Connector steps: one decoder per source format (PL-112)
+
+A source format that many pipelines read the same way gets one typed step whose parameters the reconciler renders into the stream's mapping, as jc-core renders a `kpi` step: the decoder lives once in jc-core, a fix reaches every pipeline on its next reconcile, and a manifest carries only what differs. The first is `datacube`, ŠÚ SR's JSON-stat 2.0 cubes (DATAcube, 45 pipelines in project slovensko); ArcGIS Feature Service and event calendars follow as their own kinds.
+
+```yaml excerpt
+# pipeline.yaml
+spec:
+  sources:
+    - dataSourceRef: { kind: DataSource, name: susr-vh3001rr }
+  steps:
+    - kind: datacube
+      datacube:
+        wholeArea: SK0
+        datasetPage: "https://opendata.dev.joinedcontext.com/dataset/susr-{cube}"
+        cubes:
+          vh3001rr:
+            source: "https://data.statistics.sk/api/v2/dataset/vh3001rr/all/all/all?lang=sk&type=json"
+            update: "2025-10-31"
+            period: vh3001rr_rok
+            area: nuts14
+            indicator: vh3001rr_ukaz
+  outputs:
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-vh:susr-vh
+      type: KeyPerformanceIndicator
+```
+
+**Parameters.** `cubes` maps each table code (`[a-z]{2}[0-9]{4}[a-z]{2}`, the code the answer's `href` names) to the roles of its dimensions: `period`, `area` (absent: every cell is `wholeArea`), `indicator` (absent: the cube code), `unit` (its label becomes `unitText`) and `keys`, further dimensions in order; a dimension of more than one value that no role names is a key too. `source` is the address the cube is read from and `update` the release date the collection gives, used when the answer carries none. `datasetPage` is the catalogue page with `{cube}` once. One to 16 cubes per step.
+
+**Rendering.** One KeyPerformanceIndicator per cell that carries a number, id `urn:ngsi-ld:KeyPerformanceIndicator:{orgDomain}:{space}:{cube}-{area}-{period}-{indicator}[-{keys}][-{unit}]`, attributes `dataSet`, `indicator`, `name`, `refArea`, `refPeriod`, `dimensionKey`, `kpiValue` (observed at the release), `unitText`, `source`, `isPartOf`, `dateObserved`. A converted pipeline renders byte for byte the mapping it ran as copied Bloblang, so its entities keep their URNs and no history forks; jc-core's golden tests hold three committed pipelines to that.
+
+**Checks.** jc-core refuses an unknown member, a cube code the decoder cannot find, a dimension name outside `[A-Za-z0-9_]`, a `source` or `datasetPage` that is not https or holds a quote, backslash or `%`, and an `update` that is not a date, each naming its field, before a parameter reaches the mapping; every parameter enters it as a quoted literal. The sources keep their DataSource's allow-listed address, timeout and size cap (§6).
 ### What each type becomes
 
 The reconciler renders the connection into the Bento input the runner speaks. Bento's own field
