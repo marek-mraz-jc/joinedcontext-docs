@@ -4267,6 +4267,48 @@ POST /api/v1/projects/{project}/serviceaccounts/{name}/revoke     → 202 Change
 - `POST /api/v1/projects/{project}/changes/{id}/approve` and `/reject` refuse every bearer token
   with `403` (AG-133).
 
+## 53. Costs per project (T-5126)
+
+One calendar month of the installation split per project, for Administration → Costs, and the
+same month as CSV. Organization administrators only (PF-03); anyone else gets `403`.
+
+```text
+GET /api/v1/organization/costs?month=2026-09          → 200
+GET /api/v1/organization/costs/export?month=2026-09   → 200 text/csv
+```
+
+```json
+{"month": "2026-09", "currency": "EUR", "measuredAt": "2026-10-22T01:00:00Z",
+ "prices": {"currency": "EUR", "perUsd": 0.86, "nodes": [{"name": "cpx42 nbg1", "monthly": 30.0}],
+            "volumes": [{"name": "postgres", "gigabytes": 300, "monthlyPerGigabyte": 0.044}],
+            "fixed": [{"name": "primary IPv4", "monthly": 0.5}]},
+ "projects": [
+   {"project": "doprava", "node": 30.5, "storage": 0.53, "ai": 3.61, "total": 34.64, "share": 1.0,
+    "spaces": [{"space": "cars", "bytes": 12884901888, "storage": 0.53}],
+    "assistants": [{"assistant": "help", "questions": 120, "uncostedQuestions": 2,
+                    "costUsd": 4.2, "cost": 3.61}]}
+ ],
+ "platform": {"node": 0.0, "storage": 12.67, "total": 12.67},
+ "infrastructure": 43.7, "ai": 3.61, "total": 47.31}
+```
+
+- `month` is `YYYY-MM`, the last whole month when absent; a month that has not started, or any
+  other parameter, is `400`. Without a price table (`JC_PORTAL_COST_PRICES_FILE`, the
+  deployment's `portal.costPrices`) the answer is `503` naming the value to set.
+- The rule: the nodes and fixed items are split by each project's share of the bytes the
+  brokers measure for its spaces (entities and history, §29); a project pays its own bytes at the
+  blended volume price; AI is each `AssistantDeployment`'s priced turns of the month (API/05
+  §3.1) at `perUsd`. What no project carries is `platform`, so the projects and the platform add
+  up to `infrastructure`, the price table, which the cloud invoice bills.
+- Storage is measured when the page is read, not averaged over the month. A space or an
+  assistant that did not answer counts `0` and carries its `reason`; an unpriced turn is counted
+  in `uncostedQuestions`, never as `0` cost.
+- The CSV has the columns `month,project,part,item,bytes,cost,currency`, one line per node
+  share (`node`), space (`storage`) and assistant (`ai`), then `platform-node` and
+  `platform-storage`. A cell that starts with `=`, `+`, `-` or `@` is prefixed with `'`.
+- The Portal's `scripts/cost-reconcile.mjs <csv> <invoice net total>` sums every line but `ai`
+  and exits `1` when the two are more than 10 % apart.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.

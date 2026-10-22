@@ -136,6 +136,7 @@ The management application: the API, the UI it reads from `portal-ui`, and the i
 | `JC_PORTAL_COMMIT` | — | no | The release these pages belong to: the Portal's version and, in an image, the commit it was built from (the `JC_PORTAL_COMMIT` build argument, T-4483). |
 | `JC_PORTAL_COOKIE_KEY` | — | yes | The key every session cookie is sealed with (`JC_PORTAL_COOKIE_KEY`, at least 64 bytes). |
 | `JC_PORTAL_COOKIE_KEY_PREVIOUS` | — | yes | Keys a session cookie may still be sealed with, during a rotation (`JC_PORTAL_COOKIE_KEY_PREVIOUS`, comma-separated, each held to the same length as the active one; T-0973). |
+| `JC_PORTAL_COST_PRICES_FILE` | — | no | The operator's price table for Administration → Costs (`JC_PORTAL_COST_PRICES_FILE`, the file the deployment renders `portal.costPrices` into; T-5126): the currency, the rate for one US dollar, each node, volume and fixed item with its monthly price. |
 | `JC_PORTAL_DASHBOARDS` | — | no | Whether the Dashboards section is shown (`JC_PORTAL_DASHBOARDS`, the literal string `true` to show it; default hidden, the owner's call of 2026-09-25, T-2874). |
 | `JC_PORTAL_DATABASE_URL` | — | yes | PostgreSQL connection string of the preferences tier (`JC_PORTAL_DATABASE_URL`, UI-09). |
 | `JC_PORTAL_GATEWAY_CLIENT_ID` | — | no | The Keycloak client the Context Gateway holds (`JC_PORTAL_GATEWAY_CLIENT_ID`), which is the only caller `GET /internal/previews` answers (PF-46, AG-52). |
