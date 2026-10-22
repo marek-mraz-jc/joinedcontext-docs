@@ -1,7 +1,7 @@
 ---
 sidebar_position: 8
 title: "Open Data Sources: Žilina"
-description: Every candidate feed for the zilina project (the city of Žilina and the University of Žilina), each one fetched on 2026-10-06 with its status, licence and target model.
+description: Every candidate feed for the zilina project (the city of Žilina and the University of Žilina), each one fetched on 2026-10-06 with its status, licence and target model, and the city's own open data portal read on 2026-10-22.
 ---
 
 # Open data sources of Žilina
@@ -17,12 +17,12 @@ code is in the table beside it.
 
 | level | body | territory | what it publishes openly |
 |---|---|---|---|
-| `city` | Mesto Žilina, IČO 00321796 | the city, LAU `SK031B517402` | nothing with a licence (section 4) |
+| `city` | Mesto Žilina, IČO 00321796 | the city, LAU `SK031B517402` | its own open data portal `opendata.zilina.sk` since 2026-05-04, ODbL (section 2.1); its GIS layers carry no licence (section 4) |
 | `university` | Žilinská univerzita v Žiline (UNIZA), IČO 00397563 | its faculties | DREPO, its digital library, item by item under CC BY 4.0 |
 | `national` | ŠÚ SR, EEA, MV SR, MK SR | the state, broken down to the municipality `SK031B517402` | statistics, air quality, the address register, the monument register |
 | `operator` | ŽSR | the rail network, Žilina is one of its main nodes | the national train timetable as GTFS |
 
-**Neither body publishes in the national catalogue.** A SPARQL query of
+**Neither body publishes in the national catalogue** (the city's own portal of section 2.1 is not harvested into it). A SPARQL query of
 `https://data.slovensko.sk/api/sparql` for `dct:publisher <https://data.gov.sk/id/legal-subject/{IČO}>`
 returns 0 datasets for 00321796 (the city) and for 00397563 (UNIZA). The same query returns the
 43 datasets of Banská Bystrica (00313271), so the query itself works. The Žilina publishers the
@@ -69,6 +69,34 @@ Every row answered 200 and carries an open licence. `NGSI-LD type` is the type t
 | Grafikon vlakovej dopravy, GTFS | `operator` ŽSR | `mesto` | `https://data.slovensko.sk/download?id=a5503f2c-c7cc-4a9a-a713-511e7406800d` | 200, a ZIP served as `text/csv` | GTFS in a ZIP | CC-BY-1.0 on the catalogue's copy, CC0 by the publisher | with the timetable, modified 2026-10-05 | 291 kB | `GtfsStop` (Smart Data Models, UrbanMobility): the city's five stations and the trains leaving each that day; in this feed one route is one train number, so routes and trips stay in the file | the trains leaving Žilina, the node of four lines |
 | DREPO, publikácie UNIZA | `university` UNIZA | `uniza` | `https://dspace.uniza.sk/server/api/discover/search/objects?dsoType=ITEM` (REST) and `https://dspace.uniza.sk/server/oai/request?verb=Identify` (OAI-PMH) | 200 and 200 | JSON (HAL), OAI-PMH XML | CC-BY-4.0 per item (`dc.rights.uri`); an item without an open `dc.rights.uri` is left out | continuous | 1 316 items, 787 with CC BY 4.0; 100 per page whatever `size` asks | `Article` (LinkML: title, type, year, deposit collection, publisher, licence, handle; **no author names**) | the university's open research by year, type and journal |
 
+### 2.1 The city's open data portal (read 2026-10-22, T-5232)
+
+`https://opendata.zilina.sk/sk/` is the city's own portal, run on Incinity's Invipo platform and live
+since 2026-05-04. Its catalogue is HTML only (no CKAN API, no DCAT): 145 dataset pages on 15 list pages,
+many of them the same data as JSON, CSV and XML. Every page was read once at one request a second;
+`joinedcontext-deployment` `seeds/zilina-opendata/inventory.csv` records each page with its request,
+parameters, response example, licence, whether it is live, and what the project did with it: 4 taken,
+76 merged as a copy or an aggregate of a taken source, 65 skipped with the reason.
+
+The API is `POST https://opendata.zilina.sk/api/datasets/{v1|v2}/...` with a JSON body, no key. A
+POST without a body answers the whole list where the endpoint takes no parameter. Licence: ODbL on
+104 pages, CC BY on 37, "povinné zverejňovanie" on 4; the terms (`/sk/page/detail/3`) ask the source be
+named "Mesto Žilina" and give the data "as is". The project takes four live sources into the space
+`zilina-doprava` (model `zilina-doprava`):
+
+| dataset | portal page | API | update | NGSI-LD type | pipeline |
+|---|---|---|---|---|---|
+| Car parks with their current occupancy | 57 | `v1/city-dashboard/parking/list` | every 5 min | `OffStreetParking` | `parkovanie` |
+| Public transport vehicles (DPMŽ), with delay | 124 | `v1/public-transport/vehicles/list` | every 5 min | `Vehicle` | `mhd-vozidla` |
+| Vehicles per hour per traffic counter | 182 | `v1/core/geojson/items` (class `TrafficCounter`), then `v1/traffic-counters/vehicles/hourly` per counter | hourly | `TrafficFlowObserved` | `scitace` |
+| Street lights | 102 | `v2/street-lights/items` | daily | `Streetlight` | `svietidla` |
+
+What the portal answered on 2026-10-22: one car park (Antona Bernoláka, 62 spaces); 59 vehicles at
+13:40 UTC with a deviation in minutes; 56 traffic counters, 52 active, 40 of them with a bucket for the
+last full hour; 9 247 street lights (1.3 MB). `parking/items` answered 500 "Invalid Dataset". The 41
+self-government pages point at `egov.zilina.sk`, which still times out from the build network (section
+4); several of them name persons (dogs and their keepers, tax debtors), so a later read leaves those out.
+
 ## 3. What the feeds actually returned
 
 - **ŠÚ SR.** Žilina is `SK031B517402` in every municipality cube (`/api/v2/dimension/om7101qr/om7101qr_obc`, `vh5003rr/nuts15` and `cr3803mr/cr3803mr_obecagr` all name it). Of the 678 cubes in `/api/v2/collection`, 26 break down to the municipality and were updated in 2025 or 2026. The table takes the sixteen a resident meets. `om7103mr` (monthly population movement) answered 400 to the all-periods request and needs its periods named. The pipeline asks for the last 24 months.
@@ -104,6 +132,7 @@ Every row answered 200 and carries an open licence. `NGSI-LD type` is the type t
 
 | claim | read from |
 |---|---|
+| the city portal's 145 datasets, their API and licence | each `https://opendata.zilina.sk/sk/dataset-list/detail/{id}` page and one POST per taken API, 2026-10-22 |
 | no dataset of the city or UNIZA in NKOD | `https://data.slovensko.sk/api/sparql`, `dct:publisher` per IČO, 2026-10-06 |
 | licences of MV SR, MK SR, ŽSR and Správa ciest ŽSK | the same endpoint, `legislation:termsOfUse` → `authorsWorkType` of each distribution |
 | ŠÚ SR codes and periods | `/api/v2/collection`, `/api/v2/dimension/{cube}/{dim}`, the dataset fetches above |
