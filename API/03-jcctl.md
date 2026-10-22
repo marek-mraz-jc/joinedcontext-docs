@@ -45,6 +45,7 @@ jcctl [COMMAND] [OPTIONS]
 | **`apply -f`** | `<file>`, `[--project <slug>]` | Proposes every manifest of the file as a `Change`: `POST` when the Portal holds no such resource, `PUT` when it holds a different one, nothing when it already matches; exit `1` when any was refused (MF-12, MF-14) |
 | **`diff -f`** | `<file>`, `[--project <slug>]` | Compares every manifest of the file with the live one, member by member as `plan` does; exit `2` on any difference; writes nothing (MF-14, CC-17) |
 | **`delete -f`** | `<file>`, `[--project <slug>]` | Proposes the deletion of every resource the file names as a `Change` on the deletion lane (MF-12, MF-14) |
+| **`changelog`** | `--repo-dir <project checkout>`, `[--days <1..366>]`, `[--format md\|json]` | Lists the merged changes of every public Endpoint on the first-parent history of `main` in the window, per surface, from the manifests alone: no commit message or author ([API/10 §4](10-api-change-policy.md#4-the-public-changelog), EP-148, EP-149) |
 | **`checkouts`** | `--org-dir <organization checkout>`, `--projects-dir <dir>`, `--forge <base>/<org>`, `[--token-file <path>]`, `[--secrets-dir <dir>]`, `[--once]`, `[--interval <seconds>]` | Keeps every registered project checked out at its `spec.ref` under `<dir>/{slug}`, a link swapped in one rename; a failed fetch keeps the last checkout, and `--once` fails only when the registry does not read (CC-86, CC-89) |
 
 `jcctl --help` prints the same list; `crates/jcctl/src/main.rs` holds it as one `USAGE` string, so a
