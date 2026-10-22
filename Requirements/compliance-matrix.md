@@ -1289,6 +1289,7 @@ Generated 2026-10-22 from: `docs` 697d0dc, `conformance` 60ae0fc, `deployment` d
 | **PL-109** | [S] | tested | fast ci | portal `src/pipeline_history.rs::plans_read_one_row_per_name`, portal `src/pipeline_history.rs::the_fold_writes_what_the_broker_can_keep_and_leaves_the_rest_to_the_space`, portal `src/pipeline_history.rs::each_refusal_names_its_rule`, and 2 more |
 | **PL-110** | [S] | tested | fast ci | platform `crates/jc-core/src/kinds/pipeline_history.rs::the_three_choices_pass_with_their_settings`, platform `crates/jc-core/src/kinds/pipeline_history.rs::each_rule_is_refused_with_its_path`, platform `crates/jc-core/src/kinds/pipeline_history.rs::an_unknown_member_or_choice_does_not_parse`, and 5 more |
 | **PL-111** | [S] | tested | ci-full | platform `crates/jc-manifest/tests/validate_tests.rs::a_write_policy_no_endpoint_binds_is_refused`, platform `crates/jc-manifest/tests/validate_tests.rs::a_pipeline_whose_target_does_not_bind_its_write_is_refused` |
+| **PL-112** | [S] | tested | ci-full | platform `crates/jc-core/tests/datacube_tests.rs::one_cube_without_keys_renders_the_committed_decoder`, platform `crates/jc-core/tests/datacube_tests.rs::a_placeholder_in_a_parameter_and_a_runner_read_in_a_source_are_refused`, portal `src/reconciler/streams.rs::a_datacube_step_renders_the_stream_its_copied_bloblang_ran` |
 
 ### R — Access control and federation
 

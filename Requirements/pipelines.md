@@ -6,7 +6,7 @@ description: Normative requirements for data integration, transformation, and in
 
 # Pipeline Execution & Processing
 
-Family **PL** (PL-01…PL-110). Owning chapter: [Architecture/08-pipelines.md](../Architecture/08-pipelines.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
+Family **PL** (PL-01…PL-112). Owning chapter: [Architecture/08-pipelines.md](../Architecture/08-pipelines.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
 
 ## 1. Manifest Envelope and Native Payloads
 
@@ -193,6 +193,7 @@ How a pipeline's writes become history rows (DM-104…DM-109) is a choice per wr
 - **PL-109** [S] — The record check (PL-85) MUST refuse, naming the attribute and the rule, a plan the space or the broker cannot keep: `latest` for a type whose history is not `off`; `every` or `changes` for a type whose history is `off`; `every` with `observedAt: received`, or with sample records whose attribute carries no `observedAt` (each write a new row, DM-104); a plan other than the space's own recording of that attribute; a plan other than another pipeline's of the same space for that attribute; and an `observedAt` slot whose sample value is no date-time.
 - **PL-110** [S] — A history plan MUST NOT widen a Policy: it changes rows only of attributes the pipeline writes through its own Endpoint, it is changed only by a change to the Pipeline, which needs the Pipeline's write grant (PL-55), and the editor's History column MUST show names, choices and sources only, never a sample value of a slot the model marks personal.
 - **PL-111** [S] — `jcctl validate` MUST refuse, as an error naming the file, a permission Policy that grants a write of context data and that no Endpoint of its project binds (same space; named by `policyRef`, or no `policyRef`; an App's own Endpoint only its own grants), and a Pipeline output whose `targetEndpoint` the project does not declare or that does not bind the output's derived write Policy (PL-20), saying which Endpoint refuses it and why ([ADR-N-057](../Decisions/adr-n-057-policy-rules-policy-refs-authzen.md) decision 5, T-5035).
+- **PL-112** [S] — A `v1alpha2` Pipeline step `{kind: datacube, datacube: {wholeArea, datasetPage, cubes}}` MUST render, through jc-core, into the one JSON-stat 2.0 decoder that writes one KeyPerformanceIndicator per numeric cell; `cubes` maps each table code (`[a-z]{2}[0-9]{4}[a-z]{2}`, one to 16) to `source` (https), an optional `update` date and the dimensions of the roles `period`, `area`, `indicator`, `unit` and `keys`; jc-core MUST refuse an unknown member or a parameter outside its pattern, naming the field, and a converted pipeline MUST render the mapping it ran before byte for byte, so its entity URNs stay (T-5295).
 
 ## Traceability
 
@@ -234,6 +235,7 @@ How a pipeline's writes become history rows (DM-104…DM-109) is a choice per wr
 | PL-96…PL-101 | [Architecture/08-pipelines.md#when-the-source-deletes-a-record-pl-96pl-101](../Architecture/08-pipelines.md#when-the-source-deletes-a-record-pl-96pl-101) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
 | PL-106…PL-110 | [Architecture/08-pipelines.md#history-rows-per-attribute-pl-106pl-110](../Architecture/08-pipelines.md#history-rows-per-attribute-pl-106pl-110) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
 | PL-111 | [../Decisions/adr-n-057-policy-rules-policy-refs-authzen.md](../Decisions/adr-n-057-policy-rules-policy-refs-authzen.md) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
+| PL-112 | [Architecture/08-pipelines.md#connector-steps-one-decoder-per-source-format-pl-112](../Architecture/08-pipelines.md#connector-steps-one-decoder-per-source-format-pl-112) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
 | PL-86…PL-89 | [ADR-N-048](../Decisions/adr-n-048-mqtt-edge-brokers.md) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
 | PL-90…PL-93 | [API/01-portal-api.md#48-pipeline-access-requests-pl-90pl-93](../API/01-portal-api.md#48-pipeline-access-requests-pl-90pl-93) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | PL-94…PL-95 | [Architecture/08-pipelines.md#5-security--isolation-controls](../Architecture/08-pipelines.md#5-security--isolation-controls) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
