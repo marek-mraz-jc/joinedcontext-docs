@@ -883,14 +883,18 @@ One item per pipeline the caller approves, by name:
   { "pipeline": "podujatia-zvolen", "state": "failing", "lastSuccessAt": "2026-10-18T06:00:00Z",
     "lastRunAt": "2026-10-21T06:00:00Z", "lastSent": 0, "medianSent": 10, "changePercent": -100,
     "failedRuns": 3, "lastError": "GET https://www.zvolen.sk/rss.html answered 404",
-    "lastErrorAt": "2026-10-21T06:00:01Z", "alert": true }
+    "lastErrorAt": "2026-10-21T06:00:01Z", "alert": true,
+    "links": { "checkedAt": "2026-10-19T02:00:00Z", "checked": 20, "answered": 14, "skipped": 1, "deadCount": 6,
+      "dead": [ { "url": "https://www.zvolen.sk/podujatia/koncert-v-parku", "status": 404 } ] } }
 ] }
 ```
 
 - A run fails when it sent nothing and its log holds failed or rejected lines. `state` is `failing` when the newest run failed, `drift` when it sent 20 % or less of the median of the runs in the 7 days before it, `empty` when it sent nothing and reported nothing, `never` with no run kept, and `ok` otherwise.
 - `lastError` is the newest failed or rejected line of the log, masked as the log is (§7c) and with the query and fragment cut from every URL in it.
 - `alert` is `true` after 3 failed runs in a row, or on a drop. The Portal's alert check reads the same health once an hour: 3 failed runs open a `failure` incident and a drop a `zero` incident (§37), so a person who follows the pipeline, its space or its type is told once.
-- A caller who approves no pipeline of the project gets `403`; one who may not read the project gets `404`. The Portal's pipelines page shows the answer on its Source health tab, to stewards only.
+- `links` is the newest weekly link check (T-5133), absent before the first: `checked` links asked, `answered` with 2xx or 3xx, `skipped` not asked, `deadCount` links that failed 2 checks in a row and `dead` the first 5 of them (`url` with `status`, or `error` when the host did not answer), and `checkedAt`. The share `answered / checked` is the T-5081 measure (95 % or more).
+- The link check runs on the leader once every 7 days. It reads the `url` and `organizer.url` of each pipeline's entities through a public Endpoint of the space it writes, anonymously, so it holds no right a visitor lacks; a space without a public Endpoint is not checked. An entity belongs to the pipeline whose DataSource host is the host of its `source` (else of its `url`). A link is asked only on an inventoried host, the host of a DataSource of the project; an IP address or a cluster-internal name is never asked. Per host: robots.txt first (RFC 9309; a 5xx or no answer skips the site for that run), then 1 request a second, HEAD first and a GET of the first byte when HEAD answers 405 or 501, 10 s per request, up to 5 redirects on an inventoried host; a redirect elsewhere counts as an answer and is not followed. A 4xx, a 5xx or no answer counts as one failure.
+- A caller who approves no pipeline of the project gets `403`; one who may not read the project gets `404`. The Portal's pipelines page shows the answer on its Source health tab, to stewards only, with the dead links and the fix hint "The source moved its pages: check events_url in seeds/bbsk-events/sources.csv."
 
 ### 7a. Testing a candidate pipeline (PL-43, MF-38)
 
