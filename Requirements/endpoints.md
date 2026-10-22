@@ -6,7 +6,7 @@ description: Universal ingress and egress multi-representation views, opaque slu
 
 # Endpoints & Representation Parity
 
-Family **EP** (EP-01…EP-145). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **EP** (EP-01…EP-149). Owning chapter: [Architecture/04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md). Verified by: [Testing/02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
 ## 1. Endpoint Identity and Opaque Slug
 
@@ -239,6 +239,13 @@ Decided in [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) (T-3154).
 - **EP-131** [S] — Visualizations MUST render only on `viz.{domain}` ([ADR-N-053](../Decisions/adr-n-053-declarative-visualizations.md) §2.5): a host page, framed by view id alone, that reads the published CKAN view anonymously, checks its spec against the refusal list of EP-130 and fetches the declared source of that Endpoint without a token, stopping at 15 seconds, 50,000 rows or 20 MB and then drawing nothing; and a renderer it frames with `sandbox="allow-scripts allow-downloads"` and without `allow-same-origin`, under a Content-Security-Policy with `connect-src 'none'` and no `unsafe-eval`, that checks the spec again and draws it through Vega's expression interpreter (`vega-interpreter`, `ast: true`) with a loader that loads nothing. The host page's policy MUST limit `connect-src` to `https://api.{domain}` and `https://opendata.{domain}`, CKAN MUST answer CORS for `https://viz.{domain}` alone, and no visualization of an Endpoint whose audience is not `public` MUST render.
 - **EP-132** [H][S] — The reconciler MUST publish each visualization as a CKAN resource view of the visualization type ADR-N-053 names on the Endpoint's dataset (EP-63), holding the spec, the `data` block and the Endpoint slug in the view's configuration and embedding the renderer by view id only, and MUST remove in the same run every view of that type the list no longer names or did not write. CKAN's UI MUST NOT offer that type among its view types. Only the Endpoint's editors publish a visualization, as a reviewed and audited manifest change; a spec the assistant drafted MUST NOT be published until a person saves it.
 
+## 25. Public API changes
+
+- **EP-146** [H] — An Endpoint MAY carry `spec.deprecation` (`since`, `sunset`, optional `link`, `representations`, `attributes`); validation MUST refuse a `sunset` less than 90 days after `since`, a `link` that is not an `https` URL without credentials, and a representation the Endpoint does not serve, naming the field ([API/10](../API/10-api-change-policy.md)).
+- **EP-147** [S] — While `spec.deprecation` is set, the gateway MUST add `Deprecation` (RFC 9745), `Sunset` (RFC 8594) and, when `link` is set, `Link; rel="deprecation"` to every successful data answer of the deprecated part, and to no refusal; the headers MUST carry only the two dates and the link.
+- **EP-148** [H] — `jcctl changelog` MUST list every merged change of a public Endpoint on the first-parent history of `main` within the window (default 30 days), grouped per surface, from the manifests themselves.
+- **EP-149** [S] — The changelog MUST NOT show a commit message, author, policy, role or project-list audience: an entry holds the day, the Endpoint's public name, title and address, and the change computed from the two manifests.
+
 ## Traceability
 
 | Requirement Range | Architecture Section | Test Family |
@@ -300,6 +307,7 @@ Decided in [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) (T-3154).
 | EP-139 | [Architecture/04-context-spaces-and-endpoints.md#the-catalogue-block-ep-78ep-80](../Architecture/04-context-spaces-and-endpoints.md#the-catalogue-block-ep-78ep-80) | [Testing/05-deployment-and-performance-tests.md#41-the-catalogue-smoke](../Testing/05-deployment-and-performance-tests.md#41-the-catalogue-smoke) |
 | EP-140 | [Architecture/21-open-data-catalogue.md#10-the-catalogue-as-an-ngsi-ld-endpoint](../Architecture/21-open-data-catalogue.md#10-the-catalogue-as-an-ngsi-ld-endpoint) | [Testing/02-conformance-tests.md#4-model-context-protocol](../Testing/02-conformance-tests.md#4-model-context-protocol) |
 | EP-111…EP-112 | [Architecture/07-agents-and-mcp.md#7-connecting-from-a-phone](../Architecture/07-agents-and-mcp.md#7-connecting-from-a-phone) | [Testing/02-conformance-tests.md#4-model-context-protocol](../Testing/02-conformance-tests.md#4-model-context-protocol) |
+| EP-146…EP-149 | [API/10-api-change-policy.md](../API/10-api-change-policy.md) | [Testing/01-backend-tests.md#2-the-context-gateway-harness](../Testing/01-backend-tests.md#2-the-context-gateway-harness) |
 | EP-113 | [API/02-endpoint-representations.md#10-in-the-open-data-portal](../API/02-endpoint-representations.md#10-in-the-open-data-portal) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
 ## Related
