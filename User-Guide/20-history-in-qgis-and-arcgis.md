@@ -1,5 +1,5 @@
 ---
-sidebar_position: 19
+sidebar_position: 22
 title: Show History in QGIS and ArcGIS
 description: Load the stored history of an Endpoint's data into QGIS or ArcGIS Pro and play it on a time slider.
 surfaces: ogc=1-the-history-layers ogc=2-qgis ogc=3-arcgis-pro ogc=4-what-the-history-holds
