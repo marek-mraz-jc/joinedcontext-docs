@@ -124,6 +124,12 @@ jobs:
         # Advisory by design: names of things and plain emphasis are bolded in the guide too,
         # so the list is read by a person. It runs here so that it is read at all.
         run: python3 scripts/check-guide-labels.py "${JC_CODE_DIR}/joinedcontext-portal/ui/src/locales/en.json"
+      - name: every Portal page has a User Guide page in en and sk (T-5110, UI-02)
+        # A gate: the Portal is read at main, so a route that lands without its guide page turns
+        # this lane red on the next docs run. The page names the route under `routes:`.
+        run: |
+          python3 scripts/check-guide-routes.py --selftest
+          python3 scripts/check-guide-routes.py "${JC_CODE_DIR}/joinedcontext-portal/ui"
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with: { node-version: "22" }
       - name: markdown style follows STYLE.md (T-0099)
