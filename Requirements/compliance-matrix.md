@@ -597,6 +597,7 @@ Generated 2026-10-22 from: `docs` 697d0dc, `conformance` 60ae0fc, `deployment` d
 | **DM-133** | [S] | tested | fast ci | portal `ui/tests/endpoint_data_view.test.tsx::DM-133: opens where the class's model says, for any type, and ignores what the endpoint does not answer` |
 | **DM-134** | [S] | tested | fast ci | portal `ui/tests/endpoint_data_view.test.tsx::DM-134: the presentation resolves from the model's annotations, then labels, then field-order.json, then the name` |
 | **DM-135** | [S] | tested | fast ci | portal `ui/tests/endpoint_data_view.test.tsx::builds the card from the model: class label, labels in table order, units, enum titles, hidden slots`, portal `ui/tests/endpoint_data_view.test.tsx::says a default filter in the reader's words`, portal `ui/tests/endpoint_data_view.test.tsx::shows the default filter as a chip; removing it widens the rows and the link, restore brings it back`, and 2 more |
+| **DM-136** | [S] | tested | unknown | deployment `tests/test_bbsk_events_pipelines.py::test_each_point_says_how_precise_it_is_and_an_unplaced_venue_takes_its_towns_office`, deployment `tests/test_bbsk_events_pipelines.py::test_the_venue_pipeline_writes_each_venue_once_as_a_valid_point_of_interest`, deployment `tests/test_bbsk_events_venues.py::test_one_name_within_50_m_is_one_venue_and_200_m_apart_two`, and 5 more |
 
 ### DS — Data space connector
 
