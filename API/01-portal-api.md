@@ -507,6 +507,7 @@ view of those merge requests, so that an approver never has to open the forge to
 ```text
 GET  /api/v1/projects/{project}/changes                  open proposals, newest first
 GET  /api/v1/projects/{project}/changes/history          merged and rejected ones, newest first, paged
+GET  /api/v1/projects/{project}/changes/history/export   the same, as CSV (T-5114)
 POST /api/v1/projects/{project}/changes/{id}/restore     propose again what a merged removal took
 POST /api/v1/projects/{project}/changes/{id}/undo        propose again what a merged update altered
 GET  /api/v1/projects/{project}/changes/{id}/manifests   the manifests a merged change wrote
@@ -586,6 +587,13 @@ the rejection. A change merged or closed in the forge itself carries no `decisio
 
 An unknown parameter or `page=0` is `400`. A page reads 20 closed merge requests of the forge, so it
 can hold fewer items than that, none at all included, and still carry `next`.
+
+`GET …/changes/history/export` takes the same parameters and read rule and answers `text/csv` as an
+attachment `{project}-changes.csv`, one row per closed change: `closedAt`, `change`, `outcome`,
+`kind`, `name`, `operation`, `proposedBy`, `decidedBy`, `reason`, `mergeRequest` (T-5114). It reads
+up to ten pages from `page`; while the forge holds older ones, the `JC-Next-Page` header names the
+page that continues the file. The proposer is a name, never an e-mail, and a cell starting with
+`=`, `+`, `-` or `@` gets a leading `'` so a spreadsheet does not run it.
 
 ```json
 {
