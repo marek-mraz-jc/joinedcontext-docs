@@ -1048,7 +1048,8 @@ spec:
   representations:
     feed:
       - name: kultura                  # slug [a-z0-9-], 1 to 63, unique on the Endpoint; part of the URL
-        version: 1                     # the output contract version; 1 when left out
+        version: 1                     # the output contract version; 1 when left out. A newer one is served
+                                       # from each source's type and preset, its filter kept (API/11)
         title: { sk: Kultúra v kraji, en: Culture in the region }
         description: { sk: Podujatia kultúrnych inštitúcií BBSK }
         sources:                       # one or more model classes, each with its roles
@@ -1105,7 +1106,7 @@ Entries:
 - text is never markup: Atom and JSON Feed carry text only (`type="text"`, `content_text`), RSS `description` is HTML-escaped once more, characters XML 1.0 excludes are dropped, and a `link` or `image` that is not http(s) is left out;
 - an entity without a title or an `updated` time it can read is left out and counted in `antares_surface_records_skipped_total{surface="feed", reason}` and the `antares-skipped-records` header (EP-126).
 
-Caching: every answer carries `ETag` (of the body), `Last-Modified` (the feed's `updated`) and `Cache-Control: max-age=300`; `If-None-Match`, else `If-Modified-Since`, answers `304` when nothing changed.
+Caching: every answer carries `ETag` (of the body), `Last-Modified` (the feed's `updated`) and `Cache-Control: private, max-age=300` (the Policy decides per caller, so a shared cache may not keep it, R9); `If-None-Match`, else `If-Modified-Since`, answers `304` when nothing changed.
 
 ### SensorThings (`sta`, OGC 18-088 v1.1)
 
