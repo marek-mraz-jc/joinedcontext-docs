@@ -893,7 +893,7 @@ A class that marks personal data without `legalBasis`, `purpose` and `maxRetenti
 
 ## 10. Where an event takes place (DM-136)
 
-Every event store of every city writes one location shape, so a map, a filter by town, an iCalendar `GEO` line, an OGC or STA geometry and an assistant's "events in Detva" read the same attributes in every space (T-5364).
+The Slovak event stores (`slovensko-podujatia`, `bbsk-podujatia`) write one location shape, so a map, a filter by town, an iCalendar `GEO` line, an OGC geometry and an assistant's "events in Detva" read the same attributes in both spaces (T-5364). Helsinki's Linked Events store keeps only events the register places (its own point, `location`) and writes neither `locationPrecision` nor `areaServed` yet; another city's event store takes this shape when it is built.
 
 | Attribute | Kind | Value |
 |---|---|---|
@@ -911,7 +911,7 @@ The point comes from the first step that has one, and `locationPrecision` names 
 3. the organizer's own address, for an event that names no place or only its organizer (`office`);
 4. the municipality's office, else its centre (`office`, `centre`).
 
-A national geocoder (Slovakia: Register adries; Finland: Digitransit; Spain: CartoBCN or Nominatim; Czechia: RÚIAN) fills the venue table offline, at most one request a second, with timeouts and size caps; a pipeline never calls a geocoder. A map draws `office` and `centre` as approximate and its legend says so; a village office is never presented as the venue.
+The Register adries and, for reviewed name matches, Nominatim fill the Slovak venue table offline (`seeds/bbsk-events/geocode-venues.py`), at most one request a second, with timeouts and size caps; a pipeline never calls a geocoder. `locationPrecision` is how a reader tells an approximate point: `office` and `centre` stand for the municipality, never for the venue.
 
 A venue's `PointOfInterest` id is the OpenStreetMap object of its building when the table names one, else a hash of its town, its name and its point. Two table rows with the same name less than 50 m apart are one venue; two rows of one name 200 m apart stay two. A venue carries its own `name`, `location`, `address` and `areaServed`, and only what the source or the register publishes: an organizer's private address or phone is never stored.
 
