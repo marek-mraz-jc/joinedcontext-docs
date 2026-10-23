@@ -3591,6 +3591,16 @@ POST   /api/v1/alerts/notices/{id}/read     mark one read → 204
   daily quality run found its newest entity older than the freshness target, DM-74). One
   subscription per caller and target: a second `PUT` changes it. An unknown key is `422`, an
   unknown scope or event `400`.
+- `scope` `agent` (T-5301) names an agent profile (`target` its name) and is told of its runs in
+  `project`, with the signals of §51 as `events`: `refusalSpike`, `spendShare` and
+  `offHoursWrite`; an agent event under another scope, or a pipeline event under `agent`, is `400`
+  naming `events`. An incident holds while its signal held within the last hour (a run counted
+  while it is live or finished within the hour) and recovers after an hour without it; the notice's
+  `pipeline` member carries the profile's name and its `detail` the count and the run's title.
+  Subscribing needs approve in the project, since the signals count every person's runs (AG-93):
+  `403` naming `project` otherwise, `404` naming `target` for a profile that does not exist. The
+  Activity tab offers the projects from §51 `choices.alertProjects`; the notices list drops an
+  agent notice once the caller no longer approves there.
 - `delivery` is `portal` (a notice when the incident opens and one when it closes) or `digest` (one
   notice a day, after 07:00 UTC, naming the incidents opened in the last day). `email` is refused
   with `400` and its reason while the Portal has no mail relay (T-3261).
@@ -4230,7 +4240,8 @@ GET /api/v1/organization/agents/activity?profile=builder&verdict=refused&limit=2
   parameter, or a malformed value, is `400`.
 - `choices` lists the starters and the Context Spaces of the runs the caller sees for this
   agent or run, whatever the other filters; the Activity tab offers `person` and `space` only
-  from it. A `person` or `space` outside it is `403` naming the field.
+  from it. A `person` or `space` outside it is `403` naming the field. `alertProjects` lists the
+  projects the caller approves in, where they may subscribe to the agent's alerts (§37).
 - Who sees what: the runs of every project the caller reads, their own, or every person's where
   they approve (AG-93); a caller who reads no project gets `403`. The answer reads the 500 newest
   of those runs.
