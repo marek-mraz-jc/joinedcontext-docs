@@ -236,6 +236,14 @@ The endpoint's iCalendar feed needs a broker view the endpoint does not have.
 
 What to do: Read this endpoint through its NGSI-LD surface; its iCalendar feed needs a broker view it does not have.
 
+### `feed-view-unavailable` {#feed-view-unavailable}
+
+**Feed View Unavailable**, status 501.
+
+The endpoint's Atom, RSS and JSON Feed outputs need a broker view the endpoint does not have.
+
+What to do: Read this endpoint through its NGSI-LD surface; its Atom, RSS and JSON Feed outputs need a broker view it does not have.
+
 ### `odata-batch-unavailable` {#odata-batch-unavailable}
 
 **OData Batch Unavailable**, status 501.
@@ -399,6 +407,16 @@ What to do: Run the check the answer names and send the change again with its ve
 An App stored an object larger than one call may store (AP-170); `limit` names the size.
 
 What to do: Store a smaller object; the answer names the limit in bytes.
+
+### `unprocessable` {#unprocessable}
+
+**Unprocessable Content**, status 422.
+
+A proposed Endpoint names representation outputs the model cannot serve: an unknown member, a duplicate or bad output
+name, more outputs than allowed, a source type outside the model, or a role naming a missing slot or one of the wrong
+range (EP-152..EP-160). `errors` lists one entry per refused member.
+
+What to do: Correct each member errors names; the dry run lists the same findings before you send.
 
 ### `quota` {#quota}
 

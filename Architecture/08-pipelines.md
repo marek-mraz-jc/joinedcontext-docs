@@ -404,7 +404,8 @@ spec:
 - **The source ledger decides, not the last writer.** The runner keeps one row per pipeline and entity it wrote: source key, entity id, first seen, last seen in a complete run, and the run id. Only ledger rows are candidates. Last-writer provenance would flip when a person or another pipeline touched the entity and would delete a shared entity whole, so it is never read (PL-100).
 - **A complete run, or nothing.** A snapshot run counts only when it read every page without an error and, where the source states a total, exactly that many records. A failed or partial run deletes nothing and is no miss. An id goes after `misses` complete runs without it, so one flaky page never removes a record (PL-97).
 - **The share guard.** A run that would delete more than `maxShare` of the ledger deletes nothing: it is held with the reason `share-exceeded` and the pipeline's alert subscribers hear of it (PL-71). A source outage that answers an empty list therefore holds the run instead of emptying the space. A person with `approve` on `Pipeline` releases a held run once; the dry run lists what the next complete run would delete.
-- **Shared entities.** Where two pipelines write attributes of one entity, each writes its own instances with the `datasetId` `urn:jc:pipeline:<name>`. A source delete removes that pipeline's instances; the entity goes only when no other dataset holds an attribute. An entity a person edited after the pipeline's last write is reported in the run, not deleted.
+- **Marks go per run.** In `events` mode the stream reads `deletedWhen` on each mapped record after the author's steps and routes, before the lifetime step: `true` keeps the record out of the write and posts its id to the Portal, `false` writes it, an error or any other answer is a failed record of the run. The Portal keeps a mark only for an id in the pipeline's ledger and reports any other id on the activity feed; the marks of one run go in one delete stream when the run ends, and those of a pipeline without runs (a push source) every five minutes (PL-98). Before each delete the stream reads the entities' `modifiedAt`: one changed after the pipeline's last confirmed write leaves the ledger undeleted and is reported (PL-100).
+- **Shared entities.** An entity changed after the pipeline's last write, by a person or by another pipeline, is reported in the run and kept, not deleted: the delete stream reads each chunk's `modifiedAt` by a batch query (`queryBatch`, which admission demands beside `deleteBatch`) first. Per-pipeline attribute instances (`datasetId` `urn:jc:pipeline:<name>`, a source delete removing only that pipeline's instances and the entity only when no other dataset holds one) are not served yet.
 - **The grant is explicit.** `snapshot` and `events` send `entityOperations/delete` through the pipeline's output Endpoint, so the Policy must grant `deleteBatch` and `queryBatch` on the written types; the Portal refuses the proposal until one does and never widens a grant. Every delete is a tombstone with `deletedAt` (DM-115) whose provenance names the pipeline and the reason `source-snapshot` or `source-event` (DM-111). `lease` needs no grant (PL-84).
 - **Refused at admission.** `jc-core` refuses a snapshot on a pipeline with no `period` or `schedule`, and `check_class` one whose DataSource never ends (MQTT, WebSocket, a broker input); events without `deletedWhen`; lease without a rolling entity lifetime; and any `sourceDeletes` beside `spec.expiry` (PL-99).
 
@@ -807,6 +808,38 @@ spec:
 **Units.** The units come from each slot's `unit_code` in the space's model; `sum(a.x) + sum(b.y)` with `x` in minutes and `y` in hours is refused, a ratio of two equal units is dimensionless and takes `C62` or `P1`, and `count()` is `C62`. A slot without a unit takes the declared `unitCode` on trust.
 
 **Editor.** The Portal's KPI editor (PL-105) offers count, sum, average, share of two sums, per area and per entity as choices, writes the formula from them, and keeps the typed formula under **Advanced**. Each field is checked by the same jc-core rules as it is typed, and **Preview** computes the value on the sources' current pages before Propose.
+
+### Connector steps: one decoder per source format (PL-112)
+
+A source format that many pipelines read the same way gets one typed step whose parameters the reconciler renders into the stream's mapping, as jc-core renders a `kpi` step: the decoder lives once in jc-core, a fix reaches every pipeline on its next reconcile, and a manifest carries only what differs. The first is `datacube`, ŠÚ SR's JSON-stat 2.0 cubes (DATAcube, 45 pipelines in project slovensko); ArcGIS Feature Service and event calendars follow as their own kinds.
+
+```yaml excerpt
+# pipeline.yaml
+spec:
+  sources:
+    - dataSourceRef: { kind: DataSource, name: susr-vh3001rr }
+  steps:
+    - kind: datacube
+      datacube:
+        wholeArea: SK0
+        datasetPage: "https://opendata.dev.joinedcontext.com/dataset/susr-{cube}"
+        cubes:
+          vh3001rr:
+            source: "https://data.statistics.sk/api/v2/dataset/vh3001rr/all/all/all?lang=sk&type=json"
+            update: "2025-10-31"
+            period: vh3001rr_rok
+            area: nuts14
+            indicator: vh3001rr_ukaz
+  outputs:
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-vh:susr-vh
+      type: KeyPerformanceIndicator
+```
+
+**Parameters.** `cubes` maps each table code (`[a-z]{2}[0-9]{4}[a-z]{2}`, the code the answer's `href` names) to the roles of its dimensions: `period`, `area` (absent: every cell is `wholeArea`), `indicator` (absent: the cube code), `unit` (its label becomes `unitText`) and `keys`, further dimensions in order; a dimension of more than one value that no role names is a key too. `source` is the address the cube is read from and `update` the release date the collection gives, used when the answer carries none. `datasetPage` is the catalogue page with `{cube}` once. One to 16 cubes per step.
+
+**Rendering.** One KeyPerformanceIndicator per cell that carries a number, id `urn:ngsi-ld:KeyPerformanceIndicator:{orgDomain}:{space}:{cube}-{area}-{period}-{indicator}[-{keys}][-{unit}]`, attributes `dataSet`, `indicator`, `name`, `refArea`, `refPeriod`, `dimensionKey`, `kpiValue` (observed at the release), `unitText`, `source`, `isPartOf`, `dateObserved`. A converted pipeline renders byte for byte the mapping it ran as copied Bloblang, so its entities keep their URNs and no history forks; jc-core's golden tests hold three committed pipelines to that.
+
+**Checks.** jc-core refuses an unknown member, a cube code the decoder cannot find, a dimension name outside `[A-Za-z0-9_]`, a `source` or `datasetPage` that is not https or holds a quote, backslash, `%` or a brace (bar the one `{cube}`), and an `update` that is not a date, each naming its field, before a parameter reaches the mapping; every parameter enters it as a quoted literal, and the rendered mapping passes the same author guard as an inline `bloblang` step (PL-16, PL-50). The sources keep their DataSource's allow-listed address, timeout and size cap (§6).
 
 ## 4. Scheduled Ingestion Example: CronJob CSV Fetch
 

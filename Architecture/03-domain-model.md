@@ -131,11 +131,11 @@ classDiagram
 
 ### Instance
 
-The physical Kubernetes deployment boundary running on a single domain. An Instance maps directly to a dedicated Keycloak realm and Linkerd mesh scope. One Instance serves one Organization (a city, a utility, a company): one configuration repository, one Keycloak subtree, one gateway org domain (PF-01). A neighbouring town or a utility that wants its own configuration runs its own instance, and the two share data through Endpoints under policy, the same way any two twins do.
+The physical Kubernetes deployment boundary running on a single domain. An Instance maps directly to a dedicated Keycloak realm and Linkerd mesh scope. One Instance serves one or more Organizations (a city, a utility, a company) from one configuration repository, one realm and one gateway org domain; each Organization has its own Keycloak group subtree, its own administrators and its own CKAN organisation, and exactly one of them is the installation Organization that owns what the Instance has once (PF-01, PF-121, [ADR-N-058](../Decisions/adr-n-058-several-organizations-per-installation.md)). A town that wants its own configuration repository or domain still runs its own instance, and the two share data through Endpoints under policy, the same way any two twins do.
 
 ### Organization
 
-The primary organizational boundary (e.g. `helsingin-kaupunki`). It owns user accounts, organizational groups, global role templates, and exactly one Git repository (the Org Repository) hosted in Gitea.
+The primary organizational boundary (e.g. `helsingin-kaupunki`). It owns user accounts, organizational groups and its projects; its manifest lives at `organizations/{name}.yaml` of the Org Repository in Gitea, which the Organizations of an Instance share. A Project belongs to the Organization its `spec.organizationRef` names, and a binding scoped to an Organization grants on that Organization and its projects only (PF-122, PF-123).
 
 ### Project
 
@@ -474,6 +474,37 @@ spec:
   temporalQ: timerel=after;timeAt=P-1D
   validity: { from: '2026-09-01T00:00:00Z', to: '2027-09-01T00:00:00Z' }
 ```
+
+A Policy may hold several rules instead of the one above ([ADR-N-057](../Decisions/adr-n-057-policy-rules-policy-refs-authzen.md),
+T-5036). `rules[]` lists them; each rule carries `effect` (default `permission`), `assignee`, `operations`,
+`actions`, `information` and the residual constraints `q`, `scopeQ`, `geoQ` and `temporalQ`, while `assigner`,
+`contextSpaceRef` and `validity` stay on the Policy and hold for every rule. The public reads every kiosk and one
+service account updates one of them:
+
+```yaml
+spec:
+  contextSpaceRef: { kind: ContextSpace, name: kiosks }
+  assigner: did:web:bbsk.sk
+  rules:
+    - assignee: { kind: role, id: public }
+      operations: [retrieveOps]
+    - assignee: { kind: serviceAccount, id: kiosk-editor }
+      operations: [updateAttrs]
+      information:
+        - entities: [{ type: Kiosk, id: "urn:ngsi-ld:Kiosk:bbsk.sk:kiosks:hlavne-namestie" }]
+```
+
+- The single-rule shape stays valid and means a `rules[]` of one. A Policy that sets `rules` and any rule
+  member beside it, or sets an empty `rules[]`, is refused when the manifest is validated, and the gateway
+  and the Portal leave such a Policy out, as they leave out a manifest they cannot read.
+- Each rule is its own grant: deny by default holds per rule, and a prohibition rule wins over every
+  permission of every Policy the Endpoint binds (GW4). `jc-core`'s `PolicySpec::expand` is the one accessor
+  the gateway, the `jcctl validate` lint and the Portal's view compiler read.
+- Rule `n`, counted from 1, is named `{policy}#{n}`: `access/simulate` names the rule that decided (EP-103),
+  and the lint of PL-111 names the write rule no Endpoint binds. A `policyRef`, or each entry of `policyRefs`, names a Policy and binds
+  every rule of it.
+- The ODRL rendering of `…/access` holds one `permission[]` entry per permission rule and one
+  `prohibition[]` entry per prohibition rule of the same `Set`, with `conflict: prohibit`.
 
 `operations` takes the CIM 009 Table 4.20-1 operation names, and the five **named operation groups**
 of Table 4.20-2 beside them (R8, GW34). A group is a name for the table's own list and nothing more:

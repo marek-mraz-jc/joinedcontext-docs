@@ -33,6 +33,7 @@ A **Core** component makes up a working installation and is in the shipped `comp
 | **observability** | Core | OpenTelemetry Collector | yes | Accepts OTLP, drops what is not on the allow-list, forwards the rest to the Portal's Activity stream |
 | **audit-logging** | Core | Rust (Vector) | yes | Node collector shipping the audit stream of the gateway, Keycloak and the forge to object-locked storage, 90 days (OPS-42) |
 | **sandbox-reaper** | Core | CronJob (kubectl) | yes | Deletes sandbox namespaces past their TTL, 14 day ceiling (OPS-44, PF-19) |
+| **prometheus** | Core | Go (kube-prometheus-stack) | yes | The Prometheus Operator, Prometheus with 31 days of samples, Alertmanager (no receiver outside the cluster), kube-state-metrics and node-exporter. On with `global.metrics.enabled`; before every component whose chart renders a monitor, because its release installs the CRDs (OPS-16, T-5154) |
 | **monitoring** | Core | Prometheus Operator | yes | No workload: one ServiceMonitor per component that exports metrics, and the edge PrometheusRule. Last in the list, because it scrapes the ones above it (OPS-16, TS-22) |
 | **ckan** | Add-on | Python | no | The open-data catalogue on `opendata.<domain>`, with DCAT-AP publication (EP-62…EP-67) |
 | **grafana** | Add-on | Go | no | Infrastructure observability and public data dashboards over Endpoint STA representations |
