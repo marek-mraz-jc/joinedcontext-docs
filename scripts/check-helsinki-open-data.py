@@ -7,7 +7,7 @@
 `check` needs no network. It fails when the matrix table does not hold exactly one row per
 snapshot dataset, names a dataset the snapshot does not hold, has a decision outside
 integrate/statistics/skip, an integrate or statistics row without a batch task and a model, a
-batch outside T-5253..T-5259, a score outside -1..3 (a skip has none), or a skip that section 7 does not list with its reason. When the
+batch outside T-5253..T-5259 and their splits T-5278, T-5378, a score outside -1..3 (a skip has none), or a skip that section 7 does not list with its reason. When the
 board is mounted (TASKS_DIR, default /workspace/tasks) every batch id must also be a task file
 there; CI has no board and skips that part.
 """
@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parent.parent
 PAGE = ROOT / "Research/helsinki-open-data.md"
 SNAPSHOT = ROOT / "Research/data/helsinki-hri-snapshot-2026-10-22.tsv"
 DECISIONS = {"integrate", "statistics", "skip"}
-BATCHES = {f"T-{n}" for n in range(5253, 5260)}
+BATCHES = {f"T-{n}" for n in range(5253, 5260)} | {"T-5278", "T-5378"}
 ROW = re.compile(r"^\| \d+ \| \[`([^`]+)`\]")
 SKIP_ITEM = re.compile(r"^- `([^`]+)`: (.+)$")
 
@@ -52,7 +52,13 @@ def board_ids(tasks_dir: Path) -> set[str] | None:
     return {"-".join(f.name.split("-")[:2]) for f in files}
 
 
-def problems(text: str, snapshot: set[str], board: set[str] | None) -> list[str]:
+def problems(
+    text: str,
+    snapshot: set[str],
+    board: set[str] | None,
+    batches: set[str] = BATCHES,
+    source: str = "HRI",
+) -> list[str]:
     rows, skipped = parse(text)
     found, seen = [], set()
     for r in rows:
@@ -65,7 +71,7 @@ def problems(text: str, snapshot: set[str], board: set[str] | None) -> list[str]
             found.append(f"{name}: listed twice")
         seen.add(name)
         if name not in snapshot:
-            found.append(f"{name}: not in the HRI snapshot")
+            found.append(f"{name}: not in the {source} snapshot")
         if decision not in DECISIONS:
             found.append(
                 f"{name}: decision {decision!r} is not integrate, statistics or skip"
@@ -78,8 +84,10 @@ def problems(text: str, snapshot: set[str], board: set[str] | None) -> list[str]
                     f"{name}: skipped but not listed with a reason in section 7"
                 )
         else:
-            if batch not in BATCHES:
-                found.append(f"{name}: batch {batch!r} is not one of T-5253..T-5259")
+            if batch not in batches:
+                found.append(
+                    f"{name}: batch {batch!r} is not one of {', '.join(sorted(batches))}"
+                )
             elif board is not None and batch not in board:
                 found.append(f"{name}: batch {batch} is not a task on the board")
             if not re.fullmatch(r"-?[0-3]", score):
@@ -133,9 +141,10 @@ def selftest() -> None:
         )
     )
     assert any(
-        "T-5253..T-5259" in p
+        "T-5259, T-5278, T-5378" in p
         for p in problems(good.replace("T-5253", "T-9999"), {"a", "b"}, None)
     )
+    assert problems(good.replace("T-5253", "T-5378"), {"a", "b"}, None) == []
     assert any(
         "decision" in p
         for p in problems(good.replace("| integrate |", "| maybe |"), {"a", "b"}, None)

@@ -1061,9 +1061,11 @@ spec:
 | `URL` | §3.8.4.6 | optional | `url` | `url` |
 | `CATEGORIES` | §3.8.1.2 | optional | | |
 | `STATUS` | §3.8.1.11 | optional | | `eventStatus`, mapped |
-| `ORGANIZER` | §3.8.4.3 | optional | | |
+| `ORGANIZER` | §3.8.4.3 | optional | `organizer` | `organizer` |
 | `LAST-MODIFIED` | §3.8.7.3 | optional | | |
 | `CLASS` | §3.8.1.3 | optional, `PUBLIC` only | | |
+
+`ORGANIZER` takes a uri or an e-mail address, or an object with a `name` and an `email` or a uri `url` (the Event model's `organizer`): the object writes `ORGANIZER;CN="<name>":<address>`, the address taken from `email` (as `mailto:`), else `url`, the name quoted with RFC 6868 caret escapes (`^'` for a quote, `^n` for a newline, `^^` for a caret). An organizer without an `email` or `url` writes no `ORGANIZER`, as RFC 5545 requires a cal-address there; the event's own `url` never stands in for it.
 
 `UID` and `DTSTAMP` are not mappable: the entity id is the stable identity a calendar client keys on, and `DTSTAMP` comes from the record's own modification. It is the mapped `LAST-MODIFIED`, else the newest `modifiedAt` of the attributes the mapping reads, else the entity's. A nightly re-ingest that rewrites the same values from a source with its own modification date therefore leaves each event byte for byte the same. The `schema-org` preset maps `eventStatus` with `EventScheduled`, `EventRescheduled` and `EventMovedOnline` to `CONFIRMED`, `EventPostponed` to `TENTATIVE`, `EventCancelled` to `CANCELLED`, default `CONFIRMED`.
 
