@@ -501,7 +501,7 @@ spec:
   permission of every Policy the Endpoint binds (GW4). `jc-core`'s `PolicySpec::expand` is the one accessor
   the gateway, the `jcctl validate` lint and the Portal's view compiler read.
 - Rule `n`, counted from 1, is named `{policy}#{n}`: `access/simulate` names the rule that decided (EP-103),
-  and the lint of PL-111 names the write rule no Endpoint binds. A `policyRef` names the Policy and binds
+  and the lint of PL-111 names the write rule no Endpoint binds. A `policyRef`, or each entry of `policyRefs`, names a Policy and binds
   every rule of it.
 - The ODRL rendering of `…/access` holds one `permission[]` entry per permission rule and one
   `prohibition[]` entry per prohibition rule of the same `Set`, with `conflict: prohibit`.

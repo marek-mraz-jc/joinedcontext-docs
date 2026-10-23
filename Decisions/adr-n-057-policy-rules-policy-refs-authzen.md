@@ -101,6 +101,7 @@ The k6 script runs against dev at 1, 10 and 50 concurrent clients, never the ful
 ## 8. Requirements
 
 - **EP-14**, **GW4**, **GW5**, **GW8**: binding and conflict, unchanged in meaning.
+- **EP-117**: the shape of every `policyRefs` entry, and the refusal of both fields or an empty list.
 - **R51**, **R52**, **EP-06**, **EP-103**: the AuthZEN and ODRL shapes and their parity.
 - **PL-19**, **PL-20**: the derived write Policy the lint follows.
 - **PL-111**: the lint of decision 5.
