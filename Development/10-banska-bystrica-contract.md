@@ -114,14 +114,15 @@ to the indicator space at that moment.
 
 A `KeyPerformanceIndicator` is one number for one window with the provenance that makes it
 auditable (PF-54, PF-55). The platform publishes the schema, `schemas/kinds/KeyPerformanceIndicator.json`,
-it closes the object (`additionalProperties: false`), and it requires every attribute below. This
-contract adds nothing to it.
+it closes the object (`additionalProperties: false`), and it requires every attribute below marked
+mandatory. This contract adds nothing to it.
 
 | attribute | NGSI-LD form | type and unit | mandatory |
 |---|---|---|---|
 | `id` | the URN of section 3 | string | yes |
 | `type` | `KeyPerformanceIndicator` | string | yes |
 | `name` | Property | string, equal to the `{localId}` | yes |
+| `title` | LanguageProperty | the human name, `sk` and `en`, from the indicator's Slovak and English rows of Development/11 | no |
 | `currentValue` | Property | number or string, `unitCode` a UN/CEFACT common code, `observedAt` RFC 3339 | yes |
 | `calculationPeriod` | Property | `{ start, end }`, RFC 3339 instants | yes |
 | `calculationFormula` | Property | string, how the value is computed | yes |
