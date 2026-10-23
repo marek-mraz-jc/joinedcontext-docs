@@ -70,12 +70,12 @@ The owner asked on 2026-10-21 that these Endpoints stay fast. On dev from the sw
 
 | Measure | Budget |
 |---|---|
-| PDP decision in process, 50 Policies of 5 rules on one space | p99 < 1 ms (criterion bench in ci-full, fails on a 20 % regression) |
+| PDP decision in process, 50 Policies of 5 rules on one space | p99 < 1 ms (bench `pdp_decision` in ci-full, fails on a p50 20 % above the last main run's) |
 | `…/access`, server time | p95 < 20 ms |
 | `…/access/v1/evaluations` with 100 items, server time | p95 < 30 ms |
 | an NGSI-LD or OGC read through a Policy with `idPattern`, `q` and `geoQ` | within 10 % of the same read without residual constraints |
 
-The k6 script runs against dev at 1, 10 and 50 concurrent clients, never the full ETS, and against production only inside the night window of T-4877, read-only. A read over 200 ms p95 becomes its own task.
+The bench gates the p50 for regressions because a shared runner's p99 swings by about 20 % between two runs of one commit while the p50 moves by about 3 %; it needs no criterion dependency. Each answer's `Server-Timing` splits the gateway's decision time from the broker's (API/00 section 3). The k6 script (`tests/k6/policy-budgets.js`) runs against dev at 1, 10 and 50 concurrent clients, never the full ETS, and against production only inside the night window of T-4877, read-only. A read over 200 ms p95 becomes its own task.
 
 ## 5. Security
 
