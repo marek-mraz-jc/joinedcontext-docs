@@ -25,6 +25,7 @@ The enforcement point in front of every broker surface (`context-gateway`).
 | Variable | Default | Secret | What it is |
 |---|---|---|---|
 | `JC_ENVIRONMENT` | — | no | The overlay `JC_ENVIRONMENT` names, as `validate` and `plan` read it (CC-73). |
+| `JC_GATEWAY_ACTIVITY_URL` | — | no | The OpenTelemetry Collector's OTLP/HTTP logs intake (`JC_GATEWAY_ACTIVITY_URL`, e.g. `http://observability-collector.jc:4318/v1/logs`); absent writes no MCP tool call to the projects' Activity (T-5322). |
 | `JC_GATEWAY_ASSEMBLY_DIR` | `/tmp/jc-assembly` | no | Where a layout 2 organization is assembled (`JC_GATEWAY_ASSEMBLY_DIR`, default `/tmp/jc-assembly`), a scratch directory the pod owns. |
 | `JC_GATEWAY_ASSISTANT_URL` | — | no | `jc-assistant`, scheme and authority, for `search_documents` (`JC_GATEWAY_ASSISTANT_URL`, e.g. `http://jc-assistant.assistant:8080`, EP-133); absent offers the tool nowhere. |
 | `JC_GATEWAY_BIND` | `0.0.0.0:8080` | no | The address to listen on (`JC_GATEWAY_BIND`, default `0.0.0.0:8080`). |
