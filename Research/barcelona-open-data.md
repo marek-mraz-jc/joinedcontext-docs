@@ -759,6 +759,52 @@ statistics in T-5266 (inspections and results per district, activity and quarter
 an inspection with its date, neighbourhood, activity, establishment code and result, but no
 address or point to place an entity.
 
+### 6.4 T-5265 build state (2026-10-23)
+
+The Guia BCN register publishes each facility once under a `register_id` and again in thematic
+extracts. A probe of 2026-10-23 compared the `register_id` set of every T-5265 row's DataStore
+resource with the 23 packages the `equipaments` pipeline reads; a row whose ids are all there is
+covered by that pipeline (one PointOfInterest per `register_id`) and needs no pipeline of its own.
+
+Built, score 3:
+
+- Events (`agenda` pipeline, Event): `agenda-diaria`, `agenda-cultural`, `agenda-activitats-esportives`.
+- Read by the `equipaments` pipeline (PointOfInterest): `equipament-cultura-i-lleure`,
+  `equipament-educacio`, `equipament-esports`, `equipament-serveis-socials`,
+  `equipament-transports-i-serveis-relacionats`, `allotjaments-hotels`, `sanitat-farmacies`,
+  `sanitat-hospitals-atencio-primaria`, `lavabos-publics`, `dutxes-platges`,
+  `punts-informacio-turistica`, `xarxa-refugis-climatics`.
+- Covered, every `register_id` in the packages above: `aparcaments-bcn` (555 of 555),
+  `parades-de-taxi` (293), `zones-carrega-descarrega` (2,759), `comissaries-policia` (28),
+  `culturailleure-bibliotequesimuseus` (299), `culturailleure-cinemesteatresauditoris` (187),
+  `culturailleure-parcsjardins` (358), `educacio-ensenyament-infantil` (579),
+  `educacio-ensenyament-reglat` (813), `esports-instal-lacions-esportives` (1,254),
+  `mediambient-puntsverdsbarri` (27), `mediambient-puntsverdsmobils` (100), `punts-verds` (7),
+  `mercats-fires-carrer` (44), `mercats-municipals` (43), `np-quioscs-tramits` (21), and the five
+  `serveissocials-*` rows (150, 39, 22, 8, 227).
+- Covered in part, the rest stale at the source: `benzineres` (48 of 61; package unchanged since
+  2021-06, the live stations are in the transport family), `np-piscines` (126 of 132; unchanged
+  since 2022-01).
+
+Not built, score 3, with the reason:
+
+- `equipament-sanitat`: unchanged since 2024-01-02 and without `geo_epgs_4326_lat/lon`; its live
+  extracts `sanitat-farmacies` and `sanitat-hospitals-atencio-primaria` are built.
+- `habitatges-us-turistic` (TouristRental): own layout with floor and door; T-5417 builds it at
+  building level.
+- `equipaments-culturals-icub`, `culturailleure-espaisinfantils`, `np-platges` (Beach): own
+  layouts; T-5418.
+
+Score 2: 38 of 49 PointOfInterest rows are covered by the register in full or in part (among them
+`administracio-*`, `consolats-bcn`, `llocs-culte`, `esports-equip`, `esports-individuals`,
+`culturailleure-espaismusicacopes`, `culturailleure-espaisparticipaciociutadana`,
+`educacio-ensenyament-no-reglat`, `lloguer-de-vehicles`, `aparcaments-servei-bicis`). The live
+ones outside it (`allotjaments-pensions`, `allotjaments-altres`, `punts-wifi`,
+`np-espais-gimnastica`, `patis-escolars`, `bancs-del-temps-bcn`) and the rows of other models
+(`cens-locals-planta-baixa-act-economica`, `iris`, `llista-exposicions-temporals`, score 1
+`calendari-festes-laborals`, `fitxer_entitats`, `terrasses-comercos-vigents`) are T-5419.
+`equipament-associacions` stays out: 8,165 associations, many at a member's home address.
+
 ## 7. Nothing left: what is skipped and why
 
 - `accions-formatives-adrecades-al-personal`: internal personnel administration; compatibilitats names individual employees.

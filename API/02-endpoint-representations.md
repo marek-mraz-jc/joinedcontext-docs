@@ -1047,9 +1047,11 @@ No `representations.ical` written means the `sdm-event` preset over type `Event`
 | `URL` | §3.8.4.6 | optional | `url` | `url` |
 | `CATEGORIES` | §3.8.1.2 | optional | | |
 | `STATUS` | §3.8.1.11 | optional | | `eventStatus`, mapped |
-| `ORGANIZER` | §3.8.4.3 | optional | | |
+| `ORGANIZER` | §3.8.4.3 | optional | `organizer` | `organizer` |
 | `LAST-MODIFIED` | §3.8.7.3 | optional | | |
 | `CLASS` | §3.8.1.3 | optional, `PUBLIC` only | | |
+
+`ORGANIZER` takes a uri, or an object with a uri `url` and a `name` (the Event model's `organizer`): the object writes `ORGANIZER;CN="<name>":<url>`, the name quoted with RFC 6868 caret escapes (`^'` for a quote, `^n` for a newline, `^^` for a caret). An organizer without a `url` writes no `ORGANIZER`, as RFC 5545 requires a cal-address there; the event's own `url` never stands in for it.
 
 `UID` and `DTSTAMP` are not mappable: the entity id is the stable identity a calendar client keys on, and `modifiedAt` is set by the broker. The `schema-org` preset maps `eventStatus` with `EventScheduled`, `EventRescheduled` and `EventMovedOnline` to `CONFIRMED`, `EventPostponed` to `TENTATIVE`, `EventCancelled` to `CANCELLED`, default `CONFIRMED`.
 

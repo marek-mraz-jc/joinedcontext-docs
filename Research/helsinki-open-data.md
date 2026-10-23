@@ -11,7 +11,7 @@ in which batch, as which Smart Data Model, and which it leaves out with the reas
 [Open data integration rules](../Development/12-open-data-integration.md) and has the shape of
 [Open data sources of Žilina](zilina-open-data-sources.md). The owner order of 2026-10-22 18:00Z
 asks for every usable dataset, every format that makes sense, and models as close to Smart Data
-Models as possible; task T-5252 built this page, tasks T-5253 to T-5259 build the pipelines.
+Models as possible; task T-5252 built this page, tasks T-5253 to T-5259 and their splits T-5278 and T-5378 build the pipelines.
 
 ## 1. How the matrix was made
 
@@ -54,13 +54,15 @@ still serve as a basemap link in the catalogue.
 |---|---|---|
 | T-5253 | parking and traffic | 12 |
 | T-5254 | HSL network and maintenance | 13 |
-| T-5255 | environment and energy | 16 |
+| T-5255 | environment: street cleaning air pilot | 1 |
+| T-5278 | heat vulnerability, property energy | 2 |
+| T-5378 | environment layers of kartta.hel.fi, leftovers | 11 |
 | T-5256 | buildings, addresses, land | 24 |
 | T-5257 | services and culture | 15 |
 | T-5258 | statistics as KeyPerformanceIndicator | 195 |
 | T-5259 | already seeded, brought to SDM | 9 |
-| - | skip | 112 |
-| total | integrate 89, statistics 195, skip 112 | 396 |
+| - | skip | 114 |
+| total | integrate 87, statistics 195, skip 114 | 396 |
 
 ## 3. Smart Data Models pinned
 
@@ -147,14 +149,16 @@ rest listed. A skip row has no score.
 |---|---|---|
 | T-5253 | 12 | 0 |
 | T-5254 | 13 | 0 |
-| T-5255 | 6 | 10 |
+| T-5255 | 1 | 0 |
+| T-5278 | 1 | 1 |
+| T-5378 | 3 | 8 |
 | T-5256 | 16 | 8 |
 | T-5257 | 14 | 1 |
 | T-5258 | 157 | 38 |
 | T-5259 | 9 | 0 |
 
 The owner order of 18:30Z sets a floor of 100 live Smart Data Models datasets per city (counted by
-T-5275). Helsinki has 70 useful entity datasets and 157 useful statistics series, so
+T-5275). Helsinki has 69 useful entity datasets and 157 useful statistics series, so
 the floor is reached from useful rows alone and no gap remains; the score-0 rows follow once the
 useful ones are live (owner 18:40Z: 100 is a floor).
 
@@ -192,21 +196,21 @@ name.
 | 24 | [`matkustaja-alusten-aikataulu-liikennointi-ja-sijaintitietoja-helsingin-ja-tallinnan-valilla`](https://hri.fi/data/en_GB/dataset/matkustaja-alusten-aikataulu-liikennointi-ja-sijaintitietoja-helsingin-ja-tallinnan-valilla) | Schedule and position data on passenger ferries trafficking between Helsinki and Tallinn | statistics | integrate | T-5254 | `Vehicle` (Transportation) | ngsi-ld, temporal, geojson | CSV | not stated | CC-BY-4.0 | 200 | moved from statistics: 2018-2019 ferry tracks as one history import | 1 |
 | 25 | [`vantaan-kaupunkipyoraasemat`](https://hri.fi/data/en_GB/dataset/vantaan-kaupunkipyoraasemat) | City bicycle stations of Vantaa | entities | integrate | T-5254 | `BikeHireDockingStation` (Transportation) | ngsi-ld, geojson, ogc-features, csv | CSV/GEOJSON/GEOSERVICE/KML/SHP | yearly | CC-BY-4.0 | 200 | Vantaa stations beside the HSL bikes seed, same model | 2 |
 | 26 | [`datankeruukokeilu-helsingissa-ilmanlaatu-katujen-siivouksen-aikana`](https://hri.fi/data/en_GB/dataset/datankeruukokeilu-helsingissa-ilmanlaatu-katujen-siivouksen-aikana) | Data collection pilot in Helsinki: Air quality during street cleaning | entities | integrate | T-5255 | `AirQualityObserved` (Environment) | ngsi-ld, temporal, geojson, ogc-features, csv | JSON | ended | CC-BY-4.0 | 200 | pilot series, one import | 1 |
-| 27 | [`helsingin-avouomat`](https://hri.fi/data/en_GB/dataset/helsingin-avouomat) | City of Helsinki riverbeds, streams and ditches | entities | integrate | T-5255 | custom `Watercourse`; closest SDM `WaterObserved` | ngsi-ld, geojson, ogc-features | WFS/WMS | not stated | CC-BY-4.0 | host timeout | streams and ditches as lines | 0 |
-| 28 | [`helsingin-ilmanlaadun-mittaukset-raitiovaunuihin-asennetuilla-mittalaitteilla`](https://hri.fi/data/en_GB/dataset/helsingin-ilmanlaadun-mittaukset-raitiovaunuihin-asennetuilla-mittalaitteilla) | Air quality measurements which are collected using devices installed on trams from Helsinki | statistics | integrate | T-5255 | `AirQualityObserved` (Environment) | ngsi-ld, temporal, geojson, csv | CSV | ended | CC-BY-4.0 | 200 | moved from statistics: summer 2019 tram-mounted sensors, one import | 1 |
-| 29 | [`helsingin-kaukolammon-tuotantotarve`](https://hri.fi/data/en_GB/dataset/helsingin-kaukolammon-tuotantotarve) | District heat production in Helsinki | statistics | integrate | T-5255 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | CSV | yearly | CC-BY-4.0 | 200 | moved from statistics: hourly district heat demand (Helen) | 0 |
-| 30 | [`helsingin-kaupungin-meluselvitys-2017`](https://hri.fi/data/en_GB/dataset/helsingin-kaupungin-meluselvitys-2017) | Traffic noise zones in Helsinki | entities | integrate | T-5255 | `NoisePollution` (Environment) | ngsi-ld, geojson, ogc-features | WFS/WMS | not stated | CC-BY-4.0 | host timeout | modelled noise zones (Lden bands) | 0 |
-| 31 | [`helsingin-kaupungin-palvelukiinteistojen-energiankulutustietoja`](https://hri.fi/data/en_GB/dataset/helsingin-kaupungin-palvelukiinteistojen-energiankulutustietoja) | Energy consumption data of city of Helsinki’s utility and service properties | entities | integrate | T-5255 | custom `BuildingEnergyConsumption`; closest SDM `ConsumptionPoint` | ngsi-ld, temporal, csv | JSON | daily | CC-BY-4.0 | 200 | Nuuka API, daily per property; refers to the `Building` | 2 |
-| 32 | [`helsingin-kaupungin-puurekisteri`](https://hri.fi/data/en_GB/dataset/helsingin-kaupungin-puurekisteri) | Urban tree database of the City of Helsinki | entities | integrate | T-5255 | custom `Tree`; closest SDM `FlowerBed` | ngsi-ld, geojson, ogc-features, csv | WFS/WMS | daily | CC-BY-4.0 | host timeout | one entity per tree; ParksAndGardens has no tree class at the pin | 1 |
-| 33 | [`helsingin-lampohaavoittuvuusindeksi`](https://hri.fi/data/en_GB/dataset/helsingin-lampohaavoittuvuusindeksi) | Urban Heat Vulnerability Index of Helsinki | entities | integrate | T-5255 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, geojson, ogc-features, csv | CSV/GEOJSON/GEOTIFF/GPKG/SHP | not stated | CC-BY-4.0 | 200 | one indicator per grid cell | 0 |
-| 34 | [`helsingin-luontotietojarjestelma`](https://hri.fi/data/en_GB/dataset/helsingin-luontotietojarjestelma) | Helsinki's nature information system | entities | integrate | T-5255 | `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features | WFS/WMS | not stated | CC-BY-4.0 | host timeout | nature sites and habitats | 0 |
-| 35 | [`helsingin-maa-ja-vesialueet`](https://hri.fi/data/en_GB/dataset/helsingin-maa-ja-vesialueet) | Land and water areas of Helsinki | entities | integrate | T-5255 | custom `LandCoverArea`; closest SDM `GreenspaceRecord` | ngsi-ld, geojson, ogc-features | WFS/WMS | continuous | CC-BY-4.0 | host timeout | heavy geometry (package note): page the WFS | 1 |
-| 36 | [`helsingin-tavoitteellinen-viher-ja-virkistysverkostokartta`](https://hri.fi/data/en_GB/dataset/helsingin-tavoitteellinen-viher-ja-virkistysverkostokartta) | Helsinki Open Space Plan (VISTRA) | entities | integrate | T-5255 | `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features | WFS/WMS | not stated | CC-BY-4.0 | host timeout | VISTRA open space plan | 0 |
-| 37 | [`helsingin-teollisuusmeluvyohykkeet`](https://hri.fi/data/en_GB/dataset/helsingin-teollisuusmeluvyohykkeet) | Industry noise zones in Helsinki | entities | integrate | T-5255 | `NoisePollution` (Environment) | ngsi-ld, geojson, ogc-features | WFS | not stated | CC-BY-4.0 | host timeout | industry noise zones | 0 |
-| 38 | [`helsingin-ulkoliikuntapaikkojen-laitteiden-kayttoasteet`](https://hri.fi/data/en_GB/dataset/helsingin-ulkoliikuntapaikkojen-laitteiden-kayttoasteet) | Utilization rates of outdoor gyms in Helsinki | entities | integrate | T-5255 | `DeviceMeasurement` (Device) | ngsi-ld, temporal, csv | JSON | ended | CC-BY-4.0 | 200 | ended 3/2025: one history import per gym device | 0 |
-| 39 | [`iot-meludataa-helsingista`](https://hri.fi/data/en_GB/dataset/iot-meludataa-helsingista) | Noise sensor data from Helsinki | statistics | integrate | T-5255 | `NoiseLevelObserved` (Environment) | ngsi-ld, temporal, geojson, ogc-features, csv | CSV | daily | CC-BY-4.0 | 200 | moved from statistics: CESVA sensor series | 2 |
-| 40 | [`purkupisteet-ja-osavaluma-alueet`](https://hri.fi/data/en_GB/dataset/purkupisteet-ja-osavaluma-alueet) | Purkupisteet ja osavaluma-alueet | entities | integrate | T-5255 | custom `StormwaterCatchment`; closest SDM `WasteWaterJunction` | ngsi-ld, geojson, ogc-features | WFS/WMS | not stated | CC-BY-4.0 | host timeout | discharge points and sub-catchments | 0 |
-| 41 | [`turvalliset-rakentamiskorkeudet-ja-suurin-arvioitu-merkitseva-aallonkorkeus-helsingissa`](https://hri.fi/data/en_GB/dataset/turvalliset-rakentamiskorkeudet-ja-suurin-arvioitu-merkitseva-aallonkorkeus-helsingissa) | Safe heights for buildings and highest significant wave heights in Helsinki | entities | integrate | T-5255 | custom `FloodRiskArea`; closest SDM `FloodMonitoring` | ngsi-ld, geojson, ogc-features | WFS | not stated | CC-BY-4.0 | host timeout | safe building heights and wave heights | 0 |
+| 27 | [`helsingin-avouomat`](https://hri.fi/data/en_GB/dataset/helsingin-avouomat) | City of Helsinki riverbeds, streams and ditches | entities | integrate | T-5378 | custom `Watercourse`; closest SDM `WaterObserved` | ngsi-ld, geojson, ogc-features | WFS/WMS | not stated | CC-BY-4.0 | host timeout, re-checked 2026-10-23 | streams and ditches as lines | 0 |
+| 28 | [`helsingin-ilmanlaadun-mittaukset-raitiovaunuihin-asennetuilla-mittalaitteilla`](https://hri.fi/data/en_GB/dataset/helsingin-ilmanlaadun-mittaukset-raitiovaunuihin-asennetuilla-mittalaitteilla) | Air quality measurements which are collected using devices installed on trams from Helsinki | statistics | integrate | T-5378 | `AirQualityObserved` (Environment) | ngsi-ld, temporal, geojson, csv | CSV | ended | CC-BY-4.0 | 200 | moved from statistics: summer 2019 tram-mounted sensors; deferred to T-5378: seven monthly gzip files of up to 27 MB (sporametri-movingsites-data0419.csv.gz), past what one Bento run holds in memory, so the import needs its own slicing | 1 |
+| 29 | [`helsingin-kaukolammon-tuotantotarve`](https://hri.fi/data/en_GB/dataset/helsingin-kaukolammon-tuotantotarve) | District heat production in Helsinki | statistics | integrate | T-5378 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | CSV | yearly | 200 (helen_2015_2024_v2.csv, 2.2 MB) | 200 | moved from statistics: hourly district heat demand (Helen); deferred to T-5378: the file ends on 2025-01-23 (88,217 hourly rows from 2015), a one-off history import with its own KPI period, not a weekly read | 0 |
+| 30 | [`helsingin-kaupungin-meluselvitys-2017`](https://hri.fi/data/en_GB/dataset/helsingin-kaupungin-meluselvitys-2017) | Traffic noise zones in Helsinki | entities | integrate | T-5378 | `NoisePollution` (Environment) | ngsi-ld, geojson, ogc-features | WFS/WMS | not stated | CC-BY-4.0 | host timeout, re-checked 2026-10-23 | modelled noise zones (Lden bands) | 0 |
+| 31 | [`helsingin-kaupungin-palvelukiinteistojen-energiankulutustietoja`](https://hri.fi/data/en_GB/dataset/helsingin-kaupungin-palvelukiinteistojen-energiankulutustietoja) | Energy consumption data of city of Helsinki’s utility and service properties | entities | integrate | T-5278 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | JSON | monthly | CC-BY-4.0 | 200 | built: Nuuka API Monthly/ListByProperty, one indicator per location and utility (electricity, heat kWh; water m3), the last complete month, history keeps every month; 1,050 indicators on 2026-10-22 | 2 |
+| 32 | [`helsingin-kaupungin-puurekisteri`](https://hri.fi/data/en_GB/dataset/helsingin-kaupungin-puurekisteri) | Urban tree database of the City of Helsinki | entities | integrate | T-5378 | custom `Tree`; closest SDM `FlowerBed` | ngsi-ld, geojson, ogc-features, csv | WFS/WMS | daily | CC-BY-4.0 | host timeout, re-checked 2026-10-23 | one entity per tree; ParksAndGardens has no tree class at the pin | 1 |
+| 33 | [`helsingin-lampohaavoittuvuusindeksi`](https://hri.fi/data/en_GB/dataset/helsingin-lampohaavoittuvuusindeksi) | Urban Heat Vulnerability Index of Helsinki | entities | integrate | T-5278 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, csv | CSV/GEOJSON/GEOTIFF/GPKG/SHP | not stated | CC-BY-4.0 | 200 | built: 6 indicators (Avg-UHVI, Avg-UHII, Avg-UHEI, Avg-UHAI, UHSI, HVP) per sub-district, 145 x 6 = 870, each linked to its AdministrativeArea | 0 |
+| 34 | [`helsingin-luontotietojarjestelma`](https://hri.fi/data/en_GB/dataset/helsingin-luontotietojarjestelma) | Helsinki's nature information system | entities | integrate | T-5378 | `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features | WFS/WMS | not stated | CC-BY-4.0 | host timeout, re-checked 2026-10-23 | nature sites and habitats | 0 |
+| 35 | [`helsingin-maa-ja-vesialueet`](https://hri.fi/data/en_GB/dataset/helsingin-maa-ja-vesialueet) | Land and water areas of Helsinki | entities | integrate | T-5378 | custom `LandCoverArea`; closest SDM `GreenspaceRecord` | ngsi-ld, geojson, ogc-features | WFS/WMS | continuous | CC-BY-4.0 | host timeout, re-checked 2026-10-23 | heavy geometry (package note): page the WFS | 1 |
+| 36 | [`helsingin-tavoitteellinen-viher-ja-virkistysverkostokartta`](https://hri.fi/data/en_GB/dataset/helsingin-tavoitteellinen-viher-ja-virkistysverkostokartta) | Helsinki Open Space Plan (VISTRA) | entities | integrate | T-5378 | `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features | WFS/WMS | not stated | CC-BY-4.0 | host timeout, re-checked 2026-10-23 | VISTRA open space plan | 0 |
+| 37 | [`helsingin-teollisuusmeluvyohykkeet`](https://hri.fi/data/en_GB/dataset/helsingin-teollisuusmeluvyohykkeet) | Industry noise zones in Helsinki | entities | integrate | T-5378 | `NoisePollution` (Environment) | ngsi-ld, geojson, ogc-features | WFS | not stated | CC-BY-4.0 | host timeout, re-checked 2026-10-23 | industry noise zones | 0 |
+| 38 | [`helsingin-ulkoliikuntapaikkojen-laitteiden-kayttoasteet`](https://hri.fi/data/en_GB/dataset/helsingin-ulkoliikuntapaikkojen-laitteiden-kayttoasteet) | Utilization rates of outdoor gyms in Helsinki | entities | skip | - | - | - | JSON | ended | CC-BY-4.0 | 200 | source stopped 2025-03-10 | - |
+| 39 | [`iot-meludataa-helsingista`](https://hri.fi/data/en_GB/dataset/iot-meludataa-helsingista) | Noise sensor data from Helsinki | statistics | skip | - | - | - | CSV | daily | CC-BY-4.0 | 404 | project end-of-life: the static files moved away | - |
+| 40 | [`purkupisteet-ja-osavaluma-alueet`](https://hri.fi/data/en_GB/dataset/purkupisteet-ja-osavaluma-alueet) | Purkupisteet ja osavaluma-alueet | entities | integrate | T-5378 | custom `StormwaterCatchment`; closest SDM `WasteWaterJunction` | ngsi-ld, geojson, ogc-features | WFS/WMS | not stated | CC-BY-4.0 | host timeout, re-checked 2026-10-23 | discharge points and sub-catchments | 0 |
+| 41 | [`turvalliset-rakentamiskorkeudet-ja-suurin-arvioitu-merkitseva-aallonkorkeus-helsingissa`](https://hri.fi/data/en_GB/dataset/turvalliset-rakentamiskorkeudet-ja-suurin-arvioitu-merkitseva-aallonkorkeus-helsingissa) | Safe heights for buildings and highest significant wave heights in Helsinki | entities | integrate | T-5378 | custom `FloodRiskArea`; closest SDM `FloodMonitoring` | ngsi-ld, geojson, ogc-features | WFS | not stated | CC-BY-4.0 | host timeout, re-checked 2026-10-23 | safe building heights and wave heights | 0 |
 | 42 | [`asemakaavoilla-suojellut-rakennukset-ja-alueet-helsingissa`](https://hri.fi/data/en_GB/dataset/asemakaavoilla-suojellut-rakennukset-ja-alueet-helsingissa) | Buildings and areas protected by detailed plans of the City of Helsinki | entities | integrate | T-5256 | `Building` (Building) | ngsi-ld, geojson, ogc-features | /WFS | yearly | CC-BY-4.0 | host timeout | protection class merged into the `Building` by building id; protected areas as LandUsePlanArea | 1 |
 | 43 | [`helsingin-asemakaavahakemistokartta-asemakaavahakemisto`](https://hri.fi/data/en_GB/dataset/helsingin-asemakaavahakemistokartta-asemakaavahakemisto) | Detailed plans index map of Helsinki | entities | integrate | T-5256 | custom `LandUsePlanArea`; closest SDM `RestrictedTrafficArea` | ngsi-ld, geojson, ogc-features | WFS/WMS | continuous | CC-BY-4.0 | host timeout | plan index | 0 |
 | 44 | [`helsingin-kaavayksikot`](https://hri.fi/data/en_GB/dataset/helsingin-kaavayksikot) | Plan units of the city of Helsinki | entities | integrate | T-5256 | custom `LandUsePlanArea`; closest SDM `RestrictedTrafficArea` | ngsi-ld, geojson, ogc-features | WFS | not stated | CC-BY-4.0 | host timeout | UrbanPlanning subject is empty at the pin | 0 |
@@ -625,6 +629,7 @@ name.
 - `helsingin-ruotsinkielinen-vtn-mukaan-piireitt-ja-osa-alueittain-2004-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
 - `helsingin-suomenkielinen-vtisivuotisikhmitt-sivilisyn-ja-sukupuolen-mukaan-2004-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
 - `helsingin-tuulivoimakysely-2015`: raw survey answers of one past questionnaire, not a city indicator.
+- `helsingin-ulkoliikuntapaikkojen-laitteiden-kayttoasteet`: source stopped 2025-03-10 (last reading of every gym device); a one-off history of a closed series, checked by T-5255.
 - `helsingin-ulkomaalaistaustainen-vaesto-sukupuolen-ja-taustamaan-mukaan-2017-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
 - `helsingin-vaesto-aidinkielen-ja-ian-mukaan-suurpiireittain-2004-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
 - `helsingin-vaesto-ian-1-v-ja-sukupuolen-mukaan-suurpiireittain-2004-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
@@ -654,6 +659,7 @@ name.
 - `hsl-n-reittioppaan-kohdetietokanta`: no longer updated (package note); service points come from the Service Map (T-5257).
 - `hsl-reittiopas-api`: routing query service; its data is the GTFS the seeds already read.
 - `hsln-lipunmyyntirajapinta`: ticket sales API: transactions, not open data.
+- `iot-meludataa-helsingista`: Forum Virium's noise project is end-of-life (README of ForumViriumHelsinki/OpenDataSamples/Noise); the HRI resource is a GitHub folder holding only a notebook, and its static files at iot.fvh.fi/downloads/noise/ answered 404 on 2026-10-23.
 - `kiva-keskusta-kavelijoille-kyselyn-vastaukset`: raw survey answers of one past questionnaire, not a city indicator.
 - `miehet--helsingin-koko-vt-ulkomaiden-kansalaiset-kansalaisuuden-ja-imukaan-suurpiireitt-2004-al`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
 - `miehet-helsingissa-ian-5-v-mukaan-piireittain-ja-osa-alueittain-2004-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
