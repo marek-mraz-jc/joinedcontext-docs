@@ -891,6 +891,30 @@ A model says which of its classes and slots hold personal data, the way it says 
 
 A class that marks personal data without `legalBasis`, `purpose` and `maxRetention` does not save. `keyedHash` uses the space's key, `spec.personalData.keyRef`, a `secretRef`; a model never holds a key.
 
+## 10. Where an event takes place (DM-141)
+
+The Slovak event stores (`slovensko-podujatia`, `bbsk-podujatia`) write one location shape, so a map, a filter by town, an iCalendar `GEO` line, an OGC geometry and an assistant's "events in Detva" read the same attributes in both spaces (T-5364). Helsinki's Linked Events store keeps only events the register places (its own point, `location`) and writes neither `locationPrecision` nor `areaServed` yet; another city's event store takes this shape when it is built.
+
+| Attribute | Kind | Value |
+|---|---|---|
+| `location` | GeoProperty | a GeoJSON Point in WGS 84; an event without one is not drawn on a map |
+| `locationPrecision` | Property | how close the point is to the venue: `source` (the publisher's point), `building` (the venue's building), `office` (the organizer's or the town's office standing in for an unplaced venue), `centre` (the town's centre) |
+| `venue` | Property | the place's name as the venue table or the source writes it |
+| `refPointOfInterest` | Relationship | the venue as a `PointOfInterest` entity of the same space, one per real venue, shared by every event held there |
+| `address` | Property | `streetAddress`, `postalCode`, `addressLocality`, `addressRegion`, `addressCountry` |
+| `areaServed` | Property | the municipality's official name, on every event, the key a count or a filter per town uses |
+
+The point comes from the first step that has one, and `locationPrecision` names that step:
+
+1. the source's own coordinates (`source`);
+2. the venue table, a place checked by hand or by the national address register (`building`); the event then also links the venue's `PointOfInterest`;
+3. the organizer's own address, for an event that names no place or only its organizer (`office`);
+4. the municipality's office, else its centre (`office`, `centre`).
+
+The Register adries and, for reviewed name matches, Nominatim fill the Slovak venue table offline (`seeds/bbsk-events/geocode-venues.py`), at most one request a second, with timeouts and size caps; a pipeline never calls a geocoder. `locationPrecision` is how a reader tells an approximate point: `office` and `centre` stand for the municipality, never for the venue.
+
+A venue's `PointOfInterest` id is the OpenStreetMap object of its building when the table names one, else a hash of its town, its name and its point. Two table rows with the same name less than 50 m apart are one venue; two rows of one name 200 m apart stay two. A venue carries its own `name`, `location`, `address` and `areaServed`, and only what the source or the register publishes: an organizer's private address or phone is never stored.
+
 ## Related
 
 - [Architecture/17](17-artifact-store.md) — referenced above.
