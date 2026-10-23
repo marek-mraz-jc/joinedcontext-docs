@@ -889,7 +889,15 @@ A model says which of its classes and slots hold personal data, the way it says 
 | `ingest` | slot | `keep` (default), `drop`, `keyedHash` | the gateway, before a write reaches the broker |
 | `quantity` | slot | `perInterval` | the Portal, which then refuses `record: onChange` for the slot (DM-110) |
 
-A class that marks personal data without `legalBasis`, `purpose` and `maxRetention` does not save. `keyedHash` uses the space's key, `spec.personalData.keyRef`, a `secretRef`; a model never holds a key.
+A class that marks personal data without `legalBasis`, `purpose` and `maxRetention` does not save. `keyedHash` uses the space's key, `spec.personalData.keyRef`, a `secretRef`; a model never holds a key:
+
+```yaml
+spec:
+  personalData:
+    keyRef: { name: rides-hmac, key: key }   # a value of at least 32 bytes
+```
+
+At each sync the reconciler resolves every space's `keyRef` with the backend that resolves a pipeline's `secretRef` and writes the Opaque Secret `personal-data-keys` into the gateway's namespace (`JC_PORTAL_GATEWAY_NAMESPACE`), one key per space, named by the space's URN segment (`{project}-{name}` or `spec.urnSegment`). The gateway mounts it read-only at `JC_GATEWAY_PERSONAL_KEYS` and reads the file at each write that hashes, so a rotated key takes effect within the kubelet's sync period without a restart. A key that does not resolve or is shorter than 32 bytes is left out and logged by space and secret name, never by value; the gateway then refuses that space's hashed writes `503`. The Portal holds the same keys in memory and hashes a data subject with them (API/01, the data subject's rights): HMAC-SHA-256 over the subject's UTF-8 bytes, in lowercase hex.
 
 ## 10. Where an event takes place (DM-141)
 
