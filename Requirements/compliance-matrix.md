@@ -25,7 +25,7 @@ Generated 2026-10-22 from: `docs` 697d0dc, `conformance` 60ae0fc, `deployment` d
 | **AG** — Agents and MCP | 135 | 112 | 8 | 15 | 12 |
 | **AP** — Apps on demand | 173 | 143 | 11 | 19 | 9 |
 | **CC** — Configuration as code | 90 | 74 | 7 | 9 | 0 |
-| **DM** — Data models | 132 | 103 | 14 | 15 | 6 |
+| **DM** — Data models | 137 | 103 | 14 | 20 | 11 |
 | **DS** — Data space connector | 20 | 13 | 3 | 4 | 0 |
 | **EP** — Endpoints and parity | 151 | 130 | 10 | 11 | 10 |
 | **GW** — Gateway firewall | 35 | 25 | 3 | 7 | 2 |
@@ -41,7 +41,7 @@ Generated 2026-10-22 from: `docs` 697d0dc, `conformance` 60ae0fc, `deployment` d
 | **SP** — Context-space surface | 22 | 18 | 2 | 2 | 0 |
 | **TS** — Testing and quality | 26 | 16 | 5 | 5 | 0 |
 | **UI** — Portal and user interface | 97 | 72 | 14 | 11 | 5 |
-| **Total** | 1414 | 1057 | 127 | 230 | 63 |
+| **Total** | 1419 | 1057 | 127 | 235 | 68 |
 
 ## 3. Requirement to test
 
@@ -597,6 +597,11 @@ Generated 2026-10-22 from: `docs` 697d0dc, `conformance` 60ae0fc, `deployment` d
 | **DM-133** | [S] | tested | fast ci | portal `ui/tests/endpoint_data_view.test.tsx::DM-133: opens where the class's model says, for any type, and ignores what the endpoint does not answer` |
 | **DM-134** | [S] | tested | fast ci | portal `ui/tests/endpoint_data_view.test.tsx::DM-134: the presentation resolves from the model's annotations, then labels, then field-order.json, then the name` |
 | **DM-135** | [S] | tested | fast ci | portal `ui/tests/endpoint_data_view.test.tsx::builds the card from the model: class label, labels in table order, units, enum titles, hidden slots`, portal `ui/tests/endpoint_data_view.test.tsx::says a default filter in the reader's words`, portal `ui/tests/endpoint_data_view.test.tsx::shows the default filter as a chip; removing it widens the rows and the link, restore brings it back`, and 2 more |
+| **DM-136** | [S] | open |  |  |
+| **DM-137** | [S] | open |  |  |
+| **DM-138** | [S] | open |  |  |
+| **DM-139** | [S] | open |  |  |
+| **DM-140** | [S] | open |  |  |
 
 ### DS — Data space connector
 
