@@ -812,10 +812,10 @@ names the newest yearly CSV resource the DataStore holds, and one `datastore_sea
 census sections to barri, district and city (GROUPING SETS) in the source's database. Each value
 is one `KeyPerformanceIndicator` with `refArea` to the T-5264 AdministrativeArea; the newest period
 is `kpiValue` and its history keeps one row per period. Three public datasets read them by theme:
-population, housing, vehicles. The run on the real source of 2026-10-23 wrote 9,920 entities, each
-valid against the space's schema and the pinned Smart Data Model.
+population, housing, vehicles. Every entity of the run on the real source is valid against the space's schema and the pinned
+Smart Data Model.
 
-Built, 24 rows: `est-cadastre-finques-regim-propietat`, `est-cadastre-habitatges-any-const`, `est-cadastre-habitatges-superficie`, `est-vehicles-tipologia-parc-vehicles`, `est-vehicles-tipus-propietari`, `est_vehicles_evolucio_total`, `est_vehicles_propulsio`, `est_vehicles_servei`, `notaris_compravendes_trans_tip_us`, `notaris_compravendes_trans_tip_us_sup`, `pad_alt_mdbas`, `pad_bai_mdbas`, `pad_def_mdbas`, `pad_dom_mdbas_n-persones`, `pad_dom_mdbas_tipus-domicili`, `pad_emi_mdbas`, `pad_imm_mdbas`, `pad_mdbas`, `pad_mdbas_edat-q`, `pad_mdbas_lloc-naix_sexe`, `pad_mdbas_nacionalitat-g_sexe`, `pad_mdbas_niv-educa-esta_sexe`, `pad_mdbas_sexe`, `pad_nai_mdbas`.
+Built, 44 rows: `est-cadastre-carrecs-tipus-propietari`, `est-cadastre-edificacions-any-const`, `est-cadastre-edificacions-nombre-locals`, `est-cadastre-edificacions-superficie`, `est-cadastre-finques-regim-propietat`, `est-cadastre-finques-superficie`, `est-cadastre-habitatges-any-const`, `est-cadastre-habitatges-superficie`, `est-cadastre-habitatges-valor-cadastral`, `est-cadastre-locals-sup`, `est-cadastre-locals-valors-total-unitaris`, `est-vehicles-cilindrada-motos`, `est-vehicles-nacionalitat-propietari`, `est-vehicles-potencia-fiscal-turismes`, `est-vehicles-tipologia-parc-vehicles`, `est-vehicles-tipus-propietari`, `est_vehicles_evolucio_total`, `est_vehicles_propulsio`, `est_vehicles_servei`, `notaris_compravendes_trans_tip_us`, `notaris_compravendes_trans_tip_us_sup`, `pad_alt_mdbas`, `pad_bai_mdbas`, `pad_def_mdbas`, `pad_dom_mdbas_dones`, `pad_dom_mdbas_edat-0018`, `pad_dom_mdbas_edat-1864`, `pad_dom_mdbas_edat-6599`, `pad_dom_mdbas_homes`, `pad_dom_mdbas_n-persones`, `pad_dom_mdbas_nacionalitat`, `pad_dom_mdbas_tipus-domicili`, `pad_emi_mdbas`, `pad_emi_mdbas_nacionalitat-g`, `pad_imm_mdbas`, `pad_imm_mdbas_nacionalitat-g`, `pad_mdbas`, `pad_mdbas_edat-q`, `pad_mdbas_lloc-naix_sexe`, `pad_mdbas_nacionalitat-continent_sexe`, `pad_mdbas_nacionalitat-g_sexe`, `pad_mdbas_niv-educa-esta_sexe`, `pad_mdbas_sexe`, `pad_nai_mdbas`. The run on 2026-10-23 wrote 19,822 entities (17,048 counts, 1,945 in m2, 829 in euros); `est-cadastre-habitatges-valor-cadastral` and `est-cadastre-locals-valors-total-unitaris` keep their totals only (their €/m2 unit values are means).
 
 The source hides a count under 5 as `..`; that value and every sum over it are dropped and counted
 (births: 39 of 84 areas written, deaths 61, nationality by sex 492). Rows with a district or barri
@@ -823,7 +823,23 @@ code the city has not (`99`, blank) count only in the city total.
 
 Not built, with the reason (follow-ups T-5446 and T-5447):
 
-- Same shape, left out to bound the load on dev (T-5446): `est-cadastre-carrecs-quota-cadastral`, `est-cadastre-carrecs-tipus-propietari`, `est-cadastre-carrecs-us`, `est-cadastre-carrecs-valors-cadastrals`, `est-cadastre-edificacions-any-const`, `est-cadastre-edificacions-edat-mitjana`, `est-cadastre-edificacions-nombre-locals`, `est-cadastre-edificacions-superficie`, `est-cadastre-finques-superficie`, `est-cadastre-habitatges-edat-mitjana`, `est-cadastre-habitatges-propietari`, `est-cadastre-habitatges-superficie-mitjana`, `est-cadastre-habitatges-valor-cadastral`, `est-cadastre-locals-prop`, `est-cadastre-locals-sup`, `est-cadastre-locals-us-desti`, `est-cadastre-locals-valors-total-unitaris`, `est-vehicles-amb-distintiu`, `est-vehicles-antiguitat-tipus`, `est-vehicles-cilindrada-motos`, `est-vehicles-nacionalitat-propietari`, `est-vehicles-potencia-fiscal-turismes`, `est_vehicles_index_motor`, `pad_cdo_b_barri-des`, `pad_dom_mdbas_dones`, `pad_dom_mdbas_edat-0018`, `pad_dom_mdbas_edat-1864`, `pad_dom_mdbas_edat-6599`, `pad_dom_mdbas_homes`, `pad_dom_mdbas_nacionalitat`, `pad_dom_mdbas_nacionalitat_edat`, `pad_dom_mdbas_tipus-domicili_edat`, `pad_emi_mdbas_nacionalitat-g`, `pad_imm_mdbas_nacionalitat-g`, `pad_mdb_lloc-naix-continent_edat-q_sexe`, `pad_mdb_lloc-naix-regio_sexe`, `pad_mdb_lloc-naix_edat-q_sexe`, `pad_mdb_nacionalitat-contintent_edat-q_sexe`, `pad_mdb_nacionalitat-g_edat-q_sexe`, `pad_mdb_nacionalitat-regio_sexe`, `pad_mdb_niv-educa-esta_edat-lloc-naix`, `pad_mdb_niv-educa-esta_edat-q_sexe`, `pad_mdba_sexe_edat-1`, `pad_mdba_sexe_edat-q`, `pad_mdbas_edat-1`, `pad_mdbas_nacionalitat-continent_sexe`, `pad_sol_mdb_sexe_edat-q`.
+- Measured out by the pipeline's 128 MiB memory quota: the run holds every table's DataStore answer
+  in one batch. The 44 built tables answer 3.2 MB and decode in 128 MiB (docker `--memory 128m`, exit
+  0); adding these 12 (answers of 2,250 to 8,466 rows, 8.7 MB with the rest) is killed at 128, 256 and
+  384 MiB (exit 137). Each fits alone, so a second pipeline reads them (T-5446): pad_mdbas_edat-1 (8,466 rows), est-vehicles-antiguitat-tipus (6,395), est-cadastre-locals-prop (3,813), pad_mdba_sexe_edat-q (3,509), est-cadastre-locals-us-desti (3,441), pad_mdb_lloc-naix-regio_sexe (3,207), pad_mdb_nacionalitat-regio_sexe (3,127), pad_sol_mdb_sexe_edat-q (3,079), est-cadastre-carrecs-us (2,997), pad_mdb_niv-educa-esta_edat-lloc-naix (2,653), est-vehicles-amb-distintiu (2,449), est-cadastre-habitatges-propietari (2,250).
+  The four five-year-age by sex by origin tables (`pad_mdb_lloc-naix_edat-q_sexe`,
+  `pad_mdb_lloc-naix-continent_edat-q_sexe`, `pad_mdb_nacionalitat-contintent_edat-q_sexe`,
+  `pad_mdb_nacionalitat-g_edat-q_sexe`), `pad_mdb_niv-educa-esta_edat-q_sexe` and `pad_mdba_sexe_edat-1`
+  break down into 176 to 264 cells per area, 14,784 to 22,176 entities each: the same quota, T-5446.
+  `est-cadastre-carrecs-quota-cadastral` (39 cells, 3,276 entities) goes with them.
+- `est-cadastre-carrecs-valors-cadastrals`: its DataStore query, whose value column is `Valor_€`,
+  answered 403 on 2026-10-23 where every other query answered 200 (T-5446).
+- Means, which a sum would falsify: `est-cadastre-edificacions-edat-mitjana`,
+  `est-cadastre-habitatges-edat-mitjana`, `est-cadastre-habitatges-superficie-mitjana`,
+  `pad_dom_mdbas_nacionalitat_edat` and `pad_dom_mdbas_tipus-domicili_edat` (average ages)
+  `est_vehicles_index_motor` is a ratio (vehicles per 1,000 residents).
+- `pad_cdo_b_barri-des`: moves from one barri to another, a value per pair of barris (4,398 pairs),
+  no one area to link.
 - Means per census section, which a sum would falsify (T-5446): `atles-renda-bruta-per-llar`, `atles-renda-bruta-per-persona`, `atles-renda-index-gini`, `atles-renda-mediana`, `atles-renda-mitjana`, `atles-renda-p80-p20-distribucio`, `renda-disponible-llars-bcn`, `renda-tributaria-per-persona-atlas-distribucio`, `renda-tributaria-unitat-consum-atlas-distribucio`.
 - Election results per census section and party, one file per election (T-5446): `est-eleccions-autonomiques-seccio-censal`, `est-eleccions-europees-seccio-censal`, `est-eleccions-generals-seccio-censal`, `est-eleccions-locals-seccio-censal`.
 - Electricity by postal code, sector and time band, no area to link (T-5446): `consum-electricitat-bcn`.
@@ -832,8 +848,14 @@ Not built, with the reason (follow-ups T-5446 and T-5447):
 - Series ended or older than three periods, with the newest year of their files: `cobertura-vegetal-ndvi` (2014), `est-demo-taxa-migracio-interna` (2021), `est-densitat` (2021), `est-social-discapacitats-grau` (2016), `est-social-discapacitats-grups-edat` (2016), `est-social-discapacitats-sexe` (2016), `est-social-discapacitats-tipus` (2016), `est-superficie` (2021), `est-vehicles-antiguitat-menys-un-any` (2018), `est-vehicles-antiguitat-motos` (2018), `est-vehicles-antiguitat-turismes` (2018), `est-vehicles-nacionalitat-propietari-motos` (2015), `est-vehicles-tipus-propietari-motos` (2015), `gruamunicipalbcn-retirada-diposits`, `gruamunicipalbcn-retiradavehicles` (2020), `h2mave-anualt1b`, `h2mave-anualt2b`, `h2mave-anualt3b`, `h2mave-semestralt2b`, `h2mave-totalt1b`, `h2mave-totalt2b`, `h2mave-totalt3b`, `h2mave-totalt4b`, `h2mave-totalt5b` (2024), `habit-fam-dest-habit-segons-any-const` (2011), `habit-fam-sit-edif-dest-habit-segons-tip` (2011), `habit-ppal-segons-any-const` (2011), `habit-ppal-segons-estat-conserv-edif` (2011), `habit-ppal-segons-instal1-calef` (2011), `habit-ppal-segons-instal2-aigua` (2011), `habit-ppal-segons-instal3-telf-i-int` (2011), `habit-ppal-segons-nom-habit` (2011), `habit-ppal-segons-nombre-pers-viuen` (2011), `habit-ppal-segons-regim-tin` (2011), `habit-ppal-segons-sup-util` (2011), `habitatges-2na-ma` (2015), `immo-edif-hab-segons-any-construccio` (2011), `immo-edif-hab-segons-estat-conservacio` (2011), `immo-edif-hab-segons-instalacions` (2011), `immo-edif-hab-segons-num-plantes-sobre-rasant` (2011), `immo-edif-hab-segons-num-plantes-sota-rasant` (2011), `locve-evolucio`, `n-edif-hab-n-immo-edif` (2011), `n-edif-hab-segons-any-construc` (2011), `n-edif-hab-segons-estat-cons-edifici` (2011), `n-edif-hab-segons-instal` (2011), `n-edif-hab-segons-n-immo` (2011), `n-edif-hab-segons-n-places-gar` (2011), `n-edif-hab-segons-n-plantes-sobre-rasant` (2011), `n-edif-hab-segons-n-plantes-sota-rasant` (2011), `n-edif-hab-segons-nombre-immo` (2011), `n-edif-hab-segons-nombre-plantes` (2011), `n-edif-hab-segons-nombre-plantes-sobre-rasant` (2011), `n-edif-hab-segons-nombre-plantes-sota-rasant` (2011), `n-edif-hab-tipus-edif` (2011), `poblacio-exposada-mapa-estrategic-soroll` (2022).
 - Other shapes: `cens-animals-companyia` (district and semester, no year column), `acollida-animals`
   (one column per month), `esm-bcn-evo` (survey answers per person).
-- Not probed in this batch (T-5446): `denuncies_sancions_transit_bcn_detall`, `incidents-gestionats-gub`
-  and the three `transitaeri_flightradar_*` rows.
+- `incidents-gestionats-gub` (Guàrdia Urbana incidents per type, barri and month): the shape fits
+  the pipeline, but its 37,081 answer rows alone need more than 128 MiB (exit 137 at 128, 0 at 256):
+  T-5446 with its own quota.
+- `denuncies_sancions_transit_bcn_detall`: one row per traffic fine with street and coordinates
+  (239,144 rows for 2025's first quarter), not a published figure per area.
+- `transitaeri_flightradar_ppal_aeroport`, `_comp_zona` and `_pais`: daily flights at Barcelona-El Prat
+  airport per airport, airline zone and country, columns Data_Referencia, a code and Nombre_Vols; the
+  airport lies in El Prat de Llobregat, outside the city's areas, so no refArea: T-5262's air traffic.
 - Score 0 and -1 rows keep the reason of section 6.1.
 
 ## 7. Nothing left: what is skipped and why
