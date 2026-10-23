@@ -32,6 +32,8 @@ A change to a contract (a kind, a type, a URL path, a manifest field) lands in t
 
 Each repository runs a fast lane on pull requests and on pushes to `main`, and keeps the slow work in a second workflow. Whether that second workflow is scheduled or waits to be dispatched is an Actions-minutes decision: the three private repositories ran out of minutes once, so everything except `ci.yml` is `workflow_dispatch` there until the owner restores them. A workflow whose triggers were taken away keeps the old `push` and `schedule` lines in a comment beside its `on:` block, so putting them back is one edit. The conformance suites are dispatched for a second reason: each one takes the URL of the running system it tests.
 
+In `joinedcontext-platform` and `joinedcontext-portal` the fast lane's first job, `changes`, maps the paths changed since the base to the jobs that need them (`scripts/ci/changes.sh`, with a self-test). The base is the fork from `main` on a branch, and on `main` the newest commit with a green `ci` run. A docs-only change runs gitleaks and nothing else, a UI change runs the UI jobs, a change to `ci.yml` runs every job. A skipped job counts as success, so the run's verdict stays one green `ci` (T-4985, T-4696).
+
 | Repository | Fast `ci.yml` | The slow lane |
 |---|---|---|
 | `joinedcontext-platform` | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets --locked -- -D warnings`, `cargo test --workspace --lib --bins`, `cargo doc`, the kind and configuration documentation tests, the workflow-pin check, the model-tools pytest suite, `bento lint` and `bento test` over the example pipelines, gitleaks | `ci-full.yml`, hourly at minute 7 and on demand: the whole workspace with all features and all targets, `cargo audit`, `cargo deny check advisories bans licenses sources`, Trivy over the tree |
@@ -46,15 +48,15 @@ No fast lane reaches a running cluster: the deployment lane renders and validate
 flowchart TD
     Commit[Commit on a working branch] --> Fast[Fast ci lane: fmt, lint, unit tests, render, gitleaks]
     Fast --> Main[Push or merge to main]
-    Main --> Image[image.yml: build, SBOM and provenance attestation, cosign sign, Trivy on the digest]
-    Main --> Full[ci-full hourly: whole suites, cargo audit, cargo deny, Trivy on the tree]
+    Main --> Image[image.yml hourly: build, SBOM and provenance attestation, cosign sign, Trivy on the digest]
+    Main --> Full[ci-full nightly: whole suites, cargo audit, cargo deny, Trivy on the tree]
     Image --> Registry[ghcr.io, tagged by commit sha and signed by digest]
     Registry --> Apply[Cluster apply, images pinned by digest]
 ```
 
 ## 3. What a published image carries
 
-`image.yml` runs on every push to `main` and on a `v*` tag in `joinedcontext-platform` and `joinedcontext-portal`, and builds with Docker Buildx under `id-token: write`. `image-ckan.yml` in `joinedcontext-deployment` builds the catalogue image the same way, and `image.yml` in `joinedcontext-conformance` runs on a `v*` tag only. Five things leave the lane with the image:
+`image.yml` runs once an hour when `main` moved since its last green build, when the nightly `ci-full` starts, on dispatch and on a `v*` tag in `joinedcontext-platform` and `joinedcontext-portal` (T-4696), builds what changed since that build, and builds with Docker Buildx under `id-token: write`. `image-ckan.yml` in `joinedcontext-deployment` builds the catalogue image the same way, and `image.yml` in `joinedcontext-conformance` runs on a `v*` tag only. Five things leave the lane with the image:
 
 | Carried | Produced by | Detail |
 |---|---|---|
