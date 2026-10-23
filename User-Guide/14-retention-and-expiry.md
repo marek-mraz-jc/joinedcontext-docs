@@ -18,7 +18,7 @@ A space you create keeps:
 | History | none: a type no rule names keeps its current values only | a space rule **History**, the **All other types** row, or an entity's own `historyRetention` |
 | Pipeline expiry | off | **Remove entities the source no longer sends** on the pipeline |
 
-The Helsinki sample project also carries an older settings file that says history is kept 90 days. Nothing reads that value: the 28 days above are what the platform applies, and the stale value is being removed.
+The Helsinki sample project also carries an older settings file that says history is kept 90 days. Nothing reads that value: a type no rule names keeps no history, as the table says, and the stale value is being removed.
 
 ## 2. Every Way Data Is Removed
 
