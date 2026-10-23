@@ -81,7 +81,7 @@ The gateway serves an Endpoint's WebSocket itself. It opens **one** broker subsc
 
     - every open connection of the Endpoint ends with close code 1011 and the reason "the context broker refuses this Endpoint's fan-out", with no `x-closing` (no new `x-reason`);
     - every later `x-subscribe` or `x-update` is answered `x-status: 503` with the platform's `service-unavailable` ProblemDetails, whose `detail` names the broker's status and detail;
-    - after `403`, `404` or `405`, which the broker repeats until the view or its Policy changes, the upstream stays closed while the Endpoint resolves to the same record and opens again when a reconcile changes it (T-5321); after any other status it retries in 30 s; the first accepted `x-subscribe` clears the state.
+    - after `403`, `404` or `405`, which the broker repeats until the view or its Policy changes, the upstream stays closed while the Endpoint resolves to the same record and opens again when a reconcile changes it; the hub still stops once its last client has been gone for the linger (T-5321); after any other status it retries in 30 s; the first accepted `x-subscribe` clears the state.
 
     A connection that subscribed before the broker answered may have received `201`; the 1011 close follows it. The upstream speaks as its caller (item 1), so a caller the view's listed policies do not grant sees this refusal, and the gateway logs it; it is never a quiet socket.
 
