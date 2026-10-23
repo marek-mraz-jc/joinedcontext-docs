@@ -52,7 +52,13 @@ def board_ids(tasks_dir: Path) -> set[str] | None:
     return {"-".join(f.name.split("-")[:2]) for f in files}
 
 
-def problems(text: str, snapshot: set[str], board: set[str] | None) -> list[str]:
+def problems(
+    text: str,
+    snapshot: set[str],
+    board: set[str] | None,
+    batches: set[str] = BATCHES,
+    source: str = "HRI",
+) -> list[str]:
     rows, skipped = parse(text)
     found, seen = [], set()
     for r in rows:
@@ -65,7 +71,7 @@ def problems(text: str, snapshot: set[str], board: set[str] | None) -> list[str]
             found.append(f"{name}: listed twice")
         seen.add(name)
         if name not in snapshot:
-            found.append(f"{name}: not in the HRI snapshot")
+            found.append(f"{name}: not in the {source} snapshot")
         if decision not in DECISIONS:
             found.append(
                 f"{name}: decision {decision!r} is not integrate, statistics or skip"
@@ -78,8 +84,9 @@ def problems(text: str, snapshot: set[str], board: set[str] | None) -> list[str]
                     f"{name}: skipped but not listed with a reason in section 7"
                 )
         else:
-            if batch not in BATCHES:
-                found.append(f"{name}: batch {batch!r} is not one of T-5253..T-5259")
+            if batch not in batches:
+                span = f"{min(batches)}..{max(batches)}"
+                found.append(f"{name}: batch {batch!r} is not one of {span}")
             elif board is not None and batch not in board:
                 found.append(f"{name}: batch {batch} is not a task on the board")
             if not re.fullmatch(r"-?[0-3]", score):

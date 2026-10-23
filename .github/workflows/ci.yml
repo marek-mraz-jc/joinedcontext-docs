@@ -38,6 +38,8 @@ jobs:
         run: python3 scripts/bb-bbsk-ngsi-ld-mapping.py --selftest && python3 scripts/bb-bbsk-ngsi-ld-mapping.py check
       - name: every Helsinki HRI dataset has a decision, a batch and a model, or a skip reason (T-5252)
         run: python3 scripts/check-helsinki-open-data.py --selftest && python3 scripts/check-helsinki-open-data.py check
+      - name: every Open Data BCN dataset has a decision, a batch and a model, or a skip reason (T-5261)
+        run: python3 scripts/check-barcelona-open-data.py --selftest && python3 scripts/check-barcelona-open-data.py check
       - name: every Praha dataset (city catalogue, IPR geoportal, Golemio, other) has a score and a decision (T-5267)
         run: python3 scripts/check-praha-open-data.py --selftest && python3 scripts/check-praha-open-data.py check
       - name: every data.bratislava.sk hub item has a decision, a batch and a model, or a skip reason (T-5272)
