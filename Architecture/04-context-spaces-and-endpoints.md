@@ -246,6 +246,8 @@ spec:
   caching: { maxAgeSeconds: 60 }
   projection: # Never served here, whatever the Policy allows (EP-61)
     hiddenAttributes: [calibrationOffset]
+  audit: off # off | changes: every change through this Endpoint is kept as a version with provenance (ADR-N-054 §2.8, DM-136)
+  metadata: [observedAt, unitCode, modifiedAt] # The metadata this Endpoint passes; this list is the public default (DM-139)
   viewMappingRef: { kind: Mapping, name: hki-air-quality-to-sdm } # Serve this space as another model, read only (EP-54)
 ```
 
@@ -599,6 +601,8 @@ The MCP façade is an encoder like the others: a tool call is turned into the NG
 | `spec.creates.embedOrigins` | The sites that may frame the form's page `/f/{slug}`: at most 20 `https` origins, no path and no wildcard. The Portal sends them in that page's `frame-ancestors` and nowhere else (EP-101, T-3266). | Only the Portal frames the form. |
 | `spec.caching.maxAgeSeconds` | `Cache-Control: max-age` on read responses of every representation. Public endpoints are cached publicly, everything else privately, because a shared cache must never serve one caller's projection to another. | Read responses are validated with ETags and not cached by age. |
 | `spec.fileLimits.maxFileRows`, `spec.fileLimits.maxFileBytes` | Ceiling of one `file.*` download; the gateway refuses with `413` rather than truncating, because a short file is indistinguishable from a complete one (EP-44). Both bind every format the endpoint serves, the workbook included. Beside them the gateway keeps a ceiling of its own on what one download may read from the broker before it is refused (64 MiB of entity JSON, T-0810): the row ceiling says how many entities a download holds, not how large they are, and the enforcement point is shared. | 100 000 rows and 64 MiB. |
+| `spec.audit` | `changes`: every write through this Endpoint that changes a value is kept as a version row with its provenance, even where the type's history rule keeps none; an exact repeat writes nothing. Today the row follows the type's history retention; the separate audit retention (two years, `JC_AUDIT_RETENTION`) is not read yet ([ADR-N-054 §2.8](../Decisions/adr-n-054-history-versions-provenance-gdpr.md#28-audit-mode-and-the-change-log), DM-136). | `off`: the type's history rule alone decides. |
+| `spec.metadata` | The metadata members the Endpoint passes, from `observedAt`, `unitCode`, `createdAt`, `modifiedAt`, `modifiedBy.organization`, `modifiedBy.actorKind`, `modifiedBy.actor`, `provenance`; the same list binds current and history reads on every representation, and a `q` or `orderBy` on a member not listed answers `400` (DM-139). A public Endpoint listing `modifiedBy.actor` or `provenance` is refused (DM-140). | Public: `observedAt`, `unitCode`, `modifiedAt`. Otherwise those plus `modifiedBy.organization` and `modifiedBy.actorKind`. |
 | `spec.projection.hiddenAttributes` | Attribute names this Endpoint never serves, in any representation. Intersected with the caller's policy projection, so it only ever narrows what the Policy already allows (EP-61). | The policy projection alone decides. |
 | `spec.viewMappingRef` | A `Mapping` whose **target** model this Endpoint serves. The gateway translates every entity through the Mapping's compiled IR and rewrites `attrs`, `q` and `geoQ` back through its inverse, so the whole surface speaks the target model (EP-54, DM-51). A view Endpoint is **read only**: every method but `GET`, `HEAD` and `OPTIONS` answers `405` with an `Allow` header. | The space's own model is served. |
 

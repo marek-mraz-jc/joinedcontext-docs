@@ -74,18 +74,20 @@ A quantity per interval (a count of vehicles in five minutes, rain in an hour) i
 
 ### 2.3 Provenance on every write
 
-Every row the broker keeps, every version and every tombstone included, carries six system fields beside the value (DM-111):
+Every row the broker keeps, every version and every tombstone included, carries eight system fields beside the value (DM-111):
 
 | Field | Values | Set by |
 |---|---|---|
 | `channel` | `pipeline`, `api`, `ui`, `import`, `backfill`, `mqtt` | the gateway, from the path the write came through: a Pipeline's ServiceAccount, an Endpoint call, the Portal, the CSV upload (DM-81), a backfill job, an MQTT edge broker |
 | `actor` | the ServiceAccount client id or the person's `sub` | the gateway, from the verified Keycloak token |
+| `organization` | the `metadata.name` of the Organization that owns the Project the caller was admitted under: a person's project group, a ServiceAccount's or a Pipeline's own Project; absent for an anonymous caller and a data-space participant, whose DID is its `actor` | the gateway, from the verified token and the repository |
+| `actorKind` | `person`, `serviceAccount`, `pipeline`, `agent` | the gateway: `pipeline` for a Pipeline's derived account, `agent` for an MCP call and for a person's token another client exchanged (an assistant), with the person or client it acts for as `actor` |
 | `operation` | `create`, `update`, `correct`, `backfill`, `delete`, `erase` | the broker, from §2.1 and the request |
 | `reason` | text up to 500 characters | the caller, in the `JC-Reason` header |
 | `requestId` | the request's id | the gateway (`X-Request-Id`) |
 | `writtenAt` | when the broker stored the row | the broker |
 
-The caller never types `actor` or `channel` (DM-112). The edge drops every inbound `JC-Provenance-*` header, the gateway sets them after it verified the token, and the broker reads them only from the gateway's mesh identity; a write that reaches the broker another way is stored with `channel: api` and the broker's own client as `actor`. `reason` is required for `correct`, `delete` and every write from the Portal's UI, and a write without one answers `400` with the problem type `reason-required` (DM-113). Provenance holds no value of the data and is never copied into a log line.
+The caller never types `actor`, `channel`, `organization` or `actorKind` (DM-112). The edge drops every inbound `JC-Provenance-*` header, the gateway sets them after it verified the token, and the broker reads them only from the gateway's mesh identity; a write that reaches the broker another way is stored with `channel: api` and the broker's own client as `actor`. `reason` is required for `correct`, `delete` and every write from the Portal's UI, and a write without one answers `400` with the problem type `reason-required` (DM-113). Provenance holds no value of the data and is never copied into a log line.
 
 ### 2.4 Versions
 
@@ -170,6 +172,25 @@ When two rules say how long a row lives, the first that applies wins (DM-129):
 4. the platform default, 28 days (`P28D`).
 
 Audit metadata (provenance of tombstones, the erasure log, the read log) holds no personal value and has its own retention, two years by default (`P2Y`, the Portal's `JC_AUDIT_RETENTION`).
+
+### 2.8 Audit mode and the change log
+
+Several organizations can share one space, each through its own Endpoint. An Endpoint's `spec.audit` says whether the space keeps an audit trail of what came through it (DM-136):
+
+- `off`, the default: the type's history rule (§2.2, DM-132) alone decides which rows exist.
+- `changes`: every write through the Endpoint that changes a value (canonical JSON differs, §2.1) is stored as a version row with its provenance, even where the type keeps no history. An exact repeat writes nothing. A delete writes a tombstone with provenance. The gateway tells the broker with `JC-Provenance-Audit: changes`, a header the broker believes only from the gateway's mesh identity, like the provenance headers. Such a row's provenance carries `audit: true`, so a reader and the retention sweep tell an audit row from a history row.
+
+Audit rows are the broker's ordinary versioned rows, no second store. They live for the audit retention, two years by default (`P2Y`, `JC_AUDIT_RETENTION`, §2.7), separate from the history retention, and erasure and rectification reach them like any row (§2.6): values redacted, provenance kept.
+
+Served today: the gateway sends `JC-Provenance-Audit: changes` and the broker keeps the version row with organization, actor kind and `audit: true`. Nothing reads `JC_AUDIT_RETENTION` yet: an audit row follows the type's history retention (the broker's `P28D` default for a type without a rule; a type with history off loses it on the next sweep), and a delete through an audited Endpoint writes no tombstone of its own. The separate audit retention, the tombstones and the change log below are the target (DM-136, DM-137), not yet built.
+
+**The change log** is a temporal read with `versions=all`, filtered by provenance: `organization`, `actor`, `actorKind`, `channel` and a time range, per Entity or per space. It needs `readVersions` (DM-114) and shows no value the caller could not read anyway (DM-137). The Portal shows it as a Changes tab on an Entity and on a space: who, organization, attribute, old and new value, when, reason; with a CSV export.
+
+**The current state** keeps, per attribute, `modifiedBy` (`organization`, `actorKind`, `actor`) of its last change beside `modifiedAt`. It is a system member: answered only with `sysAttrs` and only where the Endpoint's `spec.metadata` lists it, so a plain NGSI-LD answer is unchanged (DM-138).
+
+**What an Endpoint passes.** `spec.metadata` lists the metadata members an Endpoint passes on every read, current and history alike: `observedAt`, `unitCode`, `createdAt`, `modifiedAt`, `modifiedBy.organization`, `modifiedBy.actorKind`, `modifiedBy.actor`, `provenance`. A member means the same on both: on the current value it describes the last change, on a history row that row's change. Only the version chain itself (`versions=all`, the change log) is history's own, gated by `readVersions`. A public Endpoint passes `observedAt`, `unitCode` and `modifiedAt` unless it lists more; any other Endpoint also `modifiedBy.organization` and `modifiedBy.actorKind`. `modifiedBy.actor` and `provenance` pass only where listed and only to `readVersions`. A member not listed is stripped from answers, notifications and exports, and a `q` or `orderBy` on it answers `400`, so nobody probes hidden metadata by filtering (DM-139). The Portal and the Policy compiler refuse a public Endpoint that lists `modifiedBy.actor` or `provenance`, because an actor is a person's `sub` or a client id (DM-140).
+
+**Required for a dataset.** Before a space is published through an Endpoint and its catalogue entry, the Portal requires: owner organization, a steward contact (a role mailbox, never a person's name on a public page), licence, a one-line purpose, update frequency, history retention or `off`, personal data yes or no (yes needs §2.6's legal basis and maximum retention), access level and source (a URL or a system). Per value nothing is typed by hand: `observedAt` comes from the source, `modifiedAt` and `modifiedBy` from the broker and the gateway, `unitCode` from the model; only a manual correction or delete asks for a reason (DM-113).
 
 ## 3. Alternatives considered
 
