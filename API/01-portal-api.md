@@ -3253,10 +3253,21 @@ DELETE /api/v1/projects/{project}/spaces/{space}/views/{id}     delete it → 20
   against a newer view is `409` with the current version, never an overwrite of another window's
   change. Duplicating a view is a `POST` of its settings under a new title; renaming is a `PUT`.
 - A person keeps at most 200 views per space; the 201st is `409` with the limit in the problem.
-- `sort` orders the rows the grid has loaded, and the grid says so; it is not sent to the broker.
-  `group` names an enum attribute: each
-  group's count is the gateway's own `count=true` answer for `q` plus that value, read with the
-  person's session, so the counts narrow as their grants do and are never the page's tally.
+- A grid's `settings` (T-4883, T-5188): `filters`, the filter panel's condition tree; `rowSize`;
+  `aggregations`, the footer's choice per attribute; `groupBy`, at most 3 different attribute
+  names, outermost first (anything else is `422` naming `config.settings.groupBy`).
+- `sort` holds up to 3 keys, sent to the space surface as one `orderBy` (`a;desc,b`, CIM 009 4.23)
+  after the `groupBy` attributes, so the broker orders the whole filtered set and a hidden
+  attribute orders as an absent one. Each group of `groupBy` gets a header in the grid with its
+  count; `group`, kept as the first `groupBy` attribute where that is an enum, adds a row of
+  value buttons above the grid. Every count, a group header's included, is the gateway's own
+  `count=true` answer for `q` plus the group's values, read with the person's session, so the
+  counts narrow as their grants do and are never the page's tally.
+- The footer's minimum, maximum and median of a number and earliest and latest of a date are the
+  rows the space surface returns first for `orderBy=attr` (or `attr;desc`) under `q` plus `attr`,
+  the median at the middle offset (the mean of the two middle values for an even count). A sum,
+  an average and a count of distinct values need an aggregate of current values the broker does
+  not have, and the footer does not offer them.
 
 ## 31. Trash of a space's entities (ADR-N-042 §3.3, T-3107)
 
