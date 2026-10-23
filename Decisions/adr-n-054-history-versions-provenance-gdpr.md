@@ -178,7 +178,7 @@ Audit metadata (provenance of tombstones, the erasure log, the read log) holds n
 Several organizations can share one space, each through its own Endpoint. An Endpoint's `spec.audit` says whether the space keeps an audit trail of what came through it (DM-136):
 
 - `off`, the default: the type's history rule (§2.2, DM-132) alone decides which rows exist.
-- `changes`: every write through the Endpoint that changes a value (canonical JSON differs, §2.1) is stored as a version row with its provenance, even where the type keeps no history. An exact repeat writes nothing. A delete writes a tombstone with provenance. The gateway tells the broker with `JC-Provenance-Audit: changes`, a header the broker believes only from the gateway's mesh identity, like the provenance headers.
+- `changes`: every write through the Endpoint that changes a value (canonical JSON differs, §2.1) is stored as a version row with its provenance, even where the type keeps no history. An exact repeat writes nothing. A delete writes a tombstone with provenance. The gateway tells the broker with `JC-Provenance-Audit: changes`, a header the broker believes only from the gateway's mesh identity, like the provenance headers. Such a row's provenance carries `audit: true`, so a reader and the retention sweep tell an audit row from a history row.
 
 Audit rows are the broker's ordinary versioned rows, no second store. They live for the audit retention, two years by default (`P2Y`, `JC_AUDIT_RETENTION`, §2.7), separate from the history retention, and erasure and rectification reach them like any row (§2.6): values redacted, provenance kept.
 
