@@ -1,0 +1,88 @@
+id	group	summary
+/v2/airqualitystations	Air Quality (v2)	GET All Air Quality CHMI Stations
+/v2/airqualitystations/componenttypes	Air Quality (v2)	GET Air Quality Station Component Types
+/v2/airqualitystations/history	Air Quality (v2)	GET Air Quality Stations CHMI History
+/v2/airqualitystations/indextypes	Air Quality (v2)	GET Air Quality Station Index Types
+/v2/bicyclecounters	Bicycle Counters (v2)	GET All Bicycle Counters
+/v2/bicyclecounters/detections	Bicycle Counters (v2)	GET Bicycle Counters Detections
+/v2/bicyclecounters/temperatures	Bicycle Counters (v2)	GET Bicycle Counters Temperatures
+/v2/citydistricts	Prague City Districts (v2)	GET All Districts
+/v2/citydistricts/{id}	Prague City Districts (v2)	GET District
+/v2/energetics/buildings	Energetics (v2)	Get all buildings
+/v2/energetics/buildings/{id}	Energetics (v2)	Get a building by ID
+/v2/energetics/ded/buildings	Energetics DeD (v2)	Search buildings by name, address, GID, EAN, EIC or OM identifier
+/v2/energetics/ded/buildings/{gid}	Energetics DeD (v2)	ENO building detail with consumption points (OM) and technical parameters
+/v2/energetics/devices	Energetics (v2)	List of measurement devices
+/v2/energetics/devices/{deviceId}	Energetics (v2)	Measurement device info
+/v2/energetics/organizations	Energetics (v2)	List of organizations in brief or full format
+/v2/energetics/organizations/{organizationId}	Energetics (v2)	Organization detail
+/v2/energetics/measurements	Energetics (v2)	Measurements
+/v2/energetics/measurements/monthly-reading	Energetics (v2)	Monthly sums of measurements from devices
+/v2/fcd/info	Floating Car Data (v2)	GET Latest floating Car Data
+/v2/pedestrians/locations	Pedestrians (v2)	Get locations and directions
+/v2/pedestrians/measurements	Pedestrians (v2)	GET measurements of pedestrian traffic
+/v2/gardens	Gardens (v2)	GET All Gardens
+/v2/gardens/{id}	Gardens (v2)	GET Gardens
+/v2/medicalinstitutions	Medical Institutions (v2)	GET All Medical Institutions
+/v2/medicalinstitutions/{id}	Medical Institutions (v2)	GET Medical Institution
+/v2/medicalinstitutions/types	Medical Institutions (v2)	GET All Medical Institution Types
+/v2/microclimate/locations	Microclimate (v2)	GET All Microclimate Sensor Locations
+/v2/microclimate/points	Microclimate (v2)	GET Microclimate Sensor Points
+/v2/microclimate/measurements	Microclimate (v2)	GET All Microclimate Sensor Measurements
+/v2/municipalauthorities	Municipal Authorities (v2)	GET All Municipal Authorities
+/v2/municipalauthorities/{id}	Municipal Authorities (v2)	GET Municipal Authority
+/v2/municipalauthorities/{id}/queues	Municipal Authorities (v2)	GET All Municipal Authority Waiting Queues
+/v2/municipallibraries	Municipal Libraries (v2)	GET All Municipal Libraries
+/v2/municipallibraries/{id}	Municipal Libraries (v2)	GET Municipal Library
+/v2/municipalpolicestations	Municipal Police Stations (v2)	GET All Municipal Police Stations
+/v2/municipalpolicestations/{id}	Municipal Police Stations (v2)	GET Municipal Police Station
+/v2/mvt/{z}/{x}/{y}	MVT Maps (v2)	Get vector tile data for a specific map tile
+/v2/mvt/validation	MVT Maps (v2)	Validate attributes of MVT request
+/v2/traffic/restrictions	Traffic Restrictions (v2)	GET All Traffic Restrictions for a specific moment
+/v2/parking	Parking (v2)	GET All Parking Spaces within the region of interest
+/v2/parking/{id}	Parking (v2)	GET Parking Space
+/v2/parking/detail	Parking (v2) - internal	GET All Detailed Parking Spaces
+/v2/parking/detail/{id}	Parking (v2) - internal	GET Detailed Parking Space
+/v2/parking/measurements	Parking (v2) - internal	GET All Parking Spaces Measurements
+/v2/parking/tariffs	Parking (v2) - internal	GET All Parking Spaces Tariffs
+/v2/parking/tariffs/{tariffId}	Parking (v2) - internal	GET Parking Space Tariff
+/v3/parking	Parking (v3)	Get a list of parking locations within the region of interest with filtering options
+/v3/parking/{id}	Parking (v3)	Get detailed information about a parking location by ID
+/v3/parking/{id}/average-occupancy	Parking (v3)	Get detailed information about the average occupancy by ID
+/v3/parking-measurements	Parking (v3)	Get a list of the latest (max 1h old) parking measurements with filtering options
+/v3/parking-tariffs	Parking (v3)	Get a list of tariffs with filtering options
+/v3/parking-tariffs/{id}	Parking (v3)	Get a tariff by ID
+/v3/parking-machines	Parking (v3)	Get a list of parking machines within the region of interest with filtering options. Results are sorted by id.
+/v3/parking-machines/{id}	Parking (v3)	Get a parking machine by ID
+/v3/parking-sources	Parking (v3)	Available parking sources
+/v2/playgrounds	Playgrounds (v2)	GET All Playgrounds
+/v2/playgrounds/{id}	Playgrounds (v2)	GET Playground
+/v2/playgrounds/properties	Playgrounds (v2)	GET All Playgrounds Properties
+/v2/sharedbikes	Shared Bikes (v2)	GET All Shared Bikes
+/v2/sharedbikes/{id}	Shared Bikes (v2)	GET Shared Bike
+/v2/vehiclesharing	Vehiclesharing (v2)	GET All Shared Vehicles
+/v2/vehiclesharing/{id}	Vehiclesharing (v2)	GET Shared Vehicle
+/v2/vehiclesharing/gbfs/systems_list	GBFS (v2)	GET GBFS Systems List
+/v2/vehiclesharing/gbfs/{system_id}/gbfs	GBFS (v2)	GET GBFS
+/v2/vehiclesharing/gbfs/{system_id}/gbfs_versions	GBFS (v2)	GET GBFS Versions
+/v2/vehiclesharing/gbfs/{system_id}/system_information	GBFS (v2)	GET GBFS System Information
+/v2/vehiclesharing/gbfs/{system_id}/system_regions	GBFS (v2)	GET System regions
+/v2/vehiclesharing/gbfs/{system_id}/vehicle_types	GBFS (v2)	GET GBFS Vehicle Types
+/v2/vehiclesharing/gbfs/{system_id}/station_information	GBFS (v2)	GET GBFS Station Information
+/v2/vehiclesharing/gbfs/{system_id}/station_status	GBFS (v2)	GET GBFS Station Status
+/v2/vehiclesharing/gbfs/{system_id}/free_bike_status	GBFS (v2)	GET GBFS Free Bike Status
+/v2/vehiclesharing/gbfs/{system_id}/system_pricing_plans	GBFS (v2)	GET GBFS System Pricing Plans
+/v2/vehiclesharing/gbfs/{system_id}/geofencing_zones	GBFS (v2)	GET GBFS Geofencing Zones
+/v2/vehiclesharing/mvts/free_vehicle_status	MVTS	GET MVTS geojson of free vehicle status
+/v2/sharedcars	Shared Cars (v2)	GET All Shared Cars
+/v2/sharedcars/{id}	Shared Cars (v2)	GET Shared Car
+/v2/sortedwastestations	Waste Collection (v2)	GET All Waste Collection Stations
+/v2/sortedwastestations/measurements	Waste Collection (v2) - internal	GET All Waste Collection Measurements
+/v2/sortedwastestations/picks	Waste Collection (v2) - internal	GET All Waste Collection Picks
+/v2/sortedwastestations/pickdays	Waste Collection (v2) - internal	GET Waste Collection Pick Days
+/v1/bulky-waste/stations	Bulky Waste (v1)	GET All Bulky Waste Containers
+/v1/bulky-waste/stations/:customId	Bulky Waste (v1)	GET Bulky Waste Station by customId
+/v2/wastecollectionyards	Waste Collection Yards (v2)	GET All Waste Collection Yards
+/v2/wastecollectionyards/{id}	Waste Collection Yards (v2)	GET Waste Collection Yard
+/v2/wastecollectionyards/properties	Waste Collection Yards (v2)	GET All Waste Collection Yards Properties
+/v1/potholes/data	Waze (v1)	GET All Pot holes

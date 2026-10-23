@@ -1,0 +1,677 @@
+---
+sidebar_position: 15
+title: "Open Data Sources: Praha"
+description: Every dataset of Prague's city catalogue, the IPR geoportal, the Golemio API and the other sources the praha project reads, read on 2026-10-22 and 2026-10-23, with a usefulness score, a decision (live, integrate, blocked, skip or part), the Smart Data Model it maps to and the batch task that builds it.
+---
+
+# Open data sources of Praha
+
+Which datasets of the City of Prague the `praha` project takes, in which batch, as which Smart Data
+Model, and which it leaves out with the reason. It follows
+[Open data integration rules](../Development/12-open-data-integration.md) and has the shape of
+[Open data sources of Helsinki (HRI)](helsinki-open-data.md). The owner orders of 2026-10-22 (about
+17:40Z to 18:22Z) ask for every usable dataset of Praha in NGSI-LD, Smart Data Models, every sensible
+format, validated, and the useful datasets first. Task T-5267 built this page; T-5268 (live mobility,
+done), T-5276 (Golemio city services, done), T-5270 (the existing sources brought to SDM) and T-5269
+(geo layers and services) build the pipelines.
+
+## 1. How the matrix was made
+
+1. **City catalogue.** Prague's catalogue `opendata.praha.eu` redirects to the national LKOD
+   (`lkod.cz/catalog/praha`), which harvests into the national catalogue. The supervisor's SPARQL
+   snapshot of 2026-10-22 lists 119 datasets of publisher Hlavní město Praha (IČO 00064581), mostly
+   MHMP finance, and one data request (podnět 26); the board's "121" counted the header line. A SPARQL read of 2026-10-23 added the declared
+   update frequency of 66 of them. Copy: `Research/data/praha-city-catalogue-snapshot-2026-10-22.tsv`.
+2. **IPR geoportal.** The OGC API Records search of `opendata.geoportalpraha.cz` returned 226 items
+   on 2026-10-23: 214 feature services, 6 image collections, 3 image services, 3 web scenes and one
+   web map. The national catalogue holds 93 of them (IPR, IČO 70883858); their declared update
+   frequency fills the `update` column, the others show the item's last modified date. Most items
+   carry 2026-06-01, a bulk republish date, not an update rate. Copy:
+   `Research/data/praha-ipr-geoportal-snapshot-2026-10-23.tsv`.
+3. **Golemio.** The two output-gateway specifications (`openapi.json`, `openapi-public.json`) list
+   87 distinct paths; the public one is a subset of the full one. Copy:
+   `Research/data/praha-golemio-endpoints-2026-10-22.tsv`. Each path has a row, detail and code-list
+   routes as `part` rows of the list route they belong to.
+4. **Other sources.** The PID vehicle positions and departure boards (Golemio routes outside the
+   output gateway), PID GTFS and points of sale (`data.pid.cz`), nextbike GBFS, ČHMÚ air quality and
+   weather, and the Prague event calendars. Copy: `Research/data/praha-other-sources-2026-10-23.tsv`.
+5. **Probes reused.** T-5268 and T-5276 probed every Golemio list route with the project key on
+   2026-10-22 (key only from the secrets mount): record counts, freshness and the 403 answers in the
+   notes come from those task bodies. Rows not probed there say "probe" in the note; the batch probes
+   before it builds.
+6. **Judgement.** Families of rows share one rule (all MPP and ZÚR plan layers, all yearly files of
+   one series); every rule and its reason is in section 7. One source per real object: where Golemio
+   and IPR publish the same objects, one is taken and the other row names it.
+
+## 2. Decisions
+
+- **live**: a pipeline on dev writes the dataset today; `batch` names the task that built it or
+  brings it to the Smart Data Model (T-5270 for the 13 sources that ran before 2026-10-22).
+- **integrate**: the dataset becomes NGSI-LD entities of the named model through T-5269. Only rows
+  scoring 1 or more are integrate rows.
+- **blocked**: useful, but a named cause stops it: the project key lacks the Golemio scope (403),
+  the platform lacks a DataSource feature, no batch is open, or no open source exists.
+- **skip**: nothing is built; the note gives the reason, and section 7 the rule behind it.
+- **part**: a year of a series or a detail route of an endpoint; it goes with the row its note names
+  (`history of` or `detail of`) and has no score of its own. Yearly files of one series are one
+  dataset with history (owner 18:25Z), so 88 city rows are history of 13 series heads.
+
+| decision | city | ipr | golemio | other | rows |
+|---|---|---|---|---|---|
+| live | 1 | 6 | 8 | 4 | 19 |
+| integrate | 9 | 69 | 2 | 2 | 82 |
+| blocked | 0 | 0 | 16 | 2 | 18 |
+| skip | 22 | 151 | 17 | 0 | 190 |
+| part | 88 | 0 | 44 | 0 | 132 |
+| total | 120 | 226 | 87 | 8 | 441 |
+
+## 3. Smart Data Models pinned
+
+Every model name in the matrix is a directory of the subject repository at
+`https://github.com/smart-data-models/dataModel.<subject>`, read at the commit below on 2026-10-23.
+A custom model (`custom X; closest Y`) exists only where no subject has a class for the thing: noise
+and flood zones, trees, radon areas, fare zones and waste collection areas. `AdministrativeArea`,
+`BudgetLine` and `Organization` are custom classes of the praha seed; `Article` is the jc SDM
+extension the Helsinki news feed uses.
+
+| subject | commit | classes used |
+|---|---|---|
+| `Environment` | `2f048407cc` | `AirQualityObserved`, `EnvironmentObserved`, `FloodMonitoring`, `NoisePollution` |
+| `IssueTracking` | `37cd76540e` | `IssueReporting` |
+| `KeyPerformanceIndicator` | `ec7f3b642f` | `KeyPerformanceIndicator` |
+| `Parking` | `bac46424de` | `OffStreetParking`, `OnStreetParking`, `ParkingGroup` |
+| `ParksAndGardens` | `88223ee898` | `Garden`, `GreenspaceRecord` |
+| `PointOfInterest` | `7e5e24963a` | `PointOfInterest` |
+| `Streetlighting` | `e272fafc78` | `Streetlight` |
+| `Transportation` | `b83ede9d3d` | `BikeHireDockingStation`, `BikeLane`, `CityWork`, `CrowdFlowObserved`, `FareCollectionSystem`, `RestrictedTrafficArea`, `Road`, `RoadSegment`, `TrafficFlowObserved`, `Vehicle` |
+| `UrbanMobility` | `81a052c84d` | `ArrivalEstimation`, `GtfsAccessPoint`, `GtfsStop`, `PublicTransportRoute` |
+| `WasteManagement` | `16d527b36a` | `WasteContainer`, `WasteContainerIsle` |
+| `Weather` | `803fec05b2` | `WeatherObserved` |
+
+Blocked rows also name `Building`, `ConsumptionPoint` and `Device` (the Helsinki pins), and
+`Event` (`TourismDestinations`), for the day their cause clears.
+
+## 4. Outputs
+
+The `outputs` column names the representations the batch configures on the dataset's Endpoint,
+following the [representation contract](../API/11-representation-contract.md):
+
+- points and areas: `ngsi-ld`, `geojson`, `ogc-features`, `csv`;
+- time series: `ngsi-ld`, `temporal`, `sta`, `csv`;
+- tables: `ngsi-ld`, `csv`, `odata`;
+- `feed` only where items appear over time (the notice board, traffic restrictions); `ical` only for
+  events.
+
+## 5. Checks every batch runs
+
+The owner order of 2026-10-22 18:10Z adds plausibility checks beside the SDM schema check. Each batch
+task runs them on the real source data and writes the result into its own body:
+
+- **Location**: every point or area inside the city's `AdministrativeArea` plus 1 km; no 0,0; no
+  swapped latitude and longitude.
+- **Values**: physical ranges per property (temperature -40 to 50 °C, percentages 0 to 100, counts
+  at least 0, occupancy at most capacity, speeds 0 to 150 km/h) and the units the SDM names; dates no
+  more than 1 day in the future and not older than the source claims.
+- **Identity**: no two entities for one real object (same id, or same name within 20 m); every
+  reference (`refDevice`, `refParkingSite`, area links) resolves to an existing entity. The rows that
+  overlap a live source (sports grounds and Golemio playgrounds, waste facilities and Golemio yards)
+  say so in their note.
+- **Completeness**: the entity count matches the source record count (within 1 % for live feeds); a
+  source that returns 0 records or data older than 3 update periods fails the run visibly and deletes
+  nothing.
+- **Human read**: 5 random entities per dataset compared with the source page or map, with the link.
+
+Each pipeline fixture holds one out-of-area point, one out-of-range value and one duplicate, and the
+pipeline drops or flags each with a counted reason. Each batch records the entities, storage and
+pipeline CPU it adds on dev (node at 86 % memory on 2026-10-22).
+
+## 6. The matrix
+
+### 6.1 Usefulness score and the 100 target
+
+The owner order of 2026-10-22 18:25Z asks the batches to build the useful rows first. Each row except
+a part row scores one point for each of:
+
+- **live**: the source updates at least monthly (real time, daily, weekly, monthly);
+- **city question**: it answers a citizen or city question: events, traffic, air quality, parking,
+  transit, services, environment sensors or zones, area statistics;
+- **joins**: it joins entities the space already holds or another row adds (districts, stops,
+  vehicles, waste stations, parking zones);
+
+and loses one point when it is an invoice or other ledger, a finance table, a plan index or
+planning layer, map tiles, imagery or an archive. A row scoring 1 or more is **useful**. T-5269
+builds its integrate rows highest score first; skip rows keep their score so the reason is visible.
+
+| batch | rows | score 3 | score 2 | score 1 |
+|---|---|---|---|---|
+| T-5268 (live) | 1 | 1 | 0 | 0 |
+| T-5270 (live) | 12 | 4 | 7 | 1 |
+| T-5276 (live) | 6 | 1 | 2 | 3 |
+| T-5269 (integrate) | 82 | 2 | 30 | 50 |
+| blocked | 18 | 12 | 2 | 4 |
+
+The owner order of 18:30Z sets a floor of 100 live Smart Data Models datasets per city (counted by
+T-5275). Praha reaches it from useful rows alone: 19 live and 82 integrate rows make 101. The floor
+holds only if T-5269 builds every integrate row, so the 18 blocked rows are the reserve: 12 of them
+score 3 (traffic restrictions, floating car data, bicycle and pedestrian counters, shared vehicles,
+departures, office queues, events) and each would replace a score-1 row.
+
+### 6.2 All rows
+
+`dataset` links the catalogue record, the geoportal item, the Golemio documentation or the source.
+`source` is `city` (city catalogue), `ipr` (IPR geoportal), `golemio` (output-gateway path) or
+`other`. `update` is the declared frequency, else the geoportal's last modified date, else `-`.
+Rows are ordered by decision, then by score, then by source and title.
+
+| # | dataset | title | source | decision | batch | model | outputs | update | note | score |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | [`/v2/sortedwastestations`](https://api.golemio.cz/docs/openapi/) | GET All Waste Collection Stations | golemio | live | T-5270 | `WasteContainer` (WasteManagement) | ngsi-ld, temporal, sta, csv | - | `waste-fill` reads the monitored containers | 3 |
+| 2 | [`/v2/wastecollectionyards`](https://api.golemio.cz/docs/openapi/) | GET All Waste Collection Yards | golemio | live | T-5276 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | - | `golemio-yards`, 25 yards | 3 |
+| 3 | [`/v3/parking-measurements`](https://api.golemio.cz/docs/openapi/) | Get a list of the latest (max 1h old) parking measurements with filtering options | golemio | live | T-5270 | `OffStreetParking` (Parking) | ngsi-ld, temporal, sta, csv | - | `park-and-ride-occupancy` reads the TSK P+R measurements | 3 |
+| 4 | [`golemio-vehiclepositions`](https://api.golemio.cz/v2/vehiclepositions) | Golemio /v2/vehiclepositions (PID vehicle positions) | other | live | T-5268 | `Vehicle` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | - | `pid-vehicles`, every 60 s, about 784 vehicles inside Prague | 3 |
+| 5 | [`nextbike-gbfs`](https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_tg/gbfs.json) | nextbike Praha GBFS (stations and availability) | other | live | T-5270 | `BikeHireDockingStation` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | - | `bike-stations` and `bike-availability` | 3 |
+| 6 | [`chmi-air-quality`](https://opendata.chmi.cz/air_quality/now/data/) | ČHMÚ hourly air quality, Prague stations | other | live | T-5270 | `AirQualityObserved` (Environment) | ngsi-ld, temporal, sta, csv | - | `air-quality`, hourly | 3 |
+| 7 | [`/v2/municipalpolicestations`](https://api.golemio.cz/docs/openapi/) | GET All Municipal Police Stations | golemio | live | T-5276 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | - | `golemio-police`, 105 stations | 2 |
+| 8 | [`/v2/playgrounds`](https://api.golemio.cz/docs/openapi/) | GET All Playgrounds | golemio | live | T-5276 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | - | `golemio-playgrounds`, 153 | 2 |
+| 9 | [`17f4294bf3f041db9a0ec0d6ac0741a6`](https://geoportalpraha.cz/data-a-sluzby/17f4294bf3f041db9a0ec0d6ac0741a6) | Kulturní zařízení | ipr | live | T-5270 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-09-01 | the existing `culture` source reads this layer | 2 |
+| 10 | [`35ede955057f4815b522ea91b488792a`](https://geoportalpraha.cz/data-a-sluzby/35ede955057f4815b522ea91b488792a) | Městské části | ipr | live | T-5270 | `AdministrativeArea` (custom, praha seed) | ngsi-ld, geojson, ogc-features, csv | monthly | the existing `districts` source reads this layer | 2 |
+| 11 | [`9938b4b73b4d49a7aef5a605f4d39acf`](https://geoportalpraha.cz/data-a-sluzby/9938b4b73b4d49a7aef5a605f4d39acf) | Stanoviště tříděného odpadu | ipr | live | T-5270 | `WasteContainerIsle` (WasteManagement) | ngsi-ld, geojson, ogc-features, csv | irregular | the existing `waste-stations` source reads this layer | 2 |
+| 12 | [`62e3cf1020434b07832ca9ae19bce348`](https://geoportalpraha.cz/data-a-sluzby/62e3cf1020434b07832ca9ae19bce348) | Veřejné toalety | ipr | live | T-5270 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | the existing `toilets` source reads this layer | 2 |
+| 13 | [`7dce241cdbb141fa8104e3a65ca67ad6`](https://geoportalpraha.cz/data-a-sluzby/7dce241cdbb141fa8104e3a65ca67ad6) | Záchytná parkoviště PR | ipr | live | T-5270 | `OffStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | other | the existing `park-and-ride` source reads this layer | 2 |
+| 14 | [`5d32db18a5d545a79ad3029917984a89`](https://geoportalpraha.cz/data-a-sluzby/5d32db18a5d545a79ad3029917984a89) | Školská zařízení | ipr | live | T-5270 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | annual | the existing `schools` source reads this layer | 2 |
+| 15 | [`pid-points-of-sale`](https://data.pid.cz/pointsOfSale/json/pointsOfSale.json) | PID ticket points of sale | other | live | T-5270 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | - | `ticket-points` | 2 |
+| 16 | [`1f31f87f735709aa81da341112b01f51`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/1f31f87f735709aa81da341112b01f51) | Rozpočet MHMP 2026 | city | live | T-5270 | `BudgetLine` (custom, praha seed) | ngsi-ld, csv, odata | not stated | the `budget` source reads the 2026 file; earlier years load as history of the same series | 1 |
+| 17 | [`/v2/gardens`](https://api.golemio.cz/docs/openapi/) | GET All Gardens | golemio | live | T-5276 | `Garden` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | - | `golemio-gardens`, 13 gardens | 1 |
+| 18 | [`/v2/municipalauthorities`](https://api.golemio.cz/docs/openapi/) | GET All Municipal Authorities | golemio | live | T-5276 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | - | `golemio-authorities`, 64 offices | 1 |
+| 19 | [`/v2/municipallibraries`](https://api.golemio.cz/docs/openapi/) | GET All Municipal Libraries | golemio | live | T-5276 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | - | `golemio-libraries`, 57 branches after dedup | 1 |
+| 20 | [`9dc0e8136fb347858f3d36b36413c532`](https://geoportalpraha.cz/data-a-sluzby/9dc0e8136fb347858f3d36b36413c532) | Pražská integrovaná doprava - linky (aktuální stav) | ipr | integrate | T-5269 | `PublicTransportRoute` (UrbanMobility) | ngsi-ld, geojson, ogc-features, csv | daily | daily line geometry; joins the PID vehicles of `pid-vehicles` | 3 |
+| 21 | [`pid-gtfs`](https://data.pid.cz/PID_GTFS.zip) | PID GTFS timetable (stops, routes, trips) | other | integrate | T-5269 | `GtfsStop` (UrbanMobility) | ngsi-ld, geojson, ogc-features, csv | - | stops and routes the vehicles, lines and departures join to | 3 |
+| 22 | [`edf20520bbaf0ebbf15292a7142f066e`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/edf20520bbaf0ebbf15292a7142f066e) | Finanční vztahy mezi HMP a MČ HMP 2026 | city | integrate | T-5269 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, sta, csv | not stated | monthly transfers per city district: KPI per `AdministrativeArea` | 2 |
+| 23 | [`f57a3a32d7dd9b7b40b729636f062e77`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/f57a3a32d7dd9b7b40b729636f062e77) | Měsíční zprávy o činnosti Městské policie hl. m. Prahy za rok 2025 | city | integrate | T-5269 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, sta, csv | annual | monthly police activity counts (the per-unit file cuts them by police unit) | 2 |
+| 24 | [`cc9dbd08d1a478909ca5503a7be83955`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/cc9dbd08d1a478909ca5503a7be83955) | Měsíční zprávy o činnosti Městské policie hl. m. Prahy za rok 2025 podle útvarů | city | integrate | T-5269 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, sta, csv | annual | monthly police activity counts (the per-unit file cuts them by police unit) | 2 |
+| 25 | [`7628c2cadd6faf690ffbf210a34060eb`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/7628c2cadd6faf690ffbf210a34060eb) | Úřední deska MHMP | city | integrate | T-5269 | `Article` (jc SDM extension) | ngsi-ld, csv, feed | daily | daily JSON-LD notice board; the Article extension as Helsinki news | 2 |
+| 26 | [`/v3/parking`](https://api.golemio.cz/docs/openapi/) | Get a list of parking locations within the region of interest with filtering options | golemio | integrate | T-5269 | `OffStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | - | static car parks (128 Mr.Parkit garages in Prague, T-5268); occupancy only where a source gives it | 2 |
+| 27 | [`/v3/parking-tariffs`](https://api.golemio.cz/docs/openapi/) | Get a list of tariffs with filtering options | golemio | integrate | T-5269 | `OffStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | - | tariffs as members of the /v3/parking car parks | 2 |
+| 28 | [`176f314a9ded40ef88ce55a2ed401c2e`](https://geoportalpraha.cz/data-a-sluzby/176f314a9ded40ef88ce55a2ed401c2e) | Odpadní zařízení pro občany | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | other | waste facilities; dedupe the 25 yards `golemio-yards` writes (20 m rule) | 2 |
+| 29 | [`2b49ad1ad0bb4892bcb54acfb978456a`](https://geoportalpraha.cz/data-a-sluzby/2b49ad1ad0bb4892bcb54acfb978456a) | Parkovací automaty | ipr | integrate | T-5269 | `FareCollectionSystem` (Transportation) | ngsi-ld, geojson, ogc-features, csv | weekly | weekly parking machines; the Golemio copy is not read twice | 2 |
+| 30 | [`62106cae6acf4507b988c0e745f55bba`](https://geoportalpraha.cz/data-a-sluzby/62106cae6acf4507b988c0e745f55bba) | Pražská integrovaná doprava - vstupy do metra | ipr | integrate | T-5269 | `GtfsAccessPoint` (UrbanMobility) | ngsi-ld, geojson, ogc-features, csv | other | metro entrances; join the GTFS stations | 2 |
+| 31 | [`77d575ed2fd14f4987474a2f26caa460`](https://geoportalpraha.cz/data-a-sluzby/77d575ed2fd14f4987474a2f26caa460) | Sdílená data o zeleni - plochy správy | ipr | integrate | T-5269 | `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-06 | green areas of the shared green register | 2 |
+| 32 | [`802a43db41474d4db5789ef5a47f2985`](https://geoportalpraha.cz/data-a-sluzby/802a43db41474d4db5789ef5a47f2985) | Sdílená data o zeleni - vegetační prvky - body | ipr | integrate | T-5269 | custom `Tree`; closest `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-06 | trees and tree rows from the shared green register | 2 |
+| 33 | [`8818bda5e5e34d96af02126d9554b385`](https://geoportalpraha.cz/data-a-sluzby/8818bda5e5e34d96af02126d9554b385) | Sdílená data o zeleni - vegetační prvky - linie | ipr | integrate | T-5269 | `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-08 | green areas of the shared green register | 2 |
+| 34 | [`518e85700665441f86ded81dd0653a71`](https://geoportalpraha.cz/data-a-sluzby/518e85700665441f86ded81dd0653a71) | Sdílená data o zeleni - vegetační prvky - plocha | ipr | integrate | T-5269 | `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-07 | green areas of the shared green register | 2 |
+| 35 | [`58d3857a49fc43cab69c5aad0162d024`](https://geoportalpraha.cz/data-a-sluzby/58d3857a49fc43cab69c5aad0162d024) | Sdílená data o zeleni - základní plochy zeleně | ipr | integrate | T-5269 | `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-06 | green areas of the shared green register | 2 |
+| 36 | [`1185c458ba6e4d939b335457b57feb5d`](https://geoportalpraha.cz/data-a-sluzby/1185c458ba6e4d939b335457b57feb5d) | Stanoviště tříděného odpadu - položky | ipr | integrate | T-5269 | `WasteContainer` (WasteManagement) | ngsi-ld, geojson, ogc-features, csv | irregular | every container of each sorted-waste station; joins `waste-stations` | 2 |
+| 37 | [`3615fd648f1f4182b5f42dcdfba03b54`](https://geoportalpraha.cz/data-a-sluzby/3615fd648f1f4182b5f42dcdfba03b54) | Stromořadí | ipr | integrate | T-5269 | custom `Tree`; closest `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-02 | trees and tree rows from the shared green register | 2 |
+| 38 | [`ac3df5929a744bb4b80a180158a2562f`](https://geoportalpraha.cz/data-a-sluzby/ac3df5929a744bb4b80a180158a2562f) | Svoz komunálního odpadu | ipr | integrate | T-5269 | custom `WasteCollectionArea`; closest `WasteContainerIsle` (WasteManagement) | ngsi-ld, geojson, ogc-features, csv | other | collection areas and days | 2 |
+| 39 | [`68709d933e424e6b8b924e9a75aaa6c1`](https://geoportalpraha.cz/data-a-sluzby/68709d933e424e6b8b924e9a75aaa6c1) | Velkoobjemové kontejnery | ipr | integrate | T-5269 | `WasteContainer` (WasteManagement) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | bulky-waste containers (Golemio /v1/bulky-waste answers 403 for the key) | 2 |
+| 40 | [`ab4a8cd8fc284b738ca806681559d694`](https://geoportalpraha.cz/data-a-sluzby/ab4a8cd8fc284b738ca806681559d694) | Vyhrazená parkovací stání pro držitele průkazu ZTP/P bez vazby na registrační značku vozidla | ipr | integrate | T-5269 | `OnStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | other | weekly on-street parking sections and reserved bays | 2 |
+| 41 | [`6bceef0c12d84031a0628fab533eecc1`](https://geoportalpraha.cz/data-a-sluzby/6bceef0c12d84031a0628fab533eecc1) | Vyhrazená stání pro invalidy - sdružená | ipr | integrate | T-5269 | `OnStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-21 | weekly on-street parking sections and reserved bays | 2 |
+| 42 | [`1e6b9ad51a12468193f47e2b9b1b94ed`](https://geoportalpraha.cz/data-a-sluzby/1e6b9ad51a12468193f47e2b9b1b94ed) | Vyhrazené stání pro invalidy s registrační značkou | ipr | integrate | T-5269 | `OnStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | weekly | weekly on-street parking sections and reserved bays | 2 |
+| 43 | [`b62d8490d0034b55b2982386a5d1027c`](https://geoportalpraha.cz/data-a-sluzby/b62d8490d0034b55b2982386a5d1027c) | Vyhrazené stání pro zásobování | ipr | integrate | T-5269 | `OnStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-21 | weekly on-street parking sections and reserved bays | 2 |
+| 44 | [`720a5804b9ef4c73af2d85f5605c1dc6`](https://geoportalpraha.cz/data-a-sluzby/720a5804b9ef4c73af2d85f5605c1dc6) | Vyhrazené stání speciální | ipr | integrate | T-5269 | `OnStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | weekly | weekly on-street parking sections and reserved bays | 2 |
+| 45 | [`d2382afbf9454951ab71a0a89c762d15`](https://geoportalpraha.cz/data-a-sluzby/d2382afbf9454951ab71a0a89c762d15) | Vyjmenované stacionární zdroje znečišťování ovzduší - REZZO 1 | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | registered air-pollution sources beside the air-quality stations | 2 |
+| 46 | [`8f600add6b104be9810b23c1bf212b78`](https://geoportalpraha.cz/data-a-sluzby/8f600add6b104be9810b23c1bf212b78) | Vyjmenované stacionární zdroje znečišťování ovzduší - REZZO 2 | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | other | registered air-pollution sources beside the air-quality stations | 2 |
+| 47 | [`b2be4777cec1443fa1e9b4b0d385fed1`](https://geoportalpraha.cz/data-a-sluzby/b2be4777cec1443fa1e9b4b0d385fed1) | Zákaz stání | ipr | integrate | T-5269 | `RestrictedTrafficArea` (Transportation) | ngsi-ld, geojson, ogc-features, csv | weekly | weekly no-parking sections | 2 |
+| 48 | [`8cd3f76652bf49af87901a1d049cb73c`](https://geoportalpraha.cz/data-a-sluzby/8cd3f76652bf49af87901a1d049cb73c) | Zóny parkování města | ipr | integrate | T-5269 | `ParkingGroup` (Parking) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | parking zones the sections join to | 2 |
+| 49 | [`8e3420ecc539468489101958689a3cd9`](https://geoportalpraha.cz/data-a-sluzby/8e3420ecc539468489101958689a3cd9) | Zóny placeného stání vymezené tarifem | ipr | integrate | T-5269 | `OnStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-21 | weekly on-street parking sections and reserved bays | 2 |
+| 50 | [`7cbfdf9f9d87418ba62b35762cd46ca7`](https://geoportalpraha.cz/data-a-sluzby/7cbfdf9f9d87418ba62b35762cd46ca7) | Úseky parkování v zónách placeného stání | ipr | integrate | T-5269 | `OnStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | weekly | weekly on-street parking sections and reserved bays | 2 |
+| 51 | [`chmi-meteo`](https://opendata.chmi.cz/meteorology/climate/now/data/) | ČHMÚ 10-minute weather observations, Prague stations | other | integrate | T-5269 | `WeatherObserved` (Weather) | ngsi-ld, temporal, sta, csv | - | 10-minute readings of the Prague stations; probe the station list first | 2 |
+| 52 | [`81de503fd631afaf81c4f7e44960ef26`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/81de503fd631afaf81c4f7e44960ef26) | Data z aplikace opravujeme.to | city | integrate | T-5269 | `IssueReporting` (IssueTracking) | ngsi-ld, geojson, ogc-features, csv | not stated | citizen issue reports of opravujeme.to; probe how fresh the export is | 1 |
+| 53 | [`87cdef08e1e46bad834175f6f81d2477`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/87cdef08e1e46bad834175f6f81d2477) | Dopravní přestupky MHMP 2024 | city | integrate | T-5269 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, sta, csv | never | yearly offence counts; probe the columns: per street or district gives a KPI per area, else one city series | 1 |
+| 54 | [`780644b0dc13a425afe039dac383e5b1`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/780644b0dc13a425afe039dac383e5b1) | Veřejné osvětlení MHMP | city | integrate | T-5269 | `Streetlight` (Streetlighting) | ngsi-ld, geojson, ogc-features, csv | quarterly | quarterly ZIP of street lights | 1 |
+| 55 | [`bbfde042f88a0908432d451267bdfbec`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/bbfde042f88a0908432d451267bdfbec) | Volné nebytové prostory MHMP | city | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | quarterly | quarterly list of city-owned spaces to rent, geocoded by address | 1 |
+| 56 | [`d8dab0f5c38b05db2bb37758cafa7eb5`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/d8dab0f5c38b05db2bb37758cafa7eb5) | Čerpání rozpočtu MHMP 2026 | city | integrate | T-5269 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, sta, csv | not stated | monthly budget execution, one KPI series per budget line beside `budget` | 1 |
+| 57 | [`8a85aa7854b048f8a5cf8a92070dcbbe`](https://geoportalpraha.cz/data-a-sluzby/8a85aa7854b048f8a5cf8a92070dcbbe) | Bilanční územní celky (BUC) | ipr | integrate | T-5269 | `AdministrativeArea` (custom, praha seed) | ngsi-ld, geojson, ogc-features, csv | other | areas that KPI rows and police counts join to | 1 |
+| 58 | [`45063acce89d4b37afc6d51f03f3ad49`](https://geoportalpraha.cz/data-a-sluzby/45063acce89d4b37afc6d51f03f3ad49) | Cyklistické trasy | ipr | integrate | T-5269 | `BikeLane` (Transportation) | ngsi-ld, geojson, ogc-features, csv | modified 2026-08-17 | cycle routes | 1 |
+| 59 | [`fb6ab7891a7244f39a3a380027af2981`](https://geoportalpraha.cz/data-a-sluzby/fb6ab7891a7244f39a3a380027af2981) | Databáze významných staveb a míst | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | points of interest, one IPR layer family | 1 |
+| 60 | [`934bce6998c84d5ca9a31c4a2d654a2f`](https://geoportalpraha.cz/data-a-sluzby/934bce6998c84d5ca9a31c4a2d654a2f) | Hluková mapa - den | ipr | integrate | T-5269 | custom `NoiseZone`; closest `NoisePollution` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | strategic noise map band areas | 1 |
+| 61 | [`83c81bf4e8ed47c5b38c7d1344d6b41a`](https://geoportalpraha.cz/data-a-sluzby/83c81bf4e8ed47c5b38c7d1344d6b41a) | Hluková mapa - noc | ipr | integrate | T-5269 | custom `NoiseZone`; closest `NoisePollution` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | strategic noise map band areas | 1 |
+| 62 | [`6ea612215c8646dab1ea975aa64276b5`](https://geoportalpraha.cz/data-a-sluzby/6ea612215c8646dab1ea975aa64276b5) | Hluková mapa automobilové dopravy - den | ipr | integrate | T-5269 | custom `NoiseZone`; closest `NoisePollution` (Environment) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | strategic noise map band areas | 1 |
+| 63 | [`014f326d782b452eaa9cd3805587d94f`](https://geoportalpraha.cz/data-a-sluzby/014f326d782b452eaa9cd3805587d94f) | Hluková mapa automobilové dopravy - noc | ipr | integrate | T-5269 | custom `NoiseZone`; closest `NoisePollution` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | strategic noise map band areas | 1 |
+| 64 | [`787f7c3ce4964b519ddc39246377c31b`](https://geoportalpraha.cz/data-a-sluzby/787f7c3ce4964b519ddc39246377c31b) | Hřbitovy | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-09-01 | points of interest, one IPR layer family | 1 |
+| 65 | [`a74bc85ba5354490a23afcfe495693d9`](https://geoportalpraha.cz/data-a-sluzby/a74bc85ba5354490a23afcfe495693d9) | Kategorie radonového rizika | ipr | integrate | T-5269 | custom `RadonRiskArea`; closest `EnvironmentObserved` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | radon risk category per area | 1 |
+| 66 | [`c0bca952f09d44b0bf38885f499ad59d`](https://geoportalpraha.cz/data-a-sluzby/c0bca952f09d44b0bf38885f499ad59d) | Kulturně komunitní centra | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | other | points of interest, one IPR layer family | 1 |
+| 67 | [`98b5292d85404383a6b5d526fa0e752c`](https://geoportalpraha.cz/data-a-sluzby/98b5292d85404383a6b5d526fa0e752c) | Letní údržba komunikací TSK | ipr | integrate | T-5269 | `RoadSegment` (Transportation) | ngsi-ld, geojson, ogc-features, csv | annual | TSK street sections with road class and maintenance order | 1 |
+| 68 | [`927f999ff604463cbce63914de97a6d7`](https://geoportalpraha.cz/data-a-sluzby/927f999ff604463cbce63914de97a6d7) | Naučné stezky na území hl. m. Prahy ve správě odboru ochrany prostředí MHMP | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-10 | points of interest, one IPR layer family | 1 |
+| 69 | [`bed7894d358a4d08b640c972e844d7f3`](https://geoportalpraha.cz/data-a-sluzby/bed7894d358a4d08b640c972e844d7f3) | Naučné stezky na území hl. m. Prahy ve správě odboru ochrany prostředí MHMP - Zastávky | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | annual | points of interest, one IPR layer family | 1 |
+| 70 | [`6fa5c5189b664394a4c39b645ec13619`](https://geoportalpraha.cz/data-a-sluzby/6fa5c5189b664394a4c39b645ec13619) | Okrsky Městské policie Praha | ipr | integrate | T-5269 | `AdministrativeArea` (custom, praha seed) | ngsi-ld, geojson, ogc-features, csv | other | areas that KPI rows and police counts join to | 1 |
+| 71 | [`3d3add84fb784ed297725c566f149a51`](https://geoportalpraha.cz/data-a-sluzby/3d3add84fb784ed297725c566f149a51) | Oázy chladu - kašny, fontány | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | other | points of interest, one IPR layer family | 1 |
+| 72 | [`33eadb4efd7944adb3abf5cb77b40c06`](https://geoportalpraha.cz/data-a-sluzby/33eadb4efd7944adb3abf5cb77b40c06) | Oázy chladu - mlžítka | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-07-31 | points of interest, one IPR layer family | 1 |
+| 73 | [`8d435d33cd5d431cbaeda5837b3d3a77`](https://geoportalpraha.cz/data-a-sluzby/8d435d33cd5d431cbaeda5837b3d3a77) | Oázy chladu - místa ke koupání | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-07-31 | points of interest, one IPR layer family | 1 |
+| 74 | [`39f6228757cf424889f79b0ef7a7b415`](https://geoportalpraha.cz/data-a-sluzby/39f6228757cf424889f79b0ef7a7b415) | Oázy chladu - pumpy | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-07-31 | points of interest, one IPR layer family | 1 |
+| 75 | [`ae0ef46774394e09a91850fb9b826788`](https://geoportalpraha.cz/data-a-sluzby/ae0ef46774394e09a91850fb9b826788) | Oázy chladu - pítka | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | other | points of interest, one IPR layer family | 1 |
+| 76 | [`8aabe75c9689487a88d3e297bf498d6a`](https://geoportalpraha.cz/data-a-sluzby/8aabe75c9689487a88d3e297bf498d6a) | Oázy chladu - studánky, prameny | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | other | points of interest, one IPR layer family | 1 |
+| 77 | [`e01b4bb6d148496abff4f065686290ff`](https://geoportalpraha.cz/data-a-sluzby/e01b4bb6d148496abff4f065686290ff) | Oázy chladu - vodní plochy a toky | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | other | points of interest, one IPR layer family | 1 |
+| 78 | [`bf72734397ba46b9b817ee997d38284b`](https://geoportalpraha.cz/data-a-sluzby/bf72734397ba46b9b817ee997d38284b) | Parky (ÚAP) | ipr | integrate | T-5269 | `Garden` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-13 | parks | 1 |
+| 79 | [`227f70195fd04dc8b429b04ac8ce6cae`](https://geoportalpraha.cz/data-a-sluzby/227f70195fd04dc8b429b04ac8ce6cae) | Pietní místa a válečné hroby | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | points of interest, one IPR layer family | 1 |
+| 80 | [`3fbd520692be4ac889550cf7c5137282`](https://geoportalpraha.cz/data-a-sluzby/3fbd520692be4ac889550cf7c5137282) | Polikliniky a zdravotní střediska | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-09-07 | points of interest, one IPR layer family | 1 |
+| 81 | [`97a5ee3b3d0c4e27b423f28daeb84e67`](https://geoportalpraha.cz/data-a-sluzby/97a5ee3b3d0c4e27b423f28daeb84e67) | Potravinářské plnosortimentní prodejny | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | annual | points of interest, one IPR layer family | 1 |
+| 82 | [`431d4d6de82f4ce3b29c62cf82198671`](https://geoportalpraha.cz/data-a-sluzby/431d4d6de82f4ce3b29c62cf82198671) | Pošty | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | points of interest, one IPR layer family | 1 |
+| 83 | [`6391e7e27ff042a690617195a457f5a8`](https://geoportalpraha.cz/data-a-sluzby/6391e7e27ff042a690617195a457f5a8) | Pražská integrovaná doprava - tarifní pásma | ipr | integrate | T-5269 | custom `FareZone`; closest `RestrictedTrafficArea` (Transportation) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | PID fare zones | 1 |
+| 84 | [`1a09887626a243aeab7910d3ab2477d2`](https://geoportalpraha.cz/data-a-sluzby/1a09887626a243aeab7910d3ab2477d2) | Protipovodňová ochrana | ipr | integrate | T-5269 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | flood extent or flood defence | 1 |
+| 85 | [`98a6eba14f8646e1a6b7e3cd805f484b`](https://geoportalpraha.cz/data-a-sluzby/98a6eba14f8646e1a6b7e3cd805f484b) | Protipovodňová ochrana ( pytle s pískem ) | ipr | integrate | T-5269 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | flood extent or flood defence | 1 |
+| 86 | [`b00b0a0e123b49449a458e72bdf5032d`](https://geoportalpraha.cz/data-a-sluzby/b00b0a0e123b49449a458e72bdf5032d) | Pěší trasy | ipr | integrate | T-5269 | `Road` (Transportation) | ngsi-ld, geojson, ogc-features, csv | other | walking routes | 1 |
+| 87 | [`48719ca373c947f99d3fbdcf341c07f2`](https://geoportalpraha.cz/data-a-sluzby/48719ca373c947f99d3fbdcf341c07f2) | Přírodní parky | ipr | integrate | T-5269 | `Garden` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | parks | 1 |
+| 88 | [`47befb94777e42808f9934f60768072b`](https://geoportalpraha.cz/data-a-sluzby/47befb94777e42808f9934f60768072b) | Sakrální objekty | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | other | points of interest, one IPR layer family | 1 |
+| 89 | [`81c543a1199e46da87e18e12125e29a3`](https://geoportalpraha.cz/data-a-sluzby/81c543a1199e46da87e18e12125e29a3) | Ubytovací zařízení | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | points of interest, one IPR layer family | 1 |
+| 90 | [`1bbe08c6c9f44c70810957c5e10f22db`](https://geoportalpraha.cz/data-a-sluzby/1bbe08c6c9f44c70810957c5e10f22db) | Uliční úseky TSK včetně zatřídění komunikací | ipr | integrate | T-5269 | `RoadSegment` (Transportation) | ngsi-ld, geojson, ogc-features, csv | modified 2026-07-15 | TSK street sections with road class and maintenance order | 1 |
+| 91 | [`5649c54fb6ae422e89569260243870ee`](https://geoportalpraha.cz/data-a-sluzby/5649c54fb6ae422e89569260243870ee) | Veřejná hřiště | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | other | public sports grounds; dedupe against `golemio-playgrounds` (20 m rule) | 1 |
+| 92 | [`143a034267e34baaacdf253b89f4f09e`](https://geoportalpraha.cz/data-a-sluzby/143a034267e34baaacdf253b89f4f09e) | Volný pohyb psů - psí zóny | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | points of interest, one IPR layer family | 1 |
+| 93 | [`28a9425f2ee748328fc5346030de2d83`](https://geoportalpraha.cz/data-a-sluzby/28a9425f2ee748328fc5346030de2d83) | Vysoké školy | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | points of interest, one IPR layer family | 1 |
+| 94 | [`e7f57fda3ad341199f1b254abd1d1b13`](https://geoportalpraha.cz/data-a-sluzby/e7f57fda3ad341199f1b254abd1d1b13) | Zimní údržba komunikací TSK | ipr | integrate | T-5269 | `RoadSegment` (Transportation) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | TSK street sections with road class and maintenance order | 1 |
+| 95 | [`e332ec5438b645b6a08a54a0da1accd6`](https://geoportalpraha.cz/data-a-sluzby/e332ec5438b645b6a08a54a0da1accd6) | Zookoutky Lesů HMP a dále farmy, terária, záchranné stanice a další podobné objekty jiných organizací na území Prahy | ipr | integrate | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | other | points of interest, one IPR layer family | 1 |
+| 96 | [`c9dc5fa395b2478a8db0a7cc5be0e447`](https://geoportalpraha.cz/data-a-sluzby/c9dc5fa395b2478a8db0a7cc5be0e447) | Záplavové území ( Q100 ) | ipr | integrate | T-5269 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | flood extent or flood defence | 1 |
+| 97 | [`fc295e699c5346de9cf6a7e1e634726b`](https://geoportalpraha.cz/data-a-sluzby/fc295e699c5346de9cf6a7e1e634726b) | Záplavové území ( Q20 ) | ipr | integrate | T-5269 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | flood extent or flood defence | 1 |
+| 98 | [`c4ef1880cd5d4e62896f8cb845217881`](https://geoportalpraha.cz/data-a-sluzby/c4ef1880cd5d4e62896f8cb845217881) | Záplavové území ( Q5 ) | ipr | integrate | T-5269 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | flood extent or flood defence | 1 |
+| 99 | [`040756d41d294971ad730304b792cb03`](https://geoportalpraha.cz/data-a-sluzby/040756d41d294971ad730304b792cb03) | Záplavové území ( Q50 ) | ipr | integrate | T-5269 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | flood extent or flood defence | 1 |
+| 100 | [`00242330738c4326af30663eb7c6d7f9`](https://geoportalpraha.cz/data-a-sluzby/00242330738c4326af30663eb7c6d7f9) | Záplavové území ( drobné vodní toky ) | ipr | integrate | T-5269 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | flood extent or flood defence | 1 |
+| 101 | [`7a4bf2d99de44645ac5768f65d8a9692`](https://geoportalpraha.cz/data-a-sluzby/7a4bf2d99de44645ac5768f65d8a9692) | Záplavové území (Vltava, Berounka) | ipr | integrate | T-5269 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | flood extent or flood defence | 1 |
+| 102 | [`/v2/bicyclecounters`](https://api.golemio.cz/docs/openapi/) | GET All Bicycle Counters | golemio | blocked | - | `TrafficFlowObserved` (Transportation) | ngsi-ld, temporal, sta, csv | - | needs a DataSource time window (`from=` now minus the period): the route sorts by device, not time (T-5268) | 3 |
+| 103 | [`/v2/municipalauthorities/{id}/queues`](https://api.golemio.cz/docs/openapi/) | GET All Municipal Authority Waiting Queues | golemio | blocked | - | custom `ServiceQueue`; closest `ArrivalEstimation` (UrbanMobility) | ngsi-ld, temporal, sta, csv | - | one call per office with the key header; a nested Bento call carries no key (T-5268) | 3 |
+| 104 | [`/v2/sharedbikes`](https://api.golemio.cz/docs/openapi/) | GET All Shared Bikes | golemio | blocked | - | `Vehicle` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | - | useful mobility feed with no open batch: T-5268 closed without it and the board takes no new task until the owner admits one | 3 |
+| 105 | [`/v2/sharedcars`](https://api.golemio.cz/docs/openapi/) | GET All Shared Cars | golemio | blocked | - | `Vehicle` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | - | useful mobility feed with no open batch: T-5268 closed without it and the board takes no new task until the owner admits one | 3 |
+| 106 | [`/v2/vehiclesharing`](https://api.golemio.cz/docs/openapi/) | GET All Shared Vehicles | golemio | blocked | - | `Vehicle` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | - | useful mobility feed with no open batch: T-5268 closed without it and the board takes no new task until the owner admits one | 3 |
+| 107 | [`/v2/traffic/restrictions`](https://api.golemio.cz/docs/openapi/) | GET All Traffic Restrictions for a specific moment | golemio | blocked | - | `CityWork` (Transportation) | ngsi-ld, geojson, ogc-features, csv, feed | - | the project key gets 403 (scope); @user asks OICT for the scope | 3 |
+| 108 | [`/v2/vehiclesharing/gbfs/systems_list`](https://api.golemio.cz/docs/openapi/) | GET GBFS Systems List | golemio | blocked | - | `BikeHireDockingStation` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | - | useful mobility feed with no open batch: T-5268 closed without it and the board takes no new task until the owner admits one; the nextbike GBFS is already read directly | 3 |
+| 109 | [`/v2/fcd/info`](https://api.golemio.cz/docs/openapi/) | GET Latest floating Car Data | golemio | blocked | - | `TrafficFlowObserved` (Transportation) | ngsi-ld, temporal, sta, csv | - | the project key gets 403 (scope); @user asks OICT for the scope | 3 |
+| 110 | [`/v2/pedestrians/measurements`](https://api.golemio.cz/docs/openapi/) | GET measurements of pedestrian traffic | golemio | blocked | - | `CrowdFlowObserved` (Transportation) | ngsi-ld, temporal, sta, csv | - | needs a DataSource time window (`from=` now minus the period): the route sorts by device, not time (T-5268) | 3 |
+| 111 | [`/v2/energetics/measurements`](https://api.golemio.cz/docs/openapi/) | Measurements | golemio | blocked | - | `ConsumptionPoint` (Consumption) | ngsi-ld, temporal, sta, csv | - | the project key gets 403 (scope); @user asks OICT for the scope | 3 |
+| 112 | [`golemio-departureboards`](https://api.golemio.cz/v2/pid/departureboards) | Golemio /v2/pid/departureboards (PID departures per stop) | other | blocked | - | `ArrivalEstimation` (UrbanMobility) | ngsi-ld, temporal, sta, csv | - | one call per stop, about 15,000 poles against a cap of 20 calls per 8 s (T-5268); needs `pid-gtfs` stops first | 3 |
+| 113 | [`prague-events`](https://www.prague.eu/en/events) | Prague event calendar (prague.eu, GoOut) | other | blocked | - | `Event` (TourismDestinations) | ngsi-ld, geojson, csv, ical, feed | - | no open events feed found: Golemio has no events route (404, T-5268) and neither page states reuse terms; question to the publishers | 3 |
+| 114 | [`/v1/potholes/data`](https://api.golemio.cz/docs/openapi/) | GET All Pot holes | golemio | blocked | - | `IssueReporting` (IssueTracking) | ngsi-ld, geojson, ogc-features, csv | - | the project key gets 403 (scope); @user asks OICT for the scope (Waze, T-5268) | 2 |
+| 115 | [`/v2/pedestrians/locations`](https://api.golemio.cz/docs/openapi/) | Get locations and directions | golemio | blocked | - | `Device` (Device) | ngsi-ld, geojson, ogc-features, csv | - | needs a DataSource time window (`from=` now minus the period): the route sorts by device, not time (T-5268) | 2 |
+| 116 | [`/v2/energetics/buildings`](https://api.golemio.cz/docs/openapi/) | Get all buildings | golemio | blocked | - | `Building` (Building) | ngsi-ld, geojson, ogc-features, csv | - | the project key gets 403 (scope); @user asks OICT for the scope | 1 |
+| 117 | [`/v2/energetics/devices`](https://api.golemio.cz/docs/openapi/) | List of measurement devices | golemio | blocked | - | `Device` (Device) | ngsi-ld, geojson, ogc-features, csv | - | the project key gets 403 (scope); @user asks OICT for the scope | 1 |
+| 118 | [`/v2/energetics/organizations`](https://api.golemio.cz/docs/openapi/) | List of organizations in brief or full format | golemio | blocked | - | `Organization` (custom) | ngsi-ld, csv, odata | - | the project key gets 403 (scope); @user asks OICT for the scope | 1 |
+| 119 | [`/v2/energetics/ded/buildings`](https://api.golemio.cz/docs/openapi/) | Search buildings by name, address, GID, EAN, EIC or OM identifier | golemio | blocked | - | `Building` (Building) | ngsi-ld, geojson, ogc-features, csv | - | the project key gets 403 (scope); @user asks OICT for the scope | 1 |
+| 120 | [`/v1/bulky-waste/stations`](https://api.golemio.cz/docs/openapi/) | GET All Bulky Waste Containers | golemio | skip | - | `WasteContainer` (WasteManagement) | - | - | 403 for the key (T-5276); IPR Velkoobjemové kontejnery is taken | 2 |
+| 121 | [`/v2/citydistricts`](https://api.golemio.cz/docs/openapi/) | GET All Districts | golemio | skip | - | `AdministrativeArea` (custom, praha seed) | - | - | the same 57 districts the IPR `districts` source writes (T-5276 count); one source per object | 2 |
+| 122 | [`/v3/parking-machines`](https://api.golemio.cz/docs/openapi/) | Get a list of parking machines within the region of interest with filtering options. Results are sorted by id. | golemio | skip | - | `FareCollectionSystem` (Transportation) | - | - | IPR Parkovací automaty (weekly, no key) is taken; compare counts before switching | 2 |
+| 123 | [`/v2/airqualitystations`](https://api.golemio.cz/docs/openapi/) | GET All Air Quality CHMI Stations | golemio | skip | - | `AirQualityObserved` (Environment) | - | - | stale since 2026-08-12 (T-5268 probe); the ČHMÚ `air-quality` source covers the stations | 1 |
+| 124 | [`/v2/medicalinstitutions`](https://api.golemio.cz/docs/openapi/) | GET All Medical Institutions | golemio | skip | - | `PointOfInterest` (PointOfInterest) | - | - | newest record 2024-04-01 (T-5276 probe); IPR Polikliniky is taken | 1 |
+| 125 | [`/v2/microclimate/locations`](https://api.golemio.cz/docs/openapi/) | GET All Microclimate Sensor Locations | golemio | skip | - | `Device` (Device) | - | - | no reading since 2026-04-07 (T-5276 probe) | 1 |
+| 126 | [`/v2/microclimate/measurements`](https://api.golemio.cz/docs/openapi/) | GET All Microclimate Sensor Measurements | golemio | skip | - | `WeatherObserved` (Weather) | - | - | no reading since 2026-04-07 (T-5276 probe) | 1 |
+| 127 | [`/v2/parking`](https://api.golemio.cz/docs/openapi/) | GET All Parking Spaces within the region of interest | golemio | skip | - | `OffStreetParking` (Parking) | - | - | v2 is the older shape of /v3/parking | 1 |
+| 128 | [`/v2/microclimate/points`](https://api.golemio.cz/docs/openapi/) | GET Microclimate Sensor Points | golemio | skip | - | `Device` (Device) | - | - | no reading since 2026-04-07 (T-5276 probe) | 1 |
+| 129 | [`87f9881dab2847c09d6b1da7090d0f6c`](https://geoportalpraha.cz/data-a-sluzby/87f9881dab2847c09d6b1da7090d0f6c) | Objekty Městské policie Praha (body) | ipr | skip | - | - | - | modified 2026-06-01 | the same police stations `golemio-police` writes from Golemio (live); one source per object | 1 |
+| 130 | [`a62d904e397f4320b299f37760d818da`](https://geoportalpraha.cz/data-a-sluzby/a62d904e397f4320b299f37760d818da) | Sdílená data o zeleni - technické prvky - body | ipr | skip | - | - | - | modified 2026-10-06 | benches, fences and paths of the green register: an asset inventory; score 1 but no city question it answers alone | 1 |
+| 131 | [`d187ec184f6e4cd0b55e040df4bd717d`](https://geoportalpraha.cz/data-a-sluzby/d187ec184f6e4cd0b55e040df4bd717d) | Sdílená data o zeleni - technické prvky - linie | ipr | skip | - | - | - | modified 2026-10-07 | benches, fences and paths of the green register: an asset inventory; score 1 but no city question it answers alone | 1 |
+| 132 | [`6960e7e91f364502ba4325ad85e2d8f4`](https://geoportalpraha.cz/data-a-sluzby/6960e7e91f364502ba4325ad85e2d8f4) | Sdílená data o zeleni - technické prvky - plochy | ipr | skip | - | - | - | modified 2026-10-06 | benches, fences and paths of the green register: an asset inventory; score 1 but no city question it answers alone | 1 |
+| 133 | [`3fe6f0e1430da39b8be8e1144012e291`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/3fe6f0e1430da39b8be8e1144012e291) | Obsazené nebytové prostory MHMP | city | skip | - | - | - | not stated | let commercial spaces, an asset register with no city question | 0 |
+| 134 | [`b391a9b27f17b43632259284fc196662`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/b391a9b27f17b43632259284fc196662) | Počet nově uzavřených nájemních vztahů HMP (byty) | city | skip | - | - | - | not stated | city-wide housing counts with no area cut; score 0 | 0 |
+| 135 | [`62b7c5aa327934ee78cae494eefe8b8a`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/62b7c5aa327934ee78cae494eefe8b8a) | Počet opravených bytů HMP | city | skip | - | - | - | not stated | city-wide housing counts with no area cut; score 0 | 0 |
+| 136 | [`0eed7cbf7be6adac59001c93edf78b40`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/0eed7cbf7be6adac59001c93edf78b40) | Počet uvolněných bytů HMP | city | skip | - | - | - | not stated | city-wide housing counts with no area cut; score 0 | 0 |
+| 137 | [`9d1eb24f2b93993eb22e6db81c96b0fd`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/9d1eb24f2b93993eb22e6db81c96b0fd) | Počet vedených soudních sporů k bytovému fondu HMP | city | skip | - | - | - | not stated | city-wide housing counts with no area cut; score 0 | 0 |
+| 138 | [`a541a1cb0d082ab67771436216d029ed`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/a541a1cb0d082ab67771436216d029ed) | Přijaté faktury MHMP 2026 | city | skip | - | - | - | monthly | invoice ledger, no city question; budget execution covers the money | 0 |
+| 139 | [`fce15b13b660c70c8f09c1fa9fd21df1`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/fce15b13b660c70c8f09c1fa9fd21df1) | Seznam organizací HMP | city | skip | - | - | - | not stated | register of city-owned organisations, no location or value | 0 |
+| 140 | [`87ca3f222ce17ecd9b11b493ffac77a8`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/87ca3f222ce17ecd9b11b493ffac77a8) | Struktura bytového fondu HMP | city | skip | - | - | - | quarterly | city-wide housing counts with no area cut; score 0 | 0 |
+| 141 | [`podnet-26`](https://data.gov.cz/zdroj/podn%C4%9Bty-na-data-k-otev%C5%99en%C3%AD/26) | Veřejné osvětlení MHMP | city | skip | - | - | - | not stated | a data request (podnět), not a dataset; `780644b0dc13a425afe039dac383e5b1` answers it | 0 |
+| 142 | [`aaf8f062015cc627d5f247d6bd6cf9ac`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/aaf8f062015cc627d5f247d6bd6cf9ac) | Výsledky hlasování ZHMP 2022 - 2026 | city | skip | - | - | - | irregular | council roll-call votes, no city indicator | 0 |
+| 143 | [`de3744ae61c2ea56d61f4667bc209246`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/de3744ae61c2ea56d61f4667bc209246) | Žádosti o pronájem bytů HMP | city | skip | - | - | - | not stated | city-wide housing counts with no area cut; score 0 | 0 |
+| 144 | [`/v2/parking/detail`](https://api.golemio.cz/docs/openapi/) | GET All Detailed Parking Spaces | golemio | skip | - | - | - | - | internal route (spec tag "internal") | 0 |
+| 145 | [`/v2/parking/measurements`](https://api.golemio.cz/docs/openapi/) | GET All Parking Spaces Measurements | golemio | skip | - | - | - | - | internal route (spec tag "internal") | 0 |
+| 146 | [`/v2/parking/tariffs`](https://api.golemio.cz/docs/openapi/) | GET All Parking Spaces Tariffs | golemio | skip | - | - | - | - | internal route (spec tag "internal") | 0 |
+| 147 | [`/v2/sortedwastestations/measurements`](https://api.golemio.cz/docs/openapi/) | GET All Waste Collection Measurements | golemio | skip | - | - | - | - | internal route (spec tag "internal"); `waste-fill` gets the fill level from the station list | 0 |
+| 148 | [`/v2/sortedwastestations/picks`](https://api.golemio.cz/docs/openapi/) | GET All Waste Collection Picks | golemio | skip | - | - | - | - | internal route (spec tag "internal") | 0 |
+| 149 | [`/v2/sortedwastestations/pickdays`](https://api.golemio.cz/docs/openapi/) | GET Waste Collection Pick Days | golemio | skip | - | - | - | - | internal route (spec tag "internal") | 0 |
+| 150 | [`2ce0a7a48eb542fb858a998f77a5b227`](https://geoportalpraha.cz/data-a-sluzby/2ce0a7a48eb542fb858a998f77a5b227) | Bloky | ipr | skip | - | - | - | modified 2026-06-01 | urban-structure analysis layer, no city question | 0 |
+| 151 | [`fe6b8a020b744536ab95b8cb43694ea6`](https://geoportalpraha.cz/data-a-sluzby/fe6b8a020b744536ab95b8cb43694ea6) | Bonita klimatu | ipr | skip | - | - | - | modified 2026-06-01 | score 0: no city question, a one-off analysis or a register | 0 |
+| 152 | [`71783e581adb40f8bb05ca5451688776`](https://geoportalpraha.cz/data-a-sluzby/71783e581adb40f8bb05ca5451688776) | Bonita klimatu z hlediska míry zastavěnosti území | ipr | skip | - | - | - | other | score 0: no city question, a one-off analysis or a register | 0 |
+| 153 | [`805fb2c41c454f26864ec455de660562`](https://geoportalpraha.cz/data-a-sluzby/805fb2c41c454f26864ec455de660562) | Bonita klimatu z hlediska oslunění | ipr | skip | - | - | - | modified 2026-06-01 | score 0: no city question, a one-off analysis or a register | 0 |
+| 154 | [`b11ca241697446ff8f6c031ad8fd4a27`](https://geoportalpraha.cz/data-a-sluzby/b11ca241697446ff8f6c031ad8fd4a27) | Bonita klimatu z hlediska přirozené ventilace území | ipr | skip | - | - | - | modified 2026-06-01 | score 0: no city question, a one-off analysis or a register | 0 |
+| 155 | [`c0a08ed2d2f14962b65c3a1908465519`](https://geoportalpraha.cz/data-a-sluzby/c0a08ed2d2f14962b65c3a1908465519) | Bonita klimatu z hlediska rychlosti proudění | ipr | skip | - | - | - | modified 2026-06-01 | score 0: no city question, a one-off analysis or a register | 0 |
+| 156 | [`1d248a456ddd499aa51139a859bd9654`](https://geoportalpraha.cz/data-a-sluzby/1d248a456ddd499aa51139a859bd9654) | Bonita klimatu z hlediska výskytu bezvětří | ipr | skip | - | - | - | modified 2026-06-01 | score 0: no city question, a one-off analysis or a register | 0 |
+| 157 | [`96e882bdfdf448c5b0031f5303118801`](https://geoportalpraha.cz/data-a-sluzby/96e882bdfdf448c5b0031f5303118801) | Bonita klimatu z hlediska znečištění ovzduší | ipr | skip | - | - | - | modified 2026-06-01 | score 0: no city question, a one-off analysis or a register | 0 |
+| 158 | [`23c1130730444977846716a2be9a8105`](https://geoportalpraha.cz/data-a-sluzby/23c1130730444977846716a2be9a8105) | Budovy ve vlastnictví hl. m. Prahy - evidence MHMP | ipr | skip | - | - | - | modified 2026-06-01 | score 0: no city question, a one-off analysis or a register | 0 |
+| 159 | [`f27a07e826be4855b7c854f24d94dbc1`](https://geoportalpraha.cz/data-a-sluzby/f27a07e826be4855b7c854f24d94dbc1) | Cenné poválečné obytné soubory | ipr | skip | - | - | - | other | urban-structure analysis layer, no city question | 0 |
+| 160 | [`efa6767e08154a72a9a5931082dc1df2`](https://geoportalpraha.cz/data-a-sluzby/efa6767e08154a72a9a5931082dc1df2) | Cenová mapa Hl. m. Prahy - plochy | ipr | skip | - | - | - | modified 2026-06-01 | score 0: no city question, a one-off analysis or a register | 0 |
+| 161 | [`519cbdad40d242cbb765ea71f0392fb2`](https://geoportalpraha.cz/data-a-sluzby/519cbdad40d242cbb765ea71f0392fb2) | Cyklistická doprava - značky | ipr | skip | - | - | - | modified 2026-06-01 | score 0: no city question, a one-off analysis or a register | 0 |
+| 162 | [`f1669d045fc5475aace664e484bd3427`](https://geoportalpraha.cz/data-a-sluzby/f1669d045fc5475aace664e484bd3427) | Geologické jednotky | ipr | skip | - | - | - | modified 2026-06-01 | terrain or geology base layer for maps | 0 |
+| 163 | [`dd56b9bf11f748dc83402709cf7ad6c6`](https://geoportalpraha.cz/data-a-sluzby/dd56b9bf11f748dc83402709cf7ad6c6) | Historické správní hranice | ipr | skip | - | - | - | modified 2026-06-01 | urban-structure analysis layer, no city question | 0 |
+| 164 | [`2a7da6765e104063a25bb6adadd957b7`](https://geoportalpraha.cz/data-a-sluzby/2a7da6765e104063a25bb6adadd957b7) | Historické trasy cest | ipr | skip | - | - | - | modified 2026-06-01 | urban-structure analysis layer, no city question | 0 |
+| 165 | [`fe45e416b03642f9902cdf1b30ef678a`](https://geoportalpraha.cz/data-a-sluzby/fe45e416b03642f9902cdf1b30ef678a) | Hranice klimatických regionů | ipr | skip | - | - | - | other | score 0: no city question, a one-off analysis or a register | 0 |
+| 166 | [`987c2262f47549f3a0df010a6e10c83a`](https://geoportalpraha.cz/data-a-sluzby/987c2262f47549f3a0df010a6e10c83a) | Hrany svahů | ipr | skip | - | - | - | modified 2026-06-01 | terrain or geology base layer for maps | 0 |
+| 167 | [`281b2db845a9457c9fabc9b9cdf6a3e9`](https://geoportalpraha.cz/data-a-sluzby/281b2db845a9457c9fabc9b9cdf6a3e9) | IPPC - Integrované povolení | ipr | skip | - | - | - | other | score 0: no city question, a one-off analysis or a register | 0 |
+| 168 | [`cf979c31180d4fbd92ebdb22d45fa8b2`](https://geoportalpraha.cz/data-a-sluzby/cf979c31180d4fbd92ebdb22d45fa8b2) | Liniové překážky prostupnosti | ipr | skip | - | - | - | modified 2026-07-09 | urban-structure analysis layer, no city question | 0 |
+| 169 | [`d4557fdab6ba4532a2566afe39d1ec26`](https://geoportalpraha.cz/data-a-sluzby/d4557fdab6ba4532a2566afe39d1ec26) | Náměstí, návsi, prostranství | ipr | skip | - | - | - | modified 2026-06-01 | urban-structure analysis layer, no city question | 0 |
+| 170 | [`47166a1c34994903889d25c940cca5e3`](https://geoportalpraha.cz/data-a-sluzby/47166a1c34994903889d25c940cca5e3) | Opěrné zdi | ipr | skip | - | - | - | other | terrain or geology base layer for maps | 0 |
+| 171 | [`5f51a4dbd07a4429b822fe0310b2fb50`](https://geoportalpraha.cz/data-a-sluzby/5f51a4dbd07a4429b822fe0310b2fb50) | PanGeo | ipr | skip | - | - | - | irregular | terrain or geology base layer for maps | 0 |
+| 172 | [`86d460f2edd041deba0560f9a090b5f6`](https://geoportalpraha.cz/data-a-sluzby/86d460f2edd041deba0560f9a090b5f6) | Parcely ve vlastnictví hl. m. Prahy - evidence MHMP | ipr | skip | - | - | - | modified 2026-06-01 | score 0: no city question, a one-off analysis or a register | 0 |
+| 173 | [`f91c74740b6f41b296ee3d46f8920ae2`](https://geoportalpraha.cz/data-a-sluzby/f91c74740b6f41b296ee3d46f8920ae2) | Partery | ipr | skip | - | - | - | modified 2026-06-01 | urban-structure analysis layer, no city question | 0 |
+| 174 | [`96ede95cda354c7ea139ca6918a8009e`](https://geoportalpraha.cz/data-a-sluzby/96ede95cda354c7ea139ca6918a8009e) | Plošné překážky prostupnosti | ipr | skip | - | - | - | modified 2026-07-09 | urban-structure analysis layer, no city question | 0 |
+| 175 | [`669fb3aca4bf4129b252eac8552f6054`](https://geoportalpraha.cz/data-a-sluzby/669fb3aca4bf4129b252eac8552f6054) | Podlažnosti | ipr | skip | - | - | - | biennial | urban-structure analysis layer, no city question | 0 |
+| 176 | [`409b7c43a50c45abac6f41f5684e4698`](https://geoportalpraha.cz/data-a-sluzby/409b7c43a50c45abac6f41f5684e4698) | Potenciál bezmotorových tahů | ipr | skip | - | - | - | modified 2026-06-01 | urban-structure analysis layer, no city question | 0 |
+| 177 | [`d7442b3254ef40768599f328b7f3270f`](https://geoportalpraha.cz/data-a-sluzby/d7442b3254ef40768599f328b7f3270f) | Protihlukové bariéry | ipr | skip | - | - | - | other | score 0: no city question, a one-off analysis or a register | 0 |
+| 178 | [`c739df39126b456b8aaa1bb3db213b05`](https://geoportalpraha.cz/data-a-sluzby/c739df39126b456b8aaa1bb3db213b05) | Protihlukové valy | ipr | skip | - | - | - | other | score 0: no city question, a one-off analysis or a register | 0 |
+| 179 | [`f2f1606532d1455fbfb5d7ccdbb22495`](https://geoportalpraha.cz/data-a-sluzby/f2f1606532d1455fbfb5d7ccdbb22495) | Stáří zástavby | ipr | skip | - | - | - | modified 2026-06-01 | urban-structure analysis layer, no city question | 0 |
+| 180 | [`4bd3cffd9e4e47758f5f9f2d8fed6fce`](https://geoportalpraha.cz/data-a-sluzby/4bd3cffd9e4e47758f5f9f2d8fed6fce) | Subjekty EVVO | ipr | skip | - | - | - | modified 2026-07-29 | score 0: no city question, a one-off analysis or a register | 0 |
+| 181 | [`db968d51a1a043f2832a16f140386146`](https://geoportalpraha.cz/data-a-sluzby/db968d51a1a043f2832a16f140386146) | Tržní řád | ipr | skip | - | - | - | modified 2026-06-01 | score 0: no city question, a one-off analysis or a register | 0 |
+| 182 | [`b70e5b59935f4b4cb54b230db8a59871`](https://geoportalpraha.cz/data-a-sluzby/b70e5b59935f4b4cb54b230db8a59871) | Ubytování Airbnb | ipr | skip | - | - | - | modified 2026-06-01 | score 0: no city question, a one-off analysis or a register | 0 |
+| 183 | [`f71616f71ed849d8b74a86c27bfda8cb`](https://geoportalpraha.cz/data-a-sluzby/f71616f71ed849d8b74a86c27bfda8cb) | Urbanistická síť | ipr | skip | - | - | - | modified 2026-06-01 | urban-structure analysis layer, no city question | 0 |
+| 184 | [`254b2265c0964538a8dd89eed895cefb`](https://geoportalpraha.cz/data-a-sluzby/254b2265c0964538a8dd89eed895cefb) | Uzavřené rezidenční areály - body | ipr | skip | - | - | - | modified 2026-06-01 | urban-structure analysis layer, no city question | 0 |
+| 185 | [`18b04b0c976e4f6d9431275452149c6a`](https://geoportalpraha.cz/data-a-sluzby/18b04b0c976e4f6d9431275452149c6a) | Veřejně přístupná prostranství | ipr | skip | - | - | - | biennial | urban-structure analysis layer, no city question | 0 |
+| 186 | [`d6390f4d568f4560a3a5ecb95ad8ffe0`](https://geoportalpraha.cz/data-a-sluzby/d6390f4d568f4560a3a5ecb95ad8ffe0) | Voda spojitá | ipr | skip | - | - | - | modified 2026-10-05 | score 0: no city question, a one-off analysis or a register | 0 |
+| 187 | [`3476d8f8a60942c1a1e11b3730c84d0c`](https://geoportalpraha.cz/data-a-sluzby/3476d8f8a60942c1a1e11b3730c84d0c) | Vrstevnice 1 m | ipr | skip | - | - | - | modified 2026-06-01 | terrain or geology base layer for maps | 0 |
+| 188 | [`fb2e5c757d9545edb5ea0f307206225c`](https://geoportalpraha.cz/data-a-sluzby/fb2e5c757d9545edb5ea0f307206225c) | Vrstevnice 2 m | ipr | skip | - | - | - | modified 2026-06-01 | terrain or geology base layer for maps | 0 |
+| 189 | [`2ea499b6e3214edbb392820562c24a59`](https://geoportalpraha.cz/data-a-sluzby/2ea499b6e3214edbb392820562c24a59) | Vrstevnice 5 m | ipr | skip | - | - | - | modified 2026-06-01 | terrain or geology base layer for maps | 0 |
+| 190 | [`fc8aa1fdef7a41e3a996d2d2c59bcf79`](https://geoportalpraha.cz/data-a-sluzby/fc8aa1fdef7a41e3a996d2d2c59bcf79) | Vstupy - body | ipr | skip | - | - | - | modified 2026-07-09 | urban-structure analysis layer, no city question | 0 |
+| 191 | [`2a02afe23c3b434daec21dea7318d26c`](https://geoportalpraha.cz/data-a-sluzby/2a02afe23c3b434daec21dea7318d26c) | Vývoj zástavby v Praze v letech 1840 - 2010 | ipr | skip | - | - | - | modified 2026-06-01 | urban-structure analysis layer, no city question | 0 |
+| 192 | [`46887c0a203a4862ae6c4d1330cb83aa`](https://geoportalpraha.cz/data-a-sluzby/46887c0a203a4862ae6c4d1330cb83aa) | Významné stavební dominanty | ipr | skip | - | - | - | other | urban-structure analysis layer, no city question | 0 |
+| 193 | [`bae8c96d6d83476d9f9b399df87ea6f0`](https://geoportalpraha.cz/data-a-sluzby/bae8c96d6d83476d9f9b399df87ea6f0) | Významné svahy | ipr | skip | - | - | - | modified 2026-06-01 | terrain or geology base layer for maps | 0 |
+| 194 | [`7ac774b536154ac4a8e151264ea8e00c`](https://geoportalpraha.cz/data-a-sluzby/7ac774b536154ac4a8e151264ea8e00c) | Významné vyhlídkové body | ipr | skip | - | - | - | other | urban-structure analysis layer, no city question | 0 |
+| 195 | [`150307cabda6483d80e4ffd18f9e0323`](https://geoportalpraha.cz/data-a-sluzby/150307cabda6483d80e4ffd18f9e0323) | Významné vyhlídkové body - pohledové výseče | ipr | skip | - | - | - | modified 2026-06-01 | urban-structure analysis layer, no city question | 0 |
+| 196 | [`bd9307d2499c44ce9c2d3ef092e7ae74`](https://geoportalpraha.cz/data-a-sluzby/bd9307d2499c44ce9c2d3ef092e7ae74) | Významný krajinný prvek - registrovaný | ipr | skip | - | - | - | other | score 0: no city question, a one-off analysis or a register | 0 |
+| 197 | [`b8c61c672e7b4fa1a3a67e2c2c5613aa`](https://geoportalpraha.cz/data-a-sluzby/b8c61c672e7b4fa1a3a67e2c2c5613aa) | Významný krajinný prvek - test | ipr | skip | - | - | - | other | score 0: no city question, a one-off analysis or a register | 0 |
+| 198 | [`f461e0a1e13d4151a79a0c07b3ceb6cc`](https://geoportalpraha.cz/data-a-sluzby/f461e0a1e13d4151a79a0c07b3ceb6cc) | Výška obvodových linií střech | ipr | skip | - | - | - | modified 2026-06-01 | urban-structure analysis layer, no city question | 0 |
+| 199 | [`b8e6235adce5463fa3012941bd3cdc3a`](https://geoportalpraha.cz/data-a-sluzby/b8e6235adce5463fa3012941bd3cdc3a) | Včelnice Lesů hl. m. Prahy a další podobné objekty jiných organizací na území Prahy | ipr | skip | - | - | - | other | score 0: no city question, a one-off analysis or a register | 0 |
+| 200 | [`77b67894212e487cb57626e10bf15f85`](https://geoportalpraha.cz/data-a-sluzby/77b67894212e487cb57626e10bf15f85) | Věznice | ipr | skip | - | - | - | modified 2026-06-01 | score 0: no city question, a one-off analysis or a register | 0 |
+| 201 | [`80641664255a498aaea60d4d56ac962b`](https://geoportalpraha.cz/data-a-sluzby/80641664255a498aaea60d4d56ac962b) | Zaniklé cesty dle Císařských otisků stabilního katastru - pro hl. m. Praha | ipr | skip | - | - | - | other | urban-structure analysis layer, no city question | 0 |
+| 202 | [`14057412b25649c99d65cad77fd7dffd`](https://geoportalpraha.cz/data-a-sluzby/14057412b25649c99d65cad77fd7dffd) | Zaniklé cesty dle II.vojenského mapování - pro metropolitní oblast Prahy na území Středočeského kraje | ipr | skip | - | - | - | other | urban-structure analysis layer, no city question | 0 |
+| 203 | [`09bf264e20ad4a6f8f85740024dce306`](https://geoportalpraha.cz/data-a-sluzby/09bf264e20ad4a6f8f85740024dce306) | Záplavové území 2013 | ipr | skip | - | - | - | modified 2026-06-01 | score 0: no city question, a one-off analysis or a register | 0 |
+| 204 | [`f7211297c79c44a49cf249955933364a`](https://geoportalpraha.cz/data-a-sluzby/f7211297c79c44a49cf249955933364a) | Zóny havarijního plánování | ipr | skip | - | - | - | modified 2026-06-01 | score 0: no city question, a one-off analysis or a register | 0 |
+| 205 | [`4a5b20e5cfec4eb4b1c15759f2004dd3`](https://geoportalpraha.cz/data-a-sluzby/4a5b20e5cfec4eb4b1c15759f2004dd3) | Zóny parkování města 2016 | ipr | skip | - | - | - | modified 2026-06-01 | score 0: no city question, a one-off analysis or a register | 0 |
+| 206 | [`2d6fd2c0a02024268942c908332dd93f`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/2d6fd2c0a02024268942c908332dd93f) | Faktury Městské policie hl. m. Prahy za rok 2024 | city | skip | - | - | - | not stated | invoices and orders of the city police | -1 |
+| 207 | [`6eeb3dc57b800374862bc2645586e982`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/6eeb3dc57b800374862bc2645586e982) | Náklady na budovy | city | skip | - | - | - | quarterly | operating costs per city building, a finance table | -1 |
+| 208 | [`e536eba93f78963a39170c4ec3132140`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/e536eba93f78963a39170c4ec3132140) | Objednávky Městské policie hl. m. Prahy za rok 2025 | city | skip | - | - | - | annual | invoices and orders of the city police | -1 |
+| 209 | [`67bfec2fe0b874383a755dde8db36c78`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/67bfec2fe0b874383a755dde8db36c78) | Odměny členů Zastupitelstva HMP 2025 | city | skip | - | - | - | not stated | councillors' pay, a ledger | -1 |
+| 210 | [`d3495234c38e834ad81e4c445f095a57`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/d3495234c38e834ad81e4c445f095a57) | Poplatek za komunální odpad MHMP dle splatnosti | city | skip | - | - | - | annual | waste-fee accounting, no area cut | -1 |
+| 211 | [`29491fc1192ee981abd2a6d853b7a4b0`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/29491fc1192ee981abd2a6d853b7a4b0) | Poplatek za komunální odpad MHMP dle splatnosti od 2022 | city | skip | - | - | - | annual | waste-fee accounting, no area cut | -1 |
+| 212 | [`a8b43acce7dd9cc7e2fefa88a2a7c7c3`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/a8b43acce7dd9cc7e2fefa88a2a7c7c3) | Poplatek za komunální odpad MHMP dle účetní operace | city | skip | - | - | - | monthly | waste-fee accounting, no area cut | -1 |
+| 213 | [`5927470166d05eff45c1d5d203b110f6`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/5927470166d05eff45c1d5d203b110f6) | Poplatek za komunální odpad MHMP dle účetní operace od 2022 | city | skip | - | - | - | not stated | waste-fee accounting, no area cut | -1 |
+| 214 | [`8ce1088c6b630f2e2f4eec590eaf5ceb`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/8ce1088c6b630f2e2f4eec590eaf5ceb) | Publikační plán MHMP | city | skip | - | - | - | irregular | the publication plan, an index of datasets | -1 |
+| 215 | [`6142def18744a8d2b69782ae2b9d1d3a`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/6142def18744a8d2b69782ae2b9d1d3a) | Veřejné zakázky MHMP | city | skip | - | - | - | not stated | procurement ledger | -1 |
+| 216 | [`00a6881dae1ae620dadf8b55ecfd7b6e`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/00a6881dae1ae620dadf8b55ecfd7b6e) | Vybrané kontroly odboru kontrolních činností MHMP | city | skip | - | - | - | not stated | audit reports, documents | -1 |
+| 217 | [`/v2/vehiclesharing/mvts/free_vehicle_status`](https://api.golemio.cz/docs/openapi/) | GET MVTS geojson of free vehicle status | golemio | skip | - | - | - | - | vector tiles of the vehiclesharing feed | -1 |
+| 218 | [`/v2/mvt/{z}/{x}/{y}`](https://api.golemio.cz/docs/openapi/) | Get vector tile data for a specific map tile | golemio | skip | - | - | - | - | vector tiles, linked as a distribution at most | -1 |
+| 219 | [`b5db29c4f156475086de2d25e430d290`](https://geoportalpraha.cz/data-a-sluzby/b5db29c4f156475086de2d25e430d290) | Absolutní výšky budov | ipr | skip | - | - | - | modified 2026-04-30 | raster, 3D scene or web map; a basemap link in the catalogue at most | -1 |
+| 220 | [`44e6148cd9c34542b1202525ebec06de`](https://geoportalpraha.cz/data-a-sluzby/44e6148cd9c34542b1202525ebec06de) | Archivní DTM Prahy - inženýrské sítě - autorizovaná data správců - povrchové znaky zobrazené symbolem | ipr | skip | - | - | - | modified 2026-06-01 | utility network survey (DTM), an engineering archive with no city question | -1 |
+| 221 | [`67ff6c76686b44dba4386a780765429d`](https://geoportalpraha.cz/data-a-sluzby/67ff6c76686b44dba4386a780765429d) | Archivní DTM Prahy - inženýrské sítě - autorizovaná data správců - průběh | ipr | skip | - | - | - | modified 2026-06-01 | utility network survey (DTM), an engineering archive with no city question | -1 |
+| 222 | [`df942357cd6548408c35c059d3ccba61`](https://geoportalpraha.cz/data-a-sluzby/df942357cd6548408c35c059d3ccba61) | Archivní DTM Prahy - inženýrské sítě - povrchové znaky zaměřené obvodem | ipr | skip | - | - | - | modified 2026-06-01 | utility network survey (DTM), an engineering archive with no city question | -1 |
+| 223 | [`d4418172a31b46b7b875668eaa354f22`](https://geoportalpraha.cz/data-a-sluzby/d4418172a31b46b7b875668eaa354f22) | Archivní DTM Prahy - inženýrské sítě - povrchové znaky zobrazené symbolem | ipr | skip | - | - | - | modified 2026-06-01 | utility network survey (DTM), an engineering archive with no city question | -1 |
+| 224 | [`81a8d41ec3134ad38d62b02ff6235437`](https://geoportalpraha.cz/data-a-sluzby/81a8d41ec3134ad38d62b02ff6235437) | Archivní DTM Prahy - inženýrské sítě - průběh | ipr | skip | - | - | - | modified 2026-06-01 | utility network survey (DTM), an engineering archive with no city question | -1 |
+| 225 | [`7e6316e95cfe4f36ae06bbfb687bf34b`](https://geoportalpraha.cz/data-a-sluzby/7e6316e95cfe4f36ae06bbfb687bf34b) | Budovy 3D / Buildings 3D model | ipr | skip | - | - | - | modified 2026-07-21 | raster, 3D scene or web map; a basemap link in the catalogue at most | -1 |
+| 226 | [`a6120ef1652e4df2b1202c1a8ad4e0c7`](https://geoportalpraha.cz/data-a-sluzby/a6120ef1652e4df2b1202c1a8ad4e0c7) | Digitální model povrchu - 1m | ipr | skip | - | - | - | modified 2026-04-30 | raster, 3D scene or web map; a basemap link in the catalogue at most | -1 |
+| 227 | [`97d2c9c11aa9478cb21b469b8a4f820e`](https://geoportalpraha.cz/data-a-sluzby/97d2c9c11aa9478cb21b469b8a4f820e) | Digitální model terénu - rastr | ipr | skip | - | - | - | modified 2026-04-30 | raster, 3D scene or web map; a basemap link in the catalogue at most | -1 |
+| 228 | [`999e4a28af374bc5a87021bce082c392`](https://geoportalpraha.cz/data-a-sluzby/999e4a28af374bc5a87021bce082c392) | Generel cyklistických tras hl. m. Prahy | ipr | skip | - | - | - | modified 2026-06-01 | land-use plan or planning analysis layer (plan index) | -1 |
+| 229 | [`684f561915764e3e9c48800a6b4fdacd`](https://geoportalpraha.cz/data-a-sluzby/684f561915764e3e9c48800a6b4fdacd) | Klad mapových listů 1:1000 | ipr | skip | - | - | - | never | map sheet index | -1 |
+| 230 | [`db079beefdb849a2bbef58bdd8d3d2bb`](https://geoportalpraha.cz/data-a-sluzby/db079beefdb849a2bbef58bdd8d3d2bb) | Klad mapových listů 1:10000 | ipr | skip | - | - | - | modified 2026-06-01 | map sheet index | -1 |
+| 231 | [`691ecd84883d4e019e044da140f6ee0b`](https://geoportalpraha.cz/data-a-sluzby/691ecd84883d4e019e044da140f6ee0b) | Klad mapových listů 1:2000 | ipr | skip | - | - | - | modified 2026-06-01 | map sheet index | -1 |
+| 232 | [`dddf9844820d4d2abc41d2505f8220b7`](https://geoportalpraha.cz/data-a-sluzby/dddf9844820d4d2abc41d2505f8220b7) | Klad mapových listů 1:500 | ipr | skip | - | - | - | never | map sheet index | -1 |
+| 233 | [`8e7f01589b004c25820d41cc190c1ed3`](https://geoportalpraha.cz/data-a-sluzby/8e7f01589b004c25820d41cc190c1ed3) | Klad mapových listů 1:5000 | ipr | skip | - | - | - | never | map sheet index | -1 |
+| 234 | [`b69c5992ac06481da8d0e545838baa11`](https://geoportalpraha.cz/data-a-sluzby/b69c5992ac06481da8d0e545838baa11) | Klad mapových listů 1:50000 | ipr | skip | - | - | - | never | map sheet index | -1 |
+| 235 | [`267a7595c34845d5b44925414c718f5d`](https://geoportalpraha.cz/data-a-sluzby/267a7595c34845d5b44925414c718f5d) | MPP -  Technická infrastruktura — plochy a koridory | ipr | skip | - | - | - | modified 2026-10-13 | land-use plan or planning analysis layer (plan index) | -1 |
+| 236 | [`ac72dae0dad44520bdd2cbbb12e289ad`](https://geoportalpraha.cz/data-a-sluzby/ac72dae0dad44520bdd2cbbb12e289ad) | MPP - Dopravní infrastruktura — bodové značky | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 237 | [`3faec04f05534a17a065001487b6b9a3`](https://geoportalpraha.cz/data-a-sluzby/3faec04f05534a17a065001487b6b9a3) | MPP - Dopravní infrastruktura — liniové značky | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 238 | [`c23d0e4f03034a5cbe7264083f640735`](https://geoportalpraha.cz/data-a-sluzby/c23d0e4f03034a5cbe7264083f640735) | MPP - Dopravní infrastruktura — plochy a koridory | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 239 | [`dafa9924c2ad4e69af63319de9407e47`](https://geoportalpraha.cz/data-a-sluzby/dafa9924c2ad4e69af63319de9407e47) | MPP - Lokality | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 240 | [`35e82d77fbd44d96b470bf5731fbb0d4`](https://geoportalpraha.cz/data-a-sluzby/35e82d77fbd44d96b470bf5731fbb0d4) | MPP - Městské parky | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 241 | [`a64fa568139244b19563791da1c777d4`](https://geoportalpraha.cz/data-a-sluzby/a64fa568139244b19563791da1c777d4) | MPP - Městské parky vymezené bodem | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 242 | [`508529e0160a4749bd9e7a5b9f4430f0`](https://geoportalpraha.cz/data-a-sluzby/508529e0160a4749bd9e7a5b9f4430f0) | MPP - Náměstí | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 243 | [`809b02dbf2644305a93a045dd69eba03`](https://geoportalpraha.cz/data-a-sluzby/809b02dbf2644305a93a045dd69eba03) | MPP - Náměstí vymezená bodem | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 244 | [`71e0eb6eb8fd4cbaac66b999358818dd`](https://geoportalpraha.cz/data-a-sluzby/71e0eb6eb8fd4cbaac66b999358818dd) | MPP - Oblasti nových struktur | ipr | skip | - | - | - | modified 2026-10-13 | land-use plan or planning analysis layer (plan index) | -1 |
+| 245 | [`d80a3a23357f4df3b43d17dc5230c3cf`](https://geoportalpraha.cz/data-a-sluzby/d80a3a23357f4df3b43d17dc5230c3cf) | MPP - Plochy podmíněné plánovací smlouvou | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 246 | [`9615a58f573648ec9799b70de0ae47ee`](https://geoportalpraha.cz/data-a-sluzby/9615a58f573648ec9799b70de0ae47ee) | MPP - Plochy podrobnějšího strukturálního členění  | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 247 | [`3f1f21baceca413ab1a281cc16e9ca3d`](https://geoportalpraha.cz/data-a-sluzby/3f1f21baceca413ab1a281cc16e9ca3d) | MPP - Plochy podrobnějšího členění stavebních bloků | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 248 | [`365592eeaff4476ebcdcda5451c84514`](https://geoportalpraha.cz/data-a-sluzby/365592eeaff4476ebcdcda5451c84514) | MPP - Plochy podrobnějšího členění uličních prostranství | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 249 | [`bab1bec4bd3f4c17b5878155792be031`](https://geoportalpraha.cz/data-a-sluzby/bab1bec4bd3f4c17b5878155792be031) | MPP - Plochy veřejné vybavenosti | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 250 | [`f32a0a3637494123819e060dbceb6de8`](https://geoportalpraha.cz/data-a-sluzby/f32a0a3637494123819e060dbceb6de8) | MPP - Referenční koeficient | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 251 | [`2e1ee9f944f841faa5c957cba4c66135`](https://geoportalpraha.cz/data-a-sluzby/2e1ee9f944f841faa5c957cba4c66135) | MPP - Samoty | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 252 | [`84c8d0733fba4d86a1a02c9dcb1ee4b1`](https://geoportalpraha.cz/data-a-sluzby/84c8d0733fba4d86a1a02c9dcb1ee4b1) | MPP - Stávající dopravní infrastruktura — bodové značky | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 253 | [`48cc49c7a5d74bd4ad8f13c0487cf2c6`](https://geoportalpraha.cz/data-a-sluzby/48cc49c7a5d74bd4ad8f13c0487cf2c6) | MPP - Stávající dopravní infrastruktura — liniové značky | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 254 | [`78ba24e7ba6b4a5b89855aa933eee0b0`](https://geoportalpraha.cz/data-a-sluzby/78ba24e7ba6b4a5b89855aa933eee0b0) | MPP - Stávající technická infrastruktura — bodové značky | ipr | skip | - | - | - | modified 2026-10-13 | land-use plan or planning analysis layer (plan index) | -1 |
+| 255 | [`f945535de90d42048f0e2fd77343a3c5`](https://geoportalpraha.cz/data-a-sluzby/f945535de90d42048f0e2fd77343a3c5) | MPP - Stávající technická infrastruktura — liniové značky | ipr | skip | - | - | - | modified 2026-09-01 | land-use plan or planning analysis layer (plan index) | -1 |
+| 256 | [`33fa67c6f95f4b5d8adb9a6b88ff1115`](https://geoportalpraha.cz/data-a-sluzby/33fa67c6f95f4b5d8adb9a6b88ff1115) | MPP - Stávající veřejná vybavenost — body | ipr | skip | - | - | - | modified 2026-10-13 | land-use plan or planning analysis layer (plan index) | -1 |
+| 257 | [`48402811577c4829955392715805b715`](https://geoportalpraha.cz/data-a-sluzby/48402811577c4829955392715805b715) | MPP - Stávající veřejná vybavenost — plochy | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 258 | [`4d10d2da338f4d26960d65e9a452d9a7`](https://geoportalpraha.cz/data-a-sluzby/4d10d2da338f4d26960d65e9a452d9a7) | MPP - Technická infrastruktura — bodové značky | ipr | skip | - | - | - | modified 2026-10-13 | land-use plan or planning analysis layer (plan index) | -1 |
+| 259 | [`cccd135219264e9eab83598ef89795e8`](https://geoportalpraha.cz/data-a-sluzby/cccd135219264e9eab83598ef89795e8) | MPP - Technická infrastruktura — liniové značky | ipr | skip | - | - | - | modified 2026-10-13 | land-use plan or planning analysis layer (plan index) | -1 |
+| 260 | [`9ed708b84805441b9606bbdf54cea978`](https://geoportalpraha.cz/data-a-sluzby/9ed708b84805441b9606bbdf54cea978) | MPP - Transformační a rozvojové plochy | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 261 | [`5dc8ceca26314dc5b047ac4d6deebb4e`](https://geoportalpraha.cz/data-a-sluzby/5dc8ceca26314dc5b047ac4d6deebb4e) | MPP - Ulice, cesty | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 262 | [`e42a957d1d2a4499b73b1bb18e456f1b`](https://geoportalpraha.cz/data-a-sluzby/e42a957d1d2a4499b73b1bb18e456f1b) | MPP - Veřejná vybavenost vymezená bodem | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 263 | [`e02b5fc41acd4106a91cb806dcfafa6c`](https://geoportalpraha.cz/data-a-sluzby/e02b5fc41acd4106a91cb806dcfafa6c) | MPP - Veřejně prospěšné stavby a veřejně prospěšná opatření | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 264 | [`c3d19ba125964a2880b2a0707bc2025e`](https://geoportalpraha.cz/data-a-sluzby/c3d19ba125964a2880b2a0707bc2025e) | MPP - Výšková regulace | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 265 | [`6a39c6b90f204551bdd22a67d1b6b19c`](https://geoportalpraha.cz/data-a-sluzby/6a39c6b90f204551bdd22a67d1b6b19c) | MPP - Zastavitelné území | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 266 | [`aca294a21e534b09ba70e5cb871f0350`](https://geoportalpraha.cz/data-a-sluzby/aca294a21e534b09ba70e5cb871f0350) | MPP - Zastavěné území | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 267 | [`fad70568d8c6438aa7bdd7d6847f8a4f`](https://geoportalpraha.cz/data-a-sluzby/fad70568d8c6438aa7bdd7d6847f8a4f) | MPP - Záplavová území | ipr | skip | - | - | - | modified 2026-10-13 | land-use plan or planning analysis layer (plan index) | -1 |
+| 268 | [`0bf4db4da0f9430b996ba40888222e8f`](https://geoportalpraha.cz/data-a-sluzby/0bf4db4da0f9430b996ba40888222e8f) | MPP - Územní systém ekologické stability | ipr | skip | - | - | - | modified 2026-10-06 | land-use plan or planning analysis layer (plan index) | -1 |
+| 269 | [`98634aa0bcb94cb58b17f8c6f365114b`](https://geoportalpraha.cz/data-a-sluzby/98634aa0bcb94cb58b17f8c6f365114b) | MPP – Dopravní a technická infrastruktura — územní rezervy dodatek | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 270 | [`4e61cff9fad14031868f60e12d2a06ac`](https://geoportalpraha.cz/data-a-sluzby/4e61cff9fad14031868f60e12d2a06ac) | Model terénu 3D / Elevation model | ipr | skip | - | - | - | modified 2026-04-30 | raster, 3D scene or web map; a basemap link in the catalogue at most | -1 |
+| 271 | [`ae7594eb61f347a39b97315a02445e21`](https://geoportalpraha.cz/data-a-sluzby/ae7594eb61f347a39b97315a02445e21) | Mosty 3D / Bridges 3D model | ipr | skip | - | - | - | modified 2025-06-17 | raster, 3D scene or web map; a basemap link in the catalogue at most | -1 |
+| 272 | [`a8b308d0fa7d48e09042596d5bb9f3d8`](https://geoportalpraha.cz/data-a-sluzby/a8b308d0fa7d48e09042596d5bb9f3d8) | Nadmořské výšky terén a budovy | ipr | skip | - | - | - | modified 2026-04-30 | raster, 3D scene or web map; a basemap link in the catalogue at most | -1 |
+| 273 | [`11487043180349258533491f07d22366`](https://geoportalpraha.cz/data-a-sluzby/11487043180349258533491f07d22366) | Ochranná pásma hřbitovů | ipr | skip | - | - | - | modified 2026-06-01 | land-use plan or planning analysis layer (plan index) | -1 |
+| 274 | [`325519f7f44a4172bb0925e217be2ba7`](https://geoportalpraha.cz/data-a-sluzby/325519f7f44a4172bb0925e217be2ba7) | Ortofotomapa Prahy - poslední snímkování (pixel 10 cm) | ipr | skip | - | - | - | modified 2026-04-30 | raster, 3D scene or web map; a basemap link in the catalogue at most | -1 |
+| 275 | [`980a72be93ff4653b92bd21a85f5997c`](https://geoportalpraha.cz/data-a-sluzby/980a72be93ff4653b92bd21a85f5997c) | Ortofotomapa Prahy - poslední snímkování - infračervená (pixel 10 cm) | ipr | skip | - | - | - | modified 2026-04-30 | raster, 3D scene or web map; a basemap link in the catalogue at most | -1 |
+| 276 | [`58f81453af4143b8be33d7dbab9dd387`](https://geoportalpraha.cz/data-a-sluzby/58f81453af4143b8be33d7dbab9dd387) | Ortofotomapa Prahy - poslední snímkování - mimovegetační  | ipr | skip | - | - | - | modified 2026-08-04 | raster, 3D scene or web map; a basemap link in the catalogue at most | -1 |
+| 277 | [`d11ed4a6c0c6499c87470596fa38caa4`](https://geoportalpraha.cz/data-a-sluzby/d11ed4a6c0c6499c87470596fa38caa4) | Plochy potenciálu recyklace území | ipr | skip | - | - | - | modified 2026-06-01 | land-use plan or planning analysis layer (plan index) | -1 |
+| 278 | [`6a750603bf86448e80acad9be47278fd`](https://geoportalpraha.cz/data-a-sluzby/6a750603bf86448e80acad9be47278fd) | Plán využití ploch - funkční plochy (územní plán) | ipr | skip | - | - | - | quarterly | land-use plan or planning analysis layer (plan index) | -1 |
+| 279 | [`b5af4689248f4db58ee3b176970917b7`](https://geoportalpraha.cz/data-a-sluzby/b5af4689248f4db58ee3b176970917b7) | Plán využití ploch - podměrečné funkční plochy (plovoucí) - body (územní plán) | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 280 | [`84ad5ced362e4018a3199c82ee1b9488`](https://geoportalpraha.cz/data-a-sluzby/84ad5ced362e4018a3199c82ee1b9488) | Plán využití ploch - podměrečné funkční plochy (stabilizované) - body (územní plán) | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 281 | [`b098df43332e4eea9fd521151446069a`](https://geoportalpraha.cz/data-a-sluzby/b098df43332e4eea9fd521151446069a) | Plán ÚSES | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 282 | [`4c027c068e3c439bba79aa25fa2ef267`](https://geoportalpraha.cz/data-a-sluzby/4c027c068e3c439bba79aa25fa2ef267) | Plán ÚSES - kritická místa | ipr | skip | - | - | - | modified 2026-06-01 | land-use plan or planning analysis layer (plan index) | -1 |
+| 283 | [`0063e7c1f8c04fcf9dc9b1e7a6b6f4e6`](https://geoportalpraha.cz/data-a-sluzby/0063e7c1f8c04fcf9dc9b1e7a6b6f4e6) | Plán ÚSES -Interakční prvky | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 284 | [`20274e55141c4a049d8a8dbaeeacbbad`](https://geoportalpraha.cz/data-a-sluzby/20274e55141c4a049d8a8dbaeeacbbad) | Prstence města | ipr | skip | - | - | - | modified 2026-06-01 | land-use plan or planning analysis layer (plan index) | -1 |
+| 285 | [`59bafb3bc689459b9f310fcc182cd428`](https://geoportalpraha.cz/data-a-sluzby/59bafb3bc689459b9f310fcc182cd428) | Přírodní osy zeleně | ipr | skip | - | - | - | modified 2026-06-01 | land-use plan or planning analysis layer (plan index) | -1 |
+| 286 | [`ad9aca20e9c042d2b52eb31ff18961b6`](https://geoportalpraha.cz/data-a-sluzby/ad9aca20e9c042d2b52eb31ff18961b6) | Relativní výšky budov | ipr | skip | - | - | - | modified 2026-04-30 | raster, 3D scene or web map; a basemap link in the catalogue at most | -1 |
+| 287 | [`4eb682464b504230a7a9791ea1520461`](https://geoportalpraha.cz/data-a-sluzby/4eb682464b504230a7a9791ea1520461) | Současný stav využití území | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 288 | [`3b180176687845588d2a1eeaa3138ae2`](https://geoportalpraha.cz/data-a-sluzby/3b180176687845588d2a1eeaa3138ae2) | Stavební uzávěry | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 289 | [`527fb8f89ee641e9b6542a8e293228b0`](https://geoportalpraha.cz/data-a-sluzby/527fb8f89ee641e9b6542a8e293228b0) | Stavební uzávěry - dopravní | ipr | skip | - | - | - | modified 2026-06-01 | land-use plan or planning analysis layer (plan index) | -1 |
+| 290 | [`29fcd28a7bf94df990c336d8d98f8daf`](https://geoportalpraha.cz/data-a-sluzby/29fcd28a7bf94df990c336d8d98f8daf) | Stavové lokality | ipr | skip | - | - | - | modified 2026-08-07 | land-use plan or planning analysis layer (plan index) | -1 |
+| 291 | [`d887eea0888a410ba7198cc810061192`](https://geoportalpraha.cz/data-a-sluzby/d887eea0888a410ba7198cc810061192) | Vnitřní zóna města | ipr | skip | - | - | - | modified 2026-06-01 | land-use plan or planning analysis layer (plan index) | -1 |
+| 292 | [`e0d2227dff5d42eaa8a28231a3b66c56`](https://geoportalpraha.cz/data-a-sluzby/e0d2227dff5d42eaa8a28231a3b66c56) | ZÚR - Rozvojová oblast a rozvojová osa | ipr | skip | - | - | - | modified 2026-10-21 | land-use plan or planning analysis layer (plan index) | -1 |
+| 293 | [`2c3a79ece6be45bab81296f37d2cdc8b`](https://geoportalpraha.cz/data-a-sluzby/2c3a79ece6be45bab81296f37d2cdc8b) | ZÚR – Doplňkový typ objektu – body | ipr | skip | - | - | - | modified 2026-10-21 | land-use plan or planning analysis layer (plan index) | -1 |
+| 294 | [`30ac690bfc0849e3a8ffc0b9f2f0dc2a`](https://geoportalpraha.cz/data-a-sluzby/30ac690bfc0849e3a8ffc0b9f2f0dc2a) | ZÚR – Doplňkový typ objektu – plochy | ipr | skip | - | - | - | modified 2026-10-21 | land-use plan or planning analysis layer (plan index) | -1 |
+| 295 | [`7fe24a339e4d4a74ba66dbc5df23e9f0`](https://geoportalpraha.cz/data-a-sluzby/7fe24a339e4d4a74ba66dbc5df23e9f0) | ZÚR – Dopravní infrastruktura – plochy a koridory  | ipr | skip | - | - | - | modified 2026-10-21 | land-use plan or planning analysis layer (plan index) | -1 |
+| 296 | [`a51e41fa5fb84711a53ed24eda1d6730`](https://geoportalpraha.cz/data-a-sluzby/a51e41fa5fb84711a53ed24eda1d6730) | ZÚR – Krajina | ipr | skip | - | - | - | modified 2026-10-21 | land-use plan or planning analysis layer (plan index) | -1 |
+| 297 | [`e7bf7728379e46db855820a60dcca84c`](https://geoportalpraha.cz/data-a-sluzby/e7bf7728379e46db855820a60dcca84c) | ZÚR – Plocha a koridor jiné | ipr | skip | - | - | - | modified 2026-10-21 | land-use plan or planning analysis layer (plan index) | -1 |
+| 298 | [`6a09de8d038b4c3aafebba3813c408e4`](https://geoportalpraha.cz/data-a-sluzby/6a09de8d038b4c3aafebba3813c408e4) | ZÚR – Specifická oblast | ipr | skip | - | - | - | modified 2026-10-21 | land-use plan or planning analysis layer (plan index) | -1 |
+| 299 | [`3bb8bb79be2548efb11a871db0ffa5d0`](https://geoportalpraha.cz/data-a-sluzby/3bb8bb79be2548efb11a871db0ffa5d0) | ZÚR – Sídelní struktura jiná | ipr | skip | - | - | - | modified 2026-10-21 | land-use plan or planning analysis layer (plan index) | -1 |
+| 300 | [`c064ff26b18446d89a47d882271ec090`](https://geoportalpraha.cz/data-a-sluzby/c064ff26b18446d89a47d882271ec090) | ZÚR – Technická infrastruktura – plochy a koridory  | ipr | skip | - | - | - | modified 2026-10-21 | land-use plan or planning analysis layer (plan index) | -1 |
+| 301 | [`44743a45b15f4026bd646f42bf4f75f8`](https://geoportalpraha.cz/data-a-sluzby/44743a45b15f4026bd646f42bf4f75f8) | ZÚR – Vodní hospodářství | ipr | skip | - | - | - | modified 2026-10-21 | land-use plan or planning analysis layer (plan index) | -1 |
+| 302 | [`babe1fdf1ee4498da9dd1125c9206d21`](https://geoportalpraha.cz/data-a-sluzby/babe1fdf1ee4498da9dd1125c9206d21) | ZÚR – Územní rezerva | ipr | skip | - | - | - | modified 2026-10-21 | land-use plan or planning analysis layer (plan index) | -1 |
+| 303 | [`6e17e8992be24893b62284edce1a2dab`](https://geoportalpraha.cz/data-a-sluzby/6e17e8992be24893b62284edce1a2dab) | ZÚR – Územní systém ekologické stability | ipr | skip | - | - | - | modified 2026-10-22 | land-use plan or planning analysis layer (plan index) | -1 |
+| 304 | [`9cc5eccd77244692ab906218b3e367e8`](https://geoportalpraha.cz/data-a-sluzby/9cc5eccd77244692ab906218b3e367e8) | Základní kompoziční trojúhelník a oblast posuzování | ipr | skip | - | - | - | modified 2026-06-01 | land-use plan or planning analysis layer (plan index) | -1 |
+| 305 | [`1ceac78146934e98a9e5962c8e367e12`](https://geoportalpraha.cz/data-a-sluzby/1ceac78146934e98a9e5962c8e367e12) | Základní mapa 1: 25 000 - rastr barevný | ipr | skip | - | - | - | modified 2026-10-15 | raster, 3D scene or web map; a basemap link in the catalogue at most | -1 |
+| 306 | [`d13435c488614e48b05755d1332d2f59`](https://geoportalpraha.cz/data-a-sluzby/d13435c488614e48b05755d1332d2f59) | Základní mapa černobílá WGS | ipr | skip | - | - | - | modified 2026-03-27 | raster, 3D scene or web map; a basemap link in the catalogue at most | -1 |
+| 307 | [`295009bbafb642509655edd4c8049236`](https://geoportalpraha.cz/data-a-sluzby/295009bbafb642509655edd4c8049236) | Územní systém ekologické stability | ipr | skip | - | - | - | other | land-use plan or planning analysis layer (plan index) | -1 |
+| 308 | [`ca03437843114a40a03d73a211ff9823`](https://geoportalpraha.cz/data-a-sluzby/ca03437843114a40a03d73a211ff9823) | Územně plánovací podklady a územně plánovací dokumentace - plochy | ipr | skip | - | - | - | modified 2026-06-01 | land-use plan or planning analysis layer (plan index) | -1 |
+| 309 | [`28908e43177b428698924e34b007729a`](https://geoportalpraha.cz/data-a-sluzby/28908e43177b428698924e34b007729a) | Říční niva | ipr | skip | - | - | - | modified 2026-06-01 | land-use plan or planning analysis layer (plan index) | -1 |
+| 310 | [`d4ee5c1018c9b967a46c91314a8db058`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/d4ee5c1018c9b967a46c91314a8db058) | Dopravní přestupky MHMP 2015 | city | part | - | - | - | never | history of `87cdef08e1e46bad834175f6f81d2477` (2015) | - |
+| 311 | [`c589b92ddb111f86db2e938939e7f6b8`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/c589b92ddb111f86db2e938939e7f6b8) | Dopravní přestupky MHMP 2016 | city | part | - | - | - | never | history of `87cdef08e1e46bad834175f6f81d2477` (2016) | - |
+| 312 | [`4eaced16a7516d91693dd3c621c8fde8`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/4eaced16a7516d91693dd3c621c8fde8) | Dopravní přestupky MHMP 2017 | city | part | - | - | - | never | history of `87cdef08e1e46bad834175f6f81d2477` (2017) | - |
+| 313 | [`3a024bdeff0f1400f78a2da5c9cff8f4`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/3a024bdeff0f1400f78a2da5c9cff8f4) | Dopravní přestupky MHMP 2018 | city | part | - | - | - | never | history of `87cdef08e1e46bad834175f6f81d2477` (2018) | - |
+| 314 | [`39d3311e3d84da1357cb2cc74b27ed2b`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/39d3311e3d84da1357cb2cc74b27ed2b) | Dopravní přestupky MHMP 2019 | city | part | - | - | - | not stated | history of `87cdef08e1e46bad834175f6f81d2477` (2019) | - |
+| 315 | [`9211632730456407ecc2bf1d429d7daa`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/9211632730456407ecc2bf1d429d7daa) | Dopravní přestupky MHMP 2020 | city | part | - | - | - | never | history of `87cdef08e1e46bad834175f6f81d2477` (2020) | - |
+| 316 | [`8b6c450b8500706f990d07b2b4e994b8`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/8b6c450b8500706f990d07b2b4e994b8) | Dopravní přestupky MHMP 2021 | city | part | - | - | - | never | history of `87cdef08e1e46bad834175f6f81d2477` (2021) | - |
+| 317 | [`87d29366c88af8b18664be654e0aca00`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/87d29366c88af8b18664be654e0aca00) | Dopravní přestupky MHMP 2022 | city | part | - | - | - | never | history of `87cdef08e1e46bad834175f6f81d2477` (2022) | - |
+| 318 | [`3f5354fecdc89bce0dc57c9401c61b03`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/3f5354fecdc89bce0dc57c9401c61b03) | Dopravní přestupky MHMP 2023 | city | part | - | - | - | monthly | history of `87cdef08e1e46bad834175f6f81d2477` (2023) | - |
+| 319 | [`0d987304abe2c9a8985aa772cd1479fb`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/0d987304abe2c9a8985aa772cd1479fb) | Faktury Městské policie hl. m. Prahy za rok 2023 | city | part | - | - | - | monthly | history of `2d6fd2c0a02024268942c908332dd93f` (2023) | - |
+| 320 | [`ae4a34bc483c1166769400ec2f9017e2`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/ae4a34bc483c1166769400ec2f9017e2) | Finanční vztahy mezi HMP a MČ HMP 2015 | city | part | - | - | - | never | history of `edf20520bbaf0ebbf15292a7142f066e` (2015) | - |
+| 321 | [`df6437b60bbe559074e0046702630ace`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/df6437b60bbe559074e0046702630ace) | Finanční vztahy mezi HMP a MČ HMP 2016 | city | part | - | - | - | not stated | history of `edf20520bbaf0ebbf15292a7142f066e` (2016) | - |
+| 322 | [`4179cfa5af1c1faa7fd9ef7762a23f2c`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/4179cfa5af1c1faa7fd9ef7762a23f2c) | Finanční vztahy mezi HMP a MČ HMP 2017 | city | part | - | - | - | not stated | history of `edf20520bbaf0ebbf15292a7142f066e` (2017) | - |
+| 323 | [`23386f7ae082dbc93b6b94ca725af77a`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/23386f7ae082dbc93b6b94ca725af77a) | Finanční vztahy mezi HMP a MČ HMP 2018 | city | part | - | - | - | never | history of `edf20520bbaf0ebbf15292a7142f066e` (2018) | - |
+| 324 | [`76c8e8e1d2be5c476e291b0906a02ad0`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/76c8e8e1d2be5c476e291b0906a02ad0) | Finanční vztahy mezi HMP a MČ HMP 2019 | city | part | - | - | - | never | history of `edf20520bbaf0ebbf15292a7142f066e` (2019) | - |
+| 325 | [`dae2f82c9d3252ee9b2fe367f5632646`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/dae2f82c9d3252ee9b2fe367f5632646) | Finanční vztahy mezi HMP a MČ HMP 2020 | city | part | - | - | - | never | history of `edf20520bbaf0ebbf15292a7142f066e` (2020) | - |
+| 326 | [`12230f1339e64e1deab4724a05667868`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/12230f1339e64e1deab4724a05667868) | Finanční vztahy mezi HMP a MČ HMP 2021 | city | part | - | - | - | never | history of `edf20520bbaf0ebbf15292a7142f066e` (2021) | - |
+| 327 | [`3f3e9d9710f7c13f7a95ac01f354a54b`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/3f3e9d9710f7c13f7a95ac01f354a54b) | Finanční vztahy mezi HMP a MČ HMP 2022 | city | part | - | - | - | never | history of `edf20520bbaf0ebbf15292a7142f066e` (2022) | - |
+| 328 | [`7348dab6e65587067e454f4784d4af28`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/7348dab6e65587067e454f4784d4af28) | Finanční vztahy mezi HMP a MČ HMP 2023 | city | part | - | - | - | monthly | history of `edf20520bbaf0ebbf15292a7142f066e` (2023) | - |
+| 329 | [`921775df5898c070a33bad90462a6e89`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/921775df5898c070a33bad90462a6e89) | Finanční vztahy mezi HMP a MČ HMP 2024 | city | part | - | - | - | not stated | history of `edf20520bbaf0ebbf15292a7142f066e` (2024) | - |
+| 330 | [`7f37c69cadf2289da5cfbdf0c8f3aaf0`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/7f37c69cadf2289da5cfbdf0c8f3aaf0) | Finanční vztahy mezi HMP a MČ HMP 2025 | city | part | - | - | - | monthly | history of `edf20520bbaf0ebbf15292a7142f066e` (2025) | - |
+| 331 | [`7e29819e0523b91e17d636a05256de35`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/7e29819e0523b91e17d636a05256de35) | Měsíční zprávy o činnosti Městské policie hl. m. Prahy za rok 2023 | city | part | - | - | - | monthly | history of `f57a3a32d7dd9b7b40b729636f062e77` (2023) | - |
+| 332 | [`ef5699759bf9bd9e888fed590ce8d966`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/ef5699759bf9bd9e888fed590ce8d966) | Měsíční zprávy o činnosti Městské policie hl. m. Prahy za rok 2024 | city | part | - | - | - | not stated | history of `f57a3a32d7dd9b7b40b729636f062e77` (2024) | - |
+| 333 | [`013499750b46f8c0d65ff4c92bd5d425`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/013499750b46f8c0d65ff4c92bd5d425) | Měsíční zprávy o činnosti Městské policie hl. m. Prahy za rok 2024 podle útvarů | city | part | - | - | - | not stated | history of `cc9dbd08d1a478909ca5503a7be83955` (2024) | - |
+| 334 | [`9debdbeff0f173fc8b4f72134ec04903`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/9debdbeff0f173fc8b4f72134ec04903) | Objednávky Městské policie hl. m. Prahy za rok 2023 | city | part | - | - | - | monthly | history of `e536eba93f78963a39170c4ec3132140` (2023) | - |
+| 335 | [`708818b5ac7975be89de63ff9424c3e7`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/708818b5ac7975be89de63ff9424c3e7) | Objednávky Městské policie hl. m. Prahy za rok 2024 | city | part | - | - | - | monthly | history of `e536eba93f78963a39170c4ec3132140` (2024) | - |
+| 336 | [`2ab8d387d4c79150198545f2577409d7`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/2ab8d387d4c79150198545f2577409d7) | Odměny členů Zastupitelstva HMP 2021 | city | part | - | - | - | not stated | history of `67bfec2fe0b874383a755dde8db36c78` (2021) | - |
+| 337 | [`ea898fae3705da94680f5fde0a05e4bd`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/ea898fae3705da94680f5fde0a05e4bd) | Odměny členů Zastupitelstva HMP 2022 | city | part | - | - | - | not stated | history of `67bfec2fe0b874383a755dde8db36c78` (2022) | - |
+| 338 | [`0cf37eae3300e2245f594fa46a80b2d7`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/0cf37eae3300e2245f594fa46a80b2d7) | Odměny členů Zastupitelstva HMP 2023 | city | part | - | - | - | never | history of `67bfec2fe0b874383a755dde8db36c78` (2023) | - |
+| 339 | [`b2440ebc6e720931d2294cbf49bb28df`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/b2440ebc6e720931d2294cbf49bb28df) | Odměny členů Zastupitelstva HMP 2024 | city | part | - | - | - | not stated | history of `67bfec2fe0b874383a755dde8db36c78` (2024) | - |
+| 340 | [`3368962f204dd6737ba132478b2d3b28`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/3368962f204dd6737ba132478b2d3b28) | Přijaté faktury MHMP 1999 | city | part | - | - | - | never | history of `a541a1cb0d082ab67771436216d029ed` (1999) | - |
+| 341 | [`71bf14160b2aab60bd1b1f6cd87fe70b`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/71bf14160b2aab60bd1b1f6cd87fe70b) | Přijaté faktury MHMP 2000 | city | part | - | - | - | not stated | history of `a541a1cb0d082ab67771436216d029ed` (2000) | - |
+| 342 | [`417e50983a660b3c0c74cf6eefe47938`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/417e50983a660b3c0c74cf6eefe47938) | Přijaté faktury MHMP 2001 | city | part | - | - | - | never | history of `a541a1cb0d082ab67771436216d029ed` (2001) | - |
+| 343 | [`1dc79dafd08964ba3f5611a8cd01a6a2`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/1dc79dafd08964ba3f5611a8cd01a6a2) | Přijaté faktury MHMP 2002 | city | part | - | - | - | never | history of `a541a1cb0d082ab67771436216d029ed` (2002) | - |
+| 344 | [`2423f3fe497cb4f0cf6e493d57a51623`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/2423f3fe497cb4f0cf6e493d57a51623) | Přijaté faktury MHMP 2003 | city | part | - | - | - | not stated | history of `a541a1cb0d082ab67771436216d029ed` (2003) | - |
+| 345 | [`94aa0a5a45c0e877af5ec59c4bba2ece`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/94aa0a5a45c0e877af5ec59c4bba2ece) | Přijaté faktury MHMP 2004 | city | part | - | - | - | not stated | history of `a541a1cb0d082ab67771436216d029ed` (2004) | - |
+| 346 | [`6c3c8cf7ab4ae84f96595fc3e6a8ce0f`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/6c3c8cf7ab4ae84f96595fc3e6a8ce0f) | Přijaté faktury MHMP 2005 | city | part | - | - | - | never | history of `a541a1cb0d082ab67771436216d029ed` (2005) | - |
+| 347 | [`4ea985b7ccf095ee4a09e0a568d8c69d`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/4ea985b7ccf095ee4a09e0a568d8c69d) | Přijaté faktury MHMP 2006 | city | part | - | - | - | never | history of `a541a1cb0d082ab67771436216d029ed` (2006) | - |
+| 348 | [`c3fe83cc5e1a0128c3188e47b55a296f`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/c3fe83cc5e1a0128c3188e47b55a296f) | Přijaté faktury MHMP 2007 | city | part | - | - | - | never | history of `a541a1cb0d082ab67771436216d029ed` (2007) | - |
+| 349 | [`3b084eac355bdf49b01cf13163e41753`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/3b084eac355bdf49b01cf13163e41753) | Přijaté faktury MHMP 2008 | city | part | - | - | - | never | history of `a541a1cb0d082ab67771436216d029ed` (2008) | - |
+| 350 | [`3b235ed43963884c8ebbc0407d651559`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/3b235ed43963884c8ebbc0407d651559) | Přijaté faktury MHMP 2009 | city | part | - | - | - | not stated | history of `a541a1cb0d082ab67771436216d029ed` (2009) | - |
+| 351 | [`35c14086ed192b7c8f38f11b3811f318`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/35c14086ed192b7c8f38f11b3811f318) | Přijaté faktury MHMP 2010 | city | part | - | - | - | never | history of `a541a1cb0d082ab67771436216d029ed` (2010) | - |
+| 352 | [`e2ec0a7b1ef8d4e97ba9c3ca26f0f542`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/e2ec0a7b1ef8d4e97ba9c3ca26f0f542) | Přijaté faktury MHMP 2011 | city | part | - | - | - | not stated | history of `a541a1cb0d082ab67771436216d029ed` (2011) | - |
+| 353 | [`0cec38c0e93a2eaf6e87f6c86b701ef5`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/0cec38c0e93a2eaf6e87f6c86b701ef5) | Přijaté faktury MHMP 2012 | city | part | - | - | - | not stated | history of `a541a1cb0d082ab67771436216d029ed` (2012) | - |
+| 354 | [`3f60ea71bc12382127437b4685604f87`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/3f60ea71bc12382127437b4685604f87) | Přijaté faktury MHMP 2013 | city | part | - | - | - | not stated | history of `a541a1cb0d082ab67771436216d029ed` (2013) | - |
+| 355 | [`bcc6f14ae4a9b0201ebff751e3981d94`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/bcc6f14ae4a9b0201ebff751e3981d94) | Přijaté faktury MHMP 2014 | city | part | - | - | - | not stated | history of `a541a1cb0d082ab67771436216d029ed` (2014) | - |
+| 356 | [`8ccd5156ac9b94e3c3ab3f12f2a83a2b`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/8ccd5156ac9b94e3c3ab3f12f2a83a2b) | Přijaté faktury MHMP 2015 | city | part | - | - | - | never | history of `a541a1cb0d082ab67771436216d029ed` (2015) | - |
+| 357 | [`8dc3d5f822d8d00faf2299bf82fa2506`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/8dc3d5f822d8d00faf2299bf82fa2506) | Přijaté faktury MHMP 2016 | city | part | - | - | - | not stated | history of `a541a1cb0d082ab67771436216d029ed` (2016) | - |
+| 358 | [`5df024d0b58f070a6cfd1999f77e7fdd`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/5df024d0b58f070a6cfd1999f77e7fdd) | Přijaté faktury MHMP 2017 | city | part | - | - | - | not stated | history of `a541a1cb0d082ab67771436216d029ed` (2017) | - |
+| 359 | [`672bcc1af99079bf65100e4af586cd20`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/672bcc1af99079bf65100e4af586cd20) | Přijaté faktury MHMP 2018 | city | part | - | - | - | not stated | history of `a541a1cb0d082ab67771436216d029ed` (2018) | - |
+| 360 | [`fae110987b2e34b137eb92568a8c93de`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/fae110987b2e34b137eb92568a8c93de) | Přijaté faktury MHMP 2019 | city | part | - | - | - | not stated | history of `a541a1cb0d082ab67771436216d029ed` (2019) | - |
+| 361 | [`4389e9f9b430401e38804572f915932c`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/4389e9f9b430401e38804572f915932c) | Přijaté faktury MHMP 2020 | city | part | - | - | - | not stated | history of `a541a1cb0d082ab67771436216d029ed` (2020) | - |
+| 362 | [`f4b51ed7e92a25530a369a246c565c8e`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/f4b51ed7e92a25530a369a246c565c8e) | Přijaté faktury MHMP 2021 | city | part | - | - | - | never | history of `a541a1cb0d082ab67771436216d029ed` (2021) | - |
+| 363 | [`aa1a31bbbe98ead543ef8f63a4073279`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/aa1a31bbbe98ead543ef8f63a4073279) | Přijaté faktury MHMP 2022 | city | part | - | - | - | never | history of `a541a1cb0d082ab67771436216d029ed` (2022) | - |
+| 364 | [`604e1c0c766eae35695e72af22f10d66`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/604e1c0c766eae35695e72af22f10d66) | Přijaté faktury MHMP 2023 | city | part | - | - | - | not stated | history of `a541a1cb0d082ab67771436216d029ed` (2023) | - |
+| 365 | [`6895f95d4b7239c05a78f7d7bdd41f3e`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/6895f95d4b7239c05a78f7d7bdd41f3e) | Přijaté faktury MHMP 2024 | city | part | - | - | - | monthly | history of `a541a1cb0d082ab67771436216d029ed` (2024) | - |
+| 366 | [`ad49fef50a218ea2a601574c3897b57f`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/ad49fef50a218ea2a601574c3897b57f) | Přijaté faktury MHMP 2025 | city | part | - | - | - | monthly | history of `a541a1cb0d082ab67771436216d029ed` (2025) | - |
+| 367 | [`f3655b941404c3eeadddcdfc0447c270`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/f3655b941404c3eeadddcdfc0447c270) | Rozpočet MHMP 2012 | city | part | - | - | - | not stated | history of `1f31f87f735709aa81da341112b01f51` (2012) | - |
+| 368 | [`dd5c4eb24718474917e5737f350a4c65`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/dd5c4eb24718474917e5737f350a4c65) | Rozpočet MHMP 2013 | city | part | - | - | - | never | history of `1f31f87f735709aa81da341112b01f51` (2013) | - |
+| 369 | [`52cc54e369fe2f146d94194361f12d74`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/52cc54e369fe2f146d94194361f12d74) | Rozpočet MHMP 2014 | city | part | - | - | - | never | history of `1f31f87f735709aa81da341112b01f51` (2014) | - |
+| 370 | [`c0d3fe42be936775c36c112bf50308a9`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/c0d3fe42be936775c36c112bf50308a9) | Rozpočet MHMP 2015 | city | part | - | - | - | never | history of `1f31f87f735709aa81da341112b01f51` (2015) | - |
+| 371 | [`98d5714103c19366be1a164fe8422cdf`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/98d5714103c19366be1a164fe8422cdf) | Rozpočet MHMP 2016 | city | part | - | - | - | not stated | history of `1f31f87f735709aa81da341112b01f51` (2016) | - |
+| 372 | [`79fde29300e587a4e70cefa9f79e9ed3`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/79fde29300e587a4e70cefa9f79e9ed3) | Rozpočet MHMP 2017 | city | part | - | - | - | never | history of `1f31f87f735709aa81da341112b01f51` (2017) | - |
+| 373 | [`ffa89ee0bfe5ddc25e6c1720a25b6e83`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/ffa89ee0bfe5ddc25e6c1720a25b6e83) | Rozpočet MHMP 2018 | city | part | - | - | - | never | history of `1f31f87f735709aa81da341112b01f51` (2018) | - |
+| 374 | [`47f2d979a794c4ceb631d47b0b5f4b41`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/47f2d979a794c4ceb631d47b0b5f4b41) | Rozpočet MHMP 2019 | city | part | - | - | - | never | history of `1f31f87f735709aa81da341112b01f51` (2019) | - |
+| 375 | [`8462f476d77f163ab464251bcc193b90`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/8462f476d77f163ab464251bcc193b90) | Rozpočet MHMP 2020 | city | part | - | - | - | not stated | history of `1f31f87f735709aa81da341112b01f51` (2020) | - |
+| 376 | [`b52979332ba065f525fbfcee5c68cf4e`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/b52979332ba065f525fbfcee5c68cf4e) | Rozpočet MHMP 2021 | city | part | - | - | - | never | history of `1f31f87f735709aa81da341112b01f51` (2021) | - |
+| 377 | [`09980e277540f9f4c0ef020413159950`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/09980e277540f9f4c0ef020413159950) | Rozpočet MHMP 2022 | city | part | - | - | - | not stated | history of `1f31f87f735709aa81da341112b01f51` (2022) | - |
+| 378 | [`5804e52a033cd9d6c6e2d643caa87f28`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/5804e52a033cd9d6c6e2d643caa87f28) | Rozpočet MHMP 2023 | city | part | - | - | - | not stated | history of `1f31f87f735709aa81da341112b01f51` (2023) | - |
+| 379 | [`91160261d3a3796d9f7a401f046ad46d`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/91160261d3a3796d9f7a401f046ad46d) | Rozpočet MHMP 2024 | city | part | - | - | - | not stated | history of `1f31f87f735709aa81da341112b01f51` (2024) | - |
+| 380 | [`768ef3c8db42ad19a38655c4febb299d`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/768ef3c8db42ad19a38655c4febb299d) | Rozpočet MHMP 2025 | city | part | - | - | - | not stated | history of `1f31f87f735709aa81da341112b01f51` (2025) | - |
+| 381 | [`5b640b01559009ad25be8a4659c11fd2`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/5b640b01559009ad25be8a4659c11fd2) | Výsledky hlasování ZHMP 2010 - 2014 | city | part | - | - | - | not stated | history of `aaf8f062015cc627d5f247d6bd6cf9ac` (2014) | - |
+| 382 | [`100666ff605486d025385e406e8c9906`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/100666ff605486d025385e406e8c9906) | Výsledky hlasování ZHMP 2014 - 2018 | city | part | - | - | - | not stated | history of `aaf8f062015cc627d5f247d6bd6cf9ac` (2018) | - |
+| 383 | [`a44c0650787439d763b1f7cd98e0308c`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/a44c0650787439d763b1f7cd98e0308c) | Výsledky hlasování ZHMP 2018 - 2022 | city | part | - | - | - | not stated | history of `aaf8f062015cc627d5f247d6bd6cf9ac` (2022) | - |
+| 384 | [`8d32632b35609904059aa921ac6f8bf4`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/8d32632b35609904059aa921ac6f8bf4) | Čerpání rozpočtu MHMP 2012 | city | part | - | - | - | not stated | history of `d8dab0f5c38b05db2bb37758cafa7eb5` (2012) | - |
+| 385 | [`5026f8b0f0f86e2ba38a30912f63c886`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/5026f8b0f0f86e2ba38a30912f63c886) | Čerpání rozpočtu MHMP 2013 | city | part | - | - | - | never | history of `d8dab0f5c38b05db2bb37758cafa7eb5` (2013) | - |
+| 386 | [`8b4bf2c8cc0a97bafd620271ac0d25d8`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/8b4bf2c8cc0a97bafd620271ac0d25d8) | Čerpání rozpočtu MHMP 2014 | city | part | - | - | - | never | history of `d8dab0f5c38b05db2bb37758cafa7eb5` (2014) | - |
+| 387 | [`e9cc2e64f9aa99ace3afbd9284ccff35`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/e9cc2e64f9aa99ace3afbd9284ccff35) | Čerpání rozpočtu MHMP 2015 | city | part | - | - | - | never | history of `d8dab0f5c38b05db2bb37758cafa7eb5` (2015) | - |
+| 388 | [`db4bf431a7facd57119b2e5a55bb2a8a`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/db4bf431a7facd57119b2e5a55bb2a8a) | Čerpání rozpočtu MHMP 2016 | city | part | - | - | - | never | history of `d8dab0f5c38b05db2bb37758cafa7eb5` (2016) | - |
+| 389 | [`23680a0afbc7ef8acc82b1835791c488`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/23680a0afbc7ef8acc82b1835791c488) | Čerpání rozpočtu MHMP 2017 | city | part | - | - | - | not stated | history of `d8dab0f5c38b05db2bb37758cafa7eb5` (2017) | - |
+| 390 | [`34eccabf886e1deaa7d284e4e37ff970`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/34eccabf886e1deaa7d284e4e37ff970) | Čerpání rozpočtu MHMP 2018 | city | part | - | - | - | not stated | history of `d8dab0f5c38b05db2bb37758cafa7eb5` (2018) | - |
+| 391 | [`04fe1985b30b09171cd3243fc791abc5`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/04fe1985b30b09171cd3243fc791abc5) | Čerpání rozpočtu MHMP 2019 | city | part | - | - | - | never | history of `d8dab0f5c38b05db2bb37758cafa7eb5` (2019) | - |
+| 392 | [`6500fd9d9c3cfa104dbed645ed910718`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/6500fd9d9c3cfa104dbed645ed910718) | Čerpání rozpočtu MHMP 2020 | city | part | - | - | - | never | history of `d8dab0f5c38b05db2bb37758cafa7eb5` (2020) | - |
+| 393 | [`1b5942fa34d190e4e58fa3f0695a5d4f`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/1b5942fa34d190e4e58fa3f0695a5d4f) | Čerpání rozpočtu MHMP 2021 | city | part | - | - | - | never | history of `d8dab0f5c38b05db2bb37758cafa7eb5` (2021) | - |
+| 394 | [`50a28bfac04c4d0ac7714d6f64ab9eb2`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/50a28bfac04c4d0ac7714d6f64ab9eb2) | Čerpání rozpočtu MHMP 2022 | city | part | - | - | - | never | history of `d8dab0f5c38b05db2bb37758cafa7eb5` (2022) | - |
+| 395 | [`f5156e7a3c7dad62cd94122be106c939`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/f5156e7a3c7dad62cd94122be106c939) | Čerpání rozpočtu MHMP 2023 | city | part | - | - | - | not stated | history of `d8dab0f5c38b05db2bb37758cafa7eb5` (2023) | - |
+| 396 | [`e71e70a617c5a54dffd4486b8fe70ca6`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/e71e70a617c5a54dffd4486b8fe70ca6) | Čerpání rozpočtu MHMP 2024 | city | part | - | - | - | monthly | history of `d8dab0f5c38b05db2bb37758cafa7eb5` (2024) | - |
+| 397 | [`e069dbf60428dfa77fa221190b79a118`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/e069dbf60428dfa77fa221190b79a118) | Čerpání rozpočtu MHMP 2025 | city | part | - | - | - | monthly | history of `d8dab0f5c38b05db2bb37758cafa7eb5` (2025) | - |
+| 398 | [`/v3/parking-sources`](https://api.golemio.cz/docs/openapi/) | Available parking sources | golemio | part | - | - | - | - | detail of `/v3/parking` | - |
+| 399 | [`/v2/energetics/ded/buildings/{gid}`](https://api.golemio.cz/docs/openapi/) | ENO building detail with consumption points (OM) and technical parameters | golemio | part | - | - | - | - | detail of `/v2/energetics/ded/buildings` | - |
+| 400 | [`/v2/airqualitystations/componenttypes`](https://api.golemio.cz/docs/openapi/) | GET Air Quality Station Component Types | golemio | part | - | - | - | - | detail of `/v2/airqualitystations` | - |
+| 401 | [`/v2/airqualitystations/indextypes`](https://api.golemio.cz/docs/openapi/) | GET Air Quality Station Index Types | golemio | part | - | - | - | - | detail of `/v2/airqualitystations` | - |
+| 402 | [`/v2/airqualitystations/history`](https://api.golemio.cz/docs/openapi/) | GET Air Quality Stations CHMI History | golemio | part | - | - | - | - | detail of `/v2/airqualitystations` | - |
+| 403 | [`/v2/medicalinstitutions/types`](https://api.golemio.cz/docs/openapi/) | GET All Medical Institution Types | golemio | part | - | - | - | - | detail of `/v2/medicalinstitutions` | - |
+| 404 | [`/v2/playgrounds/properties`](https://api.golemio.cz/docs/openapi/) | GET All Playgrounds Properties | golemio | part | - | - | - | - | detail of `/v2/playgrounds` | - |
+| 405 | [`/v2/wastecollectionyards/properties`](https://api.golemio.cz/docs/openapi/) | GET All Waste Collection Yards Properties | golemio | part | - | - | - | - | detail of `/v2/wastecollectionyards` | - |
+| 406 | [`/v2/bicyclecounters/detections`](https://api.golemio.cz/docs/openapi/) | GET Bicycle Counters Detections | golemio | part | - | - | - | - | detail of `/v2/bicyclecounters` | - |
+| 407 | [`/v2/bicyclecounters/temperatures`](https://api.golemio.cz/docs/openapi/) | GET Bicycle Counters Temperatures | golemio | part | - | - | - | - | detail of `/v2/bicyclecounters` | - |
+| 408 | [`/v1/bulky-waste/stations/:customId`](https://api.golemio.cz/docs/openapi/) | GET Bulky Waste Station by customId | golemio | part | - | - | - | - | detail of `/v1/bulky-waste/stations` | - |
+| 409 | [`/v2/parking/detail/{id}`](https://api.golemio.cz/docs/openapi/) | GET Detailed Parking Space | golemio | part | - | - | - | - | detail of `/v2/parking/detail` | - |
+| 410 | [`/v2/citydistricts/{id}`](https://api.golemio.cz/docs/openapi/) | GET District | golemio | part | - | - | - | - | detail of `/v2/citydistricts` | - |
+| 411 | [`/v2/vehiclesharing/gbfs/{system_id}/gbfs`](https://api.golemio.cz/docs/openapi/) | GET GBFS | golemio | part | - | - | - | - | detail of `/v2/vehiclesharing/gbfs/systems_list` | - |
+| 412 | [`/v2/vehiclesharing/gbfs/{system_id}/free_bike_status`](https://api.golemio.cz/docs/openapi/) | GET GBFS Free Bike Status | golemio | part | - | - | - | - | detail of `/v2/vehiclesharing/gbfs/systems_list` | - |
+| 413 | [`/v2/vehiclesharing/gbfs/{system_id}/geofencing_zones`](https://api.golemio.cz/docs/openapi/) | GET GBFS Geofencing Zones | golemio | part | - | - | - | - | detail of `/v2/vehiclesharing/gbfs/systems_list` | - |
+| 414 | [`/v2/vehiclesharing/gbfs/{system_id}/station_information`](https://api.golemio.cz/docs/openapi/) | GET GBFS Station Information | golemio | part | - | - | - | - | detail of `/v2/vehiclesharing/gbfs/systems_list` | - |
+| 415 | [`/v2/vehiclesharing/gbfs/{system_id}/station_status`](https://api.golemio.cz/docs/openapi/) | GET GBFS Station Status | golemio | part | - | - | - | - | detail of `/v2/vehiclesharing/gbfs/systems_list` | - |
+| 416 | [`/v2/vehiclesharing/gbfs/{system_id}/system_information`](https://api.golemio.cz/docs/openapi/) | GET GBFS System Information | golemio | part | - | - | - | - | detail of `/v2/vehiclesharing/gbfs/systems_list` | - |
+| 417 | [`/v2/vehiclesharing/gbfs/{system_id}/system_pricing_plans`](https://api.golemio.cz/docs/openapi/) | GET GBFS System Pricing Plans | golemio | part | - | - | - | - | detail of `/v2/vehiclesharing/gbfs/systems_list` | - |
+| 418 | [`/v2/vehiclesharing/gbfs/{system_id}/vehicle_types`](https://api.golemio.cz/docs/openapi/) | GET GBFS Vehicle Types | golemio | part | - | - | - | - | detail of `/v2/vehiclesharing/gbfs/systems_list` | - |
+| 419 | [`/v2/vehiclesharing/gbfs/{system_id}/gbfs_versions`](https://api.golemio.cz/docs/openapi/) | GET GBFS Versions | golemio | part | - | - | - | - | detail of `/v2/vehiclesharing/gbfs/systems_list` | - |
+| 420 | [`/v2/gardens/{id}`](https://api.golemio.cz/docs/openapi/) | GET Gardens | golemio | part | - | - | - | - | detail of `/v2/gardens` | - |
+| 421 | [`/v2/medicalinstitutions/{id}`](https://api.golemio.cz/docs/openapi/) | GET Medical Institution | golemio | part | - | - | - | - | detail of `/v2/medicalinstitutions` | - |
+| 422 | [`/v2/municipalauthorities/{id}`](https://api.golemio.cz/docs/openapi/) | GET Municipal Authority | golemio | part | - | - | - | - | detail of `/v2/municipalauthorities` | - |
+| 423 | [`/v2/municipallibraries/{id}`](https://api.golemio.cz/docs/openapi/) | GET Municipal Library | golemio | part | - | - | - | - | detail of `/v2/municipallibraries` | - |
+| 424 | [`/v2/municipalpolicestations/{id}`](https://api.golemio.cz/docs/openapi/) | GET Municipal Police Station | golemio | part | - | - | - | - | detail of `/v2/municipalpolicestations` | - |
+| 425 | [`/v2/parking/{id}`](https://api.golemio.cz/docs/openapi/) | GET Parking Space | golemio | part | - | - | - | - | detail of `/v2/parking` | - |
+| 426 | [`/v2/parking/tariffs/{tariffId}`](https://api.golemio.cz/docs/openapi/) | GET Parking Space Tariff | golemio | part | - | - | - | - | detail of `/v2/parking/tariffs` | - |
+| 427 | [`/v2/playgrounds/{id}`](https://api.golemio.cz/docs/openapi/) | GET Playground | golemio | part | - | - | - | - | detail of `/v2/playgrounds` | - |
+| 428 | [`/v2/sharedbikes/{id}`](https://api.golemio.cz/docs/openapi/) | GET Shared Bike | golemio | part | - | - | - | - | detail of `/v2/sharedbikes` | - |
+| 429 | [`/v2/sharedcars/{id}`](https://api.golemio.cz/docs/openapi/) | GET Shared Car | golemio | part | - | - | - | - | detail of `/v2/sharedcars` | - |
+| 430 | [`/v2/vehiclesharing/{id}`](https://api.golemio.cz/docs/openapi/) | GET Shared Vehicle | golemio | part | - | - | - | - | detail of `/v2/vehiclesharing` | - |
+| 431 | [`/v2/vehiclesharing/gbfs/{system_id}/system_regions`](https://api.golemio.cz/docs/openapi/) | GET System regions | golemio | part | - | - | - | - | detail of `/v2/vehiclesharing/gbfs/systems_list` | - |
+| 432 | [`/v2/wastecollectionyards/{id}`](https://api.golemio.cz/docs/openapi/) | GET Waste Collection Yard | golemio | part | - | - | - | - | detail of `/v2/wastecollectionyards` | - |
+| 433 | [`/v2/energetics/buildings/{id}`](https://api.golemio.cz/docs/openapi/) | Get a building by ID | golemio | part | - | - | - | - | detail of `/v2/energetics/buildings` | - |
+| 434 | [`/v3/parking-machines/{id}`](https://api.golemio.cz/docs/openapi/) | Get a parking machine by ID | golemio | part | - | - | - | - | detail of `/v3/parking-machines` | - |
+| 435 | [`/v3/parking-tariffs/{id}`](https://api.golemio.cz/docs/openapi/) | Get a tariff by ID | golemio | part | - | - | - | - | detail of `/v3/parking-tariffs` | - |
+| 436 | [`/v3/parking/{id}`](https://api.golemio.cz/docs/openapi/) | Get detailed information about a parking location by ID | golemio | part | - | - | - | - | detail of `/v3/parking` | - |
+| 437 | [`/v3/parking/{id}/average-occupancy`](https://api.golemio.cz/docs/openapi/) | Get detailed information about the average occupancy by ID | golemio | part | - | - | - | - | detail of `/v3/parking` | - |
+| 438 | [`/v2/energetics/devices/{deviceId}`](https://api.golemio.cz/docs/openapi/) | Measurement device info | golemio | part | - | - | - | - | detail of `/v2/energetics/devices` | - |
+| 439 | [`/v2/energetics/measurements/monthly-reading`](https://api.golemio.cz/docs/openapi/) | Monthly sums of measurements from devices | golemio | part | - | - | - | - | detail of `/v2/energetics/measurements` | - |
+| 440 | [`/v2/energetics/organizations/{organizationId}`](https://api.golemio.cz/docs/openapi/) | Organization detail | golemio | part | - | - | - | - | detail of `/v2/energetics/organizations` | - |
+| 441 | [`/v2/mvt/validation`](https://api.golemio.cz/docs/openapi/) | Validate attributes of MVT request | golemio | part | - | - | - | - | detail of `/v2/mvt/{z}/{x}/{y}` | - |
+
+## 7. What is left out and why
+
+The note column carries each row's reason. The rules behind them:
+
+- **Ledgers and finance tables** (received invoices 1999-2026, city police invoices and orders,
+  councillors' pay, procurement, waste-fee accounting, building costs, audits, the publication plan):
+  no citizen question; the budget (`budget`, live) and its monthly execution (integrate) carry the
+  money.
+- **City-wide housing counts** (six MHMP housing tables, quarterly or not stated): no area cut,
+  score 0. They become KPI rows once the city publishes them per district.
+- **Plan and planning layers** (every MPP and ZÚR layer, the land-use plan, planning documents,
+  building bans, ÚSES, current land use, map sheet indexes): a plan index, owned by the planning
+  tools that read the geoportal directly; score -1.
+- **Urban-structure analyses** (building age, storeys, roof heights, blocks, permeability, squares,
+  historic and lost roads, landmarks and view cones): research layers with no city question.
+- **Terrain and geology** (contours, slopes, geology, PanGeo, retaining walls): base layers for maps.
+- **Rasters and scenes** (orthophotos, DSM/DTM, building heights, the 3D scenes, the base map): no
+  features; a WMS link in the catalogue at most.
+- **Score 0 registers and one-off analyses** (climate quality, IPPC permits, significant landscape
+  elements, emergency planning zones, market rules, prisons, environmental-education bodies, apiaries,
+  city-owned buildings and parcels, the price map, Airbnb listings, noise barriers, the 2013 flood,
+  the 2016 parking zones, cycle signs).
+- **Archive DTM utility networks**: engineering survey data of the utility owners, no city question.
+- **One source per object**: Golemio city districts (IPR `districts` is live), Golemio parking machines
+  (IPR layer taken), Golemio bulky-waste (403; IPR layer taken), IPR police objects (Golemio police
+  is live), Golemio medical institutions (stale since 2024-04; IPR polyclinics taken).
+- **Stale feeds**: Golemio air quality (stale since 2026-08-12, ČHMÚ is live) and microclimate (no
+  reading since 2026-04-07).
+- **Internal and old routes**: the Golemio routes the specification tags "internal" and the v2
+  parking shape v3 replaced.
+- **Tiles**: Golemio MVT and MVTS vector tiles, a map distribution at most.
+
+Blocked rows and what clears them:
+
+- **Golemio scope (403)**: traffic restrictions, floating car data, Waze potholes, energetics (10
+  routes). @user: ask OICT to add these scopes to the praha key.
+- **DataSource time window**: bicycle counters and pedestrians sort their measurements by device, not
+  time; a fixed URL cannot fetch the latest interval (T-5268). Needs a platform DataSource URL with a
+  `from=` of now minus the period.
+- **Keyed per-item calls**: departure boards (about 15,000 stops, 20 calls per 8 s) and office queues
+  (64 offices) need one keyed call per item; a nested Bento call carries no key (T-5268).
+- **No open batch**: shared bikes, shared cars, vehiclesharing and its GBFS systems. T-5268 closed
+  without them and the board admits no new task until the owner does.
+- **No open events source**: Golemio has no events route (404) and the Prague event calendars publish
+  no API or reuse terms that were read; the question goes to the publishers before any scrape.
+
+## 8. Provenance
+
+- City snapshot: `evidence/supervisor-2026-10-22-praha-inventory/praha-datasets.tsv` on the swarm
+  board; update frequencies from `https://data.gov.cz/sparql` on 2026-10-23.
+- IPR: `https://opendata.geoportalpraha.cz/api/search/v1/collections/all/items` (226 items) and the
+  national catalogue's IPR datasets (93), both read on 2026-10-23.
+- Golemio: `https://api.golemio.cz/docs/static/output-gateway/openapi.json` and `openapi-public.json`,
+  copied by the supervisor on 2026-10-22 to `evidence/supervisor-2026-10-22-golemio-endpoints/`.
+- Probe results: the bodies of T-5268 and T-5276 (record counts, freshness, 403 answers).
+- Smart Data Models: the GitHub API listing of each subject repository at the commit in section 3.
+- Existing praha sources: `components/context-gateway/seed/praha/` in the deployment repository at
+  main `213c946`.
+- `scripts/check-praha-open-data.py check` proves the counts: 441 rows, one per snapshot entry,
+  every live and integrate row with a batch and a model, every integrate row scoring 1 or more, every
+  blocked and skip row with a reason, every part row naming its head.
+
+## Related
+
+- [Open data integration rules](../Development/12-open-data-integration.md) — the rules this inventory follows.
+- [Open data sources of Helsinki (HRI)](helsinki-open-data.md) — the same survey for Helsinki.
+- [Representation contract](../API/11-representation-contract.md) — what each output in section 4 is.
+- [Open data catalogue](../Architecture/21-open-data-catalogue.md) — how a project publishes into CKAN.

@@ -1,0 +1,227 @@
+id	title	type	modified	periodicity
+b5db29c4f156475086de2d25e430d290	Absolutní výšky budov	Image Collection	2026-04-30	not stated
+44e6148cd9c34542b1202525ebec06de	Archivní DTM Prahy - inženýrské sítě - autorizovaná data správců - povrchové znaky zobrazené symbolem	Feature Service	2026-06-01	not stated
+67ff6c76686b44dba4386a780765429d	Archivní DTM Prahy - inženýrské sítě - autorizovaná data správců - průběh	Feature Service	2026-06-01	not stated
+df942357cd6548408c35c059d3ccba61	Archivní DTM Prahy - inženýrské sítě - povrchové znaky zaměřené obvodem	Feature Service	2026-06-01	not stated
+d4418172a31b46b7b875668eaa354f22	Archivní DTM Prahy - inženýrské sítě - povrchové znaky zobrazené symbolem	Feature Service	2026-06-01	not stated
+81a8d41ec3134ad38d62b02ff6235437	Archivní DTM Prahy - inženýrské sítě - průběh	Feature Service	2026-06-01	not stated
+8a85aa7854b048f8a5cf8a92070dcbbe	Bilanční územní celky (BUC)	Feature Service	2026-09-14	OTHER
+2ce0a7a48eb542fb858a998f77a5b227	Bloky	Feature Service	2026-06-01	not stated
+fe6b8a020b744536ab95b8cb43694ea6	Bonita klimatu	Feature Service	2026-06-01	not stated
+71783e581adb40f8bb05ca5451688776	Bonita klimatu z hlediska míry zastavěnosti území	Feature Service	2026-06-01	OTHER
+805fb2c41c454f26864ec455de660562	Bonita klimatu z hlediska oslunění	Feature Service	2026-06-01	not stated
+b11ca241697446ff8f6c031ad8fd4a27	Bonita klimatu z hlediska přirozené ventilace území	Feature Service	2026-06-01	not stated
+c0a08ed2d2f14962b65c3a1908465519	Bonita klimatu z hlediska rychlosti proudění	Feature Service	2026-06-01	not stated
+1d248a456ddd499aa51139a859bd9654	Bonita klimatu z hlediska výskytu bezvětří	Feature Service	2026-06-01	not stated
+96e882bdfdf448c5b0031f5303118801	Bonita klimatu z hlediska znečištění ovzduší	Feature Service	2026-06-01	not stated
+7e6316e95cfe4f36ae06bbfb687bf34b	Budovy 3D / Buildings 3D model	Web Scene	2026-07-21	not stated
+23c1130730444977846716a2be9a8105	Budovy ve vlastnictví hl. m. Prahy - evidence MHMP	Feature Service	2026-06-01	not stated
+f27a07e826be4855b7c854f24d94dbc1	Cenné poválečné obytné soubory	Feature Service	2026-06-01	OTHER
+efa6767e08154a72a9a5931082dc1df2	Cenová mapa Hl. m. Prahy - plochy	Feature Service	2026-06-01	not stated
+519cbdad40d242cbb765ea71f0392fb2	Cyklistická doprava - značky	Feature Service	2026-06-01	not stated
+45063acce89d4b37afc6d51f03f3ad49	Cyklistické trasy	Feature Service	2026-08-17	not stated
+fb6ab7891a7244f39a3a380027af2981	Databáze významných staveb a míst	Feature Service	2026-06-01	not stated
+a6120ef1652e4df2b1202c1a8ad4e0c7	Digitální model povrchu - 1m	Image Collection	2026-04-30	not stated
+97d2c9c11aa9478cb21b469b8a4f820e	Digitální model terénu - rastr	Image Collection	2026-04-30	not stated
+999e4a28af374bc5a87021bce082c392	Generel cyklistických tras hl. m. Prahy	Feature Service	2026-06-01	not stated
+f1669d045fc5475aace664e484bd3427	Geologické jednotky	Feature Service	2026-06-01	not stated
+dd56b9bf11f748dc83402709cf7ad6c6	Historické správní hranice	Feature Service	2026-06-01	not stated
+2a7da6765e104063a25bb6adadd957b7	Historické trasy cest	Feature Service	2026-06-01	not stated
+934bce6998c84d5ca9a31c4a2d654a2f	Hluková mapa - den	Feature Service	2026-06-01	OTHER
+83c81bf4e8ed47c5b38c7d1344d6b41a	Hluková mapa - noc	Feature Service	2026-08-17	OTHER
+6ea612215c8646dab1ea975aa64276b5	Hluková mapa automobilové dopravy - den	Feature Service	2026-06-01	not stated
+014f326d782b452eaa9cd3805587d94f	Hluková mapa automobilové dopravy - noc	Feature Service	2026-06-01	OTHER
+fe45e416b03642f9902cdf1b30ef678a	Hranice klimatických regionů	Feature Service	2026-06-01	OTHER
+987c2262f47549f3a0df010a6e10c83a	Hrany svahů	Feature Service	2026-06-01	not stated
+787f7c3ce4964b519ddc39246377c31b	Hřbitovy	Feature Service	2026-09-01	not stated
+281b2db845a9457c9fabc9b9cdf6a3e9	IPPC - Integrované povolení	Feature Service	2026-06-01	OTHER
+a74bc85ba5354490a23afcfe495693d9	Kategorie radonového rizika	Feature Service	2026-06-01	OTHER
+684f561915764e3e9c48800a6b4fdacd	Klad mapových listů 1:1000	Feature Service	2026-06-01	NEVER
+db079beefdb849a2bbef58bdd8d3d2bb	Klad mapových listů 1:10000	Feature Service	2026-06-01	not stated
+691ecd84883d4e019e044da140f6ee0b	Klad mapových listů 1:2000	Feature Service	2026-06-01	not stated
+dddf9844820d4d2abc41d2505f8220b7	Klad mapových listů 1:500	Feature Service	2026-06-01	NEVER
+8e7f01589b004c25820d41cc190c1ed3	Klad mapových listů 1:5000	Feature Service	2026-06-01	NEVER
+b69c5992ac06481da8d0e545838baa11	Klad mapových listů 1:50000	Feature Service	2026-06-01	NEVER
+17f4294bf3f041db9a0ec0d6ac0741a6	Kulturní zařízení	Feature Service	2026-09-01	not stated
+c0bca952f09d44b0bf38885f499ad59d	Kulturně komunitní centra	Feature Service	2026-09-01	OTHER
+98b5292d85404383a6b5d526fa0e752c	Letní údržba komunikací TSK	Feature Service	2026-07-15	ANNUAL
+cf979c31180d4fbd92ebdb22d45fa8b2	Liniové překážky prostupnosti	Feature Service	2026-07-09	not stated
+267a7595c34845d5b44925414c718f5d	MPP -  Technická infrastruktura — plochy a koridory	Feature Service	2026-10-13	not stated
+ac72dae0dad44520bdd2cbbb12e289ad	MPP - Dopravní infrastruktura — bodové značky	Feature Service	2026-10-09	OTHER
+3faec04f05534a17a065001487b6b9a3	MPP - Dopravní infrastruktura — liniové značky	Feature Service	2026-10-08	OTHER
+c23d0e4f03034a5cbe7264083f640735	MPP - Dopravní infrastruktura — plochy a koridory	Feature Service	2026-10-07	OTHER
+dafa9924c2ad4e69af63319de9407e47	MPP - Lokality	Feature Service	2026-10-13	OTHER
+35e82d77fbd44d96b470bf5731fbb0d4	MPP - Městské parky	Feature Service	2026-10-05	OTHER
+a64fa568139244b19563791da1c777d4	MPP - Městské parky vymezené bodem	Feature Service	2026-10-05	OTHER
+508529e0160a4749bd9e7a5b9f4430f0	MPP - Náměstí	Feature Service	2026-08-31	OTHER
+809b02dbf2644305a93a045dd69eba03	MPP - Náměstí vymezená bodem	Feature Service	2026-08-31	OTHER
+71e0eb6eb8fd4cbaac66b999358818dd	MPP - Oblasti nových struktur	Feature Service	2026-10-13	not stated
+d80a3a23357f4df3b43d17dc5230c3cf	MPP - Plochy podmíněné plánovací smlouvou	Feature Service	2026-10-13	OTHER
+9615a58f573648ec9799b70de0ae47ee	MPP - Plochy podrobnějšího strukturálního členění 	Feature Service	2026-10-05	OTHER
+3f1f21baceca413ab1a281cc16e9ca3d	MPP - Plochy podrobnějšího členění stavebních bloků	Feature Service	2026-08-31	OTHER
+365592eeaff4476ebcdcda5451c84514	MPP - Plochy podrobnějšího členění uličních prostranství	Feature Service	2026-08-31	OTHER
+bab1bec4bd3f4c17b5878155792be031	MPP - Plochy veřejné vybavenosti	Feature Service	2026-10-13	OTHER
+f32a0a3637494123819e060dbceb6de8	MPP - Referenční koeficient	Feature Service	2026-10-13	OTHER
+2e1ee9f944f841faa5c957cba4c66135	MPP - Samoty	Feature Service	2026-10-13	OTHER
+84c8d0733fba4d86a1a02c9dcb1ee4b1	MPP - Stávající dopravní infrastruktura — bodové značky	Feature Service	2026-10-12	OTHER
+48cc49c7a5d74bd4ad8f13c0487cf2c6	MPP - Stávající dopravní infrastruktura — liniové značky	Feature Service	2026-10-14	OTHER
+78ba24e7ba6b4a5b89855aa933eee0b0	MPP - Stávající technická infrastruktura — bodové značky	Feature Service	2026-10-13	not stated
+f945535de90d42048f0e2fd77343a3c5	MPP - Stávající technická infrastruktura — liniové značky	Feature Service	2026-09-01	not stated
+33fa67c6f95f4b5d8adb9a6b88ff1115	MPP - Stávající veřejná vybavenost — body	Feature Service	2026-10-13	not stated
+48402811577c4829955392715805b715	MPP - Stávající veřejná vybavenost — plochy	Feature Service	2026-10-13	OTHER
+4d10d2da338f4d26960d65e9a452d9a7	MPP - Technická infrastruktura — bodové značky	Feature Service	2026-10-13	not stated
+cccd135219264e9eab83598ef89795e8	MPP - Technická infrastruktura — liniové značky	Feature Service	2026-10-13	not stated
+9ed708b84805441b9606bbdf54cea978	MPP - Transformační a rozvojové plochy	Feature Service	2026-10-13	OTHER
+5dc8ceca26314dc5b047ac4d6deebb4e	MPP - Ulice, cesty	Feature Service	2026-08-31	OTHER
+e42a957d1d2a4499b73b1bb18e456f1b	MPP - Veřejná vybavenost vymezená bodem	Feature Service	2026-10-13	OTHER
+e02b5fc41acd4106a91cb806dcfafa6c	MPP - Veřejně prospěšné stavby a veřejně prospěšná opatření	Feature Service	2026-10-14	OTHER
+c3d19ba125964a2880b2a0707bc2025e	MPP - Výšková regulace	Feature Service	2026-08-31	OTHER
+6a39c6b90f204551bdd22a67d1b6b19c	MPP - Zastavitelné území	Feature Service	2026-10-13	OTHER
+aca294a21e534b09ba70e5cb871f0350	MPP - Zastavěné území	Feature Service	2026-10-13	OTHER
+fad70568d8c6438aa7bdd7d6847f8a4f	MPP - Záplavová území	Feature Service	2026-10-13	not stated
+0bf4db4da0f9430b996ba40888222e8f	MPP - Územní systém ekologické stability	Feature Service	2026-10-06	not stated
+98634aa0bcb94cb58b17f8c6f365114b	MPP – Dopravní a technická infrastruktura — územní rezervy dodatek	Feature Service	2026-10-06	OTHER
+4e61cff9fad14031868f60e12d2a06ac	Model terénu 3D / Elevation model	Web Scene	2026-04-30	not stated
+ae7594eb61f347a39b97315a02445e21	Mosty 3D / Bridges 3D model	Web Scene	2025-06-17	not stated
+35ede955057f4815b522ea91b488792a	Městské části	Feature Service	2026-06-01	MONTHLY
+a8b308d0fa7d48e09042596d5bb9f3d8	Nadmořské výšky terén a budovy	Image Collection	2026-04-30	not stated
+927f999ff604463cbce63914de97a6d7	Naučné stezky na území hl. m. Prahy ve správě odboru ochrany prostředí MHMP	Feature Service	2026-06-10	not stated
+bed7894d358a4d08b640c972e844d7f3	Naučné stezky na území hl. m. Prahy ve správě odboru ochrany prostředí MHMP - Zastávky	Feature Service	2026-06-10	ANNUAL
+d4557fdab6ba4532a2566afe39d1ec26	Náměstí, návsi, prostranství	Feature Service	2026-06-01	not stated
+87f9881dab2847c09d6b1da7090d0f6c	Objekty Městské policie Praha (body)	Feature Service	2026-06-01	not stated
+11487043180349258533491f07d22366	Ochranná pásma hřbitovů	Feature Service	2026-06-01	not stated
+176f314a9ded40ef88ce55a2ed401c2e	Odpadní zařízení pro občany	Feature Service	2026-09-14	OTHER
+6fa5c5189b664394a4c39b645ec13619	Okrsky Městské policie Praha	Feature Service	2026-06-01	OTHER
+47166a1c34994903889d25c940cca5e3	Opěrné zdi	Feature Service	2026-06-01	OTHER
+325519f7f44a4172bb0925e217be2ba7	Ortofotomapa Prahy - poslední snímkování (pixel 10 cm)	Image Service	2026-04-30	not stated
+980a72be93ff4653b92bd21a85f5997c	Ortofotomapa Prahy - poslední snímkování - infračervená (pixel 10 cm)	Image Service	2026-04-30	not stated
+58f81453af4143b8be33d7dbab9dd387	Ortofotomapa Prahy - poslední snímkování - mimovegetační 	Image Service	2026-08-04	not stated
+3d3add84fb784ed297725c566f149a51	Oázy chladu - kašny, fontány	Feature Service	2026-09-24	OTHER
+33eadb4efd7944adb3abf5cb77b40c06	Oázy chladu - mlžítka	Feature Service	2026-07-31	not stated
+8d435d33cd5d431cbaeda5837b3d3a77	Oázy chladu - místa ke koupání	Feature Service	2026-07-31	not stated
+39f6228757cf424889f79b0ef7a7b415	Oázy chladu - pumpy	Feature Service	2026-07-31	not stated
+ae0ef46774394e09a91850fb9b826788	Oázy chladu - pítka	Feature Service	2026-08-04	OTHER
+8aabe75c9689487a88d3e297bf498d6a	Oázy chladu - studánky, prameny	Feature Service	2026-07-31	OTHER
+e01b4bb6d148496abff4f065686290ff	Oázy chladu - vodní plochy a toky	Feature Service	2026-10-05	OTHER
+5f51a4dbd07a4429b822fe0310b2fb50	PanGeo	Feature Service	2026-06-01	IRREG
+86d460f2edd041deba0560f9a090b5f6	Parcely ve vlastnictví hl. m. Prahy - evidence MHMP	Feature Service	2026-06-01	not stated
+2b49ad1ad0bb4892bcb54acfb978456a	Parkovací automaty	Feature Service	2026-10-21	WEEKLY
+bf72734397ba46b9b817ee997d38284b	Parky (ÚAP)	Feature Service	2026-10-13	not stated
+f91c74740b6f41b296ee3d46f8920ae2	Partery	Feature Service	2026-06-01	not stated
+227f70195fd04dc8b429b04ac8ce6cae	Pietní místa a válečné hroby	Feature Service	2026-06-01	not stated
+d11ed4a6c0c6499c87470596fa38caa4	Plochy potenciálu recyklace území	Feature Service	2026-06-01	not stated
+96ede95cda354c7ea139ca6918a8009e	Plošné překážky prostupnosti	Feature Service	2026-07-09	not stated
+6a750603bf86448e80acad9be47278fd	Plán využití ploch - funkční plochy (územní plán)	Feature Service	2026-09-29	QUARTERLY
+b5af4689248f4db58ee3b176970917b7	Plán využití ploch - podměrečné funkční plochy (plovoucí) - body (územní plán)	Feature Service	2026-10-05	OTHER
+84ad5ced362e4018a3199c82ee1b9488	Plán využití ploch - podměrečné funkční plochy (stabilizované) - body (územní plán)	Feature Service	2026-10-05	OTHER
+b098df43332e4eea9fd521151446069a	Plán ÚSES	Feature Service	2026-06-01	OTHER
+4c027c068e3c439bba79aa25fa2ef267	Plán ÚSES - kritická místa	Feature Service	2026-06-01	not stated
+0063e7c1f8c04fcf9dc9b1e7a6b6f4e6	Plán ÚSES -Interakční prvky	Feature Service	2026-06-01	OTHER
+669fb3aca4bf4129b252eac8552f6054	Podlažnosti	Feature Service	2026-07-09	BIENNIAL
+3fbd520692be4ac889550cf7c5137282	Polikliniky a zdravotní střediska	Feature Service	2026-09-07	not stated
+409b7c43a50c45abac6f41f5684e4698	Potenciál bezmotorových tahů	Feature Service	2026-06-01	not stated
+97a5ee3b3d0c4e27b423f28daeb84e67	Potravinářské plnosortimentní prodejny	Feature Service	2026-09-01	ANNUAL
+431d4d6de82f4ce3b29c62cf82198671	Pošty	Feature Service	2026-06-01	not stated
+9dc0e8136fb347858f3d36b36413c532	Pražská integrovaná doprava - linky (aktuální stav)	Feature Service	2026-08-20	DAILY
+6391e7e27ff042a690617195a457f5a8	Pražská integrovaná doprava - tarifní pásma	Feature Service	2026-06-01	not stated
+62106cae6acf4507b988c0e745f55bba	Pražská integrovaná doprava - vstupy do metra	Feature Service	2026-07-14	OTHER
+d7442b3254ef40768599f328b7f3270f	Protihlukové bariéry	Feature Service	2026-06-01	OTHER
+c739df39126b456b8aaa1bb3db213b05	Protihlukové valy	Feature Service	2026-06-01	OTHER
+1a09887626a243aeab7910d3ab2477d2	Protipovodňová ochrana	Feature Service	2026-06-01	OTHER
+98a6eba14f8646e1a6b7e3cd805f484b	Protipovodňová ochrana ( pytle s pískem )	Feature Service	2026-06-01	OTHER
+20274e55141c4a049d8a8dbaeeacbbad	Prstence města	Feature Service	2026-06-01	not stated
+b00b0a0e123b49449a458e72bdf5032d	Pěší trasy	Feature Service	2026-06-02	OTHER
+59bafb3bc689459b9f310fcc182cd428	Přírodní osy zeleně	Feature Service	2026-06-01	not stated
+48719ca373c947f99d3fbdcf341c07f2	Přírodní parky	Feature Service	2026-06-01	not stated
+ad9aca20e9c042d2b52eb31ff18961b6	Relativní výšky budov	Image Collection	2026-04-30	not stated
+47befb94777e42808f9934f60768072b	Sakrální objekty	Feature Service	2026-06-01	OTHER
+77d575ed2fd14f4987474a2f26caa460	Sdílená data o zeleni - plochy správy	Feature Service	2026-10-06	not stated
+a62d904e397f4320b299f37760d818da	Sdílená data o zeleni - technické prvky - body	Feature Service	2026-10-06	not stated
+d187ec184f6e4cd0b55e040df4bd717d	Sdílená data o zeleni - technické prvky - linie	Feature Service	2026-10-07	not stated
+6960e7e91f364502ba4325ad85e2d8f4	Sdílená data o zeleni - technické prvky - plochy	Feature Service	2026-10-06	not stated
+802a43db41474d4db5789ef5a47f2985	Sdílená data o zeleni - vegetační prvky - body	Feature Service	2026-10-06	not stated
+8818bda5e5e34d96af02126d9554b385	Sdílená data o zeleni - vegetační prvky - linie	Feature Service	2026-10-08	not stated
+518e85700665441f86ded81dd0653a71	Sdílená data o zeleni - vegetační prvky - plocha	Feature Service	2026-10-07	not stated
+58d3857a49fc43cab69c5aad0162d024	Sdílená data o zeleni - základní plochy zeleně	Feature Service	2026-10-06	not stated
+4eb682464b504230a7a9791ea1520461	Současný stav využití území	Feature Service	2026-09-30	OTHER
+9938b4b73b4d49a7aef5a605f4d39acf	Stanoviště tříděného odpadu	Feature Service	2026-06-01	IRREG
+1185c458ba6e4d939b335457b57feb5d	Stanoviště tříděného odpadu - položky	Feature Service	2026-06-01	IRREG
+3b180176687845588d2a1eeaa3138ae2	Stavební uzávěry	Feature Service	2026-06-01	OTHER
+527fb8f89ee641e9b6542a8e293228b0	Stavební uzávěry - dopravní	Feature Service	2026-06-01	not stated
+29fcd28a7bf94df990c336d8d98f8daf	Stavové lokality	Feature Service	2026-08-07	not stated
+3615fd648f1f4182b5f42dcdfba03b54	Stromořadí	Feature Service	2026-10-02	not stated
+f2f1606532d1455fbfb5d7ccdbb22495	Stáří zástavby	Feature Service	2026-06-01	not stated
+4bd3cffd9e4e47758f5f9f2d8fed6fce	Subjekty EVVO	Feature Service	2026-07-29	not stated
+ac3df5929a744bb4b80a180158a2562f	Svoz komunálního odpadu	Feature Service	2026-06-01	OTHER
+db968d51a1a043f2832a16f140386146	Tržní řád	Feature Service	2026-06-01	not stated
+81c543a1199e46da87e18e12125e29a3	Ubytovací zařízení	Feature Service	2026-06-01	not stated
+b70e5b59935f4b4cb54b230db8a59871	Ubytování Airbnb	Feature Service	2026-06-01	not stated
+1bbe08c6c9f44c70810957c5e10f22db	Uliční úseky TSK včetně zatřídění komunikací	Feature Service	2026-07-15	not stated
+f71616f71ed849d8b74a86c27bfda8cb	Urbanistická síť	Feature Service	2026-06-01	not stated
+254b2265c0964538a8dd89eed895cefb	Uzavřené rezidenční areály - body	Feature Service	2026-06-01	not stated
+68709d933e424e6b8b924e9a75aaa6c1	Velkoobjemové kontejnery	Feature Service	2026-06-01	not stated
+5649c54fb6ae422e89569260243870ee	Veřejná hřiště	Feature Service	2026-09-01	OTHER
+62e3cf1020434b07832ca9ae19bce348	Veřejné toalety	Feature Service	2026-06-01	not stated
+18b04b0c976e4f6d9431275452149c6a	Veřejně přístupná prostranství	Feature Service	2026-07-09	BIENNIAL
+d887eea0888a410ba7198cc810061192	Vnitřní zóna města	Feature Service	2026-06-01	not stated
+d6390f4d568f4560a3a5ecb95ad8ffe0	Voda spojitá	Feature Service	2026-10-05	not stated
+143a034267e34baaacdf253b89f4f09e	Volný pohyb psů - psí zóny	Feature Service	2026-06-01	not stated
+3476d8f8a60942c1a1e11b3730c84d0c	Vrstevnice 1 m	Feature Service	2026-06-01	not stated
+fb2e5c757d9545edb5ea0f307206225c	Vrstevnice 2 m	Feature Service	2026-06-01	not stated
+2ea499b6e3214edbb392820562c24a59	Vrstevnice 5 m	Feature Service	2026-06-01	not stated
+fc8aa1fdef7a41e3a996d2d2c59bcf79	Vstupy - body	Feature Service	2026-07-09	not stated
+ab4a8cd8fc284b738ca806681559d694	Vyhrazená parkovací stání pro držitele průkazu ZTP/P bez vazby na registrační značku vozidla	Feature Service	2026-06-01	OTHER
+6bceef0c12d84031a0628fab533eecc1	Vyhrazená stání pro invalidy - sdružená	Feature Service	2026-10-21	not stated
+1e6b9ad51a12468193f47e2b9b1b94ed	Vyhrazené stání pro invalidy s registrační značkou	Feature Service	2026-10-21	WEEKLY
+b62d8490d0034b55b2982386a5d1027c	Vyhrazené stání pro zásobování	Feature Service	2026-10-21	not stated
+720a5804b9ef4c73af2d85f5605c1dc6	Vyhrazené stání speciální	Feature Service	2026-10-21	WEEKLY
+d2382afbf9454951ab71a0a89c762d15	Vyjmenované stacionární zdroje znečišťování ovzduší - REZZO 1	Feature Service	2026-06-01	not stated
+8f600add6b104be9810b23c1bf212b78	Vyjmenované stacionární zdroje znečišťování ovzduší - REZZO 2	Feature Service	2026-06-01	OTHER
+28a9425f2ee748328fc5346030de2d83	Vysoké školy	Feature Service	2026-06-01	not stated
+2a02afe23c3b434daec21dea7318d26c	Vývoj zástavby v Praze v letech 1840 - 2010	Feature Service	2026-06-01	not stated
+46887c0a203a4862ae6c4d1330cb83aa	Významné stavební dominanty	Feature Service	2026-06-01	OTHER
+bae8c96d6d83476d9f9b399df87ea6f0	Významné svahy	Feature Service	2026-06-01	not stated
+7ac774b536154ac4a8e151264ea8e00c	Významné vyhlídkové body	Feature Service	2026-06-01	OTHER
+150307cabda6483d80e4ffd18f9e0323	Významné vyhlídkové body - pohledové výseče	Feature Service	2026-06-01	not stated
+bd9307d2499c44ce9c2d3ef092e7ae74	Významný krajinný prvek - registrovaný	Feature Service	2026-06-01	OTHER
+b8c61c672e7b4fa1a3a67e2c2c5613aa	Významný krajinný prvek - test	Feature Service	2026-06-01	OTHER
+f461e0a1e13d4151a79a0c07b3ceb6cc	Výška obvodových linií střech	Feature Service	2026-06-01	not stated
+b8e6235adce5463fa3012941bd3cdc3a	Včelnice Lesů hl. m. Prahy a další podobné objekty jiných organizací na území Prahy	Feature Service	2026-06-01	OTHER
+77b67894212e487cb57626e10bf15f85	Věznice	Feature Service	2026-06-01	not stated
+80641664255a498aaea60d4d56ac962b	Zaniklé cesty dle Císařských otisků stabilního katastru - pro hl. m. Praha	Feature Service	2026-06-01	OTHER
+14057412b25649c99d65cad77fd7dffd	Zaniklé cesty dle II.vojenského mapování - pro metropolitní oblast Prahy na území Středočeského kraje	Feature Service	2026-10-05	OTHER
+e7f57fda3ad341199f1b254abd1d1b13	Zimní údržba komunikací TSK	Feature Service	2026-06-01	not stated
+e332ec5438b645b6a08a54a0da1accd6	Zookoutky Lesů HMP a dále farmy, terária, záchranné stanice a další podobné objekty jiných organizací na území Prahy	Feature Service	2026-10-06	OTHER
+e0d2227dff5d42eaa8a28231a3b66c56	ZÚR - Rozvojová oblast a rozvojová osa	Feature Service	2026-10-21	not stated
+2c3a79ece6be45bab81296f37d2cdc8b	ZÚR – Doplňkový typ objektu – body	Feature Service	2026-10-21	not stated
+30ac690bfc0849e3a8ffc0b9f2f0dc2a	ZÚR – Doplňkový typ objektu – plochy	Feature Service	2026-10-21	not stated
+7fe24a339e4d4a74ba66dbc5df23e9f0	ZÚR – Dopravní infrastruktura – plochy a koridory 	Feature Service	2026-10-21	not stated
+a51e41fa5fb84711a53ed24eda1d6730	ZÚR – Krajina	Feature Service	2026-10-21	not stated
+e7bf7728379e46db855820a60dcca84c	ZÚR – Plocha a koridor jiné	Feature Service	2026-10-21	not stated
+6a09de8d038b4c3aafebba3813c408e4	ZÚR – Specifická oblast	Feature Service	2026-10-21	not stated
+3bb8bb79be2548efb11a871db0ffa5d0	ZÚR – Sídelní struktura jiná	Feature Service	2026-10-21	not stated
+c064ff26b18446d89a47d882271ec090	ZÚR – Technická infrastruktura – plochy a koridory 	Feature Service	2026-10-21	not stated
+44743a45b15f4026bd646f42bf4f75f8	ZÚR – Vodní hospodářství	Feature Service	2026-10-21	not stated
+babe1fdf1ee4498da9dd1125c9206d21	ZÚR – Územní rezerva	Feature Service	2026-10-21	not stated
+6e17e8992be24893b62284edce1a2dab	ZÚR – Územní systém ekologické stability	Feature Service	2026-10-22	not stated
+7dce241cdbb141fa8104e3a65ca67ad6	Záchytná parkoviště PR	Feature Service	2026-06-01	OTHER
+b2be4777cec1443fa1e9b4b0d385fed1	Zákaz stání	Feature Service	2026-10-21	WEEKLY
+9cc5eccd77244692ab906218b3e367e8	Základní kompoziční trojúhelník a oblast posuzování	Feature Service	2026-06-01	not stated
+1ceac78146934e98a9e5962c8e367e12	Základní mapa 1: 25 000 - rastr barevný	Image Collection	2026-10-15	not stated
+d13435c488614e48b05755d1332d2f59	Základní mapa černobílá WGS	Web Map	2026-03-27	not stated
+c9dc5fa395b2478a8db0a7cc5be0e447	Záplavové území ( Q100 )	Feature Service	2026-06-01	not stated
+fc295e699c5346de9cf6a7e1e634726b	Záplavové území ( Q20 )	Feature Service	2026-06-01	not stated
+c4ef1880cd5d4e62896f8cb845217881	Záplavové území ( Q5 )	Feature Service	2026-06-01	not stated
+040756d41d294971ad730304b792cb03	Záplavové území ( Q50 )	Feature Service	2026-06-01	OTHER
+00242330738c4326af30663eb7c6d7f9	Záplavové území ( drobné vodní toky )	Feature Service	2026-06-01	OTHER
+7a4bf2d99de44645ac5768f65d8a9692	Záplavové území (Vltava, Berounka)	Feature Service	2026-06-01	not stated
+09bf264e20ad4a6f8f85740024dce306	Záplavové území 2013	Feature Service	2026-06-01	not stated
+f7211297c79c44a49cf249955933364a	Zóny havarijního plánování	Feature Service	2026-06-01	not stated
+8cd3f76652bf49af87901a1d049cb73c	Zóny parkování města	Feature Service	2026-06-01	not stated
+4a5b20e5cfec4eb4b1c15759f2004dd3	Zóny parkování města 2016	Feature Service	2026-06-01	not stated
+8e3420ecc539468489101958689a3cd9	Zóny placeného stání vymezené tarifem	Feature Service	2026-10-21	not stated
+7cbfdf9f9d87418ba62b35762cd46ca7	Úseky parkování v zónách placeného stání	Feature Service	2026-10-21	WEEKLY
+295009bbafb642509655edd4c8049236	Územní systém ekologické stability	Feature Service	2026-09-14	OTHER
+ca03437843114a40a03d73a211ff9823	Územně plánovací podklady a územně plánovací dokumentace - plochy	Feature Service	2026-06-01	not stated
+28908e43177b428698924e34b007729a	Říční niva	Feature Service	2026-06-01	not stated
+5d32db18a5d545a79ad3029917984a89	Školská zařízení	Feature Service	2026-09-01	ANNUAL
