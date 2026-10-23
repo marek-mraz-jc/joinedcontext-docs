@@ -198,6 +198,11 @@ first and the application reads it from here.
 Fourteen territories each for the two regional indicators, three indicators for the city: 31
 `KeyPerformanceIndicator` entities in all, 28 in `bbsk-kpi` and 3 in `banskabystrica-kpi`.
 
+Each entity carries its Slovak and English rows above as `title`, a LanguageProperty, and a
+regional one adds its territory: `Stav trvale bývajúceho obyvateľstva na konci obdobia, okres
+Brezno` and `Resident population at the end of the period, Brezno district`. A table labels the
+row with the title in the reader's language; `name` stays the slug, the `{localId}` of the id.
+
 ## 5. What is not defined, and why
 
 - **No indicator derived from the city's DTM registers** (green space, street lighting, parking).

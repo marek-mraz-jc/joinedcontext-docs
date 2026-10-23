@@ -29,6 +29,10 @@ station's readings as readings, with their hour.
 Each value is the publisher's own number for the city, taken as published, not recomputed, from
 the newest period the cube carries, except the visitors, which add up the months of one year.
 
+Each entity carries its Slovak and English rows below as `title`, a LanguageProperty, which a
+table shows as the row's label in the reader's language; `name` stays the slug, the `{localId}`
+of the id.
+
 ### `obyvatelstvo-stav-mesto`
 
 | | |
