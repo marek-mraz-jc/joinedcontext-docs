@@ -90,6 +90,12 @@ The edge limiter is APISIX's `limit-count` with `show_limit_quota_header`, which
 
 A caller over its quota gets **HTTP 429 Too Many Requests**, an RFC 7807 problem document and a `Retry-After: <seconds>` header carrying the same seconds as `RateLimit-Reset`.
 
+Every answer of the gateway carries a `Server-Timing` header (W3C Server Timing) with three durations in milliseconds: `pdp`, the gateway's own policy decisions; `broker`, the broker round trips; and `total`, the whole answer inside the gateway. A read through an Endpoint's view is decided by the broker, so its `pdp` is `0` and its decision is inside `broker` (ADR-N-057 section 4, T-5042):
+
+```http
+Server-Timing: pdp;dur=0.000, broker;dur=11.420, total;dur=12.910
+```
+
 ---
 
 ## 4. Standard Error Handling (RFC 7807)
