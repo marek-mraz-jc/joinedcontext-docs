@@ -87,7 +87,7 @@ Every row the broker keeps, every version and every tombstone included, carries 
 | `requestId` | the request's id | the gateway (`X-Request-Id`) |
 | `writtenAt` | when the broker stored the row | the broker |
 
-The caller never types `actor`, `channel`, `organization` or `actorKind` (DM-112). The edge drops every inbound `JC-Provenance-*` header, the gateway sets them after it verified the token, and the broker reads them only from the gateway's mesh identity; a write that reaches the broker another way is stored with `channel: api` and the broker's own client as `actor`. `reason` is required for `correct`, `delete` and every write from the Portal's UI, and a write without one answers `400` with the problem type `reason-required` (DM-113). Provenance holds no value of the data and is never copied into a log line.
+The caller never types `actor`, `channel`, `organization` or `actorKind` (DM-112). The edge drops every inbound `JC-Provenance-*` header, the gateway sets them after it verified the token, and the broker reads them only from the gateway's mesh identity; a write that reaches the broker another way is stored with `channel: api` and no `actor`: the broker names no caller it did not verify. `reason` is required for `correct`, `delete` and every write from the Portal's UI, and a write without one answers `400` with the problem type `reason-required` (DM-113). Provenance holds no value of the data and is never copied into a log line.
 
 ### 2.4 Versions
 
