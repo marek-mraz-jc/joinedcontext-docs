@@ -970,7 +970,7 @@ names are used wherever they exist, so an author reading the generated `bento.ya
 | `spec.type` | Bento input | Rendered from |
 |---|---|---|
 | `mqtt` | `mqtt` | `urls`, `topics`, `qos`, `cleanSession`, `username`, `passwordRef`; `client_id` is `jc-{project}-{pipeline}` |
-| `http` | `http_client` | `url`, `verb`, `headers`, `authorization`, `timeout`, `maxBytes` (below, PL-113); how often it is fetched stays with the pipeline's class and `spec.period` (section 1); with `archive`, the ranged zip read below (PL-72) |
+| `http` | `http_client` | `url`, `verb`, `headers`, `authorization`, `timeout`, `maxBytes` (below, PL-113); how often it is fetched stays with the pipeline's class and `spec.period` (section 1); with `archive`, the ranged zip read below (PL-72); with `format: csv`, an `unarchive: csv` processor before the author's steps (PL-114) |
 | `websocket` | `websocket` | `url`, `openMessage` |
 | `gtfs-rt` | `http_client` plus a `protobuf` processor | `url` and `feed`; the GTFS-realtime descriptor set ships in the runner image, so no pipeline carries one |
 | any other input of the runner | that input, verbatim | `spec.input`, the input's own document (PL-50, below) |
@@ -978,6 +978,24 @@ names are used wherever they exist, so an author reading the generated `bento.ya
 The `gtfs-rt` type is the one case where a `DataSource` contributes a processor as well as an
 input: the feed arrives as protobuf and every consumer would otherwise decode it again. The
 decoder is prepended to the author's processors and nothing else about them changes.
+
+An `http` body reaches the steps as one message, whatever it holds. A CSV file is the common
+open-data download, and the `csv` input that splits one into rows reads only a local path, so an
+`http` connection that serves CSV says so:
+
+```yaml
+  http:
+    url: "https://data.example.org/stations.csv"
+    format: csv # the only value; absent: the whole body is one message
+```
+
+The reconciler then prepends `unarchive: { format: csv }`, after the archive read when there is
+one: every row becomes one message, an object keyed by the header's column names, the shape the
+`csv` input sends. The pipeline test and the workbench sample split a sample of that DataSource
+the same way and leave the body of any other `http` DataSource whole, so a mapping that passes
+the test sees the messages the live run sends (PL-114). Before `format`, the studio split a URL
+ending `.csv` into rows while the runner sent its whole body, and a per-row mapping that passed
+the test wrote nothing live (T-5350).
 
 ### Credentials
 
