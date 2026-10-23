@@ -848,7 +848,8 @@ consent and never through its tenant (PF-125). The hub's project declares a `Sha
 to the member Endpoint (§5, EP-77), and the registration names it as `sharedRef` instead of
 `endpointRef`:
 
-```yaml
+<!-- excerpt until the platform's ContextSourceRegistration schema knows sharedRef (T-5439); then drop the word. -->
+```yaml excerpt
 apiVersion: joinedcontext.com/v1alpha1
 kind: ContextSourceRegistration
 metadata:
