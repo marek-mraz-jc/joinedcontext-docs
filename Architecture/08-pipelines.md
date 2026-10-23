@@ -970,7 +970,7 @@ names are used wherever they exist, so an author reading the generated `bento.ya
 | `spec.type` | Bento input | Rendered from |
 |---|---|---|
 | `mqtt` | `mqtt` | `urls`, `topics`, `qos`, `cleanSession`, `username`, `passwordRef`; `client_id` is `jc-{project}-{pipeline}` |
-| `http` | `http_client` | `url`, `verb`, `headers`, `authorization`, `timeout`; how often it is fetched stays with the pipeline's class and `spec.period` (section 1); with `archive`, the ranged zip read below (PL-72) |
+| `http` | `http_client` | `url`, `verb`, `headers`, `authorization`, `timeout`, `maxBytes` (below, PL-113); how often it is fetched stays with the pipeline's class and `spec.period` (section 1); with `archive`, the ranged zip read below (PL-72) |
 | `websocket` | `websocket` | `url`, `openMessage` |
 | `gtfs-rt` | `http_client` plus a `protobuf` processor | `url` and `feed`; the GTFS-realtime descriptor set ships in the runner image, so no pipeline carries one |
 | any other input of the runner | that input, verbatim | `spec.input`, the input's own document (PL-50, below) |
@@ -1020,6 +1020,26 @@ where it was: in the secret store, resolved by the reconciler, never in the mani
 MF-35). An API key in a vendor header is the common shape of an open-data feed, and without this
 field such a feed could only be declared by writing the key into `headers` as a value, which is
 exactly what MF-35 forbids.
+
+### A response body bound (PL-113)
+
+Bento's `http_client` input and `http` processor read whatever body the server answers. An
+`http` connection therefore names the largest body it accepts:
+
+```yaml
+  http:
+    url: "https://opendata.example.org/stations.json"
+    maxBytes: 16777216            # bytes; 32 MiB when absent, 1 to 268435456 (256 MiB)
+```
+
+The reconciler renders the bound as the first processor of the stream, before the archive read
+and the author's steps: a body larger than `maxBytes` is dropped and the runner logs, at ERROR,
+`http read refused: ... the response body is <n> bytes, over spec.http.maxBytes <bound>`. The
+check counts bytes and never parses the body. It runs after the read, because Bento has no body
+limit of its own: the bound keeps an oversized body out of the pipeline, and the stream's memory
+quota bounds what one read may hold. With an `archive`, the bound applies to every response the
+input receives (the 64 KiB directory read, or the whole archive from a server that ignores
+`Range`), and `archive.maxBytes` bounds each member.
 
 ### A zip archive: named members only (PL-72)
 
