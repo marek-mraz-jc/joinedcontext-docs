@@ -859,6 +859,28 @@ ordered by batch, integrate before statistics, then by score and title.
 | 672 | [`6e8d37699ec0476b8a0bfe118a2b62f2`](https://data.bratislava.sk/datasets/6e8d37699ec0476b8a0bfe118a2b62f2) | Zoznam primátorov mesta Bratislava | statistics | skip | - | - | - | Feature Service, table | 2026-01-22 | CC-BY-4.0 | 6 | council and office-holder records (names, votes, sessions), no Smart Data Model class and no indicator; the hub stays the source | - |
 | 673 | [`9428dac0f005497d9bbe1708addf7528`](https://data.bratislava.sk/datasets/9428dac0f005497d9bbe1708addf7528) | Zoznam členov orgánov samosprávy Magistrátu hlavného mesta SR BA | statistics | skip | - | - | - | Feature Service, table | 2024-07-09 | CC-BY-4.0 | 168 | council and office-holder records (names, votes, sessions), no Smart Data Model class and no indicator; the hub stays the source | - |
 
+### 6.3 Batch T-5273: what was built
+
+T-5273 (deployment repository, `seed/bratislava/`) built the counters and the shared bikes; each
+dataset is its own Endpoint, public Policy and CKAN dataset in the organisation `bratislava`. The
+rows it did not build carry their reason here; their work is task T-5435.
+
+| # | title | state | Endpoint or reason |
+|---|---|---|---|
+| 1 | Cestovné poriadky MHD vo formáte GTFS | not built | measured on 2026-10-23: `GTFS_latest.zip` is 6.2 MB (48 MB unpacked: `stop_times.txt` 45 MB with 710,436 rows, `trips.txt` 35,670 trips, `stops.txt` 1,378 platforms, `routes.txt` 90 routes, 1 agency); stops, routes and agency fit one archive read (as Helsinki's `hsl-gtfs-stops`) and need `GtfsAgency`, `GtfsRoute`, `GtfsStop` in the model; 35,670 `GtfsTrip` entities would be four times the space's other entities, so trips stay in the zip; T-5435 |
+| 2 | Počet prechádzajúcich chodcov podľa sčítačov za hodinu | built | `bratislava-chodci`, `CrowdFlowObserved`, daily |
+| 3 | Počet prejazdov cyklistov podľa sčítačov za hodinu | built | `bratislava-cyklisti`, `TrafficFlowObserved`, daily |
+| 4 | Počet prejazdov vozidiel podľa sčítačov za hodinu | built | `bratislava-vozidla`, `TrafficFlowObserved`, daily; 14 of the 19 sites summed 0 vehicles from 2026-09-21 to 2026-10-21 (no vehicle sensor), a day at 0 both ways is not written |
+| 5 | Cyklosčítač na Viedenskej v rokoch 2014 - 2020 | not built | the hourly rows end in 2020 and the space keeps 30 days of history (`P30D`), so a load would be deleted by retention at once; it needs its own retention decision or a yearly `KeyPerformanceIndicator` summary; T-5435 |
+| 6 | Cyklosčítač na hrádzi Berg v rokoch 2014 - 2020 | not built | as row 5 |
+| 7 | List of tourist bus stops in 2025 | not built | 13 rows with no coordinates; they need geocoding by stop name (address register first, Nominatim second), which no Bratislava pipeline has yet; T-5435 |
+| 8 | Slovnaft BAjk - lokalizácia výpožičných staníc zdieľaných bicyklov | built from the live feed | `bratislava-bajk`, `BikeHireDockingStation`, from nextbike's GBFS `nextbike_bi` (444 stations, CC0 1.0); the hub item is the 2024 system's 103 stations |
+| 9 | Zoznam zastávok turistických autobusov v roku 2025 | not built | as row 7 (5 rows, the Slovak copy of one list) |
+| 10-36 | the 27 statistics tables of the batch | not built | they are lines of the one Feature Service table pipeline (section 2), which T-5274 builds (`statistics`, a table is one line of its `tables`) and has not merged on 2026-10-23; added there, never as a second pipeline shape; T-5435 |
+
+The visitbratislava events stay in the `slovensko` space until a move is shown not to change the
+Slovakia event counts (T-5365); T-5435. DPB publishes no open GTFS-realtime feed on the hub.
+
 ## 7. Nothing left: what is skipped and why
 
 - `5bc727ed1be34501a3b49ebc1095c034`: Covid-19 - Monitorovací systém pre Bratislavu, Bratislavský samosprávny kraj a Slovensko: pandemic monitoring that ended in 2021-2022; an archive with no current city question.
