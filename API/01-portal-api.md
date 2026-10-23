@@ -3949,16 +3949,21 @@ GET  /api/v1/projects/{project}/spaces/{space}/move                → 200
   the Portal's and name the administrator who started it. No address or token is part of an
   answer.
 
-## 46. Personal data of a space (DM-124…DM-127)
+## 46. Personal data of a space (DM-124…DM-127, DM-142)
 
 For a space whose model names its data subject ([Architecture/11 §9](../Architecture/11-data-models.md#9-personal-data-in-a-model): a class with the annotation `dataSubjectRef`, the slot that holds the person), an owner of the space (`approve` on its ContextSpace) runs the data subject's rights. The subject's value, the one the class's `dataSubjectRef` slot holds, travels in the request body and never in a URL an access log keeps; the Portal keeps only its keyed hash, an HMAC-SHA256 per project and space. A subject slot ingested as `keyedHash` (DM-121) holds the value's HMAC under the space's `spec.personalData.keyRef`: the Portal searches such a slot for the subject's HMAC-SHA-256 under the same key, the subject's UTF-8 bytes in lowercase hex, which is what the gateway stored. While the Portal holds no key for the space (no `keyRef`, or one that did not resolve to at least 32 bytes at the last sync), an export or an erasure on such a space answers `409` and names the slot, never an erasure `done` with no Entities.
 
 ```text
 POST   /api/v1/projects/{project}/spaces/{space}/subjects/export           { "subject", "reason" } → 200, Cache-Control: no-store
-POST   /api/v1/projects/{project}/spaces/{space}/erasures                  { "subject", "reason" } → 202, Location of the erasure
+GET    /api/v1/projects/{project}/spaces/{space}/erasures                  the space's newest 50 erasures, proposals included → 200 { "items" }
+POST   /api/v1/projects/{project}/spaces/{space}/erasures                  { "subject", "reason" } → 202 `proposed`, Location of the erasure; nothing erased
 POST   /api/v1/projects/{project}/spaces/{space}/erasures?dryRun=All       the same body → 200 { "dryRun": true, "entities", "groups": [{ "class", "entities", "attrs" }] }, nothing erased or logged
 GET    /api/v1/projects/{project}/spaces/{space}/erasures/{id}             its state and counts per store → 200
+POST   /api/v1/projects/{project}/spaces/{space}/erasures/{id}/approve     { "subject" } → 200 `open`, the erasure runs (DM-142)
+POST   /api/v1/projects/{project}/spaces/{space}/erasures/{id}/decline     { "reason" } → 200 `declined`
 ```
+
+An erasure takes four eyes (DM-142). The first owner proposes it with the subject and the reason, and nothing is erased yet: the erasure is `proposed`, with `proposedBy` and the Entities the search found then. Another person with `approve` on the ContextSpace approves it: an owner of the space, or an `org-admin`, so a space with a single owner is never stuck. The proposer approving answers `403 self-approval`, and a bearer token approving or declining answers `403` (AG-133). The approver types the subject again; the Portal compares its keyed hash with the proposal's and answers `422` naming `subject` when they differ, so the log never holds the value and the second person checks the request instead of confirming a click. At approval the Portal searches the space again and erases what it holds then; the erasure becomes `open` with `approvedBy` and `decidedAt`. Either owner, the proposer included, declines a proposal with a reason (`declined`, `400 reason-required` without one). A proposal nobody decided within 7 days reads `expired` and is approved by nobody; the owner proposes it again. Approving or declining an erasure that is no longer `proposed` answers `409` with its state.
 
 Rectification (Art. 16) has no route of its own yet: the corrected value is written through the space's Endpoint like any other write, and its superseded version keeps the old value until a rectification route redacts it.
 
@@ -3981,6 +3986,9 @@ An erasure finds the Entities naming the subject in each such class and erases, 
   "id": "er-20261019-0a1b2c3d4e5f",
   "state": "open",
   "requestedAt": "2026-10-19T10:00:00Z",
+  "proposedBy": "user:steward",
+  "approvedBy": "user:owner2",
+  "decidedAt": "2026-10-19T11:20:00Z",
   "completedAt": null,
   "entities": 14,
   "counts": { "broker": 14, "versions": 52, "ckanDatastore": 14, "portal": 2, "conversations": 1, "exports": 0, "caches": 0 },
@@ -3988,7 +3996,7 @@ An erasure finds the Entities naming the subject in each such class and erases, 
 }
 ```
 
-The erasure answers at once and stays `open` until every store reports `done`: a store that does not answer is asked again each minute, the CKAN DataStore at each reconciler run, and after an hour of refusals it is `failed`, which leaves the erasure for a person to read why. The erasure log keeps the subject's keyed hash, the Entities and the counts, never a value, outside the broker's database; when the Portal starts and every hour after, it sends again every erasure whose record a broker no longer holds, after that broker's database was restored from an older backup ([Deployment/07 §5](../Deployment/07-backup-restore.md#5-backups-and-erasure)). Every call is audited with its `reason`; a call without one answers `400` naming `reason-required`.
+An approved erasure answers at once and stays `open` until every store reports `done`: a store that does not answer is asked again each minute, the CKAN DataStore at each reconciler run, and after an hour of refusals it is `failed`, which leaves the erasure for a person to read why. The erasure log keeps the subject's keyed hash, the Entities and the counts, never a value, outside the broker's database; when the Portal starts and every hour after, it sends again every erasure whose record a broker no longer holds, after that broker's database was restored from an older backup ([Deployment/07 §5](../Deployment/07-backup-restore.md#5-backups-and-erasure)). Every call is audited with its `reason`; a call without one answers `400` naming `reason-required`.
 
 ## 47. MQTT allowance and capture (PF-117…PF-120, MF-62, PL-87, ADR-N-048 §2.9–2.10)
 
