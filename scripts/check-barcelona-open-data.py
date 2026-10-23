@@ -50,7 +50,7 @@ def selftest() -> None:
     assert any("Open Data BCN snapshot" in p for p in problems(good, {"b", "c"}, None))
     assert any("has no row" in p for p in problems(good, names | {"d"}, None))
     assert any(
-        "T-5262..T-5266" in p
+        "is not one of T-5262, T-5263, T-5264, T-5265, T-5266" in p
         for p in problems(good.replace("T-5262 |", "T-5253 |"), names, None)
     )
     assert any(
