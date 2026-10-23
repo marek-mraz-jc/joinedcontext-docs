@@ -53,14 +53,14 @@ still serve as a basemap link in the catalogue.
 | batch | domain | rows |
 |---|---|---|
 | T-5253 | parking and traffic | 12 |
-| T-5254 | HSL network and maintenance | 13 |
+| T-5254 | HSL network and maintenance | 7 |
 | T-5255 | environment and energy | 16 |
 | T-5256 | buildings, addresses, land | 24 |
 | T-5257 | services and culture | 15 |
 | T-5258 | statistics as KeyPerformanceIndicator | 195 |
 | T-5259 | already seeded, brought to SDM | 9 |
-| - | skip | 112 |
-| total | integrate 89, statistics 195, skip 112 | 396 |
+| - | skip | 118 |
+| total | integrate 83, statistics 195, skip 118 | 396 |
 
 ## 3. Smart Data Models pinned
 
@@ -146,7 +146,7 @@ rest listed. A skip row has no score.
 | batch | useful | not useful |
 |---|---|---|
 | T-5253 | 12 | 0 |
-| T-5254 | 13 | 0 |
+| T-5254 | 7 | 0 |
 | T-5255 | 6 | 10 |
 | T-5256 | 16 | 8 |
 | T-5257 | 14 | 1 |
@@ -154,7 +154,7 @@ rest listed. A skip row has no score.
 | T-5259 | 9 | 0 |
 
 The owner order of 18:30Z sets a floor of 100 live Smart Data Models datasets per city (counted by
-T-5275). Helsinki has 70 useful entity datasets and 157 useful statistics series, so
+T-5275). Helsinki has 64 useful entity datasets and 157 useful statistics series, so
 the floor is reached from useful rows alone and no gap remains; the score-0 rows follow once the
 useful ones are live (owner 18:40Z: 100 is a floor).
 
@@ -178,19 +178,19 @@ name.
 | 10 | [`liikennemaarat-helsingissa`](https://hri.fi/data/en_GB/dataset/liikennemaarat-helsingissa) | Traffic data from Helsinki | entities | integrate | T-5253 | `TrafficFlowObserved` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | CSV/JSON/WFS/WMS | yearly | CC-BY-4.0 | 200 | yearly volumes per point; joins the measurement API stations within 20 m | 2 |
 | 11 | [`liikenneonnettomuudet-helsingissa`](https://hri.fi/data/en_GB/dataset/liikenneonnettomuudet-helsingissa) | Traffic Accidents in Helsinki | statistics | integrate | T-5253 | `RoadAccident` (Transportation) | ngsi-ld, geojson, ogc-features, csv | CSV | yearly | CC-BY-4.0 | 200 | moved here from the statistics class: one row per accident with coordinates | 1 |
 | 12 | [`pysakointivirheet-helsingissa`](https://hri.fi/data/en_GB/dataset/pysakointivirheet-helsingissa) | Parking violations in Helsinki | entities | integrate | T-5253 | `TrafficViolation` (Transportation) | ngsi-ld, temporal, csv, geojson | CSV/SHP/WFS | half a year | CC-BY-4.0 | 200 | aggregated per street and month, no plate or person data | 1 |
-| 13 | [`helsingin-ja-espoon-kaupunkipyorilla-ajatut-matkat`](https://hri.fi/data/en_GB/dataset/helsingin-ja-espoon-kaupunkipyorilla-ajatut-matkat) | City bike stations’ Origin-Destination (OD) data | statistics | integrate | T-5254 | `OriginDestinationFlow` (Transportation) | ngsi-ld, temporal, csv | CSV | yearly | CC-BY-4.0 | 403 | moved from statistics: monthly OD counts between stations; resource answered 403 to the probe, recheck | 1 |
-| 14 | [`helsingin-jalankulun-ja-pyorailyn-talvihoidon-priorisoitu-reitisto`](https://hri.fi/data/en_GB/dataset/helsingin-jalankulun-ja-pyorailyn-talvihoidon-priorisoitu-reitisto) | The prioritised winter maintenance network for pedestrians and cyclists in the City of Helsinki | entities | integrate | T-5254 | `RoadSegment` (Transportation) | ngsi-ld, geojson, ogc-features | CSV/WFS/WMS | yearly | CC-BY-4.0 | host timeout | winter maintenance class per segment | 1 |
-| 15 | [`hsl-n-joukkoliikenteen-pysakit`](https://hri.fi/data/en_GB/dataset/hsl-n-joukkoliikenteen-pysakit) | Helsinki Region Transport public transport stations | entities | integrate | T-5254 | `GtfsStop` (UrbanMobility) | ngsi-ld, geojson, ogc-features, csv | SHP | not stated | CC-BY-4.0 | 200 | extends the transit-stops seed by stop id; no second stop | 2 |
-| 16 | [`hsl-n-joukkoliikenteen-risteyssolmut`](https://hri.fi/data/en_GB/dataset/hsl-n-joukkoliikenteen-risteyssolmut) | Helsinki Region Transport public transport knots | entities | integrate | T-5254 | `GtfsStation` (UrbanMobility) | ngsi-ld, geojson, ogc-features, csv | CSV/GEOJSON/GEOSERVICE/KML/SHP | half years | CC-BY-4.0 | 200 | transfer knots; stationType knot | 1 |
-| 17 | [`hsl-n-linjat`](https://hri.fi/data/en_GB/dataset/hsl-n-linjat) | Helsinki Region Transport public transport lines | entities | integrate | T-5254 | `PublicTransportRoute` (UrbanMobility) | ngsi-ld, geojson, ogc-features | SHP | not stated | CC-BY-4.0 | 200 | line geometry; extends transit-routes and gtfs-shapes, no copy | 2 |
-| 18 | [`hsl-n-myyntipisteet`](https://hri.fi/data/en_GB/dataset/hsl-n-myyntipisteet) | Helsinki Region Transport sales points | entities | integrate | T-5254 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | CSV/GEOJSON/GEOPACKAGE/KML/SHP/XLSX | not stated | CC-BY-4.0 | 200 | category ticket sales point | 1 |
-| 19 | [`hsl-n-nousijamaarat-pysakeittain`](https://hri.fi/data/en_GB/dataset/hsl-n-nousijamaarat-pysakeittain) | Helsinki Region Transport passengers by station | entities | integrate | T-5254 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | CSV/GEOJSON/GEOSERVICE/KML/SHP | ended | CC-BY-4.0 | 200 | boardings per stop, refers to the `GtfsStop` | 2 |
-| 20 | [`hsl-n-pysakit-linjoittain`](https://hri.fi/data/en_GB/dataset/hsl-n-pysakit-linjoittain) | Helsinki Region Transport stations by line | entities | integrate | T-5254 | `PublicTransportRoute` (UrbanMobility) | ngsi-ld, geojson, ogc-features, csv | SHP | not stated | CC-BY-4.0 | 200 | stop sequence per line, merged into the transit-routes seed | 2 |
-| 21 | [`hsl-n-taksavyohykkeet`](https://hri.fi/data/en_GB/dataset/hsl-n-taksavyohykkeet) | Helsinki Region Transport tariff zones | entities | integrate | T-5254 | custom `FareZone`; closest SDM `FareCollectionSystem` | ngsi-ld, geojson, ogc-features | CSV/GEOJSON/GEOSERVICE/KML/SHP | not stated | CC-BY-4.0 | 200 | zones A-D | 1 |
-| 22 | [`hsl-n-terminaalit`](https://hri.fi/data/en_GB/dataset/hsl-n-terminaalit) | Helsinki Region Transport terminals | entities | integrate | T-5254 | `GtfsStation` (UrbanMobility) | ngsi-ld, geojson, ogc-features, csv | CSV/GEOJSON/GEOSERVICE/KML/SHP | not stated | CC-BY-4.0 | 200 | parent of its stops by stop id | 2 |
-| 23 | [`hsl-n-vuoromaarat`](https://hri.fi/data/en_GB/dataset/hsl-n-vuoromaarat) | Helsinki Region Transport shift frequencies | entities | integrate | T-5254 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | CSV/GEOJSON/GEOSERVICE/KML/SHP | half years | CC-BY-4.0 | 200 | departures per stop and link | 1 |
-| 24 | [`matkustaja-alusten-aikataulu-liikennointi-ja-sijaintitietoja-helsingin-ja-tallinnan-valilla`](https://hri.fi/data/en_GB/dataset/matkustaja-alusten-aikataulu-liikennointi-ja-sijaintitietoja-helsingin-ja-tallinnan-valilla) | Schedule and position data on passenger ferries trafficking between Helsinki and Tallinn | statistics | integrate | T-5254 | `Vehicle` (Transportation) | ngsi-ld, temporal, geojson | CSV | not stated | CC-BY-4.0 | 200 | moved from statistics: 2018-2019 ferry tracks as one history import | 1 |
-| 25 | [`vantaan-kaupunkipyoraasemat`](https://hri.fi/data/en_GB/dataset/vantaan-kaupunkipyoraasemat) | City bicycle stations of Vantaa | entities | integrate | T-5254 | `BikeHireDockingStation` (Transportation) | ngsi-ld, geojson, ogc-features, csv | CSV/GEOJSON/GEOSERVICE/KML/SHP | yearly | CC-BY-4.0 | 200 | Vantaa stations beside the HSL bikes seed, same model | 2 |
+| 13 | [`helsingin-ja-espoon-kaupunkipyorilla-ajatut-matkat`](https://hri.fi/data/en_GB/dataset/helsingin-ja-espoon-kaupunkipyorilla-ajatut-matkat) | City bike stations’ Origin-Destination (OD) data | statistics | integrate | T-5254 | `OriginDestinationFlow` (Transportation) | ngsi-ld, temporal, csv | CSV | yearly | CC-BY-4.0 | 403 | deferred (T-5254): the resource answered 403, and the space has no `OriginDestinationFlow` class; monthly CSVs of all trips need an aggregation design first | 1 |
+| 14 | [`helsingin-jalankulun-ja-pyorailyn-talvihoidon-priorisoitu-reitisto`](https://hri.fi/data/en_GB/dataset/helsingin-jalankulun-ja-pyorailyn-talvihoidon-priorisoitu-reitisto) | The prioritised winter maintenance network for pedestrians and cyclists in the City of Helsinki | entities | integrate | T-5254 | `RoadSegment` (Transportation) | ngsi-ld, geojson, ogc-features | CSV/WFS/WMS | yearly | CC-BY-4.0 | host timeout | deferred (T-5254): kartta.hel.fi WFS timed out 4 times from the build host (TCP connect), so no real fixture; needs `RoadSegment` vendored | 1 |
+| 15 | [`hsl-n-joukkoliikenteen-pysakit`](https://hri.fi/data/en_GB/dataset/hsl-n-joukkoliikenteen-pysakit) | Helsinki Region Transport public transport stations | entities | skip | - | - | - | SHP | not stated | CC-BY-4.0 | 200 | duplicate: the transit-stops GTFS seed already writes every HSL stop (GtfsStop by stop_id) | - |
+| 16 | [`hsl-n-joukkoliikenteen-risteyssolmut`](https://hri.fi/data/en_GB/dataset/hsl-n-joukkoliikenteen-risteyssolmut) | Helsinki Region Transport public transport knots | entities | skip | - | - | - | CSV/GEOJSON/GEOSERVICE/KML/SHP | half years | CC-BY-4.0 | 200 | HSL's planning network graph (16 724 nodes), nothing a passenger sees | - |
+| 17 | [`hsl-n-linjat`](https://hri.fi/data/en_GB/dataset/hsl-n-linjat) | Helsinki Region Transport public transport lines | entities | skip | - | - | - | SHP | not stated | CC-BY-4.0 | 200 | duplicate: the transit-routes and gtfs-shapes GTFS seeds already write the lines and their geometry | - |
+| 18 | [`hsl-n-myyntipisteet`](https://hri.fi/data/en_GB/dataset/hsl-n-myyntipisteet) | Helsinki Region Transport sales points | entities | integrate | T-5254 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | CSV/GEOJSON/GEOPACKAGE/KML/SHP/XLSX | not stated | CC-BY-4.0 | 200 | built (T-5254): sales-points pipeline, serviceCategory ticketSalesPoint/ServicePoint/Machine/ParkingMeter, in CKAN helsinki-places | 1 |
+| 19 | [`hsl-n-nousijamaarat-pysakeittain`](https://hri.fi/data/en_GB/dataset/hsl-n-nousijamaarat-pysakeittain) | Helsinki Region Transport passengers by station | entities | integrate | T-5254 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | CSV/GEOJSON/GEOSERVICE/KML/SHP | ended | CC-BY-4.0 | 200 | built (T-5254): stop-boardings pipeline, Nov 2016 weekday average per stop; no CKAN entry yet: the helsinki-kpi Endpoint is harvest: false until its licence decision (T-2793) | 2 |
+| 20 | [`hsl-n-pysakit-linjoittain`](https://hri.fi/data/en_GB/dataset/hsl-n-pysakit-linjoittain) | Helsinki Region Transport stations by line | entities | skip | - | - | - | SHP | not stated | CC-BY-4.0 | 200 | duplicate: the stop sequence per line is GTFS stop_times, which transit-routes and transit-stops already read | - |
+| 21 | [`hsl-n-taksavyohykkeet`](https://hri.fi/data/en_GB/dataset/hsl-n-taksavyohykkeet) | Helsinki Region Transport tariff zones | entities | integrate | T-5254 | `AdministrativeArea` (Administration), divisionLevel fareZone | ngsi-ld, geojson, ogc-features | CSV/GEOJSON/GEOSERVICE/KML/SHP | not stated | CC-BY-4.0 | 200 | built (T-5254): fare-zones pipeline, zones A-D, in CKAN helsinki-districts | 1 |
+| 22 | [`hsl-n-terminaalit`](https://hri.fi/data/en_GB/dataset/hsl-n-terminaalit) | Helsinki Region Transport terminals | entities | skip | - | - | - | CSV/GEOJSON/GEOSERVICE/KML/SHP | not stated | CC-BY-4.0 | 200 | duplicate: TERMINAALI is the GTFS stop_id of a GtfsStation that transit-stops writes (Kamppi 1000001) | - |
+| 23 | [`hsl-n-vuoromaarat`](https://hri.fi/data/en_GB/dataset/hsl-n-vuoromaarat) | Helsinki Region Transport shift frequencies | entities | skip | - | - | - | CSV/GEOJSON/GEOSERVICE/KML/SHP | half years | CC-BY-4.0 | 200 | HSL's planning network graph (8 067 links with departure counts), nothing a passenger sees | - |
+| 24 | [`matkustaja-alusten-aikataulu-liikennointi-ja-sijaintitietoja-helsingin-ja-tallinnan-valilla`](https://hri.fi/data/en_GB/dataset/matkustaja-alusten-aikataulu-liikennointi-ja-sijaintitietoja-helsingin-ja-tallinnan-valilla) | Schedule and position data on passenger ferries trafficking between Helsinki and Tallinn | statistics | integrate | T-5254 | `Vehicle` (Transportation) | ngsi-ld, temporal, geojson | CSV | not stated | CC-BY-4.0 | 200 | deferred (T-5254): a closed 2018-2019 archive with no current position; one history import, not a live dataset | 1 |
+| 25 | [`vantaan-kaupunkipyoraasemat`](https://hri.fi/data/en_GB/dataset/vantaan-kaupunkipyoraasemat) | City bicycle stations of Vantaa | entities | integrate | T-5254 | `BikeHireDockingStation` (Transportation) | ngsi-ld, geojson, ogc-features, csv | CSV/GEOJSON/GEOSERVICE/KML/SHP | yearly | CC-BY-4.0 | 200 | built (T-5254): vantaa-bikes pipeline, no live bike count in the source, in CKAN helsinki-bikes | 2 |
 | 26 | [`datankeruukokeilu-helsingissa-ilmanlaatu-katujen-siivouksen-aikana`](https://hri.fi/data/en_GB/dataset/datankeruukokeilu-helsingissa-ilmanlaatu-katujen-siivouksen-aikana) | Data collection pilot in Helsinki: Air quality during street cleaning | entities | integrate | T-5255 | `AirQualityObserved` (Environment) | ngsi-ld, temporal, geojson, ogc-features, csv | JSON | ended | CC-BY-4.0 | 200 | pilot series, one import | 1 |
 | 27 | [`helsingin-avouomat`](https://hri.fi/data/en_GB/dataset/helsingin-avouomat) | City of Helsinki riverbeds, streams and ditches | entities | integrate | T-5255 | custom `Watercourse`; closest SDM `WaterObserved` | ngsi-ld, geojson, ogc-features | WFS/WMS | not stated | CC-BY-4.0 | host timeout | streams and ditches as lines | 0 |
 | 28 | [`helsingin-ilmanlaadun-mittaukset-raitiovaunuihin-asennetuilla-mittalaitteilla`](https://hri.fi/data/en_GB/dataset/helsingin-ilmanlaadun-mittaukset-raitiovaunuihin-asennetuilla-mittalaitteilla) | Air quality measurements which are collected using devices installed on trams from Helsinki | statistics | integrate | T-5255 | `AirQualityObserved` (Environment) | ngsi-ld, temporal, geojson, csv | CSV | ended | CC-BY-4.0 | 200 | moved from statistics: summer 2019 tram-mounted sensors, one import | 1 |
@@ -650,8 +650,14 @@ name.
 - `hri-verkkopalvelun-avoimen-datan-metatiedot`: catalogue metadata of HRI itself; this page is built from it.
 - `hsl-bluetooth-majakat-api`: last update 2019; beacon ids serve on-vehicle apps, no city entity.
 - `hsl-n-asiakastyytyvaisyystutkimus`: raw survey answers of one past questionnaire, not a city indicator.
+- `hsl-n-joukkoliikenteen-pysakit`: duplicate: the transit-stops GTFS seed already writes every HSL stop (GtfsStop by stop_id).
+- `hsl-n-joukkoliikenteen-risteyssolmut`: HSL's planning network graph (16 724 nodes), nothing a passenger sees.
 - `hsl-n-liityntapysakointipaikat`: replaced by Fintraffic LIIPI (package note), which the liipi-facilities seed reads (T-5259).
+- `hsl-n-linjat`: duplicate: the transit-routes and gtfs-shapes GTFS seeds already write the lines and their geometry.
+- `hsl-n-pysakit-linjoittain`: duplicate: the stop sequence per line is GTFS stop_times, which transit-routes and transit-stops already read.
 - `hsl-n-reittioppaan-kohdetietokanta`: no longer updated (package note); service points come from the Service Map (T-5257).
+- `hsl-n-terminaalit`: duplicate: TERMINAALI is the GTFS stop_id of a GtfsStation that transit-stops writes (Kamppi 1000001).
+- `hsl-n-vuoromaarat`: HSL's planning network graph (8 067 links with departure counts), nothing a passenger sees.
 - `hsl-reittiopas-api`: routing query service; its data is the GTFS the seeds already read.
 - `hsln-lipunmyyntirajapinta`: ticket sales API: transactions, not open data.
 - `kiva-keskusta-kavelijoille-kyselyn-vastaukset`: raw survey answers of one past questionnaire, not a city indicator.
