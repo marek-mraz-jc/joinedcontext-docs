@@ -25,7 +25,7 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **AG** — Agents and MCP | 135 | 112 | 8 | 15 | 12 |
 | **AP** — Apps on demand | 173 | 143 | 11 | 19 | 9 |
 | **CC** — Configuration as code | 90 | 74 | 7 | 9 | 0 |
-| **DM** — Data models | 141 | 108 | 14 | 19 | 10 |
+| **DM** — Data models | 142 | 108 | 14 | 20 | 11 |
 | **DS** — Data space connector | 20 | 13 | 3 | 4 | 0 |
 | **EP** — Endpoints and parity | 152 | 133 | 10 | 9 | 8 |
 | **GW** — Gateway firewall | 35 | 25 | 3 | 7 | 2 |
@@ -41,7 +41,7 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **SP** — Context-space surface | 22 | 18 | 2 | 2 | 0 |
 | **TS** — Testing and quality | 26 | 16 | 5 | 5 | 0 |
 | **UI** — Portal and user interface | 97 | 72 | 14 | 11 | 5 |
-| **Total** | 1431 | 1074 | 127 | 230 | 63 |
+| **Total** | 1432 | 1074 | 127 | 231 | 64 |
 
 ## 3. Requirement to test
 
@@ -603,6 +603,7 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **DM-139** | [S] | open |  |  |
 | **DM-140** | [S] | open |  |  |
 | **DM-141** | [S] | tested | fast ci | deployment `tests/test_bbsk_events_pipelines.py::test_each_point_says_how_precise_it_is_and_an_unplaced_venue_takes_its_towns_office`, deployment `tests/test_bbsk_events_pipelines.py::test_the_venue_pipeline_writes_each_venue_once_as_a_valid_point_of_interest`, deployment `tests/test_bbsk_events_venues.py::test_one_name_within_50_m_is_one_venue_and_200_m_apart_two`, and 5 more |
+| **DM-142** | [S] | open |  |  |
 
 ### DS — Data space connector
 

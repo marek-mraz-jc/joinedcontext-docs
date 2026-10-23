@@ -214,5 +214,5 @@ Served today: the gateway sends `JC-Provenance-Audit: changes` and the broker ke
 - [Requirements/data-models.md §17](../Requirements/data-models.md#17-history-versions-provenance-and-personal-data) — DM-104…DM-129.
 - [Architecture/11-data-models.md §9](../Architecture/11-data-models.md#9-personal-data-in-a-model) — the classification annotations in a model.
 - [API/02 §2b](../API/02-endpoint-representations.md#2b-history-versions-and-provenance) — the query parameters and headers.
-- [API/01 §46](../API/01-portal-api.md#46-personal-data-of-a-space-dm-124dm-127) — export, rectification and erasure.
+- [API/01 §46](../API/01-portal-api.md#46-personal-data-of-a-space-dm-124dm-127-dm-142) — export, rectification and erasure.
 - [Deployment/07 §5](../Deployment/07-backup-restore.md#5-backups-and-erasure) — backup expiry and the erasure log after a restore.
