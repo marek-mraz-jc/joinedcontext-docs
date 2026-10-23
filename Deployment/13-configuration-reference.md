@@ -25,6 +25,7 @@ The enforcement point in front of every broker surface (`context-gateway`).
 | Variable | Default | Secret | What it is |
 |---|---|---|---|
 | `JC_ENVIRONMENT` | — | no | The overlay `JC_ENVIRONMENT` names, as `validate` and `plan` read it (CC-73). |
+| `JC_GATEWAY_ACTIVITY_URL` | — | no | The OpenTelemetry Collector's OTLP/HTTP logs intake (`JC_GATEWAY_ACTIVITY_URL`, e.g. `http://observability-collector.jc:4318/v1/logs`); absent writes no MCP tool call to the projects' Activity (T-5322). |
 | `JC_GATEWAY_ASSEMBLY_DIR` | `/tmp/jc-assembly` | no | Where a layout 2 organization is assembled (`JC_GATEWAY_ASSEMBLY_DIR`, default `/tmp/jc-assembly`), a scratch directory the pod owns. |
 | `JC_GATEWAY_ASSISTANT_URL` | — | no | `jc-assistant`, scheme and authority, for `search_documents` (`JC_GATEWAY_ASSISTANT_URL`, e.g. `http://jc-assistant.assistant:8080`, EP-133); absent offers the tool nowhere. |
 | `JC_GATEWAY_BIND` | `0.0.0.0:8080` | no | The address to listen on (`JC_GATEWAY_BIND`, default `0.0.0.0:8080`). |
@@ -142,6 +143,7 @@ The management application: the API, the UI it reads from `portal-ui`, and the i
 | `JC_PORTAL_DASHBOARDS` | — | no | Whether the Dashboards section is shown (`JC_PORTAL_DASHBOARDS`, the literal string `true` to show it; default hidden, the owner's call of 2026-09-25, T-2874). |
 | `JC_PORTAL_DATABASE_URL` | — | yes | PostgreSQL connection string of the preferences tier (`JC_PORTAL_DATABASE_URL`, UI-09). |
 | `JC_PORTAL_GATEWAY_CLIENT_ID` | — | no | The Keycloak client the Context Gateway holds (`JC_PORTAL_GATEWAY_CLIENT_ID`), which is the only caller `GET /internal/previews` answers (PF-46, AG-52). |
+| `JC_PORTAL_GATEWAY_NAMESPACE` | — | no | The Context Gateway's namespace (`JC_PORTAL_GATEWAY_NAMESPACE`, `{instance}-context-gateway`): set, the reconciler writes each space's resolved `spec.personalData.keyRef` there as the Secret `personal-data-keys`, which the gateway mounts at `JC_GATEWAY_PERSONAL_KEYS` (DM-121); unset, the keys reach only the Portal's own data subject lookup. |
 | `JC_PORTAL_GATEWAY_URL` | — | no | The platform host the context spaces are served on, which is where a declared `Subscription` is written (`JC_PORTAL_GATEWAY_URL`, `/cs/{space}/ngsi-ld/v1/subscriptions`, T-0931). |
 | `JC_PORTAL_INVITATION_CLIENT_ID` | — | no | The Keycloak client an invitation's link returns through (`JC_PORTAL_INVITATION_CLIENT_ID`): one whose redirect URIs already cover the Portal's pages, so the invitee lands on the project's home page once their password is set (PF-108). |
 | `JC_PORTAL_JOURNEY_USERS` | — | no | The usernames the Portal's own live journeys sign in as, the only people whose runs may carry `X-JC-Run-Origin: journey` (`JC_PORTAL_JOURNEY_USERS`, comma-separated; default none, so no one can mark a run; AG-93, T-2816). |
