@@ -182,6 +182,7 @@ An indicator is data, not configuration: one NGSI-LD entity of type `KeyPerforma
 | Attribute | NGSI-LD kind | Meaning |
 |---|---|---|
 | `name` | Property (string) | the indicator's short name, the `{localId}` of its URN |
+| `title` | LanguageProperty, optional | the indicator's human name, one text per language of the space, such as `{"sk": "Index starnutia", "en": "Ageing index"}`; a table labels the row with it and never shows the slug `name` to a reader (DM-100) |
 | `calculationFormula` | Property (string) | how the value is computed, e.g. `avg(pm10) over AirQualityObserved` |
 | `currentValue` | Property (number or string) with `unitCode` (UN/CEFACT) and `observedAt` | the value as last computed |
 | `calculationPeriod` | Property (`{ "start", "end" }`, ISO 8601) | the window the value covers |
