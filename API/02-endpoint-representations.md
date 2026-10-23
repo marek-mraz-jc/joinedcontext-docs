@@ -233,7 +233,7 @@ Headers:
 |---|---|---|
 | `JC-Reason` | request | why a correction, a delete or a UI edit is made, 1 to 500 characters of UTF-8, percent-encoded; without one such a write answers `400` with the problem type `reason-required` |
 | `X-Request-Id` | response | the id the row's `provenance.requestId` holds |
-| `JC-Provenance-*`, `JC-Audit` | never | dropped at the edge; the gateway sets them for the broker (DM-112, DM-136) |
+| `JC-Provenance-*` | never | dropped at the edge; the gateway sets them for the broker (DM-112, DM-136) |
 
 `lastN` counts measurements, not versions. Provenance is `channel`, `actor`, `organization`, `actorKind`, `operation`, `reason`, `requestId` and `writtenAt` ([ADR-N-054 §2.3](../Decisions/adr-n-054-history-versions-provenance-gdpr.md#23-provenance-on-every-write)).
 
