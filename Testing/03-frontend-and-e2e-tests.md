@@ -13,7 +13,7 @@ Three suites cover the frontend, in two repositories:
 | Suite | Where | Runs |
 |---|---|---|
 | Component and hook tests | `joinedcontext-portal`, `ui/tests/`, over 200 files | every push, in the fast lane |
-| Playwright specs against a built UI | `joinedcontext-portal`, `ui/e2e/` | the hourly `ci-full` lane |
+| Playwright specs against a built UI | `joinedcontext-portal`, `ui/e2e/` | the nightly `ci-full` lane |
 | Browser journeys against a live deployment | `joinedcontext-conformance`, `e2e/journeys/`, 18 specs | dispatched at a deployment |
 
 ---

@@ -16,7 +16,7 @@ This page is for whoever has to show that a defence holds: which suite replays w
 |---|---|---|
 | `gitleaks` | the fast lane of every repository, over the whole history | a private key, a high-entropy secret, an OAuth client secret |
 | `scripts/check-rendered-secrets.py`, `scripts/check-secrets.py`, `gitleaks` over the render | the deployment fast lane, per environment | a secret that appears in a rendered manifest rather than behind a `secretRef` |
-| `cargo audit` | the hourly `ci-full` of both Rust repositories | a crate with a published RustSec advisory |
+| `cargo audit` | the nightly `ci-full` of both Rust repositories | a crate with a published RustSec advisory |
 | `cargo deny check advisories bans licenses sources` | the same lane | an unapproved licence, a banned duplicate, an unknown source |
 | Trivy filesystem | the same lane | a CRITICAL or HIGH vulnerability in the tree |
 | Trivy on the image | `image.yml`, before the image is published | the same, in the image that would be deployed |
