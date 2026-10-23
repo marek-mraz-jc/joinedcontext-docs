@@ -11,6 +11,8 @@ Observability across the platform is built on standard Prometheus metrics scrapi
 
 Platform components export Prometheus metrics on dedicated endpoints. When `global.metrics.enabled: true` is set, `PodMonitor` and `ServiceMonitor` resources are created automatically.
 
+The `prometheus` component (kube-prometheus-stack) scrapes them: one Prometheus with 31 days of samples (at most 8 GB on a 10 Gi volume), Alertmanager, kube-state-metrics and node-exporter. dev and smartcity run it with the `monitoring` component since T-5154. Neither Prometheus nor Alertmanager has a route at the edge; alerts reach the deployer through the cluster-watch host job (`scripts/alert-watch.sh`).
+
 | Component | Metric Endpoint | Key Exposed Metrics |
 |---|---|---|
 | **Context Gateway** | `:8080/metrics` | `jc_gateway_requests_total{route,method,endpoint,status}`<br/>`jc_gateway_request_duration_seconds{route,method,endpoint}`<br/>`jc_gateway_pdp_decisions_total{operation,verdict}`<br/>`jc_gateway_broker_request_duration_seconds{reached}` |
