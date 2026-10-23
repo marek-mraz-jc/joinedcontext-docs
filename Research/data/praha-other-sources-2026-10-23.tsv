@@ -1,0 +1,9 @@
+id	title	url
+golemio-vehiclepositions	Golemio /v2/vehiclepositions (PID vehicle positions)	https://api.golemio.cz/v2/vehiclepositions
+golemio-departureboards	Golemio /v2/pid/departureboards (PID departures per stop)	https://api.golemio.cz/v2/pid/departureboards
+pid-gtfs	PID GTFS timetable (stops, routes, trips)	https://data.pid.cz/PID_GTFS.zip
+pid-points-of-sale	PID ticket points of sale	https://data.pid.cz/pointsOfSale/json/pointsOfSale.json
+nextbike-gbfs	nextbike Praha GBFS (stations and availability)	https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_tg/gbfs.json
+chmi-air-quality	ČHMÚ hourly air quality, Prague stations	https://opendata.chmi.cz/air_quality/now/data/
+chmi-meteo	ČHMÚ 10-minute weather observations, Prague stations	https://opendata.chmi.cz/meteorology/climate/now/data/
+prague-events	Prague event calendar (prague.eu, GoOut)	https://www.prague.eu/en/events
