@@ -224,7 +224,7 @@ deployment (OPS-28).
 | Emitter | Emits |
 |---|---|
 | Antares broker | `federation.forward`, `federation.error` |
-| context-gateway | `endpoint.traffic` once a minute per endpoint, `access.denied`, `mcp.tool` |
+| context-gateway | `mcp.tool` per caller, tool and Endpoint (every 15 s signed in, once a minute anonymous, T-5322); `endpoint.traffic` and `access.denied` not yet |
 | Bento runners | `pipeline.throughput` once a minute per stream, `pipeline.error`, `pipeline.restarted` |
 | reconciler, CKAN publisher | `config.*`, `catalogue.published`, straight to the table |
 | Portal | `mcp.tool` for an answered elicitation, `agent.answer` for an answered `jc_ask` question, `change.merged` for an approved Change, straight to the table |
@@ -246,8 +246,9 @@ can open. An attribute that is not on the list does not reach the Portal, so a n
 is invisible until somebody adds it deliberately, which is the failure mode to prefer.
 
 The list is the event's own fields and nothing besides: `project`, `space`, `kind`, `source`,
-`summary`, `severity`, `correlationId`, `details`. None of them is a body, a header, a cookie, a
-token or an entity attribute value. The one sample that does reach an event, the failing message
+`summary`, `severity`, `correlationId`, `details`, and the four `details` members of the
+gateway's `mcp.tool` record: `endpoint` (a slug), `tool` (a tool name), `outcome` and `count`
+(T-5322). None of them is a body, a header, a cookie, a token or an entity attribute value. The one sample that does reach an event, the failing message
 of a `pipeline.error`, is masked by the Data Model's own rules inside `details` before the runner
 emits it, so the collector never sees the raw form.
 

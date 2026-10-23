@@ -305,7 +305,7 @@ The vocabulary is closed because a filter over free text is not a filter:
 | `pipeline.restarted` | pipeline | the runner restarted a stream |
 | `endpoint.traffic` | gateway | one minute of requests for one endpoint and representation |
 | `access.denied` | gateway | the PDP refused, naming the rule that refused |
-| `mcp.tool` | portal | an MCP tool call (AG-19); from the Portal, the person's answer to an elicitation before a Yellow or Red call proceeds (AG-63) |
+| `mcp.tool` | portal, gateway | an MCP tool call (AG-19); from the Portal, the person's answer to an elicitation before a Yellow or Red call proceeds (AG-63); from the gateway, the calls one caller made of one tool on one Endpoint (T-5322) |
 | `agent.answer` | portal | a person answered a question an assistant run asked with `jc_ask` (AG-80): the run, the question and who answered, never the words they typed (OPS-48) |
 | `federation.forward` | broker | a query forwarded to a Context Source, with latency |
 | `federation.error` | broker | a forward that failed or was cut off by the loop guard |
@@ -315,7 +315,7 @@ The vocabulary is closed because a filter over free text is not a filter:
 | `model.key` | portal | the model key became invalid, ran out of credit, fell below 20 % of its limit or recovered, as the agent proxy reported it (AG-96): the state and the credits, never the key; filed under the project `org` |
 | `assistant.transcript` | portal | an assistant administrator listed, read or erased stored conversations (AG-99, T-4670): the actor, the action and the conversation id or the list's filter, never a question or an answer |
 
-The `pipeline.*`, `endpoint.traffic`, `access.denied` and `federation.*` kinds are part of the vocabulary and the collector's ingest route accepts them, but no pipeline runner, gateway or broker emits them yet; `mcp.tool` arrives from the Portal's own MCP only.
+The `pipeline.*`, `endpoint.traffic`, `access.denied` and `federation.*` kinds are part of the vocabulary and the collector's ingest route accepts them, but no pipeline runner, gateway or broker emits them yet. `mcp.tool` arrives from the Portal's own MCP and from the context-gateway (T-5322): one OTLP log record per caller, tool, Endpoint and outcome, posted every 15 seconds for a signed-in caller and once a minute for anonymous callers, with `details` `endpoint`, `tool`, `outcome` and `count` and the summary "<caller> called <tool> on <endpoint>"; never an argument, a value or a token. A call on a space the gateway cannot name is not recorded, since an event without a space reaches every reader of the project. The gateway posts to the collector at `JC_GATEWAY_ACTIVITY_URL` and drops a post the collector does not take.
 
 ### Where it comes from, and what it is not
 
