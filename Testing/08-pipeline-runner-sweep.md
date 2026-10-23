@@ -49,14 +49,14 @@ Each probe ran the pinned image with a fake secret in its environment and a file
 | `broker` | allowed; every child input meets the top-level rules | `pipeline_sweep_tests::an_input_nested_in_a_wrapper_is_checked_as_a_top_level_one` |
 | `cassandra` | allowed; URL host checks, secret fields as `${VAR}`, Bloblang host rule, processors as steps; egress public 443 only | `pipeline_sweep_tests::an_inputs_bloblang_reads_neither_env_nor_files`, `an_inputs_processors_are_held_to_the_step_rules` |
 | `cockroachdb_changefeed` | allowed; URL host checks, secret fields as `${VAR}`, Bloblang host rule, processors as steps; egress public 443 only | `pipeline_sweep_tests::an_inputs_bloblang_reads_neither_env_nor_files`, `an_inputs_processors_are_held_to_the_step_rules` |
-| `csv` | allowed under `/data/` only | `pipeline_sweep_tests::fsevent_watches_only_the_files_volume`, `data_source_serde_tests::file_reader_paths_must_start_with_data_and_have_no_dotdot` |
+| `csv` | allowed under `/data/<project>/` only (T-5337) | `pipeline_sweep_tests::fsevent_watches_only_the_files_volume`, `data_source_serde_tests::file_reader_paths_must_start_with_data_and_have_no_dotdot` |
 | `cypher` | allowed; URL host checks, secret fields as `${VAR}`, Bloblang host rule, processors as steps; egress public 443 only | `pipeline_sweep_tests::an_inputs_bloblang_reads_neither_env_nor_files`, `an_inputs_processors_are_held_to_the_step_rules` |
 | `discord` | allowed; URL host checks, secret fields as `${VAR}`, Bloblang host rule, processors as steps; egress public 443 only | `pipeline_sweep_tests::an_inputs_bloblang_reads_neither_env_nor_files`, `an_inputs_processors_are_held_to_the_step_rules` |
 | `dynamic` | refused: works on the runner (program, own input, cluster API, another stream, a listener) | `pipeline_sweep_tests::inputs_that_reach_the_runner_itself_are_refused` |
 | `etcd` | allowed; URL host checks, secret fields as `${VAR}`, Bloblang host rule, processors as steps; egress public 443 only | `pipeline_sweep_tests::an_inputs_bloblang_reads_neither_env_nor_files`, `an_inputs_processors_are_held_to_the_step_rules` |
-| `file` | allowed under `/data/` only | `pipeline_sweep_tests::fsevent_watches_only_the_files_volume`, `data_source_serde_tests::file_reader_paths_must_start_with_data_and_have_no_dotdot` |
-| `file_tail` | allowed under `/data/` only | `pipeline_sweep_tests::fsevent_watches_only_the_files_volume`, `data_source_serde_tests::file_reader_paths_must_start_with_data_and_have_no_dotdot` |
-| `fsevent` | allowed under `/data/` only | `pipeline_sweep_tests::fsevent_watches_only_the_files_volume`, `data_source_serde_tests::file_reader_paths_must_start_with_data_and_have_no_dotdot` |
+| `file` | allowed under `/data/<project>/` only (T-5337) | `pipeline_sweep_tests::fsevent_watches_only_the_files_volume`, `data_source_serde_tests::file_reader_paths_must_start_with_data_and_have_no_dotdot` |
+| `file_tail` | allowed under `/data/<project>/` only (T-5337) | `pipeline_sweep_tests::fsevent_watches_only_the_files_volume`, `data_source_serde_tests::file_reader_paths_must_start_with_data_and_have_no_dotdot` |
+| `fsevent` | allowed under `/data/<project>/` only (T-5337) | `pipeline_sweep_tests::fsevent_watches_only_the_files_volume`, `data_source_serde_tests::file_reader_paths_must_start_with_data_and_have_no_dotdot` |
 | `gcp_bigquery_select` | allowed; URL host checks, secret fields as `${VAR}`, Bloblang host rule, processors as steps; egress public 443 only | `pipeline_sweep_tests::an_inputs_bloblang_reads_neither_env_nor_files`, `an_inputs_processors_are_held_to_the_step_rules` |
 | `gcp_cloud_storage` | allowed; URL host checks, secret fields as `${VAR}`, Bloblang host rule, processors as steps; egress public 443 only | `pipeline_sweep_tests::an_inputs_bloblang_reads_neither_env_nor_files`, `an_inputs_processors_are_held_to_the_step_rules` |
 | `gcp_pubsub` | allowed; URL host checks, secret fields as `${VAR}`, Bloblang host rule, processors as steps; egress public 443 only | `pipeline_sweep_tests::an_inputs_bloblang_reads_neither_env_nor_files`, `an_inputs_processors_are_held_to_the_step_rules` |
@@ -80,7 +80,7 @@ Each probe ran the pinned image with a fake secret in its environment and a file
 | `nats_object_store` | allowed; URL host checks, secret fields as `${VAR}`, Bloblang host rule, processors as steps; egress public 443 only | `pipeline_sweep_tests::an_inputs_bloblang_reads_neither_env_nor_files`, `an_inputs_processors_are_held_to_the_step_rules` |
 | `nats_stream` | allowed; URL host checks, secret fields as `${VAR}`, Bloblang host rule, processors as steps; egress public 443 only | `pipeline_sweep_tests::an_inputs_bloblang_reads_neither_env_nor_files`, `an_inputs_processors_are_held_to_the_step_rules` |
 | `nsq` | allowed; URL host checks, secret fields as `${VAR}`, Bloblang host rule, processors as steps; egress public 443 only | `pipeline_sweep_tests::an_inputs_bloblang_reads_neither_env_nor_files`, `an_inputs_processors_are_held_to_the_step_rules` |
-| `parquet` | allowed under `/data/` only | `pipeline_sweep_tests::fsevent_watches_only_the_files_volume`, `data_source_serde_tests::file_reader_paths_must_start_with_data_and_have_no_dotdot` |
+| `parquet` | allowed under `/data/<project>/` only (T-5337) | `pipeline_sweep_tests::fsevent_watches_only_the_files_volume`, `data_source_serde_tests::file_reader_paths_must_start_with_data_and_have_no_dotdot` |
 | `pulsar` | allowed; URL host checks, secret fields as `${VAR}`, Bloblang host rule, processors as steps; egress public 443 only | `pipeline_sweep_tests::an_inputs_bloblang_reads_neither_env_nor_files`, `an_inputs_processors_are_held_to_the_step_rules` |
 | `read_until` | allowed; every child input meets the top-level rules | `pipeline_sweep_tests::an_input_nested_in_a_wrapper_is_checked_as_a_top_level_one` |
 | `redis_list` | allowed; URL host checks, secret fields as `${VAR}`, Bloblang host rule, processors as steps; egress public 443 only | `pipeline_sweep_tests::an_inputs_bloblang_reads_neither_env_nor_files`, `an_inputs_processors_are_held_to_the_step_rules` |
@@ -116,14 +116,14 @@ Each probe ran the pinned image with a fake secret in its environment and a file
 | `bloblang` | allowed; Bloblang host rule | `pipeline_escape_tests`, `pipeline_sweep_tests` |
 | `bounds_check` | allowed; every string through the Bloblang host rule, `${VAR}` and URL host checks | `pipeline_escape_tests`, `pipeline_sweep_tests` |
 | `branch` | allowed; every string through the Bloblang host rule, `${VAR}` and URL host checks | `pipeline_escape_tests`, `pipeline_sweep_tests` |
-| `cache` | allowed; the runner's caches are shared across projects (parked: T-later-pipeline-runner-project-isolation) | `pipeline_escape_tests`, `pipeline_sweep_tests` |
-| `cached` | allowed; shared caches as for `cache` | `pipeline_escape_tests`, `pipeline_sweep_tests` |
+| `cache` | allowed; `resource` is a short name the Portal renders as `<project>__<name>`, a name with `__` refused (T-5337) | `pipeline_sweep_tests::a_cache_label_with_a_project_prefix_is_refused`, portal `streams::tests::own_credential_keeps_every_cache_to_the_project` |
+| `cached` | allowed; `cache` kept to the project as for `cache` (T-5337) | `pipeline_sweep_tests::a_cache_label_with_a_project_prefix_is_refused` |
 | `catch` | allowed; every string through the Bloblang host rule, `${VAR}` and URL host checks | `pipeline_escape_tests`, `pipeline_sweep_tests` |
 | `command` | refused: not on the platform's list | `pipeline_escape_tests::a_processor_that_runs_a_program_or_opens_a_file_is_not_a_step` |
 | `compress` | allowed; every string through the Bloblang host rule, `${VAR}` and URL host checks | `pipeline_escape_tests`, `pipeline_sweep_tests` |
 | `couchbase` | allowed; every string through the Bloblang host rule, `${VAR}` and URL host checks | `pipeline_escape_tests`, `pipeline_sweep_tests` |
 | `decompress` | allowed; every string through the Bloblang host rule, `${VAR}` and URL host checks | `pipeline_escape_tests`, `pipeline_sweep_tests` |
-| `dedupe` | allowed; every string through the Bloblang host rule, `${VAR}` and URL host checks | `pipeline_escape_tests`, `pipeline_sweep_tests` |
+| `dedupe` | allowed; `cache` kept to the project as for `cache` (T-5337), every string through the Bloblang host rule, `${VAR}` and URL host checks | `pipeline_escape_tests`, `pipeline_sweep_tests` |
 | `elasticsearch` | allowed; every string through the Bloblang host rule, `${VAR}` and URL host checks | `pipeline_escape_tests`, `pipeline_sweep_tests` |
 | `file` | refused: not on the platform's list | `pipeline_escape_tests::a_processor_that_runs_a_program_or_opens_a_file_is_not_a_step` |
 | `for_each` | allowed; every string through the Bloblang host rule, `${VAR}` and URL host checks | `pipeline_escape_tests`, `pipeline_sweep_tests` |
