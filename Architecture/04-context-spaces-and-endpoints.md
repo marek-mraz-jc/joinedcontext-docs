@@ -246,8 +246,7 @@ spec:
   caching: { maxAgeSeconds: 60 }
   projection: # Never served here, whatever the Policy allows (EP-61)
     hiddenAttributes: [calibrationOffset]
-  audit: off # off | changes: every change through this Endpoint is kept as a version with provenance (ADR-N-054 §2.8, DM-136)
-  metadata: [observedAt, unitCode, modifiedAt] # The metadata this Endpoint passes; this list is the public default (DM-139)
+  audit: 'off' # off | changes: every change through this Endpoint is kept as a version with provenance (ADR-N-054 §2.8, DM-136)
   viewMappingRef: { kind: Mapping, name: hki-air-quality-to-sdm } # Serve this space as another model, read only (EP-54)
 ```
 
