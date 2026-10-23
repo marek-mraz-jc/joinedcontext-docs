@@ -1297,6 +1297,7 @@ Generated 2026-10-22 from: `docs` 697d0dc, `conformance` 60ae0fc, `deployment` d
 | **PL-110** | [S] | tested | fast ci | platform `crates/jc-core/src/kinds/pipeline_history.rs::the_three_choices_pass_with_their_settings`, platform `crates/jc-core/src/kinds/pipeline_history.rs::each_rule_is_refused_with_its_path`, platform `crates/jc-core/src/kinds/pipeline_history.rs::an_unknown_member_or_choice_does_not_parse`, and 5 more |
 | **PL-111** | [S] | tested | ci-full | platform `crates/jc-manifest/tests/validate_tests.rs::a_write_policy_no_endpoint_binds_is_refused`, platform `crates/jc-manifest/tests/validate_tests.rs::a_pipeline_whose_target_does_not_bind_its_write_is_refused` |
 | **PL-112** | [S] | tested | ci-full | platform `crates/jc-core/tests/datacube_tests.rs::one_cube_without_keys_renders_the_committed_decoder`, platform `crates/jc-core/tests/datacube_tests.rs::a_placeholder_in_a_parameter_and_a_runner_read_in_a_source_are_refused`, portal `src/reconciler/streams.rs::a_datacube_step_renders_the_stream_its_copied_bloblang_ran` |
+| **PL-113** | [H] | tested | ci-full, fast ci | platform `crates/jc-manifest/tests/bento_datasource_render_tests.rs::a_csv_http_body_reaches_the_steps_one_row_per_message`, platform `crates/jc-manifest/tests/bento_datasource_render_tests.rs::an_unknown_http_body_format_is_refused`, platform `crates/jc-manifest/tests/bento_datasource_render_tests.rs::an_archive_of_csv_members_splits_rows_after_the_ranged_read`, and 4 more |
 
 ### R — Access control and federation
 
