@@ -697,6 +697,42 @@ Content-Type: application/json
 A prohibition covering the action ends it, whatever any permission says, and answers
 `{"decision": false}`.
 
+`POST …/access/v1/evaluation` and `POST …/access/v1/evaluations` answer the same question in the
+AuthZEN Authorization API 1.0 shape (EP-165, ADR-N-057 decision 3), decided by the same view and
+engine as `access/check`, which stays as their alias. `evaluation` takes one request with
+`action.name` required and `resource` and `context` optional, and answers `{"decision": …}` as
+`access/check` does. `evaluations` takes 1 to 100 items under `evaluations`; each item's `action`,
+`resource` and `context` default to the request's own members. The gateway serves only the
+`execute_all` semantic: every item is decided and the answer lists one decision per item, in the
+order asked. A form asks once for every option it offers and its server checks the submitted value
+again. A batch of more than 100 items, an empty one, another `options.evaluations_semantic` or one
+item without `action.name` is a `400` for the whole request, and nothing is decided; a broker
+failure on any item fails the whole request, so a partial answer never reads as a decision. Either
+body may hold at most 64 KiB, the cap of `access/check`, and a batch's items, with the request's
+defaults copied into each, at most 1 MiB together; past either cap the answer is a `400`. A batch
+pays the Endpoint's `rateLimits` one request per item: a batch the caller's remaining quota cannot
+pay whole is a `429` with `Retry-After`, and none of it is decided. Members the gateway does not
+read (AuthZEN extensions, `options` other than `evaluations_semantic`) are ignored.
+
+The subject is the caller's token. `subject` may be left out; when present it must name the caller:
+`{"type": "user", "id": "<preferred_username>"}`, `{"type": "serviceAccount", "id": "<client>"}`,
+`{"type": "did", "id": "<the DID the token carries>"}`, or `{"type": "role", "id": "public"}` for an
+anonymous caller. Any other subject is a `403`, and the
+subject is never passed to the engine. Only `access/simulate` asks about someone else.
+
+```http
+POST /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/access/v1/evaluations
+Content-Type: application/json
+
+{"resource": {"type": "AirQualityObserved"},
+ "evaluations": [{"action": {"name": "queryEntity"}}, {"action": {"name": "deleteEntity"}}]}
+```
+
+```json
+{"evaluations": [{"decision": true, "context": {"reason": "policy_grant_matched", "assigner": "did:web:hel.fi"}},
+                 {"decision": false}]}
+```
+
 `POST …/access/simulate` answers the same question for someone else (EP-103, T-3311): the decision
 `access/check` would give a named subject on this Endpoint, from the same admission and the same
 decider, so the two cannot disagree. Through a view the broker's engine decides: the gateway asks the
