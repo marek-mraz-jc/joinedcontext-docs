@@ -182,6 +182,8 @@ Several organizations can share one space, each through its own Endpoint. An End
 
 Audit rows are the broker's ordinary versioned rows, no second store. They live for the audit retention, two years by default (`P2Y`, `JC_AUDIT_RETENTION`, §2.7), separate from the history retention, and erasure and rectification reach them like any row (§2.6): values redacted, provenance kept.
 
+Served today: the gateway sends `JC-Provenance-Audit: changes` and the broker keeps the version row with organization, actor kind and `audit: true`. Nothing reads `JC_AUDIT_RETENTION` yet: an audit row follows the type's history retention (the broker's `P28D` default for a type without a rule; a type with history off loses it on the next sweep), and a delete through an audited Endpoint writes no tombstone of its own. The separate audit retention, the tombstones and the change log below are the target (DM-136, DM-137), not yet built.
+
 **The change log** is a temporal read with `versions=all`, filtered by provenance: `organization`, `actor`, `actorKind`, `channel` and a time range, per Entity or per space. It needs `readVersions` (DM-114) and shows no value the caller could not read anyway (DM-137). The Portal shows it as a Changes tab on an Entity and on a space: who, organization, attribute, old and new value, when, reason; with a CSV export.
 
 **The current state** keeps, per attribute, `modifiedBy` (`organization`, `actorKind`, `actor`) of its last change beside `modifiedAt`. It is a system member: answered only with `sysAttrs` and only where the Endpoint's `spec.metadata` lists it, so a plain NGSI-LD answer is unchanged (DM-138).

@@ -222,7 +222,7 @@ The broker keeps one row per measurement and versions of a corrected one ([ADR-N
 | `GET …/temporal/entities…` | the latest version of each measurement |
 | `GET …/temporal/entities…&versions=all` | every version, oldest first, each with `supersededAt` and `provenance`; `403` without `readVersions` |
 | `GET …/temporal/entities…&versions=all&provenance=organization==hel;actorKind==agent` | the change log: the versions whose provenance matches, per Entity or over `…/temporal/entities?type=…`; `403` without `readVersions` (DM-137) |
-| a write through an Endpoint with `spec.audit: changes` | `204`; a changed value is kept as a version even where the type records no history, a repeat writes nothing (DM-136) |
+| a write through an Endpoint with `spec.audit: changes` | `204`; a changed value is kept as a version even where the type records no history, a repeat writes nothing (DM-136); the row follows the type's history retention until the audit retention (`JC_AUDIT_RETENTION`) is built |
 | `GET …/entities/{id}?options=sysAttrs` | `modifiedBy` (`organization`, `actorKind`, `actor`) per attribute, only the members the Endpoint's `spec.metadata` passes (DM-138, DM-139) |
 | `GET …/temporal/entities…` over an `onChange` attribute | also its last row before `timeAt` |
 | `aggrMethods=sum` or `totalCount` over an `onChange` attribute | `400`, problem type `aggregation-not-meaningful` |
