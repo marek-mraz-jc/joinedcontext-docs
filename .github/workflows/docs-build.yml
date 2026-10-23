@@ -58,7 +58,8 @@ jobs:
         # 1e7043f -> platform main a2d0d5d (T-3289 re-enabled this lane): the same kinds ci.yml pins.
         # a2d0d5d -> platform main e6d8253 (T-4820): ContextSpace retention `record`, `heartbeat`, `deadband`, `minDistance`, `attributes` (T-4669) are documented.
         # e6d8253 -> platform branch tip b8f81f7 (T-4838): Pipeline `lifetime` (PL-80..83) is documented.
-        env: { JC_SCHEMAS_TAG: b8f81f7616fabd2bc4cf65c83ec79c860a7b3e02 }
+        # b8f81f7 -> platform main 8ad437c (T-5362): Endpoint `audit` is documented; the pin ci.yml took in T-5404.
+        env: { JC_SCHEMAS_TAG: 8ad437ce135600266c89a525af14f20c80cbeec8 }
         run: |
           set -eu
           curl -sSL "https://github.com/marek-mraz-jc/joinedcontext-platform/archive/${JC_SCHEMAS_TAG}.tar.gz" \
