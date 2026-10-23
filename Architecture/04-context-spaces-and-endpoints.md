@@ -843,6 +843,38 @@ To keep this boundary strictly within the steward's domain of control, a
 `ContextSourceRegistration` whose member space is outside the hub's project is refused at
 validation: a hub may only federate spaces belonging to the same project.
 
+A member in another project of the same Organization is registered through that project's
+consent and never through its tenant (PF-125). The hub's project declares a `SharedSpaceReference`
+to the member Endpoint (§5, EP-77), and the registration names it as `sharedRef` instead of
+`endpointRef`:
+
+```yaml
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSourceRegistration
+metadata:
+  name: barcelona-air-quality
+  namespace: cities
+spec:
+  contextSpaceRef: air-quality
+  sharedRef: barcelona-air-quality # a SharedSpaceReference of the project cities
+  information:
+    - entities:
+        - type: AirQualityObserved
+  federation:
+    identity: caller
+```
+
+The hub's broker forwards such a read to the member Endpoint on the gateway, so the member's own
+audience and Policy decide on it, exactly as for any other reader of that Endpoint. A caller with
+a token is forwarded with the exchanged token of `caller` mode; an anonymous read is forwarded
+without a token and the member answers it as anonymous. `serviceAccount` is refused for a shared
+member: a grant the member gave the hub's account would otherwise reach everyone the hub serves.
+A public hub never registers a shared member whose Endpoint is not public; the reconciler leaves
+that registration unwritten and names the member in its status. A space with shared members is
+read-only, and its answers name the registration, never the member's slug or address (EP-71).
+This is how one project publishes thematic spaces over several cities' projects (a mobility or
+air-quality space over each city's Endpoints of that type) without copying an entity.
+
 For `spec.federation.identity`:
 
 - **`serviceAccount`** — the direct-read mode where the hub broker reads member tenants directly
