@@ -56,11 +56,11 @@ still serve as a basemap link in the catalogue.
 | T-5254 | HSL network and maintenance | 13 |
 | T-5255 | environment and energy | 16 |
 | T-5256 | buildings, addresses, land | 24 |
-| T-5257 | services and culture | 15 |
-| T-5258 | statistics as KeyPerformanceIndicator | 195 |
+| T-5257 | services and culture | 2 |
+| T-5258 | statistics as KeyPerformanceIndicator | 198 |
 | T-5259 | already seeded, brought to SDM | 9 |
-| - | skip | 112 |
-| total | integrate 89, statistics 195, skip 112 | 396 |
+| - | skip | 122 |
+| total | integrate 79, statistics 195, skip 122 | 396 |
 
 ## 3. Smart Data Models pinned
 
@@ -149,12 +149,12 @@ rest listed. A skip row has no score.
 | T-5254 | 13 | 0 |
 | T-5255 | 6 | 10 |
 | T-5256 | 16 | 8 |
-| T-5257 | 14 | 1 |
-| T-5258 | 157 | 38 |
+| T-5257 | 2 | 0 |
+| T-5258 | 160 | 38 |
 | T-5259 | 9 | 0 |
 
 The owner order of 18:30Z sets a floor of 100 live Smart Data Models datasets per city (counted by
-T-5275). Helsinki has 70 useful entity datasets and 157 useful statistics series, so
+T-5275). Helsinki has 61 useful entity datasets and 157 useful statistics series, so
 the floor is reached from useful rows alone and no gap remains; the score-0 rows follow once the
 useful ones are live (owner 18:40Z: 100 is a floor).
 
@@ -162,7 +162,7 @@ useful ones are live (owner 18:40Z: 100 is a floor).
 
 `dataset` links the HRI page. `source` is the resource formats HRI lists. `update` is the package's
 own update frequency. `score` is the usefulness of section 6.1. Rows are ordered by batch, then by
-name.
+name; a row keeps its number when a later batch changes its decision (T-5257 rows 66 to 80, 2026-10-23).
 
 | # | dataset | title | class | decision | batch | model | outputs | source | update | licence | probe | note | score |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -231,21 +231,21 @@ name.
 | 63 | [`helsingin-ymparistolupakohteet`](https://hri.fi/data/en_GB/dataset/helsingin-ymparistolupakohteet) | Environmental permits in Helsinki | entities | integrate | T-5256 | custom `EnvironmentalPermit`; closest SDM `PointOfInterest` | ngsi-ld, geojson, ogc-features, csv | WFS | yearly | CC-BY-4.0 | host timeout | permit sites | 1 |
 | 64 | [`helsinkilaisten-rakennusten-historiatietoja`](https://hri.fi/data/en_GB/dataset/helsinkilaisten-rakennusten-historiatietoja) | History of buildings in Helsinki | statistics | integrate | T-5256 | `Building` (Building) | ngsi-ld, csv | XLSX | not stated | CC-BY-4.0 | 200 | moved from statistics: history attributes merged into the `Building` | 1 |
 | 65 | [`paakaupunkiseudun-aanestysaluejako`](https://hri.fi/data/en_GB/dataset/paakaupunkiseudun-aanestysaluejako) | Electoral districts in the Helsinki metropolitan area | entities | integrate | T-5256 | custom `AdministrativeArea` (helsinki seed model); closest SDM none | ngsi-ld, geojson, ogc-features | SHP/TAB/WFS/WMS | when changes | CC-BY-4.0 | host timeout | areaType electoral district | 2 |
-| 66 | [`helsingin-ensimmaisen-maailmansodan-aikaiset-maalinnoitukset`](https://hri.fi/data/en_GB/dataset/helsingin-ensimmaisen-maailmansodan-aikaiset-maalinnoitukset) | Fortifications of First World War in Helsinki | entities | integrate | T-5257 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | WFS/WMS | not stated | CC-BY-4.0 | host timeout | category heritage fortification | 1 |
+| 66 | [`helsingin-ensimmaisen-maailmansodan-aikaiset-maalinnoitukset`](https://hri.fi/data/en_GB/dataset/helsingin-ensimmaisen-maailmansodan-aikaiset-maalinnoitukset) | Fortifications of First World War in Helsinki | entities | skip | - | - | - | WFS/WMS | not stated | CC-BY-4.0 | host timeout | WFS layer only; kartta.hel.fi accepted no connection from the build sandbox on 2026-10-22 and again on 2026-10-23T05:22Z (20 s timeout), so no fixture can be recorded and no pipeline tested; re-admit with a fixture recorded on dev (dev reaches the host) | - |
 | 67 | [`helsingin-kaupungin-palauterajapinta`](https://hri.fi/data/en_GB/dataset/helsingin-kaupungin-palauterajapinta) | The Issue Reporting API of the City of Helsinki | entities | integrate | T-5257 | `IssueReporting` (IssueTracking) | ngsi-ld, temporal, geojson, feed | JSON/XML | continuous | CC-BY-4.0 | 200 | Open311 requests, public fields only | 2 |
-| 68 | [`helsingin-kaupungin-palvelurekisterin-rest-rajapinta`](https://hri.fi/data/en_GB/dataset/helsingin-kaupungin-palvelurekisterin-rest-rajapinta) | Helsinki Metropolitan Area service register REST API | entities | integrate | T-5257 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | JSON/XML | continuous | CC-BY-4.0 | 200 | opening hours and descriptions merged into the same `PointOfInterest` by unit id | 3 |
-| 69 | [`helsingin-kaupungin-verkkosivustojen-kavijaanalytiikka`](https://hri.fi/data/en_GB/dataset/helsingin-kaupungin-verkkosivustojen-kavijaanalytiikka) | Visitor analytics in city of Helsinki websites | entities | integrate | T-5257 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | JSON | daily | CC-BY-4.0 | 200 | visits per site and day | 1 |
-| 70 | [`helsingin-kaupunginorkesterin-konsertit`](https://hri.fi/data/en_GB/dataset/helsingin-kaupunginorkesterin-konsertit) | Concerts of Helsinki Philharmonic Orchestra 1882- | statistics | integrate | T-5257 | `Event` (TourismDestinations) | ngsi-ld, csv, ical | XLSX | half years | CC-BY-4.0 | 200 | moved from statistics: concerts since 1882 | 1 |
-| 71 | [`helsingin-kulttuurihistoriallisesti-merkittavat-porrashuoneet`](https://hri.fi/data/en_GB/dataset/helsingin-kulttuurihistoriallisesti-merkittavat-porrashuoneet) | Historically meaningful staircases in Helsinki | statistics | integrate | T-5257 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | XLSX | not stated | CC-BY-4.0 | 200 | moved from statistics: staircases by address, geocoded | 1 |
-| 72 | [`helsingin-taidemuseon-nayttelyt`](https://hri.fi/data/en_GB/dataset/helsingin-taidemuseon-nayttelyt) | The Helsinki Art Museum’s exhibitions | statistics | integrate | T-5257 | `Event` (TourismDestinations) | ngsi-ld, csv, ical | XLSX | yearly | CC-BY-4.0 | 200 | moved from statistics: HAM exhibitions since 1968 | 1 |
-| 73 | [`helsingin-taidemuseon-prosenttirahahankkeet`](https://hri.fi/data/en_GB/dataset/helsingin-taidemuseon-prosenttirahahankkeet) | The Helsinki Art Museum’s acquisition appropriation projects | statistics | integrate | T-5257 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | XLS | yearly | CC-BY-4.0 | 200 | moved from statistics: public art works with street address, geocoded | 1 |
-| 74 | [`helsingin_maisemakulttuurikartta`](https://hri.fi/data/en_GB/dataset/helsingin_maisemakulttuurikartta) | Helsinki landscape culture | entities | integrate | T-5257 | custom `HeritageArea`; closest SDM `TouristDestination` | ngsi-ld, geojson, ogc-features | WFS/WMS | no regular updates | CC-BY-4.0 | host timeout | landscape culture areas | 0 |
-| 75 | [`jalankulkijoiden-liukastumisvaroitukset-helsingissa`](https://hri.fi/data/en_GB/dataset/jalankulkijoiden-liukastumisvaroitukset-helsingissa) | Pedestrian slip warnings in Helsinki | entities | integrate | T-5257 | `Alert` (Alert) | ngsi-ld, temporal, geojson, feed | JSON | real time | CC-BY-4.0 | 200 | same model as the service-alerts seed | 3 |
-| 76 | [`korkeasaaren-kavijamaarat`](https://hri.fi/data/en_GB/dataset/korkeasaaren-kavijamaarat) | Helsinki Zoo visitor count | entities | integrate | T-5257 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | JSON/XLSX | daily | CC-BY-4.0 | 200 | zoo visitors per day (months count from 0, package note) | 1 |
+| 68 | [`helsingin-kaupungin-palvelurekisterin-rest-rajapinta`](https://hri.fi/data/en_GB/dataset/helsingin-kaupungin-palvelurekisterin-rest-rajapinta) | Helsinki Metropolitan Area service register REST API | entities | skip | - | - | - | JSON/XML | continuous | CC-BY-4.0 | 200 | same units as the Service Map API (tprek ids) that T-5257 integrates; one source per object, no duplicate PointOfInterest | - |
+| 69 | [`helsingin-kaupungin-verkkosivustojen-kavijaanalytiikka`](https://hri.fi/data/en_GB/dataset/helsingin-kaupungin-verkkosivustojen-kavijaanalytiikka) | Visitor analytics in city of Helsinki websites | entities | integrate | T-5258 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | JSON | daily | CC-BY-4.0 | 200 | visits per site and day; daily KPI series, built by T-5258's KPI pipeline shape | 1 |
+| 70 | [`helsingin-kaupunginorkesterin-konsertit`](https://hri.fi/data/en_GB/dataset/helsingin-kaupunginorkesterin-konsertit) | Concerts of Helsinki Philharmonic Orchestra 1882- | statistics | skip | - | - | - | XLSX | half years | CC-BY-4.0 | 200 | archive of past concerts, one row per work performed (61,267 rows, 1882 to 28.05.2026, checked 2026-10-23); no upcoming concert, so no live Event; archives score down (owner 18:25Z) | - |
+| 71 | [`helsingin-kulttuurihistoriallisesti-merkittavat-porrashuoneet`](https://hri.fi/data/en_GB/dataset/helsingin-kulttuurihistoriallisesti-merkittavat-porrashuoneet) | Historically meaningful staircases in Helsinki | statistics | skip | - | - | - | XLSX | not stated | CC-BY-4.0 | 200 | one-off 2014 inventory (zip of one XLSX, 349 staircases, checked 2026-10-23) of stairwells inside residential buildings, by property id and street address only, no coordinates and no update since | - |
+| 72 | [`helsingin-taidemuseon-nayttelyt`](https://hri.fi/data/en_GB/dataset/helsingin-taidemuseon-nayttelyt) | The Helsinki Art Museum’s exhibitions | statistics | skip | - | - | - | XLSX | yearly | CC-BY-4.0 | 200 | archive of past HAM exhibitions (1,139 rows, newest start 2022-09-09, checked 2026-10-23) in one XLSX; no upcoming exhibition, so no live Event; archives score down (owner 18:25Z) | - |
+| 73 | [`helsingin-taidemuseon-prosenttirahahankkeet`](https://hri.fi/data/en_GB/dataset/helsingin-taidemuseon-prosenttirahahankkeet) | The Helsinki Art Museum’s acquisition appropriation projects | statistics | skip | - | - | - | XLS | yearly | CC-BY-4.0 | 200 | only resource is an Excel 97 .xls (BIFF8, saved 2025-09-16, checked 2026-10-23) listing works by artist and title with a building address and no coordinates; no seed pipeline reads Excel, and placing a work needs per-work geocoding the file does not support | - |
+| 74 | [`helsingin_maisemakulttuurikartta`](https://hri.fi/data/en_GB/dataset/helsingin_maisemakulttuurikartta) | Helsinki landscape culture | entities | skip | - | - | - | WFS/WMS | no regular updates | CC-BY-4.0 | host timeout | WFS layer only; kartta.hel.fi accepted no connection from the build sandbox on 2026-10-22 and again on 2026-10-23T05:22Z (20 s timeout), so no fixture can be recorded and no pipeline tested; re-admit with a fixture recorded on dev (dev reaches the host) | - |
+| 75 | [`jalankulkijoiden-liukastumisvaroitukset-helsingissa`](https://hri.fi/data/en_GB/dataset/jalankulkijoiden-liukastumisvaroitukset-helsingissa) | Pedestrian slip warnings in Helsinki | entities | skip | - | - | - | JSON | real time | CC-BY-4.0 | 200 | liukasbotti.fi/api/warnings holds 3 rows in total, the newest real one 28.02.2026, two of them test rows, no geometry and only 'Helsinki' as area: nothing an Alert could locate | - |
+| 76 | [`korkeasaaren-kavijamaarat`](https://hri.fi/data/en_GB/dataset/korkeasaaren-kavijamaarat) | Helsinki Zoo visitor count | entities | integrate | T-5258 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | JSON/XLSX | daily | CC-BY-4.0 | 200 | zoo visitors per day (months count from 0, package note); daily KPI series, built by T-5258's KPI pipeline shape | 1 |
 | 77 | [`paakaupunkiseudun-palvelukartan-rest-rajapinta`](https://hri.fi/data/en_GB/dataset/paakaupunkiseudun-palvelukartan-rest-rajapinta) | Helsinki metropolitan area Service Map APIs | entities | integrate | T-5257 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | JSON/WFS | continuous | CC-BY-4.0 | 200 | extends the services seed to every unit, no duplicate | 3 |
-| 78 | [`rajapinta-paakaupunkiseudun-kansalais-ja-tyovaenopistojen-kurssitietoihin`](https://hri.fi/data/en_GB/dataset/rajapinta-paakaupunkiseudun-kansalais-ja-tyovaenopistojen-kurssitietoihin) | API to course information for adult education centers in the capital region | entities | integrate | T-5257 | `Event` (TourismDestinations) | ngsi-ld, geojson, ical, feed | JSON | continuous | CC-BY-4.0 | 200 | adult education courses | 2 |
-| 79 | [`suomenlinnan-lautan-matkustajamaarat`](https://hri.fi/data/en_GB/dataset/suomenlinnan-lautan-matkustajamaarat) | Passenger numbers of Suomenlinna ferry | entities | integrate | T-5257 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | JSON | daily | CC-BY-4.0 | 200 | ferry passengers | 1 |
-| 80 | [`uusien-toimintojen-paikat-helsingin-rantareitilla`](https://hri.fi/data/en_GB/dataset/uusien-toimintojen-paikat-helsingin-rantareitilla) | Locations for new services at the Helsinki waterfront | entities | integrate | T-5257 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | WFS/WMS | not stated | CC-BY-4.0 | host timeout | sites offered for new waterfront services | 1 |
+| 78 | [`rajapinta-paakaupunkiseudun-kansalais-ja-tyovaenopistojen-kurssitietoihin`](https://hri.fi/data/en_GB/dataset/rajapinta-paakaupunkiseudun-kansalais-ja-tyovaenopistojen-kurssitietoihin) | API to course information for adult education centers in the capital region | entities | skip | - | - | - | JSON | continuous | CC-BY-4.0 | 200 | the Ilmoapix API (api.ilmonet.fi) needs an API key issued by Grynos Oy in every request; the platform creates no account (supervisor rule); Linked Courses (api.hel.fi/linkedcourses) answers 301 to dev.hel.fi, retired | - |
+| 79 | [`suomenlinnan-lautan-matkustajamaarat`](https://hri.fi/data/en_GB/dataset/suomenlinnan-lautan-matkustajamaarat) | Passenger numbers of Suomenlinna ferry | entities | integrate | T-5258 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | JSON | daily | CC-BY-4.0 | 200 | ferry passengers; daily KPI series, built by T-5258's KPI pipeline shape | 1 |
+| 80 | [`uusien-toimintojen-paikat-helsingin-rantareitilla`](https://hri.fi/data/en_GB/dataset/uusien-toimintojen-paikat-helsingin-rantareitilla) | Locations for new services at the Helsinki waterfront | entities | skip | - | - | - | WFS/WMS | not stated | CC-BY-4.0 | host timeout | WFS layer only; kartta.hel.fi accepted no connection from the build sandbox on 2026-10-22 and again on 2026-10-23T05:22Z (20 s timeout), so no fixture can be recorded and no pipeline tested; re-admit with a fixture recorded on dev (dev reaches the host) | - |
 | 81 | [`helsingin-asukas-ja-yrityspysakointivyohykkeet`](https://hri.fi/data/en_GB/dataset/helsingin-asukas-ja-yrityspysakointivyohykkeet) | Residential and corporate parking zones in Helsinki | entities | integrate | T-5259 | `OnStreetParking` (Parking) | ngsi-ld, geojson, ogc-features | WFS | not stated | CC-BY-4.0 | host timeout | already the resident-parking-zones seed | 2 |
 | 82 | [`helsingin-hel-fi-sivuston-avoin-rajapinta-uutisille`](https://hri.fi/data/en_GB/dataset/helsingin-hel-fi-sivuston-avoin-rajapinta-uutisille) | News on Helsinki’s hel.fi website | entities | integrate | T-5259 | custom `Article` (helsinki seed model); closest SDM `MediaEvent` | ngsi-ld, feed | XML | continuous | CC-BY-4.0 | 200 | already the news-rss seed; images only beside their article (package note) | 3 |
 | 83 | [`helsingin-kaupunginosat`](https://hri.fi/data/en_GB/dataset/helsingin-kaupunginosat) | District Map of the City of Helsinki | entities | integrate | T-5259 | custom `AdministrativeArea` (helsinki seed model); closest SDM none | ngsi-ld, geojson, ogc-features | WFS/WMS | continuous | CC-BY-4.0 | host timeout | already the districts seed | 3 |
@@ -581,6 +581,7 @@ name.
 - `helsingin-asemakaavakartat`: raster or 3D imagery (TIFF/WMS/WMTS/WCS/LAZ/DWG/SKP), no features to map; a WMS/WMTS can serve as a basemap link in the catalogue.
 - `helsingin-asuntokunnat-henkilun-mukaan-piireitt-ja-osa-alueittain-2004-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
 - `helsingin-asuntokunnat-koon-ja-vanhimman-henkilon-ian-mukaan-suurpiireittain-2004-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
+- `helsingin-ensimmaisen-maailmansodan-aikaiset-maalinnoitukset`: WFS layer only; kartta.hel.fi accepted no connection from the build sandbox on 2026-10-22 and again on 2026-10-23T05:22Z (20 s timeout), so no fixture can be recorded and no pipeline tested; re-admit with a fixture recorded on dev (dev reaches the host).
 - `helsingin-espoon-ja-vantaan-liikennevaloristeykset`: raster or 3D imagery (TIFF/WMS/WMTS/WCS/LAZ/DWG/SKP), no features to map; a WMS/WMTS can serve as a basemap link in the catalogue.
 - `helsingin-historialliset-asemakaavakartat`: raster or 3D imagery (TIFF/WMS/WMTS/WCS/LAZ/DWG/SKP), no features to map; a WMS/WMTS can serve as a basemap link in the catalogue.
 - `helsingin-historialliset-kartat`: raster or 3D imagery (TIFF/WMS/WMTS/WCS/LAZ/DWG/SKP), no features to map; a WMS/WMTS can serve as a basemap link in the catalogue.
@@ -593,6 +594,7 @@ name.
 - `helsingin-katujen-puhdistussuunnitelmat`: service unavailable since 1/2026 (package note).
 - `helsingin-kaupungin-chatbotien-koulutusdatat`: chatbot training text, no city entity.
 - `helsingin-kaupungin-koulurekisteri`: API removed 1/2026 (package note).
+- `helsingin-kaupungin-palvelurekisterin-rest-rajapinta`: same units as the Service Map API (tprek ids) that T-5257 integrates; one source per object, no duplicate PointOfInterest.
 - `helsingin-kaupungin-resurssienvarausrajapinta`: API not in use since 12/2024 (package note).
 - `helsingin-kaupungin-taloushallintopalvelun-tulot-ja-menot`: resource unreachable on 2026-10-22; recheck in T-5258.
 - `helsingin-kaupungin-talvihoidon-kayttajatyytyvaisyyskyselyn-vastaukset`: raw survey answers of one past questionnaire, not a city indicator.
@@ -600,10 +602,12 @@ name.
 - `helsingin-kaupungin-yrityshaastattelututkimus`: raw survey answers of one past questionnaire, not a city indicator.
 - `helsingin-kaupunginarkiston-aineistot`: archive media catalogue (documents, photos); answered 403 to the probe.
 - `helsingin-kaupunginmuseon-aineistot`: museum media catalogue (Finna); answered 403 to the probe.
+- `helsingin-kaupunginorkesterin-konsertit`: archive of past concerts, one row per work performed (61,267 rows, 1882 to 28.05.2026, checked 2026-10-23); no upcoming concert, so no live Event; archives score down (owner 18:25Z).
 - `helsingin-kiinteistokartta`: raster or 3D imagery (TIFF/WMS/WMTS/WCS/LAZ/DWG/SKP), no features to map; a WMS/WMTS can serve as a basemap link in the catalogue.
 - `helsingin-koko-vt-ulkomaalaistaustaiset-maan-ja-imukaan-suurpiireitt-2004-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
 - `helsingin-koko-vtkomaiden-kansalaiset-kansalaisuuden-ja-imukaan-suurpiireitt-2004-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
 - `helsingin-korkeusmalli`: raster or 3D imagery (TIFF/WMS/WMTS/WCS/LAZ/DWG/SKP), no features to map; a WMS/WMTS can serve as a basemap link in the catalogue.
+- `helsingin-kulttuurihistoriallisesti-merkittavat-porrashuoneet`: one-off 2014 inventory (zip of one XLSX, 349 staircases, checked 2026-10-23) of stairwells inside residential buildings, by property id and street address only, no coordinates and no update since.
 - `helsingin-kuvakartta`: raster or 3D imagery (TIFF/WMS/WMTS/WCS/LAZ/DWG/SKP), no features to map; a WMS/WMTS can serve as a basemap link in the catalogue.
 - `helsingin-laserkeilausaineistot`: raster or 3D imagery (TIFF/WMS/WMTS/WCS/LAZ/DWG/SKP), no features to map; a WMS/WMTS can serve as a basemap link in the catalogue.
 - `helsingin-liikenneturvallisuuskysely-asukkaille`: raw survey answers of one past questionnaire, not a city indicator.
@@ -624,6 +628,8 @@ name.
 - `helsingin-ruotsinkielinen-vtisivuotisikhmitt-sivilisyn-ja-sukupuolen-mukaan-2004-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
 - `helsingin-ruotsinkielinen-vtn-mukaan-piireitt-ja-osa-alueittain-2004-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
 - `helsingin-suomenkielinen-vtisivuotisikhmitt-sivilisyn-ja-sukupuolen-mukaan-2004-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
+- `helsingin-taidemuseon-nayttelyt`: archive of past HAM exhibitions (1,139 rows, newest start 2022-09-09, checked 2026-10-23) in one XLSX; no upcoming exhibition, so no live Event; archives score down (owner 18:25Z).
+- `helsingin-taidemuseon-prosenttirahahankkeet`: only resource is an Excel 97 .xls (BIFF8, saved 2025-09-16, checked 2026-10-23) listing works by artist and title with a building address and no coordinates; no seed pipeline reads Excel, and placing a work needs per-work geocoding the file does not support.
 - `helsingin-tuulivoimakysely-2015`: raw survey answers of one past questionnaire, not a city indicator.
 - `helsingin-ulkomaalaistaustainen-vaesto-sukupuolen-ja-taustamaan-mukaan-2017-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
 - `helsingin-vaesto-aidinkielen-ja-ian-mukaan-suurpiireittain-2004-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
@@ -644,6 +650,7 @@ name.
 - `helsingin-vtueittain-1962-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
 - `helsingin-yleiskaava-2002`: raster or 3D imagery (TIFF/WMS/WMTS/WCS/LAZ/DWG/SKP), no features to map; a WMS/WMTS can serve as a basemap link in the catalogue.
 - `helsingin-yleiskartta`: raster or 3D imagery (TIFF/WMS/WMTS/WCS/LAZ/DWG/SKP), no features to map; a WMS/WMTS can serve as a basemap link in the catalogue.
+- `helsingin_maisemakulttuurikartta`: WFS layer only; kartta.hel.fi accepted no connection from the build sandbox on 2026-10-22 and again on 2026-10-23T05:22Z (20 s timeout), so no fixture can be recorded and no pipeline tested; re-admit with a fixture recorded on dev (dev reaches the host).
 - `helsinki-2050-kyselyn-vastaukset`: raw survey answers of one past questionnaire, not a city indicator.
 - `helsinki-region-infoshare-palvelun-kayttoa-koskevan-kyselyn-vastaukset`: raw survey answers of one past questionnaire, not a city indicator.
 - `helsinkikanava-open-data`: video catalogue; licence other-open, page answered 403 to the probe.
@@ -654,6 +661,7 @@ name.
 - `hsl-n-reittioppaan-kohdetietokanta`: no longer updated (package note); service points come from the Service Map (T-5257).
 - `hsl-reittiopas-api`: routing query service; its data is the GTFS the seeds already read.
 - `hsln-lipunmyyntirajapinta`: ticket sales API: transactions, not open data.
+- `jalankulkijoiden-liukastumisvaroitukset-helsingissa`: liukasbotti.fi/api/warnings holds 3 rows in total, the newest real one 28.02.2026, two of them test rows, no geometry and only 'Helsinki' as area: nothing an Alert could locate.
 - `kiva-keskusta-kavelijoille-kyselyn-vastaukset`: raw survey answers of one past questionnaire, not a city indicator.
 - `miehet--helsingin-koko-vt-ulkomaiden-kansalaiset-kansalaisuuden-ja-imukaan-suurpiireitt-2004-al`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
 - `miehet-helsingissa-ian-5-v-mukaan-piireittain-ja-osa-alueittain-2004-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
@@ -665,6 +673,7 @@ name.
 - `paakaupunkiseudun-liikennemeluvyohykkeet`: region copy of the Helsinki noise zones (hk meluselvitys 2017), SHP only.
 - `paakaupunkiseudun-opaskartta`: raster or 3D imagery (TIFF/WMS/WMTS/WCS/LAZ/DWG/SKP), no features to map; a WMS/WMTS can serve as a basemap link in the catalogue.
 - `paakaupunkiseudun-yleiskartta`: raster or 3D imagery (TIFF/WMS/WMTS/WCS/LAZ/DWG/SKP), no features to map; a WMS/WMTS can serve as a basemap link in the catalogue.
+- `rajapinta-paakaupunkiseudun-kansalais-ja-tyovaenopistojen-kurssitietoihin`: the Ilmoapix API (api.ilmonet.fi) needs an API key issued by Grynos Oy in every request; the platform creates no account (supervisor rule); Linked Courses (api.hel.fi/linkedcourses) answers 301 to dev.hel.fi, retired.
 - `rajapinta-staran-lumiaurojen-sijantitietoihin`: API out of service since 10/2024 (package note); recheck when HRI lifts the note.
 - `semantic-hri-fi--paakaupunkiseutua-koskevaa-tilastotietoa-avoimena-linkitettyna-datana`: not maintained since 1/2015 (package note).
 - `seudullinen-osoiteluettelo`: region copy of helsingin-osoiteluettelo for the Helsinki part.
@@ -673,6 +682,7 @@ name.
 - `tietoa-suomesta-monella-eri-kielella`: API withdrawn 1/2026 (package note).
 - `ulkomaan-kansalaiset-helsingissa-kansalaisuuden-seka-syntymaalueen-ja-sukupuolen-mukaan-2017-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
 - `uudenmaan-osoiterajapinta`: address lookup service (answered 403 to the probe); T-5256 takes addresses from helsingin-osoiteluettelo.
+- `uusien-toimintojen-paikat-helsingin-rantareitilla`: WFS layer only; kartta.hel.fi accepted no connection from the build sandbox on 2026-10-22 and again on 2026-10-23T05:22Z (20 s timeout), so no fixture can be recorded and no pipeline tested; re-admit with a fixture recorded on dev (dev reaches the host).
 - `vaestonmuutokset-helsingissa-piireittain-ja-osa-alueittain-2004-alkaen`: Excel copy ended in 2023; the same series is in Aluesarjat PXWEB (T-5258) (package note).
 - `vantaan-asuntokuntien-tulot-kulutusyksikkokohtaiset-ginikertoimet-2005`: City of Vantaa only, outside the helsinki space.
 - `vantaan-vaeston-ennakollinen-ikarakenne-neljannesvuosittain-ja-alueittain-31-12-2015`: City of Vantaa only, outside the helsinki space.
