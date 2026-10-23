@@ -602,6 +602,7 @@ Generated 2026-10-22 from: `docs` 697d0dc, `conformance` 60ae0fc, `deployment` d
 | **DM-138** | [S] | open |  |  |
 | **DM-139** | [S] | open |  |  |
 | **DM-140** | [S] | open |  |  |
+| **DM-141** | [S] | tested | unknown | deployment `tests/test_bbsk_events_pipelines.py::test_each_point_says_how_precise_it_is_and_an_unplaced_venue_takes_its_towns_office`, deployment `tests/test_bbsk_events_pipelines.py::test_the_venue_pipeline_writes_each_venue_once_as_a_valid_point_of_interest`, deployment `tests/test_bbsk_events_venues.py::test_one_name_within_50_m_is_one_venue_and_200_m_apart_two`, and 5 more |
 
 ### DS — Data space connector
 
