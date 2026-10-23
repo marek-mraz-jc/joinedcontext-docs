@@ -1072,14 +1072,15 @@ refused for the same reason.
 `members` holds at most 20 names of letters, digits, `.`, `_`, `-` and `/`, so a name never
 becomes code in the rendered mapping; the connection's `verb` is `GET`, and its headers, its
 `authorization` and its TLS block apply to every request. The directory's sizes may lie and
-Bloblang's `decompress` has no output limit, so the runner inflates a deflated member with its
-own module for Bento's `wasm` processor (`/streams/inflate.wasm` from the runner's ConfigMap,
-built from joinedcontext-platform `tools/bento-inflate`). The module allocates the size the
-directory declares, once, and stops there: a deflate bomb behind a lying directory is refused
-having produced at most that many bytes, and the memory a member costs is its packed bytes plus
-its declared size. Measured in the runner's Bento 1.22.0 (peak RSS) on HSL's `hsl.zip`: agency
-alone 144 MB, agency, routes, stops and `shapes.txt` (21.8 MB) 217 MB; a 204 kB member whose
-directory says 100 bytes and whose data inflates to 200 MiB is refused at 144 MB (T-3953).
+Bloblang's `decompress` has no output limit, so the runner reads each named member as an archive
+of its own: the member's local header and packed bytes, with its directory record (the
+data-descriptor flag cleared) and an end record behind them, read by Bento's `unarchive: zip`.
+Go's archive/zip stops a member that inflates past or short of the size its record declares and
+checks its CRC-32, so a deflate bomb behind a lying directory is refused having produced at most
+that many bytes, and frees what it read when the run ends. Each member is a batch of its own, so
+a refused member never drops its siblings (T-4752). A module for Bento's `wasm` processor did
+this before (T-3953); Bento 1.22.0 never frees the module instances a run grew, and every
+archive run kept its inflated size in the runner.
 
 ### Any input the runner ships (PL-50)
 
