@@ -970,7 +970,7 @@ names are used wherever they exist, so an author reading the generated `bento.ya
 | `spec.type` | Bento input | Rendered from |
 |---|---|---|
 | `mqtt` | `mqtt` | `urls`, `topics`, `qos`, `cleanSession`, `username`, `passwordRef`; `client_id` is `jc-{project}-{pipeline}` |
-| `http` | `http_client` | `url`, `verb`, `headers`, `authorization`, `timeout`; how often it is fetched stays with the pipeline's class and `spec.period` (section 1); with `archive`, the ranged zip read below (PL-72); with `format: csv`, an `unarchive: csv` processor before the author's steps (PL-113) |
+| `http` | `http_client` | `url`, `verb`, `headers`, `authorization`, `timeout`, `maxBytes` (below, PL-113); how often it is fetched stays with the pipeline's class and `spec.period` (section 1); with `archive`, the ranged zip read below (PL-72); with `format: csv`, an `unarchive: csv` processor before the author's steps (PL-114) |
 | `websocket` | `websocket` | `url`, `openMessage` |
 | `gtfs-rt` | `http_client` plus a `protobuf` processor | `url` and `feed`; the GTFS-realtime descriptor set ships in the runner image, so no pipeline carries one |
 | any other input of the runner | that input, verbatim | `spec.input`, the input's own document (PL-50, below) |
@@ -993,7 +993,7 @@ The reconciler then prepends `unarchive: { format: csv }`, after the archive rea
 one: every row becomes one message, an object keyed by the header's column names, the shape the
 `csv` input sends. The pipeline test and the workbench sample split a sample of that DataSource
 the same way and leave the body of any other `http` DataSource whole, so a mapping that passes
-the test sees the messages the live run sends (PL-113). Before `format`, the studio split a URL
+the test sees the messages the live run sends (PL-114). Before `format`, the studio split a URL
 ending `.csv` into rows while the runner sent its whole body, and a per-row mapping that passed
 the test wrote nothing live (T-5350).
 
@@ -1039,6 +1039,26 @@ MF-35). An API key in a vendor header is the common shape of an open-data feed, 
 field such a feed could only be declared by writing the key into `headers` as a value, which is
 exactly what MF-35 forbids.
 
+### A response body bound (PL-113)
+
+Bento's `http_client` input and `http` processor read whatever body the server answers. An
+`http` connection therefore names the largest body it accepts:
+
+```yaml
+  http:
+    url: "https://opendata.example.org/stations.json"
+    maxBytes: 16777216            # bytes; 32 MiB when absent, 1 to 268435456 (256 MiB)
+```
+
+The reconciler renders the bound as the first processor of the stream, before the archive read
+and the author's steps: a body larger than `maxBytes` is dropped and the runner logs, at ERROR,
+`http read refused: ... the response body is <n> bytes, over spec.http.maxBytes <bound>`. The
+check counts bytes and never parses the body. It runs after the read, because Bento has no body
+limit of its own: the bound keeps an oversized body out of the pipeline, and the stream's memory
+quota bounds what one read may hold. With an `archive`, the bound applies to every response the
+input receives (the 64 KiB directory read, or the whole archive from a server that ignores
+`Range`), and `archive.maxBytes` bounds each member.
+
 ### A zip archive: named members only (PL-72)
 
 A static GTFS feed is one zip: Helsinki's `hsl.zip` is 79 MB and inflates to 1.25 GB, a
@@ -1070,14 +1090,15 @@ refused for the same reason.
 `members` holds at most 20 names of letters, digits, `.`, `_`, `-` and `/`, so a name never
 becomes code in the rendered mapping; the connection's `verb` is `GET`, and its headers, its
 `authorization` and its TLS block apply to every request. The directory's sizes may lie and
-Bloblang's `decompress` has no output limit, so the runner inflates a deflated member with its
-own module for Bento's `wasm` processor (`/streams/inflate.wasm` from the runner's ConfigMap,
-built from joinedcontext-platform `tools/bento-inflate`). The module allocates the size the
-directory declares, once, and stops there: a deflate bomb behind a lying directory is refused
-having produced at most that many bytes, and the memory a member costs is its packed bytes plus
-its declared size. Measured in the runner's Bento 1.22.0 (peak RSS) on HSL's `hsl.zip`: agency
-alone 144 MB, agency, routes, stops and `shapes.txt` (21.8 MB) 217 MB; a 204 kB member whose
-directory says 100 bytes and whose data inflates to 200 MiB is refused at 144 MB (T-3953).
+Bloblang's `decompress` has no output limit, so the runner reads each named member as an archive
+of its own: the member's local header and packed bytes, with its directory record (the
+data-descriptor flag cleared) and an end record behind them, read by Bento's `unarchive: zip`.
+Go's archive/zip stops a member that inflates past or short of the size its record declares and
+checks its CRC-32, so a deflate bomb behind a lying directory is refused having produced at most
+that many bytes, and frees what it read when the run ends. Each member is a batch of its own, so
+a refused member never drops its siblings (T-4752). A module for Bento's `wasm` processor did
+this before (T-3953); Bento 1.22.0 never frees the module instances a run grew, and every
+archive run kept its inflated size in the runner.
 
 ### Any input the runner ships (PL-50)
 
