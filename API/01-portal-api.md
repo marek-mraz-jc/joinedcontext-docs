@@ -889,9 +889,10 @@ One item per pipeline the caller approves, by name:
 ] }
 ```
 
-- A run fails when it sent nothing and its log holds failed or rejected lines. `state` is `failing` when the newest run failed, `drift` when it sent 20 % or less of the median of the runs in the 7 days before it, `empty` when it sent nothing and reported nothing, `never` with no run kept, and `ok` otherwise.
+- A run fails when it sent nothing and its log holds failed or rejected lines. `state` is `failing` when the newest run failed or the error ratio is above 5 %, `drift` when it sent 20 % or less of the median of the runs in the 7 days before it, `empty` when it sent nothing and reported nothing, `never` with no run kept, and `ok` otherwise.
 - `lastError` is the newest failed or rejected line of the log, masked as the log is (§7c) and with the query and fragment cut from every URL in it.
-- `alert` is `true` after 3 failed runs in a row, or on a drop. The Portal's alert check reads the same health once an hour: 3 failed runs open a `failure` incident and a drop a `zero` incident (§37), so a person who follows the pipeline, its space or its type is told once.
+- `errors` (T-5291) counts the runs that ended within 1 h of the newest one and sent at least one record: `errors` failed and rejected records, `records` every record they took (sent, failed and rejected), `percent` the share with one decimal, e.g. `{ "errors": 13, "records": 120, "percent": 10.8 }`. It is absent when those runs took no record. A run that sent nothing counts toward the failed-run streak, not here.
+- `alert` is `true` after 3 failed runs in a row, on a drop, or when `errors` is above 5 % of `records`. The Portal's alert check reads the same health once an hour: 3 failed runs or an error ratio above 5 % open a `failure` incident and a drop a `zero` incident (§37), so a person who follows the pipeline, its space or its type is told once. The same read sets the Portal metric `jc_pipeline_error_ratio{project,pipeline}` (0 to 1), which the monitoring alert `PipelineErrorRatio` reads.
 - `links` is the newest weekly link check (T-5133), absent before the first: `checked` links asked, `answered` with 2xx or 3xx, `skipped` not asked, `deadCount` links that failed 2 checks in a row and `dead` the first 5 of them (`url` with `status`, or `error` when the host did not answer), and `checkedAt`. The share `answered / checked` is the T-5081 measure (95 % or more).
 - The link check runs on the leader once every 7 days. It reads the `url` and `organizer.url` of each pipeline's entities through a public Endpoint of the space it writes, anonymously, so it holds no right a visitor lacks; a space without a public Endpoint is not checked. An entity belongs to the pipeline whose DataSource host is the host of its `source` (else of its `url`). A link is asked only on an inventoried host, the host of a DataSource of the project; an IP address or a cluster-internal name is never asked. Per host: robots.txt first (RFC 9309; a 5xx or no answer skips the site for that run), then 1 request a second, HEAD first and a GET of the first byte when HEAD answers 405 or 501, 10 s per request, up to 5 redirects on an inventoried host; a redirect elsewhere counts as an answer and is not followed. A 4xx, a 5xx or no answer counts as one failure.
 - A caller who approves no pipeline of the project gets `403`; one who may not read the project gets `404`. The Portal's pipelines page shows the answer on its Source health tab, to stewards only, with the dead links and the fix hint "The source moved these pages: update the address in its data source, or ask its publisher."
@@ -3590,6 +3591,16 @@ POST   /api/v1/alerts/notices/{id}/read     mark one read → 204
   daily quality run found its newest entity older than the freshness target, DM-74). One
   subscription per caller and target: a second `PUT` changes it. An unknown key is `422`, an
   unknown scope or event `400`.
+- `scope` `agent` (T-5301) names an agent profile (`target` its name) and is told of its runs in
+  `project`, with the signals of §51 as `events`: `refusalSpike`, `spendShare` and
+  `offHoursWrite`; an agent event under another scope, or a pipeline event under `agent`, is `400`
+  naming `events`. An incident holds while its signal held within the last hour (a run counted
+  while it is live or finished within the hour) and recovers after an hour without it; the notice's
+  `pipeline` member carries the profile's name and its `detail` the count and the run's title.
+  Subscribing needs approve in the project, since the signals count every person's runs (AG-93):
+  `403` naming `project` otherwise, `404` naming `target` for a profile that does not exist. The
+  Activity tab offers the projects from §51 `choices.alertProjects`; the notices list drops an
+  agent notice once the caller no longer approves there.
 - `delivery` is `portal` (a notice when the incident opens and one when it closes) or `digest` (one
   notice a day, after 07:00 UTC, naming the incidents opened in the last day). `email` is refused
   with `400` and its reason while the Portal has no mail relay (T-3261).
@@ -3948,16 +3959,21 @@ GET  /api/v1/projects/{project}/spaces/{space}/move                → 200
   the Portal's and name the administrator who started it. No address or token is part of an
   answer.
 
-## 46. Personal data of a space (DM-124…DM-127)
+## 46. Personal data of a space (DM-124…DM-127, DM-142)
 
-For a space whose model names its data subject ([Architecture/11 §9](../Architecture/11-data-models.md#9-personal-data-in-a-model): a class with the annotation `dataSubjectRef`, the slot that holds the person), an owner of the space (`approve` on its ContextSpace) runs the data subject's rights. The subject's value, the one the class's `dataSubjectRef` slot holds, travels in the request body and never in a URL an access log keeps; the Portal keeps only its keyed hash, an HMAC-SHA256 per project and space. A subject slot ingested as `keyedHash` (DM-121) holds the value's HMAC under the space's `spec.personalData.keyRef`, a key the Portal does not hold yet: until the reconciler mounts it, an export or an erasure on such a space answers `409` and names the slot, never an erasure `done` with no Entities.
+For a space whose model names its data subject ([Architecture/11 §9](../Architecture/11-data-models.md#9-personal-data-in-a-model): a class with the annotation `dataSubjectRef`, the slot that holds the person), an owner of the space (`approve` on its ContextSpace) runs the data subject's rights. The subject's value, the one the class's `dataSubjectRef` slot holds, travels in the request body and never in a URL an access log keeps; the Portal keeps only its keyed hash, an HMAC-SHA256 per project and space. A subject slot ingested as `keyedHash` (DM-121) holds the value's HMAC under the space's `spec.personalData.keyRef`: the Portal searches such a slot for the subject's HMAC-SHA-256 under the same key, the subject's UTF-8 bytes in lowercase hex, which is what the gateway stored. While the Portal holds no key for the space (no `keyRef`, or one that did not resolve to at least 32 bytes at the last sync), an export or an erasure on such a space answers `409` and names the slot, never an erasure `done` with no Entities.
 
 ```text
 POST   /api/v1/projects/{project}/spaces/{space}/subjects/export           { "subject", "reason" } → 200, Cache-Control: no-store
-POST   /api/v1/projects/{project}/spaces/{space}/erasures                  { "subject", "reason" } → 202, Location of the erasure
+GET    /api/v1/projects/{project}/spaces/{space}/erasures                  the space's newest 50 erasures, proposals included → 200 { "items" }
+POST   /api/v1/projects/{project}/spaces/{space}/erasures                  { "subject", "reason" } → 202 `proposed`, Location of the erasure; nothing erased
 POST   /api/v1/projects/{project}/spaces/{space}/erasures?dryRun=All       the same body → 200 { "dryRun": true, "entities", "groups": [{ "class", "entities", "attrs" }] }, nothing erased or logged
 GET    /api/v1/projects/{project}/spaces/{space}/erasures/{id}             its state and counts per store → 200
+POST   /api/v1/projects/{project}/spaces/{space}/erasures/{id}/approve     { "subject" } → 200 `open`, the erasure runs (DM-142)
+POST   /api/v1/projects/{project}/spaces/{space}/erasures/{id}/decline     { "reason" } → 200 `declined`
 ```
+
+An erasure takes four eyes (DM-142). The first owner proposes it with the subject and the reason, and nothing is erased yet: the erasure is `proposed`, with `proposedBy` and the Entities the search found then. Another person with `approve` on the ContextSpace approves it: an owner of the space, or an `org-admin`, so a space with a single owner is never stuck. The proposer approving answers `403 self-approval`, and a bearer token approving or declining answers `403` (AG-133). The approver types the subject again; the Portal compares its keyed hash with the proposal's and answers `422` naming `subject` when they differ, so the log never holds the value and the second person checks the request instead of confirming a click. At approval the Portal searches the space again and erases what it holds then; the erasure becomes `open` with `approvedBy` and `decidedAt`. Either owner, the proposer included, declines a proposal with a reason (`declined`, `400 reason-required` without one). A proposal nobody decided within 7 days reads `expired` and is approved by nobody; the owner proposes it again. Approving or declining an erasure that is no longer `proposed` answers `409` with its state.
 
 Rectification (Art. 16) has no route of its own yet: the corrected value is written through the space's Endpoint like any other write, and its superseded version keeps the old value until a rectification route redacts it.
 
@@ -3980,6 +3996,9 @@ An erasure finds the Entities naming the subject in each such class and erases, 
   "id": "er-20261019-0a1b2c3d4e5f",
   "state": "open",
   "requestedAt": "2026-10-19T10:00:00Z",
+  "proposedBy": "user:steward",
+  "approvedBy": "user:owner2",
+  "decidedAt": "2026-10-19T11:20:00Z",
   "completedAt": null,
   "entities": 14,
   "counts": { "broker": 14, "versions": 52, "ckanDatastore": 14, "portal": 2, "conversations": 1, "exports": 0, "caches": 0 },
@@ -3987,7 +4006,7 @@ An erasure finds the Entities naming the subject in each such class and erases, 
 }
 ```
 
-The erasure answers at once and stays `open` until every store reports `done`: a store that does not answer is asked again each minute, the CKAN DataStore at each reconciler run, and after an hour of refusals it is `failed`, which leaves the erasure for a person to read why. The erasure log keeps the subject's keyed hash, the Entities and the counts, never a value, outside the broker's database; when the Portal starts and every hour after, it sends again every erasure whose record a broker no longer holds, after that broker's database was restored from an older backup ([Deployment/07 §5](../Deployment/07-backup-restore.md#5-backups-and-erasure)). Every call is audited with its `reason`; a call without one answers `400` naming `reason-required`.
+An approved erasure answers at once and stays `open` until every store reports `done`: a store that does not answer is asked again each minute, the CKAN DataStore at each reconciler run, and after an hour of refusals it is `failed`, which leaves the erasure for a person to read why. The erasure log keeps the subject's keyed hash, the Entities and the counts, never a value, outside the broker's database; when the Portal starts and every hour after, it sends again every erasure whose record a broker no longer holds, after that broker's database was restored from an older backup ([Deployment/07 §5](../Deployment/07-backup-restore.md#5-backups-and-erasure)). Every call is audited with its `reason`; a call without one answers `400` naming `reason-required`.
 
 ## 47. MQTT allowance and capture (PF-117…PF-120, MF-62, PL-87, ADR-N-048 §2.9–2.10)
 
@@ -4229,7 +4248,8 @@ GET /api/v1/organization/agents/activity?profile=builder&verdict=refused&limit=2
   parameter, or a malformed value, is `400`.
 - `choices` lists the starters and the Context Spaces of the runs the caller sees for this
   agent or run, whatever the other filters; the Activity tab offers `person` and `space` only
-  from it. A `person` or `space` outside it is `403` naming the field.
+  from it. A `person` or `space` outside it is `403` naming the field. `alertProjects` lists the
+  projects the caller approves in, where they may subscribe to the agent's alerts (§37).
 - Who sees what: the runs of every project the caller reads, their own, or every person's where
   they approve (AG-93); a caller who reads no project gets `403`. The answer reads the 500 newest
   of those runs.

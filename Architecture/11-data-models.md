@@ -889,7 +889,21 @@ A model says which of its classes and slots hold personal data, the way it says 
 | `ingest` | slot | `keep` (default), `drop`, `keyedHash` | the gateway, before a write reaches the broker |
 | `quantity` | slot | `perInterval` | the Portal, which then refuses `record: onChange` for the slot (DM-110) |
 
-A class that marks personal data without `legalBasis`, `purpose` and `maxRetention` does not save. `keyedHash` uses the space's key, `spec.personalData.keyRef`, a `secretRef`; a model never holds a key.
+A class that marks personal data without `legalBasis`, `purpose` and `maxRetention` does not save. `keyedHash` uses the space's key, `spec.personalData.keyRef`, a `secretRef`; a model never holds a key:
+
+```yaml
+spec:
+  personalData:
+    keyRef: { name: rides-hmac, key: key }   # a value of at least 32 bytes
+```
+
+At each sync the reconciler resolves every space's `keyRef` with the backend that resolves a pipeline's `secretRef` and writes the Opaque Secret `personal-data-keys` into the gateway's namespace (`JC_PORTAL_GATEWAY_NAMESPACE`), one key per space, named by the space's URN segment (`{project}-{name}` or `spec.urnSegment`). The gateway mounts it read-only at `JC_GATEWAY_PERSONAL_KEYS` and reads the file at each write that hashes, so a rotated key takes effect within the kubelet's sync period without a restart. A key that does not resolve or is shorter than 32 bytes is left out and logged by space and secret name, never by value; the gateway then refuses that space's hashed writes `503`. The Portal holds the same keys in memory and hashes a data subject with them (API/01, the data subject's rights): HMAC-SHA-256 over the subject's UTF-8 bytes, in lowercase hex.
+
+The broker's side of history and erasure (Antares feature `jc`, ADR-N-054 §2.3, §2.4, §2.6):
+
+- **Provenance.** The broker believes the `JC-Provenance-*` headers only from the gateway's mesh identity, named in `ANTARES_PROVENANCE_FROM` and checked against the `l5d-client-id` header the Linkerd proxy sets. A write from any other caller is stored with `channel: api` and no `actor` (DM-112).
+- **Versions.** A temporal read with `versions=all` returns every version only when the gateway sends `JC-Read-Versions: true`, which it does after the space's Policy granted the caller `readVersions`. From anyone else the header has no effect.
+- **Erasure.** The Portal resolves the class's `dataSubjectRef` to Entity ids with the subject's `q` over current state and history, then sends `POST /q/erasures/{tenant}` on the broker's admin surface with `entities`, optional `attrs` (without them the whole Entity goes), the subject's keyed hash, `actor` and `reason`, once the space's Policy granted the caller `personalData`. The broker removes the Entities or Attributes from current state, every version and the dead letters, and keeps one record per erasure without values; each pod re-applies every record when it starts, so a restored database serves nothing erased before the restore. `GET /q/erasures/{tenant}` lists the records.
 
 ## 10. Where an event takes place (DM-141)
 

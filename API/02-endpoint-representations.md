@@ -246,6 +246,10 @@ An Endpoint publishes no GeoJSON file (T-4597). A map reads GeoJSON from an API:
   `geometry`, `coordinates`), so a dashboard layer is one query. `options=keyValues` makes each
   Feature's `properties` the plain values. Every Endpoint serves it (EP-10); an entity without a
   `location` is a Feature with a `null` geometry, so a query over non-spatial types answers `200`.
+  A LanguageProperty is one text in the language `lang` names (or `Accept-Language` on the OGC items),
+  never a `languageMap` object. A polygon goes out wound as RFC 7946 §3.1.6 says (exterior ring
+  counter-clockwise, holes clockwise), from the attribute's default instance. A ring that crosses the
+  antimeridian is served as stored, not cut in two.
 - `ogc/features/collections/{type}/items` (§6), where the Endpoint serves `ogc-features`: the
   OGC API for desktop GIS such as QGIS, whose Features follow EP-09.
 
@@ -1022,21 +1026,31 @@ How the standard's fields come from the NGSI-LD attributes is a mapping written 
 spec:
   enabledRepresentations: [ngsi-ld, ical]
   representations:
-    ical:
-      type: Event               # the NGSI-LD type the feed maps; default Event
-      preset: sdm-event         # sdm-event (default) or schema-org
-      mapping:                  # overrides on top of the preset, field by field
-        LOCATION: { join: [address.streetAddress, address.addressLocality], separator: ", " }
-        SUMMARY: { attribute: name, language: sk, truncate: 200 }
-        DTEND: { attribute: endDate, date: date, endInclusive: true }
+    ical:                         # named outputs (API/11 EP-159), at most 20
+      - name: vsetky              # the URL: /ical/v1/vsetky.ics
+        title: { sk: Všetky podujatia, en: All events }
+        lang: sk                  # BCP 47: the text of a LanguageProperty a field names no language for
+        timezone: Europe/Bratislava   # the zone of a time without offset (the default)
+        sources:
+          - type: Event           # the NGSI-LD type; default Event
+            preset: sdm-event     # sdm-event (default) or schema-org
+            mapping:              # overrides on top of the preset, field by field
+              LOCATION: { join: [address.streetAddress, address.addressLocality], separator: ", " }
+              SUMMARY: { attribute: name, language: sk, truncate: 200 }
+              DTEND: { attribute: endDate, date: date, endInclusive: true }
+              LAST-MODIFIED: dateModified
+      - name: sport
+        title: { sk: Šport, en: Sports }
+        filter: { q: 'eventCategory=="šport"' }
+        sources: [{ type: Event, preset: sdm-event }]
 ```
 
-No `representations.ical` written means the `sdm-event` preset over type `Event`, so an Endpoint that listed `ical` before mappings existed serves what it served. A `preset` with a `mapping` is the preset with those fields replaced; a `mapping` without a `preset` is the whole mapping. An optional field a preset maps is checked leniently: left out of the feed when the type does not have its attribute, otherwise each value checked as the feed is served; a field the Endpoint writes itself is checked strictly against the model.
+`spec.representations.ical` is a list of named outputs with the members of API/11 EP-159: `name`, `title`, `description`, `sources`, `filter`, `lang`, `sort` (`start` or `-start`), `limit` (1 to 10 000) and `timezone`. Each output is a calendar at `/ical/v1/{name}.ics`, and `/ical/v1/events.ics` stays an alias of the output named `events`, else of the first output (deprecated). With no output listed the Endpoint serves no calendar, even where `enabledRepresentations` names `ical` (owner rule 2026-10-22). The single mapping object of version 1 (`ical: {type, preset, mapping}`) still loads, as one output named `events`; it is deprecated. A preset serves `Event`, `CouncilMeeting` and `OfficeHours`; a source of another type maps `DTSTART` and `SUMMARY` itself. A `preset` with a `mapping` is the preset with those fields replaced; a `mapping` without a `preset` is the whole mapping. An App that lists `ical` in its data needs gets the output `events` over the `sdm-event` preset on its own Endpoint. An optional field a preset maps is checked leniently: left out of the feed when the type does not have its attribute, otherwise each value checked as the feed is served; a field the Endpoint writes itself is checked strictly against the model.
 
 | Field | RFC 5545 | Level | `sdm-event` | `schema-org` |
 |---|---|---|---|---|
 | `UID` | §3.6.1, §3.8.4.7 | required, fixed | entity `id` | entity `id` |
-| `DTSTAMP` | §3.6.1, §3.8.7.2 | required, fixed | entity `modifiedAt` | entity `modifiedAt` |
+| `DTSTAMP` | §3.6.1, §3.8.7.2 | required, fixed | mapped `LAST-MODIFIED`, else the newest `modifiedAt` of the mapped attributes | the same |
 | `DTSTART` | §3.6.1, §3.8.2.4 | required | `startDate` | `startDate` |
 | `SUMMARY` | §3.8.1.12 | required (platform rule: an entry without a title is of no use) | `name` | `name` |
 | `DTEND` | §3.8.2.2 | optional, never with `DURATION` | `endDate` | `endDate` |
@@ -1051,9 +1065,9 @@ No `representations.ical` written means the `sdm-event` preset over type `Event`
 | `LAST-MODIFIED` | §3.8.7.3 | optional | | |
 | `CLASS` | §3.8.1.3 | optional, `PUBLIC` only | | |
 
-`ORGANIZER` takes a uri, or an object with a uri `url` and a `name` (the Event model's `organizer`): the object writes `ORGANIZER;CN="<name>":<url>`, the name quoted with RFC 6868 caret escapes (`^'` for a quote, `^n` for a newline, `^^` for a caret). An organizer without a `url` writes no `ORGANIZER`, as RFC 5545 requires a cal-address there; the event's own `url` never stands in for it.
+`ORGANIZER` takes a uri or an e-mail address, or an object with a `name` and an `email` or a uri `url` (the Event model's `organizer`): the object writes `ORGANIZER;CN="<name>":<address>`, the address taken from `email` (as `mailto:`), else `url`, the name quoted with RFC 6868 caret escapes (`^'` for a quote, `^n` for a newline, `^^` for a caret). An organizer without an `email` or `url` writes no `ORGANIZER`, as RFC 5545 requires a cal-address there; the event's own `url` never stands in for it.
 
-`UID` and `DTSTAMP` are not mappable: the entity id is the stable identity a calendar client keys on, and `modifiedAt` is set by the broker. The `schema-org` preset maps `eventStatus` with `EventScheduled`, `EventRescheduled` and `EventMovedOnline` to `CONFIRMED`, `EventPostponed` to `TENTATIVE`, `EventCancelled` to `CANCELLED`, default `CONFIRMED`.
+`UID` and `DTSTAMP` are not mappable: the entity id is the stable identity a calendar client keys on, and `DTSTAMP` comes from the record's own modification. It is the mapped `LAST-MODIFIED`, else the newest `modifiedAt` of the attributes the mapping reads, else the entity's. A nightly re-ingest that rewrites the same values from a source with its own modification date therefore leaves each event byte for byte the same. The `schema-org` preset maps `eventStatus` with `EventScheduled`, `EventRescheduled` and `EventMovedOnline` to `CONFIRMED`, `EventPostponed` to `TENTATIVE`, `EventCancelled` to `CANCELLED`, default `CONFIRMED`.
 
 A field's source is an attribute name (`DTSTART: startDate`) or an object with one source and the remaps it allows:
 
@@ -1062,13 +1076,17 @@ A field's source is an attribute name (`DTSTART: startDate`) or an object with o
 | `attribute` | an attribute of the type, or a dotted path into its value (`address.addressLocality`) | every field |
 | `firstOf` | the first of a list of attributes that has a value | every field |
 | `join` + `separator` | the values of several attributes that have one, joined (default `", "`) | `SUMMARY`, `DESCRIPTION`, `LOCATION`, `CATEGORIES` |
-| `constant` | a fixed value | `CLASS` (`PUBLIC` only), `CATEGORIES` |
-| `language` | `sk`, `en`, … or `first`: which text of a LanguageProperty (default `first`) | text fields |
+| `constant` | a fixed value | `CLASS` (`PUBLIC` only), `CATEGORIES`, `DURATION` (an RFC 5545 duration such as `PT2H`: the length of a date-time event without an end) |
+| `language` | a BCP 47 tag (`sk`, `en-GB`) or `first`: which text of a LanguageProperty; the exact tag, then its primary subtag, then `@none`, then the first (default: the output's `lang`, else `first`) | text fields |
 | `date` | `auto`, `date` or `datetime` (default `auto`, as the value is) | `DTSTART`, `DTEND`, `LAST-MODIFIED` |
-| `timezone` | the IANA zone of a floating time (default `Europe/Bratislava`); a `VTIMEZONE` is emitted when used | `DTSTART`, `DTEND` |
+| `timezone` | the IANA zone a time without offset is read in (default: the output's `timezone`, else `Europe/Bratislava`) | `DTSTART`, `DTEND` |
 | `endInclusive` | `true`: the source names the last day, so `DTEND` is the next day | `DTEND` |
 | `map` + `default` | source value → calendar value; `default` for any other | `STATUS`, `CATEGORIES` |
 | `truncate` | at most n characters | `SUMMARY`, `DESCRIPTION` |
+
+### Time zones and the calendar object
+
+The broker never writes a floating time. A date-time with an offset is an instant; one without an offset is read in the field's `timezone`, else the output's, else `Europe/Bratislava`, and so is a start or end of the other value type (a date-time start with a date end). Every instant goes out in UTC (`DTSTART:20261114T180000Z`), and a date stays a date (`VALUE=DATE`). The calendar carries the output zone's `VTIMEZONE` (its observances from the year before to three years ahead) and `X-WR-TIMEZONE`, so Google Calendar, Outlook and Apple Calendar show local times. A calendar with no event still holds that `VTIMEZONE` and is a valid iCalendar object. The calendar also carries `NAME` and `DESCRIPTION` per title language (RFC 7986), `X-WR-CALNAME`, `REFRESH-INTERVAL;VALUE=DURATION:PT6H` and `X-PUBLISHED-TTL:PT6H`. The answer has a strong `ETag`, and `If-None-Match` with it answers `304`.
 
 ### The model check
 
@@ -1079,13 +1097,15 @@ A field's source is an attribute name (`DTSTART: startDate`) or an object with o
 - an attribute whose range the field does not accept: `date` or `datetime` for `DTSTART`, `DTEND` and `LAST-MODIFIED`; a string, an enum or a LanguageProperty for the text fields (`LOCATION` also takes a structured address); a GeoProperty for `GEO` (NGSI-LD `location`); `uri` for `URL`;
 - a required field whose source is not a required slot, or a `firstOf` that does not end in one;
 - a `map` over an enum that does not cover every permissible value and names no `default`; a `STATUS` value other than `TENTATIVE`, `CONFIRMED` or `CANCELLED`;
-- a remap on a field that does not allow it, an unknown field or remap key, `UID` or `DTSTAMP` mapped, `DTEND` beside `DURATION`, `CLASS` other than `PUBLIC`.
+- a remap on a field that does not allow it, an unknown field or remap key, `UID` or `DTSTAMP` mapped, `DTEND` beside `DURATION`, `CLASS` other than `PUBLIC`, a `DURATION` constant that is not an RFC 5545 duration;
+- an output whose name is not `[a-z0-9-]` of 1 to 40 characters starting and ending with a letter or digit, or is `preview`; a name used twice; a 21st output; no source or more than 10; a preset over a type other than `Event`, `CouncilMeeting` and `OfficeHours`; a `lang` or title key that is not a language tag; a `sort` other than `start` or `-start`; a `limit` outside 1 to 10 000; a `filter` geo-query without `georel`, `geometry` and `coordinates`.
 
 `id`, `type`, `createdAt`, `modifiedAt` (datetimes) and `location`, `observationSpace`, `operationSpace` (GeoProperties) belong to every NGSI-LD entity, so a model never declares them.
 
 ```text
-Endpoint banskabystrica/banskabystrica-podujatia, space banskabystrica-verejne: `ical` maps SUMMARY to `description`, which is not a required attribute of Event: mark it required or end a firstOf with a required one (EP-125)
-Endpoint banskabystrica/banskabystrica-podujatia, space banskabystrica-verejne: `ical` maps DTSTART to `name`, a LanguageProperty; DTSTART takes date or datetime (EP-125)
+Endpoint banskabystrica/banskabystrica-podujatia, space banskabystrica-verejne: `ical` output `vsetky` maps SUMMARY to `description`, which is not a required attribute of Event: mark it required or end a firstOf with a required one (EP-125)
+Endpoint banskabystrica/banskabystrica-podujatia, space banskabystrica-verejne: `ical` output `sport` maps DTSTART to `name`, a LanguageProperty; DTSTART takes date or datetime (EP-125)
+Endpoint banskabystrica/banskabystrica-podujatia, space banskabystrica-verejne: `ical` lists the output name `sport` twice; each name is one URL
 ```
 
 ### The check of each entity

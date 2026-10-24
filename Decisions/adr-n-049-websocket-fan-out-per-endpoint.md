@@ -34,7 +34,7 @@ What already exists and is reused:
 The gateway serves an Endpoint's WebSocket itself. It opens **one** broker subscription per Endpoint, keeps the Endpoint's live entities in memory, and matches the clients' filters there through an index. It cuts each delivery to the caller's own grant before the filter sees it.
 
 1. **One upstream per Endpoint and gateway replica.** The gateway opens one WebSocket to the broker view `/x/views/{slug}/ws` the first time a client connects to an Endpoint's `/ws`. The upstream carries one `x-subscribe` for every entity type the view serves, in `format: normalized`. The view is the union of the types and attributes the Endpoint's permits grant, less its hidden attributes (EP-61, [ADR-N-042](adr-n-042-data-views.md)). The broker therefore sends each change once per Endpoint, already cut to that Endpoint ("only cars").
-   - The upstream runs under the gateway's own account, `x-jc-client: context-gateway` (T-3767), which already reads the tenant for the gateway's own hops. The reconciler adds Create Subscription (clause 5.8.1) to that account's permit. On a view the rule document lists, which is then decided by its listed policies alone, the reconciler also adds the account to that view's list, so the upstream reads what the view serves and nothing beyond it.
+   - The upstream speaks as its caller, with the tenant and identity headers a REST read through the view carries (T-4755), and the gateway keeps one upstream per Endpoint and caller identity. The broker decides the socket's own Subscription as a read (Antares ADR-0026 rule 4), so the gateway's own account (`x-jc-client: context-gateway`, T-3767) creates no subscription: its permit carries no clause 5.8.1 and no view lists it (T-5339).
    - No client can speak as that account. The gateway sets `x-jc-*` only from a verified token and strips every client copy first (`tenancy::strip_client_headers`), and the account's Keycloak client is the gateway's own.
    - The upstream closes 60 s after the Endpoint's last client leaves.
    - It reconnects with `x-resume` when the broker ends it with `x-closing: lifetime`, and with backoff (1 s doubling to 30 s) on a drop.
@@ -81,9 +81,9 @@ The gateway serves an Endpoint's WebSocket itself. It opens **one** broker subsc
 
     - every open connection of the Endpoint ends with close code 1011 and the reason "the context broker refuses this Endpoint's fan-out", with no `x-closing` (no new `x-reason`);
     - every later `x-subscribe` or `x-update` is answered `x-status: 503` with the platform's `service-unavailable` ProblemDetails, whose `detail` names the broker's status and detail;
-    - the upstream retries after 30 s, and the first accepted `x-subscribe` clears the state.
+    - after `403`, `404` or `405`, which the broker repeats until the view or its Policy changes, the upstream stays closed while the Endpoint resolves to the same record and opens again when a reconcile changes it; the hub still stops once its last client has been gone for the linger (T-5321); after any other status it retries in 30 s; the first accepted `x-subscribe` clears the state.
 
-    A connection that subscribed before the broker answered may have received `201`; the 1011 close follows it. The upstream keeps the gateway's own account (item 1): the Portal lists `@context-gateway` on every view of an Endpoint that serves `websocket`, so a view whose own Policy grants only the role `public` still delivers. A missing listing shows as this refusal and in the gateway's log, never as a quiet socket.
+    A connection that subscribed before the broker answered may have received `201`; the 1011 close follows it. The upstream speaks as its caller (item 1), so a caller the view's listed policies do not grant sees this refusal, and the gateway logs it; it is never a quiet socket.
 
 ## 3. Security Analysis
 
@@ -111,7 +111,7 @@ The gateway serves an Endpoint's WebSocket itself. It opens **one** broker subsc
 ## 5. Consequences
 
 - **The gateway** owns the WebSocket session: the upstream per Endpoint, the entity table, the filter index, the per-connection queues, `x-seq`, and `x-resume` (T-4133). The ADR-0026 relay code in `handlers/ws.rs` goes away.
-- **The reconciler** adds clause 5.8.1 to the gateway account's permit, and adds `@context-gateway` to each listed view of an Endpoint that serves `websocket`.
+- **The reconciler** grants the gateway's own account nothing for the fan-out: no clause 5.8.1 and no listing on a view (T-5339, after T-4755).
 - **The broker** is unchanged: it serves one view socket per Endpoint and replica with ADR-0026 as it stands.
 - **[API/07](../API/07-websocket.md)**: a socket's Subscriptions are no longer listed over REST, a resume holds within one replica, and the measured sockets per replica go into §3.
 - **The platform repository** gains the `ws-fanout` rig and **the conformance repository** the 20-socket dev smoke (EP-115).
