@@ -4018,6 +4018,7 @@ the newest messages a broker received. The allowance is written only as a field 
 ```text
 GET    /api/v1/projects/{project}/mqtt/allowance                       → 200
 GET    /api/v1/projects/{project}/mqttbrokers/{name}/captured?topic=&limit= → 200
+GET    /api/v1/projects/{project}/mqttbrokers/{name}/bindings          → 200
 DELETE /api/v1/projects/{project}/mqttbrokers/{name}/captured          → 204
 ```
 
@@ -4069,6 +4070,36 @@ DELETE /api/v1/projects/{project}/mqttbrokers/{name}/captured          → 204
   same answer as a broker the project does not declare (PF-59). `DELETE` removes every kept
   message of the broker at once and records who did it in the activity log, without the
   payloads.
+
+```json
+{"broker": "sensors",
+ "bindings": [{"topicFilter": "devices/+/data",
+               "dataSource": {"kind": "DataSource", "name": "sensors-in"},
+               "pipeline": {"kind": "Pipeline", "name": "sensors"},
+               "endpoint": {"kind": "Endpoint", "name": "weather-write", "space": "weather"},
+               "type": "WeatherObserved",
+               "attributes": [{"from": "temperature", "to": "temperature"},
+                              {"from": "lon, lat", "to": "location"},
+                              {"to": "dateObserved"}]},
+              {"dataSource": {"kind": "DataSource", "hidden": true}}]}
+```
+
+- `bindings` answers how a topic reaches an attribute, read from the manifests the Portal
+  mirrors: each DataSource of the project whose `mqtt.brokerRef` names the broker, each of its
+  `mqtt.topics`, each pipeline of the same project that reads the DataSource by
+  `dataSourceRef`, and each Endpoint the pipeline writes through. One row per topic filter,
+  pipeline and output; a DataSource no pipeline reads is a row without `pipeline`, a broker no
+  DataSource names answers an empty `bindings`.
+- `type` is the output's `entityType`, else the type the output mapper's step names.
+  `attributes` lists the mapper's map (`from` the record field, two fields for a point, absent
+  for an expression or a fixed value); a step written by hand has no `attributes`, and the
+  pipeline editor shows its code.
+- Who may read: whoever may read `MqttBroker` in the project; anybody else gets `404` (PF-59).
+  Each hop is checked on its own: a DataSource the caller may not read is
+  `{"kind": "DataSource", "hidden": true}` without its name and topics, a pipeline as for the
+  flow map (§50), an Endpoint by its space. A hidden hop ends the row there: nothing it leads to
+  is shown. A pipeline of another project is never joined. Nothing here holds a secret, a
+  password reference or a payload.
 
 ## 48. Pipeline access requests (PL-90…PL-93)
 
