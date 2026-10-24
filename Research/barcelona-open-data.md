@@ -343,7 +343,7 @@ section 6.1. Rows are ordered by batch, then by name.
 | 147 | [`galeries-comercials`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/galeries-comercials) | Shopping galleries in the city of Barcelona | entities | integrate | T-5265 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | CSV/JSON | weekly | CC-BY-4.0 | 200 | Equipaments family: one pipeline, deduplicated by register id | 2 |
 | 148 | [`grans-centres-comercials`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/grans-centres-comercials) | Large shopping centers in the city of Barcelona | entities | integrate | T-5265 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | CSV/JSON | weekly | CC-BY-4.0 | 200 | Equipaments family: one pipeline, deduplicated by register id | 2 |
 | 149 | [`grans-establiments`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/grans-establiments) | Large establishments in the city of Barcelona | entities | integrate | T-5265 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | CSV/JSON | weekly | CC-BY-4.0 | 200 | Equipaments family: one pipeline, deduplicated by register id | 2 |
-| 150 | [`habitatges-us-turistic`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/habitatges-us-turistic) | Tourist housing in the city of Barcelona | entities | integrate | T-5265 | `TouristRental` (TourismDestinations) | ngsi-ld, geojson, ogc-features, csv | CSV/ZIP | weekly | CC-BY-4.0 | 200 | licensed tourist flats; licence number and address only, no holder data | 3 |
+| 150 | [`habitatges-us-turistic`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/habitatges-us-turistic) | Tourist housing in the city of Barcelona | entities | integrate | T-5265 | `TouristRental` (TourismDestinations) | ngsi-ld, geojson, ogc-features, csv | CSV/ZIP | weekly | CC-BY-4.0 | 200 | licensed tourist flats; licence number and address only, no holder data; built by T-5417 at building level (street and number, the building point; floor, door, staircase and block never written), 10,719 of 10,719 rows on 2026-10-24 | 3 |
 | 151 | [`horts-urbans`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/horts-urbans) | Urban orchards in the city of Barcelona | entities | integrate | T-5265 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | CSV/JSON | weekly | CC-BY-4.0 | 200 | Equipaments family: one pipeline, deduplicated by register id; moved from environment | 2 |
 | 152 | [`iris`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/iris) | Incidents, complaints, suggestions, inquiries and gratitudes managed by the Barcelona City Council | entities | integrate | T-5265 | `IssueReporting` (IssueTracking) | ngsi-ld, temporal, geojson, csv | CSV/XML | quarterly | CC-BY-4.0 | 200 | citizen requests per area and theme, no personal fields | 2 |
 | 153 | [`lavabos-publics`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/lavabos-publics) | Public toilets in the city of Barcelona | entities | integrate | T-5265 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | CSV/JSON | weekly | CC-BY-4.0 | 200 | Equipaments family: one pipeline, deduplicated by register id; moved from environment | 3 |
@@ -769,6 +769,8 @@ covered by that pipeline (one PointOfInterest per `register_id`) and needs no pi
 Built, score 3:
 
 - Events (`agenda` pipeline, Event): `agenda-diaria`, `agenda-cultural`, `agenda-activitats-esportives`.
+- Licensed tourist flats (`tourist-flats` pipeline, TouristRental, T-5417): `habitatges-us-turistic`,
+  one entity per licence at building level; floor, door, staircase and block are never written.
 - Read by the `equipaments` pipeline (PointOfInterest): `equipament-cultura-i-lleure`,
   `equipament-educacio`, `equipament-esports`, `equipament-serveis-socials`,
   `equipament-transports-i-serveis-relacionats`, `allotjaments-hotels`, `sanitat-farmacies`,
@@ -790,8 +792,6 @@ Not built, score 3, with the reason:
 
 - `equipament-sanitat`: unchanged since 2024-01-02 and without `geo_epgs_4326_lat/lon`; its live
   extracts `sanitat-farmacies` and `sanitat-hospitals-atencio-primaria` are built.
-- `habitatges-us-turistic` (TouristRental): own layout with floor and door; T-5417 builds it at
-  building level.
 - `equipaments-culturals-icub`, `culturailleure-espaisinfantils`, `np-platges` (Beach): own
   layouts; T-5418.
 
