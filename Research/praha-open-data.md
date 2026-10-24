@@ -149,7 +149,8 @@ builds its integrate rows highest score first; skip rows keep their score so the
 | T-5270 (live) | 12 | 4 | 7 | 1 |
 | T-5276 (live) | 6 | 1 | 2 | 3 |
 | T-5269 (live) | 16 | 0 | 1 | 15 |
-| blocked (T-5269 follow-ups) | 63 | 2 | 29 | 32 |
+| T-5425 (live) | 6 | 0 | 4 | 2 |
+| blocked (T-5269 follow-ups) | 55 | 2 | 23 | 30 |
 | blocked (earlier causes) | 18 | 12 | 2 | 4 |
 
 The owner order of 18:30Z sets a floor of 100 live Smart Data Models datasets per city (counted by
