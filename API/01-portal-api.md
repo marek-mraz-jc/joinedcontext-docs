@@ -4458,7 +4458,7 @@ GET /api/v1/projects/{project}/endpoints/{name}/access/attributes?type=T&attribu
   no Policy in the project. The panel says "hidden by a policy you cannot read".
 - Who may call: whoever may read the Endpoint (`read` on `Endpoint` in its Context Space). Not
   signed in is `401`; an Endpoint the caller may not read is `403`; an unknown Endpoint and a
-  type the Endpoint's space model has no class for are both `404` with the same body.
+  type a space model with classes does not list are both `404` with the same body.
 - No attribute value is read: the route asks a decision, never an entity.
 - `decision` and `reason` are the gateway's answer, `null` when it was not asked.
 - The gateway unreachable is `503`; the panel keeps the gateway's chips and says the Policy
