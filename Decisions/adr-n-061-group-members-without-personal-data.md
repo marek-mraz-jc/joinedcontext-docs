@@ -110,6 +110,7 @@ spec:
 ## Related
 
 - [ADR-N-031](adr-n-031-people-groups-and-app-groups.md) — people in Keycloak; decision 1 amended here.
+- [ADR-N-059](adr-n-059-departments-and-the-unit-of-tenancy.md) — departments as the unit of tenancy; its option E keeps department groups in Keycloak too.
 - [ADR-N-054](adr-n-054-history-versions-provenance-gdpr.md) — history and erasure.
 - [ADR-N-058](adr-n-058-several-organizations-per-installation.md) — one Keycloak group subtree per Organization.
 - [Requirements/platform](../Requirements/platform.md#roles-as-code) — PF-49, PF-62…PF-64, PF-126, PF-127.
