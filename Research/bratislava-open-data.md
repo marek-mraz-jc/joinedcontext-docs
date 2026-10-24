@@ -861,13 +861,14 @@ ordered by batch, integrate before statistics, then by score and title.
 
 ### 6.3 Batch T-5273: what was built
 
-T-5273 (deployment repository, `seed/bratislava/`) built the counters and the shared bikes; each
+T-5273 (deployment repository, `seed/bratislava/`) built the counters, the shared bikes and the
+public transport stops and lines from DPB's GTFS; each
 dataset is its own Endpoint, public Policy and CKAN dataset in the organisation `bratislava`. The
 rows it did not build carry their reason here; their work is task T-5435.
 
 | # | title | state | Endpoint or reason |
 |---|---|---|---|
-| 1 | Cestovné poriadky MHD vo formáte GTFS | not built | measured on 2026-10-23: `GTFS_latest.zip` is 6.2 MB (48 MB unpacked: `stop_times.txt` 45 MB with 710,436 rows, `trips.txt` 35,670 trips, `stops.txt` 1,378 platforms, `routes.txt` 90 routes, 1 agency); stops, routes and agency fit one archive read (as Helsinki's `hsl-gtfs-stops`) and need `GtfsAgency`, `GtfsRoute`, `GtfsStop` in the model; 35,670 `GtfsTrip` entities would be four times the space's other entities, so trips stay in the zip; T-5435 |
+| 1 | Cestovné poriadky MHD vo formáte GTFS | built (stops, lines, agency) | `bratislava-mhd-zastavky` (`GtfsStop`, 1,378 platforms) and `bratislava-mhd-linky` (`GtfsRoute`, 90 lines, and `GtfsAgency`, DPB), pipeline `mhd-gtfs`, nightly, reading `agency.txt`, `routes.txt` and `stops.txt` of the 6.2 MB zip by byte range (2026-10-24: 48 MB unpacked, `stop_times.txt` 45 MB with 710,436 rows); 35,670 `GtfsTrip` entities would be four times the space's other entities and need `stop_times.txt`, so trips stay in the zip |
 | 2 | Počet prechádzajúcich chodcov podľa sčítačov za hodinu | built | `bratislava-chodci`, `CrowdFlowObserved`, daily |
 | 3 | Počet prejazdov cyklistov podľa sčítačov za hodinu | built | `bratislava-cyklisti`, `TrafficFlowObserved`, daily |
 | 4 | Počet prejazdov vozidiel podľa sčítačov za hodinu | built | `bratislava-vozidla`, `TrafficFlowObserved`, daily; 14 of the 19 sites summed 0 vehicles from 2026-09-21 to 2026-10-21 (no vehicle sensor), a day at 0 both ways is not written |
