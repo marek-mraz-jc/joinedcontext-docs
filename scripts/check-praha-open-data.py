@@ -7,7 +7,7 @@
 `check` needs no network. It fails when the matrix does not hold exactly one row per entry of the
 four snapshots (city catalogue, IPR geoportal, Golemio OpenAPI paths, other sources), names an id
 its source snapshot does not hold, has a decision outside live/integrate/blocked/skip/part, a live
-or integrate row without a batch of T-5268, T-5269, T-5270 or T-5276 and a model, an integrate row
+or integrate row without a batch of T-5268, T-5269, T-5270, T-5276 or T-5424 and a model, an integrate row
 scoring under 1, a blocked or skip row without a reason, a score outside -1..3, or a part row that
 does not name the row it belongs to. When the board is mounted (TASKS_DIR, default /workspace/tasks)
 every batch id must also be a task file there; CI has no board and skips that part.
@@ -30,7 +30,7 @@ SNAPSHOTS = {
     "other": ROOT / "Research/data/praha-other-sources-2026-10-23.tsv",
 }
 DECISIONS = {"live", "integrate", "blocked", "skip", "part"}
-BATCHES = {"T-5268", "T-5269", "T-5270", "T-5276"}
+BATCHES = {"T-5268", "T-5269", "T-5270", "T-5276", "T-5424"}
 ROW = re.compile(r"^\| \d+ \| \[`([^`]+)`\]")
 PART = re.compile(r"^(?:history|detail) of `([^`]+)`")
 
