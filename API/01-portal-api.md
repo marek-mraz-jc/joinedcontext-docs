@@ -4426,6 +4426,43 @@ POST /api/v1/projects/{project}/kpis/check   {pipeline, preview?}   → 200 KpiC
 - Who may call: a person with `propose` on `Pipeline` in the project; anyone else gets `403`,
   and so does a workload token, whose reading is its ServiceAccount's grants.
 
+## 56. Why a cell is not editable (T-5528, GW6, EP-55)
+
+The entity grid's cell inspector shows, per attribute, what the person may do with it and why.
+The table itself is the gateway's: the browser reads `GET /api/endpoint/{slug}/access/attributes?type=T`
+([API/02 §7b](02-endpoint-representations.md)) with the person's own session through the edge,
+so every chip is the decision their real request gets. The Portal holds no access token of the
+person and computes no grant in the browser. This route adds one thing the gateway never says
+to a caller: which Policy refused an attribute, for a caller who may read that Policy.
+
+```text
+GET /api/v1/projects/{project}/endpoints/{name}/access/attributes?type=T&attribute=A&action=write → 200 AttributeExplained
+```
+
+```json
+{"type": "AirQualityObserved", "attribute": "no2", "action": "write",
+ "decision": false, "reason": "prohibited",
+ "policy": "no2-frozen", "policyTitle": "NO2 is corrected by the lab only", "policyHidden": false}
+```
+
+- `type` and `attribute` are required, 1 to 255 printable characters; `action` is `read`,
+  `write` or `delete` (`queryEntity`, `updateAttrs`, `deleteAttrs`), `write` when absent. Any
+  other value is `400` naming the parameter.
+- The question goes to the gateway's `access/simulate` with the Portal's own service-account
+  token (the only caller the gateway answers there) and with the caller themself as subject:
+  their username, groups and realm roles from their verified session, never from the request.
+  `resource.properties.attribute` carries the attribute.
+- `policy` and `policyTitle` name the deciding Policy only when the caller may read that Policy
+  (`read` on `Policy` in its Context Space). For anyone else both are `null` and `policyHidden`
+  is `true` when a Policy decided; the gateway is then not asked at all when the caller may read
+  no Policy in the project. The panel says "hidden by a policy you cannot read".
+- Who may call: whoever may read the Endpoint (`read` on `Endpoint` in its Context Space). Not
+  signed in is `401`; an Endpoint the caller may not read is `403`; an unknown Endpoint and a
+  type the Endpoint's space model has no class for are both `404` with the same body.
+- No attribute value is read: the route asks a decision, never an entity.
+- The gateway unreachable is `503`; the panel keeps the gateway's chips and says the Policy
+  could not be named.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
