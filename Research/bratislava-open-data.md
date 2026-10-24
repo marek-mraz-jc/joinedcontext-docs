@@ -866,10 +866,11 @@ T-5274 (deployment repository, `seed/bratislava/`) built three pipeline shapes:
 coordinates as `PointOfInterest`) and the one Feature Service table shape for statistics as
 `KeyPerformanceIndicator`, run by three pipelines split by area so that a run fits its memory
 quota: `statistics` (the 17 city districts, 15,765 figures on 2026-10-24, 320 MiB quota),
-`statistics-okresy` (Bratislava I to V, 10,333 figures, 256 MiB) and `statistics-mesto` (the city
-as a whole, 10,396 figures, 256 MiB); all three run the same mapping text, a table is one line of
-its `tables`. Every built row is its own Endpoint, public Policy (narrowed by `idPattern` to its
-table's ids) and CKAN dataset in the organisation `bratislava`: 332 datasets, 36,494 figures.
+`statistics-okresy` (Bratislava I to V, 10,257 figures, 256 MiB) and `statistics-mesto` (the city
+as a whole, 10,231 figures, 256 MiB); all three run the same mapping text, a table is one line of
+its `tables`. A dataset name that would end in a year takes the suffix `-ba`: the Portal's
+residue janitor may remove names ending in four digits (T-2627). Every built row is its own
+Endpoint, public Policy (narrowed by `idPattern` to its table's ids) and CKAN dataset in the organisation `bratislava`: 332 datasets, 36,253 figures.
 
 How the statistics rows were sorted, on 2026-10-24: each of the batch's 601 Feature Services was
 read once whole (`/0?f=json` for its fields, `/0/query?where=1=1&outFields=*` for at most 2,000
@@ -885,8 +886,7 @@ the space's schema and the vendored SDM `KeyPerformanceIndicator` schema.
 
 Score 0 and -1 rows of the same shape are listed, not loaded: section 6.1 builds the useful rows.
 Source defects the run counts instead of hiding: "Zmena počtu obyvateľov v mestských častiach
-Bratislavy medzi rokom 2022 a 2035" lists one district twice and "Počet evidovaných vodičov"
-repeats 6 of 50 rows (the first is kept); several tables write `None` in place of a number.
+Bratislavy medzi rokom 2022 a 2035" lists one district twice (the first is kept); several tables write `None` in place of a number. "Počet evidovaných vodičov" writes 13 of its 50 years as fractions ("2018,636364") and six police tables of the okresy write their third period as a half year ("01/2018 - 06/2018"): those rows are dropped as "no period". The two population-pyramid tables ("Veková štruktúra obyvateľov Bratislavy v roku 2021", "Vekové zloženie obyvateľov Bratislavy a Slovenska v roku 2021") write the men as negative numbers for the chart: dropped as "out of range" (a count is 0 or more), the women kept. "Spôsoby riešenia priestupkov" writes "-" for none: no number.
 
 | # | title | score | state | Endpoint or reason |
 |---|---|---|---|---|
@@ -953,7 +953,7 @@ repeats 6 of 50 rows (the first is kept); several tables write `None` in place o
 | 97 | Migračná efektívnosť okresov Bratislavy | 2 | built | `bratislava-migracna-efektivnost-okresov`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 120 figures |
 | 98 | Migračné saldo mestských častí Bratislavy v období 2000 – 2021 | 2 | built | `bratislava-migracne-saldo-mestskych-casti-v-obdobi`, `KeyPerformanceIndicator`, weekly (statistics), 408 figures |
 | 99 | Migračné saldo okresov Bratislavy (na 1 000 obyvateľov) | 2 | built | `bratislava-migracne-saldo-okresov-na-1-000`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 120 figures |
-| 100 | Migračné saldo okresov Bratislavy v rokoch 2017 – 2021 podľa veku a pohlavia (muži) | 2 | built | `bratislava-migracne-saldo-okresov-v-rokoch-2017`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 90 figures |
+| 100 | Migračné saldo okresov Bratislavy v rokoch 2017 – 2021 podľa veku a pohlavia (muži) | 2 | built | `bratislava-migracne-saldo-okresov-v-rokoch-2017-ba`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 90 figures |
 | 101 | Migračné saldo okresov Bratislavy v rokoch 2017 – 2021 podľa veku a pohlavia (ženy) | 2 | built | `bratislava-migracne-saldo-okresov-v-veku-a-pohlavia-zeny`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 90 figures |
 | 102 | Migračný obrat mestských častí Bratislavy v období 2000 – 2021 | 2 | built | `bratislava-migracny-obrat-mestskych-casti-v-obdobi`, `KeyPerformanceIndicator`, weekly (statistics), 1 figures |
 | 103 | Migračný obrat okresov Bratislavy (na 1 000 obyvateľov) | 2 | built | `bratislava-migracny-obrat-okresov-na-1-000`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 120 figures |
@@ -1027,7 +1027,7 @@ repeats 6 of 50 rows (the first is kept); several tables write `None` in place o
 | 171 | Priemerný vek pri sobáši mužov v okresoch Bratislavy v obdobiach rokov 2000 – 2021 | 2 | built | `bratislava-priemerny-vek-pri-sobasi-muzov-v`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 90 figures |
 | 172 | Priemerný vek pri sobáši žien v okresoch Bratislavy v obdobiach rokov 2000 – 2021 | 2 | built | `bratislava-priemerny-vek-pri-sobasi-zien-v`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 90 figures |
 | 173 | Priemerný vek žien pri narodení dieťaťa v mestských častiach BA vo vybraných obdobiach | 2 | built | `bratislava-priemerny-vek-zien-pri-narodeni-dietata`, `KeyPerformanceIndicator`, weekly (statistics), 68 figures |
-| 174 | Priemerný vek žien pri narodení dieťaťa v okresoch Bratislavy v rokoch 2000 – 2021 | 2 | built | `bratislava-priemerny-vek-zien-pri-v-rokoch-2000-2021`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 90 figures |
+| 174 | Priemerný vek žien pri narodení dieťaťa v okresoch Bratislavy v rokoch 2000 – 2021 | 2 | built | `bratislava-priemerny-vek-zien-pri-v-rokoch-2000-2021-ba`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 90 figures |
 | 175 | Priemerný vek žien pri narodení prvého dieťaťa v mestských č. BA vo vybraných obdobiach | 2 | built | `bratislava-priemerny-vek-zien-pri-narodeni-prveho`, `KeyPerformanceIndicator`, weekly (statistics), 68 figures |
 | 176 | Priemerný vek žien pri narodení prvého dieťaťa v okresoch Bratislavy v rokoch 2000 – 2021 | 2 | built | `bratislava-priemerny-vek-zien-pri-v-rokoch-2000-2021-2`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 90 figures |
 | 177 | Prognóza celkového prírastku obyvateľov v mestských častiach Bratislavy | 2 | built | `bratislava-prognoza-celkovy-prirastok`, `KeyPerformanceIndicator`, weekly (statistics), 221 figures |
@@ -1044,7 +1044,7 @@ repeats 6 of 50 rows (the first is kept); several tables write `None` in place o
 | 188 | Prognózovaný prirodzený prírastok obyvateľov okresov Bratislavy v rokoch 2022 – 2035 | 2 | built | `bratislava-prognozovany-prirodzeny-prirastok`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 70 figures |
 | 189 | Prognózovaný vývoj indexu ekonomického zaťaženia obyv. okresov BA v rokoch 2022 – 2035 | 2 | built | `bratislava-prognozovany-vyvoj-indexu-ekonomickeho`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 70 figures |
 | 190 | Prognózovaný vývoj strednej dĺžky života mužov pri narodení v okresoch BA v r. 2022 – 2035 | 2 | built | `bratislava-prognozovany-vyvoj-strednej-dlzky`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 70 figures |
-| 191 | Prognózovaný vývoj strednej dĺžky života žien pri narodení v okresoch BA v r. 2022 – 2035 | 2 | built | `bratislava-prognozovany-vyvoj-ba-v-r-2022-2035`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 70 figures |
+| 191 | Prognózovaný vývoj strednej dĺžky života žien pri narodení v okresoch BA v r. 2022 – 2035 | 2 | built | `bratislava-prognozovany-vyvoj-ba-v-r-2022-2035-ba`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 70 figures |
 | 192 | Prognózovaný vývoj úhrnnej plodnosti v okresoch Bratislavy do roku 2035 | 2 | built | `bratislava-prognozovany-vyvoj-uhrnnej-plodnosti-v`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 70 figures |
 | 193 | Príspevky k zmene strednej dĺžky života pri narodení mužov v okresoch BA | 2 | not built | no period: no year column and no year in the title; an indicator without its period (`calculationPeriod`) cannot be compared |
 | 194 | Príspevky k zmene strednej dĺžky života pri narodení mužov v okresoch BA (%) | 2 | not built | no period: no year column and no year in the title; an indicator without its period (`calculationPeriod`) cannot be compared |
@@ -1058,7 +1058,7 @@ repeats 6 of 50 rows (the first is kept); several tables write `None` in place o
 | 202 | Vekové zloženie obyvateľov v najstaršej a najmladšej mestskej časti Bratislavy v roku 2021 | 2 | not built | the age pyramids of two city districts, with the men written as negative values (a chart encoding, not a figure) |
 | 203 | Vnútorná priestorová štruktúra medzi mestskými časťami Bratislavy v rokoch 2001 - 2051 (v %) | 2 | built | `bratislava-vnutorna-priestorova-struktura-medzi`, `KeyPerformanceIndicator`, weekly (statistics), 102 figures |
 | 204 | Vzdelanostná štruktúra mužov vo veku 15 a viac rokov v mestských častiach BA (SODB 2021) | 2 | built | `bratislava-vzdelanostna-struktura-muzov-vo-veku-15`, `KeyPerformanceIndicator`, weekly (statistics), 102 figures |
-| 205 | Vzdelanostná štruktúra mužov vo veku 15 a viac rokov v okresoch Bratislavy (SODB 2021) | 2 | built | `bratislava-vzdelanostna-struktura-v-okresoch-sodb-2021`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 30 figures |
+| 205 | Vzdelanostná štruktúra mužov vo veku 15 a viac rokov v okresoch Bratislavy (SODB 2021) | 2 | built | `bratislava-vzdelanostna-struktura-v-okresoch-sodb-2021-ba`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 30 figures |
 | 206 | Vzdelanostná štruktúra žien vo veku 15 a viac rokov v mestských častiach BA (SODB 2021) | 2 | built | `bratislava-vzdelanostna-struktura-zien-vo-veku-15`, `KeyPerformanceIndicator`, weekly (statistics), 102 figures |
 | 207 | Vzdelanostná štruktúra žien vo veku 15 a viac rokov v okresoch Bratislavy (SODB 2021) | 2 | built | `bratislava-vzdelanostna-struktura-v-okresoch-sodb-2021-2`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 30 figures |
 | 208 | Vzájomné migračné saldo mestských častí Bratislavy 2017 – 2021 | 2 | built | `bratislava-vzajomne-migracne-saldo-mestskych-casti`, `KeyPerformanceIndicator`, weekly (statistics), 170 figures |
@@ -1071,15 +1071,15 @@ repeats 6 of 50 rows (the first is kept); several tables write `None` in place o
 | 215 | Vývoj počtu obyvateľov mestských okresov Bratislavy v rokoch 2000 – 2021 | 2 | built | `bratislava-vyvoj-poctu-obyvatelov-mestskych`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 110 figures |
 | 216 | Vývoj počtu obyvateľov v obciach BSK rokoch 1980 – 2051 | 2 | not built | by municipality of the Bratislava Region (OBEC): the space holds no municipality areas |
 | 217 | Vývoj strednej dĺžky života pri narodení mužov v okresoch BA v obdobiach rokov 2000 – 2021 | 2 | built | `bratislava-vyvoj-strednej-dlzky-zivota-pri`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 90 figures |
-| 218 | Vývoj strednej dĺžky života pri narodení žien v okresoch BA v obdobiach rokov 2000 – 2021 | 2 | built | `bratislava-vyvoj-strednej-dlzky-rokov-2000-2021`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 90 figures |
+| 218 | Vývoj strednej dĺžky života pri narodení žien v okresoch BA v obdobiach rokov 2000 – 2021 | 2 | built | `bratislava-vyvoj-strednej-dlzky-rokov-2000-2021-ba`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 90 figures |
 | 219 | Vývoj úhrnnej plodnosti žien v okresoch Bratislavy v rokoch 2000 – 2021 | 2 | built | `bratislava-vyvoj-uhrnnej-plodnosti-zien-v-okresoch`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 110 figures |
 | 220 | Výška mzdy v sektore "vzdelávanie" v meste Bratislava | 2 | built | `bratislava-vyska-mzdy-v-sektore-vzdelavanie`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 90 figures |
 | 221 | Zmena počtu obyvateľov v mestských častiach Bratislavy medzi rokom 2000 a 2021 | 2 | built | `bratislava-zmena-poctu-obyvatelov-v-mestskych`, `KeyPerformanceIndicator`, weekly (statistics), 17 figures |
-| 222 | Zmena počtu obyvateľov v mestských častiach Bratislavy medzi rokom 2022 a 2035 | 2 | built | `bratislava-zmena-poctu-obyvatelov-v-rokom-2022-a-2035`, `KeyPerformanceIndicator`, weekly (statistics), 16 figures |
+| 222 | Zmena počtu obyvateľov v mestských častiach Bratislavy medzi rokom 2022 a 2035 | 2 | built | `bratislava-zmena-poctu-obyvatelov-v-rokom-2022-a-2035-ba`, `KeyPerformanceIndicator`, weekly (statistics), 16 figures |
 | 223 | Zmena počtu obyvateľov v okresoch Bratislavy medzi rokom 2000 a 2021 | 2 | built | `bratislava-zmena-poctu-obyvatelov-v-okresoch-medzi`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 5 figures |
 | 224 | Zmena priemerného veku obyvateľstva okresov Bratislavy medzi rokom 2000 a 2021 | 2 | built | `bratislava-zmena-priemerneho-veku-obyvatelstva`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 5 figures |
 | 225 | Zmena priemerného veku v mestských častiach Bratislavy medzi rokom 2000 a 2021 | 2 | built | `bratislava-zmena-priemerneho-veku-v-mestskych`, `KeyPerformanceIndicator`, weekly (statistics), 17 figures |
-| 226 | Zmena priemerného veku v mestských častiach Bratislavy medzi rokom 2022 a 2035 | 2 | built | `bratislava-zmena-priemerneho-veku-v-rokom-2022-a-2035`, `KeyPerformanceIndicator`, weekly (statistics), 17 figures |
+| 226 | Zmena priemerného veku v mestských častiach Bratislavy medzi rokom 2022 a 2035 | 2 | built | `bratislava-zmena-priemerneho-veku-v-rokom-2022-a-2035-ba`, `KeyPerformanceIndicator`, weekly (statistics), 17 figures |
 | 227 | Údaje za kriminalitu mladých podľa jednotlivých druhov | 2 | built | `bratislava-udaje-za-kriminalitu-mladych-podla`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 350 figures |
 | 228 | Úhrnná plodnosť žien v mestských častiach Bratislavy vo vybraných obdobiach | 2 | built | `bratislava-plodnost`, `KeyPerformanceIndicator`, weekly (statistics), 68 figures |
 | 229 | Úhrnná rozvodovosť v okresoch Bratislavy v období rokov 2000 – 2021 | 2 | built | `bratislava-uhrnna-rozvodovost-v-okresoch-v-obdobi`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 90 figures |
@@ -1111,13 +1111,13 @@ repeats 6 of 50 rows (the first is kept); several tables write `None` in place o
 | 255 | Miera skládkovania komunálnych odpadov v Bratislave | 1 | built | `bratislava-miera-skladkovania-komunalnych-odpadov`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 8 figures |
 | 256 | Miera zhodnotenia biologicky rozložiteľného komunálneho odpadu v Bratislave | 1 | built | `bratislava-miera-zhodnotenia-biologicky`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 8 figures |
 | 257 | Miery plodnosti žien v Bratislave a na Slovensku v rokoch 2000 a 2021 | 1 | built | `bratislava-miery-plodnosti-zien-a-na-slovensku-v`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 62 figures |
-| 258 | Miery plodnosti žien v okresoch Bratislavy v rokoch 2000 – 2004 | 1 | built | `bratislava-miery-plodnosti-zien-v-v-rokoch-2000-2004`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 155 figures |
+| 258 | Miery plodnosti žien v okresoch Bratislavy v rokoch 2000 – 2004 | 1 | built | `bratislava-miery-plodnosti-zien-v-v-rokoch-2000-2004-ba`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 155 figures |
 | 259 | Migračné saldo (čistá migrácia) mužov a žien v Bratislave | 1 | built | `bratislava-migracne-saldo-cista-migracia-muzov-a`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 44 figures |
 | 260 | Migračné saldo Bratislavy s ostatnými krajmi SR | 1 | not built | by region (kraj) of Slovakia: the space holds no region areas |
 | 261 | Migračné saldo Bratislavy vnútorným a zahraničným sťahovaním | 1 | built | `bratislava-migracne-saldo-vnutornym-a-zahranicnym`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 44 figures |
 | 262 | Množstvo komunálneho odpadu na obyvateľa v Bratislave | 1 | built | `bratislava-mnozstvo-komunalneho-odpadu-na-obyvatela`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 8 figures |
 | 263 | Množstvo komunálneho odpadu v Bratislave | 1 | built | `bratislava-mnozstvo-komunalneho-odpadu`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 32 figures |
-| 264 | Množstvo vysadených stromov od roku 2016 | 1 | built | `bratislava-mnozstvo-vysadenych-stromov-od-roku-2016`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 7 figures |
+| 264 | Množstvo vysadených stromov od roku 2016 | 1 | built | `bratislava-mnozstvo-vysadenych-stromov-od-roku-2016-ba`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 7 figures |
 | 265 | Návštevnosť Galérie mesta Bratislava a počet výstav | 1 | built | `bratislava-navstevnost-galerie-a-pocet-vystav`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 20 figures |
 | 266 | Návštevnosť ZOO Bratislava | 1 | built | `bratislava-navstevnost-zoo`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 10 figures |
 | 267 | Návštevnosť divadelných predstavení a priemerný počet návštevníkov na predstavení v DPOH v Bratislave | 1 | built | `bratislava-navstevnost-divadelnych-predstaveni-a`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 20 figures |
@@ -1156,7 +1156,7 @@ repeats 6 of 50 rows (the first is kept); several tables write `None` in place o
 | 300 | Počet doktorandov na vysokých školách v Bratislave | 1 | built | `bratislava-pocet-doktorandov-na-vysokych-skolach`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 93 figures |
 | 301 | Počet dospievajúcich a stredných škôl podľa typu zriaďovateľa v Bratislave v roku 2021 | 1 | built | `bratislava-pocet-dospievajucich-a-strednych-skol`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 24 figures |
 | 302 | Počet evidovaných prvkov v DTM mesta Bratislava | 1 | built | `bratislava-pocet-evidovanych-prvkov-v-dtm`, `KeyPerformanceIndicator`, weekly (statistics), 255 figures |
-| 303 | Počet evidovaných vodičov | 1 | built | `bratislava-pocet-evidovanych-vodicov`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 44 figures |
+| 303 | Počet evidovaných vodičov | 1 | built | `bratislava-pocet-evidovanych-vodicov`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 38 figures |
 | 304 | Počet fakúlt a počet absolventov denného štúdia na vysokých školách v Bratislave | 1 | built | `bratislava-pocet-fakult-a-pocet-absolventov`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 713 figures |
 | 305 | Počet gymnázií a stredných športových škôl v Bratislave | 1 | built | `bratislava-pocet-gymnazii-a-strednych-sportovych`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 44 figures |
 | 306 | Počet hovorov prijatých na linke 159 (mestská polícia) v Bratislave | 1 | built | `bratislava-pocet-hovorov-prijatych-na-linke-159`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 9 figures |
@@ -1182,10 +1182,10 @@ repeats 6 of 50 rows (the first is kept); several tables write `None` in place o
 | 326 | Počet prijatých žiadostí o vydanie občianskeho preukazu | 1 | built | `bratislava-pocet-prijatych-ziadosti-obcianskeho-preukazu`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 135 figures |
 | 327 | Počet schválených žiadostí v rámci zriaďovanej a nezriaďovanej kultúry BKIS | 1 | not built | by ZRIADOVANA_KULTURA, NEZRIADOVANA_KULTURA, not by city district, okres or the whole city |
 | 328 | Počet stredných odborných škôl v Bratislave | 1 | built | `bratislava-pocet-strednych-odbornych-skol`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 44 figures |
-| 329 | Počet stíhaných a vyšetrovaných osôb | 1 | built | `bratislava-pocet-stihanych-a-vysetrovanych-osob`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 15 figures |
-| 330 | Počet trestných činov a počet stíhaných a vyšetrovaných mladistvých a maloletých osôb | 1 | built | `bratislava-pocet-trestnych-cinov-a-pocet-stihanych`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 60 figures |
-| 331 | Počet trestných činov a stíhané a vyšetrované osoby (alkohol, drogy) | 1 | built | `bratislava-pocet-trestnych-cinov-a-stihane-a`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 60 figures |
-| 332 | Počet trestných činov spáchaných organizovanou formou | 1 | built | `bratislava-pocet-trestnych-cinov-spachanych`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 15 figures |
+| 329 | Počet stíhaných a vyšetrovaných osôb | 1 | built | `bratislava-pocet-stihanych-a-vysetrovanych-osob`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 10 figures |
+| 330 | Počet trestných činov a počet stíhaných a vyšetrovaných mladistvých a maloletých osôb | 1 | built | `bratislava-pocet-trestnych-cinov-a-pocet-stihanych`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 40 figures |
+| 331 | Počet trestných činov a stíhané a vyšetrované osoby (alkohol, drogy) | 1 | built | `bratislava-pocet-trestnych-cinov-a-stihane-a`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 40 figures |
+| 332 | Počet trestných činov spáchaných organizovanou formou | 1 | built | `bratislava-pocet-trestnych-cinov-spachanych`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 10 figures |
 | 333 | Počet tried v gymnáziách a športových školách v Bratislave | 1 | built | `bratislava-pocet-tried-v-gymnaziach-a-sportovych`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 44 figures |
 | 334 | Počet tried v konzervatóriách v Bratislave | 1 | built | `bratislava-pocet-tried-v-konzervatoriach`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 44 figures |
 | 335 | Počet tried v materských školách v Bratislave | 1 | built | `bratislava-pocet-tried-v-materskych-skolach`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 64 figures |
@@ -1208,13 +1208,13 @@ repeats 6 of 50 rows (the first is kept); several tables write `None` in place o
 | 352 | Počet zamestnancov v stavebníctve v podnikoch s viac ako 20 zamestnancami v r. 2008 - 2021 | 1 | built | `bratislava-pocet-zamestnancov-v-stavebnictve-v`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 14 figures |
 | 353 | Počet zapísaných žiakov v školských kluboch (špeciálne školy) v Bratislave | 1 | built | `bratislava-pocet-zapisanych-ziakov-v-skolskych`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 22 figures |
 | 354 | Počet zapísaných žiakov v školských kluboch v Bratislave | 1 | built | `bratislava-pocet-zapisanych-ziakov-v-v-skolskych-kluboch`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 33 figures |
-| 355 | Počet zistených, objasnených (aj dodatočne) trestných činov | 1 | built | `bratislava-pocet-zistenych-objasnenych-aj`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 45 figures |
+| 355 | Počet zistených, objasnených (aj dodatočne) trestných činov | 1 | built | `bratislava-pocet-zistenych-objasnenych-aj`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 30 figures |
 | 356 | Počet zrealizovaných podujatí BKIS (bez DPOH) | 1 | built | `bratislava-pocet-zrealizovanych-podujati-bkis-bez`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 10 figures |
 | 357 | Počet základných a stredných škôl v Bratislave podľa ich veľkosti v roku 2021 | 1 | built | `bratislava-pocet-zakladnych-a-strednych-skol-podla`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 10 figures |
 | 358 | Počet základných umeleckých škôl v Bratislave | 1 | built | `bratislava-pocet-zakladnych-umeleckych-skol`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 44 figures |
 | 359 | Počet základných škôl v Bratislave | 1 | built | `bratislava-pocet-zakladnych-skol`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 44 figures |
 | 360 | Počet členov záujmových útvarov CVČ v Bratislave | 1 | built | `bratislava-pocet-clenov-zaujmovych-utvarov-cvc`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 99 figures |
-| 361 | Počet škôl v Bratislave za obdobie 2010 – 2022 | 1 | built | `bratislava-pocet-skol-za-obdobie-2010-2022`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 39 figures |
+| 361 | Počet škôl v Bratislave za obdobie 2010 – 2022 | 1 | built | `bratislava-pocet-skol-za-obdobie-2010-2022-ba`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 39 figures |
 | 362 | Počet študentov na jednotlivých vysokých školách v Bratislave | 1 | built | `bratislava-pocet-studentov-na-jednotlivych`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 288 figures |
 | 363 | Počet študentov na stredných školách v Bratislave podľa druhu strednej školy v roku 2021 | 1 | built | `bratislava-pocet-studentov-na-strednych-skolach`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 3 figures |
 | 364 | Počet študentov na vysokých školách v Bratislave | 1 | built | `bratislava-pocet-studentov-na-vysokych-skolach`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 96 figures |
@@ -1239,14 +1239,14 @@ repeats 6 of 50 rows (the first is kept); several tables write `None` in place o
 | 383 | Priemerný vek prisťahovaných a vysťahovaných do a z Bratislavy podľa pohlaví | 1 | built | `bratislava-priemerny-vek-pristahovanych-a`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 88 figures |
 | 384 | Priemerný vek žien pri narodení dieťaťa v Bratislave a na Slovensku v rokoch 2000 – 2021 | 1 | built | `bratislava-priemerny-vek-zien-pri-v-rokoch-2000-2021-3`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 22 figures |
 | 385 | Priemerný vek žien pri narodení prvého dieťaťa v BA a na Slovensku v rokoch 2000 – 2021 | 1 | built | `bratislava-priemerny-vek-zien-pri-v-rokoch-2000-2021-4`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 22 figures |
-| 386 | Prognóza počtu obyvateľov Bratislavy v rokoch 2022 – 2050 podľa scenárov | 1 | built | `bratislava-prognoza-poctu-obyvatelov-v-rokoch-2022`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 145 figures |
+| 386 | Prognóza počtu obyvateľov Bratislavy v rokoch 2022 – 2050 podľa scenárov | 1 | built | `bratislava-prognoza-poctu-obyvatelov-v-rokoch-2022-ba`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 145 figures |
 | 387 | Prognózovaná zmena podielu hlavných vekových skupín obyvateľstva BA v rokoch 2022 a 2050 | 1 | built | `bratislava-prognozovana-zmena-podielu-hlavnych`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 20 figures |
-| 388 | Prognózovaný index starnutia obyvateľstva Bratislavy v rokoch 2020 – 2050 | 1 | built | `bratislava-prognozovany-index-v-rokoch-2020-2050`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 145 figures |
+| 388 | Prognózovaný index starnutia obyvateľstva Bratislavy v rokoch 2020 – 2050 | 1 | built | `bratislava-prognozovany-index-v-rokoch-2020-2050-ba`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 145 figures |
 | 389 | Prognózovaný priemerný vek obyvateľov Bratislavy v rokoch 2022 – 2050 | 1 | built | `bratislava-prognozovany-priemerny-vek-obyvatelov-v`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 145 figures |
 | 390 | Prognózovaný vývoj celkového prírastku Bratislavy v rokoch 2022 – 2050 | 1 | built | `bratislava-prognozovany-vyvoj-celkoveho-prirastku`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 145 figures |
-| 391 | Prognózovaný vývoj indexu ekonomického zaťaženia obyvateľstva BA v rokoch 2022 – 2050 | 1 | built | `bratislava-prognozovany-vyvoj-indexu-ba-v-rokoch-2022-2050`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 145 figures |
+| 391 | Prognózovaný vývoj indexu ekonomického zaťaženia obyvateľstva BA v rokoch 2022 – 2050 | 1 | built | `bratislava-prognozovany-vyvoj-indexu-ba-v-rokoch-2022-2050-ba`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 145 figures |
 | 392 | Prognózovaný vývoj prirodzeného prírastku Bratislavy v rokoch 2022 – 2050 | 1 | built | `bratislava-prognozovany-vyvoj-prirodzeneho`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 145 figures |
-| 393 | Prognózovaný vývoj strednej dĺžky života pri narodení mužov v BA v rokoch 2022 – 2050 | 1 | built | `bratislava-prognozovany-vyvoj-ba-v-rokoch-2022-2050`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 87 figures |
+| 393 | Prognózovaný vývoj strednej dĺžky života pri narodení mužov v BA v rokoch 2022 – 2050 | 1 | built | `bratislava-prognozovany-vyvoj-ba-v-rokoch-2022-2050-ba`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 87 figures |
 | 394 | Prognózovaný vývoj strednej dĺžky života pri narodení žien v BA v rokoch 2022 – 2050 | 1 | built | `bratislava-prognozovany-vyvoj-ba-v-rokoch-2022-2050-2`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 87 figures |
 | 395 | Prognózovaný vývoj úhrnnej plodnosti v Bratislave do roku 2050 | 1 | built | `bratislava-prognozovany-vyvoj-uhrnnej-plodnosti-do`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 87 figures |
 | 396 | Prognózovaný vývoj účelových jednotiek materských škôl v Bratislave do roku 2050 | 1 | not built | every figure cell is empty (the hub writes None in POCET) |
@@ -1287,35 +1287,35 @@ repeats 6 of 50 rows (the first is kept); several tables write `None` in place o
 | 431 | Spotreba vody na obyvateľa na deň (BVS) | 1 | not built | figures of the water company BVS over its whole supply area (Bratislava and the municipalities around it), not of the city |
 | 432 | Spôsob nakladania s odpadmi | 1 | built | `bratislava-sposob-nakladania-s-odpadmi`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 15 figures |
 | 433 | Spôsob nakladania s odpadmi v Bratislave | 1 | built | `bratislava-sposob-nakladania-s-nakladania-s-odpadmi`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 24 figures |
-| 434 | Spôsobená škoda trestných činov v 1 000 EUR | 1 | built | `bratislava-sposobena-skoda-trestnych-cinov-v-1-000`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 15 figures |
-| 435 | Spôsoby riešenia priestupkov v Bratislave podľa evidencie mestskej polície | 1 | built | `bratislava-sposoby-riesenia-priestupkov-podla`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 8 figures |
+| 434 | Spôsobená škoda trestných činov v 1 000 EUR | 1 | built | `bratislava-sposobena-skoda-trestnych-cinov-v-1-000`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 10 figures |
+| 435 | Spôsoby riešenia priestupkov v Bratislave podľa evidencie mestskej polície | 1 | built | `bratislava-sposoby-riesenia-priestupkov-podla`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 45 figures |
 | 436 | Stav knižničného fondu v Mestskej knižnici v Bratislave | 1 | built | `bratislava-stav-kniznicneho-fondu-v-mestskej`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 30 figures |
 | 437 | Terénne sociálne služby v Bratislavskom samosprávnom kraji (2021) | 1 | not built | figures of the Bratislava self-governing region (BSK) as a whole, not of the city or its districts |
 | 438 | Tržby najvýznamnejších spoločností v priemysle Bratislavy v rokoch 2008 - 2021 | 1 | built | `bratislava-trzby-najvyznamnejsich-spolocnosti-v`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 42 figures |
 | 439 | Tržby z predaja do zahraničia v priemysle Bratislavy podľa odvetví v rokoch 2015 - 2021 | 1 | built | `bratislava-trzby-z-predaja-do-zahranicia-v`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 94 figures |
 | 440 | Ulice s viac ako 400 priestupkami v Bratislave | 1 | not built | by ULICA, not by city district, okres or the whole city |
-| 441 | Veková štruktúra obyvateľov Bratislavy v roku 2021 | 1 | built | `bratislava-vekova-struktura-obyvatelov-v-roku-2021`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 202 figures |
+| 441 | Veková štruktúra obyvateľov Bratislavy v roku 2021 | 1 | built | `bratislava-vekova-struktura-obyvatelov-v-roku-2021-ba`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 101 figures |
 | 442 | Vekové zloženie migračného salda Bratislavy | 1 | built | `bratislava-vekove-zlozenie-migracneho-salda`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 396 figures |
-| 443 | Vekové zloženie obyvateľov Bratislavy a Slovenska v roku 2021 | 1 | built | `bratislava-vekove-zlozenie-obyvatelov-a-slovenska`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 202 figures |
-| 444 | Vekové zloženie obyvateľov Bratislavy v roku 2021 a v roku 2050 (stredný scenár) | 1 | built | `bratislava-vekove-zlozenie-obyvatelov-v-roku-2021`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 404 figures |
-| 445 | Vzájomné migračné saldo mestských častí Bratislavy 2000 – 2004 | 1 | built | `bratislava-vzajomne-migracne-saldo-casti-2000-2004`, `KeyPerformanceIndicator`, weekly (statistics), 170 figures |
+| 443 | Vekové zloženie obyvateľov Bratislavy a Slovenska v roku 2021 | 1 | built | `bratislava-vekove-zlozenie-obyvatelov-a-slovenska`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 101 figures |
+| 444 | Vekové zloženie obyvateľov Bratislavy v roku 2021 a v roku 2050 (stredný scenár) | 1 | built | `bratislava-vekove-zlozenie-obyvatelov-v-roku-2021-ba`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 404 figures |
+| 445 | Vzájomné migračné saldo mestských častí Bratislavy 2000 – 2004 | 1 | built | `bratislava-vzajomne-migracne-saldo-casti-2000-2004-ba`, `KeyPerformanceIndicator`, weekly (statistics), 170 figures |
 | 446 | Vzájomné migračné saldo okresov Bratislavy 2000 – 2004 | 1 | not built | flows between two districts (origin and destination), not a figure of one area |
 | 447 | Výkony cestovného ruchu v Bratislave - počet návštevníkov | 1 | built | `bratislava-vykony-cestovneho-ruchu-pocet`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 90 figures |
 | 448 | Výkony cestovného ruchu v Bratislave - počet prenocovaní | 1 | built | `bratislava-vykony-cestovneho-ruchu-pocet-prenocovani`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 90 figures |
 | 449 | Výpožičky v Mestskej knižnici v Bratislave | 1 | built | `bratislava-vypozicky-v-mestskej-kniznici`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 20 figures |
 | 450 | Vývoj celkovej zamestnanosti a zamestnanosti v priemysle v Bratislave v rokoch 2010 - 2021 | 1 | built | `bratislava-vyvoj-celkovej-zamestnanosti-a`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 16 figures |
 | 451 | Vývoj počtu malých, stredných a veľkých podnikov v rokoch 2010 - 2021 | 1 | built | `bratislava-vyvoj-poctu-malych-strednych-a-velkych`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 36 figures |
-| 452 | Vývoj počtu obyvateľov Bratislavy v rokoch 2000 – 2021 (31.12.) | 1 | built | `bratislava-vyvoj-poctu-obyvatelov-v-rokoch-2000`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 22 figures |
+| 452 | Vývoj počtu obyvateľov Bratislavy v rokoch 2000 – 2021 (31.12.) | 1 | built | `bratislava-vyvoj-poctu-obyvatelov-v-rokoch-2000-ba`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 22 figures |
 | 453 | Vývoj počtu všeobecných ambulancií v Bratislave na 100 000 obyvateľov v rokoch 2022 – 2050 | 1 | built | `bratislava-vyvoj-poctu-vseobecnych-ambulancii-na`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 58 figures |
 | 454 | Vývoj počtu študentov doktorandského štúdia v BA podľa vysokých škôl v rokoch 2015 - 2021 | 1 | built | `bratislava-vyvoj-poctu-studentov-doktorandskeho`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 60 figures |
-| 455 | Vývoj počtu študentov doktorandského štúdia v Bratislave a na SR v rokoch 2015 - 2021 | 1 | built | `bratislava-vyvoj-poctu-studentov-sr-v-rokoch-2015-2021`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 6 figures |
-| 456 | Vývoj počtu žiackych miest na 1000 obyvateľov v Bratislave v rokoch 2000 – 2021 | 1 | built | `bratislava-vyvoj-poctu-ziackych-miest-na-1000`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 66 figures |
+| 455 | Vývoj počtu študentov doktorandského štúdia v Bratislave a na SR v rokoch 2015 - 2021 | 1 | built | `bratislava-vyvoj-poctu-studentov-sr-v-rokoch-2015-2021-ba`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 6 figures |
+| 456 | Vývoj počtu žiackych miest na 1000 obyvateľov v Bratislave v rokoch 2000 – 2021 | 1 | built | `bratislava-vyvoj-poctu-ziackych-miest-na-1000-ba`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 66 figures |
 | 457 | Vývoj stavebnej produkcie v BA v podnikoch s viac ako 20 zamestnancami | 1 | built | `bratislava-vyvoj-stavebnej-produkcie-v-ba-v`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 28 figures |
 | 458 | Vývoj strednej dĺžky života pri narodení mužov v BA a na SR v období rokov 2000 – 2021 | 1 | built | `bratislava-vyvoj-strednej-dlzky-rokov-2000-2021-2`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 20 figures |
 | 459 | Vývoj strednej dĺžky života pri narodení žien v BA a na SR v období rokov 2000 – 2021 | 1 | built | `bratislava-vyvoj-strednej-dlzky-rokov-2000-2021-3`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 20 figures |
 | 460 | Vývoj tržieb za ubytovanie v Bratislave v rokoch 2010 - 2021 | 1 | built | `bratislava-vyvoj-trzieb-za-ubytovanie-v-rokoch`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 12 figures |
 | 461 | Vývoj tržieb za vlastné výkony a tovar v obchode pohostinstve a ubytovaní v BA | 1 | built | `bratislava-vyvoj-trzieb-za-vlastne-vykony-a-tovar`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 28 figures |
-| 462 | Vývoj tržieb za vlastné výkony a tovar v priemysle Bratislavy v rokoch 2008 - 2021 | 1 | built | `bratislava-vyvoj-trzieb-za-vlastne-v-rokoch-2008-2021`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 14 figures |
+| 462 | Vývoj tržieb za vlastné výkony a tovar v priemysle Bratislavy v rokoch 2008 - 2021 | 1 | built | `bratislava-vyvoj-trzieb-za-vlastne-v-rokoch-2008-2021-ba`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 14 figures |
 | 463 | Vývoj tržieb za vlastné výkony a tovar vo vybraných trhových službách v BA | 1 | built | `bratislava-vyvoj-trzieb-za-vlastne-sluzbach-v-ba`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 12 figures |
 | 464 | Vývoj zamestnanosti v obchode, pohostinstve a ubytovaní v Bratislave v rokoch 2015 - 2021 | 1 | built | `bratislava-vyvoj-zamestnanosti-v-obchode`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 28 figures |
 | 465 | Vývoj úhrnnej plodnosti žien v Bratislave a na Slovensku v rokoch 2000 – 2021 | 1 | built | `bratislava-vyvoj-uhrnnej-plodnosti-zien-a-na`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 22 figures |
