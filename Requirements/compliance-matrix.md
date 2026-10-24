@@ -22,7 +22,7 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 
 | Family | Requirements | Tested | Built | Open | Untested and security-tagged |
 |---|---|---|---|---|---|
-| **AG** — Agents and MCP | 135 | 112 | 8 | 15 | 12 |
+| **AG** — Agents and MCP | 140 | 112 | 8 | 20 | 17 |
 | **AP** — Apps on demand | 173 | 143 | 11 | 19 | 9 |
 | **CC** — Configuration as code | 90 | 74 | 7 | 9 | 0 |
 | **DM** — Data models | 142 | 108 | 14 | 20 | 11 |
@@ -41,7 +41,7 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **SP** — Context-space surface | 22 | 18 | 2 | 2 | 0 |
 | **TS** — Testing and quality | 26 | 16 | 5 | 5 | 0 |
 | **UI** — Portal and user interface | 97 | 72 | 14 | 11 | 5 |
-| **Total** | 1432 | 1074 | 127 | 231 | 64 |
+| **Total** | 1437 | 1074 | 127 | 236 | 69 |
 
 ## 3. Requirement to test
 
@@ -177,6 +177,11 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **AG-131** | [S] | tested | ci-full, fast ci | platform `crates/context-gateway/tests/edge_auth_accounts_roles_in_tests.rs::a_grant_outside_its_validity_is_not_a_role`, platform `crates/jc-core/tests/service_account_tests.rs::a_grant_with_a_validity_window_is_in_force_only_inside_it`, platform `crates/jcctl/tests/service_account_reconciler_tests.rs::a_grant_window_becomes_the_policy_validity`, and 2 more |
 | **AG-132** | [A] [S] | tested | ci-full, fast ci | portal `src/api/agent_access.rs::removing_one_grant_narrows`, portal `src/api/agent_access.rs::adding_changing_or_keeping_every_grant_does_not`, portal `src/api/agent_access.rs::the_reaper_takes_expired_grants_and_never_the_last_one`, and 13 more |
 | **AG-133** | [A] [S] | built |  | `joinedcontext-portal/ui/src/pages/organization/Agents.tsx` |
+| **AG-137** | [A] [H] [S] | open |  |  |
+| **AG-138** | [A] [H] [S] | open |  |  |
+| **AG-139** | [A] [S] | open |  |  |
+| **AG-140** | [A] [H] [S] | open |  |  |
+| **AG-141** | [A] [S] | open |  |  |
 | **AG-87** | [H] | tested | ci-full, fast ci | portal `src/agents/paths.rs::building_an_app_may_draft_the_space_it_needs`, portal `src/agents/paths.rs::every_path_says_its_steps_with_tools_it_may_call`, portal `src/agents/paths.rs::every_path_has_an_id_that_reads_back_and_a_first_question`, and 41 more |
 | **AG-88** | [A] | built |  | `joinedcontext-portal/src/agents/oneshot/conversation.rs` |
 | **AG-89** | [A] [S] | tested | fast ci | portal `src/ops/pipeline_steps.rs::fields_are_every_key_once_in_name_order` |
