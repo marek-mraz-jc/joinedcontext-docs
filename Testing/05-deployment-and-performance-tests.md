@@ -108,8 +108,7 @@ For each dataset it checks the distributions the dataset itself lists. The entit
 | OGC API Features | `ogc/features/collections/{type}/items?limit=1`, with the dataset's own `isPartOf` when it lists one | 200, `application/geo+json`, at least one feature. A dataset with no OGC distribution is a `skip` when its sample carries no `location` and a `ko` when it does |
 | Data model | `schema/index.json`, and the Endpoint's `ngsi-ld/v1/types` | 200, a model lists the dataset's type, and every type the Endpoint serves has a model |
 | Data | the NGSI-LD sample, and the Endpoint's `schema/v{version}/model.schema.json` of the model `schema/index.json` lists the type under | every sampled row passes the data rules below |
-| Views | `resource_view_list?id=…` on every datastore table of the dataset | every table has a `datatables_view`; when the sample holds a numeric value observed at a time (`observedAt`, or `dateObserved` on the row), one table also has a `jc_visualization` chart. A dataset with no datastore table is a `skip`: the datastore cell already says `ko` |
-| CKAN datastore | `datastore_search?resource_id=…&limit=0` on the dataset's first datastore table | `total` at least 1 and within 1 % of the platform's count of the same rows. A dataset with no datastore table is a `ko`, read from the inventory at no request |
+| Views | `resource_view_list?id=…` on the dataset's resources | when the sample holds a numeric value observed at a time (`observedAt`, or `dateObserved` on the row), one resource has a `jc_visualization` chart; otherwise a `skip`. CKAN holds no rows (EP-65, T-5060), so no table view is checked |
 | WebSocket | `ws`, through `scripts/smoke-ws.py` | the dataset lists it: `101` and an `x-subscribe` answered `201`. It does not: the `404` [API/02](../API/02-endpoint-representations.md) names for a representation the Endpoint does not serve. Any other answer is `ko` |
 | Map | `https://opendata.{domain}/map/{dataset}` | with an OGC distribution: 200, at least one map layer, and an OGC cell that is not `ko`, so the map has a feature to show. Without one: a `ko` when the sample carries a `location`, and otherwise the `404` that means the dataset page shows no map link |
 | CSV | `file.csv?type={type}&limit=1`, with `q=isPartOf=="…"` when the dataset lists its own `isPartOf` | 200, `text/csv`, a header line and at least one row: a header alone is the empty download a dataset link gives when its rows name another catalogue host (T-4908) |
@@ -125,7 +124,7 @@ The data check (T-4743) reads the rows themselves, because every interface can a
 
 The cell names the row id and the failing attribute, never a value, at most three of them and the count of the rest. An empty sample is `ko: no rows`.
 
-The platform's count for the datastore check is the OGC `numberMatched` of the dataset's own `isPartOf` filter when the dataset lists one and an OGC distribution, and the OData `@odata.count` of the same filter otherwise. When the type is shared by several datasets of one Endpoint with no `isPartOf`, the check is a `skip` that names them: no per-dataset count exists. A datastore's `last_modified` is no staleness signal, because the harvest writes nothing when its source is unchanged (T-4644). A harvest that stopped shows as the failed CronJob that `_smoke` already reports.
+A harvest that stopped shows as the failed CronJob that `_smoke` already reports.
 
 Production limits (owner, T-4716):
 

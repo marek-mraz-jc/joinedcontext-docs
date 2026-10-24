@@ -936,7 +936,6 @@ spec:
       organization: helsingin-kaupunki # the CKAN organization slug
       name: ilmanlaatu # optional; the endpoint name by default
       license: cc-by # optional; a CKAN licence id (CC-BY 4.0)
-      datastore: { representation: csv, refresh: onChange } # optional row mirror
 ```
 
 The licence is the one member that may say something the endpoint's record does not: the CKAN licence id the organization chose, used when the Endpoint declares no `spec.catalog.license` and the record therefore names none (§3a).
@@ -965,7 +964,6 @@ spec:
 | One resource per schema artifact | the record's schema distributions (§3a) | every formalism the endpoint serves — LinkML, JSON Schema, `@context`, SHACL, OWL, RDF, the generated documentation — becomes a resource of its own, carrying the sha256 the record declares in CKAN's `hash` field so a download can be checked without asking the endpoint again (EP-68) |
 | The dataset's visibility | `spec.audience` | a `public` endpoint becomes a public dataset, anything narrower a private dataset of the organization; the mapping is closed by default, so an audience the publisher does not recognise is private (EP-69, PF-45) |
 | One view per visualization | `spec.catalog.visualizations` (§3a) | a CKAN resource view of the visualization type (ADR-N-053), titled and described per item, that embeds the sandboxed renderer on `viz.{domain}`; views the list no longer names are removed in the same run, and CKAN's UI does not offer the type (EP-132) |
-| Optional DataStore table | the tabular representation | filled through the endpoint's `file.csv`, every row upserted on each `jcctl publish ckan` run (EP-65) |
 | The organization | `spec.publish.ckan.organization` | created, when it does not exist, with the `CkanInstance`'s `metadata.title`, else the branding `organisation` name ([Deployment/12](../Deployment/12-branding-and-naming.md)) |
 
 ### Why the publisher is an ordinary consumer
@@ -976,13 +974,13 @@ The CKAN API token is resolved from a `secretRef` at reconcile time and lives in
 
 ### Visibility is the endpoint's, not CKAN's
 
-A dataset is private in CKAN when the endpoint behind it is not public, and the flip happens on the next reconcile rather than by hand: narrowing an endpoint from `public` to `organization` rewrites the dataset in the same run that rewrites its resources. Who may then open a private dataset is decided in Keycloak, not in CKAN: membership of the CKAN organization is the realm role, synced through the CKAN OIDC extension, and the platform creates no CKAN-local users. A DataStore table under a private dataset is private with it, because the row API answers only to a member of the owning organization.
+A dataset is private in CKAN when the endpoint behind it is not public, and the flip happens on the next reconcile rather than by hand: narrowing an endpoint from `public` to `organization` rewrites the dataset in the same run that rewrites its resources. Who may then open a private dataset is decided in Keycloak, not in CKAN: membership of the CKAN organization is the realm role, synced through the CKAN OIDC extension, and the platform creates no CKAN-local users.
 
 The record itself says the same thing to a harvester that never logs in: `dcterms:accessRights` is `PUBLIC` or `RESTRICTED` from the EU authority list, and a restricted endpoint's record points at its own access document with `odrl:hasPolicy`, which is the offer a data space connector negotiates against (EP-69, DS-08).
 
-### DataStore, when rows are wanted
+### No rows in the catalogue
 
-A CKAN DataStore table gives the catalogue a preview, a filtered API and a SQL surface over the rows. It is optional because it is a copy: the endpoint stays the source. When `datastore` is declared, each `jcctl publish ckan` run reads the endpoint's `file.csv` and `schema/v1/model.schema.json` as the publisher's ServiceAccount and upserts every row into its entity type's table, whose columns cover the type's model, and rows the endpoint no longer returns leave the table (EP-65, EP-44; `crates/jcctl/src/commands/publish_ckan.rs`). The DataStore takes only the `csv` representation; declaring another is refused with the fix named. `publish.ckan.datastore.refresh: onChange`, a refresh driven by the endpoint's subscription, is accepted in the manifest but not wired: today every refresh is a full reload on the next run.
+CKAN holds no copy of an endpoint's rows (EP-65, T-5060): the endpoint is the only data surface, and the dataset page reads it live through the explorer. A copy would have to repeat every policy, deletion and erasure the endpoint already enforces. jc-core refuses a manifest that still declares `publish.ckan.datastore` and names the fix (delete the block); the publisher drops a DataStore table resource an earlier run left on a dataset with the next `package_update`. The automatic charts are built from the endpoint's `schema/v1/model.schema.json` and `model.linkml.yaml`, which the publisher reads as its ServiceAccount like any other consumer.
 
 ## Related
 

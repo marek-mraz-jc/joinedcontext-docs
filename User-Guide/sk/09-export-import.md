@@ -104,7 +104,7 @@ Verejné endpointy možno zverejniť priamo na portáli otvorených údajov pomo
 4. Kliknite na **Navrhnúť katalóg**.
 5. Po zlúčení otvorte `/projects/helsinki/endpoints` a upravte svoj verejný endpoint, napríklad `helsinki-bikes`.
 6. V konfigurácii endpointu vyberte `helsinki-ckan` ako cieľový katalóg otvorených údajov.
-Mali by ste vidieť dataset uvedený pod zverejnenými endpointmi s priamymi odkazmi na záznamy DCAT-AP a zrkadlá DataStore.
+Mali by ste vidieť dataset uvedený pod zverejnenými endpointmi s priamymi odkazmi na jeho záznam DCAT-AP a vlastné API endpointu.
 
 #### Otázkou pre asistenta
 

@@ -1956,8 +1956,7 @@ GET /api/v1/projects/{project}/ckan/status    catalogues, and what each endpoint
       "resources": [
         { "name": "NGSI-LD API", "url": "https://api.{domain}/api/endpoint/{endpointSlug}/ngsi-ld/v1/", "format": "NGSI-LD" },
         { "name": "CSV", "url": "https://api.{domain}/api/endpoint/{endpointSlug}/file.csv", "format": "CSV" }
-      ],
-      "datastore": { "representation": "csv", "refresh": "onChange" }
+      ]
     }
   ]
 }
@@ -2055,7 +2054,6 @@ alternatives, filters combine with AND) and `page` (from 1, twenty datasets a pa
 }
 ```
 
-- `previewUrl` is set on a resource with an active DataStore sheet (§3 of Architecture/21).
 - `endpoint` and `model` are set only when the dataset's `endpoint` extra names an Endpoint of this
   installation whose audience is `public`: the Portal parses the slug out of the extra, finds the
   Endpoint in its mirror and builds the URL on its own host. `docsUrl` is the dataset's Markdown
@@ -2130,20 +2128,19 @@ proposes; it writes nothing. The caller needs `propose` on `Endpoint` in the pro
     "publisher": { "name": { "sk": "Banskobystrický samosprávny kraj" } },
     "contactPoint": { "name": "Open data desk", "email": "opendata@example.org" }
   },
-  "publish": { "ckan": { "instanceRef": { "kind": "CkanInstance", "name": "bbsk" },
-                         "datastore": { "representation": "csv" } } },
+  "publish": { "ckan": { "instanceRef": { "kind": "CkanInstance", "name": "bbsk" } } },
   "missing": ["spatial", "frequency"],
   "attributes": [
     { "type": "KeyPerformanceIndicator", "name": "kpiValue" },
     { "type": "KeyPerformanceIndicator", "name": "reporterEmail", "withheld": "personal" }
-  ],
-  "datastoreAvailable": true
+  ]
 }
 ```
 
 - `catalog` is the drafted `spec.catalog` (EP-78) and `publish` the drafted `spec.publish`
   (EP-62); a block the Endpoint already declares is returned as it is, so re-running the flow
-  never overwrites what a steward wrote. `missing` names the catalogue fields nothing could fill;
+  never overwrites what a steward wrote, less a `datastore` member, which jc-core refuses since
+  T-5060 (EP-65). `missing` names the catalogue fields nothing could fill;
   `spatial`, `temporal` and `frequency` are never drafted.
 - `makesPublic` is `true` when the Endpoint's audience is not `public`: the UI then says so before
   the proposal, and the Change the UI proposes with `spec.audience: public` takes the red lane
@@ -2156,8 +2153,6 @@ proposes; it writes nothing. The caller needs `propose` on `Endpoint` in the pro
   already. The UI never offers a withheld slot, adds every personal one and each slot the person
   leaves out to `projection.hiddenAttributes`, and asks for the Endpoint's name typed back before
   it proposes a public publication (EP-142).
-- `datastoreAvailable` is `true` when the Endpoint serves `csv`, the one representation a DataStore
-  mirror reads (EP-65); a drafted `publish.ckan` then carries `datastore`.
 - `404` for an unknown Endpoint; `409` naming `CkanInstance` when the project has none to publish to.
 
 ## 17. Federation registrations and the graph (MF-36, UI-27, UI-28, EP-71, PF-48)
@@ -3986,10 +3981,11 @@ An erasure finds the Entities naming the subject in each such class and erases, 
 | Store | What goes |
 | --- | --- |
 | `broker` | the Attributes from the current state, every version and the dead letters; the broker keeps a content-free record and applies it again when it starts (Antares `POST /q/erasures/{tenant}`) |
-| `ckanDatastore` | the Entities' rows of the DataStore tables the space's published Endpoints mirror, by `entity_id`; the next mirror run writes back what an Entity still holds |
 | `portal` | the Portal's trash and comments of the Entities |
 | `conversations` | every stored assistant conversation that mentions an Entity's URN or, on the first attempt, the subject's own words |
 | `exports`, `caches` | nothing: the platform keeps no export file (`file.csv` is streamed) and no entity cache (every answer is `private`), so both are `done` at once |
+
+The open-data catalogue is no store: CKAN holds no rows since T-5060 (EP-65). An erasure logged before then still lists a `ckanDatastore` part; a pending one is `done` with a count of 0 on its next attempt, because the next publication drops the old table resources and CKAN drops their tables with them.
 
 ```json
 {
@@ -4001,12 +3997,12 @@ An erasure finds the Entities naming the subject in each such class and erases, 
   "decidedAt": "2026-10-19T11:20:00Z",
   "completedAt": null,
   "entities": 14,
-  "counts": { "broker": 14, "versions": 52, "ckanDatastore": 14, "portal": 2, "conversations": 1, "exports": 0, "caches": 0 },
-  "stores": { "broker": { "state": "done", "count": 14, "versions": 52, "attempts": 1 }, "ckanDatastore": { "state": "pending", "count": 0, "attempts": 1, "error": "CKAN unavailable: …" } }
+  "counts": { "broker": 14, "versions": 52, "portal": 2, "conversations": 1, "exports": 0, "caches": 0 },
+  "stores": { "broker": { "state": "done", "count": 14, "versions": 52, "attempts": 1 }, "conversations": { "state": "pending", "count": 0, "attempts": 1, "error": "the assistant answered 503" } }
 }
 ```
 
-An approved erasure answers at once and stays `open` until every store reports `done`: a store that does not answer is asked again each minute, the CKAN DataStore at each reconciler run, and after an hour of refusals it is `failed`, which leaves the erasure for a person to read why. The erasure log keeps the subject's keyed hash, the Entities and the counts, never a value, outside the broker's database; when the Portal starts and every hour after, it sends again every erasure whose record a broker no longer holds, after that broker's database was restored from an older backup ([Deployment/07 §5](../Deployment/07-backup-restore.md#5-backups-and-erasure)). Every call is audited with its `reason`; a call without one answers `400` naming `reason-required`.
+An approved erasure answers at once and stays `open` until every store reports `done`: a store that does not answer is asked again each minute, and after an hour of refusals it is `failed`, which leaves the erasure for a person to read why. The erasure log keeps the subject's keyed hash, the Entities and the counts, never a value, outside the broker's database; when the Portal starts and every hour after, it sends again every erasure whose record a broker no longer holds, after that broker's database was restored from an older backup ([Deployment/07 §5](../Deployment/07-backup-restore.md#5-backups-and-erasure)). Every call is audited with its `reason`; a call without one answers `400` naming `reason-required`.
 
 ## 47. MQTT allowance and capture (PF-117…PF-120, MF-62, PL-87, ADR-N-048 §2.9–2.10)
 

@@ -538,7 +538,7 @@ itself: no field of the manifest can make the change smaller, so `classify`
 | `Environment` | one file decides the domain of every URN, the image every workload runs and where a `secretRef` is resolved, for a whole environment at once (CC-73, CC-75) |
 | `ContextSourceRegistration`, `SharedSpaceReference`, `DataSpaceParticipant`, `DataOffer`, `DataAgreement` | they reach another organization with the data of this one (MF-36, DS-17) |
 | `Subscription` | a standing egress: `spec.notification.endpoint.uri` is an address the platform posts to and `spec.notification.attributes`, empty meaning every granted attribute, says what it posts, for every matching entity, until somebody stops it |
-| `CkanInstance` | the same, by copy rather than by notification: the DataStore mirror of an Endpoint writes its rows to the host in `spec.url` with the token in `spec.apiTokenRef` (EP-65…EP-67) |
+| `CkanInstance` | the same, by publication rather than by notification: the publisher writes an Endpoint's dataset, never its rows, to the host in `spec.url` with the token in `spec.apiTokenRef` (EP-62…EP-67) |
 
 A `Subscription` and a `CkanInstance` were Yellow until 2026-09-20, which meant that continuous
 publication of context data to a host of the proposer's choosing took one approval while a one-off

@@ -300,7 +300,7 @@ One entity is one row. A column is the dot-joined path to a leaf value in the en
 - Nested members are joined with `.`: a Property's value is `temperature.value`, its metadata `temperature.observedAt`, a sub-property `temperature.accuracy.value`.
 - An array whose members are all scalars gives each member a column with its index in brackets: `location.value.coordinates[0]`, `location.value.coordinates[1]`.
 - An attribute with several instances (CIM 009 4.5.5) keeps its default instance, the one without a `datasetId`, in the attribute's own columns; each other instance gets its own columns, named `speed[datasetId=…].value` with the instance's `datasetId` in the brackets.
-- Any other array that holds an array or an object (the rings of a `Polygon`, the points of a `LineString`) is one cell carrying the array as JSON, in the column named by the array's path: `location.value.coordinates`. A table's width never grows with a geometry's vertex count, so a polygon layer still fits a spreadsheet and the 1600-column table of a CKAN DataStore mirror (EP-65). An answer mixing Points and Polygons carries both the indexed columns and the one JSON column.
+- Any other array that holds an array or an object (the rings of a `Polygon`, the points of a `LineString`) is one cell carrying the array as JSON, in the column named by the array's path: `location.value.coordinates`. A table's width never grows with a geometry's vertex count, so a polygon layer still fits a spreadsheet. An answer mixing Points and Polygons carries both the indexed columns and the one JSON column.
 - The structural discriminator of an attribute (`"type": "Property"`, `"GeoProperty"`, `"Relationship"`, `"ListRelationship"`, `"LanguageProperty"`, `"VocabProperty"`, `"JsonProperty"`, `"ListProperty"`, or any `type` beside an attribute's own members `value`, `object`, `languageMap`, `vocab`, `json`, `valueList` or `objectList`) is not data and gets no column. The `type` of a GeoJSON geometry does, because it says which geometry it is.
 - A Relationship is its target URN as a string, in the column `refDistrict.object` (EP-08).
 - `@context` and the other JSON-LD keywords get no column.
@@ -1277,9 +1277,8 @@ What the catalogue keeps current (EP-109):
 
 | Resource kind | What CKAN holds | How it stays current |
 |---|---|---|
-| DataStore table (`spec.publish.ckan.datastore`) | a copy of the rows, one table per entity type | row by row on each change (`refresh: onChange`) or on each reconcile (`onReconcile`), deletions included (EP-65) |
 | File resource (`file.csv`) | a link to the live download | the file is built on each request; `metadata_modified` moves on the next publication run after the data changed |
-| API resource (NGSI-LD, WebSocket, MCP, OGC, OData) | a link | always live; CKAN holds no copy |
+| API resource (NGSI-LD, WebSocket, MCP, OGC, OData) | a link | always live; CKAN holds no copy of any row (EP-65) |
 | Schema artifact | a link and the sha256 of its model version | a new model version adds new artifacts with their own hashes (EP-68) |
 
 A surface the Endpoint stops serving, by `spec.disabledRepresentations` or an explicit list, loses its resource in the same run (EP-108).

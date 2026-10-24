@@ -752,7 +752,10 @@ def plan(d: dict, probe_: dict, fetched: str, gis: dict | None = None) -> dict:
         r, p = by_fmt["CSV"]
         fields = [f["name"] for f in p["fields"]]
         ranges = {f["name"]: RANGES.get(f["type"], "string") for f in p["fields"]}
-        source = {"kind": "ckan-datastore", "url": r["url"], "resource": r["id"], "rows": p["count"]}
+        # The legacy uploads' rows sat in our own catalogue's DataStore, which od-standards filled
+        # from that dataset's Endpoint (T-4742); CKAN holds no rows since T-5060, so the source
+        # is the Endpoint itself.
+        source = {"kind": "endpoint", "rows": p["count"]}
     elif "ZIP" in by_fmt and by_fmt["ZIP"][1].get("features") and "5514" in by_fmt["ZIP"][1].get("crs", ""):
         # The pipeline unpacks the ZIP and reprojects S-JTSK to WGS 84 itself (T-4317).
         r, p = by_fmt["ZIP"]
