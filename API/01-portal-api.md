@@ -2753,7 +2753,7 @@ project's home page greets them with the first step of the role they hold there 
 grants nothing: the Portal proposes the person's role as a `RoleBinding` through the one propose
 function, and the role holds once that Change is approved, like any other grant (PF-95).
 
-The e-mail is also the username, the name members and subjects name the person by (PF-04). The
+The e-mail is also the username (PF-04); a `Group` member, a binding subject and a `Policy` assignee name the person by `person.id`, the Keycloak user id, never by the e-mail (PF-126). The
 realm sends its execute-actions e-mail, `VERIFY_EMAIL` and `UPDATE_PASSWORD` (PF-92), and the
 answer is `201` with `{ "person": {…}, "emailSent": true }`. When the realm cannot send mail, the
 Portal sets a temporary password with `UPDATE_PASSWORD` required instead and answers it once, as
