@@ -4426,6 +4426,51 @@ POST /api/v1/projects/{project}/kpis/check   {pipeline, preview?}   → 200 KpiC
 - Who may call: a person with `propose` on `Pipeline` in the project; anyone else gets `403`,
   and so does a workload token, whose reading is its ServiceAccount's grants.
 
+## 56. Who may do what on one Endpoint (T-5531, EP-103)
+
+The Endpoint page's Access tab shows every principal against each type and four actions: read,
+write, delete and history. The Portal decides nothing. It lists the principals the Endpoint's
+space names: the `assignee` of each Policy of that space and of each of its `rules` (a `user` as
+`person`, `role: public` as the public), every ServiceAccount of the project and the public. It
+then asks the gateway's `access/simulate` with no action for each principal (§39), at most 16 at
+once, with its own service-account token, never the caller's.
+
+```text
+GET /api/v1/projects/{project}/endpoints/{name}/access/matrix?kind=group → 200 Matrix
+```
+
+```json
+{"endpoint": "bikes-ops", "space": "bikes",
+ "principals": [{"kind": "group", "name": "bike-stewards",
+                 "via": [{"kind": "policy", "name": "stewards-write"}]}],
+ "types": ["BikeHireDockingStation"],
+ "cells": [{"principal": "group:bike-stewards", "type": "BikeHireDockingStation",
+            "action": "write", "effect": "permit", "attributes": ["status"],
+            "constraint": "q: operator==\"HSL\"", "decidedBy": "stewards-write"}],
+ "edges": [{"from": "principal:group:bike-stewards", "to": "policy:stewards-write"},
+           {"from": "policy:stewards-write", "to": "endpoint:bikes-ops"},
+           {"from": "endpoint:bikes-ops", "to": "type:BikeHireDockingStation"}]}
+```
+
+- A cell is one type and one action a permission (`effect: permit`) or a prohibition
+  (`effect: prohibit`) of the principal's grant document names. An operation falls into a
+  column as the UI's operation areas read it: `retrieve*` and `query*` are read, a `*Temporal*`
+  operation is history, create, update, replace, append, merge, upsert and batch are write,
+  delete and purge are delete; subscriptions, registrations and entity maps have no column. A
+  combination without a cell is refused.
+- `attributes` is `"*"` or the attribute names; `constraint` joins the grant's `q`, `scopeQ`,
+  `geoQ` and `temporalQ` into one line. `decidedBy` is the first Policy in force for the
+  principal, of the cell's effect, whose `information` names the type or no type, else `null`.
+- A principal the gateway admits to nothing is left out. A `did` assignee is no token the
+  gateway can be asked about and is left out too.
+- `kind` is `person`, `group`, `role`, `serviceAccount` or `public` (`400` otherwise). More than
+  50 principals is `422`, naming `kind` as the member to narrow by; the gateway is not asked.
+- Who may read: an organization administrator, or whoever reads Policies in the Endpoint's
+  Context Space; anybody else is `403` before the gateway is asked. An unknown Endpoint is `404`;
+  no gateway, or a gateway that does not answer, is `503`.
+- Each read is one `access.simulated` activity event naming the reader, the Endpoint and the
+  number of principals. The answer carries rules only, never a data value.
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.
