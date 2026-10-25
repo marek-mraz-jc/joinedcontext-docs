@@ -305,7 +305,7 @@ The vocabulary is closed because a filter over free text is not a filter:
 | `pipeline.restarted` | pipeline | the runner restarted a stream |
 | `endpoint.traffic` | gateway | one minute of requests for one endpoint and representation |
 | `access.denied` | gateway | the PDP refused, naming the rule that refused |
-| `mcp.tool` | portal, gateway | an MCP tool call (AG-19); from the Portal, the person's answer to an elicitation before a Yellow or Red call proceeds (AG-63); from the gateway, the calls one caller made of one tool on one Endpoint (T-5322) |
+| `mcp.tool` | portal, gateway | an MCP tool call (AG-19); from the Portal, one row per `tools/call` of a person's AI client with its decision, channel `mcp` and client, the answer to an elicitation before a Yellow or Red call proceeds included (AG-63, T-5609); from the gateway, the calls one caller made of one tool on one Endpoint (T-5322) |
 | `agent.answer` | portal | a person answered a question an assistant run asked with `jc_ask` (AG-80): the run, the question and who answered, never the words they typed (OPS-48) |
 | `federation.forward` | broker | a query forwarded to a Context Source, with latency |
 | `federation.error` | broker | a forward that failed or was cut off by the loop guard |
