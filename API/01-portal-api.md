@@ -448,6 +448,14 @@ Example write result:
 }
 ```
 
+A Change proposed inside an MCP `tools/call` also carries `status.proposedVia`, for example
+`{ "channel": "mcp", "client": "mcp-mobile" }` (AG-137, ADR-N-060 §2.2): `client` is the token's
+`azp`, at most 64 characters of `[A-Za-z0-9._:-]`, otherwise `unknown`. Every commit of that call
+ends in the trailer `Proposed-Via: mcp; client=mcp-mobile`, and its merge request body opens with
+"Proposed through an AI client over MCP (client `mcp-mobile`)." and ends in the same trailer. The
+Portal reads `proposedVia` back from that last line, so the approval page shows it as a badge.
+A Change proposed in the Portal or with the person's own token has no `proposedVia`.
+
 ### Drafts of a manifest (AG-61, UI-47, UI-48)
 
 A form saves what a person has typed before anything is proposed. A draft is shared, not
@@ -663,7 +671,9 @@ change's `planFields` say what it changed and not nothing.
 
 Approving a change records a `change.merged` activity event naming the change, its resource and the
 approver ([§14](#14-activity-ui-31-ops-48-ops-49)), so the project's activity says what went live and
-links to it, beside the reconciler's `config.applied` for the commit.
+links to it, beside the reconciler's `config.applied` for the commit. Rejecting one records a
+`change.rejected` event naming the change, its resource, the rejecter and the reason (at most 500
+characters), so a decision not to ship is on the feed too and not only on the forge.
 
 Approval rules, enforced by the API and not only by the UI:
 
@@ -1692,8 +1702,13 @@ GET /api/v1/app-templates      every template, by name, for any signed-in person
   "audience": "managers",
   "access": "Read-only; the indicators may be public.",
   "dataNeeds": [{ "types": ["KeyPerformanceIndicator"], "attrs": ["kpiValue", "target"], "operations": ["queryEntity"] }]
-}] }
+}],
+  "modelAvailable": true }
 ```
+
+`modelAvailable` is `false` when the Portal has no agent runner or the agent proxy last reported
+the model key refused or out of credit (AG-96); the gallery then says why "Create from this" is
+unavailable and offers "Use as is" below.
 
 ```text
 GET /api/v1/app-templates/{name}/screenshot/{width}   a PNG of the template at 1440 or 375 px; 404 otherwise
@@ -1705,6 +1720,30 @@ Content Security Policy: `connect-src 'none'`, `form-action 'none'`, `frame-ance
 The templates are the samples of SDK-24, compiled into the Portal. A run started with a prompt
 that contains `(template: {name})` adapts that template, whatever else the prompt says; a name no
 template has is ignored and the prompt's words choose, as before.
+
+```text
+POST /api/v1/projects/{project}/app-templates/{name}/apps   use a template as it ships (T-5617)
+```
+
+```json
+{ "name": "bike-finder", "endpointName": "bikes" }
+```
+
+No model is asked. The Portal creates the repository `{project}_{name}` of the App (AP-75), commits
+the SDK template with the sample's `src/` over it, the build workflow and a README to `main` in
+the caller's name, protects `main`, and proposes the App building from that commit: class `ui`,
+visibility `project`, the template's `dataNeeds` in the Endpoint's context space. The proposal
+runs as a dry run before the forge is touched, and a failure after the repository exists deletes
+it again (CC-85).
+
+- `202` with the Change.
+- `403` when the caller may not propose an App in the project, before the body is read.
+- `404` for a template the gallery does not hold.
+- `422` with `errors` entries prefixed by the field: `name:` for a name that is not a DNS-1123
+  label, too long for its repository or already an App; `endpointName:` for an Endpoint that is
+  not there or that the caller may not read (one answer for both), or one that hides an attribute
+  the template reads.
+- `409` when a repository of that name is already in the forge; it is never adopted.
 
 ## 13. Flows: running a blueprint (CC-24, CC-30, CC-31, CC-32, CC-59)
 
@@ -2546,8 +2585,12 @@ MCP (Streamable HTTP, protocol 2026-07-28):
   and the operation runs. `"action": "decline"` (or `"cancel"`) answers a refusal and nothing
   runs. An id is one-shot, belongs to the token's subject, expires in ten minutes and is bound to
   the operation and the arguments it was asked for: different arguments need a new answer. Every
-  answer is written to the project's activity as `mcp.tool` from `portal`, naming the operation,
-  the person and what they decided.
+  `tools/call` naming a known operation in a project the caller reads is one `mcp.tool` row from
+  `portal` on that project's activity (T-5609). Its `details` hold `operation`, `decision`
+  (`ran`, `started` for a task, `asked`, `declined` or `refused`), `answer` (`accepted` or
+  `declined`) when the call carried one, `subject`, `username`, `channel` `mcp`, `client` (the
+  token's `azp`) and `change` with the Change's name, also its `correlationId`, when the call
+  opened one. Names only: no argument value or manifest content reaches the row.
   Tasks (AG-60): `jc_pipeline_test`, `jc_model_infer`, `jc_space_complete` and
   `jc_datasource_check` wait on the runner, on Model Tools or on somebody's feed, so `tools/call`
   answers `{ "task": { "taskId", "status": "working", "pollInterval", "ttl" } }` at once and the
@@ -4196,6 +4239,17 @@ Filing needs `propose` on the Pipeline in `{project}`, and so does the `endpoint
   "change": null
 }
 ```
+
+### 48.1 A person's request on an Endpoint (PL-115)
+
+A person who reads an Endpoint but gets nothing through it asks the owners of its space on the Endpoint's page. The request is the same kind of row, in the same incoming list, decided by the same doors.
+
+```text
+GET    /api/v1/projects/{project}/endpoints/{name}/access-requests   { "types": [...], "refusal": string|null, "items": [...] } → 200
+POST   /api/v1/projects/{project}/endpoints/{name}/access-requests   { "types": ["AirQualityObserved"], "until"?, "reason" } → 201
+```
+
+Both need `read` on the Project and on the Endpoint in its space; anybody else reads `404`. `GET` answers the types the caller may ask for (the classes of the space's compiled model, narrowed to the classes of the ModelProjection the Endpoint names), `refusal` when no new grant could reach the Endpoint (it names `policyRef` or `policyRefs`, or it is an App's own Endpoint, AP-139), and the caller's own requests on it, never another person's. `POST` comes from a person's session; a service account's or an agent's token answers `403`. The body names no grantee: an unknown member answers `400`, and the grant is always for the caller. A type the Endpoint does not serve, an empty or doubled type, an end that passed and an empty reason each answer `422` with one `errors` line naming its field (`types[i]`, `until`, `reason`); an Endpoint with a `refusal`, or a second open or granted request of the same person on it, answers `409`. A person's request reads `"pipeline": null`, `"person": "{username}"` and `"account": "{username}"`; its types carry `"attrs": []` (every attribute of the type). Approving proposes one Policy into the Endpoint's project: `{endpoint}-{id}` (or `access-{id}` when that is over 63 characters), assignee `{ "kind": "user", "id": "{username}" }`, `retrieveOps`, `information` naming the asked-for types, `validity.to` the end; the Endpoint itself is unchanged. Revoking ends that Policy now and leaves the Endpoint unchanged.
 
 ## 49. The agent registry (T-4849, AG-126…AG-129)
 
