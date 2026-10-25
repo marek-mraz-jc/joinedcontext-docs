@@ -17,8 +17,8 @@ jcctl [COMMAND] [OPTIONS]
 
 | Command | Arguments | Description |
 |---|---|---|
-| **`plan`** | `--repo-dir <path>`, `--gateway-url <url>` | Computes structural diff between Git manifests and live cluster state |
-| **`apply`** | `--repo-dir <path>`, `--gateway-url <url>` | Converges live cluster state to match the Git repository |
+| **`plan`** | `--repo-dir <path>`, `--gateway-url <url>` | Compares the seed entities a space declares with what it holds and prints the repository's flags; exit code 2 if a seed is pending. Configuration is read from the repository by every component, so it has no plan of its own (CC-72) |
+| **`apply`** | `--repo-dir <path>`, `--gateway-url <url>` | Replays the seed entities a space declares into it; configuration needs no apply, every component reads it from the repository (CC-72) |
 | **`drift`** | `--repo-dir <path>`, `--gateway-url <url>`, `[--json]`, `[--adopt-dir <path>]` | Compares the seed entities a space declares with what it holds; exit code 2 if drifted. Needs `--gateway-url`: configuration is read from the repository, so it cannot drift (CC-21, CC-38, CC-72) |
 | **`import`** | `<source> --repo-dir <path>`, `[--namespace <slug>]`, `[--org-domain <d>]`, `[--conflict fail\|skip\|replace\|rename]` | Imports a manifest or an unpacked bundle, rewritten for this project (MF-20…MF-24, PF-22) |
 | **`export`** | `--repo-dir <path>`, `--project <slug>`, `--out-dir <path>` | Writes `projects/{p}/` of the checkout as a bundle: manifests without `status` or secret values, native files verbatim, and a `kind: Bundle` index (MF-16, MF-17) |
@@ -87,6 +87,12 @@ blue stack still serves traffic (CC-50, CC-51).
 Without `--gateway-url` the command works on the repository alone: `validate`, `export`, `schema export` and
 the `model` verbs need no platform, and `plan` says so rather than comparing against an empty
 world.
+
+Neither `plan` nor `apply` compares or replays configuration manifests: the gateway, the Portal and
+the reconciler read them from the repository (CC-72), so a manifest is live the moment its commit
+is, and a comparison against a platform store that does not exist would report every manifest as
+`CREATE` on every run. Both report the configuration half as read from the repository and decide
+their outcome on the seed half alone, as `drift` does.
 
 ### 2a. Talking to the Portal (`get`, `describe`, `apply -f`, `diff -f`, `delete -f`)
 
@@ -185,6 +191,8 @@ A program that runs without a person keeps using a `ServiceAccount` (PF-34).
 }
 ```
 
+`summary` and `changes` describe configuration manifests and stay zero and empty while every
+component reads them from the repository (section 2, CC-72); the seed half is printed as text.
 `flags` carries what the plan noticed and will not act on: a peer with no schema surface, a
 reference whose model cannot be mirrored, anything a reviewer should read before approving
 rather than discover after applying (DM-48). It is advisory and never changes the exit code —
