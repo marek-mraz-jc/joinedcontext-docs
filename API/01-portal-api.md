@@ -2785,8 +2785,8 @@ user ids (a department leaving), and does what `DELETE` does for all of them at 
 takes every one of their e-mails out of every `Group` and `RoleBinding`, and each person is
 disabled, signed out and marked with that Change. When no manifest names any of them they are
 deleted at once: `204`. Each person is held to the `DELETE` rules before anything is written: a
-person holding a right the caller lacks is `403` naming them, the caller or the last Organization
-Administrator in the list is `409`, an unknown id is `404` naming it, a person whose removal is
+person holding a right the caller lacks is `403` naming them, the caller, the last Organization
+Administrator, or every Organization Administrator together in the list is `409`, an unknown id is `404` naming it, a person whose removal is
 already open is `409` naming it, and no id or more than 200 is `422`. The Change's title and
 description name the ids, never the e-mails. Each person gets their own `person.changed` event
 (T-5606).
