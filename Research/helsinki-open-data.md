@@ -861,7 +861,534 @@ task board).
 - Existing helsinki sources: `components/context-gateway/seed/helsinki/` in the deployment repository
   at main `45d5718`.
 - `scripts/check-helsinki-open-data.py check` proves the counts: 396 rows, every name in the
-  snapshot, every integrate or statistics row with a batch and a model, every skip in section 7.
+  snapshot, every integrate or statistics row with a batch and a model, every skip in section 7,
+  and the section 9 re-score against the counts of sections 9.3 and 10.
+- Re-score (T-5663): HRI `package_search` and `package_show` and one probe per resource on
+  2026-10-25T14:50Z; the dev Endpoints' `/types`, counts and id prefixes at
+  `https://api.dev.joinedcontext.com/api/endpoint/<slug>/ngsi-ld/v1/` at the same time; the
+  Endpoint seeds at deployment main `691f99b`.
+
+## 9. Re-score of 2026-10-25
+
+The owner order of 2026-10-25T14:20Z asks for every usable Helsinki dataset on its NGSI-LD Endpoints,
+at least 100, and nothing that is not usable (T-5663). This section re-scores all 396 rows of
+section 6 against the portal and the dev cluster of 2026-10-25. Where it differs from section 6, this
+section holds; the batch task that builds a row updates its section 6 row.
+
+### 9.1 Rule set
+
+A row is **usable** (`yes`) when all of these hold:
+
+- a machine-readable download or API: CSV, JSON, GeoJSON, WFS, GTFS, PXWEB or another API;
+- it answers today (from the dev cluster where the sandbox cannot reach the host, section 9.2);
+- it is updated within its stated period, or it is a static reference set;
+- an open licence and nothing behind a login or an issued key;
+- at least one row inside the city's box;
+- not a duplicate or a subset of another row or of a seeded source.
+
+Every other row gets one reason word:
+
+| reason | meaning |
+|---|---|
+| `dead` | the resource answers 4xx, does not answer, or the package note says the service is gone |
+| `stale` | the series ended or stopped, or the last file is older than its stated period allows |
+| `licence` | needs an API key, an access key or a contract; or the data is not public |
+| `duplicate` | the same records are in another row or a seeded source |
+| `format` | no format of the list above: raster or 3D imagery, XLS/XLSX or SHP only |
+| `not-data` | answers no city question as records: raw survey answers, projections, rankings, ledgers, planning graphs |
+| `outside` | another city's data only, no row inside Helsinki |
+
+Decided (worker-t5663, owner may override): the task's reason list (`dead`, `stale`, `pdf-only`,
+`licence`, `empty`, `duplicate`) gains `format`, `not-data` and `outside`, because 34, 47 and 6
+rows fit none of its words; `pdf-only` and `empty` hold no row. Options were forcing those rows into
+`stale` or `empty`, which would misstate why they are left out.
+
+### 9.2 What was read
+
+- **Portal.** `package_search` (rows=1000) on 2026-10-25T14:50Z: 592 packages on HRI, 396 of them
+  from the publishers of section 1, the same 396 names as on 2026-10-22: none added, none removed.
+  `package_show` of each: 394 CC BY 4.0, one CC0, one `other-open`, as before.
+- **Probe.** One GET of each resource URL (at most six per package, 64 KiB read, 15 s timeout) on
+  2026-10-25T14:50Z: 320 packages answer, 10 fail (403 or no answer), 4 have no resource URL, and 62
+  are served only from `kartta.hel.fi`, which still accepts no TCP connection from the sandbox (15 s
+  timeout). Of the failing rows only row 13 was a usable candidate; it answers 403 and is now `dead`.
+- **kartta.hel.fi from dev.** The dev cluster reads the host today: the 59 `district-*` and 148
+  `subdistrict-*` `AdministrativeArea` entities of `helsinki-districts`, whose source is the
+  `avoindata:Kaupunginosajako` WFS layer, carry `modifiedAt` 2026-10-25T00:38Z. So no kartta row is
+  `dead`; T-5256, T-5286 and T-5378 are blocked by the sandbox, not by the source.
+- **Dev.** For each of the 34 seeded Helsinki Endpoints, `GET /api/endpoint/<slug>/ngsi-ld/v1/types`,
+  then `entities?type=<t>&count=true&limit=0` per type, then the id prefixes per type
+  (`format=keyValues&pick=id,modifiedAt&options=sysAttrs`, paged) to tell which source wrote which
+  entities. 21 Endpoints hold entities, 11 list no type and 2 need a login.
+
+### 9.3 Counts
+
+| usable | rows |
+|---|---|
+| yes | 133 |
+| stale | 83 |
+| duplicate | 78 |
+| not-data | 47 |
+| format | 34 |
+| dead | 11 |
+| outside | 6 |
+| licence | 4 |
+| total | 396 |
+
+133 rows are usable, so the target is 100 with room to spare. 18 of them have entities on dev now
+(row 47 only for 3 of its layers); 115 are not live yet.
+
+Changed against section 6: row 13 (`dead`, 403), rows 7, 8, 9, 12 and 24 (section 6 kept them in
+a batch, T-5253 and T-5254 left them out: duplicate, SHP only, stale), row 25 (`outside`: all 120
+Vantaa stations lie in Vantaa, live on dev as `vantaa-*` in `helsinki-bikes`), and rows 66, 74 and 80
+(`yes`: skipped on 2026-10-22 only because the sandbox could not reach `kartta.hel.fi`).
+
+### 9.4 Seeded but empty on dev
+
+| Endpoint | rows | what dev holds | cause |
+|---|---|---|---|
+| `helsinki-statistics-education`, `-employment`, `-environment`, `-housing`, `-income`, `-population`, `-services`, `-welfare` | the 67 statistics rows of T-5258 | no type; `helsinki-all` holds 0 `KeyPerformanceIndicator` with a `stat-` id | the `statistics` pipeline (daily 05:35) has written no entity; T-5258 says `deployed: pending` |
+| `helsinki-kpi`, `helsinki-statistics-services` | 69, 76 | no `service-usage` KPI | the `service-usage` pipeline has written no entity |
+| `helsinki-heat-vulnerability` | 33 | no type | the `heat-vulnerability` pipeline has written no entity, although its source zip answers 200 |
+
+Each Endpoint answers 200 with an empty type list, so the views and their Policies are in place and
+the pipelines are the gap. The run logs are on the cluster, which only the deployer reads: fix task F1.
+`helsinki-hub` and `catalog` hold no data rows by design; `helsinki-bikes-ops` and `app-bike-stations`
+answer 401 without a login and count for nothing.
+
+### 9.5 All rows
+
+`usable` follows section 9.1. `dev` is what the dev cluster held on 2026-10-25T14:50Z: `live:` with
+the Endpoint and the entity count (and id prefix where an Endpoint has several sources), `empty:` with
+the cause, `not seeded`, or for a row that is not usable `-` or the fact behind its reason. `plan` is `live`, the batch or fix of
+section 10, or `-`.
+
+| # | dataset | usable | dev | plan |
+|---|---|---|---|---|
+| 1 | `datankeruukokeilu-helsingissa-liikennelaskenta-konenaon-avulla` | yes | not seeded | B1 |
+| 2 | `helsingin-kantakaupungin-ja-asukaspysakointivyohykkeiden-pysakointipaikat` | yes | not seeded | T-5286 |
+| 3 | `helsingin-liikenne-ja-varoitusvaloliittymat` | yes | not seeded | T-5286 |
+| 4 | `helsingin-liikennemittausten-tilastorajapinta` | yes | live: `helsinki-traffic-counts` 33, live: `helsinki-cycle-counts` 19 | live |
+| 5 | `helsingin-liikennevaylat` | yes | not seeded | T-5286 |
+| 6 | `helsingin-matkailuliikenteen-pysakit-ja-pysakointipaikat` | yes | not seeded | T-5286 |
+| 7 | `helsingin-pyorailijamaarat` | duplicate | same Eco-Counter stations as row 4 | - |
+| 8 | `helsingin-pyoravaylat-2025` | format | SHP zips only, a planned 2025 network | - |
+| 9 | `helsingin-seudun-pyoralaskennat` | stale | yearly means 2013-2017 only | - |
+| 10 | `liikennemaarat-helsingissa` | yes | not seeded (its JSON API is row 4's LAM source) | B1 |
+| 11 | `liikenneonnettomuudet-helsingissa` | yes | not seeded | T-5286 |
+| 12 | `pysakointivirheet-helsingissa` | stale | half-yearly, no file since 2024-09 | - |
+| 13 | `helsingin-ja-espoon-kaupunkipyorilla-ajatut-matkat` | dead | resource answers 403 | - |
+| 14 | `helsingin-jalankulun-ja-pyorailyn-talvihoidon-priorisoitu-reitisto` | yes | not seeded | T-5286 |
+| 15 | `hsl-n-joukkoliikenteen-pysakit` | duplicate | - | - |
+| 16 | `hsl-n-joukkoliikenteen-risteyssolmut` | not-data | - | - |
+| 17 | `hsl-n-linjat` | duplicate | - | - |
+| 18 | `hsl-n-myyntipisteet` | yes | live: `helsinki-places` 853 `hsl-sales-*` | live |
+| 19 | `hsl-n-nousijamaarat-pysakeittain` | yes | live: `helsinki-kpi` 6708 `hsl-boardings-*` | live |
+| 20 | `hsl-n-pysakit-linjoittain` | duplicate | - | - |
+| 21 | `hsl-n-taksavyohykkeet` | yes | live: `helsinki-districts` 4 `hsl-zone-*` | live |
+| 22 | `hsl-n-terminaalit` | duplicate | - | - |
+| 23 | `hsl-n-vuoromaarat` | not-data | - | - |
+| 24 | `matkustaja-alusten-aikataulu-liikennointi-ja-sijaintitietoja-helsingin-ja-tallinnan-valilla` | stale | closed 2018-2019 archive | - |
+| 25 | `vantaan-kaupunkipyoraasemat` | outside | live: `helsinki-bikes` 120 `vantaa-*`; Vantaa stations, none in Helsinki | - |
+| 26 | `datankeruukokeilu-helsingissa-ilmanlaatu-katujen-siivouksen-aikana` | yes | live: `helsinki-street-cleaning-air` 13712 `swarco-*` | live |
+| 27 | `helsingin-avouomat` | yes | not seeded | T-5378 |
+| 28 | `helsingin-ilmanlaadun-mittaukset-raitiovaunuihin-asennetuilla-mittalaitteilla` | yes | not seeded | T-5378 |
+| 29 | `helsingin-kaukolammon-tuotantotarve` | yes | not seeded | T-5378 |
+| 30 | `helsingin-kaupungin-meluselvitys-2017` | yes | not seeded | T-5378 |
+| 31 | `helsingin-kaupungin-palvelukiinteistojen-energiankulutustietoja` | yes | live: `helsinki-service-property-energy` 1066 `energy-*` | live |
+| 32 | `helsingin-kaupungin-puurekisteri` | yes | not seeded | T-5378 |
+| 33 | `helsingin-lampohaavoittuvuusindeksi` | yes | empty: `helsinki-heat-vulnerability` lists no type; the heat-vulnerability pipeline wrote no KPI | F1 |
+| 34 | `helsingin-luontotietojarjestelma` | yes | not seeded | T-5378 |
+| 35 | `helsingin-maa-ja-vesialueet` | yes | not seeded | T-5378 |
+| 36 | `helsingin-tavoitteellinen-viher-ja-virkistysverkostokartta` | yes | not seeded | T-5378 |
+| 37 | `helsingin-teollisuusmeluvyohykkeet` | yes | not seeded | T-5378 |
+| 38 | `helsingin-ulkoliikuntapaikkojen-laitteiden-kayttoasteet` | stale | - | - |
+| 39 | `iot-meludataa-helsingista` | stale | - | - |
+| 40 | `purkupisteet-ja-osavaluma-alueet` | yes | not seeded | T-5378 |
+| 41 | `turvalliset-rakentamiskorkeudet-ja-suurin-arvioitu-merkitseva-aallonkorkeus-helsingissa` | yes | not seeded | T-5378 |
+| 42 | `asemakaavoilla-suojellut-rakennukset-ja-alueet-helsingissa` | yes | not seeded | T-5256 |
+| 43 | `helsingin-asemakaavahakemistokartta-asemakaavahakemisto` | yes | not seeded | T-5256 |
+| 44 | `helsingin-kaavayksikot` | yes | not seeded | T-5256 |
+| 45 | `helsingin-kaupungin-peruskoulujen-oppilaaksiottoaluerajat` | yes | not seeded | T-5256 |
+| 46 | `helsingin-kaupungin-yleisten-alueiden-rekisteri` | yes | not seeded | T-5256 |
+| 47 | `helsingin-kaupungin-yleisten-alueiden-tapahtuma-ja-maankayttolupajarjestelma` | yes | live: `helsinki-public-area-permits` 1160 `KP/TP/LJ-*` (3 layers) | T-5256 |
+| 48 | `helsingin-kaupunkitilaohjealueet` | yes | not seeded | T-5256 |
+| 49 | `helsingin-kiinteistot-alueina` | yes | not seeded | T-5256 |
+| 50 | `helsingin-korttelit` | yes | not seeded | T-5256 |
+| 51 | `helsingin-maaraalat-alueina` | yes | not seeded | T-5256 |
+| 52 | `helsingin-nimisto` | yes | not seeded | T-5256 |
+| 53 | `helsingin-osayleiskaavahakemisto` | yes | not seeded | T-5256 |
+| 54 | `helsingin-osayleiskaavat` | yes | not seeded | T-5256 |
+| 55 | `helsingin-osoiteluettelo` | yes | not seeded | T-5256 |
+| 56 | `helsingin-paakatuverkon-paallysteiden-kuntomittaukset` | yes | not seeded | T-5256 |
+| 57 | `helsingin-rakennukset` | yes | not seeded | T-5256 |
+| 58 | `helsingin-rakennuskiellot-alueina` | yes | not seeded | T-5256 |
+| 59 | `helsingin-vapaat-yritystontit` | yes | not seeded | T-5256 |
+| 60 | `helsingin-yleiskaava-2016` | yes | not seeded | T-5256 |
+| 61 | `helsingin-yleisten-alueiden-arvoymparistot` | yes | not seeded | T-5256 |
+| 62 | `helsingin-yleisten-alueiden-kunnossapidon-vastuualueet` | yes | not seeded | T-5256 |
+| 63 | `helsingin-ymparistolupakohteet` | yes | not seeded | T-5256 |
+| 64 | `helsinkilaisten-rakennusten-historiatietoja` | yes | not seeded | T-5256 |
+| 65 | `paakaupunkiseudun-aanestysaluejako` | yes | not seeded | T-5256 |
+| 66 | `helsingin-ensimmaisen-maailmansodan-aikaiset-maalinnoitukset` | yes | not seeded (skipped on 2026-10-22 only because the sandbox cannot reach kartta.hel.fi) | B2 |
+| 67 | `helsingin-kaupungin-palauterajapinta` | yes | live: `helsinki-feedback` 163 `open311-*` | live |
+| 68 | `helsingin-kaupungin-palvelurekisterin-rest-rajapinta` | duplicate | - | - |
+| 69 | `helsingin-kaupungin-verkkosivustojen-kavijaanalytiikka` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no service-usage KPI; the pipeline wrote none | F1 |
+| 70 | `helsingin-kaupunginorkesterin-konsertit` | stale | - | - |
+| 71 | `helsingin-kulttuurihistoriallisesti-merkittavat-porrashuoneet` | stale | - | - |
+| 72 | `helsingin-taidemuseon-nayttelyt` | stale | - | - |
+| 73 | `helsingin-taidemuseon-prosenttirahahankkeet` | format | - | - |
+| 74 | `helsingin_maisemakulttuurikartta` | yes | not seeded (skipped on 2026-10-22 only because the sandbox cannot reach kartta.hel.fi) | B2 |
+| 75 | `jalankulkijoiden-liukastumisvaroitukset-helsingissa` | not-data | - | - |
+| 76 | `korkeasaaren-kavijamaarat` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no service-usage KPI; the pipeline wrote none | F1 |
+| 77 | `paakaupunkiseudun-palvelukartan-rest-rajapinta` | yes | live: `helsinki-places` 12466 `servicemap-*` | live |
+| 78 | `rajapinta-paakaupunkiseudun-kansalais-ja-tyovaenopistojen-kurssitietoihin` | licence | - | - |
+| 79 | `suomenlinnan-lautan-matkustajamaarat` | licence | - | - |
+| 80 | `uusien-toimintojen-paikat-helsingin-rantareitilla` | yes | not seeded (skipped on 2026-10-22 only because the sandbox cannot reach kartta.hel.fi) | B2 |
+| 81 | `helsingin-asukas-ja-yrityspysakointivyohykkeet` | yes | live: `helsinki-parking` 16 `resident-zone-*` | live |
+| 82 | `helsingin-hel-fi-sivuston-avoin-rajapinta-uutisille` | yes | live: `helsinki-news` 32 | live |
+| 83 | `helsingin-kaupunginosat` | yes | live: `helsinki-districts` 59 `district-*` | live |
+| 84 | `helsingin-piirijako` | yes | live: `helsinki-districts` 148 `subdistrict-*` | live |
+| 85 | `helsingin-pysakoinnin-maksuvyohykkeet` | yes | live: `helsinki-parking` 2 `fee-zone-*` | live |
+| 86 | `hsl-n-kaupunkipyoraasemat` | yes | live: `helsinki-bikes` 456 | live |
+| 87 | `linked-events-tapahtumarajapinta` | yes | live: `helsinki-events` 137 | live |
+| 88 | `rajapinta-helsingin-pysakointipaikkojen-kaytosta` | yes | live: `helsinki-parking` 1830 `parkkiopas-*` | live |
+| 89 | `veden-reaaliaikainen-lampotila-helsingin-uimarannoilla` | yes | live: `helsinki-beach-water` 28 `uiras-*` | live |
+| 90 | `a01hki_astuot_tp_hper_rahoitus_talotyyppi` | stale | - | - |
+| 91 | `aluesarjat-a01s-hki-askan-2005` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 92 | `aluesarjat-a01s-hki-rakennuskanta` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 93 | `aluesarjat-a01s-hki-tyovoima-sukupuoli` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 94 | `aluesarjat-a02s-hki-askan-talotyyppi-hallintap-kotilanne` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 95 | `aluesarjat-a03s-hki-kuolleet` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 96 | `aluesarjat-hginseutu-ar-aa01-asuntokanta-rvuosi-talotyyppi` | duplicate | - | - |
+| 97 | `aluesarjat-hginseutu-ar-aa03-asuntokanta-halper-huoneistotyyppi` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 98 | `aluesarjat-hginseutu-ar-rr01-rakennukset-kayttark-rvuosi` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 99 | `aluesarjat-hginseutu-as-ak01-asuntokunnat-talotyp-henkiloluku` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 100 | `aluesarjat-hginseutu-tt-tm03-koulutustaso` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 101 | `aluesarjat-hginseutu-va-ve02-vaestoennuste-kehys` | not-data | - | - |
+| 102 | `aluesarjat-hginseutu-va-ve03-vaestoennuste-kieli` | not-data | - | - |
+| 103 | `aluesarjat-hginseutu-va-vr03-vakiluku-ika-sukup-aidinkieli3-ssaaty` | duplicate | - | - |
+| 104 | `aluesarjat_a01hki_asunto_ohjelma` | not-data | - | - |
+| 105 | `aluesarjat_a01hki_asuntokuntien_tulot` | stale | - | - |
+| 106 | `aluesarjat_a01hki_raktuot_kayttotark_2003-` | stale | - | - |
+| 107 | `aluesarjat_a01hkis_vaestotulot` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 108 | `aluesarjat_a01s_hki_asuntokunnat` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 109 | `aluesarjat_a01s_hki_muuttoliike` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 110 | `aluesarjat_a01s_hki_perhetyypit` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 111 | `aluesarjat_a01s_hki_vaesto_koulutusaste` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 112 | `aluesarjat_a01s_hki_vakiluku` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 113 | `aluesarjat_a02s_hki_perhevaesto` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 114 | `aluesarjat_a02s_hki_syntyneet` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 115 | `aluesarjat_a02s_hki_vakiluku1962` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 116 | `aluesarjat_a03s_hki_askan_hallintaperuste_htyyppi` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 117 | `aluesarjat_a03s_hki_lapsiperheet_alle18` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 118 | `aluesarjat_a03s_hki_vakiluku_aidinkieli` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 119 | `aluesarjat_a04s_hki_lapsiperheet` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 120 | `aluesarjat_a04s_hkis_tyottomat_sukupuoli` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 121 | `aluesarjat_hginseutu_ar_aa02_asuntokanta_talotyyppi_halper_kaytil` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 122 | `aluesarjat_hginseutu_as_ak02_asuntokuntien_keskikoko` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 123 | `aluesarjat_hginseutu_as_ak03_asumisvaljyys_hloluku` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 124 | `aluesarjat_hginseutu_tt_tm01_tyottomyys_kk` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 125 | `aluesarjat_hginseutu_tt_tm02_paa_as_toiminta` | duplicate | - | - |
+| 126 | `aluesarjat_hginseutu_tt_tv01_tyovoima_ika` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 127 | `aluesarjat_hginseutu_tt_tv02a_tyovoima_tol2008` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 128 | `aluesarjat_hginseutu_va_mt01a_tulomuuttajatkoulutussuku` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 129 | `aluesarjat_hginseutu_va_mt01b_lahtomuuttajatkoulutussuku` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 130 | `aluesarjat_hginseutu_va_pe01_perheet_perhetyyppi` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 131 | `aluesarjat_hginseutu_va_pe02_lapsiperheet_lapsiluku` | duplicate | - | - |
+| 132 | `aluesarjat_hginseutu_va_pe03_lapsiperheet_perhetyyppi` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 133 | `aluesarjat_hginseutu_va_pe04_perhevaesto` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 134 | `aluesarjat_hginseutu_va_vm01_vaestonmuutosten_yhdistelma` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 135 | `aluesarjat_hginseutu_va_vm02_muuttoliike_alueittain` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 136 | `aluesarjat_hginseutu_va_vm03_muuttoliike_ikaryhmittain` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 137 | `aluesarjat_hginseutu_va_vm04_syntyneet` | duplicate | - | - |
+| 138 | `aluesarjat_hginseutu_va_vm05_kuolleet` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 139 | `aluesarjat_hginseutu_va_vr01_vakiluku_ika` | duplicate | - | - |
+| 140 | `aluesarjat_hginseutu_va_vr02_vakiluku_aidinkieli3` | duplicate | - | - |
+| 141 | `aluesarjat_hginseutu_va_vr04_vakiluku_aidinkieli_ika` | duplicate | - | - |
+| 142 | `aluesarjat_hginseutu_va_vr05_vakiluku_kansalaisuus_s` | duplicate | - | - |
+| 143 | `asunnontarkastuksen-toimenpidepyynnot-helsingissa` | stale | - | - |
+| 144 | `eduskuntavaalit-helsingissa-2011` | stale | - | - |
+| 145 | `eduskuntavaalit-helsingissa-2015` | stale | - | - |
+| 146 | `elinkustannusindeksi-ja-rahanarvonkerroin-keskimaaraisten-kuukausivuokrien-deflatoimiseksi` | stale | - | - |
+| 147 | `helsingin-asuinhuoneistojen-keskimaarainen-kuukausivuokra-huoneluvun-mukaan-1900` | stale | - | - |
+| 148 | `helsingin-asuinhuoneistojen-keskimaarainen-kuukausivuokra-huoneluvun-mukaan-1932-1974` | stale | - | - |
+| 149 | `helsingin-asuinhuoneistojen-keskimaarainen-kuukausivuokra-huoneluvun-mukaan-1975-1980` | stale | - | - |
+| 150 | `helsingin-asuinhuoneistot-asuntovaesto-ja-asumistiheys-huoneluvun-mukaan-1870-1998` | stale | - | - |
+| 151 | `helsingin-asuntokuntien-kulutusyksikkokohtaiset-rahatulot-desiililuokittain-1995` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 152 | `helsingin-asuntokuntien-tulot-asuntokunnan-elinvaiheen-ja-alueen-mukaan-1995` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 153 | `helsingin-asuntokuntien-tulot-kulutusyksikkokohtaiset-ginikertoimet-2005` | stale | - | - |
+| 154 | `helsingin-asuntotuotanto-aloitetut-rakennushankkeet-2015` | duplicate | - | - |
+| 155 | `helsingin-asuntotuotanto-keskeneraiset-rakennushankkeet-2015` | duplicate | - | - |
+| 156 | `helsingin-asuntotuotanto-myonnetyt-rakennusluvat-2015` | duplicate | - | - |
+| 157 | `helsingin-asuntotuotanto-neljannesvuosittain-aloitetut-rakennushankkeet-2015q1` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 158 | `helsingin-asuntotuotanto-neljannesvuosittain-keskeneraiset-rakennushankkeet-2015q1` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 159 | `helsingin-asuntotuotanto-neljannesvuosittain-myonnetyt-rakennusluvat-2015q1` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 160 | `helsingin-asuntotuotanto-neljannesvuosittain-valmistuneet-rakennushankkeet-2015q1` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 161 | `helsingin-asuntotuotanto-neljannesvuosittain-valmistuneet-rakennushankkeet-ml-rah-hal-ja-rak-2015q1` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 162 | `helsingin-asuntotuotanto-valmistuneet-rakennushankkeet-2015` | duplicate | - | - |
+| 163 | `helsingin-asuntotuotanto-valmistuneet-rakennushankkeet-rahoitus-hallintaperuste-ja-rakennuttaja-2015` | duplicate | - | - |
+| 164 | `helsingin-erilaisilla-mukavuuslaitoksilla-varustetut-huoneistot-kaupunginosittain-1920` | stale | - | - |
+| 165 | `helsingin-erisuuruisissa-huoneistoissa-asuvat-henkilot-kaupunginosittain-8-12-1920` | stale | - | - |
+| 166 | `helsingin-henkikirjoitettu-vaesto-kaupunginosittain-1-1-1875-1960` | stale | - | - |
+| 167 | `helsingin-historialliset-tilastot` | stale | - | - |
+| 168 | `helsingin-kaupungin-avustukset` | not-data | - | - |
+| 169 | `helsingin-kaupungin-henkilosto-1914-1998` | stale | - | - |
+| 170 | `helsingin-kaupungin-henkiloston-koulutukset` | not-data | - | - |
+| 171 | `helsingin-kaupungin-kansakoulujen-luokat-lukuvuosina-1896-97-1976-77` | stale | - | - |
+| 172 | `helsingin-kaupungin-kansakoulujen-opettajat-lukuvuosina-1896-97-1976-77` | stale | - | - |
+| 173 | `helsingin-kaupungin-kansakoulujen-oppilaat-lukuvuosina-1896-97-1976-77` | stale | - | - |
+| 174 | `helsingin-kaupungin-kansakoulujen-oppilaiden-vanhempien-tausta-lukuvuosina-1896-97-1968-69` | stale | - | - |
+| 175 | `helsingin-kaupungin-nuorisoasiainkeskuksen-avustukset` | not-data | - | - |
+| 176 | `helsingin-kaupungin-ostot` | not-data | - | - |
+| 177 | `helsingin-kaupungin-peruskoulujen-kielivalinnat` | format | - | - |
+| 178 | `helsingin-kaupungin-talousarviotiedot` | not-data | - | - |
+| 179 | `helsingin-kaupungin-tulot-ja-menot` | not-data | - | - |
+| 180 | `helsingin-kaupungin-tyonvalitystoiminta-1903-1960` | stale | - | - |
+| 181 | `helsingin-kaupungin-ymparistoraportti` | format | - | - |
+| 182 | `helsingin-kaupungin-ymparistotilinpito` | duplicate | - | - |
+| 183 | `helsingin-kaupunginkirjaston-kaynnit-toimipisteittain` | format | - | - |
+| 184 | `helsingin-kaupunginkirjaston-lainausmaarat-1860` | stale | - | - |
+| 185 | `helsingin-kaupunginkirjaston-lainausmaarat-toimipisteittain` | format | - | - |
+| 186 | `helsingin-kaupunginkirjastossa-kirjastokorttiaan-k-ytt-neet` | format | - | - |
+| 187 | `helsingin-keskivakiluku-ian-ja-sukupuolen-mukaan-1935-1961` | stale | - | - |
+| 188 | `helsingin-kestavan-kehityksen-indikaattorit` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 189 | `helsingin-kulttuurikeskuksen-avustukset` | not-data | - | - |
+| 190 | `helsingin-lammitettavat-rakennukset-rakennusaineen-ja-kerrosluvun-mukaan-1880-1930` | stale | - | - |
+| 191 | `helsingin-lukioiden-sis-np-syrajat` | stale | - | - |
+| 192 | `helsingin-lukioiden-yhteishaun-tulokset` | stale | - | - |
+| 193 | `helsingin-nuoret-alueittain` | stale | - | - |
+| 194 | `helsingin-oppikoulujen-1-ja-2-luokalle-otetut-oppilaat-lukuvuosina-1925-26-1960-61` | stale | - | - |
+| 195 | `helsingin-oppikoulut-lukuvuosina-1894-95-1976-77` | stale | - | - |
+| 196 | `helsingin-osallistuvan-budjetoinnin-aanestystulokset` | not-data | - | - |
+| 197 | `helsingin-perus-ja-2-asteen-opetuksen-oppilasmaarat-kouluittain` | format | - | - |
+| 198 | `helsingin-rakennetut-kiinteistot-ja-lammitettavat-rakennukset-kaupunginosittain-1900-1950` | stale | - | - |
+| 199 | `helsingin-rakennetut-kiinteistot-seka-lammitettavat-rakennukset-ja-huoneet-kaupunginosittain-1870` | stale | - | - |
+| 200 | `helsingin-rakennustuotanto-aloitetut-rakennushankkeet-2015` | duplicate | - | - |
+| 201 | `helsingin-rakennustuotanto-keskeneraiset-rakennushankkeet-2015` | duplicate | - | - |
+| 202 | `helsingin-rakennustuotanto-myonnetyt-rakennusluvat-2015` | duplicate | - | - |
+| 203 | `helsingin-rakennustuotanto-neljannesvuosittain-aloitetut-rakennushankkeet-2015q1` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 204 | `helsingin-rakennustuotanto-neljannesvuosittain-keskeneraiset-rakennushankkeet-2015q1` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 205 | `helsingin-rakennustuotanto-neljannesvuosittain-myonnetyt-rakennusluvat-2015q1` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 206 | `helsingin-rakennustuotanto-neljannesvuosittain-valmistuneet-rakennushankkeet-2015q1` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 207 | `helsingin-rakennustuotanto-valmistuneet-rakennushankkeet-2015` | duplicate | - | - |
+| 208 | `helsingin-seudun-aluesarjat-tilastotietokannan-tiedot-paikkatietona` | duplicate | - | - |
+| 209 | `helsingin-seudun-kuntien-valisen-ja-ulkomaisen-muuttoliikkeen-ennakkotiedot-neljannesvuosittain-2010` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 210 | `helsingin-seudun-perheet-perhetyypin-mukaan` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 211 | `helsingin-seudun-sairastavuusindeksi` | duplicate | - | - |
+| 212 | `helsingin-seudun-tyopaikat-alueella-tyossakayvat-toimialan-tol-2008-2-3-nro-mukaan-31-12-2008` | duplicate | - | - |
+| 213 | `helsingin-seudun-v-est-1-1-1980-2013-sek-ennuste-1-1-2014-2050` | not-data | - | - |
+| 214 | `helsingin-seudun-vaesto-aidinkielen-mukaan` | duplicate | - | - |
+| 215 | `helsingin-seudun-vaestonmuutosten-ennakkotiedot-vuoden-alusta-neljannesvuosittain` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 216 | `helsingin-sosiaalitoimen-suoritetietoja` | stale | - | - |
+| 217 | `helsingin-tilastollinen-vuosikirja` | duplicate | - | - |
+| 218 | `helsingin-tulo-ja-lahtomuutto-laaneittain-1911-1994` | stale | - | - |
+| 219 | `helsingin-tyovaeston-asunto-olot-vuonna-1900-asuntojen-varustelutaso` | stale | - | - |
+| 220 | `helsingin-tyovaeston-asunto-olot-vuonna-1900-terveydelliset-olot` | stale | - | - |
+| 221 | `helsingin-tyovaeston-asunto-olot-vuonna-1900-tietoa-asukkaiden-lukumaarasta` | stale | - | - |
+| 222 | `helsingin-tyovaeston-asunto-olot-vuonna-1900-tietoa-asuntojen-lukumaarasta` | stale | - | - |
+| 223 | `helsingin-tyovaeston-asunto-olot-vuonna-1900-tietoa-huoneiden-lukumaarasta` | stale | - | - |
+| 224 | `helsingin-vaesto-elinkeinoryhmittain-1870-1930` | stale | - | - |
+| 225 | `helsingin-vaesto-ja-asuntotuotantoennuste-alueittain` | not-data | - | - |
+| 226 | `helsingin-vaesto-ja-ruotsinkieliset-1-1-1992-alkaen-seka-vaestoennuste-alueittain` | not-data | - | - |
+| 227 | `helsingin-vaesto-paaasiallisen-toiminnan-sukupuolen-ja-ian-mukaan-31-12-2000` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 228 | `helsingin-vaeston-ammatissa-toimivuus-1870-1930` | stale | - | - |
+| 229 | `helsingin-vaeston-ennakollinen-ikarakenne-neljannesvuosittain-ja-alueittain-31-12-2015` | stale | - | - |
+| 230 | `helsingin-vakiluku-1-1-1875-1993-ja-vuodenvaihteissa-1993-94-2013-14` | stale | - | - |
+| 231 | `helsingin-vakiluku-ian-ja-sukupuolen-mukaan-1900-1961` | stale | - | - |
+| 232 | `helsingin-vanhojen-asunto-osakehuoneistojen-neliohinnat-postinumeroalueittain-vuodesta-2000` | stale | - | - |
+| 233 | `helsingin-ymparistotilasto` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 234 | `helsingissa-asuva-tyollinen-tyovoima-toimialan-tol-2008-mukaan` | duplicate | - | - |
+| 235 | `helsinki-alueittain` | stale | - | - |
+| 236 | `helsinki-s-2030-climate-technologies-city-performance-tool-2016` | stale | - | - |
+| 237 | `helsinki-turvattomuutta-kokevien-osuudet-peruspiireitt-2003-2006-ja-2009` | not-data | - | - |
+| 238 | `helsinkiin-ja-helsingista-muuttaneet-sukupuolen-mukaan-1881-1998` | stale | - | - |
+| 239 | `ikaryhmittaiset-hedelmallisyysluvut-helsingissa-1936-2013` | stale | - | - |
+| 240 | `kirjastokaynnit-toimipisteittain-ja-kuukausittain-helsingin-kaupunginkirjastossa` | format | - | - |
+| 241 | `kirjojen-lainaus-kielittain-helsingin-kaupunginkirjastossa` | format | - | - |
+| 242 | `kokonaishedelmallisyysluku-ja-yleinen-hedelmallisyysluku-helsingissa-1936-2013` | stale | - | - |
+| 243 | `kuolleet-kuolemansyyn-mukaan-10000-asukasta-kohden-helsingissa-1891-1950` | stale | - | - |
+| 244 | `kuolleet-kuolemansyyn-mukaan-10000-asukasta-kohden-helsingissa-1951-1968` | stale | - | - |
+| 245 | `kuolleet-kuolemansyyn-mukaan-10000-asukasta-kohden-helsingissa-1969-1985` | stale | - | - |
+| 246 | `kuolleet-kuolemansyyn-mukaan-10000-asukasta-kohden-helsingissa-1988-1995` | stale | - | - |
+| 247 | `kuuden-suurimman-kaupungin-kehitysvammahuollon-vertailu` | stale | - | - |
+| 248 | `kuuden-suurimman-kaupungin-lastensuojelun-vertailu` | stale | - | - |
+| 249 | `kuuden-suurimman-kaupungin-paihde-ja-mielenterveyspalvelujen-vertailu` | stale | - | - |
+| 250 | `kuuden-suurimman-kaupungin-toimeentulotuen-vertailu` | stale | - | - |
+| 251 | `kuuden-suurimman-kaupungin-vammaispalvelujen-vertailu` | stale | - | - |
+| 252 | `kuuden-suurimman-kaupungin-vanhustenpalvelujen-vertailu` | stale | - | - |
+| 253 | `kuuden-suurimman-kaupungin-varhaiskasvatuspalvelujen-vertailu` | format | - | - |
+| 254 | `lainaus-toimipisteittain-ja-kuukausittain-helsingin-kaupunginkirjastossa` | format | - | - |
+| 255 | `lasten-ja-nuorten-hyvinvointi-helsingissa` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 256 | `naiset-ja-miehet-helsingissa` | stale | - | - |
+| 257 | `naisten-ja-miesten-taydellinen-elinajantaulu-km-jaljella-oleva-elinaika-helsingissa-1941-2005` | stale | - | - |
+| 258 | `nordstat-tilastoja-pohjoismaiden-suurimmista-kaupungeista-ja-kaupunkiseuduista` | duplicate | - | - |
+| 259 | `paakaupunkiseudun-autonomistajuustiedot` | format | - | - |
+| 260 | `paakaupunkiseudun-vaestoennuste` | not-data | - | - |
+| 261 | `paikalliset-ja-muualle-ulottuvat-tyonseisaukset-helsingissa-1907-1951` | stale | - | - |
+| 262 | `paikalliset-tyonseisaukset-1954-1970-ja-tyotaistelut-helsingissa-1971-1997` | stale | - | - |
+| 263 | `pks-kuntien-taloudellisia-tunnuslukuja` | stale | - | - |
+| 264 | `seudullinen-tilastorajapinta` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 265 | `solmitut-ja-purkautuneet-avioliitot-helsingissa-1896-1998` | stale | - | - |
+| 266 | `syntyneet-ja-kuolleet-helsingissa-1811-1998` | stale | - | - |
+| 267 | `teollisuuden-tyopaikat-ja-tyontekijat-helsingissa-1884-1965` | stale | - | - |
+| 268 | `tyopaikat-helsingissa-alueella-tyossakayvat-toimialan-tol-2008-2-3-nro-mukaan-31-12-2008` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 269 | `tyopaikat-uudellamaalla-alueella-tyossakayvat-toimialan-tol-2008-mukaan` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 270 | `uudenmaan-asuntokunnat-henkiloluvun-ja-vanhimman-ian-mukaan` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 271 | `uudenmaan-kuntien-asuntokuntien-kulutusyksikkokohtaiset-rahatulot-desiililuokittain-1995` | stale | - | - |
+| 272 | `uudenmaan-kuntien-asuntokuntien-tulot-asuntokunnan-elinvaiheen-ja-alueen-mukaan-1995` | stale | - | - |
+| 273 | `uudenmaan-kuntien-asuntokuntien-tulot-kulutusyksikkokohtaiset-ginikertoimet-2005` | stale | - | - |
+| 274 | `uudenmaan-rakennukset-kayttotarkoituksen-lammitystavan-lammitysaineen-ja-kerrosalan-mukaan` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 275 | `uudenmaan-seudullinen-tyopaikkaprojektio-1980-2060` | not-data | - | - |
+| 276 | `uudenmaan-tyopaikkaprojektioissa-kaytetyt-vaestoprojektiot` | not-data | - | - |
+| 277 | `uudenmaan-vaesto-aidinkielen-sukupuolen-ja-ian-mukaan` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 278 | `uudenmaan-vaesto-ian-mukaan` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 279 | `uudenmaan-vaesto-paaasiallisen-toiminnan-ian-ja-sukupuolen-mukaan` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 280 | `uusimaa-kuolleet-ian-ja-sukupuolen-mukaan` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 281 | `uusimaa-muuttoliike-lahto-tai-kohdealueen-aidinkielen-ja-ian-mukaan` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 282 | `uusimaa-syntyneet-aidin-ian-mukaan` | yes | empty: the `helsinki-statistics-*` and `helsinki-kpi` views hold no `stat-*` KPI; the pipeline wrote none | F1 |
+| 283 | `valmistuneet-asuinhuoneet-kivi-ja-puutaloissa-helsingissa-1939-1950` | stale | - | - |
+| 284 | `valmistuneet-asuinhuoneistot-helsingissa-1921-1967` | stale | - | - |
+| 285 | `aarteeni-helsingissa-kyselyn-vastaukset` | not-data | - | - |
+| 286 | `elintarvikevalvonnan-piiriin-kuuluvat-elintarvikehuoneistot-helsingissa` | stale | - | - |
+| 287 | `espoon-asuntokuntien-tulot-kulutusyksikkokohtaiset-ginikertoimet-2005` | outside | - | - |
+| 288 | `espoon-kaupungin-resurssienvarausrajapinta` | outside | - | - |
+| 289 | `espoon-vaeston-ennakollinen-ikarakenne-neljannesvuosittain-ja-alueittain-31-12-2015` | outside | - | - |
+| 290 | `etelasatama-virtual-3d-malli` | format | - | - |
+| 291 | `helmet-kirjastojen-aineistoluettelot` | duplicate | - | - |
+| 292 | `helmet-kirjastojen-lainatuimmat-aikuistenkirjat` | not-data | - | - |
+| 293 | `helmet-kirjastojen-lainatuimmat-lastenkirjat` | not-data | - | - |
+| 294 | `helmet-kirjastojen-varatuimmat-kirjat` | not-data | - | - |
+| 295 | `helsingin-3d-kaupunkimalli` | not-data | - | - |
+| 296 | `helsingin-3d-rakennukset` | duplicate | - | - |
+| 297 | `helsingin-ajantasa-asemakaava` | format | - | - |
+| 298 | `helsingin-asemakaavakartat` | format | - | - |
+| 299 | `helsingin-asuntokunnat-henkilun-mukaan-piireitt-ja-osa-alueittain-2004-alkaen` | duplicate | - | - |
+| 300 | `helsingin-asuntokunnat-koon-ja-vanhimman-henkilon-ian-mukaan-suurpiireittain-2004-alkaen` | duplicate | - | - |
+| 301 | `helsingin-espoon-ja-vantaan-liikennevaloristeykset` | format | - | - |
+| 302 | `helsingin-historialliset-asemakaavakartat` | format | - | - |
+| 303 | `helsingin-historialliset-kartat` | format | - | - |
+| 304 | `helsingin-historialliset-opaskartat` | format | - | - |
+| 305 | `helsingin-historialliset-yleiskaavat` | format | - | - |
+| 306 | `helsingin-ja-vantaan-ymparistoasennekyselyn-vastaukset` | not-data | - | - |
+| 307 | `helsingin-johtamisen-uudistaminen-verkkokyselyn-vastaukset` | not-data | - | - |
+| 308 | `helsingin-kansallinen-kaupunkipuisto-kyselyn-vastaukset` | not-data | - | - |
+| 309 | `helsingin-kantakartta` | format | - | - |
+| 310 | `helsingin-katujen-puhdistussuunnitelmat` | dead | - | - |
+| 311 | `helsingin-kaupungin-chatbotien-koulutusdatat` | not-data | - | - |
+| 312 | `helsingin-kaupungin-koulurekisteri` | dead | - | - |
+| 313 | `helsingin-kaupungin-resurssienvarausrajapinta` | dead | - | - |
+| 314 | `helsingin-kaupungin-taloushallintopalvelun-tulot-ja-menot` | dead | - | - |
+| 315 | `helsingin-kaupungin-talvihoidon-kayttajatyytyvaisyyskyselyn-vastaukset` | not-data | - | - |
+| 316 | `helsingin-kaupungin-tarkastuslautakunnan-arviointikertomuksissa-esitetyt-suositukset` | not-data | - | - |
+| 317 | `helsingin-kaupungin-yrityshaastattelututkimus` | not-data | - | - |
+| 318 | `helsingin-kaupunginarkiston-aineistot` | dead | - | - |
+| 319 | `helsingin-kaupunginmuseon-aineistot` | dead | - | - |
+| 320 | `helsingin-kiinteistokartta` | format | - | - |
+| 321 | `helsingin-koko-vt-ulkomaalaistaustaiset-maan-ja-imukaan-suurpiireitt-2004-alkaen` | duplicate | - | - |
+| 322 | `helsingin-koko-vtkomaiden-kansalaiset-kansalaisuuden-ja-imukaan-suurpiireitt-2004-alkaen` | duplicate | - | - |
+| 323 | `helsingin-korkeusmalli` | format | - | - |
+| 324 | `helsingin-kuvakartta` | format | - | - |
+| 325 | `helsingin-laserkeilausaineistot` | format | - | - |
+| 326 | `helsingin-liikenneturvallisuuskysely-asukkaille` | not-data | - | - |
+| 327 | `helsingin-luontopalvelulinjauksen-asukaskyselyn-vastaukset` | not-data | - | - |
+| 328 | `helsingin-mikroilmaston-simulaatiodemo` | not-data | - | - |
+| 329 | `helsingin-muu-kuin-suomen-ja-ruotsinkielinen-vtisivuotisikhmitt-sivilisyn-ja-sukupuolen-mukaan-` | duplicate | - | - |
+| 330 | `helsingin-muun-kuin-suomen-tai-ruotsinkielinen-vtn-ja-sukupuolen-mukaan-suurpiireitt-2004-alkae` | duplicate | - | - |
+| 331 | `helsingin-opaskartta` | duplicate | - | - |
+| 332 | `helsingin-ortoilmakuvat` | format | - | - |
+| 333 | `helsingin-paivahoitotilastot` | duplicate | - | - |
+| 334 | `helsingin-perheet-ja-lapset-sekterherakennetta-kuvaavia-tunnuslukuja-piireitt-ja-osa-alueittain` | duplicate | - | - |
+| 335 | `helsingin-pintamalli` | format | - | - |
+| 336 | `helsingin-pyorailybarometrikyselyn-vastaukset` | not-data | - | - |
+| 337 | `helsingin-pyoravaylien-ongelmakohdekyselyn-vastaukset` | not-data | - | - |
+| 338 | `helsingin-raide-jokerin-linjaus-ja-pysakit` | duplicate | - | - |
+| 339 | `helsingin-rinnevarjosteet` | format | - | - |
+| 340 | `helsingin-ruotsinkielinen-vaesto-ian-ja-sukupuolen-mukaan-suurpiireittain-2004-alkaen` | duplicate | - | - |
+| 341 | `helsingin-ruotsinkielinen-vtisivuotisikhmitt-sivilisyn-ja-sukupuolen-mukaan-2004-alkaen` | duplicate | - | - |
+| 342 | `helsingin-ruotsinkielinen-vtn-mukaan-piireitt-ja-osa-alueittain-2004-alkaen` | duplicate | - | - |
+| 343 | `helsingin-suomenkielinen-vtisivuotisikhmitt-sivilisyn-ja-sukupuolen-mukaan-2004-alkaen` | duplicate | - | - |
+| 344 | `helsingin-tuulivoimakysely-2015` | not-data | - | - |
+| 345 | `helsingin-ulkomaalaistaustainen-vaesto-sukupuolen-ja-taustamaan-mukaan-2017-alkaen` | duplicate | - | - |
+| 346 | `helsingin-vaesto-aidinkielen-ja-ian-mukaan-suurpiireittain-2004-alkaen` | duplicate | - | - |
+| 347 | `helsingin-vaesto-ian-1-v-ja-sukupuolen-mukaan-suurpiireittain-2004-alkaen` | duplicate | - | - |
+| 348 | `helsingin-vaesto-ian-5-v-aidinkielen-ja-sukupuolen-mukaan-suurpiireittain-2004-alkaen` | duplicate | - | - |
+| 349 | `helsingin-vaesto-ian-5-v-mukaan-piireittain-ja-osa-alueittain-2004-alkaen` | duplicate | - | - |
+| 350 | `helsingin-vaesto-ian-ja-sukupuolen-mukaan-suurpiireittain-2004-alkaen` | duplicate | - | - |
+| 351 | `helsingin-vaesto-piireittain-ja-osa-alueittain-ian-mukaan-2004-alkaen` | duplicate | - | - |
+| 352 | `helsingin-vaesto-sukupuolen-ja-sivilisaadyn-mukaan-2004-alkaen-piireittain-ja-osa-alueittain` | duplicate | - | - |
+| 353 | `helsingin-vaesto-syntymapaikan-sukupuolen-ja-ian-mukaan-2004-alkaen` | duplicate | - | - |
+| 354 | `helsingin-vaesto-uskonnollisen-yhdyskunnan-sukupuolen-ja-ian-mukaan-2004-alkaen` | duplicate | - | - |
+| 355 | `helsingin-vaesto-viisivuotisikaryhmittain-sivilisaadyn-ja-sukupuolen-mukaan-2004-alkaen` | duplicate | - | - |
+| 356 | `helsingin-vapaa-aikakyselyn-vastaukset` | not-data | - | - |
+| 357 | `helsingin-vtdinkielen-ja-imukaan-2004-alkaen` | duplicate | - | - |
+| 358 | `helsingin-vtn-1-v-kumulatiivinen-ja-sukupuolen-mukaan-suurpiireitt-2004-alkaen` | duplicate | - | - |
+| 359 | `helsingin-vtn-ja-sukupuolen-mukaan-sekaisten-osuus-piireitt-ja-osa-alueittain-2004-alkaen` | duplicate | - | - |
+| 360 | `helsingin-vtn-mukaan-piireitt-ja-osa-alueittain-2004-alkaen` | duplicate | - | - |
+| 361 | `helsingin-vtueittain-1962-alkaen` | duplicate | - | - |
+| 362 | `helsingin-yleiskaava-2002` | format | - | - |
+| 363 | `helsingin-yleiskartta` | format | - | - |
+| 364 | `helsinki-2050-kyselyn-vastaukset` | not-data | - | - |
+| 365 | `helsinki-region-infoshare-palvelun-kayttoa-koskevan-kyselyn-vastaukset` | not-data | - | - |
+| 366 | `helsinkikanava-open-data` | dead | - | - |
+| 367 | `hri-verkkopalvelun-avoimen-datan-metatiedot` | not-data | - | - |
+| 368 | `hsl-bluetooth-majakat-api` | not-data | - | - |
+| 369 | `hsl-n-asiakastyytyvaisyystutkimus` | not-data | - | - |
+| 370 | `hsl-n-liityntapysakointipaikat` | duplicate | - | - |
+| 371 | `hsl-n-reittioppaan-kohdetietokanta` | duplicate | - | - |
+| 372 | `hsl-reittiopas-api` | duplicate | - | - |
+| 373 | `hsln-lipunmyyntirajapinta` | licence | - | - |
+| 374 | `kiva-keskusta-kavelijoille-kyselyn-vastaukset` | not-data | - | - |
+| 375 | `miehet--helsingin-koko-vt-ulkomaiden-kansalaiset-kansalaisuuden-ja-imukaan-suurpiireitt-2004-al` | duplicate | - | - |
+| 376 | `miehet-helsingissa-ian-5-v-mukaan-piireittain-ja-osa-alueittain-2004-alkaen` | duplicate | - | - |
+| 377 | `muu-vaesto-helsingissa-eli-henkilot-joiden-asuinaluetta-ei-ole-maaritelty-ian-mukaan-2004-alkaen` | duplicate | - | - |
+| 378 | `muu-vtlsingissli-henkiloiden-asuinaluetta-ei-ole-mitelty-sukupuolen-mukaan-2004-alkaen` | duplicate | - | - |
+| 379 | `naiset--helsingin-koko-vt-ulkomaiden-kansalaiset-kansalaisuuden-ja-imukaan-suurpiireitt-2004-al` | duplicate | - | - |
+| 380 | `naiset-helsingissa-ian-5-v-mukaan-piireittain-ja-osa-alueittain-2004-alkaen` | duplicate | - | - |
+| 381 | `paakaupunkiseudun-avoimen-datan-palvelun-kayttajakyselyn-vastaukset` | not-data | - | - |
+| 382 | `paakaupunkiseudun-liikennemeluvyohykkeet` | duplicate | - | - |
+| 383 | `paakaupunkiseudun-opaskartta` | format | - | - |
+| 384 | `paakaupunkiseudun-yleiskartta` | format | - | - |
+| 385 | `rajapinta-staran-lumiaurojen-sijantitietoihin` | dead | - | - |
+| 386 | `semantic-hri-fi--paakaupunkiseutua-koskevaa-tilastotietoa-avoimena-linkitettyna-datana` | stale | - | - |
+| 387 | `seudullinen-osoiteluettelo` | duplicate | - | - |
+| 388 | `signe-branderin-panoraamakuvat-1900-luvun-alun-helsingista` | format | - | - |
+| 389 | `staran-tuotantoajoneuvojen-liikkeet-ja-toimenpiteet-helsingissa` | licence | - | - |
+| 390 | `tietoa-suomesta-monella-eri-kielella` | dead | - | - |
+| 391 | `ulkomaan-kansalaiset-helsingissa-kansalaisuuden-seka-syntymaalueen-ja-sukupuolen-mukaan-2017-alkaen` | duplicate | - | - |
+| 392 | `uudenmaan-osoiterajapinta` | dead | - | - |
+| 393 | `vaestonmuutokset-helsingissa-piireittain-ja-osa-alueittain-2004-alkaen` | duplicate | - | - |
+| 394 | `vantaan-asuntokuntien-tulot-kulutusyksikkokohtaiset-ginikertoimet-2005` | outside | - | - |
+| 395 | `vantaan-vaeston-ennakollinen-ikarakenne-neljannesvuosittain-ja-alueittain-31-12-2015` | outside | - | - |
+| 396 | `yksinasuvat-yhden-hengen-asuntokunnat-helsingissukupuolen-ja-imukaan-peruspiireitt-2004-alkaen` | duplicate | - | - |
+
+## 10. Plan to 100
+
+Usable 133, live 18, target 100: 82 more rows have to go live. Batches in the order that reaches 100
+soonest:
+
+| plan | rows | live after | shape | SDM types | LinkML classes added | rows by # |
+|---|---|---|---|---|---|---|
+| F1 | 70 | 88 | fix: the three built KPI pipelines write nothing on dev | `KeyPerformanceIndicator` | none | 33, 69, 76 and the 67 T-5258 statistics rows |
+| T-5286 | 6 | 94 | `kartta.hel.fi` WFS GetFeature and one CSV, parked | `OnStreetParking`, `RoadSegment`, `RoadAccident`, custom `TrafficSignalJunction` | `RoadSegment`, `RoadAccident`, `TrafficSignalJunction` | 2, 3, 5, 6, 11, 14 |
+| T-5378 | 11 | 105 | `kartta.hel.fi` WFS GetFeature and two files, parked | `NoisePollution`, `GreenspaceRecord`, `AirQualityObserved`, `KeyPerformanceIndicator`, custom `Watercourse`, `Tree`, `LandCoverArea`, `StormwaterCatchment`, `FloodRiskArea` | `NoisePollution`, `GreenspaceRecord` and the five custom classes | 27, 28, 29, 30, 32, 34, 35, 36, 37, 40, 41 |
+| T-5256 | 24 | 128 | `kartta.hel.fi` WFS GetFeature, paged, and one CSV, parked | `Building`, `GreenspaceRecord`, `CityWork`, `RoadSegment`, custom `AdministrativeArea`, `LandUsePlanArea`, `LandParcel`, `Street`, `Address`, `MaintenanceArea`, `EnvironmentalPermit` | `Building`, `GreenspaceRecord`, `LandUsePlanArea`, `LandParcel`, `Street`, `Address`, `MaintenanceArea`, `EnvironmentalPermit` | 42 to 65 (47 already live for 3 layers) |
+| B2 | 3 | 131 | `kartta.hel.fi` WFS GetFeature, points and areas | `PointOfInterest`, custom `HeritageArea` (closest SDM `GreenspaceRecord`) | `HeritageArea` | 66, 74, 80 |
+| B1 | 2 | 133 | one-shot file import: a JSON pilot dump and a yearly CSV per counting point | `TrafficFlowObserved` | none | 1, 10 |
+
+- **F1** is a fix, not a build: one cause per pipeline, so it is one task whatever its row count.
+  It needs the deployer (pipeline run logs on dev), then a fix in the deployment repository.
+- **T-5286, T-5378, T-5256** are kept as they are, with one addition: row 14 (winter maintenance
+  network, a `kartta.hel.fi` `RoadSegment` layer, deferred by T-5254) joins T-5286 beside row 5.
+  All three stay blocked until each layer has a fixture recorded from the cluster:
+  one `GetFeature ... &count=20` per layer, run by the deployer from a dev pod and committed under
+  `tests/fixtures/helsinki/kartta/`, as T-5286 already describes. Section 9.2 shows the host answers dev.
+- **B2** and **B1** are new; the supervisor files them. B2 has the same fixture need as the three
+  parked batches.
+
+The batch list goes to the supervisor as a note (T-5663); every row id above is in section 9.5.
+`scripts/check-helsinki-open-data.py check` proves the counts of sections 9.3 and 10 from the table,
+and `scripts/check-helsinki-open-data.py probe` re-reads 10 sampled usable rows and fails on a dead one.
 
 ## Related
 
