@@ -1692,8 +1692,13 @@ GET /api/v1/app-templates      every template, by name, for any signed-in person
   "audience": "managers",
   "access": "Read-only; the indicators may be public.",
   "dataNeeds": [{ "types": ["KeyPerformanceIndicator"], "attrs": ["kpiValue", "target"], "operations": ["queryEntity"] }]
-}] }
+}],
+  "modelAvailable": true }
 ```
+
+`modelAvailable` is `false` when the Portal has no agent runner or the agent proxy last reported
+the model key refused or out of credit (AG-96); the gallery then says why "Create from this" is
+unavailable and offers "Use as is" below.
 
 ```text
 GET /api/v1/app-templates/{name}/screenshot/{width}   a PNG of the template at 1440 or 375 px; 404 otherwise
@@ -1705,6 +1710,30 @@ Content Security Policy: `connect-src 'none'`, `form-action 'none'`, `frame-ance
 The templates are the samples of SDK-24, compiled into the Portal. A run started with a prompt
 that contains `(template: {name})` adapts that template, whatever else the prompt says; a name no
 template has is ignored and the prompt's words choose, as before.
+
+```text
+POST /api/v1/projects/{project}/app-templates/{name}/apps   use a template as it ships (T-5617)
+```
+
+```json
+{ "name": "bike-finder", "endpointName": "bikes" }
+```
+
+No model is asked. The Portal creates the repository `{project}_{name}` of the App (AP-75), commits
+the SDK template with the sample's `src/` over it, the build workflow and a README to `main` in
+the caller's name, protects `main`, and proposes the App building from that commit: class `ui`,
+visibility `project`, the template's `dataNeeds` in the Endpoint's context space. The proposal
+runs as a dry run before the forge is touched, and a failure after the repository exists deletes
+it again (CC-85).
+
+- `202` with the Change.
+- `403` when the caller may not propose an App in the project, before the body is read.
+- `404` for a template the gallery does not hold.
+- `422` with `errors` entries prefixed by the field: `name:` for a name that is not a DNS-1123
+  label, too long for its repository or already an App; `endpointName:` for an Endpoint that is
+  not there or that the caller may not read (one answer for both), or one that hides an attribute
+  the template reads.
+- `409` when a repository of that name is already in the forge; it is never adopted.
 
 ## 13. Flows: running a blueprint (CC-24, CC-30, CC-31, CC-32, CC-59)
 
