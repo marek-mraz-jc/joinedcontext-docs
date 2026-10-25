@@ -231,6 +231,9 @@ jobs:
           set -eu
           python3 scripts/validate-doc-manifests-with-jcctl.py --selftest
           python3 scripts/validate-doc-manifests-with-jcctl.py
+      - name: ADR-N-059's table is its generator's output and every model passes jcctl validate (T-5543)
+        env: { JC_JCCTL: "${{ runner.temp }}/platform/target/debug/jcctl" }
+        run: python3 Decisions/assets/adr-n-059/test_models.py
       - name: every manifest the pages print is in the layout jcctl fmt writes (T-5052)
         env: { JC_JCCTL: "${{ runner.temp }}/platform/target/debug/jcctl" }
         run: git ls-files -z '*.md' | xargs -0 "$JC_JCCTL" fmt --check
