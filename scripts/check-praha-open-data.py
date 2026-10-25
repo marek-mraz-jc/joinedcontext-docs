@@ -39,9 +39,9 @@ SNAPSHOTS = {
     "other": ROOT / "Research/data/praha-other-sources-2026-10-23.tsv",
 }
 DECISIONS = {"live", "seeded", "integrate", "skip", "part"}
-UNUSABLE = {"stale", "duplicate", "login", "format", "licence"}
-BUILT = {"T-5268", "T-5269", "T-5270", "T-5276", "T-5423", "T-5424", "T-5425", "T-5429"}
-PARKED = {"T-5426", "T-5427", "T-5428"}
+UNUSABLE = {"stale", "duplicate", "login", "format", "licence", "unnamed"}
+BUILT = {"T-5268", "T-5269", "T-5270", "T-5276", "T-5423", "T-5424", "T-5426", "T-5425", "T-5429"}
+PARKED = {"T-5427", "T-5428"}
 PLANNED = re.compile(r"^(?:F-\d|P-\d\d)$")
 CELLS = 13
 IPR = "https://mp.iprpraha.cz/arcgis/rest/services/Hosted/"
