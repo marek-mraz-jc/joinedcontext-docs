@@ -894,24 +894,24 @@ Bratislavy medzi rokom 2022 a 2035" lists one district twice (the first is kept)
 | 38 | Databáza poskytovateľov celoživotného vzdelávania v Bratislave | 2 | built | `bratislava-celozivotne-vzdelavanie`, `PointOfInterest`, weekly (places) |
 | 39 | Debarierizácie chodníkov v Bratislave od roku 2020 | 2 | not built | 703 works located by street and district only, no coordinates: they need the address-register geocoding step no Bratislava pipeline has, and `CityWork` is not in the model |
 | 40 | Fixpointy (miesto/nádoba na zber injekčných striekačiek) pre ľudí v núdzi v Bratislave | 2 | built | `bratislava-fixpointy`, `PointOfInterest`, weekly (places) |
-| 41 | Kontaktné miesta Magistrátu hlavného mesta SR Bratislavy | 2 | not built | 7 contact points with a full address and no coordinates: geocoding by address first; row 54 adds their hours |
+| 41 | Kontaktné miesta Magistrátu hlavného mesta SR Bratislavy | 2 | built | `bratislava-kontaktne-miesta`, `PointOfInterest`, weekly (places, T-5444): 6 of 7 placed by the address register |
 | 42 | Mestská časť | 2 | built | `bratislava-districts`, `AdministrativeArea`, weekly (districts) |
 | 43 | Práca s podnetmi zadanými Magistrátu hlavného mesta SR Bratislavy od roku 2017 | 2 | not built | 12,847 reports, more than the one read of 2,000 rows a table pipeline makes (needs resultOffset paging), and `IssueReporting` is not in the model; the hub copy stops at 2024-07 |
 | 44 | Služby pre ľudí bez domova v Bratislave | 2 | built | `bratislava-sluzby-bez-domova`, `PointOfInterest`, weekly (places) |
 | 45 | Starostlivosť o dreviny v Bratislave | 2 | not built | 5,768 tree points, past the 2,000-row read (paging), and a `Tree` class the model lacks (closest SDM `FlowerBed`/`GreenspaceRecord` do not fit one tree) |
-| 46 | Súbor vzdelávacích inštitúcií v rámci mesta Bratislava | 2 | not built | 521 institutions by street and district, no coordinates: address-register geocoding first |
-| 47 | Zoznam centier voľného času v roku 2024 | 2 | not built | 15 leisure centres by address, no coordinates: geocoding first |
-| 48 | Zoznam materských škôl v roku 2025 | 2 | not built | 160 kindergartens by address, no coordinates: geocoding first; row 49 is the newer year of the series |
-| 49 | Zoznam materských škôl v roku 2026 | 2 | not built | 159 kindergartens by address, no coordinates: geocoding first |
+| 46 | Súbor vzdelávacích inštitúcií v rámci mesta Bratislava | 2 | built | `bratislava-vzdelavacie-institucie`, `PointOfInterest`, weekly (places, T-5444): 457 of 521 placed by the address register |
+| 47 | Zoznam centier voľného času v roku 2024 | 2 | built | `bratislava-centra-volneho-casu`, `PointOfInterest`, weekly (places, T-5444): 15 of 15 placed by the address register |
+| 48 | Zoznam materských škôl v roku 2025 | 2 | not built | superseded: the 2026 list of row 49 is the series' dataset (`bratislava-materske-skoly`), newest year wins |
+| 49 | Zoznam materských škôl v roku 2026 | 2 | built | `bratislava-materske-skoly`, `PointOfInterest`, weekly (places, T-5444): 147 of 159 placed by the address register |
 | 50 | Zoznam pitných fontán v roku 2024 | 2 | not built | 96 fountains located by a place description, no coordinates and no address to geocode |
-| 51 | Zoznam základných umeleckých škôl v roku 2024 | 2 | not built | 101 art schools by address, no coordinates: geocoding first |
-| 52 | Zoznam základných škôl v roku 2025 | 2 | not built | 117 primary schools by address, no coordinates: geocoding first |
+| 51 | Zoznam základných umeleckých škôl v roku 2024 | 2 | built | `bratislava-zakladne-umelecke-skoly`, `PointOfInterest`, weekly (places, T-5444): 93 of 101 placed by the address register |
+| 52 | Zoznam základných škôl v roku 2025 | 2 | built | `bratislava-zakladne-skoly`, `PointOfInterest`, weekly (places, T-5444): 109 of 117 placed by the address register |
 | 53 | Zoznam športovísk na území Bratislavy | 2 | not built | 2,215 sports grounds by street, no coordinates (geocoding) and past the 2,000-row read (paging) |
 | 54 | Úradné a návštevné hodiny Magistrátu hlavného mesta SR BA | 2 | not built | opening hours of the 7 contact points of row 41: an attribute of those places once they are geocoded |
 | 55 | Čierne skládky v meste Bratislava v roku 2025 | 2 | not built | 67 dump reports with a GPS text column: `IssueReporting` is not in the model, and the places pipeline writes `PointOfInterest` only |
 | 56 | Celomestský zoznam pamätihodností mesta Bratislavy | 1 | not built | 552 monuments by street, no coordinates: geocoding first |
 | 57 | Centrálny register poskytovateľov sociálnych služieb v Bratislavskom kraji | 1 | not built | 1,082 social-service places of the whole region by address, no coordinates: geocoding first, Bratislava rows only |
-| 58 | Chovné a veterinárne zariadenia | 1 | not built | 458 points as layer geometry, not X/Y columns: the places pipeline reads attribute columns with returnGeometry=false; reading geometry in WGS 84 (outSR=4326) is a second query shape |
+| 58 | Chovné a veterinárne zariadenia | 1 | built | `bratislava-veterinarne-zariadenia`, `PointOfInterest`, weekly (places, T-5444): layer 4 point geometry in WGS 84, 451 of 458 (7 farms outside the city) |
 | 59 | Citlivosť budov na zrážky | 1 | not built | 9,570 cells of the 200 m climate-atlas grid as polygons: past the 2,000-row read (paging), and the `ClimateRiskArea` class the matrix names is not in the model; each layer is one attribute of the same cell, one pipeline for all eleven |
 | 60 | Citlivosť dopravnej infraštruktúry na zrážky | 1 | not built | 9,570 cells of the 200 m climate-atlas grid as polygons: past the 2,000-row read (paging), and the `ClimateRiskArea` class the matrix names is not in the model; each layer is one attribute of the same cell, one pipeline for all eleven |
 | 61 | Citlivosť na zmenu klímy celková | 1 | not built | 9,570 cells of the 200 m climate-atlas grid as polygons: past the 2,000-row read (paging), and the `ClimateRiskArea` class the matrix names is not in the model; each layer is one attribute of the same cell, one pipeline for all eleven |
@@ -922,7 +922,7 @@ Bratislavy medzi rokom 2022 a 2035" lists one district twice (the first is kept)
 | 66 | Majetok mesta Bratislava k 31.12.2025 | 1 | not built | 44,811 parcels with no geometry, past the 2,000-row read; `LandParcel` is not in the model |
 | 67 | Objekty a byty vo vlastníctve Hlavného mesta SR BA nezverené do správy MČ k 31.12.2019 | 1 | not built | 63 buildings by address, no coordinates: geocoding first; `Building` is not in the model |
 | 68 | Objekty a byty vo vlastníctve Hlavného mesta SR Bratislavy nezverené do správy MČ | 1 | not built | 61 buildings by address, no coordinates: geocoding first; `Building` is not in the model |
-| 69 | Ochladzovacie miesta v Bratislave (Ochlaď sa!) | 1 | not built | 35 cooling places by address, no coordinates: geocoding first |
+| 69 | Ochladzovacie miesta v Bratislave (Ochlaď sa!) | 1 | built | `bratislava-ochladzovacie-miesta`, `PointOfInterest`, weekly (places, T-5444): 25 of 35 placed by the address register |
 | 70 | Organizácie Hlavného mesta SR Bratislava | 1 | not built | 55 organisations by address, no coordinates: geocoding first |
 | 71 | Parcely vo vlastníctve hlavného mesta SR Bratislavy k 31.12.2019 | 1 | not built | 41,558 parcels with no geometry, past the 2,000-row read; `LandParcel` is not in the model |
 | 72 | Pozemky vo vlastníctve hlavného mesta SR Bratislavy k 31.12.2020. | 1 | not built | 43,586 parcels with no geometry, past the 2,000-row read; `LandParcel` is not in the model |
@@ -1491,6 +1491,55 @@ Bratislavy medzi rokom 2022 a 2035" lists one district twice (the first is kept)
 | 635 | Čerpanie rozpočtu oddelenia sociálnych vecí k 06.09.2019 | -1 | not built | by Program___kód, not by city district, okres or the whole city |
 | 636 | Čerpanie rozpočtu oddelenia sociálnych vecí k 30.06.2019 | -1 | not built | by Program___kód, not by city district, okres or the whole city |
 | 637 | Čistý prírastok podnikov v samosprávnych krajoch Slovenska v rokoch 2015 - 2019 | -1 | not built | by region (kraj) of Slovakia: the space holds no region areas |
+
+### 6.5 Batch T-5444: places by address and by layer geometry
+
+T-5444 added eight tables to the `places` pipeline, each its own Endpoint, public Policy (narrowed
+by `idPattern` to its key) and CKAN dataset in the organisation `bratislava`, 1,303 more
+`PointOfInterest` entities from the tables recorded on 2026-10-25 (1,611 with T-5274's four):
+
+| row | Endpoint | read | entities | dropped |
+|---|---|---|---|---|
+| 41 | `bratislava-kontaktne-miesta` | address register | 6 of 7 | 1 no position |
+| 46 | `bratislava-vzdelavacie-institucie` | address register | 457 of 521 | 41 no position, 23 duplicates |
+| 47 | `bratislava-centra-volneho-casu` | address register | 15 of 15 | none |
+| 49 | `bratislava-materske-skoly` | address register | 147 of 159 | 11 no position, 1 duplicate |
+| 51 | `bratislava-zakladne-umelecke-skoly` | address register | 93 of 101 | 8 no position |
+| 52 | `bratislava-zakladne-skoly` | address register | 109 of 117 | 8 no position |
+| 58 | `bratislava-veterinarne-zariadenia` | layer 4 point geometry, WGS 84 | 451 of 458 | 7 outside Bratislava |
+| 69 | `bratislava-ochladzovacie-miesta` | address register | 25 of 35 | 10 no position |
+
+The pipeline never calls a geocoder. `seeds/bratislava-places/geocode.py` (deployment repository)
+reads each address-only table as the pipeline does and looks every address up in Register adries
+(`ra.synchronix.sk`, the address register of MV SR, no key, one request a second). It accepts a
+hit only in Bratislava or one of its boroughs, on the same street with the same number; when
+several points match, only the one in the row's district counts, and two or more left over refuse
+the address. The hits go into `positions.csv` and into the mapping's `positions`, keyed by the
+first 16 hex digits of the SHA-256 of `<street>|<district>` in lower case, the key the mapping
+computes per row. A row without a position is dropped as "no position" and counted; a new school
+appears on the map after the next run of the script. Of 704 distinct addresses, 635 resolve;
+`seeds/bratislava-places/not-placed.csv` lists the other 69 per table with a reason. Most are
+not in the register as written (a building name in place of a number such as "Mlynská dolina
+F2", a range such as "Zochova 6-8", a street without a number, or a number the register does
+not hold); five sit in the register without a point and two match two points in one borough.
+One contact point of row 41 has no address at all.
+
+Human read, 2026-10-25 (mapping output against the hub row and the map): MŠ Bohrova, Bohrova 1,
+Petržalka at 48.130352, 17.096945; MŠ Ušiakova, Ušiakova 1, Dúbravka at 48.189835, 17.039307;
+ZŠ Matky Alexie, Palackého 1, Staré Mesto at 48.14176, 17.111216; CVČ Gessayova, Gessayova 6,
+Petržalka at 48.12103, 17.113785; Magistrát, pokladňa, Primaciálne námestie 1 at 48.144184,
+17.10942; Miestny úrad Vajnory (cooling place), Roľnícka 109 at 48.204346, 17.206657; Sloboda
+zvierat o.z. (row 58), Pod Brehmi 1/A at 48.174148, 17.061178. The veterinary layer also names
+its editors (`Creator`, `Editor`): the mapping reads neither.
+
+Still not built from batch T-5274's rows, each for the reason its row in 6.4 gives: the sports
+grounds (row 53: 2,215 rows past one read, and geocoding), the office hours (row 54: an attribute
+of row 41's places, no class of their own), the issue reports (rows 43 and 55: `IssueReporting`
+is not in the space's model, and row 43 needs paging), the tree points (rows 45, 79, 80: no tree
+class, paging), the 200 m climate grid (rows 59 to 64 and 74 to 77: `ClimateRiskArea` is not in
+the model, 9,570 cells a layer), the fountains (row 50: no address to geocode), the monuments,
+social services and community housing (rows 56, 57, 65: score 1, geocoding first) and the
+statistics tables by ZSJ, municipality, flow or without a period.
 
 ## 7. Nothing left: what is skipped and why
 
