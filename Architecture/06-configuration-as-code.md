@@ -44,7 +44,7 @@ blueprints/
 policies/
   roles.json                            # compiled from Role and RoleBinding by jcctl (PF-51); generated
 users/
-  groups/{name}.yaml                    # kind: Group, members by e-mail; synced into Keycloak (PF-62, PF-63)
+  groups/{name}.yaml                    # kind: Group, members by e-mail (by Keycloak user id once PF-126 ships); synced into Keycloak (PF-62, PF-63)
   roles/{name}.yaml                     # kind: Role, verbs on kinds (PF-49)
   assignments/{name}.yaml               # kind: RoleBinding, a Role to users or groups over a scope (PF-49)
 portal/
