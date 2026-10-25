@@ -1647,6 +1647,45 @@ the model, 9,570 cells a layer), the fountains (row 50: no address to geocode), 
 social services and community housing (rows 56, 57, 65: score 1, geocoding first) and the
 statistics tables by ZSJ, municipality, flow or without a period.
 
+### 6.7 Public institutions of Bratislava (T-5690)
+
+The owner order of 2026-10-25 15:47Z asks for every public institution the open sources list, as
+`PointOfInterest` with a GPS point. T-5690 read the hub's 1,157 Feature Services by name and the
+national catalogue (`https://data.slovensko.sk/api/sparql`, dataset titles holding "zoznam",
+"register" or "sieť") on 2026-10-25 at 16:00Z. Each category is integrated only when its source
+answers today, is open, names the institution and places it inside the city. T-5444 (section 6.6)
+had built the schools; T-5690 adds the city's own organisations.
+
+| category | source | Endpoint | entities | GPS |
+|---|---|---|---|---|
+| City Hall contact points | hub row 41 | `bratislava-kontaktne-miesta` | 6 of 7 | address register |
+| kindergartens | hub row 49 | `bratislava-materske-skoly` | 147 of 159 | address register |
+| primary schools | hub row 52 | `bratislava-zakladne-skoly` | 109 of 117 | address register |
+| primary art schools | hub row 51 | `bratislava-zakladne-umelecke-skoly` | 93 of 101 | address register |
+| leisure-time centres | hub row 47 | `bratislava-centra-volneho-casu` | 15 of 15 | address register |
+| schools of every level | hub row 46 | `bratislava-vzdelavacie-institucie` | 457 of 521 | address register |
+| city organisations: library, museum, gallery, theatre, social care homes, city companies | hub row 73 | `bratislava-mestske-organizacie` | 50 of 51 | address register |
+
+Each entity says how it got its point: `dataProvider` ends in "GPS: Register adries" or, for a
+layer with its own geometry, the layer's point, and `source` is the hub dataset. Row 73 lists 50
+organisations of the city in 51 rows (Incheba, a.s. at two seats, two places); its postal
+addresses ("Vajnorská ulica 1346/135, 831 04 Bratislava - mestská časť Nové Mesto") are looked up
+by the street and number before the first comma. 44 of its 45 addresses resolve; "Daliborovo
+námestie 2937/2" is not in the register (`not-placed.csv`), so that row is dropped as "no
+position". With row 73 the places pipeline keeps 1,661 places of the recording of 2026-10-25.
+
+Categories not integrated, one word each:
+
+| category | source read | reason |
+|---|---|---|
+| borough offices (17 miestne úrady) | hub, national catalogue | none: no dataset lists them; two (Ružinov, Vajnory) appear as cooling places (row 69) |
+| health care providers | hub `Lekárne_lekári_a_zdravotnícke_zariadenia` (4,623 rows) | stale: last edit 2021-01-13, the whole region, Esri-geocoded; places named after physicians |
+| social services | hub row 57, `Centrálny register poskytovateľov sociálnych služieb v Bratislavskom kraji` (1,082 rows) | nameless: the provider column says only public or non-public; the rows name statutory persons |
+| police | national catalogue | none: no list of police stations |
+| post offices | national catalogue | none: no list of post offices |
+| universities | hub statistics tables | none: counts of students only, no list of places |
+| banks (`Finančné_inštitúcie`) | hub, 38 points | scope: not public institutions |
+
 ## 7. Nothing left: what is skipped and why
 
 - `5bc727ed1be34501a3b49ebc1095c034`: Covid-19 - Monitorovací systém pre Bratislavu, Bratislavský samosprávny kraj a Slovensko: pandemic monitoring that ended in 2021-2022; an archive with no current city question.
