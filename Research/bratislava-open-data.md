@@ -425,7 +425,7 @@ ordered by batch, integrate before statistics, then by score and title.
 | 234 | [`140289ebf7664b8093b4a303a11a8578`](https://data.bratislava.sk/datasets/140289ebf7664b8093b4a303a11a8578) | Charakter zariadení materských škôl - štátni vs. súkromní a cirkevní zriaďovatelia v Bratislave | statistics | statistics | T-5274 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | Feature Service, table | 2026-10-20 | CC-BY-4.0 | 9 | city-wide series | 1 | yes | not seeded | P2 |
 | 235 | [`bf304fc534824947bad158771596062b`](https://data.bratislava.sk/datasets/bf304fc534824947bad158771596062b) | Charakter zariadení stredných škôl - štátni vs. súkromní a cirkevní zriaďovatelia v Bratislave | statistics | statistics | T-5274 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | Feature Service, table | 2026-10-20 | CC-BY-4.0 | 9 | city-wide series | 1 | yes | not seeded | P2 |
 | 236 | [`821c498081ce41fcb9e87fb8bb0d7b70`](https://data.bratislava.sk/datasets/821c498081ce41fcb9e87fb8bb0d7b70) | Charakter zariadení základných škôl - štátni vs. súkromní a cirkevní zriaďovatelia v Bratislave | statistics | statistics | T-5274 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | Feature Service, table | 2026-10-20 | CC-BY-4.0 | 9 | city-wide series | 1 | yes | not seeded | P2 |
-| 237 | [`ffe51d79f7854658bcdb33cc9ae69141`](https://data.bratislava.sk/datasets/ffe51d79f7854658bcdb33cc9ae69141) | Demografia podľa miesta sčítania (raster 1x1 km) | statistics | statistics | T-5274 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | Feature Service, table | 2024-07-09 | CC-BY-4.0 | 50,661 | city-wide series | 1 | yes | not seeded | P1 |
+| 237 | [`ffe51d79f7854658bcdb33cc9ae69141`](https://data.bratislava.sk/datasets/ffe51d79f7854658bcdb33cc9ae69141) | Demografia podľa miesta sčítania (raster 1x1 km) | statistics | statistics | T-5274 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | Feature Service, table | 2024-07-09 | CC-BY-4.0 | 50,661 | city-wide series | 1 | yes | not seeded | P5 |
 | 238 | [`b3c956c596d94601aa34716535316e25`](https://data.bratislava.sk/datasets/b3c956c596d94601aa34716535316e25) | Desať obcí v Bratislavskom kraji s najväčším počtom prisťahovaných z Bratislavy | statistics | statistics | T-5274 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | Feature Service, table | 2024-09-23 | CC-BY-4.0 | 220 | city-wide series | 1 | yes | not seeded | P7 |
 | 239 | [`90820624a2cb4dc69c75110dfe05b524`](https://data.bratislava.sk/datasets/90820624a2cb4dc69c75110dfe05b524) | Desať obcí v Trnavskom kraji s najväčším počtom prisťahovaných z Bratislavy | statistics | statistics | T-5274 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | Feature Service, table | 2024-09-23 | CC-BY-4.0 | 220 | city-wide series | 1 | outside | - | - |
 | 240 | [`6ef6d351ec6a411dbc41c2ac405450a5`](https://data.bratislava.sk/datasets/6ef6d351ec6a411dbc41c2ac405450a5) | Dochádzka do zamestnania medzi jednotlivými mestskými časťami Bratislavy v roku 2035 | statistics | statistics | T-5274 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, csv | Feature Service, table | 2026-05-05 | CC-BY-4.0 | 324 | city-wide series | 1 | yes | seeded, 404 | T-5648 |
@@ -1612,11 +1612,11 @@ through the one Feature Service table pipeline; a batch adds only what its shape
 | T-5648 | 336 | seeded: the Portal publishes the Endpoints | as built | none | every row with plan `T-5648` |
 | T-5435 | 31 | counter history 2014-2020, tourist bus stops by geocoding, 27 statistics tables as table lines | `TrafficFlowObserved`, `OnStreetParking`, `KeyPerformanceIndicator` | `OnStreetParking` | 5, 6, 7, 9, 10-36 |
 | T-5444 | 37 | places by address geocoding or layer geometry, trees, climate grid, issue reports, streets, parcels, buildings | `PointOfInterest`, `Building`, `CityWork`, `IssueReporting`; custom `Tree`, `ClimateRiskArea`, `Street`, `LandParcel` | `Building`, `CityWork`, `IssueReporting`, `Tree`, `ClimateRiskArea`, `Street`, `LandParcel` | 39, 41, 45-47, 49-77, 79-81 |
-| P1 | 20 | tables over 2,000 rows: the table pipeline pages with `resultOffset` | `KeyPerformanceIndicator` | none | 143, 150, 158, 200, 237, 322, 514, 544, 589, 590, 609, 614, 616, 618, 620, 622, 625-628 |
+| P1 | 19 | tables over 2,000 rows: the table pipeline pages with `resultOffset`, and reads a ledger of events as the hub's counts and sums | `KeyPerformanceIndicator` | none | 143, 150, 158, 200, 322, 514, 544, 589, 590, 609, 614, 616, 618, 620, 622, 625-628 |
 | P2 | 15 | period from a month column or the item description instead of a year | `KeyPerformanceIndicator` | none | 82, 149, 155, 193-197, 199, 234-236, 252, 290, 291 |
 | P3 | 15 | as P2 | `KeyPerformanceIndicator` | none | 399-404, 515-517, 541, 547, 554, 555, 557, 624 |
 | P4 | 14 | areas beside the 17 districts: ZSJ of the 2021 census, municipalities of BSK | `KeyPerformanceIndicator`, `AdministrativeArea` | none (new area levels) | 104, 105, 119-122, 124-131 |
-| P5 | 14 | as P4, with the 1 km census grid | `KeyPerformanceIndicator`, `AdministrativeArea` | none (new area levels) | 132-140, 157, 213, 216, 243, 298 |
+| P5 | 15 | as P4, with the 1 km census grid | `KeyPerformanceIndicator`, `AdministrativeArea` | none (new area levels) | 132-140, 157, 213, 216, 237, 243, 298 |
 | P6 | 19 | a named breakdown column (pool, street, programme, code) beside the area; the two age pyramids with their sign restored | `KeyPerformanceIndicator` | none | 201, 202, 310, 327, 382, 440, 531, 548, 587, 591, 602, 613, 615, 617, 619, 621, 623, 635, 636 |
 | P7 | 6 | flows between two areas (migration, commuting) | `KeyPerformanceIndicator` | none (origin and destination area slots) | 89, 109, 209, 238, 272, 446 |
 | P8 | 18 | score 0 and -1 tables of the built shape: table lines only | `KeyPerformanceIndicator` | none | 510-513, 518, 521-523, 526, 530, 532, 534, 535, 538-540, 542, 543 |
@@ -1689,6 +1689,41 @@ class, paging), the 200 m climate grid (rows 59 to 64 and 74 to 77: `ClimateRisk
 the model, 9,570 cells a layer), the fountains (row 50: no address to geocode), the monuments,
 social services and community housing (rows 56, 57, 65: score 1, geocoding first) and the
 statistics tables by ZSJ, municipality, flow or without a period.
+
+### 6.8 Batch T-5671: what was built
+
+P1 found that 16 of its 20 tables are ledgers with one row per event or booking (police events,
+fines, Free Wifi days, DTMB authorisations and deposits, budget lines, school transfers), and
+that 4 of them answer at most 1,000 rows a query (`maxRecordCount`). Paging alone would write no
+figure for a ledger, so the one table pipeline does two things more, still one mapping text for
+the three statistics pipelines:
+
+- Every table is read in pages of 1,000 rows with `resultOffset`, until the hub stops saying
+  `exceededTransferLimit`, at most 20 pages; a table with more, or a page the hub refuses, writes
+  nothing of itself and the others still write.
+- A table line with `group`, `stats` and `where` asks the hub for its own counts and sums per
+  group (`groupByFieldsForStatistics`, `outStatistics`, ordered by the group so the pages do not
+  overlap). The year comes from a SUBSTRING of the date text; `labels` turns a code into its
+  word (budget `P`/`V` as príjmy/výdavky); `past` drops a period that starts after today.
+
+| row | table | pages | groups | hub rows counted | how |
+|---|---|---|---|---|---|
+| 143 | other events 2017-2022 | 1 | 352 | 3,559 of 3,559 | count per year, group of event and district |
+| 150 | offences by event 2017-2022 | 2 | 1,837 | 342,446 of 342,446 | count per year, group of event and district |
+| 158 | sports classes | 4 | 3,192 rows | all | rows as figures, per okres, year, grade, category, sport |
+| 200 | road safety barriers 2016 | 1 | 50 | 1,732 of 1,732 | count and length per okres, road class, type, manager type; the year from the item description |
+| 322 | offences and fines | 1 | 165 | 7,593 of 7,593 | count and sum of fines per year and group |
+| 514 | Free Wifi browser language | 1 | 102 | 2,886 days | sum of the daily counts per year and language |
+| 544 | Free Wifi data | 1 | 3 | 2,320 of 2,320 | sums per year of its daily, later two-hourly records |
+| 589, 590 | DTMB authorisations | 1 | 1, 6 | 2,391, 6,610 | count per year |
+| 609 | budget drawing 2021 (holds 2022 too) | 1 | 44 | 4,769 lines of month 12 | sums per year, revenue or expenditure, economic class |
+| 614-622 | expenditure budgets 2014-2018 | 1 | 3 each | 2,073-2,303 lines | sums per kind of expenditure |
+| 625 | transfers to non-state schools | 1 | 14 | 1,719 of 1,719 | sum and count per year |
+| 626-628 | DTMB deposits | 1 | 2, 3, 10 | 3,644, 2,079, 6,566 | count per year; 403 + 152 deposits without a date, 2 header rows and 5 deposits dated 2028 write nothing |
+
+Read on 2026-10-25. Row 237 moved to P5: its 50,661 rows are the 1 km census grid of the whole
+of Slovakia, and only P5 builds the grid as an area. The grouped sums match a sum of the
+downloaded rows (row 609, expenditure class 63 of 2021: 534 lines, 83,770,477.40 EUR both ways).
 
 ## 7. Nothing left: what is skipped and why
 
