@@ -76,6 +76,61 @@ The copy has no ingress (its NetworkPolicy admits only the CNPG operator; the dr
 production RTO and RPO are those the drill measured; until the production instance archives to
 object storage, the drill there records `no-backup` and no number exists.
 
+### The nightly local dump and its restore check
+
+An instance without object storage (production until its S3 keys exist) keeps a nightly
+`pg_dumpall --clean --if-exists | gzip` instead: the CronJob `postgres-cluster-local-backup`
+(02:30 UTC, `postgres.databases.localBackup`) writes `/backup/<date>.sql.gz` to a node volume of
+`size` (10Gi) and keeps `keepDays` (7) days. It covers a dropped table or a broken migration, not
+the loss of the node. Just before each dump the job counts every table of every database into
+`<date>.sql.gz.counts` beside it; `excludeDatabases` (empty by default) leaves named databases
+out of both. The job fails when pg_dumpall fails or when one dump exceeds 80 % of the volume
+(that dump is kept; the fix is a larger `localBackup.size`), and `PostgresBackupStale` fires
+once no dump has succeeded for 26 hours.
+
+local-path does not enforce `size`, and the volume sits on the disk Postgres runs on, so the
+job holds itself to it:
+
+- Retention runs first, so a dump gets the room the expired ones leave.
+- The dump stops at what is left of `size` and is deleted when it reaches that; the error names
+  `localBackup.size` and `excludeDatabases`.
+- The dump does not start when writing up to that much would leave the node's disk under 10 %
+  free.
+- The Job `postgres-cluster-local-backup-now` that each apply creates (it binds the volume) dumps
+  only when no dump of the last 20 hours is on the volume, so an hourly apply adds no dump.
+
+Dev dumps without `antares` and `ckan_datastore` (81 GB and 1.9 GB on 2026-10-25) and keeps one
+day.
+
+With `localBackup.enabled` the monthly drill restores the newest dump first, before any
+archive restore, in an init container of its own Job pod:
+
+1. The init container `dump` runs the cluster's image, with the dump volume mounted read-only
+   and an `emptyDir` of `drDrill.storageSize` for the data. It starts a Postgres of its own.
+2. It tests the gzip whole, then feeds it to `psql -v ON_ERROR_STOP=1`. A truncated file or the
+   first refused statement fails the stage.
+3. It counts every table of the copy and holds it to the dump's `.counts` file, within
+   `tolerancePercent` and at least one row. A table the copy lacks fails the stage by name.
+4. It stops Postgres, deletes the copy's files and hands its verdict to the drill container,
+   which writes `localDump` (`local-dump-passed`, `failed`, `skipped` when the node had no
+   room, `off` without the dump), `localDumpRtoSeconds` (database start to restored),
+   `localDumpBytes` and `localDumpDetail` into the ConfigMap `postgres-cluster-dr-drill`.
+
+A failed dump restore fails the drill (`result: failed`, the Job red). A passed one leaves
+`result: no-backup` on an instance without object storage: the dump does not survive the node,
+so `PostgresRestoreDrillStale` keeps reporting the missing off-site backup. The restored copy
+holds production data: Postgres in the init container listens on no port (a Unix socket in its
+`emptyDir` only), the container gets no API token (the pod mounts the ServiceAccount token into
+the drill container alone), and an error in `localDumpDetail` is cut at its first quote so no
+row value reaches the ConfigMap. The drill creates no pod: its Role grants no `pods` verb, so
+it cannot start a pod under another ServiceAccount or with another Secret. Dev runs the
+dump beside its archive to rehearse the stage; read the measured numbers with:
+
+```bash
+kubectl -n dev get configmap postgres-cluster-dr-drill \
+  -o jsonpath='{.data.localDump} {.data.localDumpRtoSeconds}s {.data.localDumpBytes} bytes{"\n"}'
+```
+
 ## 3. Disaster Recovery Procedure
 
 To restore an entire organisational instance from scratch on a blank Kubernetes cluster:
