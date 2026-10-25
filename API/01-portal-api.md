@@ -2753,7 +2753,7 @@ project's home page greets them with the first step of the role they hold there 
 grants nothing: the Portal proposes the person's role as a `RoleBinding` through the one propose
 function, and the role holds once that Change is approved, like any other grant (PF-95).
 
-The e-mail is also the username, the name members and subjects name the person by (PF-04). The
+The e-mail is also the username, the name members and subjects name the person by today (PF-04); [ADR-N-061](../Decisions/adr-n-061-group-members-without-personal-data.md) moves a `Group` member, a binding subject and a `Policy` assignee to `person.id`, the Keycloak user id, once PF-126 is built. The
 realm sends its execute-actions e-mail, `VERIFY_EMAIL` and `UPDATE_PASSWORD` (PF-92), and the
 answer is `201` with `{ "person": {…}, "emailSent": true }`. When the realm cannot send mail, the
 Portal sets a temporary password with `UPDATE_PASSWORD` required instead and answers it once, as
@@ -4515,6 +4515,97 @@ POST /api/v1/projects/{project}/kpis/check   {pipeline, preview?}   → 200 KpiC
   over nothing, a source that did not answer, PL-104).
 - Who may call: a person with `propose` on `Pipeline` in the project; anyone else gets `403`,
   and so does a workload token, whose reading is its ServiceAccount's grants.
+
+## 56. Adding a device to an MQTT broker (T-5532, PF-47, ADR-N-048 §5)
+
+The MQTT brokers page adds a device that signs in by its own key pair. The browser makes the key
+pair (WebCrypto ECDSA P-256) or takes the public half pasted as a JWKS, one JWK or a PEM public
+key. The private key stays in the browser and the person's download; no request carries it.
+
+```text
+GET  /api/v1/projects/{project}/mqttbrokers/{name}/devices          → 200
+POST /api/v1/projects/{project}/mqttbrokers/{name}/devices          → 202
+```
+
+```json
+{"mayAdd": true,
+ "roles": [{"name": "camera", "publish": ["cameras/${clientid}/#"]}],
+ "tokenUrl": "https://id.example.org/realms/jc/protocol/openid-connect/token",
+ "issuer": "https://id.example.org/realms/jc"}
+```
+
+```json
+{"name": "sensor-001", "role": "camera", "topic": "cameras/${clientid}/#",
+ "jwks": {"keys": [{"kty": "EC", "crv": "P-256", "kid": "k1", "x": "…", "y": "…"}]}}
+```
+
+- `GET` answers whoever may read the project's MqttBrokers; `roles` is empty and `mayAdd` false
+  unless the caller is a person who may propose a ServiceAccount and this MqttBroker. Anybody else
+  gets `404`, as for a broker the project does not declare (PF-59).
+- `POST` proposes one Change in the caller's name: a ServiceAccount `{name}` whose only credential
+  is `{kind: oauth-client, name: device-key, jwks}` and whose one grant is `mqtt-device` on the
+  project, which names no Role and scopes no space, so it gives no Portal right and no Endpoint
+  audience; and the broker with `{name}` added to `role`'s `serviceAccounts`. The Change waits for
+  a second person; the Portal never approves it on proposal.
+- Refusals, before anything reaches the forge: a JWK carrying a private or symmetric member (`d`,
+  `p`, `q`, `dp`, `dq`, `qi`, `oth`, `k`) is `422` naming `jwks.keys[i].{member}`, and the value is
+  never echoed; any other PF-47 rule (one to five keys, P-256 or RSA 2048+, unique `kid`) is `422`
+  naming `jwks`; a `role` the broker lacks or a `topic` outside the role's `publish` filters is
+  `422` naming the field (a role that publishes needs a `topic`); a name that is not a DNS label is
+  `422` naming `name`; an existing ServiceAccount of that name is `409`; a caller who may not
+  propose both kinds is `403`, and so is any bearer token of a workload or agent, which proposes
+  the two manifests through `jc_resource_propose` instead.
+- After approval the device signs a client assertion (RFC 7523, `iss` and `sub` its client
+  `{project}-{name}`, `aud` the `issuer`) with its private key, sends it to `tokenUrl` with
+  `grant_type=client_credentials`, and connects with the access token as the MQTT password.
+  Rotating the key is a proposal of a new `jwks` on the account; revoking is removing the account
+  from the role.
+
+## 57. Who may do what on one Endpoint (T-5531, EP-103)
+
+The Endpoint page's Access tab shows every principal against each type and four actions: read,
+write, delete and history. The Portal decides nothing. It lists the principals the Endpoint's
+space names: the `assignee` of each Policy of that space and of each of its `rules` (a `user` as
+`person`, `role: public` as the public), each ServiceAccount of the project the caller may
+read (a kind they cannot read stays invisible, PF-59) and the public. It
+then asks the gateway's `access/simulate` with no action for each principal (§39), at most 16 at
+once, with its own service-account token, never the caller's.
+
+```text
+GET /api/v1/projects/{project}/endpoints/{name}/access/matrix?kind=group → 200 Matrix
+```
+
+```json
+{"endpoint": "bikes-ops", "space": "bikes",
+ "principals": [{"kind": "group", "name": "bike-stewards",
+                 "via": [{"kind": "policy", "name": "stewards-write"}]}],
+ "types": ["BikeHireDockingStation"],
+ "cells": [{"principal": "group:bike-stewards", "type": "BikeHireDockingStation",
+            "action": "write", "effect": "permit", "attributes": ["status"],
+            "constraint": "q: operator==\"HSL\"", "decidedBy": "stewards-write"}],
+ "edges": [{"from": "principal:group:bike-stewards", "to": "policy:stewards-write"},
+           {"from": "policy:stewards-write", "to": "endpoint:bikes-ops"},
+           {"from": "endpoint:bikes-ops", "to": "type:BikeHireDockingStation"}]}
+```
+
+- A cell is one type and one action a permission (`effect: permit`) or a prohibition
+  (`effect: prohibit`) of the principal's grant document names. An operation falls into a
+  column as the UI's operation areas read it: `retrieve*` and `query*` are read, a `*Temporal*`
+  operation is history, create, update, replace, append, merge, upsert and batch are write,
+  delete and purge are delete; subscriptions, registrations and entity maps have no column. A
+  combination without a cell is refused.
+- `attributes` is `"*"` or the attribute names; `constraint` joins the grant's `q`, `scopeQ`,
+  `geoQ` and `temporalQ` into one line. `decidedBy` is the first Policy in force for the
+  principal, of the cell's effect, whose `information` names the type or no type, else `null`.
+- A principal the gateway admits to nothing is left out. A `did` assignee is no token the
+  gateway can be asked about and is left out too.
+- `kind` is `person`, `group`, `role`, `serviceAccount` or `public` (`400` otherwise). More than
+  50 principals is `422`, naming `kind` as the member to narrow by; the gateway is not asked.
+- Who may read: an organization administrator, or whoever reads Policies in the Endpoint's
+  Context Space; anybody else is `403` before the gateway is asked. An unknown Endpoint is `404`;
+  no gateway, or a gateway that does not answer, is `503`.
+- Each read is one `access.simulated` activity event naming the reader, the Endpoint and the
+  number of principals. The answer carries rules only, never a data value.
 
 ## Related
 

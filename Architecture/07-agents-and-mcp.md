@@ -333,7 +333,7 @@ sequenceDiagram
      Co-Proposed-By: demo.steward@example.org
      ```
 
-   A proposal made through the Portal, by a person or an assistant acting for one, is authored by that person.
+   A proposal made through the Portal, by a person or an assistant acting for one, is authored by that person. A Change records the channel it came through (`proposedVia`: `person`, `mcp` or `agent`, and the client), and a commit proposed over MCP carries a `Proposed-Via` trailer ([§10](#10-contribution-workflow), AG-17, AG-18, AG-137).
 3. **Grounded Tool Results (CC-47):** A data-plane tool result carries `restricted: true` when the policy narrowed the answer, beside `total`, `nextCursor` and `warnings`.
 
 ---
@@ -461,8 +461,45 @@ What the assistant may never do is unchanged by this: it proposes, it does not a
 
 While it works, the person watches. The assistant edits the draft the open form is editing, and the form shows each change as it lands, marks what the assistant wrote and never overwrites the field the person has in hand (UI-58, UI-47, AG-61). The panel keeps the last three routes as breadcrumbs (UI-59), so "create a data model for bike counters" is a conversation the person walks through — which space, which base model, which unit — and ends with a checked draft whose Propose is theirs to click.
 
+## 10. Contribution workflow
+
+Decided in [ADR-N-060](../Decisions/adr-n-060-contribution-workflow-over-mcp.md) (Proposed). "Improving the platform" over an MCP connector means two things, and each has its own path.
+
+**The project's configuration.** A change to one resource is one proposal on `main`: the client calls `jc_*_propose`, the person confirms the elicitation (AG-63), and the Change waits for an approver. A change to more than one resource is a workspace ([ADR-N-024](../Decisions/adr-n-024-workspaces-branch-and-preview.md), AG-82):
+
+1. The client opens a workspace (`jc_workspace_open`) and proposes each resource into it (`jc_*_propose` with `workspace`). A write inside a workspace changes nothing on `main`, so it runs in the Green lane after the same verdict and coverage checks as the REST `?workspace=` door (PF-57, CC-76).
+2. The client compares and previews the workspace, then asks for a review with a short summary through the review-request operation of ADR-N-060 §2 (follow-up F2, not built yet). The request pins the branch's head commit and opens no Change (AG-138).
+3. The workspace owner gets a notification that opens the comparison with **Bring back**. The person's click opens one Change for the whole workspace. If the branch moved after the request, the Portal asks the person to compare again instead.
+4. An approver approves or rejects the Change in the Portal, and the reconciler applies it. The approver sees "Proposed with an AI client" and the client's name on the Change (AG-137).
+
+The client never brings a workspace back, discards it or decides a Change, on MCP or on REST: the Portal decides the channel from the token's client, not from the route (AG-11, AG-82, AG-133).
+
+```mermaid
+sequenceDiagram
+    participant C as MCP client
+    participant P as Portal
+    participant O as Workspace owner
+    participant A as Approver
+    C->>P: jc_workspace_open, jc_*_propose x n (workspace)
+    C->>P: request review (head, summary)
+    P->>O: notification: review the comparison
+    O->>P: Bring back (one Change, proposedVia mcp)
+    P->>A: Change waits, marked as AI-proposed
+    A->>P: Approve
+    P->>P: reconciler applies
+```
+
+A two-resource contribution takes 4 clicks from the two people together, against 6 for two separate Changes and 11 for a workspace today (ADR-N-060 §3).
+
+**Who may contribute.** `spec.policies.agents.mcp.propose` on the Organization names the Roles that may propose over MCP, narrowed per project under `projects`; absent, it is every Role that may propose in the Portal. It only narrows the person's own rights (AG-139).
+
+**The platform's own behaviour.** Code and product changes come in as feedback (API/01 §38), from any Portal page or over MCP with the feedback operation of ADR-N-060 §2 (follow-up F6, not built yet) after the person reads the text. Feedback is anonymous unless the person signs it, may link the Change that showed the need, and reaches the board as a blocked proposed task (AG-140).
+
+**Limits.** `spec.limits.contributions` bounds per person, across every channel, the open Changes, the open workspaces, the MCP calls a minute, the review requests a day and the feedback an hour (AG-141, [ADR-N-035](../Decisions/adr-n-035-organization-policies-and-limits.md)).
+
 ## Related
 
+- [ADR-N-060](../Decisions/adr-n-060-contribution-workflow-over-mcp.md) — the contribution workflow over MCP.
 - [Architecture/16](16-apps-on-demand.md) — referenced above.
 - [ADR-N-025](../Decisions/adr-n-025-one-mcp-connector-several-endpoints.md) — one connector over several Endpoints (EP-87, EP-88).
 - [01-overview](../Architecture/01-overview.md) — where this chapter sits in the whole.

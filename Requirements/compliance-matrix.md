@@ -22,7 +22,7 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 
 | Family | Requirements | Tested | Built | Open | Untested and security-tagged |
 |---|---|---|---|---|---|
-| **AG** — Agents and MCP | 135 | 112 | 8 | 15 | 12 |
+| **AG** — Agents and MCP | 140 | 112 | 8 | 20 | 17 |
 | **AP** — Apps on demand | 173 | 143 | 11 | 19 | 9 |
 | **CC** — Configuration as code | 90 | 74 | 7 | 9 | 0 |
 | **DM** — Data models | 142 | 108 | 14 | 20 | 11 |
@@ -41,7 +41,7 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **SP** — Context-space surface | 22 | 18 | 2 | 2 | 0 |
 | **TS** — Testing and quality | 26 | 16 | 5 | 5 | 0 |
 | **UI** — Portal and user interface | 97 | 72 | 14 | 11 | 5 |
-| **Total** | 1432 | 1074 | 127 | 231 | 64 |
+| **Total** | 1437 | 1074 | 127 | 236 | 69 |
 
 ## 3. Requirement to test
 
@@ -177,6 +177,11 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **AG-131** | [S] | tested | ci-full, fast ci | platform `crates/context-gateway/tests/edge_auth_accounts_roles_in_tests.rs::a_grant_outside_its_validity_is_not_a_role`, platform `crates/jc-core/tests/service_account_tests.rs::a_grant_with_a_validity_window_is_in_force_only_inside_it`, platform `crates/jcctl/tests/service_account_reconciler_tests.rs::a_grant_window_becomes_the_policy_validity`, and 2 more |
 | **AG-132** | [A] [S] | tested | ci-full, fast ci | portal `src/api/agent_access.rs::removing_one_grant_narrows`, portal `src/api/agent_access.rs::adding_changing_or_keeping_every_grant_does_not`, portal `src/api/agent_access.rs::the_reaper_takes_expired_grants_and_never_the_last_one`, and 13 more |
 | **AG-133** | [A] [S] | built |  | `joinedcontext-portal/ui/src/pages/organization/Agents.tsx` |
+| **AG-137** | [A] [H] [S] | open |  |  |
+| **AG-138** | [A] [H] [S] | open |  |  |
+| **AG-139** | [A] [S] | open |  |  |
+| **AG-140** | [A] [H] [S] | open |  |  |
+| **AG-141** | [A] [S] | open |  |  |
 | **AG-87** | [H] | tested | ci-full, fast ci | portal `src/agents/paths.rs::building_an_app_may_draft_the_space_it_needs`, portal `src/agents/paths.rs::every_path_says_its_steps_with_tools_it_may_call`, portal `src/agents/paths.rs::every_path_has_an_id_that_reads_back_and_a_first_question`, and 41 more |
 | **AG-88** | [A] | built |  | `joinedcontext-portal/src/agents/oneshot/conversation.rs` |
 | **AG-89** | [A] [S] | tested | fast ci | portal `src/ops/pipeline_steps.rs::fields_are_every_key_once_in_name_order` |
@@ -562,7 +567,7 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **DM-98** | [H] | tested | ci-full, fast ci | platform `crates/jc-core/src/field_order.rs::the_table_parses_and_every_group_attribute_has_a_label`, platform `crates/jc-core/src/field_order.rs::name_comes_first_coordinates_and_id_last`, platform `crates/jc-core/src/field_order.rs::an_unlisted_number_is_a_value_and_an_unlisted_text_the_rest`, and 17 more |
 | **DM-99** | [H] | tested | fast ci | platform `crates/assistant/src/chat/viz.rs::the_default_maps_popup_shows_the_models_key_attributes` |
 | **DM-100** | [H] | tested | fast ci | platform `tools/model-tools/tests/test_gen_broker_schema.py::test_the_display_order_rank_title_and_label_reach_the_broker`, portal `ui/tests/display_order.test.ts::ranked first, then the class's slots as written, system attributes last, unlisted after`, portal `ui/tests/display_order.test.ts::never lists a slot the caller's answer does not carry, however the model ranks it`, and 2 more |
-| **DM-101** | [S] | built |  | `joinedcontext-deployment/charts/ckan/files/jc_theme/plugin.py`, `joinedcontext-platform/crates/assistant/src/chat/routed.rs`, `joinedcontext-platform/crates/jcctl/src/publish/ckan_datastore.rs` |
+| **DM-101** | [S] | built |  | `joinedcontext-deployment/charts/ckan/files/jc_theme/plugin.py`, `joinedcontext-platform/crates/assistant/src/chat/routed.rs` |
 | **DM-102** | [S] | tested | ci-full, fast ci | platform `crates/jc-core/tests/display_order_tests.rs::rank_first_then_own_slots_then_inherited_extras_by_the_heuristic_system_last`, platform `crates/jc-core/tests/display_order_tests.rs::hidden_and_ungranted_slots_never_appear`, platform `crates/jc-core/tests/display_order_tests.rs::summary_is_the_annotated_slots_else_the_first_four`, and 12 more |
 | **DM-103** |  | built |  | `joinedcontext-platform/crates/jc-core/src/display_order.rs` |
 | **DM-104** |  | tested | fast ci | portal `src/temporal_audit.rs::the_scan_reads_each_attribute_its_observed_at_unit_and_dataset`, portal `src/temporal_audit.rs::a_member_key_is_its_quoted_name_then_a_colon_across_blanks`, portal `src/temporal_audit.rs::a_default_type_names_attributes_before_any_type_literal`, and 2 more |
@@ -1106,6 +1111,8 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **PF-47** | [S] | tested | ci-full, fast ci | deployment `tests/test_keycloak_workload_identity.py::test_the_realm_trusts_the_clusters_serviceaccount_issuer`, deployment `tests/test_keycloak_workload_identity.py::test_keycloak_holds_a_short_projected_token_and_not_the_default_one`, deployment `tests/test_keycloak_workload_identity.py::test_keycloak_reaches_the_api_server_and_no_https_elsewhere`, and 63 more |
 | **PF-48** | [S] | tested | ci-full, conformance, fast ci, live on dev | conformance `tests/etsi/temporal_federated.robot::PF-48 The Hub's Own Policy Set Is The Only Gate`, conformance `tests/mcp/test_mcp_protocol.py::test_pf48_the_hub_grants_no_more_than_its_own_policy_says`, deployment `tests/test_forge_bootstrap.py::test_the_seed_carries_a_hub_whose_two_members_are_inside_its_own_project`, and 48 more |
 | **PF-125** | [S] | open |  |  |
+| **PF-126** | [S] | open |  |  |
+| **PF-127** | [S] | open |  |  |
 | **PF-49** | [S] | tested | ci-full, fast ci | deployment `tests/test_context_gateway.py::test_the_proposer_account_holds_a_portal_token_and_no_endpoint_token`, deployment `tests/test_seed_identity_contract.py::test_the_janitor_reaches_journey_residue_and_nothing_seeded`, platform `crates/jc-core/tests/role_tests.rs::the_documented_role_round_trips`, and 16 more |
 | **PF-50** | [S] | tested | ci-full, conformance, fast ci, live on dev | conformance `e2e/journeys/16-role-permissions.spec.ts::UI-44 the viewer sees New endpoint and New pipeline disabled with the reason, and PF-50 the API says 403`, deployment `tests/test_forge_bootstrap.py::test_a_role_that_may_act_on_an_endpoint_may_act_on_its_projection`, deployment `tests/test_keycloak_clients.py::test_every_client_carries_the_groups_claim`, and 152 more |
 | **PF-51** | [H] | tested | ci-full, conformance, fast ci | conformance `tests/security/test_forge_side_door.py::test_cc41_pf51_the_default_branch_is_protected_and_a_reader_may_neither_push_nor_merge`, conformance `tests/security/test_forge_side_door.py::test_pf51_the_protection_rule_pins_the_pusher_and_drops_an_approval_a_new_commit_invalidates`, conformance `tests/security/test_forge_side_door.py::test_pf51_a_leaked_platform_token_cannot_administer_the_forge`, and 52 more |
