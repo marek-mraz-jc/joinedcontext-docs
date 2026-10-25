@@ -879,6 +879,52 @@ on 2026-10-24:
 - Only DGN, DWG, SHP, KMZ, WMS or GPKG, which no pipeline reads: 65 (GeoJSON of 2020), 80, 81, 82,
   83, 84, 85, 88, 89.
 
+### 6.7 Public institutions by category (T-5692, 2026-10-25)
+
+The owner asked on 2026-10-25 for every public institution category the city publishes, each with a
+GPS point. Open Data BCN's register of facilities lists all of them in the `equipament-*` families
+the `equipaments` pipeline already reads (section 6.4), each facility with the register's own WGS84
+point (`geo_epgs_4326_lat/lon`); no category needs a geocoder. The register gives a facility
+several kinds (`secondary_filters_name`): a municipal library is also a library and a study room.
+Up to T-5692 the pipeline kept one kind a facility, the first in alphabetical order, so dev served
+1 of the 52 municipal libraries, none of the 106 municipal nursery schools and none of the 51
+municipal sports centres. T-5692 writes every kind and every family of a facility into `category`.
+
+Source: distinct `register_id` per kind in the family's DataStore resource, fetched 2026-10-25.
+Mapped: the committed mapping run on that day's register (23,336 PointOfInterest, each with its
+source point inside Barcelona). Dev before: `category=="<kind>"` on the places Endpoint on
+2026-10-25, before the change was applied.
+
+| Category (register kind) | Family | Source | Mapped | Dev before |
+|---|---|---:|---:|---:|
+| Biblioteques municipals (municipal libraries) | culture-leisure | 52 | 52 | 1 |
+| Centres cívics (civic centres) | culture-leisure | 52 | 52 | 52 |
+| Casals i espais per a joves (youth centres) | culture-leisure | 45 | 45 | 44 |
+| Casals de barri comunitaris (community centres) | culture-leisure | 44 | 44 | 43 |
+| Museus municipals (municipal museums) | culture-leisure | 21 | 21 | 0 |
+| Arxius municipals (municipal archives) | culture-leisure | 19 | 19 | 19 |
+| Instal·lacions esportives municipals (municipal sports centres) | sports | 51 | 51 | 0 |
+| Escoles Bressol municipals (municipal nursery schools) | education | 106 | 106 | 0 |
+| Centres de serveis socials (social services centres) | social-services | 39 | 39 | 39 |
+| Residències gent gran (care homes) | social-services | 227 | 226 | 225 |
+| Centres de dia gent gran (day centres) | social-services | 150 | 148 | 148 |
+| OACs (citizen service offices) | public-administration | 13 | 13 | 13 |
+| Consells mpals. de districte (district councils) | public-administration | 10 | 10 | 10 |
+| Oficines d'Habitatge (housing offices) | public-administration | 11 | 11 | 11 |
+| Guàrdia Urbana (city police) | public-administration | 10 | 10 | 10 |
+| Comissaries dels Mossos d'Esquadra (police stations) | public-administration | 12 | 12 | 12 |
+| Mercats municipals (municipal markets) | markets-shopping | 43 | 43 | 39 |
+
+A gap is a row the pipeline drops by reason: a point outside the city or none at all (186 and 66
+of the whole register), or a second id for one place. The family codes count every facility a
+family lists: public-administration 1,095 in the city, 1,094 mapped; social-services 1,123 and 1,120.
+
+Unusable, with the reason: `comissaries-policia` (stale, 2023-10, its ids in the register),
+`consolats-bcn` (stale, 2023-10), `culturailleure-bibliotequesimuseus` and
+`serveissocials-oficinesbenestarsocial` (stale, 2023-10, ids in the register), `equipament-sanitat`
+(stale, 2024-01), `equipament-associacions` (private: members' home addresses). No fire-station or
+court register is published (package_search `bombers` and `jutjats`: 0 hits).
+
 ## 7. Nothing left: what is skipped and why
 
 - `accions-formatives-adrecades-al-personal`: internal personnel administration; compatibilitats names individual employees.
