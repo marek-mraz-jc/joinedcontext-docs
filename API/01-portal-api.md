@@ -2691,6 +2691,7 @@ POST   /api/v1/organization/people/{id}/resend-invitation   send a pending invit
 POST   /api/v1/organization/people/{id}/remove-second-factor  remove every OTP and WebAuthn credential → 204
 POST   /api/v1/organization/people/{id}/sign-out            end every session → 204
 DELETE /api/v1/organization/people/{id}                     remove → 202 with the Change, or 204
+POST   /api/v1/organization/people/remove                   remove up to 200 at once → 202 with the Change, or 204
 ```
 
 `{id}` is the Keycloak user id. `GET` takes `search` (a substring of the name or e-mail), `first`
@@ -2779,10 +2780,21 @@ deletes the Keycloak user once that Change is on `main`, and clears the mark, le
 disabled, when the Change is rejected. A person no manifest names is deleted at once: `204`.
 An App's `spec.access` entry naming the e-mail then matches nobody, and the App page lists it.
 
+`POST /api/v1/organization/people/remove` takes `{"ids": ["7d1f0c9e-…", …]}`, 1 to 200 Keycloak
+user ids (a department leaving), and does what `DELETE` does for all of them at once: ONE Change
+takes every one of their e-mails out of every `Group` and `RoleBinding`, and each person is
+disabled, signed out and marked with that Change. When no manifest names any of them they are
+deleted at once: `204`. Each person is held to the `DELETE` rules before anything is written: a
+person holding a right the caller lacks is `403` naming them, the caller or the last Organization
+Administrator in the list is `409`, an unknown id is `404` naming it, a person whose removal is
+already open is `409` naming it, and no id or more than 200 is `422`. The Change's title and
+description name the ids, never the e-mails. Each person gets their own `person.changed` event
+(T-5606).
+
 - Every route needs a binding at organization scope whose role grants the verb on `Person`
   (PF-91): `read` for the two `GET`s, `create` for `POST`, `update` for `PATCH` and
   `reset-password`, `disable` for `disable`, `enable`, `remove-second-factor` and `sign-out`, and
-  `delete` for `DELETE`. Anyone else gets `403` naming the verb.
+  `delete` for `DELETE` and `remove`. Anyone else gets `403` naming the verb.
 - A person who holds a right the caller does not hold (an `org-admin`, for a caller who is only
   `people-admin`) is refused every write above with `403` naming that right, so a reset's temporary
   password never opens a stronger account; disabling or deleting yourself, or the last Organization
