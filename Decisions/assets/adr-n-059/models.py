@@ -85,6 +85,12 @@ MODELS = {
 }
 
 
+def person(n: int) -> str:
+    """The n-th person's Keycloak user id: a member names a person by id, never by e-mail
+    (PF-126, ADR-N-061)."""
+    return f"00000000-0000-4000-8000-{n:012d}"
+
+
 @dataclass(frozen=True)
 class Town:
     """The municipality as data: who is in which department, and what is shared."""
@@ -97,7 +103,7 @@ class Town:
     def people(self) -> dict[str, list[str]]:
         out, n = {}, 0
         for dept, count, _spaces, _eps in self.departments:
-            out[dept] = [f"u{n + i + 1:03d}@{{orgDomain}}" for i in range(count)]
+            out[dept] = [person(n + i + 1) for i in range(count)]
             n += count
         for dept, user in self.extra_people:
             out[dept].append(user)
@@ -411,7 +417,7 @@ def count(model: str, town: Town | None = None) -> dict[str, int]:
 SCENARIOS = {
     "a": (
         "Add a person to a department",
-        lambda t: replace(t, extra_people=(("skolstvo", "u101@{orgDomain}"),)),
+        lambda t: replace(t, extra_people=(("skolstvo", person(101)),)),
     ),
     "b": (
         "Give one department read on another's dataset",

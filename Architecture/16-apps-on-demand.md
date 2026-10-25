@@ -394,7 +394,7 @@ spec:
     - { name: editor, title: { en: "Editor", sk: "Editor" }, description: "Writes the steward's note" }
   access:
     - { role: viewer, subjects: [{ group: helsinki-operations }] }
-    - { role: editor, subjects: [{ user: jana.kovacova@example.org }] }
+    - { role: editor, subjects: [{ user: 3f2a9c1e-7b4d-4e8a-9c61-0d5e2b7f8a14 }] }
   dataNeeds:
     - contextSpaceRef: { kind: ContextSpace, name: helsinki }
       types: [Alert]
