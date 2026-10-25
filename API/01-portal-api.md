@@ -4197,6 +4197,17 @@ Filing needs `propose` on the Pipeline in `{project}`, and so does the `endpoint
 }
 ```
 
+### 48.1 A person's request on an Endpoint (PL-115)
+
+A person who reads an Endpoint but gets nothing through it asks the owners of its space on the Endpoint's page. The request is the same kind of row, in the same incoming list, decided by the same doors.
+
+```text
+GET    /api/v1/projects/{project}/endpoints/{name}/access-requests   { "types": [...], "refusal": string|null, "items": [...] } → 200
+POST   /api/v1/projects/{project}/endpoints/{name}/access-requests   { "types": ["AirQualityObserved"], "until"?, "reason" } → 201
+```
+
+Both need `read` on the Project and on the Endpoint in its space; anybody else reads `404`. `GET` answers the types the caller may ask for (the classes of the space's compiled model, narrowed to the classes of the ModelProjection the Endpoint names), `refusal` when no new grant could reach the Endpoint (it names `policyRef` or `policyRefs`, or it is an App's own Endpoint, AP-139), and the caller's own requests on it, never another person's. `POST` comes from a person's session; a service account's or an agent's token answers `403`. The body names no grantee: an unknown member answers `400`, and the grant is always for the caller. A type the Endpoint does not serve, an empty or doubled type, an end that passed and an empty reason each answer `422` with one `errors` line naming its field (`types[i]`, `until`, `reason`); an Endpoint with a `refusal`, or a second open or granted request of the same person on it, answers `409`. A person's request reads `"pipeline": null`, `"person": "{username}"` and `"account": "{username}"`; its types carry `"attrs": []` (every attribute of the type). Approving proposes one Policy into the Endpoint's project: `{endpoint}-{id}` (or `access-{id}` when that is over 63 characters), assignee `{ "kind": "user", "id": "{username}" }`, `retrieveOps`, `information` naming the asked-for types, `validity.to` the end; the Endpoint itself is unchanged. Revoking ends that Policy now and leaves the Endpoint unchanged.
+
 ## 49. The agent registry (T-4849, AG-126…AG-129)
 
 Administration → Agents: every agent identity of the organization and its projects in one
