@@ -115,8 +115,8 @@ The Portal crate holds the API, the reconciler and the embedded UI, in over 120 
 
 Two files in `jc-core` are why a manifest printed in this documentation set can be trusted:
 
-- `crates/jc-core/tests/docs_golden_tests.rs` reads every file in `crates/jc-core/tests/golden/`, 24 manifests lifted from the pages that print them, and asserts each one parses, validates and round-trips. The file names carry the page they came from, so a broken example names its own page.
-- `crates/jc-core/tests/kind_documentation_tests.rs` asserts that every field of every kind carries a doc comment and that none of them carries a credential-shaped value. That comment becomes the JSON Schema `description` the Portal ships, the API publishes and the MCP tool list hands a model, so a missing one is a field unexplained in four places.
+- `crates/jc-core/tests/it/docs_golden_tests.rs` reads every file in `crates/jc-core/tests/golden/`, 24 manifests lifted from the pages that print them, and asserts each one parses, validates and round-trips. The file names carry the page they came from, so a broken example names its own page.
+- `crates/jc-core/tests/it/kind_documentation_tests.rs` asserts that every field of every kind carries a doc comment and that none of them carries a credential-shaped value. That comment becomes the JSON Schema `description` the Portal ships, the API publishes and the MCP tool list hands a model, so a missing one is a field unexplained in four places.
 
 ---
 

@@ -468,7 +468,7 @@ Decided in [ADR-N-060](../Decisions/adr-n-060-contribution-workflow-over-mcp.md)
 **The project's configuration.** A change to one resource is one proposal on `main`: the client calls `jc_*_propose`, the person confirms the elicitation (AG-63), and the Change waits for an approver. A change to more than one resource is a workspace ([ADR-N-024](../Decisions/adr-n-024-workspaces-branch-and-preview.md), AG-82):
 
 1. The client opens a workspace (`jc_workspace_open`) and proposes each resource into it (`jc_*_propose` with `workspace`). A write inside a workspace changes nothing on `main`, so it runs in the Green lane after the same verdict and coverage checks as the REST `?workspace=` door (PF-57, CC-76).
-2. The client compares and previews the workspace, then calls `jc_workspace_request_review` with a short summary. The request pins the branch's head commit and opens no Change (AG-138).
+2. The client compares and previews the workspace, then asks for a review with a short summary through the review-request operation of ADR-N-060 §2 (follow-up F2, not built yet). The request pins the branch's head commit and opens no Change (AG-138).
 3. The workspace owner gets a notification that opens the comparison with **Bring back**. The person's click opens one Change for the whole workspace. If the branch moved after the request, the Portal asks the person to compare again instead.
 4. An approver approves or rejects the Change in the Portal, and the reconciler applies it. The approver sees "Proposed with an AI client" and the client's name on the Change (AG-137).
 
@@ -481,7 +481,7 @@ sequenceDiagram
     participant O as Workspace owner
     participant A as Approver
     C->>P: jc_workspace_open, jc_*_propose x n (workspace)
-    C->>P: jc_workspace_request_review (head, summary)
+    C->>P: request review (head, summary)
     P->>O: notification: review the comparison
     O->>P: Bring back (one Change, proposedVia mcp)
     P->>A: Change waits, marked as AI-proposed
@@ -493,7 +493,7 @@ A two-resource contribution takes 4 clicks from the two people together, against
 
 **Who may contribute.** `spec.policies.agents.mcp.propose` on the Organization names the Roles that may propose over MCP, narrowed per project under `projects`; absent, it is every Role that may propose in the Portal. It only narrows the person's own rights (AG-139).
 
-**The platform's own behaviour.** Code and product changes come in as feedback (API/01 §38), from any Portal page or over MCP with `jc_feedback_send` after the person reads the text. Feedback is anonymous unless the person signs it, may link the Change that showed the need, and reaches the board as a blocked proposed task (AG-140).
+**The platform's own behaviour.** Code and product changes come in as feedback (API/01 §38), from any Portal page or over MCP with the feedback operation of ADR-N-060 §2 (follow-up F6, not built yet) after the person reads the text. Feedback is anonymous unless the person signs it, may link the Change that showed the need, and reaches the board as a blocked proposed task (AG-140).
 
 **Limits.** `spec.limits.contributions` bounds per person, across every channel, the open Changes, the open workspaces, the MCP calls a minute, the review requests a day and the feedback an hour (AG-141, [ADR-N-035](../Decisions/adr-n-035-organization-policies-and-limits.md)).
 
