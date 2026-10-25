@@ -1308,6 +1308,7 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **PL-112** | [S] | tested | ci-full, fast ci | platform `crates/jc-core/src/datacube.rs::the_cube_table_is_written_as_python_writes_it`, platform `crates/jc-core/src/datacube.rs::each_parameter_is_checked_before_it_is_rendered`, platform `crates/jc-core/tests/datacube_tests.rs::one_cube_without_keys_renders_the_committed_decoder`, and 7 more |
 | **PL-113** | [S] | tested | ci-full | platform `crates/jc-core/tests/data_source_serde_tests.rs::an_http_body_bound_is_one_byte_to_256_mib`, platform `crates/jc-manifest/tests/http_max_bytes_bento_tests.rs::a_body_over_max_bytes_is_refused_before_the_authors_steps` |
 | **PL-114** | [H] | tested | ci-full, fast ci | platform `crates/jc-manifest/tests/bento_datasource_render_tests.rs::a_csv_http_body_reaches_the_steps_one_row_per_message`, platform `crates/jc-manifest/tests/bento_datasource_render_tests.rs::an_unknown_http_body_format_is_refused`, platform `crates/jc-manifest/tests/bento_datasource_render_tests.rs::an_archive_of_csv_members_splits_rows_after_the_ranged_read`, and 4 more |
+| **PL-115** | [S] [H] | tested | ci-full, fast ci | portal `src/access_requests.rs::a_persons_approval_proposes_one_policy_for_that_person`, portal `src/access_requests.rs::a_person_names_only_served_types`, portal `tests/access_requests_tests.rs::a_persons_request_is_refused_field_by_field`, and 3 more |
 
 ### R — Access control and federation
 
