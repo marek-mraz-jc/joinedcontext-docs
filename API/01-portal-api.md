@@ -4431,7 +4431,8 @@ POST /api/v1/projects/{project}/kpis/check   {pipeline, preview?}   → 200 KpiC
 The Endpoint page's Access tab shows every principal against each type and four actions: read,
 write, delete and history. The Portal decides nothing. It lists the principals the Endpoint's
 space names: the `assignee` of each Policy of that space and of each of its `rules` (a `user` as
-`person`, `role: public` as the public), every ServiceAccount of the project and the public. It
+`person`, `role: public` as the public), each ServiceAccount of the project the caller may
+read (a kind they cannot read stays invisible, PF-59) and the public. It
 then asks the gateway's `access/simulate` with no action for each principal (§39), at most 16 at
 once, with its own service-account token, never the caller's.
 
