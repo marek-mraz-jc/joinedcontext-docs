@@ -83,9 +83,24 @@ An instance without object storage (production until its S3 keys exist) keeps a 
 (02:30 UTC, `postgres.databases.localBackup`) writes `/backup/<date>.sql.gz` to a node volume of
 `size` (10Gi) and keeps `keepDays` (7) days. It covers a dropped table or a broken migration, not
 the loss of the node. Just before each dump the job counts every table of every database into
-`<date>.sql.gz.counts` beside it. The job fails when pg_dumpall fails or when one dump exceeds
-80 % of the volume (that dump is kept; the fix is a larger `localBackup.size`), and
-`PostgresBackupStale` fires once no dump has succeeded for 26 hours.
+`<date>.sql.gz.counts` beside it; `excludeDatabases` (empty by default) leaves named databases
+out of both. The job fails when pg_dumpall fails or when one dump exceeds 80 % of the volume
+(that dump is kept; the fix is a larger `localBackup.size`), and `PostgresBackupStale` fires
+once no dump has succeeded for 26 hours.
+
+local-path does not enforce `size`, and the volume sits on the disk Postgres runs on, so the
+job holds itself to it:
+
+- Retention runs first, so a dump gets the room the expired ones leave.
+- The dump stops at what is left of `size` and is deleted when it reaches that; the error names
+  `localBackup.size` and `excludeDatabases`.
+- The dump does not start when writing up to that much would leave the node's disk under 10 %
+  free.
+- The Job `postgres-cluster-local-backup-now` that each apply creates (it binds the volume) dumps
+  only when no dump of the last 20 hours is on the volume, so an hourly apply adds no dump.
+
+Dev dumps without `antares` and `ckan_datastore` (81 GB and 1.9 GB on 2026-10-25) and keeps one
+day.
 
 With `localBackup.enabled` the monthly drill restores the newest dump first, before any
 archive restore, in an init container of its own Job pod:
