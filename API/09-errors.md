@@ -340,6 +340,14 @@ The endpoint has no broker view, because its slug is longer than a view id may b
 
 What to do: The endpoint has no context broker view (its slug is longer than a view id can be); its status in the Portal says so. Give it a shorter slug.
 
+### `query-timeout` {#query-timeout}
+
+**Query Timeout**, status 504.
+
+The context broker did not finish the query in time: its database cancelled it at the statement timeout. Asking the same query again times out again; a temporal query over a long window or a whole type is the usual case.
+
+What to do: Ask for less at once: a shorter time window, a smaller limit or lastN, or only the attributes you need.
+
 ### `delivery-timeout` {#delivery-timeout}
 
 **Delivery Timeout**, status 504.
