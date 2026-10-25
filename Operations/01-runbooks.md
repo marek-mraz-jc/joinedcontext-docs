@@ -195,10 +195,12 @@ scripts/emergency-revoke.sh --instance dev --policy public-read \
    stays cryptographically valid until it expires, so logging the subject out of Keycloak
    revokes nothing on its own: only the PDP can stop honouring the token. The script removes
    the manifest from the gateway's repository first.
-2. **The gateway replicas re-read the repository.** The endpoint and policy table is read
-   once at start-up and there is no invalidation endpoint yet, so the restart *is* the cache
-   flush. A rollout that does not finish inside the bound is reported as a failed revocation,
-   never as a success.
+2. **The gateway replicas re-read the repository by themselves.** Each replica polls its copy
+   of the repository every second and swaps its endpoint and policy tables when a manifest
+   changes, so the script restarts nothing: a restart of the gateway every tenant shares
+   would only add its rollout time to the bound. The Verification step below proves that the
+   replicas stopped honouring the grant; a credential still accepted after the bound is
+   reported as a failed revocation, never as a success.
 3. **Keycloak stops issuing new tokens.** Sessions are logged out for a user, the client
    secret is rotated for a service account. The script prints no token and no secret.
    For a client the platform declares (edge, portal-api, the gateway, Grafana, Gitea …) the
