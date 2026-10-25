@@ -1,0 +1,264 @@
+name	org_type	site	feed_kind	check_url	upcoming	complete	robots	read_on	verdict	reason
+Schwarzenberský palác v Praze	muzeum	https://www.ngprague.cz/budova/schwarzenbersky-palac					y	2026-10-25	skip	no machine-readable events
+Musoleum	muzeum	https://musoleum.cz/					y	2026-10-25	skip	none upcoming
+Dům fotografie	muzeum	https://www.ghmp.cz/budovy/ghmp-dum-fotografie/					y	2026-10-25	skip	no machine-readable events
+Galerie U Betlémské kaple	muzeum	https://www.galerieubetlemskekaple.cz/					y	2026-10-25	skip	no machine-readable events
+Lobkowiczké sbírky	muzeum	http://www.lobkowicz.com/collections/						2026-10-25	skip	down: HTTPError
+Galerie Millennium	muzeum	http://www.gallerymillennium.cz/					y	2026-10-25	skip	no machine-readable events
+Obrazárna Pražského hradu	muzeum	https://www.hrad.cz/cs/prazsky-hrad-pro-navstevniky					y	2026-10-25	skip	no machine-readable events
+Museum Kampa	muzeum	http://www.museumkampa.cz/					y	2026-10-25	skip	no machine-readable events
+Signal Space	muzeum	https://www.signalspace.com/cs					y	2026-10-25	skip	no machine-readable events
+Galerie Rudolfinum	muzeum	http://www.galerierudolfinum.cz/en/						2026-10-25	skip	http only
+Stavovské divadlo	budova divadla	https://www.estatestheatre.cz/					y	2026-10-25	skip	no machine-readable events
+Státní opera Praha	music venue	https://www.narodni-divadlo.cz/en/state-opera					y	2026-10-25	skip	no machine-readable events
+Q85727011	knihovna	http://www.mecd.gob.es/republicacheca/oficinasycentros/centros-recursos.html						2026-10-25	skip	down: URLError
+Centrum volného času Praha 9	kulturní centrum	http://www.centrumvolnehocasupraha.cz/						2026-10-25	skip	down: URLError
+Rodinné a pohybové centrum Pražačka	kulturní centrum	https://rpcprazacka.cz/					y	2026-10-25	skip	none upcoming
+MeetFactory	kulturní centrum	http://www.meetfactory.cz/en/						2026-10-25	skip	http only
+Cinema City Galaxie	kino	https://www.cinemacity.cz/					y	2026-10-25	skip	no machine-readable events
+Řeporyjská stezka	galerie umění	https://reporyjskastezka.webnode.cz/					y	2026-10-25	skip	no machine-readable events
+Místní veřejná knihovna Horní Počernice	veřejná knihovna	https://knihovnapocernice.cz/					y	2026-10-25	skip	no machine-readable events
+Rodinné centrum Mateřídouška	kulturní centrum	https://www.toulcuvdvur.cz/rc-materidouska					y	2026-10-25	skip	no machine-readable events
+Roxy	music venue	http://www.roxy.cz					y	2026-10-25	skip	no machine-readable events
+Letnice	kulturní centrum	https://klubletnice.cz/					y	2026-10-25	skip	no machine-readable events
+Baby Club Kenny	kulturní centrum	https://evakiedronova.cz/centra/praha/modrany/						2026-10-25	skip	down: HTTPError
+České vysoké učení technické v Praze	univerzita	https://cvut.cz						2026-10-25	skip	down: URLError
+Zličínská knihovna	veřejná knihovna	https://www.zlicinska-knihovna.cz/					y	2026-10-25	skip	no machine-readable events
+Akademie múzických umění v Praze	univerzita	http://www.amu.cz/					y	2026-10-25	skip	no machine-readable events
+Klub Decima	kulturní centrum	https://www.praha.ymca.cz/decima						2026-10-25	skip	down: URLError
+Reduta Jazz Club	music venue	http://www.redutajazzclub.cz/en						2026-10-25	skip	http only
+Klub Junior	kulturní centrum	http://klubjunior.cz/						2026-10-25	skip	http only
+Rudolfinum	music venue	http://www.rudolfinum.cz/					y	2026-10-25	skip	no machine-readable events
+Dům dětí a mládeže hlavního města Prahy	kulturní centrum	http://ddmpraha.cz/					y	2026-10-25	skip	no machine-readable events
+Dům dětí a mládeže Praha 3 - Ulita	kulturní centrum	https://www.ulita.cz/					y	2026-10-25	skip	no machine-readable events
+Dům dětí a mládeže Praha 6	kulturní centrum	https://www.ddmp6.cz/					y	2026-10-25	skip	no machine-readable events
+Dům dětí a mládeže Praha 6 - Suchdol	kulturní centrum	https://www.ddmsuchdol.cz/					y	2026-10-25	skip	no machine-readable events
+Dům dětí a mládeže Praha 7	kulturní centrum	https://www.ddmpraha7.cz/					y	2026-10-25	skip	no machine-readable events
+Fortuna Arena	stadion	https://www.slavia.cz/klub-fortuna-arena						2026-10-25	skip	down: HTTPError
+Poštovní muzeum Praha	muzeum	http://www.postovnimuzeum.cz/cs					y	2026-10-25	skip	no machine-readable events
+Vltavská filharmonie	music venue	https://vltavskafilharmonie.cz/					y	2026-10-25	skip	no machine-readable events
+Obecní dům	music venue	http://www.obecnidum.cz/					y	2026-10-25	skip	no machine-readable events
+Dům dětí a mládeže Praha 2	kulturní centrum	http://www.ddm-ph2.cz/					y	2026-10-25	skip	no machine-readable events
+Hobby centrum 4	kulturní centrum	http://www.hobbycentrum4.cz/					y	2026-10-25	skip	no machine-readable events
+Dům dětí a mládeže Praha 9	kulturní centrum	http://ddmpraha9.cz/					y	2026-10-25	skip	no machine-readable events
+Dům dětí a mládeže Jižní Město	kulturní centrum	https://www.ddmjm.cz/					y	2026-10-25	skip	no machine-readable events
+Dům dětí a mládeže Modřany	kulturní centrum	https://www.ddmm.cz					y	2026-10-25	skip	no machine-readable events
+Dům dětí a mládeže Praha 5	kulturní centrum	https://www.ddmpraha5.cz/					y	2026-10-25	skip	no machine-readable events
+Dům dětí a mládeže Praha 10 - Dům UM	kulturní centrum	http://www.dumum.cz/					y	2026-10-25	skip	no machine-readable events
+Palác Lucerna	kulturní centrum	https://www.lucerna.cz/					y	2026-10-25	skip	no machine-readable events
+Mucha Foundation Art Museum	muzeum umění	https://mucha.eu/					y	2026-10-25	skip	no machine-readable events
+Ymkárium	kulturní centrum	http://www.ymca.cz/praha/nizkoprahova-sekce/ymkarium/						2026-10-25	skip	down: HTTPError
+GoJa Music Hall	music venue	http://www.goja.cz/					y	2026-10-25	skip	no machine-readable events
+Centrum volného času Botič	kulturní centrum	https://www.praha2.cz/centrum-volneho-casu-botic/os-1329						2026-10-25	skip	down: HTTPError
+Knihovna s infocentrem MČ Praha-Kolovraty	knihovna	https://www.kolovraty.cz/knihovna%2Ds%2Dinfocentrem/ms-5662/p1=5662						2026-10-25	skip	down: HTTPError
+Knihovna Národního muzea	knihovna	http://www.nm.cz/National-Museum-Library/						2026-10-25	skip	down: HTTPError
+knihovna Carlose Fuentese	knihovna	http://praga.cervantes.es/es/biblioteca_espanol/biblioteca_espanol.htm					n	2026-10-25	skip	robots.txt
+Knihovna Filozofického ústavu	knihovna	http://knihovna.flu.cas.cz/					y	2026-10-25	skip	no machine-readable events
+Knihovna Antonína Švehly	knihovna	http://kas.uzei.cz						2026-10-25	skip	down: URLError
+Místní knihovna Radotín	knihovna	https://www.knihovna-radotin.cz					y	2026-10-25	skip	no machine-readable events
+Národní lékařská knihovna	knihovna	https://nlk.cz					y	2026-10-25	skip	no machine-readable events
+Národní technická knihovna	knihovna	http://www.techlib.cz/en/						2026-10-25	skip	down: URLError
+Státní knihovna ČSR	knihovna	https://openlibrary.org/authors/OL1163606A/Sta%CC%81tni%CC%81_knihovna_C%CC%8CSR.					y	2026-10-25	skip	no machine-readable events
+Místní veřejná knihovna Šeberov	knihovna	http://www.seberov.cz/					y	2026-10-25	skip	no machine-readable events
+Americké centrum	knihovna	http://www.americkecentrum.cz/					y	2026-10-25	skip	no machine-readable events
+Místní lidová knihovna Praha 11	knihovna	https://www.mistniknihovnachodov.cz/					y	2026-10-25	skip	no machine-readable events
+Místní knihovna Uhříněves	knihovna	https://www.praha22.cz/volny-cas/knihovna/					y	2026-10-25	skip	no machine-readable events
+Divadelní a filmové oddělení Městské knihovny v Praze	knihovna	https://www.mlp.cz/cz/o-knihovne/sluzby/specializovana-oddeleni/divadelni-a-filmove-oddeleni/						2026-10-25	skip	down: HTTPError
+Křesťanská knihovna Praha	knihovna	http://www.christianlibrary.cz/						2026-10-25	skip	http only
+Hórnikova knihovna	knihovna	http://www.luzice.com/					y	2026-10-25	skip	no machine-readable events
+Hórnikova knihovna	knihovna	https://katalog.hornikovaknihovna.cz/					n	2026-10-25	skip	robots.txt
+Obecní knihovna Ďáblice	knihovna	http://dablice.knihovna.cz/					y	2026-10-25	skip	no machine-readable events
+Knihovna Orientálního ústavu AV ČR	knihovna	http://www.orient.cas.cz/knihovna/						2026-10-25	skip	down: HTTPError
+Veřejná knihovna Dubeč	knihovna	https://www.praha-dubec.cz/knihovna/ds-9862					n	2026-10-25	skip	robots.txt
+Knihovna Městské části Praha 18	knihovna	https://knihovna.letnany.cz/					n	2026-10-25	skip	robots.txt
+Kino Vzlet	kino	https://vzlet.cz					y	2026-10-25	skip	no machine-readable events
+Modřanský biograf	kino	https://www.modranskybiograf.cz						2026-10-25	skip	down: HTTPError
+Kino Kavalírka	kino	https://www.kinokavalirka.cz					y	2026-10-25	skip	no machine-readable events
+Kino Petrohradská	kino	https://www.kinopetrohradska.cz						2026-10-25	skip	down: URLError
+Kino Evald	kino	http://www.evald.cz						2026-10-25	skip	down: HTTPError
+Divadlo Perštýn	kino	https://www.divadloperstyn.cz						2026-10-25	skip	down: URLError
+Kino Pilotů	kino	https://kinopilotu.cz					y	2026-10-25	skip	no machine-readable events
+Kino Ponrepo	kino	https://nfa.cz/cs/kino-ponrepo					y	2026-10-25	skip	no machine-readable events
+Divadlo Bez zábradlí	kino	https://bezzabradli.cz						2026-10-25	skip	down: HTTPError
+Kino MAT	kino	https://www.mat.cz/kino/					y	2026-10-25	skip	no machine-readable events
+Edison Filmhub	kino	https://edisonfilmhub.cz					y	2026-10-25	skip	none upcoming
+Kino Přítomnost	kino	https://www.kinopritomnost.cz/	jsonld	https://www.kinopritomnost.cz/	16	16	y	2026-10-25	usable	16 upcoming with name, start and place
+Zoo Praha	zoologická zahrada	https://www.zoopraha.cz/cs					y	2026-10-25	skip	no machine-readable events
+Kino Atlas	kino	http://www.kinoatlas.cz					y	2026-10-25	skip	no machine-readable events
+Kino Aero	kino	https://www.kinoaero.cz/	jsonld	https://www.kinoaero.cz/	27	27	y	2026-10-25	usable	27 upcoming with name, start and place
+Kino Oko	kino	https://www.biooko.net	jsonld	https://www.biooko.net	34	34	y	2026-10-25	usable	34 upcoming with name, start and place
+Kino Světozor	kino	https://www.kinosvetozor.cz	jsonld	https://www.kinosvetozor.cz	38	38	y	2026-10-25	usable	38 upcoming with name, start and place
+Divadlo Palace	kino	https://www.divadlopalace.cz					y	2026-10-25	skip	no machine-readable events
+Kino Lucerna	kino	https://www.kinolucerna.cz	jsonld	https://www.kinolucerna.cz	51	51	y	2026-10-25	usable	51 upcoming with name, start and place
+zookoutek Kamýk	zoologická zahrada	https://lhmp.cz/zachranna-stanice/lesni-zookoutky/zookoutek-kamyk/					y	2026-10-25	skip	no machine-readable events
+Zoopark Milíčov	zoologická zahrada	https://www.facebook.com/p/Zoopark-Mil%C3%AD%C4%8Dov-100030921956627/					n	2026-10-25	skip	robots.txt
+Muzeum českého granátu Praha	muzeum	http://www.mcgp.cz/					y	2026-10-25	skip	no machine-readable events
+Divadlo Na zábradlí	budova divadla	http://www.nazabradli.cz/					y	2026-10-25	skip	no machine-readable events
+Muzeum iluzivního umění Praha	muzeum	https://www.iamprague.eu/					y	2026-10-25	skip	no machine-readable events
+Malostranská beseda	budova divadla	https://www.malostranska-beseda.cz					y	2026-10-25	skip	no machine-readable events
+Divadlo na Vinohradech	budova divadla	https://www.divadlonavinohradech.com/					y	2026-10-25	skip	no machine-readable events
+Gong	budova divadla	http://www.divadlogong.cz/						2026-10-25	skip	down: URLError
+Kerava Museum Services	muzeum	https://www.kerava.fi/kulttuuri-ja-vapaa-aika/museot-ja-kulttuuri/museot					y	2026-10-25	skip	no machine-readable events
+Hudební divadlo Karlín	budova divadla	http://www.hdk.cz/en/					y	2026-10-25	skip	no machine-readable events
+Kulturní Centrum Zahrada	budova divadla	http://www.kczahrada.cz/					y	2026-10-25	skip	no machine-readable events
+Divadlo Broadway	budova divadla	http://divadlo-broadway.cz/					y	2026-10-25	skip	no machine-readable events
+Divadlo U Hasičů	budova divadla	http://divadlouhasicu.net					y	2026-10-25	skip	no machine-readable events
+Divadlo v Korunní	budova divadla	http://www.divadlokorunni.cz/						2026-10-25	skip	down: HTTPError
+Divadlo Karla Hackera	budova divadla	http://www.divadlokh.cz/					y	2026-10-25	skip	no machine-readable events
+Divadlo Za Plotem	budova divadla	http://dzp.webnode.cz/					y	2026-10-25	skip	no machine-readable events
+Divadlo Horní Počernice	budova divadla	http://www.divadlopocernice.cz/					y	2026-10-25	skip	no machine-readable events
+Divadlo Metro	budova divadla	http://www.divadlometro.cz/					y	2026-10-25	skip	no machine-readable events
+Klub Mlejn	budova divadla	http://www.mlejn.cz/						2026-10-25	skip	http only
+Pidivadlo	budova divadla	http://www.pidivadlo.cz/						2026-10-25	skip	down: HTTPError
+Divadlo Na Rejdišti a Koncertní sál Pražské konzervatoře	budova divadla	http://www.prgcons.cz/	tribe-rest	https://prazskakonzervator.cz/wp-json/tribe/events/v1/events?per_page=50&start_date=now	50	50	y	2026-10-25	usable	50 upcoming with name, start and place
+Žižkovské divadlo Járy Cimrmana	budova divadla	https://zdjc.cz/					y	2026-10-25	skip	no machine-readable events
+Divadlo U22	budova divadla	http://www.divadlou22.cz						2026-10-25	skip	http only
+Divadlo Minor	budova divadla	https://www.minor.cz					y	2026-10-25	skip	no machine-readable events
+ARCHA+	budova divadla	https://www.divadloarcha.cz/					y	2026-10-25	skip	no machine-readable events
+Muzeum granátů Magic Garnet	muzeum	http://www.magicgarnet.cz					y	2026-10-25	skip	no machine-readable events
+Divadlo v Celetné	budova divadla	http://www.divadlovceletne.cz/					y	2026-10-25	skip	no machine-readable events
+Divadlo Orfeus	budova divadla	https://orfeusdivadlo.cz/					y	2026-10-25	skip	no machine-readable events
+Muzeum Lega	muzeum	https://muzeumlega.cz/muzeum/praha					y	2026-10-25	skip	no machine-readable events
+Divadlo ABC	budova divadla	http://www.mestskadivadlaprazska.cz/abc/divadlo-abc/					y	2026-10-25	skip	no machine-readable events
+Divadlo Kámen	budova divadla	http://www.divadlokamen.cz/	jsonld	https://divadlokamen.cz/	2	2	y	2026-10-25	usable	2 upcoming with name, start and place
+Divadlo Ponec	budova divadla	http://www.divadloponec.cz/					y	2026-10-25	skip	no machine-readable events
+Divadlo DISK	budova divadla	https://www.divadlodisk.cz/					y	2026-10-25	skip	no machine-readable events
+Divadlo Ungelt	budova divadla	https://www.divadloungelt.cz					y	2026-10-25	skip	no machine-readable events
+Muzeum a vzdělávací centrum československých legií	muzeum	https://www.csol.cz/projekty/muzea-csol-cesta-legionare/muzeum-praha/					y	2026-10-25	skip	no machine-readable events
+Divadlo v Dlouhé	budova divadla	http://www.divadlovdlouhe.cz/					y	2026-10-25	skip	no machine-readable events
+Muzeum slivovice R. Jelínek	muzeum	https://slivovitzmuseum.com/					y	2026-10-25	skip	no machine-readable events
+Muzeum slivovice R. Jelínek	muzeum	https://www.muzeumslivovice.cz/					y	2026-10-25	skip	no machine-readable events
+Divadlo v Řeznické	budova divadla	http://reznicka.cz/					y	2026-10-25	skip	no machine-readable events
+Divadlo Jana Kašky	budova divadla	http://www.divadlozbraslav.cz/						2026-10-25	skip	http only
+Bytové divadlo Košická	budova divadla	https://www.oldstars.cz/oldstars/prostory					y	2026-10-25	skip	no machine-readable events
+Alfred ve dvoře	budova divadla	https://www.alfredvedvore.cz/					y	2026-10-25	skip	no machine-readable events
+Salesiánské divadlo	budova divadla	http://www.strediskokobylisy.cz/divadlo/					y	2026-10-25	skip	no machine-readable events
+Divadlo Kampa	budova divadla	https://www.divadlokampa.cz					y	2026-10-25	skip	no machine-readable events
+A Studio Rubín	budova divadla	http://www.astudiorubin.cz/					y	2026-10-25	skip	no machine-readable events
+Husův sbor v Praze-Vršovicích	budova divadla	http://www.husuvsbor.cz					y	2026-10-25	skip	no machine-readable events
+Muzeum Československých Legií	muzeum	https://muzeumlegii.cz/					y	2026-10-25	skip	no machine-readable events
+Design Museum Prague	muzeum	https://www.designmuseumprague.com/					y	2026-10-25	skip	no machine-readable events
+Návštěvnické centrum Staropramen	muzeum	https://www.centrumstaropramen.cz					y	2026-10-25	skip	no machine-readable events
+Strašnické divadlo	budova divadla	http://www.strasnickedivadlo.eu						2026-10-25	skip	down: URLError
+RockOpera Praha	budova divadla	http://www.rockopera.cz/					y	2026-10-25	skip	no machine-readable events
+Studio DVA divadlo	budova divadla	https://www.studiodva.cz	jsonld	https://www.studiodva.cz/program-2/?dt=n	503	499	y	2026-10-25	usable	499 upcoming with name, start and place
+Divadlo Radka Brzobohatého	budova divadla	http://www.divadlorb.cz/					y	2026-10-25	skip	no machine-readable events
+Dům národnostních menšin	muzeum	https://www.dnm-praha.eu/					y	2026-10-25	skip	no machine-readable events
+Muzeum smyslů	muzeum	https://muzeumsmyslu.cz/					y	2026-10-25	skip	no machine-readable events
+Kabaretní divadélko Labuť	budova divadla	http://www.cernalabut.cz/					y	2026-10-25	skip	no machine-readable events
+Divadlo D21	budova divadla	http://www.divadlod21.cz/					y	2026-10-25	skip	no machine-readable events
+Speculum Alchemiae	muzeum	http://alchemiae.cz/en						2026-10-25	skip	http only
+Staroměstská radnice	muzeum	https://www.prague.eu/staromestskaradnice					y	2026-10-25	skip	no machine-readable events
+Muzeum Antonína Dvořáka	muzeum	http://www.antonindvorak2004.cz/english/muzeum-antonina-dvoraka.html						2026-10-25	skip	http only
+KGB Museum	muzeum	http://kgbmuseum.com/en/					y	2026-10-25	skip	no machine-readable events
+Židovské muzeum v Praze	muzeum	https://www.jewishmuseum.cz/					y	2026-10-25	skip	no machine-readable events
+Muzeum Karla Zemana	muzeum	https://muzeumkarlazemana.cz/					y	2026-10-25	skip	no machine-readable events
+Galerie Václava Špály	muzeum	https://www.galerievaclavaspaly.cz/					y	2026-10-25	skip	no machine-readable events
+Pedagogické muzeum J. A. Komenského v Praze	muzeum	http://www.npmk.cz/muzeum					y	2026-10-25	skip	no machine-readable events
+Techtle Mechtle	music venue	http://www.techtle-mechtle.cz/						2026-10-25	skip	down: URLError
+Prašná brána	muzeum	http://www.muzeumprahy.cz/199-prasna-brana/						2026-10-25	skip	down: HTTPError
+Kulturní dům Kyje	kulturní centrum	http://www.kdkyje.cz					n	2026-10-25	skip	robots.txt
+Vagon	music venue	http://www.vagon.cz/						2026-10-25	skip	http only
+Galerie Nová síň	muzeum	https://www.novasin.org/					y	2026-10-25	skip	no machine-readable events
+Hrdličkovo muzeum člověka	muzeum	https://muzeumcloveka.cz					y	2026-10-25	skip	no machine-readable events
+Balbínova poetická hospůdka	music venue	http://www.balbinka.cz/						2026-10-25	skip	http only
+Jazz Club Ungelt	music venue	https://jazzungelt.cz/						2026-10-25	skip	down: URLError
+Museum středověkých mučicích nástrojů	muzeum	http://www.museumtortury.cz					y	2026-10-25	skip	no machine-readable events
+Centrum současného umění DOX	muzeum	http://www.dox.cz/					y	2026-10-25	skip	no machine-readable events
+Radost FX	music venue	https://www.radostfx.cz/					y	2026-10-25	skip	event pages only
+Museum of Medieval Torture Instruments	muzeum	https://www.museumtorture.com					y	2026-10-25	skip	no machine-readable events
+Pivovarské muzeum U Fleků	muzeum	http://ufleku.cz/programy/muzeum/					y	2026-10-25	skip	no machine-readable events
+Sex Machines Museum	muzeum	https://sexmachinesmuseum.com					y	2026-10-25	skip	no machine-readable events
+Clock Gallery Praha	muzeum	http://clockgallery.cz					y	2026-10-25	skip	no machine-readable events
+AghaRTA Jazz Centrum	music venue	https://www.agharta.cz/					y	2026-10-25	skip	no machine-readable events
+Muzeum her Cibien's Corner	muzeum	http://www.muzeumher.cz					y	2026-10-25	skip	no machine-readable events
+Jazz Republic	music venue	http://www.jazzrepublic.cz					y	2026-10-25	skip	no machine-readable events
+Muzeum PRE	muzeum	https://www.pre.cz/muzeum					y	2026-10-25	skip	no machine-readable events
+Muzeum Policie České republiky	muzeum	https://www.muzeumpolicie.cz						2026-10-25	skip	down: HTTPError
+Knihovna Národního archivu	knihovna	https://knihovna.nacr.cz/#!/					y	2026-10-25	skip	no machine-readable events
+Muzeum Franze Kafky	muzeum	http://www.kafkamuseum.cz/					y	2026-10-25	skip	no machine-readable events
+Muzeum komunismu	muzeum	https://www.museumofcommunism.com/					y	2026-10-25	skip	no machine-readable events
+Síň slávy českého hokeje	muzeum	http://www.cslh.cz/sin-slavy.html						2026-10-25	skip	down: HTTPError
+Galerie Cesty ke světlu	muzeum	http://www.cestykesvetlu.cz/						2026-10-25	skip	http only
+Kulturní centrum Novodvorská Praha	kulturní centrum	http://www.kcnovodvorska.cz/						2026-10-25	skip	down: HTTPError
+Muzeum městské hromadné dopravy v Praze	muzeum	http://www.dpp.cz/muzeum-mhd					y	2026-10-25	skip	no machine-readable events
+Sportovní hala Fortuna	aréna	http://www.tipsportarena-praha.cz						2026-10-25	skip	http only
+O₂ universum	aréna	https://www.o2universum.cz/					y	2026-10-25	skip	event pages only
+O₂ arena	aréna	https://www.o2arena.cz/					y	2026-10-25	skip	event pages only
+Galerie Pictura	galerie umění	http://www.pictura.cz/					y	2026-10-25	skip	no machine-readable events
+Galerie Fasáda	galerie umění	https://www.galeriefasada.cz/					y	2026-10-25	skip	no machine-readable events
+KodlContemporary	galerie umění	https://www.kodlcontemporary.com/					y	2026-10-25	skip	no machine-readable events
+Galerie ocelových figurín	galerie umění	https://www.galerieocelovychfigurin.cz/					y	2026-10-25	skip	no machine-readable events
+Lumia Gallery	galerie umění	https://www.lumia.gallery/					y	2026-10-25	skip	no machine-readable events
+Kunsthalle Praha	galerie umění	https://www.kunsthallepraha.org/en					y	2026-10-25	skip	no machine-readable events
+Galerie KMI	galerie umění	https://galeriekmoch.cz					y	2026-10-25	skip	no machine-readable events
+Galerie Via Art	galerie umění	http://www.galerieviaart.cz/						2026-10-25	skip	http only
+Galerie Villa Pellé	galerie umění	https://villapelle.cz/galerie-villa-pelle/					y	2026-10-25	skip	no machine-readable events
+Trafo Gallery	galerie umění	https://trafogallery.cz/					y	2026-10-25	skip	no machine-readable events
+Galerie Jaroslava Fragnera	galerie umění	https://fragnerka.cvut.cz						2026-10-25	skip	down: URLError
+Galerie La Femme	galerie umění	http://www.glf.cz					y	2026-10-25	skip	no machine-readable events
+Ars Diva Galerie	galerie umění	http://www.arsdiva.cz/					y	2026-10-25	skip	no machine-readable events
+Galerie Jiří Švestka	galerie umění	https://jirisvestkagallery.com					y	2026-10-25	skip	no machine-readable events
+Hauch Gallery	galerie umění	http://www.hauchgallery.com/						2026-10-25	skip	down: URLError
+400 ASA Gallery	galerie umění	https://www.400asa.org/					y	2026-10-25	skip	no machine-readable events
+Artinbox galerie	galerie umění	https://www.artinbox.cz/					y	2026-10-25	skip	no machine-readable events
+Galerie Kroupa	galerie umění	https://www.galeriekroupa.cz/					y	2026-10-25	skip	no machine-readable events
+Arcimboldo Auctions	galerie umění	https://www.arcimboldo.cz/					y	2026-10-25	skip	no machine-readable events
+Galerie Pecka	galerie umění	http://www.galeriepecka.cz						2026-10-25	skip	http only
+Pragovka Gallery	galerie umění	https://x.pragovka.com/cs/pragovka-gallery						2026-10-25	skip	down: URLError
+Ruský dům v Praze	kulturní centrum	https://rsvk.cz	jsonld	https://rsvk.cz/ru/calendar/	1	1	y	2026-10-25	usable	1 upcoming with name, start and place
+Kulturní centrum Klubovna	kulturní centrum	https://klubovna.povalec.cz/					y	2026-10-25	skip	no machine-readable events
+Kulturní centrum Knoflík	kulturní centrum	http://www.centrumknoflik.cz/					y	2026-10-25	skip	no machine-readable events
+Kulturní centrum Úl	kulturní centrum	https://www.uldablice.cz/					y	2026-10-25	skip	no machine-readable events
+Kulturní centrum Velký mlýn	kulturní centrum	https://www.velkymlyn.cz/	tribe-rest	https://www.velkymlyn.cz/wp-json/tribe/events/v1/events?per_page=50&start_date=now	34	30	y	2026-10-25	usable	30 upcoming with name, start and place
+Kafkárna	kulturní centrum	https://www.umprum.cz/cs/web/o-umprum/udrzitelnost/kafkarna					y	2026-10-25	skip	no machine-readable events
+PRAGOS centrum	kulturní centrum	https://pragos.cz/veterani/kulturni-centrum					y	2026-10-25	skip	no machine-readable events
+Kulturní centrum 12	kulturní centrum	https://www.kc12.cz/					n	2026-10-25	skip	robots.txt
+Werichova vila	music venue	http://www.werichovavila.cz/					y	2026-10-25	skip	no machine-readable events
+JammClub	music venue	https://jammclub.cz/	jsonld	https://jammclub.cz/program	16	16	y	2026-10-25	usable	16 upcoming with name, start and place
+Lucerna Music Bar	music venue	https://www.musicbar.cz					y	2026-10-25	skip	no machine-readable events
+Praha 1	city district	http://www.praha1.cz/	ical	https://www.praha1.cz/?ical=1	53	1	y	2026-10-25	usable	1 upcoming with name, start and place
+Praha 3	city district	http://www.praha3.cz						2026-10-25	skip	down: HTTPError
+Praha 11	city district	https://www.praha11.cz					y	2026-10-25	skip	no machine-readable events
+Praha 20	city district	https://www.pocernice.cz/	ical	https://www.pocernice.cz/?ical=1	39	39	y	2026-10-25	usable	39 upcoming with name, start and place
+Praha 10	city district	http://www.praha10.cz/					y	2026-10-25	skip	no machine-readable events
+Praha 9	city district	https://www.praha9.cz					y	2026-10-25	skip	no machine-readable events
+Praha-Troja	city district	https://www.mctroja.cz/					y	2026-10-25	skip	no machine-readable events
+Praha 7	city district	https://www.praha7.cz/					y	2026-10-25	skip	no machine-readable events
+Praha 8	city district	https://www.praha8.cz/					y	2026-10-25	skip	no machine-readable events
+Praha 18	city district	https://www.praha18.cz/					n	2026-10-25	skip	robots.txt
+Praha 17	city district	https://www.repy.cz					y	2026-10-25	skip	no machine-readable events
+Praha 16	city district	http://www.praha16.eu/					y	2026-10-25	skip	no machine-readable events
+Praha 19	city district	https://praha19.cz/	ical	https://www.praha19.cz/?ical=1	30	0	y	2026-10-25	skip	no place
+Praha-Kunratice	city district	https://www.praha-kunratice.cz/					y	2026-10-25	skip	no machine-readable events
+Praha 6	city district	https://praha6.cz					y	2026-10-25	skip	no machine-readable events
+Praha-Suchdol	city district	http://www.praha-suchdol.cz/	tribe-rest	https://praha-suchdol.cz/wp-json/tribe/events/v1/events?per_page=50&start_date=now	5	0	y	2026-10-25	skip	no place
+Praha 15	city district	https://www.praha15.cz					n	2026-10-25	skip	robots.txt
+Praha-Zbraslav	city district	http://www.mc-zbraslav.cz/					n	2026-10-25	skip	robots.txt
+Praha-Slivenec	city district	https://www.praha-slivenec.cz/					n	2026-10-25	skip	robots.txt
+Praha 4	city district	http://www.praha4.cz/						2026-10-25	skip	down: HTTPError
+Praha 12	city district	https://www.praha12.cz/					n	2026-10-25	skip	robots.txt
+Praha 5	city district	https://www.praha5.cz	ical	https://www.praha5.cz/?ical=1	6	0	y	2026-10-25	skip	no place
+Hlavní město Praha	city	https://www.praha.eu/						2026-10-25	skip	down: URLError
+Praha 13	city district	https://www.praha13.cz/					y	2026-10-25	skip	no machine-readable events
+Praha 14	city district	https://www.praha14.cz/					y	2026-10-25	skip	no machine-readable events
+Praha 21	city district	https://www.praha21.cz/					y	2026-10-25	skip	no machine-readable events
+GoOut Praha	ticketing	https://goout.net/cs/praha/					y	2026-10-25	skip	no machine-readable events
+Ticketportal	ticketing	https://www.ticketportal.cz/					y	2026-10-25	skip	no machine-readable events
+Ticketmaster CZ	ticketing	https://www.ticketmaster.cz/						2026-10-25	skip	down: HTTPError
+Kudy z nudy	tourism organisation	https://www.kudyznudy.cz/					y	2026-10-25	skip	no machine-readable events
+Česká filharmonie	concert hall	https://www.ceskafilharmonie.cz/					y	2026-10-25	skip	no machine-readable events
+DOX	gallery	https://www.dox.org/					y	2026-10-25	skip	no machine-readable events
+Divadlo Archa	theatre	https://www.archa-plus.cz/					y	2026-10-25	skip	no machine-readable events
+Jatka78	theatre	https://www.jatka78.cz/					y	2026-10-25	skip	no machine-readable events
+La Fabrika	theatre	https://www.lafabrika.cz/	jsonld	https://www.lafabrika.cz/cs/program	60	60	y	2026-10-25	usable	60 upcoming with name, start and place
+Palác Akropolis	music venue	https://www.palacakropolis.cz/					y	2026-10-25	skip	no machine-readable events
+Forum Karlín	music venue	https://www.forumkarlin.cz/					y	2026-10-25	skip	no machine-readable events
+Pražské jaro	festival	https://festival.cz/					y	2026-10-25	skip	no machine-readable events
+Prague Pride	festival	https://www.praguepride.cz/	tribe-rest	https://www.praguepride.com/wp-json/tribe/events/v1/events?per_page=50&start_date=now	44	42	y	2026-10-25	usable	42 upcoming with name, start and place
+Signal festival	festival	https://www.signalfestival.com/					y	2026-10-25	skip	no machine-readable events
+Studio Hrdinů	theatre	https://www.studiohrdinu.cz/					y	2026-10-25	skip	no machine-readable events
+Švandovo divadlo	theatre	https://www.svandovodivadlo.cz/					y	2026-10-25	skip	no machine-readable events
+Divadlo Hybernia	theatre	https://www.hybernia.eu/					y	2026-10-25	skip	no machine-readable events
+KD Ládví	culture centre	https://www.kdladvi.cz/						2026-10-25	skip	down: HTTPError
+Centrum Kaštan	culture centre	https://www.kastan.cz/					y	2026-10-25	skip	no machine-readable events
