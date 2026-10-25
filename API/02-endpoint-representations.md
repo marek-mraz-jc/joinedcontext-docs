@@ -622,8 +622,8 @@ Per caller, a Mapping is listed only when every source class and slot its `class
 
 ## 7b. Access surface (`access`)
 
-Path: `/api/endpoint/{endpointSlug}/access` and `POST …/access/check`. The space surface links a
-`/cs/{space}/access` child but the router does not serve one yet (**T-2373**), so a caller reads the
+Path: `/api/endpoint/{endpointSlug}/access`, `POST …/access/check` and `GET …/access/attributes`.
+The space surface links a `/cs/{space}/access` child but the router does not serve one yet (**T-2373**), so a caller reads the
 grants through the endpoint slug.
 
 Returns the caller's effective grants (EP-55…EP-60). Same decision as the data paths, four
@@ -636,7 +636,8 @@ what they may do, and there is always an answer to that.
 
 Who answers (plan 5.6, **T-3649**): the gateway admits the caller as on the data paths (`404` for an
 unknown slug, `401`/`403` from the audience) and then reads the Endpoint's broker view, `GET
-/x/views/{view}/access` and `POST /x/views/{view}/access/check`, under the tenant and the verified
+/x/views/{view}/access`, `POST /x/views/{view}/access/check` and `POST
+/x/views/{view}/access/attributes`, under the tenant and the verified
 caller (`x-jc-*`) and nothing else of the request. The broker writes the document and decides the
 check from the rule table its engine enforces with, so the description cannot drift from the
 enforcement (EP-60). The gateway adds what belongs to the Endpoint and not to the grants: the
@@ -704,6 +705,14 @@ Content-Type: application/json
 A prohibition covering the action ends it, whatever any permission says, and answers
 `{"decision": false}`.
 
+`resource.properties.attribute` (optional, one short name or IRI) narrows the question to one
+Attribute of `resource.type` (T-5527). A permission covers the Attribute when a selector covering
+the type lists it, or lists no Attribute (the whole Entity). A prohibition refuses its whole type,
+whichever Attributes it lists, because the engine refuses a real read or write of that type the same
+way; the answer never grants a cell the real request refuses. A write of the access-control
+vocabulary ([GW29](../Requirements/gateway-firewall.md)) is never granted. Without `attribute` the
+check answers as before.
+
 `POST …/access/v1/evaluation` and `POST …/access/v1/evaluations` answer the same question in the
 AuthZEN Authorization API 1.0 shape (EP-165, ADR-N-057 decision 3), decided by the same view and
 engine as `access/check`, which stays as their alias. `evaluation` takes one request with
@@ -740,6 +749,31 @@ Content-Type: application/json
                  {"decision": false}]}
 ```
 
+`GET …/access/attributes?type={Type}` answers the caller's decisions on every Attribute the
+Endpoint serves of one entity type (T-5527), the table an entity editor draws its cells from.
+`type` is a class of the Endpoint's model; the Attributes are the model's slots of that class,
+less the ones the projection or `hiddenAttributes` leave out. The gateway asks the view once for
+all of them; each row is the decision `access/check` gives with `resource.properties.attribute`:
+
+```json
+{"type": "AirQualityObserved",
+ "attributes": [{"name": "pm10", "read": true, "write": true, "delete": false, "reason": "grant"},
+                {"name": "pm25", "read": true, "write": false, "delete": false, "reason": "formula"},
+                {"name": "stationName", "read": false, "write": false, "delete": false, "reason": "not_in_grant"}]}
+```
+
+`read` is `retrieveEntity` (a `GET` with `attrs=`), `write` is `updateAttrs` (a `PATCH` of the
+Attribute), `delete` is `deleteAttrs`, each through the Endpoint's view. `reason` is the strongest
+of the three verdicts: `prohibited` (a prohibition covers the type for one of them), `formula` (a
+grant with a condition on the stored Entity, `q`, `scopeQ`, `geoQ` or a window, so the cell holds
+only for the entities that meet it), `grant`, `not_in_grant` (a permission covers the type but
+lists other Attributes) or `no_grant`. Deny is the default: with no grant every cell is `false`.
+A reason never names a Policy, its assigner or another principal
+([GW6](../Requirements/gateway-firewall.md)). `type` missing or not a class of the model the
+Endpoint serves (an Endpoint without a generated model, or whose view serves another model,
+included) is a `400`; a class with no served Attributes or more than 200 is a `400` too. The answer pays the Endpoint's `rateLimits` as `evaluations` does: one request per 100
+decisions (three per Attribute), and a quota that cannot pay it is a `429`.
+
 `POST …/access/simulate` answers the same question for someone else (EP-103, T-3311): the decision
 `access/check` would give a named subject on this Endpoint, from the same admission and the same
 decider, so the two cannot disagree. Through a view the broker's engine decides: the gateway asks the
@@ -757,7 +791,8 @@ of three shapes: a person (`user`, with the `groups` and realm `roles` the Porta
 them), a member of `groups` or `roles` with no person (`user` absent: no Policy written for one
 person applies), or a `serviceAccount` by its Keycloak client id (`{project}-{name}`). An empty
 `subject` is the public caller. An unknown member, a `serviceAccount` beside a person, an
-`action` without a `name`, or a `resource` without an `action` is a `400` saying which.
+`action` without a `name`, a `resource` without an `action`, or an empty
+`resource.properties.attribute` is a `400` saying which.
 
 ```http
 POST /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/access/simulate
@@ -775,7 +810,8 @@ Content-Type: application/json
 
 Unlike `access/check`, the answer names why in every case, because its reader is an administrator
 who may read every Policy: `policy_grant_matched` with the granting `policy`, `prohibited` with the
-refusing `policy`, `no_grant` when no Policy grants the action on the type, and `not_admitted` when
+refusing `policy`, `no_grant` when no Policy grants the action on the type, `not_in_grant` when a
+Policy covers the type but not the `resource.properties.attribute` asked about, and `not_admitted` when
 the Endpoint's audience refuses the subject before any Policy is read (EP-14). `policy` is the
 Policy's manifest name: the engine's `{project}/{name}` and `{project}/{name}@{endpoint}` ids are
 answered as `{name}`, and an id of any other shape is left out. A broker that does not know the
