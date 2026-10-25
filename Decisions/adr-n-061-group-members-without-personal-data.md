@@ -95,7 +95,7 @@ spec:
 
 ## 4. Consequences
 
-- PF-49, PF-62, PF-63 and PF-64 change as §3 says; PF-126 (no personal data in a member or subject) and PF-127 (directory federation) are new.
+- PF-126 (no personal data in a member or subject) and PF-127 (directory federation) are new and open. PF-49, PF-62 and PF-63 keep their e-mail wording, which the code and its tests hold today, and PF-62 points at PF-126; PF-126 supersedes that wording once the follow-up work below ships, and that work rewrites PF-49, PF-62 and PF-63 in the same docs change. PF-64 names directory groups as provider groups now, since `source: provider` binds them without new code.
 - The approval page shows a member's name next to their id to a reviewer who holds `update` on `Person` or `approve` on `Group`; anyone else sees the id.
 - A member must exist in Keycloak before a Change names them, so "the binding takes effect on that person's first login" (PF-62) ends: the Portal creates the person first (PF-92), and a directory user exists once Keycloak has synced it.
 - Follow-up work, each a task for the owner to admit: jc-core `Member.user`, `Subject.user` and the `Policy` user assignee take a Keycloak id and refuse an e-mail; the reconciler (`src/reconciler/groups.rs`) adds and prunes members by id; the gateway and the Portal PDP match a `user` subject or assignee against `sub`; the Portal names ids on the change and group pages and proposes the migration Change; the seeds move to ids; Deployment documents LDAP federation and Entra brokering for a municipality; a CSV import on the people page.
