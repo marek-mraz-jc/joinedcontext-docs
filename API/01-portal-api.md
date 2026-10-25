@@ -4469,11 +4469,12 @@ each grant, where it holds, until when, and what it gives in the Portal.
 ```text
 GET  /api/v1/projects/{project}/serviceaccounts/{name}/access     → 200
 POST /api/v1/projects/{project}/serviceaccounts/{name}/revoke     → 202 Change
+POST /api/v1/projects/{project}/serviceaccounts/{name}/secret     → 200, shown once
 ```
 
 ```json
 {"account": "vendor-ci", "project": "helsinki", "delegates": false,
- "mayPropose": true, "mayRevoke": true,
+ "mayPropose": true, "mayRevoke": true, "noSecret": null, "mayIssueSecret": true,
  "grants": [
    {"index": 0, "role": "pipeline-admin", "scope": "project:helsinki", "state": "active",
     "notAfter": "2026-11-01T00:00:00Z",
@@ -4503,6 +4504,19 @@ POST /api/v1/projects/{project}/serviceaccounts/{name}/revoke     → 202 Change
   than its proposer approves (PF-58, T-4833).
 - `POST /api/v1/projects/{project}/changes/{id}/approve` and `/reject` refuse every bearer token
   with `403` (AG-133).
+- `noSecret` says why the account has no client secret the Portal can issue: `workload` (its pod
+  token opens its client), `key-pair` (a credential with `jwks`) or `no-credential`; `null` when it
+  signs in with a secret. `mayIssueSecret` is `true` for a Portal session with `approve` on it.
+- `POST .../secret` has Keycloak generate a new secret for the account's client `{project}-{name}`
+  and answers it once, with `Cache-Control: no-store`:
+  `{"clientId": "helsinki-vendor", "clientSecret": "…", "tokenUrl": "https://idm…/protocol/openid-connect/token"}`.
+  The Portal keeps no copy and no route reads it again. The previous secret is refused at once,
+  the account's earlier tokens are marked revoked (the gateway refuses them at its next poll), and
+  an `access.revoked` activity event names who did it (PF-37, T-5626). Only a person's session
+  with `approve` on `ServiceAccount`: a bearer token is `403`, and so is a caller without
+  `approve`. An account with `noSecret`, or whose client does not exist yet or is the platform's
+  own (`keycloak-clients.yaml`, rotated by runbook 4), is `409` with the reason; Keycloak
+  unreachable is `503`.
 
 ## 53. Costs per project (T-5126)
 
