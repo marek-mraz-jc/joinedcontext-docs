@@ -41,7 +41,8 @@ jcctl [COMMAND] [OPTIONS]
 | **`migrate`** | `--repo-dir <layout 1 clone>`, `--out-dir <empty dir>` | Splits each `projects/{slug}/` into a project repository of its own with its history, and writes the organization repository of layout 2 with the registry in their place (CC-85) |
 | **`export --format git`** | `--repo-dir <project checkout>`, `--project <slug>`, `--out-dir <dir>`, `[--app-dir <name>=<checkout>]`, `[--org-dir <organization checkout>]` | One `git bundle` per repository of the project, its registry entry without values, a copy of every organization model the project imports (read from `--org-dir`, refused without it), and a `kind: Bundle` index of roles, SHA-256, head commits and carried models (MF-45, MF-49) |
 | **`import --format git`** | `<dir> --out-dir <empty dir>` | Clones each bundle, refuses the import unless every file and head is the one the index lists, and migrates a layout 1 organization on the way in (MF-46, MF-47) |
-| **`login`** | `--idm <issuer url>`, `[--token-file <path>]` | Signs a person in by the device flow (RFC 8628) on the Keycloak client `jcctl` and writes their Portal token to a file only they may read (PF-45, MF-14) |
+| **`login`** | `--idm <issuer url>`, `[--token-file <path>]` | Signs a person in by the device flow (RFC 8628) with PKCE (RFC 7636, S256) on the Keycloak client `jcctl` and writes their Portal token to a file only they may read (PF-45, MF-14) |
+| **`token`** | `--resource <endpoint url>`, `--idm <issuer url>`, `[--token-file <path>]` | Signs a person in the same way for one Endpoint and writes a token the gateway admits on that Endpoint alone, decided by the person's Policy: a script reads as the person who runs it (PF-45, PF-46, §2b) |
 | **`get`** | `<plural> [<name>]`, `--project <slug>`, `[-o name\|yaml\|json]`, `[-l <labelSelector>]` | Reads live manifests from the Portal: a list follows `continue` to the end; `-o name` (the default) prints `{plural}/{name}` per line (MF-14) |
 | **`describe`** | `<plural> <name>`, `--project <slug>` | One live manifest for a person to read: its identity and title, then `spec` and `status` as YAML (MF-14) |
 | **`apply -f`** | `<file>`, `[--project <slug>]` | Proposes every manifest of the file as a `Change`: `POST` when the Portal holds no such resource, `PUT` when it holds a different one, nothing when it already matches; exit `1` when any was refused (MF-12, MF-14) |
@@ -96,11 +97,13 @@ repository checkout, and take their own address and identity:
 |---|---|---|
 | `--server <url>` | `JC_SERVER` | Base URL of the Portal, e.g. `https://portal.dev.joinedcontext.com` |
 | `--token-file <path>` | `JC_TOKEN_FILE` | File holding an OIDC access token for the Portal: a person's from `jcctl login` (PF-45), or a `ServiceAccount`'s from the client credentials grant (PF-34); without either, the file `jcctl login` wrote |
-| `--idm <url>` (`login` only) | `JC_IDM` | The realm's issuer, e.g. `https://idm.<domain>/realms/<realm>`; `https` except on the loopback interface |
+| `--idm <url>` (`login` and `token`) | `JC_IDM` | The realm's issuer, e.g. `https://idm.<domain>/realms/<realm>`; `https` except on the loopback interface |
 
 `jcctl login` runs the device flow on the public Keycloak client `jcctl`, which offers that
-grant and no other and whose tokens carry the `portal-api` audience the Portal accepts. It
-prints the address and the code to open on any device, polls the token endpoint at the interval
+grant and no other and whose tokens carry the `portal-api` audience the Portal accepts. The
+client is public, so each sign-in carries a proof key (RFC 7636, `S256`): a fresh 32-byte
+verifier, its hash on the device authorization and the verifier on every token request; the
+realm refuses a device authorization without one. It prints the address and the code to open on any device, polls the token endpoint at the interval
 the provider names (five seconds more on `slow_down`), and writes the access token to
 `--token-file`, else `$XDG_CONFIG_HOME/jcctl/token` (`~/.config/jcctl/token`), with mode `600` in
 a directory of mode `700`. The refresh token is not kept: when the token expires, the person
@@ -122,6 +125,38 @@ at the end.
 `get -o yaml` and `-o json` print the manifest as the API serves it. The Portal serves what the
 repository holds, which carries a `secretRef` naming a secret and never its value (CC-06), so
 no output of these verbs carries a resolved secret.
+
+### 2b. A person's script on one Endpoint (`token`)
+
+A script that reads a non-public Endpoint as the person who runs it takes a token from
+`jcctl token`:
+
+```sh
+jcctl token --resource https://api.dev.joinedcontext.com/api/endpoint/<slug> \
+  --idm https://idm.dev.joinedcontext.com/realms/dev
+curl -H 'Accept: application/ld+json' \
+  -H "Authorization: Bearer $(cat ~/.config/jcctl/endpoints/<slug>)" \
+  'https://api.dev.joinedcontext.com/api/endpoint/<slug>/ngsi-ld/v1/entities?type=<Type>&limit=5'
+```
+
+`--resource` is the Endpoint's address as its page shows it; the slug is the path segment after
+`/api/endpoint/`, and an address without one is refused before anything is sent. The command
+runs the device flow of §2a for the scope `openid endpoint:{slug}` and writes the token to
+`--token-file`, else `$XDG_CONFIG_HOME/jcctl/endpoints/{slug}`, with the same modes. The token
+carries the audience `jcctl-endpoint` beside `portal-api`; the gateway admits a `jcctl-endpoint`
+token from the client `jcctl` only on the Endpoint its `endpoint:{slug}` scope names, and the
+Endpoint's Policy decides each call by the person (PF-46). Any other Endpoint answers `401`, an
+Endpoint whose Policy does not grant the person `403`; `endpoint:*` reaches nothing there. A
+token of `jcctl login` alone carries no Endpoint scope and reaches no Endpoint.
+
+Decided (worker-t5614, owner may override): a second sign-in per Endpoint, not an RFC 8693
+token exchange of the `jcctl login` token, because Keycloak's standard token exchange takes only
+confidential clients and `jcctl` lives on a laptop without a secret; the browser session the
+person already has turns the second sign-in into one confirmation. The `endpoint:{slug}` scopes
+are the ones the Portal renders for the MCP hub (Endpoints serving MCP); the admin-permissions
+Job links each to `jcctl` as an optional scope.
+
+A program that runs without a person keeps using a `ServiceAccount` (PF-34).
 
 ## 3. JSON Output Contract (`--json`)
 

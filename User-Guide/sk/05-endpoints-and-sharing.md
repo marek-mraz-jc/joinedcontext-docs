@@ -89,6 +89,7 @@ Skopírujte adresy endpointu pomocou tlačidla **Kopírovať URL** vedľa ľubov
 - **Microsoft Excel a Power BI:** Zvoľte **Data > From Web** a zadajte URL pre export do CSV `https://api.{domain}/api/endpoint/{slug}/file.csv`.
 - **Grafana:** V plugine zdroja údajov Infinity sa dopytujte na `/ngsi-ld/v1/entities?type=…` s hlavičkou `Accept: application/geo+json` na vykreslenie živých polôh na paneli Geomap.
 - **AI agenti (MCP):** Pripojte externé prostredia agentov (napríklad Claude Code) na `https://api.{domain}/api/endpoint/{slug}/mcp`. Agent automaticky objaví dopytovacie nástroje podľa politiky endpointu.
+- Skript, ktorý číta ako vy: Pre Endpoint, ktorý nie je verejný, spustite `jcctl token --resource https://api.{domain}/api/endpoint/{slug} --idm https://idm.{domain}/realms/{realm}`, potvrďte prihlásenie v prehliadači a token, ktorý zapíše do `~/.config/jcctl/endpoints/{slug}`, posielajte ako `Authorization: Bearer …`. Token otvára len tento jeden Endpoint a nič iné a každé volanie rozhoduje Policy Endpointu tak ako vaše ([API/03 §2b](../../API/03-jcctl.md#2b-a-persons-script-on-one-endpoint-token)). Program, ktorý beží bez vás, používa servisný účet.
 - Schéma a čo môžete robiť: `https://api.{domain}/api/endpoint/{slug}/schema/v1/AirQualityObserved.json` je zverejnená schéma jedného typu a `https://api.{domain}/api/endpoint/{slug}/access` odpovedá, čo volajúci v danom momente smie čítať a zapisovať.
 
 ## 5. Zdieľanie údajov medzi projektmi
