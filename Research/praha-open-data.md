@@ -85,17 +85,17 @@ The decision follows from `usable` and from dev:
 |---|---|---|---|---|---|
 | live | 1 | 6 | 8 | 3 | 18 |
 | seeded | 5 | 44 | 3 | 3 | 55 |
-| integrate | 21 | 147 | 4 | 1 | 173 |
-| skip | 5 | 29 | 28 | 1 | 63 |
+| integrate | 21 | 147 | 1 | 1 | 170 |
+| skip | 5 | 29 | 31 | 1 | 66 |
 | part | 88 | 0 | 44 | 0 | 132 |
 | total | 120 | 226 | 87 | 8 | 441 |
 
 | usable | city | ipr | golemio | other | rows |
 |---|---|---|---|---|---|
-| yes | 27 | 197 | 15 | 7 | 246 |
-| stale | 3 | 9 | 5 | 0 | 17 |
+| yes | 27 | 197 | 12 | 7 | 243 |
+| stale | 3 | 9 | 6 | 0 | 18 |
 | duplicate | 1 | 5 | 3 | 0 | 9 |
-| login | 0 | 0 | 18 | 0 | 18 |
+| login | 0 | 0 | 20 | 0 | 20 |
 | format | 0 | 13 | 2 | 0 | 15 |
 | licence | 0 | 0 | 0 | 1 | 1 |
 | unnamed | 0 | 2 | 0 | 0 | 2 |
@@ -184,8 +184,8 @@ build the rows highest score first; skip rows keep their score so the reason is 
 |---|---|---|---|---|---|
 | live | 18 | 5 | 9 | 4 | 0 |
 | seeded | 55 | 3 | 18 | 34 | 0 |
-| integrate | 173 | 4 | 3 | 15 | 151 |
-| skip | 63 | 8 | 14 | 15 | 26 |
+| integrate | 170 | 2 | 2 | 15 | 151 |
+| skip | 66 | 10 | 15 | 15 | 26 |
 
 The score orders the work; since 2026-10-25 it no longer decides whether a row is built. The owner
 order of that day takes every usable row, so the rows the score of 2026-10-23 left out (plan layers,
@@ -305,20 +305,20 @@ decision changes the row's cells, not its number.
 | 99 | [`040756d41d294971ad730304b792cb03`](https://geoportalpraha.cz/data-a-sluzby/040756d41d294971ad730304b792cb03) | Záplavové území ( Q50 ) | ipr | seeded | T-5429 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | flood extent or flood defence | 1 | yes | seeded, `praha-zaplavova-uzemi` answers 404: not published |
 | 100 | [`00242330738c4326af30663eb7c6d7f9`](https://geoportalpraha.cz/data-a-sluzby/00242330738c4326af30663eb7c6d7f9) | Záplavové území ( drobné vodní toky ) | ipr | integrate | P-04 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | flood extent or flood defence; 23.5 MB (T-5429), over the 16 MiB read cap: P-04 reads it in pages | 1 | yes | - |
 | 101 | [`7a4bf2d99de44645ac5768f65d8a9692`](https://geoportalpraha.cz/data-a-sluzby/7a4bf2d99de44645ac5768f65d8a9692) | Záplavové území (Vltava, Berounka) | ipr | seeded | T-5429 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | flood extent or flood defence | 1 | yes | seeded, `praha-zaplavova-uzemi` answers 404: not published |
-| 102 | [`/v2/bicyclecounters`](https://api.golemio.cz/docs/openapi/) | GET All Bicycle Counters | golemio | integrate | P-02 | `TrafficFlowObserved` (Transportation) | ngsi-ld, temporal, sta, csv | - | needs a DataSource time window (`from=` now minus the period): the route sorts by device, not time (T-5268) | 3 | yes | - |
-| 103 | [`/v2/municipalauthorities/{id}/queues`](https://api.golemio.cz/docs/openapi/) | GET All Municipal Authority Waiting Queues | golemio | integrate | P-02 | custom `ServiceQueue`; closest `ArrivalEstimation` (UrbanMobility) | ngsi-ld, temporal, sta, csv | - | one call per office with the key header; a nested Bento call carries no key (T-5268) | 3 | yes | - |
+| 102 | [`/v2/bicyclecounters`](https://api.golemio.cz/docs/openapi/) | GET All Bicycle Counters | golemio | integrate | P-02 | `TrafficFlowObserved` (Transportation) | ngsi-ld, temporal, sta, csv | - | built in T-5681: the counter list by the DataSource, then one keyed call for the last hour (`from=` now minus 1 h) from the mapping with the Pipeline's own `secretRef`; 61 of 79 directions counted on 2026-10-25 15:20Z, the rest silent for 30 days | 3 | yes | - |
+| 103 | [`/v2/municipalauthorities/{id}/queues`](https://api.golemio.cz/docs/openapi/) | GET All Municipal Authority Waiting Queues | golemio | skip | - | custom `ServiceQueue`; closest `ArrivalEstimation` (UrbanMobility) | ngsi-ld, temporal, sta, csv | - | 63 of the 64 offices answer 404 and the one that answers (Škodův palác) was last updated 2023-01-31 (T-5681, 2026-10-25) | 3 | stale | - |
 | 104 | [`/v2/sharedbikes`](https://api.golemio.cz/docs/openapi/) | GET All Shared Bikes | golemio | skip | - | `Vehicle` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | - | the project key gets 403 (Forbidden) on 2026-10-25 (T-5680); a mobility feed T-5268 left out; the owner order of 2026-10-25 admits it | 3 | login | - |
 | 105 | [`/v2/sharedcars`](https://api.golemio.cz/docs/openapi/) | GET All Shared Cars | golemio | seeded | T-5680 | `Vehicle` (Transportation) | ngsi-ld, geojson, ogc-features, csv | - | `golemio-shared-cars`, every 5 min: car4way, Anytime and Bolt, 949 cars free to rent (2026-10-25) | 3 | yes | seeded, not applied on dev yet: `praha-sdilena-auta` (T-5680) |
 | 106 | [`/v2/vehiclesharing`](https://api.golemio.cz/docs/openapi/) | GET All Shared Vehicles | golemio | skip | - | `Vehicle` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | - | the project key gets 403 (Forbidden) on 2026-10-25 (T-5680); a mobility feed T-5268 left out; the owner order of 2026-10-25 admits it | 3 | login | - |
 | 107 | [`/v2/traffic/restrictions`](https://api.golemio.cz/docs/openapi/) | GET All Traffic Restrictions for a specific moment | golemio | skip | - | `CityWork` (Transportation) | ngsi-ld, geojson, ogc-features, csv, feed | - | the project key gets 403 (scope); @user asks OICT for the scope | 3 | login | - |
 | 108 | [`/v2/vehiclesharing/gbfs/systems_list`](https://api.golemio.cz/docs/openapi/) | GET GBFS Systems List | golemio | skip | - | `BikeHireDockingStation` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | - | the project key gets 403 (Forbidden) on 2026-10-25 (T-5680); a mobility feed T-5268 left out; the owner order of 2026-10-25 admits it; the nextbike GBFS is already read directly | 3 | login | - |
 | 109 | [`/v2/fcd/info`](https://api.golemio.cz/docs/openapi/) | GET Latest floating Car Data | golemio | skip | - | `TrafficFlowObserved` (Transportation) | ngsi-ld, temporal, sta, csv | - | the project key gets 403 (scope); @user asks OICT for the scope | 3 | login | - |
-| 110 | [`/v2/pedestrians/measurements`](https://api.golemio.cz/docs/openapi/) | GET measurements of pedestrian traffic | golemio | integrate | P-02 | `CrowdFlowObserved` (Transportation) | ngsi-ld, temporal, sta, csv | - | needs a DataSource time window (`from=` now minus the period): the route sorts by device, not time (T-5268) | 3 | yes | - |
+| 110 | [`/v2/pedestrians/measurements`](https://api.golemio.cz/docs/openapi/) | GET measurements of pedestrian traffic | golemio | skip | - | `CrowdFlowObserved` (Transportation) | ngsi-ld, temporal, sta, csv | - | 403 for the project key on 2026-10-25 (T-5681) | 3 | login | - |
 | 111 | [`/v2/energetics/measurements`](https://api.golemio.cz/docs/openapi/) | Measurements | golemio | skip | - | `ConsumptionPoint` (Consumption) | ngsi-ld, temporal, sta, csv | - | the project key gets 403 (scope); @user asks OICT for the scope | 3 | login | - |
-| 112 | [`golemio-departureboards`](https://api.golemio.cz/v2/pid/departureboards) | Golemio /v2/pid/departureboards (PID departures per stop) | other | integrate | P-02 | `ArrivalEstimation` (UrbanMobility) | ngsi-ld, temporal, sta, csv | - | one call per stop, about 15,000 poles against a cap of 20 calls per 8 s (T-5268); needs `pid-gtfs` stops first | 3 | yes | - |
+| 112 | [`golemio-departureboards`](https://api.golemio.cz/v2/pid/departureboards) | Golemio /v2/pid/departureboards (PID departures per stop) | other | integrate | P-12 | `ArrivalEstimation` (UrbanMobility) | ngsi-ld, temporal, sta, csv | - | one board per stop, about 15,000 poles against a cap of 20 calls per 8 s shared with every Golemio pipeline (T-5268); one call takes several `ids` (3 tested by T-5681), so a chosen stop set (the metro's 61 stations) fits a few calls a run; needs `pid-gtfs` stops first | 3 | yes | - |
 | 113 | [`prague-events`](https://www.prague.eu/en/events) | Prague event calendar (prague.eu, GoOut) | other | skip | - | `Event` (TourismDestinations) | ngsi-ld, geojson, csv, ical, feed | - | no open events feed found: Golemio has no events route (404, T-5268) and neither page states reuse terms; question to the publishers | 3 | licence | - |
 | 114 | [`/v1/potholes/data`](https://api.golemio.cz/docs/openapi/) | GET All Pot holes | golemio | skip | - | `IssueReporting` (IssueTracking) | ngsi-ld, geojson, ogc-features, csv | - | the project key gets 403 (scope); @user asks OICT for the scope (Waze, T-5268) | 2 | login | - |
-| 115 | [`/v2/pedestrians/locations`](https://api.golemio.cz/docs/openapi/) | Get locations and directions | golemio | integrate | P-02 | `Device` (Device) | ngsi-ld, geojson, ogc-features, csv | - | needs a DataSource time window (`from=` now minus the period): the route sorts by device, not time (T-5268) | 2 | yes | - |
+| 115 | [`/v2/pedestrians/locations`](https://api.golemio.cz/docs/openapi/) | Get locations and directions | golemio | skip | - | `Device` (Device) | ngsi-ld, geojson, ogc-features, csv | - | 403 for the project key on 2026-10-25 (T-5681) | 2 | login | - |
 | 116 | [`/v2/energetics/buildings`](https://api.golemio.cz/docs/openapi/) | Get all buildings | golemio | skip | - | `Building` (Building) | ngsi-ld, geojson, ogc-features, csv | - | the project key gets 403 (scope); @user asks OICT for the scope | 1 | login | - |
 | 117 | [`/v2/energetics/devices`](https://api.golemio.cz/docs/openapi/) | List of measurement devices | golemio | skip | - | `Device` (Device) | ngsi-ld, geojson, ogc-features, csv | - | the project key gets 403 (scope); @user asks OICT for the scope | 1 | login | - |
 | 118 | [`/v2/energetics/organizations`](https://api.golemio.cz/docs/openapi/) | List of organizations in brief or full format | golemio | skip | - | `Organization` (custom) | ngsi-ld, csv, odata | - | the project key gets 403 (scope); @user asks OICT for the scope | 1 | login | - |
@@ -648,10 +648,10 @@ decision changes the row's cells, not its number.
 
 ## 7. What is left out and why
 
-Only rows that fail the usable rule of section 2 are left out (60 rows, decision `skip`):
+Only rows that fail the usable rule of section 2 are left out (66 rows, decision `skip`):
 
-- **stale** (17): the Golemio air-quality stations (since 2026-08-12; ČHMÚ is live), medical
-  institutions (2024-04) and the three microclimate routes (2026-04-07); the PID lines layer (declared
+- **stale** (18): the Golemio air-quality stations (since 2026-08-12; ČHMÚ is live), the municipal
+  office queues (one office answers, last updated 2023-01-31), medical institutions (2024-04) and the three microclimate routes (2026-04-07); the PID lines layer (declared
   daily, last edit 2026-08-20; the GTFS feed of row 21 carries the routes); five TSK parking layers
   declared weekly and last edited 2026-09-07 (rows 29, 42, 44, 47, 50); two waste-fee files that rows
   211 and 213 continue since 2022; the three IPR waste layers of rows 36, 38 and 39 (last edited 2019 and
@@ -661,8 +661,8 @@ Only rows that fail the usable rule of section 2 are left out (60 rows, decision
   IPR police objects (Golemio police is live), nameless IPR playgrounds (Golemio playgrounds are
   live), the city parking zones (every section id of rows 49 and 50 carries its zone), the 2016 zones,
   a test copy of a landscape register, and the data request answered by row 54.
-- **login** (18): traffic restrictions, floating car data, Waze potholes, bulky waste, three parking
-  routes (rows 104, 106 and 108, T-5680) and the six energetics routes answer 403 for the project key; the six routes tagged internal need an internal
+- **login** (20): traffic restrictions, floating car data, Waze potholes, bulky waste, three parking
+  routes (rows 104, 106 and 108, T-5680), the two pedestrian counter routes (T-5681) and the six energetics routes answer 403 for the project key; the six routes tagged internal need an internal
   scope. @user: ask OICT to add these scopes to the praha key; each row then moves to integrate.
 - **format** (15): orthophotos, surface and terrain models, building heights, the 3D scenes, the base
   maps, and the Golemio vector tiles: no features, a basemap link in the catalogue at most.
@@ -673,9 +673,9 @@ Only rows that fail the usable rule of section 2 are left out (60 rows, decision
 
 ## 8. Plan to 100
 
-Usable on 2026-10-25: **246** datasets. Live on dev: **18**. Once the seeded rows publish, the
-parked task T-5684 lands and P-02 to P-04 run, Praha holds 18 + 55 + 2 + 20 = **95**; the first five
-rows of P-05 make 100. P-05 to P-11 take the remaining 151 usable rows, which score 0 or -1; they come after the first 100 are live.
+Usable on 2026-10-25: **243** datasets. Live on dev: **18**. Once the seeded rows publish, the
+parked task T-5684 lands and P-02 to P-04 and P-12 run, Praha holds 18 + 55 + 2 + 17 = **92**; the
+first eight rows of P-05 make 100. P-12 waits for the PID stops in the space. P-05 to P-11 take the remaining 151 usable rows, which score 0 or -1; they come after the first 100 are live.
 
 Every batch runs the checks of section 5, reads the source again before it builds, and ends with one
 MCP read per dataset through the connector (owner order of 2026-10-25). A batch holds at most 25 rows
@@ -690,7 +690,7 @@ of one pipeline shape.
 | T-5428 | 22-24, 52, 56 | 5 | city tables and feeds | `KeyPerformanceIndicator`, `CityWork` | `KeyPerformanceIndicator`, `CityWork` | seeded |
 | T-5684 | 54, 55 | 2 | city tables without coordinates | `Streetlight`, `PointOfInterest` | `Streetlight` | geocoding (55), node memory (54) |
 | P-01 | - | 0 | built by T-5680: rows 26, 27 and 105 seeded; 104, 106 and 108 answer the project key 403 (login) | `OffStreetParking`, `Vehicle` | none | - |
-| P-02 | 102, 103, 110, 112, 115 | 5 | Golemio routes read per item or per time window | `TrafficFlowObserved`, `CrowdFlowObserved`, `Device`, `ArrivalEstimation`, custom `ServiceQueue` | `TrafficFlowObserved`, `CrowdFlowObserved`, `Device`, `ArrivalEstimation`, `ServiceQueue` | a DataSource `from=` window and keyed per-item calls (platform) |
+| P-02 | 102 | 1 | Golemio route read per time window | `TrafficFlowObserved` | `TrafficFlowObserved` | built in T-5681 (deployment): a Pipeline's own `secretRefs` key a mapping's `http` step, so no platform change; 103, 110 and 115 proved unusable (section 7), 112 moved to P-12 |
 | P-03 | 79, 82, 130, 131, 132 | 5 | IPR point, line and area layers without a name field | `PointOfInterest`, custom `GreenAsset` | `GreenAsset` | T-5426 (area and line shape) |
 | P-04 | 31, 34, 60-63, 67, 90, 94, 100 | 10 | IPR layers over the 16 MiB read cap, read in pages of object ids | `GreenspaceRecord`, `RoadSegment`, custom `NoiseZone`, custom `FloodZone` | `GreenspaceRecord`, `RoadSegment`, `NoiseZone` | T-5426; storage measured first (node memory) |
 | P-05 | 235-259 | 25 | IPR plan layers (MPP, part 1) | custom `PlanningArea` | `PlanningArea` | T-5426 |
@@ -700,6 +700,7 @@ of one pipeline shape.
 | P-09 | 162, 166, 170, 171, 187-189, 193, 220-224, 229-234 | 19 | IPR terrain, map sheets and archive utility networks | custom `ReferenceGeometry` | `ReferenceGeometry` | T-5426 |
 | P-10 | 151-158, 160, 161, 165, 167, 172, 177, 178, 180-182, 186, 196, 199, 200, 203, 204 | 24 | IPR registers and one-off analyses | custom `RegisterArea` | `RegisterArea` | T-5426 |
 | P-11 | 133-140, 142, 143, 206-209, 211, 213-216 | 19 | city tables (CSV, JSON, XML) | `KeyPerformanceIndicator`, `Organization`, `PointOfInterest`, custom `FinancialRecord`, `CouncilVote`, `Record` | `FinancialRecord`, `CouncilVote`, `Record` | T-5428 (KPI and Article classes) |
+| P-12 | 112 | 1 | Golemio departure boards for a chosen stop set, several `ids` per call | `ArrivalEstimation` | `ArrivalEstimation` | the PID stops in the space (F-1), a stop set that fits the key's 20 calls per 8 s |
 
 ## 9. Provenance
 
