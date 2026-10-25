@@ -96,7 +96,7 @@ It takes the inventory from two sides: every CKAN dataset (`https://opendata.{do
 - a public Endpoint that no dataset names;
 - a distribution on another installation's host, such as `api.dev.` in the production catalogue.
 
-One more request checks the search filters (T-5294): `package_search?rows=0` with the facets `vocab_jc_use` and `vocab_jc_topic`, written as a row `(catalogue)` of its own. It is a `ko` when the Format filter offers no value, names anything but `table`, `map`, `live` or `api` (a file format such as CSV or OWL), or holds a value with the count of every dataset, and when the Topic filter is missing. An empty catalogue is a `skip`.
+One more request checks the search filters (T-5294, T-5649): `package_search?rows=0` with the facets `vocab_jc_format` and `vocab_jc_topic`, written as a row `(catalogue)` of its own. It is a `ko` when the Format filter offers no value or names anything but a format a dataset serves its data in, by the CKAN theme's code (`NGSI-LD`, `WEBSOCKET`, `OGCFEAT`, `ODATA`, `STA`, `GEOJSON`, `CSV`, `JSON`, `XLSX`, `XLS`, `XML`, `PARQUET`, `ICS`, `RSS`, `ATOM`, `JSONFEED`, `MCP`): a data model document such as OWL or a use such as `map` is a `ko`. It is also a `ko` when the Topic filter is missing. An empty catalogue is a `skip`.
 
 For each dataset it checks the distributions the dataset itself lists. The entity type comes from the dataset's OData, OGC or resource name, and otherwise from the Endpoint's `ngsi-ld/v1/types`.
 
