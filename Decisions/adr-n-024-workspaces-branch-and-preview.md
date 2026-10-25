@@ -178,7 +178,7 @@ lives is rendered from where it lives.** Read against `components/context-gatewa
 | **SharedSpaceReference** | `endpointSlug` of the source; the import door re-mints the endpoint's slug and does not touch the reference | **no**: after copying an organization, or two projects together, the reference points at a slug that does not exist there |
 
 What can never be copied, and must be reported instead of failing later: secret values behind
-`secretRef`, people (`user: demo.steward@hel.fi` in RoleBindings and Policies), hosts and
+`secretRef`, people (a Keycloak user id in RoleBindings and Policies), hosts and
 certificates (the Environment overlay), feed credentials. A copy ends with a list: "3 secrets to
 provide, 4 people to map, 1 host to set", each linking to where.
 
