@@ -110,14 +110,23 @@ Check flow status in Portal UI: status must transition from *Error* to *Live*.
 
 ### Diagnosis
 
-1. Inspect APISIX access logs filtered by endpoint slug:
+1. Open the project's **Activity** and filter the kind **Rate limit reached** (`endpoint.rate-limited`), or ask the API:
+
+   ```bash
+   curl -sS -H "Authorization: Bearer $TOKEN" \
+     "https://<portal>/api/v1/projects/<project>/activity?kind=endpoint.rate-limited"
+   ```
+
+   The gateway writes one row per Endpoint and caller with the number of `429` answers it gave: "serviceAccount:walk-caller was refused 12 times on walk-read: its rate limit was spent". A signed-in caller's rows arrive every 15 seconds, anonymous callers' once a minute. The caller is the principal the Endpoint admits the token as (`serviceAccount:<name>`, `user:<name>`); a request without an admitted token is `anonymous`, and the Activity never shows a client address (T-5624).
+
+2. For an `anonymous` flood, find the client addresses in the APISIX access logs, filtered by Endpoint slug:
 
    ```bash
    kubectl logs -n dev -l app.kubernetes.io/name=apisix -c apisix --tail=500 \
      | grep "/api/endpoint/<slug>"
    ```
 
-2. Identify abusive client IP addresses or compromised API tokens.
+   The gateway's own log line `rate limit reached` carries `slug` and `caller` in the same form as the Activity row.
 
 ### Remediation
 
