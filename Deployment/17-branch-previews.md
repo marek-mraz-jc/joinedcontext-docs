@@ -108,13 +108,13 @@ metadata:
   namespace: pv-example
 spec:
   hard:
-    pods: "6"
-    requests.cpu: "1"
-    limits.cpu: "6"
+    pods: '6'
+    requests.cpu: '1'
+    limits.cpu: '6'
     requests.memory: 1696Mi
     limits.memory: 3584Mi
-    services.loadbalancers: "0"
-    services.nodeports: "0"
+    services.loadbalancers: '0'
+    services.nodeports: '0'
 ---
 apiVersion: v1
 kind: LimitRange
@@ -131,7 +131,7 @@ spec:
         cpu: 50m
         memory: 128Mi
       max:
-        cpu: "1"
+        cpu: '1'
         memory: 1Gi
 ---
 apiVersion: networking.k8s.io/v1
@@ -141,15 +141,13 @@ metadata:
   namespace: pv-example
 spec:
   podSelector: {}
-  policyTypes: ["Ingress", "Egress"]
+  policyTypes: [Ingress, Egress]
   ingress:
     - from:
         - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
+            matchLabels: { kubernetes.io/metadata.name: kube-system }
           podSelector:
-            matchLabels:
-              app.kubernetes.io/name: traefik
+            matchLabels: { app.kubernetes.io/name: traefik }
       ports:
         - protocol: TCP
           port: 8080
@@ -158,11 +156,9 @@ spec:
   egress:
     - to:
         - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
+            matchLabels: { kubernetes.io/metadata.name: kube-system }
           podSelector:
-            matchLabels:
-              k8s-app: kube-dns
+            matchLabels: { k8s-app: kube-dns }
       ports:
         - protocol: UDP
           port: 53
@@ -170,11 +166,9 @@ spec:
           port: 53
     - to:
         - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: dev
+            matchLabels: { kubernetes.io/metadata.name: dev }
           podSelector:
-            matchLabels:
-              app.kubernetes.io/instance: keycloak-app
+            matchLabels: { app.kubernetes.io/instance: keycloak-app }
       ports:
         - protocol: TCP
           port: 8080
@@ -182,11 +176,9 @@ spec:
           port: 4143
     - to:
         - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: dev
+            matchLabels: { kubernetes.io/metadata.name: dev }
           podSelector:
-            matchLabels:
-              cnpg.io/cluster: postgres-cluster
+            matchLabels: { cnpg.io/cluster: postgres-cluster }
       ports:
         - protocol: TCP
           port: 5432
@@ -194,11 +186,9 @@ spec:
           port: 4143
     - to:
         - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: dev
+            matchLabels: { kubernetes.io/metadata.name: dev }
           podSelector:
-            matchLabels:
-              app.kubernetes.io/name: gitea
+            matchLabels: { app.kubernetes.io/name: gitea }
       ports:
         - protocol: TCP
           port: 3000
