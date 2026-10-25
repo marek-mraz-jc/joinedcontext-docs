@@ -55,9 +55,9 @@ A municipality of 100 employees in 8 departments adds 100 or more addresses to t
 4. **Migration without rewriting history.** Since force-push is forbidden and history is the audit, the existing commits stay. The Portal proposes one Change per organization repository that replaces every e-mail member, `user` subject and `user` assignee by the Keycloak id the realm holds for it; an address no Keycloak user carries is listed in the Change for its author to remove. The seeds name their demo people by the ids the dev realm import fixes. The e-mails already in history remain, in demo data only.
 5. **Bulk import later, SCIM not now.** A CSV import on the Portal's people page (option d) is a later convenience for organizations without a directory: it creates the people in Keycloak and proposes the group members by id in one Change. SCIM 2.0 waits for an organization whose identity provider can push only SCIM; Keycloak ships no SCIM server, and LDAP or OIDC federation covers Active Directory and Entra ID without it.
 
-A `Group` member after this decision (an excerpt until the jc-core half ships, since `jcctl validate` still asks for an e-mail), and a directory department bound to a role:
+A `Group` member after this decision, and a directory department bound to a role:
 
-```yaml excerpt
+```yaml
 apiVersion: joinedcontext.com/v1alpha1
 kind: Group
 metadata:

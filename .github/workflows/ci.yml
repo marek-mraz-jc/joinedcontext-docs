@@ -206,7 +206,8 @@ jobs:
     # e6d8253 -> platform branch tip b8f81f7 (T-4838): Pipeline `lifetime`.
     # b8f81f7 -> platform branch tip 8ee1dd1 (T-5052): `jcctl fmt --check` for the snippet layout.
     # 8ee1dd1 -> platform main 8ad437c (T-5404): Endpoint `audit` (T-5362).
-    env: { JC_PLATFORM_TAG: 8ad437ce135600266c89a525af14f20c80cbeec8 }
+    # 8ad437c -> platform branch tip 02f2779 (T-5710): a person is a Keycloak id (PF-126).
+    env: { JC_PLATFORM_TAG: 02f27794ff5cc7319d2c98bc0d25df85434298d5 }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
