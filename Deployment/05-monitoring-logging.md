@@ -94,6 +94,8 @@ Headers containing authentication secrets (`Authorization`, `X-API-KEY`, `Cookie
 
 Everything else keeps writing to `stdout` for whatever the operator scrapes; the audit stream is the one this component owns. A record joins it because of the pod it came from, never because of what it says, so no component can drop itself out of the trail by changing what it logs. The gateway's `trace_id` is what correlates a denied request, the MCP tool call that made it and the policy that matched (R42, AG-19).
 
+Neither `dev` nor `smartcity` runs the `audit-logging` component yet: it waits for the owner to provide the Object Lock bucket, so until then OPS-42 holds only in the rendered chart, and `tests/test_audit_logging.py::test_production_profiles_run_the_append_only_sink` stays an expected failure.
+
 The audit bucket carries S3 Object Lock in compliance mode with a 90 day default retention (OPS-42). Compliance mode is the point: governance mode lets a sufficiently privileged account shorten a lock, and an audit trail an administrator can shorten is not one. The collector's credential grants `PutObject` alone and arrives by `secretRef` like every other credential, so the collector cannot read, overwrite or delete what it has already shipped.
 
 Timestamps are parsed as RFC 3339 and stored in UTC. A record whose `timestamp` does not parse keeps its ingest time and is tagged rather than dropped, because a malformed audit record is still evidence.

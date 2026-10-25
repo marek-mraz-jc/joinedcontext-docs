@@ -74,20 +74,21 @@ A quantity per interval (a count of vehicles in five minutes, rain in an hour) i
 
 ### 2.3 Provenance on every write
 
-Every row the broker keeps, every version and every tombstone included, carries eight system fields beside the value (DM-111):
+Every row the broker keeps, every version and every tombstone included, carries nine system fields beside the value (DM-111):
 
 | Field | Values | Set by |
 |---|---|---|
 | `channel` | `pipeline`, `api`, `ui`, `import`, `backfill`, `mqtt` | the gateway, from the path the write came through: a Pipeline's ServiceAccount, an Endpoint call, the Portal, the CSV upload (DM-81), a backfill job, an MQTT edge broker |
 | `actor` | the ServiceAccount client id or the person's `sub` | the gateway, from the verified Keycloak token |
 | `organization` | the `metadata.name` of the Organization that owns the Project the caller was admitted under: a person's project group, a ServiceAccount's or a Pipeline's own Project; absent for an anonymous caller and a data-space participant, whose DID is its `actor` | the gateway, from the verified token and the repository |
+| `client` | the Keycloak client the verified token was issued to (`azp`): `portal-ui`, an MCP client, a CLI, an App; absent for an anonymous caller and a data-space participant | the gateway, from the verified token, so a person's write names the client it came through |
 | `actorKind` | `person`, `serviceAccount`, `pipeline`, `agent` | the gateway: `pipeline` for a Pipeline's derived account, `agent` for an MCP call and for a person's token another client exchanged (an assistant), with the person or client it acts for as `actor` |
 | `operation` | `create`, `update`, `correct`, `backfill`, `delete`, `erase` | the broker, from §2.1 and the request |
 | `reason` | text up to 500 characters | the caller, in the `JC-Reason` header |
 | `requestId` | the request's id | the gateway (`X-Request-Id`) |
 | `writtenAt` | when the broker stored the row | the broker |
 
-The caller never types `actor`, `channel`, `organization` or `actorKind` (DM-112). The edge drops every inbound `JC-Provenance-*` header, the gateway sets them after it verified the token, and the broker reads them only from the gateway's mesh identity; a write that reaches the broker another way is stored with `channel: api` and no `actor`: the broker names no caller it did not verify. `reason` is required for `correct`, `delete` and every write from the Portal's UI, and a write without one answers `400` with the problem type `reason-required` (DM-113). Provenance holds no value of the data and is never copied into a log line.
+The caller never types `actor`, `client`, `channel`, `organization` or `actorKind` (DM-112). The edge drops every inbound `JC-Provenance-*` header, the gateway sets them after it verified the token, and the broker reads them only from the gateway's mesh identity; a write that reaches the broker another way is stored with `channel: api` and no `actor`: the broker names no caller it did not verify. `reason` is required for `correct`, `delete` and every write from the Portal's UI, and a write without one answers `400` with the problem type `reason-required` (DM-113). Provenance holds no value of the data and is never copied into a log line.
 
 ### 2.4 Versions
 
