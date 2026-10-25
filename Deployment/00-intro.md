@@ -59,6 +59,7 @@ flowchart TD
 11. **[Moving a Project Between Instances](11-moving-a-project.md):** exporting a project and importing it elsewhere.
 12. **[Branding and Naming](12-branding-and-naming.md):** what an operator may rename, and what the platform derives.
 13. **[Production Instance smartcity](14-production-smartcity.md):** the production installation, its backups, restore and patch window.
+14. **[Branch Previews on dev](17-branch-previews.md):** what a code-branch preview runs, what it costs, how it is isolated and why it never promotes.
 
 ## Related
 
