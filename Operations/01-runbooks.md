@@ -155,7 +155,18 @@ Identify compromised identity did:web identifier, Keycloak service account, or `
 
 ### Remediation
 
-One script does all of it, in the only order that revokes anything, and it measures the
+**A leaked secret of a ServiceAccount the Portal manages** (its client `{project}-{name}` carries
+`managed-by: joinedcontext`, every account a project created) needs no script and no realm
+administrator: a person with `approve` on ServiceAccount opens Access → Service accounts → the
+account → *What this account may do* → *Issue new secret*, or calls
+`POST /api/v1/projects/{project}/serviceaccounts/{name}/secret` from their session
+([API/01 §52](../API/01-portal-api.md)). The leaked secret is refused at once and the tokens it got
+are refused at the gateway's next revocation poll; the new secret is shown once. Give it to the
+system that signs in as the account. Remove a `Policy` the account should no longer reach as a
+Change. `tests/drills/walk_ops.sh` drill C measures this path against the 5-second bound.
+
+For a policy, a person, or a client the platform's deployment declares, one script does all of
+it, in the only order that revokes anything, and it measures the
 result ([OPS-45](../Requirements/operations.md),
 [R48](../Requirements/policy-firewall.md#31-structural-gaps)):
 
