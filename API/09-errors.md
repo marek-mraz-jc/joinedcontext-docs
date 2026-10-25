@@ -360,6 +360,14 @@ A request to the Portal is not valid; `errors` lists every violation, so a form 
 
 What to do: Correct the request as the detail says; errors lists every violation at once.
 
+### `second-factor-required` {#second-factor-required}
+
+**Second Factor Required**, status 403.
+
+A decision (approve, reject, revoke, an erasure, people administration) needs a second factor proven in this session, and the person signed in with a password alone; whatever gave them the right does not change that (PF-128).
+
+What to do: Sign in again with your one-time code (GET /api/v1/auth/login?step_up=true), then repeat the decision.
+
 ### `self-approval` {#self-approval}
 
 **Self Approval Forbidden**, status 403.

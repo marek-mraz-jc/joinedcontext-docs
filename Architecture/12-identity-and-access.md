@@ -30,6 +30,8 @@ The platform enforces four non-negotiable identity rules:
 - **I3, Peer Federation Identity:** Peer digital twins in a federation NEVER receive local Keycloak user accounts. Peer identities are established via W3C Decentralized Identifiers (`did:web`) verified against the European Trusted Issuers Registry (TIR).
 - **I4, Zero Permissions in Tokens:** Authentication tokens carry identity assertions exclusively (`sub`, `iss`, `client_id`, `email`). Tokens NEVER contain permissions, role lists, or scope grants. All authorization is decided by the Context Gateway's own in-process PDP against the `Policy` entities of the policy space ([ADR-N-003](../Decisions/adr-n-003-context-gateway-in-rust.md)); the legacy OPA sidecar it replaced is gone (13 §5).
 
+A token's `acr` and `amr` say how the person signed in, which is identity too, not a permission: the realm tags every one-time-code step `otp` (`amr`), and its step-up subflow, asked with `acr_values=mfa`, sets `acr` to `mfa`. The Portal reads them before every decision, whatever binding gave the right, and offers the step-up login when they prove no second factor (PF-128).
+
 ---
 
 ## 2. Organization, Group & Role Model
