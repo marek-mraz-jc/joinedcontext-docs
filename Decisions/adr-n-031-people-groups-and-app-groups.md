@@ -38,7 +38,7 @@ What the Portal can do on that date:
 
 ## 3. Decision
 
-1. **People live in Keycloak, not in Git.** A person's name and e-mail are personal data, so there is no `User` manifest. The Portal manages people through the Keycloak admin API, and every action lands in the activity log as who, what and when, never a credential. Membership stays as code.
+1. **People live in Keycloak, not in Git.** A person's name and e-mail are personal data, so there is no `User` manifest. The Portal manages people through the Keycloak admin API, and every action lands in the activity log as who, what and when, never a credential. Membership stays as code. Amended by [ADR-N-061](adr-n-061-group-members-without-personal-data.md): a member, a binding subject and a `Policy` assignee name the person by their Keycloak user id, never their e-mail, and a municipality with a directory binds its department groups with `source: provider`.
 2. **Who may.** The taxonomy seeds `people-admin`, whose verbs `create`, `update`, `disable` and `delete` on the kind `Person` apply at organization scope; `org-admin` holds it. Anyone else sees the controls disabled with the reason (UI-44).
 3. **The lifecycle of a person.**
    - Create (e-mail, name, language). Keycloak sends the execute-actions e-mail (`VERIFY_EMAIL`, `UPDATE_PASSWORD`). A realm without SMTP instead gets a temporary password with `UPDATE_PASSWORD` required. The Portal shows that password once and never stores or logs it.
@@ -70,6 +70,7 @@ What the Portal can do on that date:
 
 ## Related
 
+- [ADR-N-061](adr-n-061-group-members-without-personal-data.md) — members by Keycloak user id, directory groups; amends decision 1.
 - [ADR-N-030](adr-n-030-every-application-is-a-keycloak-client.md) — the App's own client and its client roles.
 - [ADR-N-027](adr-n-027-application-roles.md) — application roles.
 - [Requirements/platform](../Requirements/platform.md#people-and-group-roles) — PF-90…PF-95.
