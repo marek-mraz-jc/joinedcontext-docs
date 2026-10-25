@@ -448,6 +448,14 @@ Example write result:
 }
 ```
 
+A Change proposed inside an MCP `tools/call` also carries `status.proposedVia`, for example
+`{ "channel": "mcp", "client": "mcp-mobile" }` (AG-137, ADR-N-060 §2.2): `client` is the token's
+`azp`, at most 64 characters of `[A-Za-z0-9._:-]`, otherwise `unknown`. Every commit of that call
+ends in the trailer `Proposed-Via: mcp; client=mcp-mobile`, and its merge request body opens with
+"Proposed through an AI client over MCP (client `mcp-mobile`)." and ends in the same trailer. The
+Portal reads `proposedVia` back from that last line, so the approval page shows it as a badge.
+A Change proposed in the Portal or with the person's own token has no `proposedVia`.
+
 ### Drafts of a manifest (AG-61, UI-47, UI-48)
 
 A form saves what a person has typed before anything is proposed. A draft is shared, not
@@ -2575,8 +2583,12 @@ MCP (Streamable HTTP, protocol 2026-07-28):
   and the operation runs. `"action": "decline"` (or `"cancel"`) answers a refusal and nothing
   runs. An id is one-shot, belongs to the token's subject, expires in ten minutes and is bound to
   the operation and the arguments it was asked for: different arguments need a new answer. Every
-  answer is written to the project's activity as `mcp.tool` from `portal`, naming the operation,
-  the person and what they decided.
+  `tools/call` naming a known operation in a project the caller reads is one `mcp.tool` row from
+  `portal` on that project's activity (T-5609). Its `details` hold `operation`, `decision`
+  (`ran`, `started` for a task, `asked`, `declined` or `refused`), `answer` (`accepted` or
+  `declined`) when the call carried one, `subject`, `username`, `channel` `mcp`, `client` (the
+  token's `azp`) and `change` with the Change's name, also its `correlationId`, when the call
+  opened one. Names only: no argument value or manifest content reaches the row.
   Tasks (AG-60): `jc_pipeline_test`, `jc_model_infer`, `jc_space_complete` and
   `jc_datasource_check` wait on the runner, on Model Tools or on somebody's feed, so `tools/call`
   answers `{ "task": { "taskId", "status": "working", "pollInterval", "ttl" } }` at once and the
