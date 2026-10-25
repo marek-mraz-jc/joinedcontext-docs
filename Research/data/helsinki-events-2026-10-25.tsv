@@ -1,0 +1,173 @@
+name	org_type	site	feed_kind	check_url	upcoming	complete	robots	read_on	verdict	reason
+Varhaiskasvatuksen ja esiopetuksen palvelukokonaisuus	Linked Events publisher ahjo:u42030010	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u42030010&start=today	2601	2601	y	2026-10-25	usable	2601 upcoming with name, start and place in Helsinki
+Kirjastopalvelukokonaisuus	Linked Events publisher ahjo:u48040050	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u48040050&start=today	1724	1718	y	2026-10-25	usable	1718 upcoming with name, start and place in Helsinki
+Elinvoima	Linked Events publisher espoo:sito	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=espoo:sito&start=today	1549	588	y	2026-10-25	usable	588 upcoming with name, start and place in Helsinki
+Sosiaali-, terveys- ja pelastustoimiala	Linked Events publisher ahjo:u321200	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u321200&start=today	1083	1083	y	2026-10-25	usable	1083 upcoming with name, start and place in Helsinki
+Viestintäosasto	Linked Events publisher ahjo:u021800	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u021800&start=today	949	949	y	2026-10-25	usable	949 upcoming with name, start and place in Helsinki
+Osallisuus ja neuvonta	Linked Events publisher ahjo:u02180020	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u02180020&start=today	666	666	y	2026-10-25	usable	666 upcoming with name, start and place in Helsinki
+Muu	Linked Events publisher others	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=others&start=today	611	605	y	2026-10-25	usable	605 upcoming with name, start and place in Helsinki
+Vantaan kaupunki	Linked Events publisher vantaa:kaupunki	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=vantaa:kaupunki&start=today	510	354	y	2026-10-25	usable	354 upcoming with name, start and place in Helsinki
+Lippupiste Oy	Linked Events publisher ytj:1789232-4	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ytj:1789232-4&start=today	438	438	y	2026-10-25	usable	438 upcoming with name, start and place in Helsinki
+Kasvatuksen ja koulutuksen toimiala	Linked Events publisher ahjo:u420300	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u420300&start=today	425	410	y	2026-10-25	usable	410 upcoming with name, start and place in Helsinki
+Kulttuuripalvelukokonaisuus	Linked Events publisher ahjo:u48040010	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u48040010&start=today	423	413	y	2026-10-25	usable	413 upcoming with name, start and place in Helsinki
+Kontulan seniorikeskus	Linked Events publisher ahjo:u321200303030	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u321200303030&start=today	415	415	y	2026-10-25	usable	415 upcoming with name, start and place in Helsinki
+Myllypuron seniorikeskus	Linked Events publisher ahjo:u321200303040	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u321200303040&start=today	235	235	y	2026-10-25	usable	235 upcoming with name, start and place in Helsinki
+Matkailuyksikkö	Linked Events publisher ytj:0586977-6	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ytj:0586977-6&start=today	218	183	y	2026-10-25	usable	183 upcoming with name, start and place in Helsinki
+Aluekirjastopalvelut	Linked Events publisher ahjo:u4804005010	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u4804005010&start=today	212	212	y	2026-10-25	usable	212 upcoming with name, start and place in Helsinki
+Roihuvuoren seniorikeskus	Linked Events publisher ahjo:u3212003035	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u3212003035&start=today	187	187	y	2026-10-25	usable	187 upcoming with name, start and place in Helsinki
+Leikkipuisto Lampi	Linked Events publisher helsinki:u42030010201024	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=helsinki:u42030010201024&start=today	142	142	y	2026-10-25	usable	142 upcoming with name, start and place in Helsinki
+Kustaankartanon seniorikeskus	Linked Events publisher ahjo:u321200303050	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u321200303050&start=today	117	117	y	2026-10-25	usable	117 upcoming with name, start and place in Helsinki
+Kulttuurin ja vapaa-ajan toimiala	Linked Events publisher ahjo:u480400	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u480400&start=today	89	88	y	2026-10-25	usable	88 upcoming with name, start and place in Helsinki
+Kaupunginorkesteri	Linked Events publisher ahjo:u4804001030	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u4804001030&start=today	77	77	y	2026-10-25	usable	77 upcoming with name, start and place in Helsinki
+Vuosaaren kirjasto	Linked Events publisher ahjo:u480400501036	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u480400501036&start=today	72	72	y	2026-10-25	usable	72 upcoming with name, start and place in Helsinki
+Koskelan seniorikeskus	Linked Events publisher ahjo:u321200303025	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u321200303025&start=today	68	68	y	2026-10-25	usable	68 upcoming with name, start and place in Helsinki
+Kinaporin seniorikeskus	Linked Events publisher ahjo:u321200303010	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u321200303010&start=today	61	61	y	2026-10-25	usable	61 upcoming with name, start and place in Helsinki
+Riistavuoren seniorikeskus	Linked Events publisher ahjo:u321200303045	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u321200303045&start=today	60	60	y	2026-10-25	usable	60 upcoming with name, start and place in Helsinki
+Töölön seniorikeskus	Linked Events publisher ahjo:u321200303015	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u321200303015&start=today	58	58	y	2026-10-25	usable	58 upcoming with name, start and place in Helsinki
+Kauniainen	Linked Events publisher kauniainen:kaupunki	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=kauniainen:kaupunki&start=today	57	0	y	2026-10-25	skip	no place in Helsinki
+Konsernihallinto	Linked Events publisher espoo:koha	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=espoo:koha&start=today	57	19	y	2026-10-25	usable	19 upcoming with name, start and place in Helsinki
+Leikkipuisto Trumpetti	Linked Events publisher helsinki:u42030010201057	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=helsinki:u42030010201057&start=today	54	54	y	2026-10-25	usable	54 upcoming with name, start and place in Helsinki
+Leikkipuisto Torpparinmäki	Linked Events publisher helsinki:u42030010201055	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=helsinki:u42030010201055&start=today	45	45	y	2026-10-25	usable	45 upcoming with name, start and place in Helsinki
+Seniorikeskukset	Linked Events publisher ahjo:u3212003030	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u3212003030&start=today	44	44	y	2026-10-25	usable	44 upcoming with name, start and place in Helsinki
+Kasvu ja oppiminen	Linked Events publisher espoo:KOTO	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=espoo:KOTO&start=today	41	32	y	2026-10-25	usable	32 upcoming with name, start and place in Helsinki
+Kaupunginmuseo	Linked Events publisher ahjo:u4804001020	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u4804001020&start=today	40	40	y	2026-10-25	usable	40 upcoming with name, start and place in Helsinki
+Leikkipuisto Sanna	Linked Events publisher helsinki:u42030010201047	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=helsinki:u42030010201047&start=today	40	40	y	2026-10-25	usable	40 upcoming with name, start and place in Helsinki
+Nuorisopalvelukokonaisuus	Linked Events publisher ahjo:u48040030	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u48040030&start=today	35	35	y	2026-10-25	usable	35 upcoming with name, start and place in Helsinki
+Leikkipuisto Nurkka	Linked Events publisher helsinki:u42030010201038	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=helsinki:u42030010201038&start=today	30	30	y	2026-10-25	usable	30 upcoming with name, start and place in Helsinki
+Elinkeino-osasto	Linked Events publisher ahjo:u021200	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u021200&start=today	25	25	y	2026-10-25	usable	25 upcoming with name, start and place in Helsinki
+Työllisyyspalvelut	Linked Events publisher ahjo:u021200130	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u021200130&start=today	23	23	y	2026-10-25	usable	23 upcoming with name, start and place in Helsinki
+Nykytaiteen museo Kiasma	Linked Events publisher fng:kiasma	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=fng:kiasma&start=today	15	15	y	2026-10-25	usable	15 upcoming with name, start and place in Helsinki
+Itäinen nuorisotyö	Linked Events publisher ahjo:u4804003010	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u4804003010&start=today	15	15	y	2026-10-25	usable	15 upcoming with name, start and place in Helsinki
+Pohjoinen nuorisotyö	Linked Events publisher ahjo:u4804003030	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u4804003030&start=today	14	14	y	2026-10-25	usable	14 upcoming with name, start and place in Helsinki
+Leikkipuisto Piika	Linked Events publisher helsinki:u42030010201039	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=helsinki:u42030010201039&start=today	11	11	y	2026-10-25	usable	11 upcoming with name, start and place in Helsinki
+Syystien seniorikeskus	Linked Events publisher ahjo:u321200303055	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u321200303055&start=today	10	10	y	2026-10-25	usable	10 upcoming with name, start and place in Helsinki
+Viestintäpalvelut ja osallisuus	Linked Events publisher ahjo:u3212004080	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u3212004080&start=today	7	7	y	2026-10-25	usable	7 upcoming with name, start and place in Helsinki
+Kaupunkiympäristön toimiala	Linked Events publisher ahjo:u541000	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u541000&start=today	7	5	y	2026-10-25	usable	5 upcoming with name, start and place in Helsinki
+Harrastukset.hel.fi kumppanit	Linked Events publisher None:	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=None:&start=today	7	7	y	2026-10-25	usable	7 upcoming with name, start and place in Helsinki
+Keskustakirjasto Oodi	Linked Events publisher ahjo:u4804005020	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u4804005020&start=today	5	5	y	2026-10-25	usable	5 upcoming with name, start and place in Helsinki
+HAM Helsingin taidemuseo	Linked Events publisher ytj:3272340-6	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ytj:3272340-6&start=today	5	5	y	2026-10-25	usable	5 upcoming with name, start and place in Helsinki
+Maunulan nuorisotyöyksikkö	Linked Events publisher ahjo:u480400303040	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u480400303040&start=today	5	5	y	2026-10-25	usable	5 upcoming with name, start and place in Helsinki
+Ympäristöpalvelut	Linked Events publisher ahjo:u5110530040	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u5110530040&start=today	4	4	y	2026-10-25	usable	4 upcoming with name, start and place in Helsinki
+Helsingin tapahtumasäätiö sr	Linked Events publisher ytj:0224232-9	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ytj:0224232-9&start=today	3	3	y	2026-10-25	usable	3 upcoming with name, start and place in Helsinki
+Liikuntaan aktivointi	Linked Events publisher ahjo:u4804002010	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u4804002010&start=today	3	3	y	2026-10-25	usable	3 upcoming with name, start and place in Helsinki
+Liikuntapalvelukokonaisuus	Linked Events publisher ahjo:u48040020	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u48040020&start=today	2	2	y	2026-10-25	usable	2 upcoming with name, start and place in Helsinki
+Sairaala-, kuntoutus- ja hoivapalvelut -palvelukokonaisuus	Linked Events publisher ahjo:u32120030	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u32120030&start=today	2	2	y	2026-10-25	usable	2 upcoming with name, start and place in Helsinki
+Kaupunkiympäristö	Linked Events publisher espoo:tyt	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=espoo:tyt&start=today	1	0	y	2026-10-25	skip	no place in Helsinki
+Läntinen nuorisotyö	Linked Events publisher ahjo:u4804003020	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u4804003020&start=today	1	1	y	2026-10-25	usable	1 upcoming with name, start and place in Helsinki
+Munkkiniemen nuorisotyöyksikkö	Linked Events publisher ahjo:u480400302040	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u480400302040&start=today	1	1	y	2026-10-25	usable	1 upcoming with name, start and place in Helsinki
+Sotepe-yhteistyökumppanit	Linked Events publisher helsinki:sotepe-yht	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=helsinki:sotepe-yht&start=today	1	1	y	2026-10-25	usable	1 upcoming with name, start and place in Helsinki
+Kaupunginkanslia	Linked Events publisher ahjo:u02100	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u02100&start=today	1	1	y	2026-10-25	usable	1 upcoming with name, start and place in Helsinki
+Rakentamispalveluliikelaitos	Linked Events publisher ahjo:u31000	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u31000&start=today	1	1	y	2026-10-25	usable	1 upcoming with name, start and place in Helsinki
+Osallisuus ja neuvonta	Linked Events publisher ahjo:u02160010	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u02160010&start=today	1	0	y	2026-10-25	skip	no place in Helsinki
+Maahanmuutto- ja työllisyysasiat	Linked Events publisher ahjo:u02120030	https://api.hel.fi/linkedevents/v1/	linked-events	https://api.hel.fi/linkedevents/v1/event/?publisher=ahjo:u02120030&start=today	1	0	y	2026-10-25	skip	no place in Helsinki
+Kallio Library	knihovna	https://www.helmet.fi/en-US/Libraries_and_services/Kallio_Library						2026-10-25	skip	down: HTTPError
+Rikhardinkatu Library	knihovna	https://www.flickr.com/photos/helmetkirjasto/with/7175567028/					n	2026-10-25	skip	robots.txt
+Library of Parliament	knihovna	https://www.eduskunta.fi/EN/naineduskuntatoimii/kirjasto/Pages/default.aspx						2026-10-25	skip	down: HTTPError
+Helsinská centrální knihovna Oodi	knihovna	https://www.oodihelsinki.fi/					y	2026-10-25	skip	no machine-readable events
+Taideteollinen korkeakoulu	akademická instituce	http://arts.aalto.fi/en/					y	2026-10-25	skip	no machine-readable events
+Myllypuro Library	knihovna	https://helmet.finna.fi/OrganisationInfo/Home?lng=fi#84883						2026-10-25	skip	down: HTTPError
+Alexander Theatre	music venue	https://www.aleksanterinteatteri.fi/					y	2026-10-25	skip	no machine-readable events
+Kiasma Teatteri	budova divadla	http://www.kiasma.fi/					n	2026-10-25	skip	robots.txt
+Teater Viirus	budova divadla	http://www.viirus.fi/					y	2026-10-25	skip	no machine-readable events
+Q11896699	budova divadla	http://www.teatteritakomo.fi/					y	2026-10-25	skip	no machine-readable events
+Savoy Theatre	budova divadla	http://www.savoyteatteri.fi/					y	2026-10-25	skip	no machine-readable events
+Lilla Teatern	budova divadla	https://hkt.fi/nayttamot/lilla-teatern/					y	2026-10-25	skip	no machine-readable events
+Svenska Teatern	budova divadla	https://svenskateatern.fi/					y	2026-10-25	skip	no machine-readable events
+Drom	budova divadla	https://www.drom.fi/					y	2026-10-25	skip	no machine-readable events
+Teatteri Jurkka	budova divadla	https://www.jurkka.fi/					y	2026-10-25	skip	no machine-readable events
+Suomen Pankin rahamuseo	muzeum	https://www.rahamuseo.fi/					y	2026-10-25	skip	no machine-readable events
+Suomenlinna Museum	muzeum	http://www.museot.fi/museohaku/index.php?museo_id=22158					y	2026-10-25	skip	no machine-readable events
+Computer Museum of Kallio	muzeum	https://www.kalliontietokonemuseo.fi/					y	2026-10-25	skip	no machine-readable events
+Q53016271	muzeum	https://www.metropolia.fi/fi/asiakastyot-ja-palvelut/hoitotyon-koulutuksen-museo					y	2026-10-25	skip	no machine-readable events
+Worker’s Museum	muzeum	https://arbetarbostadsmuseet.fi/					y	2026-10-25	skip	no machine-readable events
+Worker’s Museum	muzeum	https://muzeirabochegobyta.fi/						2026-10-25	skip	down: URLError
+Worker’s Museum	muzeum	https://tyovaenasuntomuseo.fi/					y	2026-10-25	skip	no machine-readable events
+Worker’s Museum	muzeum	https://workerhousingmuseum.fi/					y	2026-10-25	skip	no machine-readable events
+Suomenlinna Museum	muzeum	https://www.suomenlinna.fi/en/visitor/museums/suomenlinna-museum/						2026-10-25	skip	down: HTTPError
+Q53456356	muzeum	https://www.vapaamuurarit.fi/?id=301&o=Museo					y	2026-10-25	skip	no machine-readable events
+Hakasalmi Villa	muzeum	https://hakasalmenhuvila.fi/					y	2026-10-25	skip	no machine-readable events
+Hakasalmi Villa	muzeum	https://hakasalmivilla.fi/					y	2026-10-25	skip	no machine-readable events
+Hakasalmi Villa	muzeum	https://villahagasund.fi/					y	2026-10-25	skip	no machine-readable events
+Museum of Visual Impairment	muzeum	https://www.nkl.fi/fi/etusivu/toiminta/museo					y	2026-10-25	skip	no machine-readable events
+Nordea Bank Museum	muzeum	https://www.nordea.fi/henkiloasiakkaat/pankkimuseo.html					y	2026-10-25	skip	no machine-readable events
+Helsinki tram museum	muzeum	http://ratikkamuseo.fi/					y	2026-10-25	skip	no machine-readable events
+Studio Aalto	muzeum	http://www.alvaraalto.fi/					y	2026-10-25	skip	no machine-readable events
+Q115553717	muzeum	http://www.valokuvataiteenmuseo.fi					y	2026-10-25	skip	no machine-readable events
+Lauri and Lasse Reitz Foundation Museum	muzeum	http://www.reitz.fi/					y	2026-10-25	skip	no machine-readable events
+TAHTO Center for Finnish Sports Culture	muzeum	https://www.urheilumuseo.fi/					y	2026-10-25	skip	no machine-readable events
+Museum of Architecture and Design	muzeum	https://www.admuseo.fi/					y	2026-10-25	skip	no machine-readable events
+Hotel and Restaurant Museum	muzeum	https://www.hotellijaravintolamuseo.fi/					y	2026-10-25	skip	no machine-readable events
+Music Museum Fame	muzeum	https://musiikkimuseofame.fi/					y	2026-10-25	skip	no machine-readable events
+Museum of Civil Defence	muzeum	https://www.hvssy.fi/vaestonsuojelumuseo/					y	2026-10-25	skip	no machine-readable events
+Museum of Impossible Forms	muzeum	https://www.museumofimpossibleforms.org					y	2026-10-25	skip	no machine-readable events
+Museum of Technology	muzeum	http://www.tekniikanmuseo.fi					y	2026-10-25	skip	no machine-readable events
+Seurasaari Open-Air Museum	muzeum	https://www.kansallismuseo.fi/en/seurasaarenulkomuseo					y	2026-10-25	skip	no machine-readable events
+The Salvation Army Museum	muzeum	https://www.pelastusarmeija.fi/pelastusarmeija/museo					y	2026-10-25	skip	no machine-readable events
+Didrichsen Art Museum	muzeum	http://www.didrichsenmuseum.fi/					y	2026-10-25	skip	no machine-readable events
+Theatre Museum	muzeum	https://www.teatterimuseo.fi/					y	2026-10-25	skip	no machine-readable events
+Mannerheim Museum	muzeum	http://www.mannerheim-museo.fi					y	2026-10-25	skip	no machine-readable events
+Villa Gyllenberg	muzeum	https://www.villagyllenberg.fi/					y	2026-10-25	skip	no machine-readable events
+Gloria Cultural Arena	muzeum	http://www.nk.hel.fi/gloria/						2026-10-25	skip	down: URLError
+Helsinki City Museum	muzeum	https://www.helsinginkaupunginmuseo.fi/					y	2026-10-25	skip	no machine-readable events
+Kaarle XII	music venue	https://www.kaarle.fi/					y	2026-10-25	skip	no machine-readable events
+Finská národní galerie	muzeum	https://www.kansallisgalleria.fi/					y	2026-10-25	skip	no machine-readable events
+Hanken School of Economics	univerzita	https://www.hanken.fi					y	2026-10-25	skip	no machine-readable events
+University of the Arts Helsinki	univerzita	http://www.uniarts.fi					y	2026-10-25	skip	no machine-readable events
+Riviera	kino	https://www.rivierakallio.fi/					y	2026-10-25	skip	no machine-readable events
+Umělecké muzeum Helsinky	muzeum	http://www.helsingintaidemuseo.fi						2026-10-25	skip	down: URLError
+Museum of Finnish Architecture	muzeum	http://www.mfa.fi/					y	2026-10-25	skip	no machine-readable events
+Kino Engel	kino	https://kinoengel.fi/					y	2026-10-25	skip	no machine-readable events
+Tropicario	zoologická zahrada	http://www.tropicario.com					y	2026-10-25	skip	no machine-readable events
+Kinopalatsi	kino	https://www.finnkino.fi/teatterit/kinopalatsi-helsinki						2026-10-25	skip	down: HTTPError
+Helsinský olympijský stadion	stadion	https://www.stadion.fi/fi					y	2026-10-25	skip	no machine-readable events
+Riviera Punavuori	kino	https://www.rivieracinemas.fi/elokuvateatteri-punavuori/					y	2026-10-25	skip	no machine-readable events
+Korjaamo Culture Factory	kino	http://www.korjaamo.fi					y	2026-10-25	skip	no machine-readable events
+Kunsthalle Helsinki	muzeum	https://taidehalli.fi/					y	2026-10-25	skip	no machine-readable events
+Flying Cinema Tour of Helsinki	kino	https://fi.flyingcinematour.com/					y	2026-10-25	skip	no machine-readable events
+Amos Rex	muzeum	https://amosrex.fi/					y	2026-10-25	skip	no machine-readable events
+Bar Loose	music venue	https://barloose.com/	tribe-rest	https://barloose.com/wp-json/tribe/events/v1/events?per_page=50&start_date=now	22	0	y	2026-10-25	skip	no place
+Espa Stage	music venue	https://www.espanlava.fi/					y	2026-10-25	skip	no machine-readable events
+Fallkulla Domestic Animal Farm	zoologická zahrada	http://fallkulla.munstadi.fi/						2026-10-25	skip	down: URLError
+Sinebrychoff Art Museum	muzeum	https://sinebrychoffintaidemuseo.fi/					n	2026-10-25	skip	robots.txt
+Helsinki University Observatory	muzeum	http://www.observatorio.fi/english/					y	2026-10-25	skip	no machine-readable events
+European Digital Mathematics Library	knihovna	https://eudml.org/					y	2026-10-25	skip	no machine-readable events
+Orion	kino	https://cinemaorion.fi/					y	2026-10-25	skip	no machine-readable events
+Bio Rex	kino	https://www.gilda.fi/teatteri/lasipalatsi/					y	2026-10-25	skip	no machine-readable events
+Amos Anderson Art Museum	muzeum	http://www.amosanderson.fi					y	2026-10-25	skip	no machine-readable events
+Celia	knihovna	https://www.celia.fi/					y	2026-10-25	skip	no machine-readable events
+Ateneum	muzeum	http://www.ateneum.fi/					n	2026-10-25	skip	robots.txt
+Kino	kino	http://www.andorra.fi/						2026-10-25	skip	down: HTTPError
+Korkeasaari Zoo	zoologická zahrada	https://www.korkeasaari.fi					y	2026-10-25	skip	no machine-readable events
+Tavastia Club	music venue	https://tavastiaklubi.fi/					y	2026-10-25	skip	no machine-readable events
+Muzeum designu	muzeum	http://www.designmuseum.fi/					y	2026-10-25	skip	no machine-readable events
+Paloheinä artificial turf field	stadion	https://www.hps.fi/olosuhteet/hofs-areena/						2026-10-25	skip	down: HTTPError
+MUU Helsinki Contemporary Art Centre	galerie umění	https://muu.fi/fi/muuspace/					y	2026-10-25	skip	no machine-readable events
+Bolt Arena	stadion	https://www.boltarena.fi/					y	2026-10-25	skip	no machine-readable events
+Kulttuuritalo	koncertní sál	http://kulttuuritalo.fi					y	2026-10-25	skip	no machine-readable events
+Helsinki Music Centre	koncertní sál	https://www.musiikkitalo.fi/					y	2026-10-25	skip	no machine-readable events
+Urhea Hall	aréna	https://urhea-halli.fi/					y	2026-10-25	skip	no machine-readable events
+Sound Art Gallery Akusmata	galerie umění	http://akusmata.com/						2026-10-25	skip	http only
+Hartwall-areena	aréna	https://www.veikkausarena.fi/					y	2026-10-25	skip	no machine-readable events
+Tm-gallery	galerie umění	https://www.painters.fi/tmgalleria/					y	2026-10-25	skip	no machine-readable events
+Finlandia-talo	koncertní sál	https://www.finlandiatalo.fi/					y	2026-10-25	skip	no machine-readable events
+Studium Catholicum	knihovna	https://studium.fi/					y	2026-10-25	skip	no machine-readable events
+Q137858859	kulturní centrum	https://n10.fi/					y	2026-10-25	skip	no machine-readable events
+Vallila Allotment Garden Museum	muzeum	https://www.vallilanspy.fi/museo/					y	2026-10-25	skip	no machine-readable events
+Cable Factory	kulturní centrum	https://www.kaapelitehdas.fi/					y	2026-10-25	skip	no machine-readable events
+Museum of Finnish Romani Culture	muzeum	https://romanikulttuurinmuseo.com/					y	2026-10-25	skip	no machine-readable events
+Caisa	kulturní centrum	http://www.kulttuuri.hel.fi/caisa/index_en.html					y	2026-10-25	skip	no machine-readable events
+Helsinki German Library	knihovna	https://www.deutsche-bibliothek.org						2026-10-25	skip	down: URLError
+Caisa	kulturní centrum	https://www.caisa.fi/					y	2026-10-25	skip	no machine-readable events
+Merkki Museum	muzeum	https://merkkiin.fi/museo/					y	2026-10-25	skip	no machine-readable events
+Elisa Telephone Museum	muzeum	https://elisa.com/corporate/about-elisa/history/telephone-museum/					y	2026-10-25	skip	no machine-readable events
+Elisa Telephone Museum	muzeum	https://elisa.fi/yhtiotieto/tietoa-elisasta/historia/puhelinmuseo/					y	2026-10-25	skip	no machine-readable events
+Library of the Labour Movement	knihovna	https://www.tyovaenperinne.fi/					y	2026-10-25	skip	no machine-readable events
+Library of Statistics	knihovna	http://www.stat.fi/tup/tilastokirjasto/index.html						2026-10-25	skip	down: HTTPError
+Q137858859	kulturní centrum	http://nilsiankatu10.fi/					y	2026-10-25	skip	no machine-readable events
+Military Museum of Finland	muzeum	https://sotamuseo.fi/					y	2026-10-25	skip	no machine-readable events
+Kanneltalo	kulturní centrum	http://www.kanneltalo.fi/					y	2026-10-25	skip	no machine-readable events
+Suvilahti	kulturní centrum	https://www.suvilahti.fi/					y	2026-10-25	skip	no machine-readable events
+Mad House Helsinki	kulturní centrum	https://madhousehelsinki.fi/					y	2026-10-25	skip	no machine-readable events
+Cultural Centre and Conference Hotel Sofia	kulturní centrum	https://www.sofia.fi/en/					y	2026-10-25	skip	no machine-readable events
+Stoa	kulturní centrum	http://www.stoa.fi					y	2026-10-25	skip	no machine-readable events
+Ääniwalli	music venue	https://aaniwalli.fi/					y	2026-10-25	skip	no machine-readable events

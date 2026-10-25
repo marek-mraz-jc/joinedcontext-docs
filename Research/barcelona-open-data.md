@@ -194,21 +194,21 @@ section 6.1. Rows are ordered by batch, then by name.
 
 | # | dataset | title | class | decision | batch | model | outputs | source | update | licence | probe | note | score |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | [`accidents-causes-gu-bcn`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/accidents-causes-gu-bcn) | Accidents by mediate cause managed by the Guàrdia Urbana in the city of Barcelona | entities | integrate | T-5262 | `RoadAccident` (Transportation) | ngsi-ld, geojson, ogc-features, csv | CSV/XML | yearly | CC-BY-4.0 | 200 | attributes joined into the accidents-gu-bcn entity by file number; age and sex only as counts | 2 |
-| 2 | [`accidents-gu-bcn`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/accidents-gu-bcn) | Accidents managed by the local police in the city of Barcelona | entities | integrate | T-5262 | `RoadAccident` (Transportation) | ngsi-ld, geojson, ogc-features, csv | CSV/XML | yearly | CC-BY-4.0 | 200 | one entity per file number, no personal fields; moved from safety | 2 |
-| 3 | [`accidents-persones-gu-bcn`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/accidents-persones-gu-bcn) | People involved in accidents managed by the Police in the city of Barcelona | entities | integrate | T-5262 | `RoadAccident` (Transportation) | ngsi-ld, geojson, ogc-features, csv | CSV | yearly | CC-BY-4.0 | 200 | attributes joined into the accidents-gu-bcn entity by file number; age and sex only as counts | 2 |
-| 4 | [`accidents-tipus-gu-bcn`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/accidents-tipus-gu-bcn) | Accidents by type managed by the Guàrdia Urbana in the city of Barcelona | entities | integrate | T-5262 | `RoadAccident` (Transportation) | ngsi-ld, geojson, ogc-features, csv | CSV/XML | yearly | CC-BY-4.0 | 200 | attributes joined into the accidents-gu-bcn entity by file number; age and sex only as counts | 2 |
-| 5 | [`accidents-vehicles-gu-bcn`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/accidents-vehicles-gu-bcn) | Vehicles involved in accidents handled by the police in the city of Barcelona | entities | integrate | T-5262 | `RoadAccident` (Transportation) | ngsi-ld, geojson, ogc-features, csv | CSV/XML | yearly | CC-BY-4.0 | 200 | attributes joined into the accidents-gu-bcn entity by file number; age and sex only as counts | 2 |
-| 6 | [`accidents_causa_conductor_gu_bcn`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/accidents_causa_conductor_gu_bcn) | Accidents by driver cause managed by the Guàrdia Urbana in the city of Barcelona | entities | integrate | T-5262 | `RoadAccident` (Transportation) | ngsi-ld, geojson, ogc-features, csv | CSV | yearly | CC-BY-4.0 | 200 | attributes joined into the accidents-gu-bcn entity by file number; age and sex only as counts | 2 |
-| 7 | [`aforaments-descriptiu`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/aforaments-descriptiu) | Mobility gauging equipment of the city of Barcelona | entities | integrate | T-5262 | `Device` (Device) | ngsi-ld, geojson, ogc-features, csv | CSV | yearly | CC-BY-4.0 | 200 | counting stations, refDevice of the readings | 2 |
-| 8 | [`aforaments-detall`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/aforaments-detall) | Mobility gauging detail of the city of Barcelona | entities | integrate | T-5262 | `TrafficFlowObserved` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | CSV | yearly | CC-BY-4.0 | 200 | counter readings, joins aforaments-descriptiu | 2 |
+| 1 | [`accidents-causes-gu-bcn`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/accidents-causes-gu-bcn) | Accidents by mediate cause managed by the Guàrdia Urbana in the city of Barcelona | entities | integrate | T-5262 | `RoadAccident` (Transportation) | ngsi-ld, geojson, ogc-features, csv | CSV/XML | yearly | CC-BY-4.0 | 200 | mediate causes joined by file number into the accidents-gu-bcn entity as accidentCause (T-5374) | 2 |
+| 2 | [`accidents-gu-bcn`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/accidents-gu-bcn) | Accidents managed by the local police in the city of Barcelona | entities | integrate | T-5262 | `RoadAccident` (Transportation) | ngsi-ld, geojson, ogc-features, csv | CSV/XML | yearly | CC-BY-4.0 | 200 | one RoadAccident per file number of the newest year (7,741 in 2025), counts only, no personal fields; moved from safety (T-5374) | 2 |
+| 3 | [`accidents-persones-gu-bcn`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/accidents-persones-gu-bcn) | People involved in accidents managed by the Police in the city of Barcelona | entities | integrate | T-5262 | `RoadAccident` (Transportation) | ngsi-ld, geojson, ogc-features, csv | CSV | yearly | CC-BY-4.0 | 200 | passengers and pedestrians injured or dead joined by file number as counts; no age, sex or trip purpose leaves the source (T-5374) | 2 |
+| 4 | [`accidents-tipus-gu-bcn`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/accidents-tipus-gu-bcn) | Accidents by type managed by the Guàrdia Urbana in the city of Barcelona | entities | integrate | T-5262 | `RoadAccident` (Transportation) | ngsi-ld, geojson, ogc-features, csv | CSV/XML | yearly | CC-BY-4.0 | 200 | accident kinds joined by file number as accidentKind, SDM accidentType codes where a code means the same (T-5374) | 2 |
+| 5 | [`accidents-vehicles-gu-bcn`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/accidents-vehicles-gu-bcn) | Vehicles involved in accidents handled by the police in the city of Barcelona | entities | integrate | T-5262 | `RoadAccident` (Transportation) | ngsi-ld, geojson, ogc-features, csv | CSV/XML | yearly | CC-BY-4.0 | 200 | kind of each vehicle joined by file number as vehicleKind, SDM vehiclesInvolved codes where a code means the same; no make, model, colour or licence (T-5374) | 2 |
+| 6 | [`accidents_causa_conductor_gu_bcn`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/accidents_causa_conductor_gu_bcn) | Accidents by driver cause managed by the Guàrdia Urbana in the city of Barcelona | entities | integrate | T-5262 | `RoadAccident` (Transportation) | ngsi-ld, geojson, ogc-features, csv | CSV | yearly | CC-BY-4.0 | 200 | drivers’ causes joined by file number into accidentCause after the mediate causes (T-5374) | 2 |
+| 7 | [`aforaments-descriptiu`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/aforaments-descriptiu) | Mobility gauging equipment of the city of Barcelona | entities | integrate | T-5262 | `Device` (Device) | ngsi-ld, geojson, ogc-features, csv | CSV | yearly | CC-BY-4.0 | 200 | folded into the TrafficFlowObserved of row 8 (name, kind, place) by one DataStore join; no separate Device (T-5374) | 2 |
+| 8 | [`aforaments-detall`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/aforaments-detall) | Mobility gauging detail of the city of Barcelona | entities | integrate | T-5262 | `TrafficFlowObserved` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | CSV | yearly | CC-BY-4.0 | 200 | one TrafficFlowObserved per counter, working-day IMD of the newest month (796 of 881 counters measured in 2025-12, 85 marked Mesura no disponible), weekly (T-5374) | 2 |
 | 9 | [`aparcaments-sota-superficie`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/aparcaments-sota-superficie) | Off-street parking inventory of the B:SM network in the city of Barcelona | entities | integrate | T-5262 | `OffStreetParking` (Parking) | ngsi-ld, temporal, geojson, ogc-features, csv | JSON | real time | CC-BY-4.0 | 302 token page | token required (bsm Parkings): blocked until the owner registers | 2 |
 | 10 | [`carrers-30-bcn`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/carrers-30-bcn) | Carrers 30 a la ciutat de Barcelona | entities | integrate | T-5262 | `RoadSegment` (Transportation) | ngsi-ld, geojson, ogc-features | DBASE/GEOJSON/PRJ/SHP/SHX/ZIP | on request | CC-BY-4.0 | 200 | speed and pedestrian regime per street section | 1 |
 | 11 | [`carrers-plataforma-unica-bcn`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/carrers-plataforma-unica-bcn) | Streets with a single platform with pedestrian priority in the city of Barcelona | entities | integrate | T-5262 | `RoadSegment` (Transportation) | ngsi-ld, geojson, ogc-features | DBASE/GEOJSON/PRJ/SHP/SHX/ZIP | on request | CC-BY-4.0 | 200 | speed and pedestrian regime per street section | 1 |
 | 12 | [`carrers-vianants-bcn`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/carrers-vianants-bcn) | Streets with a single platform without motorized vehicles in the city of Barcelona | entities | integrate | T-5262 | `RoadSegment` (Transportation) | ngsi-ld, geojson, ogc-features | DBASE/GEOJSON/PRJ/SHP/SHX/ZIP | on request | CC-BY-4.0 | 200 | speed and pedestrian regime per street section | 1 |
-| 13 | [`carril-bici`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/carril-bici) | Bicycle lanes of the city of Barcelona | entities | integrate | T-5262 | `BikeLane` (Transportation) | ngsi-ld, geojson, ogc-features | DBASE/GEOJSON/PRJ/SHP/SHX/WMS/ZIP | on request | CC-BY-4.0 | 200 | current bike network | 1 |
-| 14 | [`carrils-bici-en-construccio`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/carrils-bici-en-construccio) | Bicycle lanes in construction in the city of Barcelona | entities | integrate | T-5262 | `BikeLane` (Transportation) | ngsi-ld, geojson, ogc-features | DBASE/GEOJSON/PRJ/SHP/SHX/ZIP | on request | CC-BY-4.0 | 200 | lanes under construction, status planned | 1 |
-| 15 | [`corredors-bici-bcn`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/corredors-bici-bcn) | Bike corridors of the city of Barcelona | entities | integrate | T-5262 | `BikeLane` (Transportation) | ngsi-ld, geojson, ogc-features | DBASE/GEOJSON/PRJ/SHP/SHX/ZIP | on request | CC-BY-4.0 | 200 | current bike network | 1 |
+| 13 | [`carril-bici`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/carril-bici) | Bicycle lanes of the city of Barcelona | entities | integrate | T-5262 | `BikeLane` (Transportation) | ngsi-ld, geojson, ogc-features | DBASE/GEOJSON/PRJ/SHP/SHX/WMS/ZIP | on request | CC-BY-4.0 | 200 | current bike network, 571 segments with corridors and works on 2026-10-24, weekly (T-5374) | 1 |
+| 14 | [`carrils-bici-en-construccio`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/carrils-bici-en-construccio) | Bicycle lanes in construction in the city of Barcelona | entities | integrate | T-5262 | `BikeLane` (Transportation) | ngsi-ld, geojson, ogc-features | DBASE/GEOJSON/PRJ/SHP/SHX/ZIP | on request | CC-BY-4.0 | 200 | lanes under construction, bikeLaneState underConstruction (T-5374) | 1 |
+| 15 | [`corredors-bici-bcn`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/corredors-bici-bcn) | Bike corridors of the city of Barcelona | entities | integrate | T-5262 | `BikeLane` (Transportation) | ngsi-ld, geojson, ogc-features | DBASE/GEOJSON/PRJ/SHP/SHX/ZIP | on request | CC-BY-4.0 | 200 | bike corridors, read with carril-bici into one BikeLane layer (T-5374) | 1 |
 | 16 | [`edificis-amics-de-la-bici-barcelona`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/edificis-amics-de-la-bici-barcelona) | Friends of the Bike buildings of the public facilities of the city of Barcelona | entities | integrate | T-5262 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | CSV/GEOJSON | half-yearly | CC-BY-4.0 | 200 | bike-friendly public buildings | 0 |
 | 17 | [`estacionaments-dum`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/estacionaments-dum) | (DUM) parking lot in the city of Barcelona | entities | integrate | T-5262 | `OnStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | JSON | daily | CC-BY-4.0 | 200 | loading and coach parking areas | 2 |
 | 18 | [`estacions-bus`](https://opendata-ajuntament.barcelona.cat/data/en/dataset/estacions-bus) | Bus stops of the city of Barcelona | entities | integrate | T-5262 | `PublicTransportStop` (UrbanMobility) | ngsi-ld, geojson, ogc-features, csv | CSV/XML | on request | CC-BY-4.0 | 200 | stops and stations | 1 |
@@ -878,6 +878,52 @@ on 2026-10-24:
 - 70 cameres: the CSV resource is empty.
 - Only DGN, DWG, SHP, KMZ, WMS or GPKG, which no pipeline reads: 65 (GeoJSON of 2020), 80, 81, 82,
   83, 84, 85, 88, 89.
+
+### 6.7 Public institutions by category (T-5692, 2026-10-25)
+
+The owner asked on 2026-10-25 for every public institution category the city publishes, each with a
+GPS point. Open Data BCN's register of facilities lists all of them in the `equipament-*` families
+the `equipaments` pipeline already reads (section 6.4), each facility with the register's own WGS84
+point (`geo_epgs_4326_lat/lon`); no category needs a geocoder. The register gives a facility
+several kinds (`secondary_filters_name`): a municipal library is also a library and a study room.
+Up to T-5692 the pipeline kept one kind a facility, the first in alphabetical order, so dev served
+1 of the 52 municipal libraries, none of the 106 municipal nursery schools and none of the 51
+municipal sports centres. T-5692 writes every kind and every family of a facility into `category`.
+
+Source: distinct `register_id` per kind in the family's DataStore resource, fetched 2026-10-25.
+Mapped: the committed mapping run on that day's register (23,336 PointOfInterest, each with its
+source point inside Barcelona). Dev before: `category=="<kind>"` on the places Endpoint on
+2026-10-25, before the change was applied.
+
+| Category (register kind) | Family | Source | Mapped | Dev before |
+|---|---|---:|---:|---:|
+| Biblioteques municipals (municipal libraries) | culture-leisure | 52 | 52 | 1 |
+| Centres cívics (civic centres) | culture-leisure | 52 | 52 | 52 |
+| Casals i espais per a joves (youth centres) | culture-leisure | 45 | 45 | 44 |
+| Casals de barri comunitaris (community centres) | culture-leisure | 44 | 44 | 43 |
+| Museus municipals (municipal museums) | culture-leisure | 21 | 21 | 0 |
+| Arxius municipals (municipal archives) | culture-leisure | 19 | 19 | 19 |
+| Instal·lacions esportives municipals (municipal sports centres) | sports | 51 | 51 | 0 |
+| Escoles Bressol municipals (municipal nursery schools) | education | 106 | 106 | 0 |
+| Centres de serveis socials (social services centres) | social-services | 39 | 39 | 39 |
+| Residències gent gran (care homes) | social-services | 227 | 226 | 225 |
+| Centres de dia gent gran (day centres) | social-services | 150 | 148 | 148 |
+| OACs (citizen service offices) | public-administration | 13 | 13 | 13 |
+| Consells mpals. de districte (district councils) | public-administration | 10 | 10 | 10 |
+| Oficines d'Habitatge (housing offices) | public-administration | 11 | 11 | 11 |
+| Guàrdia Urbana (city police) | public-administration | 10 | 10 | 10 |
+| Comissaries dels Mossos d'Esquadra (police stations) | public-administration | 12 | 12 | 12 |
+| Mercats municipals (municipal markets) | markets-shopping | 43 | 43 | 39 |
+
+A gap is a row the pipeline drops by reason: a point outside the city or none at all (186 and 66
+of the whole register), or a second id for one place. The family codes count every facility a
+family lists: public-administration 1,095 in the city, 1,094 mapped; social-services 1,123 and 1,120.
+
+Unusable, with the reason: `comissaries-policia` (stale, 2023-10, its ids in the register),
+`consolats-bcn` (stale, 2023-10), `culturailleure-bibliotequesimuseus` and
+`serveissocials-oficinesbenestarsocial` (stale, 2023-10, ids in the register), `equipament-sanitat`
+(stale, 2024-01), `equipament-associacions` (private: members' home addresses). No fire-station or
+court register is published (package_search `bombers` and `jutjats`: 0 hits).
 
 ## 7. Nothing left: what is skipped and why
 

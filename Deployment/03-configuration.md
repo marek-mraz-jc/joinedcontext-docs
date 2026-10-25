@@ -187,7 +187,8 @@ The generated `apisix.yaml` mounted inside the container **MUST** terminate with
 The realm carries one optional client scope, `mcp:portal`, whose audience mapper adds
 `portal-api` to the access token ([AG-60](../Requirements/agents.md), RFC 9728). The Portal MCP
 server at `/api/v1/mcp` accepts only a bearer whose `aud` names the Portal, so an MCP client
-(a phone app on `mcp-mobile`, a client behind the edge login on `edge`) asks for
+(a web or phone app on `mcp-mobile`, a client on the person's computer on `mcp-local`, a
+client behind the edge login on `edge`) asks for
 `scope=openid mcp:portal` and nothing else on its token changes. The scope is optional until
 RFC 8707 resource indicators replace it; a client that does not ask for it keeps a token the
 MCP route refuses with `401` and `WWW-Authenticate: Bearer resource_metadata=…`.
