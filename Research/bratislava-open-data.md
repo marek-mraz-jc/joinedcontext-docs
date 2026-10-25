@@ -864,7 +864,7 @@ ordered by batch, integrate before statistics, then by score and title.
 T-5273 (deployment repository, `seed/bratislava/`) built the counters, the shared bikes and the
 public transport stops and lines from DPB's GTFS; each
 dataset is its own Endpoint, public Policy and CKAN dataset in the organisation `bratislava`. The
-rows it did not build carry their reason here; their work is task T-5435.
+rows it did not build were left to T-5435, which built or measured each one (rows 5 to 36 below, 2026-10-25).
 
 | # | title | state | Endpoint or reason |
 |---|---|---|---|
@@ -872,15 +872,45 @@ rows it did not build carry their reason here; their work is task T-5435.
 | 2 | Počet prechádzajúcich chodcov podľa sčítačov za hodinu | built | `bratislava-chodci`, `CrowdFlowObserved`, daily |
 | 3 | Počet prejazdov cyklistov podľa sčítačov za hodinu | built | `bratislava-cyklisti`, `TrafficFlowObserved`, daily |
 | 4 | Počet prejazdov vozidiel podľa sčítačov za hodinu | built | `bratislava-vozidla`, `TrafficFlowObserved`, daily; 14 of the 19 sites summed 0 vehicles from 2026-09-21 to 2026-10-21 (no vehicle sensor), a day at 0 both ways is not written |
-| 5 | Cyklosčítač na Viedenskej v rokoch 2014 - 2020 | not built | the hourly rows end in 2020 and the space keeps 30 days of history (`P30D`), so a load would be deleted by retention at once; it needs its own retention decision or a yearly `KeyPerformanceIndicator` summary; T-5435 |
-| 6 | Cyklosčítač na hrádzi Berg v rokoch 2014 - 2020 | not built | as row 5 |
-| 7 | List of tourist bus stops in 2025 | not built | 13 rows with no coordinates; they need geocoding by stop name (address register first, Nominatim second), which no Bratislava pipeline has yet; T-5435 |
+| 5 | Cyklosčítač na Viedenskej v rokoch 2014 - 2020 | not built: duplicate | the same hourly counts as the live table `cyklisti2_0` of row 3, which holds the site `Viedenska` from 2014-11-22: the archive writes local time, the live table UTC (2014-11-24 15:00 local, 9 towards Starý most and 13 towards Most SNP, is the live row 14:00Z with 9 and 13; read 2026-10-25, T-5435); the counters pipeline of row 3 reads that table |
+| 6 | Cyklosčítač na hrádzi Berg v rokoch 2014 - 2020 | not built: duplicate | as row 5: the live site `Hradza Berg` from 2014-11-20 (2016-06-01 10:00 local, 10 to Slovakia and 13 to Austria, is the live row 08:00Z with 10 and 13) |
+| 7 | List of tourist bus stops in 2025 | built | `bratislava-turisticke-autobusy`, `OnStreetParking`, weekly (pipeline `coach-stops`, T-5435), 13 stops of 13; the list has no coordinates, each name is placed from OpenStreetMap (section 6.5) |
 | 8 | Slovnaft BAjk - lokalizácia výpožičných staníc zdieľaných bicyklov | built from the live feed | `bratislava-bajk`, `BikeHireDockingStation`, from nextbike's GBFS `nextbike_bi` (444 stations, CC0 1.0); the hub item is the 2024 system's 103 stations |
-| 9 | Zoznam zastávok turistických autobusov v roku 2025 | not built | as row 7 (5 rows, the Slovak copy of one list) |
-| 10-36 | the 27 statistics tables of the batch | not built | they are lines of the one Feature Service table pipeline (section 2), which T-5274 built (`statistics`, a table is one line of its `tables`, section 6.4) and merged on 2026-10-25, after this batch; added there as lines by T-5435 through its sorting rule, never as a second pipeline shape |
+| 9 | Zoznam zastávok turistických autobusov v roku 2025 | not built: broken | the Slovak copy of row 7, imported with the whole CSV in the first cell of row 1 (`OID` holds `;Počet miest;…\r\n1;Hodžovo námestie;…`): 5 rows, none a stop; row 7 is built |
+| 10 | Počet dopravných nehôd s následkom na živote alebo zdraví | built | `bratislava-nehody-s-nasledkom-na-zdravi`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 35 figures; the 6 rows 2019-2024 name `PK Bratislava` (the police region), no okres, and are dropped |
+| 11 | Počet dopravných nehôd s usmrtením v cestnej doprave | built | `bratislava-nehody-s-usmrtenim`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 35 figures |
+| 12 | Počet dopravných nehôd v cestnej doprave | built | `bratislava-dopravne-nehody`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 35 figures; the 6 `PK Bratislava` rows dropped as in row 10 |
+| 13 | Počet dopravných nehôd v cestnej doprave (druh vozidla vinníka) | built | `bratislava-dopravne-nehody-druh-vozidla-vinnika`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 350 figures |
+| 14 | Počet dopravných nehôd v cestnej doprave podľa kategórie cesty | built | `bratislava-dopravne-nehody-kategoria-cesty`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 270 figures |
+| 15 | Počet dopravných nehôd v cestnej doprave podľa miesta (v/mimo obce) | built | `bratislava-dopravne-nehody-v-obci-a-mimo-obce`, `KeyPerformanceIndicator`, weekly (statistics-okresy), 70 figures |
+| 16 | Cestovanie bez platného cestovného lístka v MHD v Bratislave (v eurách) | built | `bratislava-cestovne-bez-listka-eura`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 24 figures |
+| 17 | Cestujúci bez platného cestovného lístka v MHD v Bratislave | built | `bratislava-cestujuci-bez-listka`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 24 figures |
+| 18 | Cyklotrasy v Bratislave podľa dopravného priestoru a krytu vozovky | not built: no period | 577 route segments (width, surface, kind of lane) with no year: an inventory of segments, no indicator, and no geometry to place them |
+| 19 | Dopravné výkony MHD podľa jednotlivých trakcií v Bratislave | built | `bratislava-dopravne-vykony-mhd`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 102 figures |
+| 20 | Pasport cyklotrás na území hl. mesta SR Bratislavy | not built: no period | segment inventory as row 18 (route, length, completion share, no period column); the service answers 1,000 rows a read and holds 1,311, past one read |
+| 21 | Počet dní s prekročením cieľovej hodnoty koncentrácie škodlivých látok O3 v ovzduší v Bratislave | built | `bratislava-dni-prekrocenia-o3`, `KeyPerformanceIndicator` per station, weekly (statistics-mesto), 22 figures |
+| 22 | Počet dopravných prostriedkov MHD v Bratislave | built | `bratislava-vozidla-mhd`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 24 figures |
+| 23 | Počet odbavených cestujúcich na letisku M. R. Štefánika v Bratislave podľa druhu dopravy | built | `bratislava-cestujuci-letisko`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 60 figures |
+| 24 | Počet prekročení dennej limitnej hodnoty koncentrácie škodlivých látok PM10 v ovzduší v Bratislave | built | `bratislava-prekrocenia-pm10`, `KeyPerformanceIndicator` per station, weekly (statistics-mesto), 40 figures |
+| 25 | Počet prepravených osôb MHD v Bratislave | built | `bratislava-prepravene-osoby-mhd`, `KeyPerformanceIndicator` per quarter, weekly (statistics-mesto), 28 figures; the table writes its quarter as `1.Q`, which the mapping now reads |
+| 26 | Priemerná ročná koncentrácia škodlivých látok PM10 v ovzduší v Bratislave | built | `bratislava-priemerna-koncentracia-pm10`, `KeyPerformanceIndicator` per station, weekly (statistics-mesto), 9 figures |
+| 27 | Priemerná ročná koncentrácia škodlivých látok PM2.5 v ovzduší v Bratislave | built | `bratislava-priemerna-koncentracia-pm25`, `KeyPerformanceIndicator` per station, weekly (statistics-mesto), 38 figures |
+| 28 | Stavebný stav mostov v správe BA SK | not built: not the city | the bridges the Bratislava self-governing region (BA SK) manages on its roads, a region-wide count with no area column: no city, district or okres figure to write |
+| 29 | Stavebný stav mostov v správe BA SK na cestách II. triedy | not built: not the city | as row 28 |
+| 30 | Stavebný stav mostov v správe BA SK na cestách III. triedy | not built: not the city | as row 28 |
+| 31 | Vyhodnotenie cyklotrás | not built: no period | 29 route sections with their length and surface and no year: an inventory, no indicator |
+| 32 | Zmena dopravného dopytu podľa ÚGD hl. mesta Bratislava a Prognózy (v %) | built | `bratislava-zmena-dopravneho-dopytu`, `KeyPerformanceIndicator`, weekly (statistics-mesto), 18 figures (index 2011 = 100, years 2011, 2021 and the plan year 2035) |
+| 33-35 | Veková skladba dopravných vozidiel MHD v Bratislave (autobusy, električky, trolejbusy) | not built: score 0 | the age of DPB's fleet answers no citizen question (section 6.1) |
+| 36 | Vyhodnotenie dĺžky cyklistickej siete v Bratislave v roku 2018 (4. kvartál) | not built: score 0 | an archive whose one period ended in 2018 |
 
-The visitbratislava events stay in the `slovensko` space until a move is shown not to change the
-Slovakia event counts (T-5365); T-5435. DPB publishes no open GTFS-realtime feed on the hub.
+The visitbratislava events stay in the `slovensko` space. Measured on dev 2026-10-25: the
+`slovensko-podujatia` Endpoint holds 978 events and none from visitbratislava.com
+(`q=source~="visitbratislava"` counts 0), because the event pages lost their JSON-LD `Event`
+(T-5365). Moving the pipeline would change no count. The same site's REST API still lists 372
+events with their days in the field `event_date`, 92 of its first 100 upcoming, so T-5435 reads
+them there instead (feed kind `wp-rest-fields`). They land in the Slovakia calendar beside the 20
+Bratislava events it already holds, with its iCal and feed. The `bratislava` space has neither the
+`Event` type nor an iCal representation. DPB publishes no open GTFS-realtime feed on the hub.
 
 ### 6.4 Batch T-5274: what was built
 
@@ -1514,6 +1544,19 @@ Bratislavy medzi rokom 2022 a 2035" lists one district twice (the first is kept)
 | 635 | Čerpanie rozpočtu oddelenia sociálnych vecí k 06.09.2019 | -1 | not built | by Program___kód, not by city district, okres or the whole city |
 | 636 | Čerpanie rozpočtu oddelenia sociálnych vecí k 30.06.2019 | -1 | not built | by Program___kód, not by city district, okres or the whole city |
 | 637 | Čistý prírastok podnikov v samosprávnych krajoch Slovenska v rokoch 2015 - 2019 | -1 | not built | by region (kraj) of Slovakia: the space holds no region areas |
+
+### 6.5 Batch T-5435: the tourist coach stops placed by name
+
+The city's list (row 7) names 13 stops and carries no coordinates. The national address register
+holds addresses with a number; the stops are named by a street, a square or a sight, so each name
+was looked up with Nominatim (OpenStreetMap) on 2026-10-25 and read against the place the list
+names: the square Hodžovo námestie, the two lanes of Suché mýto, Mudroňova street below the castle
+(the access the list gives for buses), the Chatam Sófer bus stop, the Slavín memorial, the theatre
+Malá scéna STU, Olejkárska street, the cemetery Slávičie údolie, Fajnorovo nábrežie, Lovinského
+street, Na hriadkach in Devínska Nová Ves (Sandberg) and the Pasienky stadium. Each point is the
+street or place, not the measured stand. Every point lies inside the city's bounding box. A stop the
+placing table does not hold is logged and left out; the list's "Short-Term Stop" is `shortTerm` and
+"Long-Term Stop" `mediumTerm`, since the Smart Data Model has no longer term.
 
 ## 7. Nothing left: what is skipped and why
 
