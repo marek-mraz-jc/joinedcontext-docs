@@ -477,6 +477,13 @@ Several related edits are held together, tried somewhere safe and brought back a
 - **CC-89** [S] — A registry entry MAY name an external git repository: the platform MUST mirror it read-only at the pinned ref and MUST refuse every edit through the Portal with "this project is authored at {url}". This replaces a `SyncSource` for a whole project; a `SyncSource` stays for subtrees (model libraries, blueprint sets).
 - **CC-90** — Every project repository MUST run the same CI on every merge request: schema validation, Conftest and `jcctl validate --project`. The organization render (CC-86) MUST be the gate before an apply and MUST run when a pinned ref moves or a tracked branch receives a push (webhook).
 
+## 16. Who reaches a preview and a branch environment
+
+- **CC-91** [S] — A preview's Endpoints and the canonical surface of each preview space MUST answer only the readers the Portal lists with the preview: the workspace's author and the reviewers of its Change (AP-19, AP-50). The gateway MUST answer every other caller, an anonymous one, a signed-in person who is not a reader and any workload token, with the 404 of an unknown slug, whatever `audience` the branch declares. A preview listed without readers MUST answer nobody.
+- **CC-92** [S] — A preview Endpoint's slug MUST be minted from the prefix, the origin's slug and a salt of at least 128 random bits the Portal mints per preview, so it cannot be computed from the workspace name and a published slug (EP-02).
+- **CC-93** [S] — Every write through a preview MUST carry the verified caller as `jc-provenance-actor`, and the broker MUST keep the preview's changes as for an Endpoint with `audit: changes` (DM-136). A preview MUST expire with its workspace, at most 14 days after it started (PF-19), and MUST hold a copy of real data only as the space owner approved it (AP-19).
+- **CC-94** [S] — A branch environment (a review app or a deployment of a branch other than `main`) MUST run in namespaces of its own, with Keycloak clients of its own whose tokens name no audience of `main`'s services, no `secretRef` resolving to a production secret, a NetworkPolicy refusing every namespace of `main`, images signed by the workflow on the branch's own ref, never on the production cluster, every answer marked `X-Robots-Tag: noindex`, and MUST be removed when the branch is.
+
 ## Traceability
 
 | Requirement Range | Architecture Section | Test Family |
@@ -498,6 +505,7 @@ Several related edits are held together, tried somewhere safe and brought back a
 | CC-76…CC-81 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/04-configuration-and-pipeline-tests.md#4-plan-and-idempotency](../Testing/04-configuration-and-pipeline-tests.md#4-plan-and-idempotency) |
 | CC-85…CC-90 | [Architecture/06-configuration-as-code.md#1-repository-layout-cc-08-cc-85](../Architecture/06-configuration-as-code.md#1-repository-layout-cc-08-cc-85) | [Testing/04-configuration-and-pipeline-tests.md#2-the-gate-on-an-organization-repository](../Testing/04-configuration-and-pipeline-tests.md#2-the-gate-on-an-organization-repository) |
 | CC-82…CC-84 | [Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes](../Architecture/06-configuration-as-code.md#8-identity-local-names-and-rendered-prefixes) | [Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation](../Testing/04-configuration-and-pipeline-tests.md#1-manifest-validation) |
+| CC-91…CC-94 | [Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81](../Architecture/06-configuration-as-code.md#7-workspaces-and-previews-cc-76cc-81) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 
 ## Related
 

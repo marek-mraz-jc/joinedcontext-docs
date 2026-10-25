@@ -462,6 +462,10 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **CC-88** |  | tested | ci-full, fast ci, live on dev | platform `crates/jc-core/tests/project_parameters_tests.rs::values_come_from_the_entry_over_the_defaults`, platform `crates/jc-core/tests/project_parameters_tests.rs::a_secret_parameter_renders_a_secret_ref_name`, platform `crates/jc-core/tests/project_parameters_tests.rs::a_secret_value_never_appears_in_a_refusal`, and 30 more |
 | **CC-89** | [S] | tested | ci-full | platform `crates/context-gateway/tests/store_layout_tests.rs::an_idle_tick_reads_the_checkout_links_and_walks_no_project_file`, platform `crates/context-gateway/tests/store_layout_tests.rs::the_organizations_dcat_profiles_are_read_and_a_broken_list_serves_the_core_alone`, platform `crates/jcctl/tests/checkouts_tests.rs::a_mounted_secret_is_read_by_name_only`, and 1 more |
 | **CC-90** |  | tested | ci-full, fast ci, live on dev | platform `crates/jcctl/tests/cli_layout_tests.rs::validate_takes_an_organization_or_one_project`, platform `crates/jcctl/tests/cli_layout_tests.rs::the_ci_workflow_of_a_project_repository_is_not_a_manifest`, platform `crates/jcctl/tests/validate_layout_tests.rs::a_project_repository_validates_alone_with_its_own_paths`, and 4 more |
+| **CC-91** | [S] | tested | unknown | platform `crates/context-gateway/tests/edge_gateway_previews_tests.rs::a_preview_of_a_public_endpoint_answers_its_author_and_reviewers_only`, platform `crates/context-gateway/tests/edge_gateway_previews_tests.rs::a_branch_file_cannot_stand_in_for_the_readers` |
+| **CC-92** | [S] | tested | unknown | platform `crates/context-gateway/tests/edge_gateway_previews_tests.rs::a_preview_slug_cannot_be_derived_from_public_inputs` |
+| **CC-93** | [S] | tested | unknown | platform `crates/context-gateway/tests/edge_gateway_previews_tests.rs::a_write_through_a_preview_is_attributed` |
+| **CC-94** | [S] | open |  |  |
 
 ### DM — Data models
 
