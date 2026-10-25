@@ -1606,8 +1606,8 @@ supervisor section of 14:40Z). No row is live with data.
 |---|---|
 | live with data on dev | 0 |
 | seeded, Endpoint answers 404 | 348 |
-| not seeded | 208 |
-| total usable | 556 |
+| not seeded | 204 |
+| total usable | 552 |
 
 **Plan to 100.** 552 rows are usable (559 before T-5672, T-5673 and T-5675 found seven unusable), so 100 is reached from usable rows alone; the gap today is
 100, because none is live. The fix of T-5648 makes up to 348 rows live at once (336 plus the 12 T-5672 seeded), with no new
