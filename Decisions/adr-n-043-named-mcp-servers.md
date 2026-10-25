@@ -7,7 +7,7 @@ title: "ADR-N-043: Named MCP Servers over Chosen Endpoints"
 
 Date: 2026-10-06  
 Status: Accepted  
-Amended: 2026-10-17 (section 7, connector profiles, T-4504)  
+Amended: 2026-10-17 (section 7, connector profiles, T-4504); 2026-10-23 (section 10, one connector per publisher, T-5367)  
 Decision Makers: product owner (order of 2026-10-06, T-3154; the choices of section 2 were delegated in the order)
 
 ## 1. Context
@@ -141,6 +141,16 @@ Decided (worker-6, owner may override): a public server is read-only for every c
 | A write through a public server with a steward's token | §9.1: the tool is refused by name before routing. |
 | `endpoint` as a URL, `../`, an IP or another project's slug | §9.2: resolved inside the reach only; a miss sends no broker request. |
 | A planted instruction asks the model to call an outside host | §9.3: no tool takes a URL; the model reaches only the server's read tools on its reach. |
+
+## 10. Amendment 2026-10-23: One Connector per Publisher (T-5367)
+
+The owner, 2026-10-22: one MCP connector per publisher that a person imports into an AI assistant and that holds only that publisher's datasets, and one for the whole open data portal, modular, so a new dataset needs no manifest edit.
+
+Decided (worker-t5367, owner may override): each publisher's server selects with §7's grammar, `select: {projects: [{project}], accessLevel: [public]}` and `audience: public`, and the portal-wide one is `org/open-data` with `select: {accessLevel: [public]}`; options: a new `organization` field in `select` (the project is already the publisher's unit in every seed, and an Organization holding several projects can list them), a reconciler that rewrites `members` on each sync (a hand list of up to ten, a Change per new Endpoint, and §7.2 already resolves per call).
+
+1. **Publisher servers.** `{project}/otvorene-data` (Barcelona `barcelona/dades-obertes`, in the city's language) for Žilina, Banská Bystrica, BBSK, Bratislava, Helsinki, Praha and Barcelona. A selector may name `spaces` instead of `projects` when a public Endpoint of the project holds test data (Banská Bystrica's `public-air`, which the smoke run and the ETSI suite write).
+2. **The portal-wide server.** `/api/mcp/org/open-data` selects every public Endpoint of the installation and reads each where it lives, the same mechanism and no copy of data. Its description sends the client to `search` first, since its reach exceeds the fan-out bound of §7.4.
+3. **Membership follows the Endpoint table.** A new public Endpoint of the project is in the server after the gateway's next reload of the table; an Endpoint whose audience narrows, or that is removed, leaves it then (§7.2). Every call stays the Endpoint's own call under its own Policy, and §9 keeps the servers read-only.
 
 ## Related
 
