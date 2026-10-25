@@ -791,7 +791,8 @@ of three shapes: a person (`user`, with the `groups` and realm `roles` the Porta
 them), a member of `groups` or `roles` with no person (`user` absent: no Policy written for one
 person applies), or a `serviceAccount` by its Keycloak client id (`{project}-{name}`). An empty
 `subject` is the public caller. An unknown member, a `serviceAccount` beside a person, an
-`action` without a `name`, or a `resource` without an `action` is a `400` saying which.
+`action` without a `name`, a `resource` without an `action`, or an empty
+`resource.properties.attribute` is a `400` saying which.
 
 ```http
 POST /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/access/simulate
