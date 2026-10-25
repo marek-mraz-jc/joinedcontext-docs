@@ -214,6 +214,21 @@ A sixth property is checked by admission, not by the suite: a preview runs only 
 
 A branch preview never touches prod and never promotes anything. Its images carry `pv-` tags that pin-images skips (T-5547), so none of them reaches `components/*/images.yaml`, dev or `dev-green`. Its forge organization is a fixture outside every project's repository, so nothing written in a preview reaches a configuration repository either. The only path to prod stays the release gate of T-0051 (`v*` tag, render diff, approval on the `production` environment) and the [Release Runbook](16-release-runbook.md). A staging cluster stays the owner's decision (2026-09-14, 2026-10-06), and so does any node bought for previews.
 
+## 9. What the recipe builds today
+
+`just dev-preview {slug} [portal-image] [ui-image]` (deployment `scripts/preview.sh`, chart `components/preview/charts/preview`, T-5548) builds a Portal preview and differs from sections 1 and 6 in these points:
+
+- **No forge organization yet.** The Portal starts without `JC_GITEA_URL`, so the preview has no Gitea egress and no `pv-{slug}` organization; it shows an installation with no configuration repository. The fixture repository comes with the task that needs a preview with data.
+- **The realm `preview` is created by the recipe** with no fixture people, and the client `pv-{slug}-portal` (audience `pv-{slug}`, service account on for the isolation suite) by `kcadm` in the Keycloak pod. The realm import of the keycloak component builds one static realm and cannot hold a client per slug.
+- **The recipe generates the database password**, stores only its SCRAM verifier in Postgres and the password in the Secret `preview-credentials` of `pv-{slug}`, beside the client secret and the session key.
+- **Egress to the ingress controller on 8443** replaces Gitea's rule: the Portal discovers OIDC at the public issuer `idm.{domain}`, which kube-proxy rewrites to the Traefik pod. Through it the preview meets dev's public surface like any other client, and the isolation suite checks that dev refuses its token.
+- **The quota is the Portal preview size**: requests 1 GiB and limits 2 GiB, 4 pods, so the suite's Job fits beside the two services and a 2 GiB container is refused by the LimitRange's 1 GiB maximum. The Linkerd proxy is sized by namespace annotations (64 Mi request, 128 Mi limit).
+- **The dev side is behind `global.branchPreviews.enabled`**, which only dev may set and the production guard refuses: the role `pv_previews`, the `pg_hba` lines `hostssl sameuser +pv_previews` and `host all +pv_previews reject` before the catch-all, and the NetworkPolicies `keycloak-from-branch-previews` and `postgres-from-branch-previews`. The sandbox reaper's admission policy `sandbox-reaper-reaper-preview-names` lets only a namespace named `pv-{slug}` carry the label `sandbox.joinedcontext.com/lifecycle: preview`, since that label opens Keycloak and Postgres.
+- **Off on dev for now**: each role `pv_{slug}` has `CONNECTION LIMIT 5`, the Portal's pool, so two previews need dev's `max_connections` raised from 55 to 67 (53 pool ceilings times 1.2 plus 3 reserved). At 67 the Postgres pod's worst case is 1,905 MiB, over 80 % of its 2 GiB limit, and the node has no memory to raise the limit. dev therefore keeps `global.branchPreviews` off and `just dev-preview` refuses; turning it on needs a larger node (section 3) or a larger Postgres limit.
+- **Cleanup after the reaper**: every `just dev-preview` first removes the database, role and client of a `pv_*` role whose namespace is gone. The refusal of a sixth start of one host within 7 days is not built; the 10-certificate weekly budget counts the Certificates that still exist.
+
+`just dev-preview-down {slug}` deletes the namespace, database, role and client and lists what is left; `just dev-preview-isolation {slug} {runner}` runs the suite of section 7.
+
 ## Related
 
 - [ADR-N-062](../Decisions/adr-n-062-branch-previews-on-the-dev-node.md): the decision this page carries out, with the options weighed.
