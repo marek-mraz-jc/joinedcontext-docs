@@ -1982,6 +1982,7 @@ they carry is what the public catalogue already shows.
 GET /api/v1/catalogue                          search, facets and one page of datasets
 GET /api/v1/catalogue/datasets/{name}          one dataset
 GET /api/v1/catalogue/datasets/{name}/sample   up to ten rows, read through its Endpoint
+GET /api/v1/catalogue/datasets/{name}/map      its located entities, for the dataset page's map
 GET /api/v1/catalogue/endpoints/{slug}/standards  a public Endpoint's standards, fields and examples
 ```
 
@@ -2070,6 +2071,38 @@ model class, read anonymously through its NGSI-LD representation with `options=k
 `{ "type": "KeyPerformanceIndicator", "columns": ["id", "name", "value"], "rows": [["urn:…", "…", "12"]] }`.
 A dataset with no Endpoint of this installation, or one that does not serve `ngsi-ld`, answers
 `404`; an Endpoint that does not answer, `503`. Nested values are written as compact JSON.
+
+`GET /api/v1/catalogue/datasets/{name}/map` answers the located entities of the same class, read
+the same way with `limit=1000&count=true`, for the map on the dataset page (EP-82, T-5628).
+`lang` (two or three lowercase letters, default `en`; anything else answers `400`) picks the
+labels:
+
+```json
+{
+  "type": "AirQualityObserved",
+  "total": 14,
+  "fields": [{ "slot": "name", "label": "Názov" }, { "slot": "pm10", "label": "PM10" }],
+  "features": [
+    {
+      "id": "urn:ngsi-ld:AirQualityObserved:a",
+      "geometry": { "type": "Point", "coordinates": [14.42, 50.08] },
+      "properties": { "name": "Legerova", "pm10": "21.5" }
+    }
+  ],
+  "basemap": "praha"
+}
+```
+
+- `fields` are the key attributes a popup shows, chosen by the Endpoint's `display` override, then
+  the model's `summary` annotations, then jc-core's field order (DM-98, DM-99, EP-135); a
+  structured value or a geometry is never one of them.
+- `features` holds every entity with a GeoJSON geometry (`location` first, else the first
+  attribute holding one); an entity without one is left out, so a dataset without locations
+  answers no features and the page shows no map.
+- `total` counts the entities of the class, located or not, when the Endpoint counted them; past
+  1000 the page says how many it shows.
+- `basemap` names the project whose basemap draws under the features, when the platform has one.
+- The same `404` and `503` as the sample.
 
 `GET /api/v1/catalogue/endpoints/{slug}/standards` answers the "Standards" part of a public
 Endpoint's page (`/d/{slug}` and the Endpoint page in the Portal, TS-19, T-4484):
