@@ -82,16 +82,16 @@ The decision follows from `usable` and from dev:
 | decision | city | ipr | golemio | other | rows |
 |---|---|---|---|---|---|
 | live | 1 | 6 | 8 | 3 | 18 |
-| seeded | 0 | 38 | 0 | 3 | 41 |
-| integrate | 28 | 158 | 10 | 1 | 197 |
-| skip | 3 | 24 | 25 | 1 | 53 |
+| seeded | 0 | 43 | 0 | 3 | 46 |
+| integrate | 28 | 151 | 10 | 1 | 190 |
+| skip | 3 | 26 | 25 | 1 | 55 |
 | part | 88 | 0 | 44 | 0 | 132 |
 | total | 120 | 226 | 87 | 8 | 441 |
 
 | usable | city | ipr | golemio | other | rows |
 |---|---|---|---|---|---|
-| yes | 29 | 202 | 18 | 7 | 256 |
-| stale | 2 | 6 | 5 | 0 | 13 |
+| yes | 29 | 200 | 18 | 7 | 254 |
+| stale | 2 | 8 | 5 | 0 | 15 |
 | duplicate | 1 | 5 | 3 | 0 | 9 |
 | login | 0 | 0 | 15 | 0 | 15 |
 | format | 0 | 13 | 2 | 0 | 15 |
@@ -178,9 +178,9 @@ build the rows highest score first; skip rows keep their score so the reason is 
 | decision | rows | score 3 | score 2 | score 1 | score 0 or -1 |
 |---|---|---|---|---|---|
 | live | 18 | 5 | 9 | 4 | 0 |
-| seeded | 41 | 2 | 13 | 26 | 0 |
-| integrate | 197 | 8 | 12 | 26 | 151 |
-| skip | 53 | 5 | 10 | 12 | 26 |
+| seeded | 46 | 2 | 15 | 29 | 0 |
+| integrate | 190 | 8 | 10 | 21 | 151 |
+| skip | 55 | 5 | 10 | 14 | 26 |
 
 The score orders the work; since 2026-10-25 it no longer decides whether a row is built. The owner
 order of that day takes every usable row, so the rows the score of 2026-10-23 left out (plan layers,
@@ -229,10 +229,10 @@ decision changes the row's cells, not its number.
 | 28 | [`176f314a9ded40ef88ce55a2ed401c2e`](https://geoportalpraha.cz/data-a-sluzby/176f314a9ded40ef88ce55a2ed401c2e) | Odpadní zařízení pro občany | ipr | seeded | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | other | `geo-waste-points` writes 9 (2026-10-23; the 29 collection yards stay with `golemio-yards`) | 2 | yes | seeded, 0 entities: `praha-trideny-odpad` answers with no type |
 | 29 | [`2b49ad1ad0bb4892bcb54acfb978456a`](https://geoportalpraha.cz/data-a-sluzby/2b49ad1ad0bb4892bcb54acfb978456a) | Parkovací automaty | ipr | skip | - | `FareCollectionSystem` (Transportation) | ngsi-ld, geojson, ogc-features, csv | weekly | weekly parking machines; the Golemio copy is not read twice; stale on 2026-10-25: declared weekly, last edit 2026-09-07 | 2 | stale | seeded, `praha-parkovaci-automaty` answers 404: not published |
 | 30 | [`62106cae6acf4507b988c0e745f55bba`](https://geoportalpraha.cz/data-a-sluzby/62106cae6acf4507b988c0e745f55bba) | Pražská integrovaná doprava - vstupy do metra | ipr | seeded | T-5423 | `GtfsAccessPoint` (UrbanMobility) | ngsi-ld, geojson, ogc-features, csv | other | `pid-metro-entrances` writes 340 of 341 (2026-10-24; one Prosek E4 twin 4 m apart dropped as a duplicate) | 2 | yes | seeded, 0 entities: `praha-vstupy-metra` answers with no type |
-| 31 | [`77d575ed2fd14f4987474a2f26caa460`](https://geoportalpraha.cz/data-a-sluzby/77d575ed2fd14f4987474a2f26caa460) | Sdílená data o zeleni - plochy správy | ipr | integrate | P-04 | `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-06 | green areas of the shared green register; 173,977 polygons, about 100-125 MB (T-5425), over the 16 MiB read cap: P-04 reads it in pages | 2 | yes | - |
+| 31 | [`77d575ed2fd14f4987474a2f26caa460`](https://geoportalpraha.cz/data-a-sluzby/77d575ed2fd14f4987474a2f26caa460) | Sdílená data o zeleni - plochy správy | ipr | seeded | T-5683 | `Garden` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-06 | green areas each manager looks after, of the shared green register; 173,977 polygons (about 100-125 MB whole) read as `green-management-0` to `-9`, a tenth of the object ids each in pages of 2000 (a tenth peaked at 192 MiB, T-5683); one entity per distinct outline, a tenth wrote 16,889 of 17,398 | 2 | yes | seeded, not on dev before T-5683 merges and dev is applied |
 | 32 | [`802a43db41474d4db5789ef5a47f2985`](https://geoportalpraha.cz/data-a-sluzby/802a43db41474d4db5789ef5a47f2985) | Sdílená data o zeleni - vegetační prvky - body | ipr | seeded | T-5425 | custom `Tree`; closest `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-06 | trees and tree rows from the shared green register | 2 | yes | seeded, `praha-stromy` answers 404: not published |
 | 33 | [`8818bda5e5e34d96af02126d9554b385`](https://geoportalpraha.cz/data-a-sluzby/8818bda5e5e34d96af02126d9554b385) | Sdílená data o zeleni - vegetační prvky - linie | ipr | seeded | T-5425 | `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-08 | green areas of the shared green register | 2 | yes | seeded, `praha-stromy` answers 404: not published |
-| 34 | [`518e85700665441f86ded81dd0653a71`](https://geoportalpraha.cz/data-a-sluzby/518e85700665441f86ded81dd0653a71) | Sdílená data o zeleni - vegetační prvky - plocha | ipr | integrate | P-04 | `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-07 | green areas of the shared green register; 140,653 polygons, about 100-125 MB (T-5425), over the 16 MiB read cap: P-04 reads it in pages | 2 | yes | - |
+| 34 | [`518e85700665441f86ded81dd0653a71`](https://geoportalpraha.cz/data-a-sluzby/518e85700665441f86ded81dd0653a71) | Sdílená data o zeleni - vegetační prvky - plocha | ipr | seeded | T-5683 | `Garden` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-07 | vegetation areas (beds, lawns, shrubs) of the shared green register; 140,653 polygons read as `green-vegetation-areas-0` to `-9`, a tenth each in pages of 2000 (a tenth wrote 13,560 of 14,065 in 192 MiB, T-5683) | 2 | yes | seeded, not on dev before T-5683 merges and dev is applied |
 | 35 | [`58d3857a49fc43cab69c5aad0162d024`](https://geoportalpraha.cz/data-a-sluzby/58d3857a49fc43cab69c5aad0162d024) | Sdílená data o zeleni - základní plochy zeleně | ipr | seeded | T-5425 | `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-06 | green areas of the shared green register | 2 | yes | seeded, `praha-zelen` answers 404: not published |
 | 36 | [`1185c458ba6e4d939b335457b57feb5d`](https://geoportalpraha.cz/data-a-sluzby/1185c458ba6e4d939b335457b57feb5d) | Stanoviště tříděného odpadu - položky | ipr | integrate | T-5427 | `WasteContainer` (WasteManagement) | ngsi-ld, geojson, ogc-features, csv | irregular | every container of each sorted-waste station; joins `waste-stations` | 2 | yes | - |
 | 37 | [`3615fd648f1f4182b5f42dcdfba03b54`](https://geoportalpraha.cz/data-a-sluzby/3615fd648f1f4182b5f42dcdfba03b54) | Stromořadí | ipr | seeded | T-5425 | custom `Tree`; closest `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-02 | trees and tree rows from the shared green register | 2 | yes | seeded, `praha-stromy` answers 404: not published |
@@ -258,10 +258,10 @@ decision changes the row's cells, not its number.
 | 57 | [`8a85aa7854b048f8a5cf8a92070dcbbe`](https://geoportalpraha.cz/data-a-sluzby/8a85aa7854b048f8a5cf8a92070dcbbe) | Bilanční územní celky (BUC) | ipr | integrate | T-5426 | `AdministrativeArea` (custom, praha seed) | ngsi-ld, geojson, ogc-features, csv | other | areas that KPI rows and police counts join to | 1 | yes | - |
 | 58 | [`45063acce89d4b37afc6d51f03f3ad49`](https://geoportalpraha.cz/data-a-sluzby/45063acce89d4b37afc6d51f03f3ad49) | Cyklistické trasy | ipr | integrate | T-5426 | `BikeLane` (Transportation) | ngsi-ld, geojson, ogc-features, csv | modified 2026-08-17 | cycle routes | 1 | yes | - |
 | 59 | [`fb6ab7891a7244f39a3a380027af2981`](https://geoportalpraha.cz/data-a-sluzby/fb6ab7891a7244f39a3a380027af2981) | Databáze významných staveb a míst | ipr | seeded | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | `geo-landmarks` writes 772 (2026-10-23; read against the source in T-5269) | 1 | yes | seeded, 0 entities: `praha-vybavenost` answers with no type |
-| 60 | [`934bce6998c84d5ca9a31c4a2d654a2f`](https://geoportalpraha.cz/data-a-sluzby/934bce6998c84d5ca9a31c4a2d654a2f) | Hluková mapa - den | ipr | integrate | P-04 | custom `NoiseZone`; closest `NoisePollution` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | strategic noise map band areas; 185 MB (T-5429), over the 16 MiB read cap: P-04 reads it in pages | 1 | yes | - |
-| 61 | [`83c81bf4e8ed47c5b38c7d1344d6b41a`](https://geoportalpraha.cz/data-a-sluzby/83c81bf4e8ed47c5b38c7d1344d6b41a) | Hluková mapa - noc | ipr | integrate | P-04 | custom `NoiseZone`; closest `NoisePollution` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | strategic noise map band areas; 162 MB (T-5429), over the 16 MiB read cap: P-04 reads it in pages | 1 | yes | - |
-| 62 | [`6ea612215c8646dab1ea975aa64276b5`](https://geoportalpraha.cz/data-a-sluzby/6ea612215c8646dab1ea975aa64276b5) | Hluková mapa automobilové dopravy - den | ipr | integrate | P-04 | custom `NoiseZone`; closest `NoisePollution` (Environment) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | strategic noise map band areas; 152 MB (T-5429), over the 16 MiB read cap: P-04 reads it in pages | 1 | yes | - |
-| 63 | [`014f326d782b452eaa9cd3805587d94f`](https://geoportalpraha.cz/data-a-sluzby/014f326d782b452eaa9cd3805587d94f) | Hluková mapa automobilové dopravy - noc | ipr | integrate | P-04 | custom `NoiseZone`; closest `NoisePollution` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | strategic noise map band areas; 151 MB (T-5429), over the 16 MiB read cap: P-04 reads it in pages | 1 | yes | - |
+| 60 | [`934bce6998c84d5ca9a31c4a2d654a2f`](https://geoportalpraha.cz/data-a-sluzby/934bce6998c84d5ca9a31c4a2d654a2f) | Hluková mapa - den | ipr | seeded | T-5683 | custom `NoiseZone` (extension); closest `NoisePollution` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | computed noise map of surface transport, day, state 2024: 19 bands of 5 dB, each one MultiPolygon over the city (92 MB whole); `geo-noise-day-0` to `-2` read one band per page, simplified to about 2 m, and write each polygon: 72,476 NoiseZone (T-5683) | 1 | yes | seeded, not on dev before T-5683 merges and dev is applied |
+| 61 | [`83c81bf4e8ed47c5b38c7d1344d6b41a`](https://geoportalpraha.cz/data-a-sluzby/83c81bf4e8ed47c5b38c7d1344d6b41a) | Hluková mapa - noc | ipr | seeded | T-5683 | custom `NoiseZone` (extension); closest `NoisePollution` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | computed noise map of surface transport, night, state 2024: 18 bands of 5 dB (162 MB whole); `geo-noise-night-0` to `-2` as row 60: 67,228 NoiseZone (T-5683) | 1 | yes | seeded, not on dev before T-5683 merges and dev is applied |
+| 62 | [`6ea612215c8646dab1ea975aa64276b5`](https://geoportalpraha.cz/data-a-sluzby/6ea612215c8646dab1ea975aa64276b5) | Hluková mapa automobilové dopravy - den | ipr | skip | - | custom `NoiseZone`; closest `NoisePollution` (Environment) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | car traffic noise map, day, state 2010 (the item description): rows 60 and 61 map the same 5 dB bands for all surface transport in 2024 | 1 | stale | - |
+| 63 | [`014f326d782b452eaa9cd3805587d94f`](https://geoportalpraha.cz/data-a-sluzby/014f326d782b452eaa9cd3805587d94f) | Hluková mapa automobilové dopravy - noc | ipr | skip | - | custom `NoiseZone`; closest `NoisePollution` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | car traffic noise map, night, state 2010 (the item description): rows 60 and 61 map the same 5 dB bands for all surface transport in 2024 | 1 | stale | - |
 | 64 | [`787f7c3ce4964b519ddc39246377c31b`](https://geoportalpraha.cz/data-a-sluzby/787f7c3ce4964b519ddc39246377c31b) | Hřbitovy | ipr | integrate | T-5426 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-09-01 | points of interest, one IPR layer family | 1 | yes | - |
 | 65 | [`a74bc85ba5354490a23afcfe495693d9`](https://geoportalpraha.cz/data-a-sluzby/a74bc85ba5354490a23afcfe495693d9) | Kategorie radonového rizika | ipr | seeded | T-5429 | custom `RadonRiskArea`; closest `EnvironmentObserved` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | radon risk category per area | 1 | yes | seeded, `praha-radon` answers 404: not published |
 | 66 | [`c0bca952f09d44b0bf38885f499ad59d`](https://geoportalpraha.cz/data-a-sluzby/c0bca952f09d44b0bf38885f499ad59d) | Kulturně komunitní centra | ipr | seeded | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | other | `geo-community-centres` writes 294 (2026-10-23; read against the source in T-5269) | 1 | yes | seeded, 0 entities: `praha-vybavenost` answers with no type |
@@ -298,7 +298,7 @@ decision changes the row's cells, not its number.
 | 97 | [`fc295e699c5346de9cf6a7e1e634726b`](https://geoportalpraha.cz/data-a-sluzby/fc295e699c5346de9cf6a7e1e634726b) | Záplavové území ( Q20 ) | ipr | seeded | T-5429 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | flood extent or flood defence | 1 | yes | seeded, `praha-zaplavova-uzemi` answers 404: not published |
 | 98 | [`c4ef1880cd5d4e62896f8cb845217881`](https://geoportalpraha.cz/data-a-sluzby/c4ef1880cd5d4e62896f8cb845217881) | Záplavové území ( Q5 ) | ipr | seeded | T-5429 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | flood extent or flood defence | 1 | yes | seeded, `praha-zaplavova-uzemi` answers 404: not published |
 | 99 | [`040756d41d294971ad730304b792cb03`](https://geoportalpraha.cz/data-a-sluzby/040756d41d294971ad730304b792cb03) | Záplavové území ( Q50 ) | ipr | seeded | T-5429 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | flood extent or flood defence | 1 | yes | seeded, `praha-zaplavova-uzemi` answers 404: not published |
-| 100 | [`00242330738c4326af30663eb7c6d7f9`](https://geoportalpraha.cz/data-a-sluzby/00242330738c4326af30663eb7c6d7f9) | Záplavové území ( drobné vodní toky ) | ipr | integrate | P-04 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | flood extent or flood defence; 23.5 MB (T-5429), over the 16 MiB read cap: P-04 reads it in pages | 1 | yes | - |
+| 100 | [`00242330738c4326af30663eb7c6d7f9`](https://geoportalpraha.cz/data-a-sluzby/00242330738c4326af30663eb7c6d7f9) | Záplavové území ( drobné vodní toky ) | ipr | seeded | T-5683 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | flood areas of the small streams, active zone and Q100; 2,201 areas (23.5 MB whole) read by `geo-flood-small-streams` in pages of 200: 2,199 FloodZone, two areas reach outside Prague's box (T-5683) | 1 | yes | seeded, not on dev before T-5683 merges and dev is applied |
 | 101 | [`7a4bf2d99de44645ac5768f65d8a9692`](https://geoportalpraha.cz/data-a-sluzby/7a4bf2d99de44645ac5768f65d8a9692) | Záplavové území (Vltava, Berounka) | ipr | seeded | T-5429 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | flood extent or flood defence | 1 | yes | seeded, `praha-zaplavova-uzemi` answers 404: not published |
 | 102 | [`/v2/bicyclecounters`](https://api.golemio.cz/docs/openapi/) | GET All Bicycle Counters | golemio | integrate | P-02 | `TrafficFlowObserved` (Transportation) | ngsi-ld, temporal, sta, csv | - | needs a DataSource time window (`from=` now minus the period): the route sorts by device, not time (T-5268) | 3 | yes | - |
 | 103 | [`/v2/municipalauthorities/{id}/queues`](https://api.golemio.cz/docs/openapi/) | GET All Municipal Authority Waiting Queues | golemio | integrate | P-02 | custom `ServiceQueue`; closest `ArrivalEstimation` (UrbanMobility) | ngsi-ld, temporal, sta, csv | - | one call per office with the key header; a nested Bento call carries no key (T-5268) | 3 | yes | - |
@@ -643,13 +643,14 @@ decision changes the row's cells, not its number.
 
 ## 7. What is left out and why
 
-Only rows that fail the usable rule of section 2 are left out (53 rows, decision `skip`):
+Only rows that fail the usable rule of section 2 are left out (55 rows, decision `skip`):
 
-- **stale** (13): the Golemio air-quality stations (since 2026-08-12; ČHMÚ is live), medical
+- **stale** (15): the Golemio air-quality stations (since 2026-08-12; ČHMÚ is live), medical
   institutions (2024-04) and the three microclimate routes (2026-04-07); the PID lines layer (declared
   daily, last edit 2026-08-20; the GTFS feed of row 21 carries the routes); five TSK parking layers
   declared weekly and last edited 2026-09-07 (rows 29, 42, 44, 47, 50); two waste-fee files that rows
-  211 and 213 continue since 2022. Rows 20, 29, 42, 44, 47 and 50 are seeded: the batch that fixes
+  211 and 213 continue since 2022; the two car traffic noise maps of 2010 (rows 62 and 63), which
+  the noise maps of 2024 (rows 60 and 61) replace. Rows 20, 29, 42, 44, 47 and 50 are seeded: the batch that fixes
   their Endpoint reads the edit date again and publishes them once the source moves.
 - **duplicate** (9): Golemio districts, parking machines and v2 parking (IPR or v3 rows hold them),
   IPR police objects (Golemio police is live), nameless IPR playgrounds (Golemio playgrounds are
@@ -665,8 +666,9 @@ Only rows that fail the usable rule of section 2 are left out (53 rows, decision
 
 ## 8. Plan to 100
 
-Usable on 2026-10-25: **256** datasets. Live on dev: **18**. Praha reaches 100 once the seeded rows
-publish, the three parked tasks land and P-01 to P-04 run: 18 + 41 + 23 + 23 = **105**. P-05 to P-11
+Usable on 2026-10-25: **254** datasets. Live on dev: **18**. Praha reaches 100 once the seeded rows
+publish, the three parked tasks land and P-01 to P-03 run: 18 + 46 + 23 + 16 = **103** (T-5683 built
+five rows of P-04 and found rows 62 and 63 stale). P-05 to P-11
 take the remaining 151 usable rows, which score 0 or -1; they come after the first 100 are live.
 
 Every batch runs the checks of section 5, reads the source again before it builds, and ends with one
@@ -683,7 +685,7 @@ of one pipeline shape.
 | P-01 | 26, 27, 104, 105, 106, 108 | 6 | Golemio list routes with the project key | `OffStreetParking`, `Vehicle`, `BikeHireDockingStation` | none | - |
 | P-02 | 102, 103, 110, 112, 115 | 5 | Golemio routes read per item or per time window | `TrafficFlowObserved`, `CrowdFlowObserved`, `Device`, `ArrivalEstimation`, custom `ServiceQueue` | `TrafficFlowObserved`, `CrowdFlowObserved`, `Device`, `ArrivalEstimation`, `ServiceQueue` | a DataSource `from=` window and keyed per-item calls (platform) |
 | P-03 | 79, 82, 130, 131, 132 | 5 | IPR point, line and area layers without a name field | `PointOfInterest`, custom `GreenAsset` | `GreenAsset` | T-5426 (area and line shape) |
-| P-04 | 31, 34, 60-63, 100 | 7 | IPR layers over the 16 MiB read cap, read in pages of object ids | `GreenspaceRecord`, custom `NoiseZone`, custom `FloodZone` | `GreenspaceRecord`, `NoiseZone` | T-5426; storage measured first (node memory) |
+| P-04 | 31, 34, 60, 61, 100 | 5 | built by T-5683: IPR layers over the 16 MiB read cap, read in pages; rows 62 and 63 skip (stale) | `Garden`, custom `NoiseZone`, custom `FloodZone` | `NoiseZone` | storage on dev: about 0.45 million areas, 0.47 GB of entities a week, history off (deployer checks the Antares volume) |
 | P-05 | 235-259 | 25 | IPR plan layers (MPP, part 1) | custom `PlanningArea` | `PlanningArea` | T-5426 |
 | P-06 | 260-269, 292-304 | 23 | IPR plan layers (MPP part 2, ZÚR) | custom `PlanningArea` | none (P-05 adds it) | P-05 |
 | P-07 | 228, 273, 277-285, 287-291, 307-309 | 19 | IPR land-use, ÚSES and other plan layers | custom `PlanningArea` | none (P-05 adds it) | P-05 |
