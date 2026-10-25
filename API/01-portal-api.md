@@ -4457,7 +4457,52 @@ POST /api/v1/projects/{project}/kpis/check   {pipeline, preview?}   → 200 KpiC
 - Who may call: a person with `propose` on `Pipeline` in the project; anyone else gets `403`,
   and so does a workload token, whose reading is its ServiceAccount's grants.
 
-## 56. Who may do what on one Endpoint (T-5531, EP-103)
+## 56. Adding a device to an MQTT broker (T-5532, PF-47, ADR-N-048 §5)
+
+The MQTT brokers page adds a device that signs in by its own key pair. The browser makes the key
+pair (WebCrypto ECDSA P-256) or takes the public half pasted as a JWKS, one JWK or a PEM public
+key. The private key stays in the browser and the person's download; no request carries it.
+
+```text
+GET  /api/v1/projects/{project}/mqttbrokers/{name}/devices          → 200
+POST /api/v1/projects/{project}/mqttbrokers/{name}/devices          → 202
+```
+
+```json
+{"mayAdd": true,
+ "roles": [{"name": "camera", "publish": ["cameras/${clientid}/#"]}],
+ "tokenUrl": "https://id.example.org/realms/jc/protocol/openid-connect/token",
+ "issuer": "https://id.example.org/realms/jc"}
+```
+
+```json
+{"name": "sensor-001", "role": "camera", "topic": "cameras/${clientid}/#",
+ "jwks": {"keys": [{"kty": "EC", "crv": "P-256", "kid": "k1", "x": "…", "y": "…"}]}}
+```
+
+- `GET` answers whoever may read the project's MqttBrokers; `roles` is empty and `mayAdd` false
+  unless the caller is a person who may propose a ServiceAccount and this MqttBroker. Anybody else
+  gets `404`, as for a broker the project does not declare (PF-59).
+- `POST` proposes one Change in the caller's name: a ServiceAccount `{name}` whose only credential
+  is `{kind: oauth-client, name: device-key, jwks}` and whose one grant is `mqtt-device` on the
+  project, which names no Role and scopes no space, so it gives no Portal right and no Endpoint
+  audience; and the broker with `{name}` added to `role`'s `serviceAccounts`. The Change waits for
+  a second person; the Portal never approves it on proposal.
+- Refusals, before anything reaches the forge: a JWK carrying a private or symmetric member (`d`,
+  `p`, `q`, `dp`, `dq`, `qi`, `oth`, `k`) is `422` naming `jwks.keys[i].{member}`, and the value is
+  never echoed; any other PF-47 rule (one to five keys, P-256 or RSA 2048+, unique `kid`) is `422`
+  naming `jwks`; a `role` the broker lacks or a `topic` outside the role's `publish` filters is
+  `422` naming the field (a role that publishes needs a `topic`); a name that is not a DNS label is
+  `422` naming `name`; an existing ServiceAccount of that name is `409`; a caller who may not
+  propose both kinds is `403`, and so is any bearer token of a workload or agent, which proposes
+  the two manifests through `jc_resource_propose` instead.
+- After approval the device signs a client assertion (RFC 7523, `iss` and `sub` its client
+  `{project}-{name}`, `aud` the `issuer`) with its private key, sends it to `tokenUrl` with
+  `grant_type=client_credentials`, and connects with the access token as the MQTT password.
+  Rotating the key is a proposal of a new `jwks` on the account; revoking is removing the account
+  from the role.
+
+## 57. Who may do what on one Endpoint (T-5531, EP-103)
 
 The Endpoint page's Access tab shows every principal against each type and four actions: read,
 write, delete and history. The Portal decides nothing. It lists the principals the Endpoint's
