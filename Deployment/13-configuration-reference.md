@@ -56,6 +56,7 @@ The enforcement point in front of every broker surface (`context-gateway`).
 | `JC_GATEWAY_WRITE_BUDGET_MIB` | `16` | no | How many MiB of write bodies may be in the gateway at once (`JC_GATEWAY_WRITE_BUDGET_MIB`, default `16`, [`crate::app::WRITE_BUDGET_MIB`]); a write past it is answered 503 with `Retry-After` (T-4077). |
 | `JC_GATEWAY_WS_ENTITIES` | — | no | `JC_GATEWAY_WS_ENTITIES`, the entity table's bound per Endpoint (ADR-N-049 §2.2). |
 | `JC_GATEWAY_USAGE_URL` | — | no | The Portal's intake of usage counts (`JC_GATEWAY_USAGE_URL`, its internal listener's `/internal/usage`); absent counts nothing for the publishers' Usage tab (T-5118). |
+| `JC_GATEWAY_REVOCATIONS_URL` | — | no | The Portal's list of revoked subjects (`JC_GATEWAY_REVOCATIONS_URL`, its internal listener's `/internal/revocations`); absent leaves a disabled person's token valid here until it expires (T-5568). |
 | `JC_GATEWAY_WS_HUBS` | — | no | `JC_GATEWAY_WS_HUBS`: the hubs, and so the broker connections, of this replica (default 64, API/07 §3). |
 | `JC_GATEWAY_WS_HUBS_PER_SPACE` | — | no | `JC_GATEWAY_WS_HUBS_PER_SPACE`: the hubs one space may hold in this replica (default 32, under the broker's 50 per tenant). |
 | `JC_GATEWAY_WS_PER_SPACE` | — | no | `JC_GATEWAY_WS_PER_SPACE`: the space cap, raised for a measurement (the `ws-fanout` rig). |
