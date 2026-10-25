@@ -3912,6 +3912,65 @@ GET /api/v1/projects/{project}/mqttbrokers/{name}/measured          → 200
   same answer as a broker the project does not declare (PF-59). No token, topic or client address
   is part of the answer.
 
+### 44a. Testing a device message and watching for it (T-5534, PL-75, ADR-N-048 §2.3)
+
+The broker card's **Test a message** dialog answers, before a device sends anything, what would
+happen to one message of one ServiceAccount on one topic, and then watches for the real one.
+
+```text
+POST /api/v1/projects/{project}/mqttbrokers/{name}/test-publish    → 200 | 404 | 422
+GET  /api/v1/projects/{project}/mqttbrokers/{name}/watch?account=&since=   → 200 | 404 | 422
+```
+
+```json
+{"account": "cam-west", "topic": "cameras/helsinki-cam-west/frame", "payload": "{\"temperature\": 21.5}"}
+```
+
+```json
+{"clientId": "helsinki-cam-west", "published": false,
+ "steps": [
+  {"step": "acl", "outcome": "ok", "reason": "allowed by cameras/helsinki-cam-west/#"},
+  {"step": "size", "outcome": "ok", "reason": "22 of 65536 bytes"},
+  {"step": "rate", "outcome": "ok", "reason": "one message fits; a client may publish 10 per second ..."},
+  {"step": "binding", "outcome": "ok", "reason": "DataSource 'cameras' reads it, Pipeline 'frames' takes it"},
+  {"step": "mapping", "outcome": "ok", "reason": "1 record(s)"},
+  {"step": "endpoint", "outcome": "ok", "reason": "every attribute is written through helsinki-cameras"}]}
+```
+
+- The steps, in order: `acl` (a role of `account` publishes on a filter matching `topic`, its
+  `${clientid}` bound to the account's Keycloak client `{project}-{account}`), `size` (the
+  payload's bytes against `spec.limits.maxMessageBytes`), `rate` (`spec.limits.messagesPerSecond`
+  per client), `binding` (the project's DataSources whose `mqtt.brokerRef` names the broker and
+  whose `mqtt.topics` match, and the Pipelines that take each as their source; the first is
+  tested), `mapping` (that Pipeline's steps over the payload on the project's runner, as §7a runs
+  them) and `endpoint` (the record check of §7a for each mapped record). Each answers `ok`,
+  `refused` or `unchecked` with a sentence; `unchecked` says why the step could not run (no
+  Pipeline, no runner, or a caller who may not propose Pipelines).
+- Nothing is published: the Portal opens no MQTT connection and writes nothing. The broker, not
+  the gateway, applies the ACL and the size limit to each PUBLISH, so a refused `acl` or `size`
+  step is the only place a person sees those two before a device sends.
+- `422` names the member at fault: an `account` no role of the broker names, a `topic` that is
+  empty, longer than 1024 bytes, holds `+`, `#` or NUL or starts with `$`, a `payload` above
+  1 MiB (the ceiling of every broker, MF-54). A payload above the broker's own limit is the
+  `size` step's refusal, not a 422.
+- `watch` answers `{observedAt, refusals, refusalsRead, connected, messagesPerSecond, reason}`:
+  the CONNECTs the gateway refused for this broker after `since` (RFC 3339), of `account` when
+  given, newest first, each `{at, reason, account}`; the account's connected clients and the
+  broker's messages per second as §44 measures them. `reason` is one of `no_token`, `expired`,
+  `wrong_audience`, `invalid_token`, `wrong_client`, `unknown_account`, `other_project`,
+  `no_role`, `no_subscription`, `no_realm`. `refusalsRead: false` with `reason` when the gateway
+  did not answer; a refusal is never invented and an empty list then means "unknown".
+- The gateway counts each refusal of a broker the repository declares as
+  `jc_mqtt_auth_refused_total{broker,reason}` and keeps the newest 50 per broker in memory: the
+  time, the reason and the broker's own ServiceAccount the username named, never the token, the
+  client id or the address. It serves them at `GET /internal/mqtt/refusals/{release}` on its
+  internal listener (port 8082) to the mesh identity `JC_GATEWAY_MQTT_PORTAL_IDENTITY` names and
+  answers `403` to anyone else; the Portal reads that listener on the host of
+  `JC_PORTAL_GATEWAY_URL`.
+- Who may call: whoever may read the project's MqttBrokers; anybody else gets `404`, as for a
+  broker the project does not declare (PF-59). The `mapping` and `endpoint` steps run only for a
+  caller who may propose a Pipeline in the project.
+
 ## 45. Moving a space to another broker (T-4000, PF-115, ADR-N-047 §2.6)
 
 One job moves one space, with its history, from the broker it lives on to another `ContextBroker`
