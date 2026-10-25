@@ -227,7 +227,7 @@ deployment (OPS-28).
 | context-gateway | `mcp.tool` per caller, tool and Endpoint (every 15 s signed in, once a minute anonymous, T-5322); `endpoint.rate-limited` per caller and Endpoint on the same schedule (T-5624); `endpoint.traffic` and `access.denied` not yet |
 | Bento runners | `pipeline.throughput` once a minute per stream, `pipeline.error`, `pipeline.restarted` |
 | reconciler, CKAN publisher | `config.*`, `catalogue.published`, straight to the table |
-| Portal | `mcp.tool` for an answered elicitation, `agent.answer` for an answered `jc_ask` question, `change.merged` for an approved Change, straight to the table |
+| Portal | `mcp.tool` for an answered elicitation, `agent.answer` for an answered `jc_ask` question, `change.merged` for an approved Change, `change.rejected` for a rejected one, straight to the table |
 
 The per-minute records carry counters the emitter already keeps for its Prometheus endpoint
 (OPS-16). One line a minute is cheaper than teaching a collector to aggregate, and it keeps the

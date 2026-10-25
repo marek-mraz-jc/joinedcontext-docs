@@ -300,13 +300,14 @@ The vocabulary is closed because a filter over free text is not a filter:
 | `config.applied`, `config.drifted` | reconciler | an apply, a difference between Git and the cluster |
 | `config.planned` | reconciler | a plan. Accepted, not emitted yet |
 | `change.merged` | portal | a person approved a Change and the forge merged it: `details` names the `change`, `resourceKind`, `name`, `operation`, `approvedBy` and the `object` an object page filters on (T-3292) |
+| `change.rejected` | portal | a person rejected a Change and the forge closed it: `details` names the `change`, `resourceKind`, `name`, `operation`, `rejectedBy`, the `reason` they typed (at most 500 characters) and the `object` (T-5613) |
 | `pipeline.throughput` | pipeline | one minute of messages, as a count |
 | `pipeline.error` | pipeline | a mapping or output failure, with the failing sample redacted |
 | `pipeline.restarted` | pipeline | the runner restarted a stream |
 | `endpoint.traffic` | gateway | one minute of requests for one endpoint and representation |
 | `access.denied` | gateway | the PDP refused, naming the rule that refused |
 | `endpoint.rate-limited` | gateway | the requests one caller made on one Endpoint that its rate limit answered `429` (T-5624): `details` `endpoint` and `count`, the caller in the summary as the Endpoint admits the token, or `anonymous`; never a client address |
-| `mcp.tool` | portal, gateway | an MCP tool call (AG-19); from the Portal, the person's answer to an elicitation before a Yellow or Red call proceeds (AG-63); from the gateway, the calls one caller made of one tool on one Endpoint (T-5322) |
+| `mcp.tool` | portal, gateway | an MCP tool call (AG-19); from the Portal, one row per `tools/call` of a person's AI client with its decision, channel `mcp` and client, the answer to an elicitation before a Yellow or Red call proceeds included (AG-63, T-5609); from the gateway, the calls one caller made of one tool on one Endpoint (T-5322) |
 | `agent.answer` | portal | a person answered a question an assistant run asked with `jc_ask` (AG-80): the run, the question and who answered, never the words they typed (OPS-48) |
 | `federation.forward` | broker | a query forwarded to a Context Source, with latency |
 | `federation.error` | broker | a forward that failed or was cut off by the loop guard |
