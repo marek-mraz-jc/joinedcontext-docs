@@ -448,6 +448,14 @@ Example write result:
 }
 ```
 
+A Change proposed inside an MCP `tools/call` also carries `status.proposedVia`, for example
+`{ "channel": "mcp", "client": "mcp-mobile" }` (AG-137, ADR-N-060 §2.2): `client` is the token's
+`azp`, at most 64 characters of `[A-Za-z0-9._:-]`, otherwise `unknown`. Every commit of that call
+ends in the trailer `Proposed-Via: mcp; client=mcp-mobile`, and its merge request body opens with
+"Proposed through an AI client over MCP (client `mcp-mobile`)." and ends in the same trailer. The
+Portal reads `proposedVia` back from that last line, so the approval page shows it as a badge.
+A Change proposed in the Portal or with the person's own token has no `proposedVia`.
+
 ### Drafts of a manifest (AG-61, UI-47, UI-48)
 
 A form saves what a person has typed before anything is proposed. A draft is shared, not
@@ -663,7 +671,9 @@ change's `planFields` say what it changed and not nothing.
 
 Approving a change records a `change.merged` activity event naming the change, its resource and the
 approver ([§14](#14-activity-ui-31-ops-48-ops-49)), so the project's activity says what went live and
-links to it, beside the reconciler's `config.applied` for the commit.
+links to it, beside the reconciler's `config.applied` for the commit. Rejecting one records a
+`change.rejected` event naming the change, its resource, the rejecter and the reason (at most 500
+characters), so a decision not to ship is on the feed too and not only on the forge.
 
 Approval rules, enforced by the API and not only by the UI:
 
@@ -1692,8 +1702,13 @@ GET /api/v1/app-templates      every template, by name, for any signed-in person
   "audience": "managers",
   "access": "Read-only; the indicators may be public.",
   "dataNeeds": [{ "types": ["KeyPerformanceIndicator"], "attrs": ["kpiValue", "target"], "operations": ["queryEntity"] }]
-}] }
+}],
+  "modelAvailable": true }
 ```
+
+`modelAvailable` is `false` when the Portal has no agent runner or the agent proxy last reported
+the model key refused or out of credit (AG-96); the gallery then says why "Create from this" is
+unavailable and offers "Use as is" below.
 
 ```text
 GET /api/v1/app-templates/{name}/screenshot/{width}   a PNG of the template at 1440 or 375 px; 404 otherwise
@@ -1705,6 +1720,30 @@ Content Security Policy: `connect-src 'none'`, `form-action 'none'`, `frame-ance
 The templates are the samples of SDK-24, compiled into the Portal. A run started with a prompt
 that contains `(template: {name})` adapts that template, whatever else the prompt says; a name no
 template has is ignored and the prompt's words choose, as before.
+
+```text
+POST /api/v1/projects/{project}/app-templates/{name}/apps   use a template as it ships (T-5617)
+```
+
+```json
+{ "name": "bike-finder", "endpointName": "bikes" }
+```
+
+No model is asked. The Portal creates the repository `{project}_{name}` of the App (AP-75), commits
+the SDK template with the sample's `src/` over it, the build workflow and a README to `main` in
+the caller's name, protects `main`, and proposes the App building from that commit: class `ui`,
+visibility `project`, the template's `dataNeeds` in the Endpoint's context space. The proposal
+runs as a dry run before the forge is touched, and a failure after the repository exists deletes
+it again (CC-85).
+
+- `202` with the Change.
+- `403` when the caller may not propose an App in the project, before the body is read.
+- `404` for a template the gallery does not hold.
+- `422` with `errors` entries prefixed by the field: `name:` for a name that is not a DNS-1123
+  label, too long for its repository or already an App; `endpointName:` for an Endpoint that is
+  not there or that the caller may not read (one answer for both), or one that hides an attribute
+  the template reads.
+- `409` when a repository of that name is already in the forge; it is never adopted.
 
 ## 13. Flows: running a blueprint (CC-24, CC-30, CC-31, CC-32, CC-59)
 
@@ -1982,6 +2021,7 @@ they carry is what the public catalogue already shows.
 GET /api/v1/catalogue                          search, facets and one page of datasets
 GET /api/v1/catalogue/datasets/{name}          one dataset
 GET /api/v1/catalogue/datasets/{name}/sample   up to ten rows, read through its Endpoint
+GET /api/v1/catalogue/datasets/{name}/map      its located entities, for the dataset page's map
 GET /api/v1/catalogue/endpoints/{slug}/standards  a public Endpoint's standards, fields and examples
 ```
 
@@ -2070,6 +2110,38 @@ model class, read anonymously through its NGSI-LD representation with `options=k
 `{ "type": "KeyPerformanceIndicator", "columns": ["id", "name", "value"], "rows": [["urn:…", "…", "12"]] }`.
 A dataset with no Endpoint of this installation, or one that does not serve `ngsi-ld`, answers
 `404`; an Endpoint that does not answer, `503`. Nested values are written as compact JSON.
+
+`GET /api/v1/catalogue/datasets/{name}/map` answers the located entities of the same class, read
+the same way with `limit=1000&count=true`, for the map on the dataset page (EP-82, T-5628).
+`lang` (two or three lowercase letters, default `en`; anything else answers `400`) picks the
+labels:
+
+```json
+{
+  "type": "AirQualityObserved",
+  "total": 14,
+  "fields": [{ "slot": "name", "label": "Názov" }, { "slot": "pm10", "label": "PM10" }],
+  "features": [
+    {
+      "id": "urn:ngsi-ld:AirQualityObserved:a",
+      "geometry": { "type": "Point", "coordinates": [14.42, 50.08] },
+      "properties": { "name": "Legerova", "pm10": "21.5" }
+    }
+  ],
+  "basemap": "praha"
+}
+```
+
+- `fields` are the key attributes a popup shows, chosen by the Endpoint's `display` override, then
+  the model's `summary` annotations, then jc-core's field order (DM-98, DM-99, EP-135); a
+  structured value or a geometry is never one of them.
+- `features` holds every entity with a GeoJSON geometry (`location` first, else the first
+  attribute holding one); an entity without one is left out, so a dataset without locations
+  answers no features and the page shows no map.
+- `total` counts the entities of the class, located or not, when the Endpoint counted them; past
+  1000 the page says how many it shows.
+- `basemap` names the project whose basemap draws under the features, when the platform has one.
+- The same `404` and `503` as the sample.
 
 `GET /api/v1/catalogue/endpoints/{slug}/standards` answers the "Standards" part of a public
 Endpoint's page (`/d/{slug}` and the Endpoint page in the Portal, TS-19, T-4484):
@@ -2546,8 +2618,12 @@ MCP (Streamable HTTP, protocol 2026-07-28):
   and the operation runs. `"action": "decline"` (or `"cancel"`) answers a refusal and nothing
   runs. An id is one-shot, belongs to the token's subject, expires in ten minutes and is bound to
   the operation and the arguments it was asked for: different arguments need a new answer. Every
-  answer is written to the project's activity as `mcp.tool` from `portal`, naming the operation,
-  the person and what they decided.
+  `tools/call` naming a known operation in a project the caller reads is one `mcp.tool` row from
+  `portal` on that project's activity (T-5609). Its `details` hold `operation`, `decision`
+  (`ran`, `started` for a task, `asked`, `declined` or `refused`), `answer` (`accepted` or
+  `declined`) when the call carried one, `subject`, `username`, `channel` `mcp`, `client` (the
+  token's `azp`) and `change` with the Change's name, also its `correlationId`, when the call
+  opened one. Names only: no argument value or manifest content reaches the row.
   Tasks (AG-60): `jc_pipeline_test`, `jc_model_infer`, `jc_space_complete` and
   `jc_datasource_check` wait on the runner, on Model Tools or on somebody's feed, so `tools/call`
   answers `{ "task": { "taskId", "status": "working", "pollInterval", "ttl" } }` at once and the
@@ -2613,6 +2689,8 @@ DELETE /api/v1/projects/{project}/workspaces/{name}/preview   → 204; stopping 
 The gateway reads the running previews from the Portal's internal listener, which the edge does not route and a NetworkPolicy opens to the gateway alone: the path `/internal/previews` answers `{ "items": [ { "prefix": "ws-bikes-cleanup-", "files": { "<path>": "<manifest>" } } ] }`, without the repository's encrypted secrets and without another project's files. The gateway presents its own Keycloak ServiceAccount token on that call — `client_credentials`, audience `portal-internal`, `azp` its own client — and the route refuses a call without one: the NetworkPolicy is the second control and never the only one (PF-46, [Architecture 13 §6](../Architecture/13-security.md)). A page of manifests is what the route answers, so a pod that reached the port through a policy mistake would otherwise read every project's configuration. The answer carries an `ETag`, a SHA-256 over the body: the gateway sends it back as `If-None-Match` on its next fetch, every ten seconds, and a list that did not change answers `304` with no body, so an idle instance moves no manifests (CC-78). Authentication comes first, so a call without the token learns nothing from a `304` either.
 
 The gateway reads the domain verification of every Organization from the same listener, with the same token, the same `ETag` and the same ten-second fetch: `GET /internal/domain-verifications` answers `{ "items": [ { "organization": "hel", "domain": "hel.fi", "state": "verified" } ] }`, one item per Organization manifest of the repository, `state` one of `pending`, `verified`, `failed` and `pending` for an Organization the Portal has not checked yet. The challenge, the record and the reason stay off this route: the gateway decides on the state alone ([Architecture/03 §3](../Architecture/03-domain-model.md#3-identity-and-urn-specification)). Under `JC_GATEWAY_DOMAIN_VERIFICATION=enforce` a write to a space of an Organization that is not `verified`, or whose state the gateway does not know, answers `403` with the problem type `https://joinedcontext.com/errors/domain-not-verified` and a detail naming the Organization and its domain.
+
+The gateway reads the revoked subjects from the same listener, with the same token, the same `ETag` and the same ten-second fetch: `GET /internal/revocations` answers `{ "items": [ { "subject": "<Keycloak user id>", "revokedAt": 1798761600 } ] }`, one item per subject the Portal disabled, deleted or signed out, or whose ServiceAccount client it removed, or whose session Keycloak ended through the back-channel logout, for as long as a token issued before the mark could still be valid. The gateway refuses a token of a listed subject issued at or before `revokedAt` on every door that verifies one (REST, the hub and Endpoint MCP, a WebSocket upgrade, an MQTT CONNECT) with `401`; a token issued later, after the person was enabled again and signed in anew, is admitted. A failed fetch keeps the last list (T-5568, TR-03187 AR-6).
 
 Only the owner starts or stops a preview; an agent may, as it may open and write the workspace. Real data reaches a preview only when the person copies it from the Try it panel (PF-83): the browser reads at most 1 000 entities per type through the origin's Endpoint and writes them through the preview's, both on the person's own session at the edge, with every id moved to the preview's space segment. The Portal holds no token of the person's for the gateway, so no operation of the registry copies data, and an agent never does. The operations are `jc_workspace_preview_start`, `jc_workspace_preview_get` and `jc_workspace_preview_stop`.
 
@@ -2689,6 +2767,7 @@ POST   /api/v1/organization/people/{id}/resend-invitation   send a pending invit
 POST   /api/v1/organization/people/{id}/remove-second-factor  remove every OTP and WebAuthn credential → 204
 POST   /api/v1/organization/people/{id}/sign-out            end every session → 204
 DELETE /api/v1/organization/people/{id}                     remove → 202 with the Change, or 204
+POST   /api/v1/organization/people/remove                   remove up to 200 at once → 202 with the Change, or 204
 ```
 
 `{id}` is the Keycloak user id. `GET` takes `search` (a substring of the name or e-mail), `first`
@@ -2777,10 +2856,21 @@ deletes the Keycloak user once that Change is on `main`, and clears the mark, le
 disabled, when the Change is rejected. A person no manifest names is deleted at once: `204`.
 An App's `spec.access` entry naming the e-mail then matches nobody, and the App page lists it.
 
+`POST /api/v1/organization/people/remove` takes `{"ids": ["7d1f0c9e-…", …]}`, 1 to 200 Keycloak
+user ids (a department leaving), and does what `DELETE` does for all of them at once: ONE Change
+takes every one of their e-mails out of every `Group` and `RoleBinding`, and each person is
+disabled, signed out and marked with that Change. When no manifest names any of them they are
+deleted at once: `204`. Each person is held to the `DELETE` rules before anything is written: a
+person holding a right the caller lacks is `403` naming them, the caller, the last Organization
+Administrator, or every Organization Administrator together in the list is `409`, an unknown id is `404` naming it, a person whose removal is
+already open is `409` naming it, and no id or more than 200 is `422`. The Change's title and
+description name the ids, never the e-mails. Each person gets their own `person.changed` event
+(T-5606).
+
 - Every route needs a binding at organization scope whose role grants the verb on `Person`
   (PF-91): `read` for the two `GET`s, `create` for `POST`, `update` for `PATCH` and
   `reset-password`, `disable` for `disable`, `enable`, `remove-second-factor` and `sign-out`, and
-  `delete` for `DELETE`. Anyone else gets `403` naming the verb.
+  `delete` for `DELETE` and `remove`. Anyone else gets `403` naming the verb.
 - A person who holds a right the caller does not hold (an `org-admin`, for a caller who is only
   `people-admin`) is refused every write above with `403` naming that right, so a reset's temporary
   password never opens a stronger account; disabling or deleting yourself, or the last Organization
@@ -3912,6 +4002,67 @@ GET /api/v1/projects/{project}/mqttbrokers/{name}/measured          → 200
   same answer as a broker the project does not declare (PF-59). No token, topic or client address
   is part of the answer.
 
+### 44a. Testing a device message and watching for it (T-5534, PL-75, ADR-N-048 §2.3)
+
+The broker card's **Test a message** dialog answers, before a device sends anything, what would
+happen to one message of one ServiceAccount on one topic, and then watches for the real one.
+
+```text
+POST /api/v1/projects/{project}/mqttbrokers/{name}/test-publish    → 200 | 404 | 422
+GET  /api/v1/projects/{project}/mqttbrokers/{name}/watch?account=&since=   → 200 | 404 | 422
+```
+
+```json
+{"account": "cam-west", "topic": "cameras/helsinki-cam-west/frame", "payload": "{\"temperature\": 21.5}"}
+```
+
+```json
+{"clientId": "helsinki-cam-west", "published": false,
+ "steps": [
+  {"step": "acl", "outcome": "ok", "reason": "allowed by cameras/helsinki-cam-west/#"},
+  {"step": "size", "outcome": "ok", "reason": "22 of 65536 bytes"},
+  {"step": "rate", "outcome": "ok", "reason": "one message fits; a client may publish 10 per second ..."},
+  {"step": "binding", "outcome": "ok", "reason": "DataSource 'cameras' reads it, Pipeline 'frames' takes it"},
+  {"step": "mapping", "outcome": "ok", "reason": "1 record(s)"},
+  {"step": "endpoint", "outcome": "ok", "reason": "every attribute is written through helsinki-cameras"}]}
+```
+
+- The steps, in order: `acl` (a role of `account` publishes on a filter matching `topic`, its
+  `${clientid}` bound to the account's Keycloak client `{project}-{account}`), `size` (the
+  payload's bytes against `spec.limits.maxMessageBytes`), `rate` (`spec.limits.messagesPerSecond`
+  per client), `binding` (the project's DataSources whose `mqtt.brokerRef` names the broker and
+  whose `mqtt.topics` match, and the Pipelines that take each as their source; the first one
+  the caller may read is tested; a DataSource or Pipeline the caller may not read is named only
+  as "a DataSource you may not read" or "a Pipeline you may not read", as §47 hides a hop, and
+  its mapping is not run), `mapping` (that Pipeline's steps over the payload on the project's
+  runner, as §7a runs them) and `endpoint` (the record check of §7a for each mapped record). Each answers `ok`,
+  `refused` or `unchecked` with a sentence; `unchecked` says why the step could not run (no
+  Pipeline the caller may read, no runner, or a caller who may not propose Pipelines).
+- Nothing is published: the Portal opens no MQTT connection and writes nothing. The broker, not
+  the gateway, applies the ACL and the size limit to each PUBLISH, so a refused `acl` or `size`
+  step is the only place a person sees those two before a device sends.
+- `422` names the member at fault: an `account` no role of the broker names, a `topic` that is
+  empty, longer than 1024 bytes, holds `+`, `#` or NUL or starts with `$`, a `payload` above
+  1 MiB (the ceiling of every broker, MF-54). A payload above the broker's own limit is the
+  `size` step's refusal, not a 422.
+- `watch` answers `{observedAt, refusals, refusalsRead, connected, messagesPerSecond, reason}`:
+  the CONNECTs the gateway refused for this broker after `since` (RFC 3339), of `account` when
+  given, newest first, each `{at, reason, account}`; the account's connected clients and the
+  broker's messages per second as §44 measures them. `reason` is one of `no_token`, `expired`,
+  `wrong_audience`, `invalid_token`, `wrong_client`, `unknown_account`, `other_project`,
+  `no_role`, `no_subscription`, `no_realm`. `refusalsRead: false` with `reason` when the gateway
+  did not answer; a refusal is never invented and an empty list then means "unknown".
+- The gateway counts each refusal of a broker the repository declares as
+  `jc_mqtt_auth_refused_total{broker,reason}` and keeps the newest 50 per broker in memory: the
+  time, the reason and the broker's own ServiceAccount the username named, never the token, the
+  client id or the address. It serves them at `GET /internal/mqtt/refusals/{release}` on its
+  internal listener (port 8082) to the mesh identity `JC_GATEWAY_MQTT_PORTAL_IDENTITY` names and
+  answers `403` to anyone else; the Portal reads that listener on the host of
+  `JC_PORTAL_GATEWAY_URL`.
+- Who may call: whoever may read the project's MqttBrokers; anybody else gets `404`, as for a
+  broker the project does not declare (PF-59). The `mapping` and `endpoint` steps run only for a
+  caller who may propose a Pipeline in the project.
+
 ## 45. Moving a space to another broker (T-4000, PF-115, ADR-N-047 §2.6)
 
 One job moves one space, with its history, from the broker it lives on to another `ContextBroker`
@@ -4133,6 +4284,17 @@ Filing needs `propose` on the Pipeline in `{project}`, and so does the `endpoint
   "change": null
 }
 ```
+
+### 48.1 A person's request on an Endpoint (PL-115)
+
+A person who reads an Endpoint but gets nothing through it asks the owners of its space on the Endpoint's page. The request is the same kind of row, in the same incoming list, decided by the same doors.
+
+```text
+GET    /api/v1/projects/{project}/endpoints/{name}/access-requests   { "types": [...], "refusal": string|null, "items": [...] } → 200
+POST   /api/v1/projects/{project}/endpoints/{name}/access-requests   { "types": ["AirQualityObserved"], "until"?, "reason" } → 201
+```
+
+Both need `read` on the Project and on the Endpoint in its space; anybody else reads `404`. `GET` answers the types the caller may ask for (the classes of the space's compiled model, narrowed to the classes of the ModelProjection the Endpoint names), `refusal` when no new grant could reach the Endpoint (it names `policyRef` or `policyRefs`, or it is an App's own Endpoint, AP-139), and the caller's own requests on it, never another person's. `POST` comes from a person's session; a service account's or an agent's token answers `403`. The body names no grantee: an unknown member answers `400`, and the grant is always for the caller. A type the Endpoint does not serve, an empty or doubled type, an end that passed and an empty reason each answer `422` with one `errors` line naming its field (`types[i]`, `until`, `reason`); an Endpoint with a `refusal`, or a second open or granted request of the same person on it, answers `409`. A person's request reads `"pipeline": null`, `"person": "{username}"` and `"account": "{username}"`; its types carry `"attrs": []` (every attribute of the type). Approving proposes one Policy into the Endpoint's project: `{endpoint}-{id}` (or `access-{id}` when that is over 63 characters), assignee `{ "kind": "user", "id": "{username}" }`, `retrieveOps`, `information` naming the asked-for types, `validity.to` the end; the Endpoint itself is unchanged. Revoking ends that Policy now and leaves the Endpoint unchanged.
 
 ## 49. The agent registry (T-4849, AG-126…AG-129)
 

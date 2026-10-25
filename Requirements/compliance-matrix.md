@@ -1113,6 +1113,7 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **PF-125** | [S] | open |  |  |
 | **PF-126** | [S] | open |  |  |
 | **PF-127** | [S] | open |  |  |
+| **PF-128** | [S] [H] | open |  |  |
 | **PF-49** | [S] | tested | ci-full, fast ci | deployment `tests/test_context_gateway.py::test_the_proposer_account_holds_a_portal_token_and_no_endpoint_token`, deployment `tests/test_seed_identity_contract.py::test_the_janitor_reaches_journey_residue_and_nothing_seeded`, platform `crates/jc-core/tests/role_tests.rs::the_documented_role_round_trips`, and 16 more |
 | **PF-50** | [S] | tested | ci-full, conformance, fast ci, live on dev | conformance `e2e/journeys/16-role-permissions.spec.ts::UI-44 the viewer sees New endpoint and New pipeline disabled with the reason, and PF-50 the API says 403`, deployment `tests/test_forge_bootstrap.py::test_a_role_that_may_act_on_an_endpoint_may_act_on_its_projection`, deployment `tests/test_keycloak_clients.py::test_every_client_carries_the_groups_claim`, and 152 more |
 | **PF-51** | [H] | tested | ci-full, conformance, fast ci | conformance `tests/security/test_forge_side_door.py::test_cc41_pf51_the_default_branch_is_protected_and_a_reader_may_neither_push_nor_merge`, conformance `tests/security/test_forge_side_door.py::test_pf51_the_protection_rule_pins_the_pusher_and_drops_an_approval_a_new_commit_invalidates`, conformance `tests/security/test_forge_side_door.py::test_pf51_a_leaked_platform_token_cannot_administer_the_forge`, and 52 more |
@@ -1307,6 +1308,7 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **PL-112** | [S] | tested | ci-full, fast ci | platform `crates/jc-core/src/datacube.rs::the_cube_table_is_written_as_python_writes_it`, platform `crates/jc-core/src/datacube.rs::each_parameter_is_checked_before_it_is_rendered`, platform `crates/jc-core/tests/datacube_tests.rs::one_cube_without_keys_renders_the_committed_decoder`, and 7 more |
 | **PL-113** | [S] | tested | ci-full | platform `crates/jc-core/tests/data_source_serde_tests.rs::an_http_body_bound_is_one_byte_to_256_mib`, platform `crates/jc-manifest/tests/http_max_bytes_bento_tests.rs::a_body_over_max_bytes_is_refused_before_the_authors_steps` |
 | **PL-114** | [H] | tested | ci-full, fast ci | platform `crates/jc-manifest/tests/bento_datasource_render_tests.rs::a_csv_http_body_reaches_the_steps_one_row_per_message`, platform `crates/jc-manifest/tests/bento_datasource_render_tests.rs::an_unknown_http_body_format_is_refused`, platform `crates/jc-manifest/tests/bento_datasource_render_tests.rs::an_archive_of_csv_members_splits_rows_after_the_ranged_read`, and 4 more |
+| **PL-115** | [S] [H] | tested | ci-full, fast ci | portal `src/access_requests.rs::a_persons_approval_proposes_one_policy_for_that_person`, portal `src/access_requests.rs::a_person_names_only_served_types`, portal `tests/access_requests_tests.rs::a_persons_request_is_refused_field_by_field`, and 3 more |
 
 ### R — Access control and federation
 
