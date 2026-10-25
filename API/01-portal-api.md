@@ -671,7 +671,9 @@ change's `planFields` say what it changed and not nothing.
 
 Approving a change records a `change.merged` activity event naming the change, its resource and the
 approver ([§14](#14-activity-ui-31-ops-48-ops-49)), so the project's activity says what went live and
-links to it, beside the reconciler's `config.applied` for the commit.
+links to it, beside the reconciler's `config.applied` for the commit. Rejecting one records a
+`change.rejected` event naming the change, its resource, the rejecter and the reason (at most 500
+characters), so a decision not to ship is on the feed too and not only on the forge.
 
 Approval rules, enforced by the API and not only by the UI:
 

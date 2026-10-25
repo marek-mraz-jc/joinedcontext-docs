@@ -300,6 +300,7 @@ The vocabulary is closed because a filter over free text is not a filter:
 | `config.applied`, `config.drifted` | reconciler | an apply, a difference between Git and the cluster |
 | `config.planned` | reconciler | a plan. Accepted, not emitted yet |
 | `change.merged` | portal | a person approved a Change and the forge merged it: `details` names the `change`, `resourceKind`, `name`, `operation`, `approvedBy` and the `object` an object page filters on (T-3292) |
+| `change.rejected` | portal | a person rejected a Change and the forge closed it: `details` names the `change`, `resourceKind`, `name`, `operation`, `rejectedBy`, the `reason` they typed (at most 500 characters) and the `object` (T-5613) |
 | `pipeline.throughput` | pipeline | one minute of messages, as a count |
 | `pipeline.error` | pipeline | a mapping or output failure, with the failing sample redacted |
 | `pipeline.restarted` | pipeline | the runner restarted a stream |
