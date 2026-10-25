@@ -86,12 +86,12 @@ metadata:
 spec:
   description: The air quality domain, measurement and modelling
   members:
-    - user: jana.kovacova@example.org
-    # not in Keycloak yet: a warning, in force at first login
-    - user: peter.novak@example.org
+    # each member is a Keycloak user id, the `sub` of their token; never an e-mail
+    - user: 3f2a9c1e-7b4d-4e8a-9c61-0d5e2b7f8a14
+    - user: 8b1d4e2f-0c3a-4f5b-9e6d-7a2c1b0e9f38
 ```
 
-A `Group` is the people a binding names at once (PF-62). Today a member, a binding's `user` subject and a `Policy` assignee of kind `user` name the person by e-mail, as the examples on this page show. [ADR-N-061](../Decisions/adr-n-061-group-members-without-personal-data.md) moves them to the person's Keycloak user id, the `sub` of their token, so no name or e-mail goes into Git, whose history a deletion cannot clean, and the Portal will show the name beside the id to a reviewer who may see it (PF-126, not built yet). The reconciler owns the Keycloak group it creates for each manifest, marked `managed-by: joinedcontext`: members are added and pruned to match, a rename follows the manifest, and an edit made in the Keycloak console is overwritten on the next reconcile and reported as drift, the same shape as every other drift the reconciler reports (PF-63). A Keycloak group without the mark is somebody else's and is left alone. So a fresh environment recreates membership from the repository, a membership change is a merge request in the red lane like a `Role` or a `RoleBinding`, and a `subjects[].group` in a binding or a `ServiceAccount` names a manifest, refused at validation when none exists (PF-64), where today it would silently match nobody. A group the identity provider owns, such as the realm's default group every signed-in person joins, is bound with `{ group: platform-readers, source: provider }`: the mark is in the manifest, reviewed in the red lane with the binding, validation accepts that group without a manifest, and the reconciler never creates, edits or prunes it (PF-64, PF-63). The same mark binds the department groups Keycloak syncs from a municipality's directory, over LDAP user federation for Active Directory or OpenLDAP, or over OIDC or SAML brokering for Entra ID or ADFS: the directory keeps the people and their departments, and the repository keeps only which department holds which role (PF-127). Only a `RoleBinding` subject carries the mark; an App's or an Endpoint's roles name `Group` manifests alone. The one binding still read from Keycloak is the bootstrap administrators' group of the platform settings file (PF-52), because it has to exist before the first manifest does.
+A `Group` is the people a binding names at once (PF-62). A member, a binding's `user` subject, an App's or an Endpoint's role member and a `Policy` assignee of kind `user` name the person by their Keycloak user id, the `sub` of their token: validation refuses an e-mail or any other form with an error naming the field, and the gateway matches the id against `sub`, never against a username somebody can rename (PF-126, [ADR-N-061](../Decisions/adr-n-061-group-members-without-personal-data.md)). So no name or e-mail goes into Git, whose history a deletion cannot clean; once the person is deleted from Keycloak the id names nobody. A `RoleBinding` subject or `Policy` assignee may also name a client's own service-account user, `service-account-<client>`, such as the build lane's: it is no person, and only that client's token carries it. The Portal showing the name beside the id to a reviewer who may see it, and the reconciler adding members by id, follow (PF-126). The reconciler owns the Keycloak group it creates for each manifest, marked `managed-by: joinedcontext`: members are added and pruned to match, a rename follows the manifest, and an edit made in the Keycloak console is overwritten on the next reconcile and reported as drift, the same shape as every other drift the reconciler reports (PF-63). A Keycloak group without the mark is somebody else's and is left alone. So a fresh environment recreates membership from the repository, a membership change is a merge request in the red lane like a `Role` or a `RoleBinding`, and a `subjects[].group` in a binding or a `ServiceAccount` names a manifest, refused at validation when none exists (PF-64), where today it would silently match nobody. A group the identity provider owns, such as the realm's default group every signed-in person joins, is bound with `{ group: platform-readers, source: provider }`: the mark is in the manifest, reviewed in the red lane with the binding, validation accepts that group without a manifest, and the reconciler never creates, edits or prunes it (PF-64, PF-63). The same mark binds the department groups Keycloak syncs from a municipality's directory, over LDAP user federation for Active Directory or OpenLDAP, or over OIDC or SAML brokering for Entra ID or ADFS: the directory keeps the people and their departments, and the repository keeps only which department holds which role (PF-127). Only a `RoleBinding` subject carries the mark; an App's or an Endpoint's roles name `Group` manifests alone. The one binding still read from Keycloak is the bootstrap administrators' group of the platform settings file (PF-52), because it has to exist before the first manifest does.
 
 ```yaml
 # users/roles/pipeline-developer.yaml
@@ -120,7 +120,7 @@ metadata:
 spec:
   subjects:
     - group: air-quality-team
-    - user: jana.kovacova@example.org
+    - user: 3f2a9c1e-7b4d-4e8a-9c61-0d5e2b7f8a14
   role: pipeline-developer
   scope: { project: ovzdusie } # organization | project | contextSpace
   validity: { notAfter: '2026-12-31T23:59:59Z' }
@@ -153,7 +153,7 @@ metadata:
 spec:
   subjects:
     - group: ckan-editors
-    - user: demo.steward@hel.fi
+    - user: 5c7e9a1b-2d4f-4a6c-8e0b-1f3d5a7c9e2b
   role: ckan-admin-helsinki-open-data-2
   scope: { project: helsinki }
 ---
@@ -166,7 +166,7 @@ metadata:
 spec:
   description: The people who look after the open-data-2 catalogue
   members:
-    - user: demo.steward@hel.fi
+    - user: 5c7e9a1b-2d4f-4a6c-8e0b-1f3d5a7c9e2b
 ```
 
 A binding carries no constraint of its own: the role is what narrows, so a person reading `users/assignments/` sees whom, and `users/roles/` what. `org-admin` changes every instance anyway; publishing an Endpoint *to* an instance stays the `publisher`'s right (PF-71).
