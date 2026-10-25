@@ -40,7 +40,7 @@ SNAPSHOTS = {
 }
 DECISIONS = {"live", "seeded", "integrate", "skip", "part"}
 UNUSABLE = {"stale", "duplicate", "login", "format", "licence", "unnamed", "personal"}
-BUILT = {"T-5268", "T-5269", "T-5270", "T-5276", "T-5423", "T-5424", "T-5426", "T-5425", "T-5428", "T-5429"}
+BUILT = {"T-5268", "T-5269", "T-5270", "T-5276", "T-5423", "T-5424", "T-5426", "T-5425", "T-5428", "T-5429", "T-5680"}
 PARKED = {"T-5427", "T-5428", "T-5684"}
 PLANNED = re.compile(r"^(?:F-\d|P-\d\d)$")
 CELLS = 13

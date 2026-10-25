@@ -84,18 +84,18 @@ The decision follows from `usable` and from dev:
 | decision | city | ipr | golemio | other | rows |
 |---|---|---|---|---|---|
 | live | 1 | 6 | 8 | 3 | 18 |
-| seeded | 5 | 44 | 0 | 3 | 52 |
-| integrate | 21 | 147 | 10 | 1 | 179 |
-| skip | 5 | 29 | 25 | 1 | 60 |
+| seeded | 5 | 44 | 3 | 3 | 55 |
+| integrate | 21 | 147 | 4 | 1 | 173 |
+| skip | 5 | 29 | 28 | 1 | 63 |
 | part | 88 | 0 | 44 | 0 | 132 |
 | total | 120 | 226 | 87 | 8 | 441 |
 
 | usable | city | ipr | golemio | other | rows |
 |---|---|---|---|---|---|
-| yes | 27 | 197 | 18 | 7 | 249 |
+| yes | 27 | 197 | 15 | 7 | 246 |
 | stale | 3 | 9 | 5 | 0 | 17 |
 | duplicate | 1 | 5 | 3 | 0 | 9 |
-| login | 0 | 0 | 15 | 0 | 15 |
+| login | 0 | 0 | 18 | 0 | 18 |
 | format | 0 | 13 | 2 | 0 | 15 |
 | licence | 0 | 0 | 0 | 1 | 1 |
 | unnamed | 0 | 2 | 0 | 0 | 2 |
@@ -183,9 +183,9 @@ build the rows highest score first; skip rows keep their score so the reason is 
 | decision | rows | score 3 | score 2 | score 1 | score 0 or -1 |
 |---|---|---|---|---|---|
 | live | 18 | 5 | 9 | 4 | 0 |
-| seeded | 52 | 2 | 16 | 34 | 0 |
-| integrate | 179 | 8 | 5 | 15 | 151 |
-| skip | 60 | 5 | 14 | 15 | 26 |
+| seeded | 55 | 3 | 18 | 34 | 0 |
+| integrate | 173 | 4 | 3 | 15 | 151 |
+| skip | 63 | 8 | 14 | 15 | 26 |
 
 The score orders the work; since 2026-10-25 it no longer decides whether a row is built. The owner
 order of that day takes every usable row, so the rows the score of 2026-10-23 left out (plan layers,
@@ -229,8 +229,8 @@ decision changes the row's cells, not its number.
 | 23 | [`f57a3a32d7dd9b7b40b729636f062e77`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/f57a3a32d7dd9b7b40b729636f062e77) | Měsíční zprávy o činnosti Městské policie hl. m. Prahy za rok 2025 | city | seeded | T-5428 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, csv, odata | annual | `police-activity`: 935 KPI (2025, 11 reported months; January is empty), one per figure and month; the 2026 file is not out yet (404 on 2026-10-25) | 2 | yes | seeded, `praha-cinnost-mestske-policie` not on dev until the branch merges |
 | 24 | [`cc9dbd08d1a478909ca5503a7be83955`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/cc9dbd08d1a478909ca5503a7be83955) | Měsíční zprávy o činnosti Městské policie hl. m. Prahy za rok 2025 podle útvarů | city | seeded | T-5428 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, csv, odata | annual | `police-units`: 9,152 KPI (2025, units OŘ1 to OŘ15 and the patrol unit as `dimensionKey`) | 2 | yes | seeded, `praha-cinnost-mestske-policie-utvary` not on dev until the branch merges |
 | 25 | [`7628c2cadd6faf690ffbf210a34060eb`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/7628c2cadd6faf690ffbf210a34060eb) | Úřední deska MHMP | city | skip | - | `Article` (jc SDM extension) | ngsi-ld, csv, feed | daily | 5,795 notices (2026-10-25) whose titles name people: owners of towed or abandoned vehicles with plates and towns, auction debtors, addressees of deliveries (237 by a pattern, more in capitals); no filter guarantees none slips through, and a copy keeps a name after the board takes it down (T-5428) | 2 | personal | - |
-| 26 | [`/v3/parking`](https://api.golemio.cz/docs/openapi/) | Get a list of parking locations within the region of interest with filtering options | golemio | integrate | P-01 | `OffStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | - | static car parks (128 Mr.Parkit garages in Prague, T-5268); occupancy only where a source gives it | 2 | yes | - |
-| 27 | [`/v3/parking-tariffs`](https://api.golemio.cz/docs/openapi/) | Get a list of tariffs with filtering options | golemio | integrate | P-01 | `OffStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | - | tariffs as members of the /v3/parking car parks | 2 | yes | - |
+| 26 | [`/v3/parking`](https://api.golemio.cz/docs/openapi/) | Get a list of parking locations within the region of interest with filtering options | golemio | seeded | T-5680 | `OffStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | - | `golemio-garages`, daily: the 128 Mr.Parkit garages in Prague of 132 (2026-10-25); no occupancy, Mr.Parkit's measurements are null (T-5268) | 2 | yes | seeded, not applied on dev yet: `praha-garaze` (T-5680) |
+| 27 | [`/v3/parking-tariffs`](https://api.golemio.cz/docs/openapi/) | Get a list of tariffs with filtering options | golemio | seeded | T-5680 | `OffStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | - | read by `golemio-garages` with the garages: price of an hour and of a day (CZK) on each garage | 2 | yes | seeded, not applied on dev yet: `praha-garaze` (T-5680) |
 | 28 | [`176f314a9ded40ef88ce55a2ed401c2e`](https://geoportalpraha.cz/data-a-sluzby/176f314a9ded40ef88ce55a2ed401c2e) | Odpadní zařízení pro občany | ipr | seeded | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | other | `geo-waste-points` writes 9 (2026-10-23; the 29 collection yards stay with `golemio-yards`) | 2 | yes | seeded, 0 entities: `praha-trideny-odpad` answers with no type |
 | 29 | [`2b49ad1ad0bb4892bcb54acfb978456a`](https://geoportalpraha.cz/data-a-sluzby/2b49ad1ad0bb4892bcb54acfb978456a) | Parkovací automaty | ipr | skip | - | `FareCollectionSystem` (Transportation) | ngsi-ld, geojson, ogc-features, csv | weekly | weekly parking machines; the Golemio copy is not read twice; stale on 2026-10-25: declared weekly, last edit 2026-09-07 | 2 | stale | seeded, `praha-parkovaci-automaty` answers 404: not published |
 | 30 | [`62106cae6acf4507b988c0e745f55bba`](https://geoportalpraha.cz/data-a-sluzby/62106cae6acf4507b988c0e745f55bba) | Pražská integrovaná doprava - vstupy do metra | ipr | seeded | T-5423 | `GtfsAccessPoint` (UrbanMobility) | ngsi-ld, geojson, ogc-features, csv | other | `pid-metro-entrances` writes 340 of 341 (2026-10-24; one Prosek E4 twin 4 m apart dropped as a duplicate) | 2 | yes | seeded, 0 entities: `praha-vstupy-metra` answers with no type |
@@ -307,11 +307,11 @@ decision changes the row's cells, not its number.
 | 101 | [`7a4bf2d99de44645ac5768f65d8a9692`](https://geoportalpraha.cz/data-a-sluzby/7a4bf2d99de44645ac5768f65d8a9692) | Záplavové území (Vltava, Berounka) | ipr | seeded | T-5429 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | flood extent or flood defence | 1 | yes | seeded, `praha-zaplavova-uzemi` answers 404: not published |
 | 102 | [`/v2/bicyclecounters`](https://api.golemio.cz/docs/openapi/) | GET All Bicycle Counters | golemio | integrate | P-02 | `TrafficFlowObserved` (Transportation) | ngsi-ld, temporal, sta, csv | - | needs a DataSource time window (`from=` now minus the period): the route sorts by device, not time (T-5268) | 3 | yes | - |
 | 103 | [`/v2/municipalauthorities/{id}/queues`](https://api.golemio.cz/docs/openapi/) | GET All Municipal Authority Waiting Queues | golemio | integrate | P-02 | custom `ServiceQueue`; closest `ArrivalEstimation` (UrbanMobility) | ngsi-ld, temporal, sta, csv | - | one call per office with the key header; a nested Bento call carries no key (T-5268) | 3 | yes | - |
-| 104 | [`/v2/sharedbikes`](https://api.golemio.cz/docs/openapi/) | GET All Shared Bikes | golemio | integrate | P-01 | `Vehicle` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | - | a mobility feed T-5268 left out; the owner order of 2026-10-25 admits it | 3 | yes | - |
-| 105 | [`/v2/sharedcars`](https://api.golemio.cz/docs/openapi/) | GET All Shared Cars | golemio | integrate | P-01 | `Vehicle` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | - | a mobility feed T-5268 left out; the owner order of 2026-10-25 admits it | 3 | yes | - |
-| 106 | [`/v2/vehiclesharing`](https://api.golemio.cz/docs/openapi/) | GET All Shared Vehicles | golemio | integrate | P-01 | `Vehicle` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | - | a mobility feed T-5268 left out; the owner order of 2026-10-25 admits it | 3 | yes | - |
+| 104 | [`/v2/sharedbikes`](https://api.golemio.cz/docs/openapi/) | GET All Shared Bikes | golemio | skip | - | `Vehicle` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | - | the project key gets 403 (Forbidden) on 2026-10-25 (T-5680); a mobility feed T-5268 left out; the owner order of 2026-10-25 admits it | 3 | login | - |
+| 105 | [`/v2/sharedcars`](https://api.golemio.cz/docs/openapi/) | GET All Shared Cars | golemio | seeded | T-5680 | `Vehicle` (Transportation) | ngsi-ld, geojson, ogc-features, csv | - | `golemio-shared-cars`, every 5 min: car4way, Anytime and Bolt, 949 cars free to rent (2026-10-25) | 3 | yes | seeded, not applied on dev yet: `praha-sdilena-auta` (T-5680) |
+| 106 | [`/v2/vehiclesharing`](https://api.golemio.cz/docs/openapi/) | GET All Shared Vehicles | golemio | skip | - | `Vehicle` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | - | the project key gets 403 (Forbidden) on 2026-10-25 (T-5680); a mobility feed T-5268 left out; the owner order of 2026-10-25 admits it | 3 | login | - |
 | 107 | [`/v2/traffic/restrictions`](https://api.golemio.cz/docs/openapi/) | GET All Traffic Restrictions for a specific moment | golemio | skip | - | `CityWork` (Transportation) | ngsi-ld, geojson, ogc-features, csv, feed | - | the project key gets 403 (scope); @user asks OICT for the scope | 3 | login | - |
-| 108 | [`/v2/vehiclesharing/gbfs/systems_list`](https://api.golemio.cz/docs/openapi/) | GET GBFS Systems List | golemio | integrate | P-01 | `BikeHireDockingStation` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | - | a mobility feed T-5268 left out; the owner order of 2026-10-25 admits it; the nextbike GBFS is already read directly | 3 | yes | - |
+| 108 | [`/v2/vehiclesharing/gbfs/systems_list`](https://api.golemio.cz/docs/openapi/) | GET GBFS Systems List | golemio | skip | - | `BikeHireDockingStation` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | - | the project key gets 403 (Forbidden) on 2026-10-25 (T-5680); a mobility feed T-5268 left out; the owner order of 2026-10-25 admits it; the nextbike GBFS is already read directly | 3 | login | - |
 | 109 | [`/v2/fcd/info`](https://api.golemio.cz/docs/openapi/) | GET Latest floating Car Data | golemio | skip | - | `TrafficFlowObserved` (Transportation) | ngsi-ld, temporal, sta, csv | - | the project key gets 403 (scope); @user asks OICT for the scope | 3 | login | - |
 | 110 | [`/v2/pedestrians/measurements`](https://api.golemio.cz/docs/openapi/) | GET measurements of pedestrian traffic | golemio | integrate | P-02 | `CrowdFlowObserved` (Transportation) | ngsi-ld, temporal, sta, csv | - | needs a DataSource time window (`from=` now minus the period): the route sorts by device, not time (T-5268) | 3 | yes | - |
 | 111 | [`/v2/energetics/measurements`](https://api.golemio.cz/docs/openapi/) | Measurements | golemio | skip | - | `ConsumptionPoint` (Consumption) | ngsi-ld, temporal, sta, csv | - | the project key gets 403 (scope); @user asks OICT for the scope | 3 | login | - |
@@ -661,8 +661,8 @@ Only rows that fail the usable rule of section 2 are left out (60 rows, decision
   IPR police objects (Golemio police is live), nameless IPR playgrounds (Golemio playgrounds are
   live), the city parking zones (every section id of rows 49 and 50 carries its zone), the 2016 zones,
   a test copy of a landscape register, and the data request answered by row 54.
-- **login** (15): traffic restrictions, floating car data, Waze potholes, bulky waste and the six
-  energetics routes answer 403 for the project key; the six routes tagged internal need an internal
+- **login** (18): traffic restrictions, floating car data, Waze potholes, bulky waste, three parking
+  routes (rows 104, 106 and 108, T-5680) and the six energetics routes answer 403 for the project key; the six routes tagged internal need an internal
   scope. @user: ask OICT to add these scopes to the praha key; each row then moves to integrate.
 - **format** (15): orthophotos, surface and terrain models, building heights, the 3D scenes, the base
   maps, and the Golemio vector tiles: no features, a basemap link in the catalogue at most.
@@ -673,8 +673,8 @@ Only rows that fail the usable rule of section 2 are left out (60 rows, decision
 
 ## 8. Plan to 100
 
-Usable on 2026-10-25: **249** datasets. Live on dev: **18**. Once the seeded rows publish, the
-parked task T-5684 lands and P-01 to P-04 run, Praha holds 18 + 52 + 2 + 26 = **98**; the first two
+Usable on 2026-10-25: **246** datasets. Live on dev: **18**. Once the seeded rows publish, the
+parked task T-5684 lands and P-02 to P-04 run, Praha holds 18 + 55 + 2 + 20 = **95**; the first five
 rows of P-05 make 100. P-05 to P-11 take the remaining 151 usable rows, which score 0 or -1; they come after the first 100 are live.
 
 Every batch runs the checks of section 5, reads the source again before it builds, and ends with one
@@ -689,7 +689,7 @@ of one pipeline shape.
 | T-5427 | 36, 38, 39 | 3 | IPR waste layers | `WasteContainer` | none | done: all three stale, `waste-containers` reads Golemio |
 | T-5428 | 22-24, 52, 56 | 5 | city tables and feeds | `KeyPerformanceIndicator`, `CityWork` | `KeyPerformanceIndicator`, `CityWork` | seeded |
 | T-5684 | 54, 55 | 2 | city tables without coordinates | `Streetlight`, `PointOfInterest` | `Streetlight` | geocoding (55), node memory (54) |
-| P-01 | 26, 27, 104, 105, 106, 108 | 6 | Golemio list routes with the project key | `OffStreetParking`, `Vehicle`, `BikeHireDockingStation` | none | - |
+| P-01 | - | 0 | built by T-5680: rows 26, 27 and 105 seeded; 104, 106 and 108 answer the project key 403 (login) | `OffStreetParking`, `Vehicle` | none | - |
 | P-02 | 102, 103, 110, 112, 115 | 5 | Golemio routes read per item or per time window | `TrafficFlowObserved`, `CrowdFlowObserved`, `Device`, `ArrivalEstimation`, custom `ServiceQueue` | `TrafficFlowObserved`, `CrowdFlowObserved`, `Device`, `ArrivalEstimation`, `ServiceQueue` | a DataSource `from=` window and keyed per-item calls (platform) |
 | P-03 | 79, 82, 130, 131, 132 | 5 | IPR point, line and area layers without a name field | `PointOfInterest`, custom `GreenAsset` | `GreenAsset` | T-5426 (area and line shape) |
 | P-04 | 31, 34, 60-63, 67, 90, 94, 100 | 10 | IPR layers over the 16 MiB read cap, read in pages of object ids | `GreenspaceRecord`, `RoadSegment`, custom `NoiseZone`, custom `FloodZone` | `GreenspaceRecord`, `RoadSegment`, `NoiseZone` | T-5426; storage measured first (node memory) |
