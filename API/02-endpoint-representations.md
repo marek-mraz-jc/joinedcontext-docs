@@ -769,9 +769,9 @@ grant with a condition on the stored Entity, `q`, `scopeQ`, `geoQ` or a window, 
 only for the entities that meet it), `grant`, `not_in_grant` (a permission covers the type but
 lists other Attributes) or `no_grant`. Deny is the default: with no grant every cell is `false`.
 A reason never names a Policy, its assigner or another principal
-([GW6](../Requirements/gateway-firewall.md)). `type` missing, not a class of the model, or an
-Endpoint without a generated model is a `400`; a class of more than 200 served Attributes is a
-`400` too. The answer pays the Endpoint's `rateLimits` as `evaluations` does: one request per 100
+([GW6](../Requirements/gateway-firewall.md)). `type` missing or not a class of the model the
+Endpoint serves (an Endpoint without a generated model, or whose view serves another model,
+included) is a `400`; a class with no served Attributes or more than 200 is a `400` too. The answer pays the Endpoint's `rateLimits` as `evaluations` does: one request per 100
 decisions (three per Attribute), and a quota that cannot pay it is a `429`.
 
 `POST …/access/simulate` answers the same question for someone else (EP-103, T-3311): the decision
