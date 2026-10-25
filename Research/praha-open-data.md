@@ -59,7 +59,8 @@ word that fails it:
 - **login**: the route answers only with a key scope the project lacks (403, or an internal tag);
 - **format**: raster, 3D scene, web map or vector tiles, no features to read;
 - **licence**: no reuse terms are published;
-- **unnamed**: no name, number or route field, so a resident cannot tell one record from another.
+- **unnamed**: no name, number or route field, so a resident cannot tell one record from another;
+- **personal**: the records name private persons and no filter can be shown to remove every name.
 
 Decided (worker-t5665, owner may override): a Golemio route counts as usable. Golemio wants an API
 key that anyone gets by self-service sign-up, publishes under CC BY 4.0, and the platform holds the key
@@ -83,22 +84,24 @@ The decision follows from `usable` and from dev:
 | decision | city | ipr | golemio | other | rows |
 |---|---|---|---|---|---|
 | live | 1 | 6 | 8 | 3 | 18 |
-| seeded | 0 | 44 | 0 | 3 | 47 |
-| integrate | 28 | 147 | 10 | 1 | 186 |
-| skip | 3 | 29 | 25 | 1 | 58 |
+| seeded | 5 | 44 | 0 | 3 | 52 |
+| integrate | 21 | 147 | 10 | 1 | 179 |
+| skip | 5 | 29 | 25 | 1 | 60 |
 | part | 88 | 0 | 44 | 0 | 132 |
 | total | 120 | 226 | 87 | 8 | 441 |
 
 | usable | city | ipr | golemio | other | rows |
 |---|---|---|---|---|---|
-| yes | 29 | 197 | 18 | 7 | 251 |
-| stale | 2 | 9 | 5 | 0 | 16 |
+| yes | 27 | 197 | 18 | 7 | 249 |
+| stale | 3 | 9 | 5 | 0 | 17 |
 | duplicate | 1 | 5 | 3 | 0 | 9 |
 | login | 0 | 0 | 15 | 0 | 15 |
 | format | 0 | 13 | 2 | 0 | 15 |
 | licence | 0 | 0 | 0 | 1 | 1 |
 | unnamed | 0 | 2 | 0 | 0 | 2 |
+| personal | 1 | 0 | 0 | 0 | 1 |
 | part | 88 | 0 | 44 | 0 | 132 |
+| total | 120 | 226 | 87 | 8 | 441 |
 
 ## 3. Smart Data Models pinned
 
@@ -180,9 +183,9 @@ build the rows highest score first; skip rows keep their score so the reason is 
 | decision | rows | score 3 | score 2 | score 1 | score 0 or -1 |
 |---|---|---|---|---|---|
 | live | 18 | 5 | 9 | 4 | 0 |
-| seeded | 47 | 2 | 13 | 32 | 0 |
-| integrate | 189 | 8 | 12 | 18 | 151 |
-| skip | 55 | 5 | 10 | 14 | 26 |
+| seeded | 52 | 2 | 16 | 34 | 0 |
+| integrate | 179 | 8 | 5 | 15 | 151 |
+| skip | 60 | 5 | 14 | 15 | 26 |
 
 The score orders the work; since 2026-10-25 it no longer decides whether a row is built. The owner
 order of that day takes every usable row, so the rows the score of 2026-10-23 left out (plan layers,
@@ -222,10 +225,10 @@ decision changes the row's cells, not its number.
 | 19 | [`/v2/municipallibraries`](https://api.golemio.cz/docs/openapi/) | GET All Municipal Libraries | golemio | live | T-5276 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | - | `golemio-libraries`, 57 branches after dedup | 1 | yes | live, 57 |
 | 20 | [`9dc0e8136fb347858f3d36b36413c532`](https://geoportalpraha.cz/data-a-sluzby/9dc0e8136fb347858f3d36b36413c532) | Pražská integrovaná doprava - linky (aktuální stav) | ipr | skip | - | `PublicTransportRoute` (UrbanMobility) | ngsi-ld, geojson, ogc-features, csv | daily | `pid-lines` writes 819 (2026-10-24; the layer's FeatureServer query with the geometry simplified to about 5 m answers 7.3 MB instead of 30.2 MB, 50 lines per write); joins the PID vehicles of `pid-vehicles`; stale on 2026-10-25: declared daily, last edit 2026-08-20 | 3 | stale | seeded, 0 entities: `praha-linky-pid` answers with no type |
 | 21 | [`pid-gtfs`](https://data.pid.cz/PID_GTFS.zip) | PID GTFS timetable (stops, routes, trips) | other | seeded | T-5423 | `GtfsStop` (UrbanMobility) | ngsi-ld, geojson, ogc-features, csv | - | `pid-stops` writes the 4,922 platforms in Prague of 16,118 (2026-10-24) from ROPID's stop layer [Zastavky_WGS84](https://data.pid.cz/geodata/Zastavky_WGS84.json) (9.4 MB, the GTFS stops.txt platforms with lines and fare zones), so the 291 MB zip is not read; routes come from row 20 | 3 | yes | seeded, 0 entities: `praha-zastavky-pid` answers with no type |
-| 22 | [`edf20520bbaf0ebbf15292a7142f066e`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/edf20520bbaf0ebbf15292a7142f066e) | Finanční vztahy mezi HMP a MČ HMP 2026 | city | integrate | T-5428 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, sta, csv | not stated | monthly transfers per city district: KPI per `AdministrativeArea` | 2 | yes | - |
-| 23 | [`f57a3a32d7dd9b7b40b729636f062e77`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/f57a3a32d7dd9b7b40b729636f062e77) | Měsíční zprávy o činnosti Městské policie hl. m. Prahy za rok 2025 | city | integrate | T-5428 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, sta, csv | annual | monthly police activity counts (the per-unit file cuts them by police unit) | 2 | yes | - |
-| 24 | [`cc9dbd08d1a478909ca5503a7be83955`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/cc9dbd08d1a478909ca5503a7be83955) | Měsíční zprávy o činnosti Městské policie hl. m. Prahy za rok 2025 podle útvarů | city | integrate | T-5428 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, sta, csv | annual | monthly police activity counts (the per-unit file cuts them by police unit) | 2 | yes | - |
-| 25 | [`7628c2cadd6faf690ffbf210a34060eb`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/7628c2cadd6faf690ffbf210a34060eb) | Úřední deska MHMP | city | integrate | T-5428 | `Article` (jc SDM extension) | ngsi-ld, csv, feed | daily | daily JSON-LD notice board; the Article extension as Helsinki news | 2 | yes | - |
+| 22 | [`edf20520bbaf0ebbf15292a7142f066e`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/edf20520bbaf0ebbf15292a7142f066e) | Finanční vztahy mezi HMP a MČ HMP 2026 | city | seeded | T-5428 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, csv, odata | not stated | `district-transfers`: 1119 KPI (2026-10-25), one per transfer line, `refArea` the district's IČO and name, drawn so far beside the approved and adjusted amount | 2 | yes | seeded, `praha-financni-vztahy-mc` not on dev until the branch merges |
+| 23 | [`f57a3a32d7dd9b7b40b729636f062e77`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/f57a3a32d7dd9b7b40b729636f062e77) | Měsíční zprávy o činnosti Městské policie hl. m. Prahy za rok 2025 | city | seeded | T-5428 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, csv, odata | annual | `police-activity`: 935 KPI (2025, 11 reported months; January is empty), one per figure and month; the 2026 file is not out yet (404 on 2026-10-25) | 2 | yes | seeded, `praha-cinnost-mestske-policie` not on dev until the branch merges |
+| 24 | [`cc9dbd08d1a478909ca5503a7be83955`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/cc9dbd08d1a478909ca5503a7be83955) | Měsíční zprávy o činnosti Městské policie hl. m. Prahy za rok 2025 podle útvarů | city | seeded | T-5428 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, csv, odata | annual | `police-units`: 9,152 KPI (2025, units OŘ1 to OŘ15 and the patrol unit as `dimensionKey`) | 2 | yes | seeded, `praha-cinnost-mestske-policie-utvary` not on dev until the branch merges |
+| 25 | [`7628c2cadd6faf690ffbf210a34060eb`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/7628c2cadd6faf690ffbf210a34060eb) | Úřední deska MHMP | city | skip | - | `Article` (jc SDM extension) | ngsi-ld, csv, feed | daily | 5,795 notices (2026-10-25) whose titles name people: owners of towed or abandoned vehicles with plates and towns, auction debtors, addressees of deliveries (237 by a pattern, more in capitals); no filter guarantees none slips through, and a copy keeps a name after the board takes it down (T-5428) | 2 | personal | - |
 | 26 | [`/v3/parking`](https://api.golemio.cz/docs/openapi/) | Get a list of parking locations within the region of interest with filtering options | golemio | integrate | P-01 | `OffStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | - | static car parks (128 Mr.Parkit garages in Prague, T-5268); occupancy only where a source gives it | 2 | yes | - |
 | 27 | [`/v3/parking-tariffs`](https://api.golemio.cz/docs/openapi/) | Get a list of tariffs with filtering options | golemio | integrate | P-01 | `OffStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | - | tariffs as members of the /v3/parking car parks | 2 | yes | - |
 | 28 | [`176f314a9ded40ef88ce55a2ed401c2e`](https://geoportalpraha.cz/data-a-sluzby/176f314a9ded40ef88ce55a2ed401c2e) | Odpadní zařízení pro občany | ipr | seeded | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | other | `geo-waste-points` writes 9 (2026-10-23; the 29 collection yards stay with `golemio-yards`) | 2 | yes | seeded, 0 entities: `praha-trideny-odpad` answers with no type |
@@ -252,11 +255,11 @@ decision changes the row's cells, not its number.
 | 49 | [`8e3420ecc539468489101958689a3cd9`](https://geoportalpraha.cz/data-a-sluzby/8e3420ecc539468489101958689a3cd9) | Zóny placeného stání vymezené tarifem | ipr | seeded | T-5424 | `OnStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-21 | weekly on-street parking sections and reserved bays | 2 | yes | seeded, `praha-parkovani` answers 404: not published |
 | 50 | [`7cbfdf9f9d87418ba62b35762cd46ca7`](https://geoportalpraha.cz/data-a-sluzby/7cbfdf9f9d87418ba62b35762cd46ca7) | Úseky parkování v zónách placeného stání | ipr | skip | - | `OnStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | weekly | weekly on-street parking sections and reserved bays; stale on 2026-10-25: declared weekly, last edit 2026-09-07 | 2 | stale | seeded, `praha-parkovani` answers 404: not published |
 | 51 | [`chmi-meteo`](https://opendata.chmi.cz/meteorology/climate/now/data/) | ČHMÚ 10-minute weather observations, Prague stations | other | seeded | T-5429 | `WeatherObserved` (Weather) | ngsi-ld, temporal, sta, csv | - | 10-minute readings of the Prague stations; probe the station list first | 2 | yes | seeded, `praha-pocasi` answers 404: not published |
-| 52 | [`81de503fd631afaf81c4f7e44960ef26`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/81de503fd631afaf81c4f7e44960ef26) | Data z aplikace opravujeme.to | city | integrate | T-5428 | `IssueReporting` (IssueTracking) | ngsi-ld, geojson, ogc-features, csv | not stated | citizen issue reports of opravujeme.to; probe how fresh the export is | 1 | yes | - |
-| 53 | [`87cdef08e1e46bad834175f6f81d2477`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/87cdef08e1e46bad834175f6f81d2477) | Dopravní přestupky MHMP 2024 | city | integrate | T-5428 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, sta, csv | never | yearly offence counts; probe the columns: per street or district gives a KPI per area, else one city series | 1 | yes | - |
-| 54 | [`780644b0dc13a425afe039dac383e5b1`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/780644b0dc13a425afe039dac383e5b1) | Veřejné osvětlení MHMP | city | integrate | T-5428 | `Streetlight` (Streetlighting) | ngsi-ld, geojson, ogc-features, csv | quarterly | quarterly ZIP of street lights | 1 | yes | - |
-| 55 | [`bbfde042f88a0908432d451267bdfbec`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/bbfde042f88a0908432d451267bdfbec) | Volné nebytové prostory MHMP | city | integrate | T-5428 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | quarterly | quarterly list of city-owned spaces to rent, geocoded by address | 1 | yes | - |
-| 56 | [`d8dab0f5c38b05db2bb37758cafa7eb5`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/d8dab0f5c38b05db2bb37758cafa7eb5) | Čerpání rozpočtu MHMP 2026 | city | integrate | T-5428 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, sta, csv | not stated | monthly budget execution, one KPI series per budget line beside `budget` | 1 | yes | - |
+| 52 | [`81de503fd631afaf81c4f7e44960ef26`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/81de503fd631afaf81c4f7e44960ef26) | Data z aplikace opravujeme.to | city | seeded | T-5428 | `CityWork` (Transportation) | ngsi-ld, geojson, ogc-features, csv | not stated | not issue reports: the export (`/api/action`) is opravujeme.to's works and closures, so a CityWork. `road-works`: 1438 of 1439 (2026-10-25; 77 open, 11 planned, the rest completed), every 6 h; people, phones, e-mails, contractor, private investors and free text left out | 1 | yes | seeded, `praha-opravy-a-uzavirky` not on dev until the branch merges |
+| 53 | [`87cdef08e1e46bad834175f6f81d2477`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/87cdef08e1e46bad834175f6f81d2477) | Dopravní přestupky MHMP 2024 | city | skip | - | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, temporal, sta, csv | never | 372,084 offences of 2024 in a 58 MB CSV, frequency `never`, no later year published; the police reports of rows 23 and 24 are the current series (T-5428) | 1 | stale | - |
+| 54 | [`780644b0dc13a425afe039dac383e5b1`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/780644b0dc13a425afe039dac383e5b1) | Veřejné osvětlení MHMP | city | integrate | T-5684 | `Streetlight` (Streetlighting) | ngsi-ld, geojson, ogc-features, csv | quarterly | 145,591 poles in S-JTSK (a 13.7 MB windows-1250 CSV in a quarterly ZIP, 2026-06-30) with pole number, street and kind only; parked by T-5428 for the node's memory (99 % on 2026-10-25): T-5684 (tasks/later) | 1 | yes | - |
+| 55 | [`bbfde042f88a0908432d451267bdfbec`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/bbfde042f88a0908432d451267bdfbec) | Volné nebytové prostory MHMP | city | integrate | T-5684 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | quarterly | 1221 spaces at 179 addresses (2026-10-25) with no coordinates: geocoding against RÚIAN address points first, T-5684 (tasks/later) | 1 | yes | - |
+| 56 | [`d8dab0f5c38b05db2bb37758cafa7eb5`](https://data.gov.cz/zdroj/datov%C3%A9-sady/00064581/d8dab0f5c38b05db2bb37758cafa7eb5) | Čerpání rozpočtu MHMP 2026 | city | seeded | T-5428 | `KeyPerformanceIndicator` (KeyPerformanceIndicator) | ngsi-ld, csv, odata | not stated | `budget-drawing`: 1612 KPI (2026-10-25), one per budget line: drawn so far beside the current budget, keyed by the five codes of the BudgetLine of `budget` | 1 | yes | seeded, `praha-cerpani-rozpoctu` not on dev until the branch merges |
 | 57 | [`8a85aa7854b048f8a5cf8a92070dcbbe`](https://geoportalpraha.cz/data-a-sluzby/8a85aa7854b048f8a5cf8a92070dcbbe) | Bilanční územní celky (BUC) | ipr | seeded | T-5426 | `AdministrativeArea` (custom, praha seed) | ngsi-ld, geojson, ogc-features, csv | other | `area-buc` maps 120 of 120 (2026-10-25, Bento over the source), Endpoint praha-bilancni-celky; the districts Endpoint keeps its 57 `district-` ids | 1 | yes | seeded, `praha-bilancni-celky` answers 404: not applied yet |
 | 58 | [`45063acce89d4b37afc6d51f03f3ad49`](https://geoportalpraha.cz/data-a-sluzby/45063acce89d4b37afc6d51f03f3ad49) | Cyklistické trasy | ipr | seeded | T-5426 | `BikeLane` (Transportation) | ngsi-ld, geojson, ogc-features, csv | modified 2026-08-17 | `area-cycle-routes` maps 6,325 of 6,328 segments (2026-10-25; 3 without a valid line or outside Prague), Endpoint praha-cyklotrasy; route number and kind of way from the layer's code list | 1 | yes | seeded, `praha-cyklotrasy` answers 404: not applied yet |
 | 59 | [`fb6ab7891a7244f39a3a380027af2981`](https://geoportalpraha.cz/data-a-sluzby/fb6ab7891a7244f39a3a380027af2981) | Databáze významných staveb a míst | ipr | seeded | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | `geo-landmarks` writes 772 (2026-10-23; read against the source in T-5269) | 1 | yes | seeded, 0 entities: `praha-vybavenost` answers with no type |
@@ -645,14 +648,14 @@ decision changes the row's cells, not its number.
 
 ## 7. What is left out and why
 
-Only rows that fail the usable rule of section 2 are left out (56 rows, decision `skip`):
+Only rows that fail the usable rule of section 2 are left out (60 rows, decision `skip`):
 
-- **stale** (16): the Golemio air-quality stations (since 2026-08-12; ČHMÚ is live), medical
+- **stale** (17): the Golemio air-quality stations (since 2026-08-12; ČHMÚ is live), medical
   institutions (2024-04) and the three microclimate routes (2026-04-07); the PID lines layer (declared
   daily, last edit 2026-08-20; the GTFS feed of row 21 carries the routes); five TSK parking layers
   declared weekly and last edited 2026-09-07 (rows 29, 42, 44, 47, 50); two waste-fee files that rows
   211 and 213 continue since 2022; the three IPR waste layers of rows 36, 38 and 39 (last edited 2019 and
-  2021; T-5427 reads every container with its next collection day from Golemio, row 1). Rows 20, 29, 42, 44, 47 and 50 are seeded: the batch that fixes
+  2021; T-5427 reads every container with its next collection day from Golemio, row 1); the 2024 traffic offences (row 53, declared never, no later year). Rows 20, 29, 42, 44, 47 and 50 are seeded: the batch that fixes
   their Endpoint reads the edit date again and publishes them once the source moves.
 - **duplicate** (9): Golemio districts, parking machines and v2 parking (IPR or v3 rows hold them),
   IPR police objects (Golemio police is live), nameless IPR playgrounds (Golemio playgrounds are
@@ -665,12 +668,14 @@ Only rows that fail the usable rule of section 2 are left out (56 rows, decision
   maps, and the Golemio vector tiles: no features, a basemap link in the catalogue at most.
 - **licence** (1): the Prague event calendars publish no API and no reuse terms; T-5666 looks for
   event sources.
+- **personal** (1): the official notice board (row 25), whose titles name owners of towed vehicles,
+  auction debtors and addressees of deliveries.
 
 ## 8. Plan to 100
 
-Usable on 2026-10-25: **251** datasets. Live on dev: **18**. Praha reaches 100 once the seeded rows
-publish, the parked task lands and P-01 to P-04 run: 18 + 47 + 9 + 26 = **100**. P-05 to P-11
-take the remaining 151 usable rows, which score 0 or -1; they come after the first 100 are live.
+Usable on 2026-10-25: **249** datasets. Live on dev: **18**. Once the seeded rows publish, the
+parked task T-5684 lands and P-01 to P-04 run, Praha holds 18 + 52 + 2 + 26 = **98**; the first two
+rows of P-05 make 100. P-05 to P-11 take the remaining 151 usable rows, which score 0 or -1; they come after the first 100 are live.
 
 Every batch runs the checks of section 5, reads the source again before it builds, and ends with one
 MCP read per dataset through the connector (owner order of 2026-10-25). A batch holds at most 25 rows
@@ -682,7 +687,8 @@ of one pipeline shape.
 | F-2 | 32, 33, 35, 37, 40, 41, 43, 45, 46, 49, 51, 65, 78, 84, 85, 87, 96-99, 101 | 21 | seeded; the Endpoint answers 404: find why the reconciler does not publish it and fix it | `OnStreetParking`, `Tree`, `Garden`, `EmissionSource`, `WeatherObserved`, `RadonRiskArea`, `FloodZone`, `FloodDefence` | none (dev serves all of them) | the reconciler log (deployer); T-5648 chases the same symptom for Bratislava |
 | T-5426 | 57, 58, 64, 68, 77, 92 | 6 | seeded; IPR area and line layers (rows 70 and 86 skip as unnamed, 67, 90 and 94 go to P-04) | `AdministrativeArea`, `BikeLane`, `PointOfInterest` | `BikeLane` | dev-apply, then one MCP read per dataset |
 | T-5427 | 36, 38, 39 | 3 | IPR waste layers | `WasteContainer` | none | done: all three stale, `waste-containers` reads Golemio |
-| T-5428 | 22-25, 52-56 | 9 | city tables and feeds | `KeyPerformanceIndicator`, `Article`, `IssueReporting`, `Streetlight`, `PointOfInterest` | `KeyPerformanceIndicator`, `Article`, `IssueReporting`, `Streetlight` | in flight |
+| T-5428 | 22-24, 52, 56 | 5 | city tables and feeds | `KeyPerformanceIndicator`, `CityWork` | `KeyPerformanceIndicator`, `CityWork` | seeded |
+| T-5684 | 54, 55 | 2 | city tables without coordinates | `Streetlight`, `PointOfInterest` | `Streetlight` | geocoding (55), node memory (54) |
 | P-01 | 26, 27, 104, 105, 106, 108 | 6 | Golemio list routes with the project key | `OffStreetParking`, `Vehicle`, `BikeHireDockingStation` | none | - |
 | P-02 | 102, 103, 110, 112, 115 | 5 | Golemio routes read per item or per time window | `TrafficFlowObserved`, `CrowdFlowObserved`, `Device`, `ArrivalEstimation`, custom `ServiceQueue` | `TrafficFlowObserved`, `CrowdFlowObserved`, `Device`, `ArrivalEstimation`, `ServiceQueue` | a DataSource `from=` window and keyed per-item calls (platform) |
 | P-03 | 79, 82, 130, 131, 132 | 5 | IPR point, line and area layers without a name field | `PointOfInterest`, custom `GreenAsset` | `GreenAsset` | T-5426 (area and line shape) |
