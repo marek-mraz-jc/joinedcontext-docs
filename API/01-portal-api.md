@@ -3941,11 +3941,13 @@ GET  /api/v1/projects/{project}/mqttbrokers/{name}/watch?account=&since=   → 2
   `${clientid}` bound to the account's Keycloak client `{project}-{account}`), `size` (the
   payload's bytes against `spec.limits.maxMessageBytes`), `rate` (`spec.limits.messagesPerSecond`
   per client), `binding` (the project's DataSources whose `mqtt.brokerRef` names the broker and
-  whose `mqtt.topics` match, and the Pipelines that take each as their source; the first is
-  tested), `mapping` (that Pipeline's steps over the payload on the project's runner, as §7a runs
-  them) and `endpoint` (the record check of §7a for each mapped record). Each answers `ok`,
+  whose `mqtt.topics` match, and the Pipelines that take each as their source; the first one
+  the caller may read is tested; a DataSource or Pipeline the caller may not read is named only
+  as "a DataSource you may not read" or "a Pipeline you may not read", as §47 hides a hop, and
+  its mapping is not run), `mapping` (that Pipeline's steps over the payload on the project's
+  runner, as §7a runs them) and `endpoint` (the record check of §7a for each mapped record). Each answers `ok`,
   `refused` or `unchecked` with a sentence; `unchecked` says why the step could not run (no
-  Pipeline, no runner, or a caller who may not propose Pipelines).
+  Pipeline the caller may read, no runner, or a caller who may not propose Pipelines).
 - Nothing is published: the Portal opens no MQTT connection and writes nothing. The broker, not
   the gateway, applies the ACL and the size limit to each PUBLISH, so a refused `acl` or `size`
   step is the only place a person sees those two before a device sends.
