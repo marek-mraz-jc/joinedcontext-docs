@@ -663,6 +663,23 @@ Only rows that fail the usable rule of section 2 are left out (53 rows, decision
 - **licence** (1): the Prague event calendars publish no API and no reuse terms; T-5666 looks for
   event sources.
 
+### 7.1 Public institutions by category (T-5691)
+
+The owner order of 2026-10-25 asks for every public institution category with a GPS point. Read on
+2026-10-25; the dataset `praha-zdravotni-a-socialni-sluzby` holds the two registers integrated here.
+
+| category | source | verdict | count on 2026-10-25 | point |
+|---|---|---|---|---|
+| schools, culture, toilets, libraries, police, offices, yards, playgrounds, health centres | rows above (`praha-mista`, `praha-sluzby`, `praha-vybavenost`) | live or seeded | see section 6 | from the source |
+| health care | [NRPZS places of care](https://datanzis.uzis.gov.cz/data/NR-01-NRPZS/NR-01-06/Otevrena-data-NR-01-06-nrpzs-mista-poskytovani-zdravotnich-sluzeb.csv), ÚZIS ČR, CC BY 4.0, monthly | integrated, `nrpzs-health-care` | 6,979 places in Prague, 4,473 of legal persons, 4,451 written (18 without a point, 4 duplicates) | the register's `ZZ_GPS` |
+| social services | [RPSS](https://data.mpsv.cz/od/soubory/rpss/rpss.json), MPSV, through its SPARQL endpoint, no copyright or database right | integrated, `rpss-social-services` | 830 services at a facility address in Prague, 830 written | geocoded from the RÚIAN address point at ČÚZK (CC BY 4.0); 12 retired codes found again by address text |
+| post offices | IPR `Pošty` (row 82); Česká pošta's branch list | **nameless** | 70 points | IPR publishes no name or address; Česká pošta's XML refused the request ("Request Rejected") and states no reuse licence |
+| sports grounds | IPR `Veřejná hřiště` (row 91); district lists of Praha 8, 11 and 12 on data.gov.cz | **partial** | - | the IPR layer has no name; the district lists cover 3 of 57 districts |
+
+A place of care of a sole trader (2,506 in Prague) is left out: its name is the person's name and the
+place can be their home. A social service facility with a secret address (`utajenaAdresa`, a shelter)
+is never asked for, nor the facility head, the statutory bodies, phones or e-mails.
+
 ## 8. Plan to 100
 
 Usable on 2026-10-25: **256** datasets. Live on dev: **18**. Praha reaches 100 once the seeded rows
