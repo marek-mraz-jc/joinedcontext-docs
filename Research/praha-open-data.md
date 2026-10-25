@@ -59,10 +59,10 @@ done), T-5276 (Golemio city services, done), T-5270 (the existing sources brough
 
 | decision | city | ipr | golemio | other | rows |
 |---|---|---|---|---|---|
-| live | 1 | 22 | 8 | 4 | 35 |
+| live | 1 | 25 | 8 | 5 | 39 |
 | integrate | 0 | 0 | 0 | 0 | 0 |
-| blocked | 9 | 50 | 18 | 4 | 81 |
-| skip | 22 | 154 | 17 | 0 | 193 |
+| blocked | 9 | 44 | 18 | 3 | 74 |
+| skip | 22 | 157 | 17 | 0 | 196 |
 | part | 88 | 0 | 44 | 0 | 132 |
 | total | 120 | 226 | 87 | 8 | 441 |
 
@@ -171,7 +171,7 @@ decision changes the row's cells, not its number.
 
 | # | dataset | title | source | decision | batch | model | outputs | update | note | score |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | [`/v2/sortedwastestations`](https://api.golemio.cz/docs/openapi/) | GET All Waste Collection Stations | golemio | live | T-5270 | `WasteContainer` (WasteManagement) | ngsi-ld, temporal, sta, csv | - | `waste-fill` reads the monitored containers | 3 |
+| 1 | [`/v2/sortedwastestations`](https://api.golemio.cz/docs/openapi/) | GET All Waste Collection Stations | golemio | live | T-5270, T-5427 | `WasteContainer` (WasteManagement) | ngsi-ld, temporal, sta, csv | - | `waste-fill` reads the monitored containers, `waste-containers` every other one with its next collection day | 3 |
 | 2 | [`/v2/wastecollectionyards`](https://api.golemio.cz/docs/openapi/) | GET All Waste Collection Yards | golemio | live | T-5276 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | - | `golemio-yards`, 25 yards | 3 |
 | 3 | [`/v3/parking-measurements`](https://api.golemio.cz/docs/openapi/) | Get a list of the latest (max 1h old) parking measurements with filtering options | golemio | live | T-5270 | `OffStreetParking` (Parking) | ngsi-ld, temporal, sta, csv | - | `park-and-ride-occupancy` reads the TSK P+R measurements | 3 |
 | 4 | [`golemio-vehiclepositions`](https://api.golemio.cz/v2/vehiclepositions) | Golemio /v2/vehiclepositions (PID vehicle positions) | other | live | T-5268 | `Vehicle` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | - | `pid-vehicles`, every 60 s, about 784 vehicles inside Prague | 3 |
@@ -206,10 +206,10 @@ decision changes the row's cells, not its number.
 | 33 | [`8818bda5e5e34d96af02126d9554b385`](https://geoportalpraha.cz/data-a-sluzby/8818bda5e5e34d96af02126d9554b385) | Sdílená data o zeleni - vegetační prvky - linie | ipr | blocked | - | `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-08 | green areas of the shared green register; blocked: praha.linkml.yaml has no `GreenspaceRecord`: T-5425 (tasks/later) | 2 |
 | 34 | [`518e85700665441f86ded81dd0653a71`](https://geoportalpraha.cz/data-a-sluzby/518e85700665441f86ded81dd0653a71) | Sdílená data o zeleni - vegetační prvky - plocha | ipr | blocked | - | `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-07 | green areas of the shared green register; blocked: praha.linkml.yaml has no `GreenspaceRecord`: T-5425 (tasks/later) | 2 |
 | 35 | [`58d3857a49fc43cab69c5aad0162d024`](https://geoportalpraha.cz/data-a-sluzby/58d3857a49fc43cab69c5aad0162d024) | Sdílená data o zeleni - základní plochy zeleně | ipr | blocked | - | `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-06 | green areas of the shared green register; blocked: praha.linkml.yaml has no `GreenspaceRecord`: T-5425 (tasks/later) | 2 |
-| 36 | [`1185c458ba6e4d939b335457b57feb5d`](https://geoportalpraha.cz/data-a-sluzby/1185c458ba6e4d939b335457b57feb5d) | Stanoviště tříděného odpadu - položky | ipr | blocked | - | `WasteContainer` (WasteManagement) | ngsi-ld, geojson, ogc-features, csv | irregular | every container of each sorted-waste station; joins `waste-stations`; blocked: `WasteContainer` exists; no IPR container pipeline joined to the `waste-stations` isles: T-5427 (tasks/later) | 2 |
+| 36 | [`1185c458ba6e4d939b335457b57feb5d`](https://geoportalpraha.cz/data-a-sluzby/1185c458ba6e4d939b335457b57feb5d) | Stanoviště tříděného odpadu - položky | ipr | skip | T-5427 | `WasteContainer` (WasteManagement) | ngsi-ld, geojson, ogc-features, csv | modified 2021-06-16 | stale: the layer was last edited 2021-06-16 and has no collection day; `waste-containers` (T-5427) writes every container without a sensor from Golemio's current list (row 1), 20 587 with the next collection day on 2026-10-25 | 2 |
 | 37 | [`3615fd648f1f4182b5f42dcdfba03b54`](https://geoportalpraha.cz/data-a-sluzby/3615fd648f1f4182b5f42dcdfba03b54) | Stromořadí | ipr | blocked | - | custom `Tree`; closest `GreenspaceRecord` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-02 | trees and tree rows from the shared green register; blocked: praha.linkml.yaml has no `Tree`: T-5425 (tasks/later) | 2 |
-| 38 | [`ac3df5929a744bb4b80a180158a2562f`](https://geoportalpraha.cz/data-a-sluzby/ac3df5929a744bb4b80a180158a2562f) | Svoz komunálního odpadu | ipr | blocked | - | custom `WasteCollectionArea`; closest `WasteContainerIsle` (WasteManagement) | ngsi-ld, geojson, ogc-features, csv | other | collection areas and days; blocked: praha.linkml.yaml has no `WasteCollectionArea`: T-5427 (tasks/later) | 2 |
-| 39 | [`68709d933e424e6b8b924e9a75aaa6c1`](https://geoportalpraha.cz/data-a-sluzby/68709d933e424e6b8b924e9a75aaa6c1) | Velkoobjemové kontejnery | ipr | blocked | - | `WasteContainer` (WasteManagement) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | bulky-waste containers (Golemio /v1/bulky-waste answers 403 for the key); blocked: `WasteContainer` exists; no IPR container pipeline: T-5427 (tasks/later) | 2 |
+| 38 | [`ac3df5929a744bb4b80a180158a2562f`](https://geoportalpraha.cz/data-a-sluzby/ac3df5929a744bb4b80a180158a2562f) | Svoz komunálního odpadu | ipr | skip | T-5427 | custom `WasteCollectionArea`; closest `WasteContainerIsle` (WasteManagement) | ngsi-ld, geojson, ogc-features, csv | modified 2019-02-22 | stale: four collection companies' areas as of 2019-02-22, no collection days (read 2026-10-25); the containers' days come from `waste-containers` | 2 |
+| 39 | [`68709d933e424e6b8b924e9a75aaa6c1`](https://geoportalpraha.cz/data-a-sluzby/68709d933e424e6b8b924e9a75aaa6c1) | Velkoobjemové kontejnery | ipr | skip | T-5427 | `WasteContainer` (WasteManagement) | ngsi-ld, geojson, ogc-features, csv | modified 2021-06-16 | stale: 67 084 bulky-waste container placements, the last on 2021-11-28 (read 2026-10-25); Golemio /v1/bulky-waste answers 403 for the key | 2 |
 | 40 | [`ab4a8cd8fc284b738ca806681559d694`](https://geoportalpraha.cz/data-a-sluzby/ab4a8cd8fc284b738ca806681559d694) | Vyhrazená parkovací stání pro držitele průkazu ZTP/P bez vazby na registrační značku vozidla | ipr | blocked | - | `OnStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | other | weekly on-street parking sections and reserved bays; blocked: praha.linkml.yaml has no `OnStreetParking`: T-5424 (tasks/later) | 2 |
 | 41 | [`6bceef0c12d84031a0628fab533eecc1`](https://geoportalpraha.cz/data-a-sluzby/6bceef0c12d84031a0628fab533eecc1) | Vyhrazená stání pro invalidy - sdružená | ipr | blocked | - | `OnStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | modified 2026-10-21 | weekly on-street parking sections and reserved bays; blocked: praha.linkml.yaml has no `OnStreetParking`: T-5424 (tasks/later) | 2 |
 | 42 | [`1e6b9ad51a12468193f47e2b9b1b94ed`](https://geoportalpraha.cz/data-a-sluzby/1e6b9ad51a12468193f47e2b9b1b94ed) | Vyhrazené stání pro invalidy s registrační značkou | ipr | blocked | - | `OnStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | weekly | weekly on-street parking sections and reserved bays; blocked: praha.linkml.yaml has no `OnStreetParking`: T-5424 (tasks/later) | 2 |
@@ -290,7 +290,7 @@ decision changes the row's cells, not its number.
 | 117 | [`/v2/energetics/devices`](https://api.golemio.cz/docs/openapi/) | List of measurement devices | golemio | blocked | - | `Device` (Device) | ngsi-ld, geojson, ogc-features, csv | - | the project key gets 403 (scope); @user asks OICT for the scope | 1 |
 | 118 | [`/v2/energetics/organizations`](https://api.golemio.cz/docs/openapi/) | List of organizations in brief or full format | golemio | blocked | - | `Organization` (custom) | ngsi-ld, csv, odata | - | the project key gets 403 (scope); @user asks OICT for the scope | 1 |
 | 119 | [`/v2/energetics/ded/buildings`](https://api.golemio.cz/docs/openapi/) | Search buildings by name, address, GID, EAN, EIC or OM identifier | golemio | blocked | - | `Building` (Building) | ngsi-ld, geojson, ogc-features, csv | - | the project key gets 403 (scope); @user asks OICT for the scope | 1 |
-| 120 | [`/v1/bulky-waste/stations`](https://api.golemio.cz/docs/openapi/) | GET All Bulky Waste Containers | golemio | skip | - | `WasteContainer` (WasteManagement) | - | - | 403 for the key (T-5276); IPR Velkoobjemové kontejnery (row 39, T-5427) is the source to take | 2 |
+| 120 | [`/v1/bulky-waste/stations`](https://api.golemio.cz/docs/openapi/) | GET All Bulky Waste Containers | golemio | skip | - | `WasteContainer` (WasteManagement) | - | - | 403 for the key (T-5276); IPR Velkoobjemové kontejnery (row 39) stopped in 2021 | 2 |
 | 121 | [`/v2/citydistricts`](https://api.golemio.cz/docs/openapi/) | GET All Districts | golemio | skip | - | `AdministrativeArea` (custom, praha seed) | - | - | the same 57 districts the IPR `districts` source writes (T-5276 count); one source per object | 2 |
 | 122 | [`/v3/parking-machines`](https://api.golemio.cz/docs/openapi/) | Get a list of parking machines within the region of interest with filtering options. Results are sorted by id. | golemio | skip | - | `FareCollectionSystem` (Transportation) | - | - | IPR Parkovací automaty (row 29, weekly, no key, T-5424) is the source to take; compare counts before switching | 2 |
 | 123 | [`/v2/airqualitystations`](https://api.golemio.cz/docs/openapi/) | GET All Air Quality CHMI Stations | golemio | skip | - | `AirQualityObserved` (Environment) | - | - | stale since 2026-08-12 (T-5268 probe); the ČHMÚ `air-quality` source covers the stations | 1 |
@@ -652,7 +652,8 @@ Blocked rows and what clears them:
   T-5423 PID lines, stops, metro entrances, fare zones (rows 20, 21, 30, 83; live since T-5423: the
   lines read simplified from the FeatureServer, the stops from ROPID's stop layer); T-5424 parking (26, 27, 29, 40-44, 47-50); T-5425 green
   registry and parks (31-35, 37, 78, 87); T-5426 an IPR area and line shape (57, 58, 64, 67, 68, 70,
-  77, 86, 90, 92, 94); T-5427 waste containers and areas (36, 38, 39); T-5428 city tables as KPI
+  77, 86, 90, 92, 94); T-5427 waste containers and areas (36, 38, 39; skip since T-5427: all three IPR layers stopped in 2019 or 2021, and
+  `waste-containers` reads every container with its next collection day from Golemio); T-5428 city tables as KPI
   series, notice board, issue reports, street lights, city-owned spaces (22-25, 52-56); T-5429 noise,
   radon, flood, emission registers, ČHMÚ weather (45, 46, 51, 60-63, 65, 84, 85, 96-101).
 
