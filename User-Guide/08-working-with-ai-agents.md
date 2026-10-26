@@ -5,6 +5,7 @@ description: Using the docked assistant, running unattended agent tasks, inspect
 routes:
   - /projects/$project/assistant
   - /projects/$project/mcp
+  - /projects/$project/mcp-elicitations/$id
   - /projects/$project/knowledge
   - /projects/$project/knowledge/conversations
   - /projects/$project/knowledge/$source
@@ -122,6 +123,10 @@ You should see your external agent discover available data inspection tools and 
 #### By asking the assistant
 
 Type into the composer: `What is the MCP address for the helsinki-all endpoint?`. The assistant inspects the endpoint manifest and returns the complete Streamable HTTP URL ready to paste into your external client configuration.
+
+#### Deciding a call your client asks you about
+
+When an AI client signed in as you asks to run a call that changes the project, the Portal asks you first. Your client shows a link to `/projects/$project/mcp-elicitations/$id`, a page titled "Decide an AI client's call" that names the operation and the time it stays open. Press "Accept the call" to let this one call run once, or "Decline the call" to stop it, then go back to your client: it runs the call, or learns you declined, when it sends it again. The question stays open for ten minutes and only you can answer it; a client signed in as a service account cannot answer for you.
 
 ## 5. Knowledge Sources and Assistants
 

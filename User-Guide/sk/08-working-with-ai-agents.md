@@ -5,6 +5,7 @@ description: Používanie ukotveného asistenta, spúšťanie úloh agenta na po
 routes:
   - /projects/$project/assistant
   - /projects/$project/mcp
+  - /projects/$project/mcp-elicitations/$id
   - /projects/$project/knowledge
   - /projects/$project/knowledge/conversations
   - /projects/$project/knowledge/$source
@@ -122,6 +123,10 @@ Mali by ste vidieť, ako váš externý agent objaví dostupné nástroje na pre
 #### Otázkou pre asistenta
 
 Do poľa asistenta napíšte: `What is the MCP address for the helsinki-all endpoint?`. Asistent skontroluje manifest endpointu a vráti úplnú Streamable HTTP URL pripravenú na vloženie do konfigurácie vášho externého klienta.
+
+#### Rozhodnutie o volaní, na ktoré sa pýta váš klient
+
+Keď AI klient prihlásený za vás chce spustiť volanie, ktoré mení projekt, Portál sa najprv spýta vás. Klient zobrazí odkaz na `/projects/$project/mcp-elicitations/$id`, stránku s názvom „Rozhodnite o volaní AI klienta“, ktorá uvádza operáciu a čas, dokedy zostáva otvorená. Stlačte „Prijať volanie“, ak má toto jedno volanie raz prebehnúť, alebo „Odmietnuť volanie“, ak ho chcete zastaviť, a vráťte sa ku klientovi: keď volanie pošle znova, spustí ho, alebo sa dozvie, že ste ho odmietli. Otázka zostáva otvorená desať minút a odpovedať na ňu môžete len vy; klient prihlásený ako servisný účet za vás odpovedať nemôže.
 
 ## 5. Zdroje znalostí a asistenti
 
