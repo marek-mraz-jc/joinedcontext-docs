@@ -221,7 +221,8 @@ The credential holder of a builder run (`jc-agent-proxy`): a workspace reaches t
 | `JC_PORTAL_CLIENT_ID` | `portal-api` | no | The Portal's Keycloak client (`JC_PORTAL_CLIENT_ID`, default `portal-api`): the one caller whose service-account token may hand this proxy a person's token for a run (`POST /internal/runs/{run}/identity`, ADR-N-038, AG-52, AG-94). |
 | `JC_PROXY_BIND` | `0.0.0.0:8080` | no | The address to listen on (`JC_PROXY_BIND`, default `0.0.0.0:8080`). |
 | `JC_PROXY_FUNCTIONS_IDENTITY` | `jc-functions` | no | The `jc-functions` workload's ServiceAccount (`JC_PROXY_FUNCTIONS_IDENTITY`, default `jc-functions`): with mesh identity required, the one workload a run's data credential is honoured from (ADR-N-038 decision 6). |
-| `JC_REQUIRE_MESH_IDENTITY` | — | no | Whether a caller must arrive through the mesh with a Linkerd identity (`JC_REQUIRE_MESH_IDENTITY`, the string `true` to require it; default off). |
+| `JC_PROXY_PORTAL_IDENTITY` | `portal` | no | The Portal's workload (`JC_PROXY_PORTAL_IDENTITY`, `<serviceaccount>` or `<serviceaccount>.<namespace>`, default `portal`): with mesh identity required, the one workload besides a run's own whose ticket is honoured. |
+| `JC_REQUIRE_MESH_IDENTITY` | — | no | Whether a caller must arrive through the mesh with a Linkerd identity (`JC_REQUIRE_MESH_IDENTITY`, `true` or `false`; default on, F-PLT1-008). |
 
 ## 4. Functions runtime
 
