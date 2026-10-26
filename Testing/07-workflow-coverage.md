@@ -297,6 +297,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 | `refused-own-approval` | `joinedcontext-portal/src/change.rs` | `tests/auto_approve_tests.rs` | `ui/tests/approval_actions.test.tsx` | `ui/e2e/live/roles-refusals.spec.ts` › "a person who proposes and does not administer cannot approve their own change" | person only: the refusal is of a person's approval; an agent is refused every approval before that (AG-11) |
 | `refused-agent-approval` | `joinedcontext-portal/src/ops/changes.rs` | `tests/attack_person_only_operations_tests.rs` | `ui/tests/assistant_permissions.test.tsx` | `ui/e2e/live/roles-refusals.spec.ts` › "the assistant never approves, however it is asked" | `jc_change_approve` |
 | `refused-second-change` | `joinedcontext-portal/src/change.rs` | `tests/edge_change_lane_tests.rs` | `ui/tests/change_follow_card.test.tsx` | `ui/e2e/live/one-change-at-a-time.spec.ts` › "a second change on the same resource is refused by the name of the first, and lands once that one is decided" | `jc_resource_propose` |
+| `mcp-question` | `joinedcontext-portal/src/mcp/elicitation.rs` | `tests/mcp_portal_tests.rs` | `ui/tests/mcp_elicitation.test.tsx` | `ui/e2e/live/mcp-question.spec.ts` › "a person opens an MCP call's question that is not open for them, is told what to do, and decides nothing" | person only: accepting or declining an AI client's call is the person's own decision in their session; the client that asks never answers it (AG-63) |
 
 ### 3.22 Shared drafts (`draft`)
 
@@ -396,6 +397,7 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 | `DELETE /api/v1/projects/{project}/knowledge/sources/{source}/files/{id}` | `knowledge/upload-files` |
 | `POST /api/v1/projects/{project}/knowledge/sources/{source}/inclusion` | `knowledge/leave-out` |
 | `POST /api/v1/projects/{project}/knowledge/sources/{source}/recrawl` | `knowledge/recrawl` |
+| `POST /api/v1/projects/{project}/mcp-elicitations/{id}/decision` | `change/mcp-question` |
 | `POST /api/v1/projects/{project}/ops/{name}` | none: the registry's door runs every operation by name, and each operation is claimed by the step whose tool it is |
 | `POST /api/v1/projects/{project}/pipelines/test` | `pipeline/test` |
 | `POST /api/v1/projects/{project}/pipelines/{name}/rejected/retry` | `pipeline/retry-rejected` |
