@@ -60,7 +60,8 @@ word that fails it:
 - **format**: raster, 3D scene, web map or vector tiles, no features to read;
 - **licence**: no reuse terms are published;
 - **unnamed**: no name, number or route field, so a resident cannot tell one record from another;
-- **personal**: the records name private persons and no filter can be shown to remove every name.
+- **personal**: the records name private persons and no filter can be shown to remove every name;
+- **undocumented**: the only value field is a code whose meaning the publisher does not publish.
 
 Decided (worker-t5665, owner may override): a Golemio route counts as usable. Golemio wants an API
 key that anyone gets by self-service sign-up, publishes under CC BY 4.0, and the platform holds the key
@@ -84,15 +85,15 @@ The decision follows from `usable` and from dev:
 | decision | city | ipr | golemio | other | rows |
 |---|---|---|---|---|---|
 | live | 1 | 6 | 8 | 3 | 18 |
-| seeded | 5 | 49 | 3 | 3 | 60 |
-| integrate | 21 | 140 | 1 | 1 | 163 |
-| skip | 5 | 31 | 31 | 1 | 68 |
+| seeded | 5 | 51 | 3 | 3 | 62 |
+| integrate | 21 | 137 | 1 | 1 | 160 |
+| skip | 5 | 32 | 31 | 1 | 69 |
 | part | 88 | 0 | 44 | 0 | 132 |
 | total | 120 | 226 | 87 | 8 | 441 |
 
 | usable | city | ipr | golemio | other | rows |
 |---|---|---|---|---|---|
-| yes | 27 | 195 | 12 | 7 | 241 |
+| yes | 27 | 194 | 12 | 7 | 240 |
 | stale | 3 | 11 | 6 | 0 | 20 |
 | duplicate | 1 | 5 | 3 | 0 | 9 |
 | login | 0 | 0 | 20 | 0 | 20 |
@@ -100,6 +101,7 @@ The decision follows from `usable` and from dev:
 | licence | 0 | 0 | 0 | 1 | 1 |
 | unnamed | 0 | 2 | 0 | 0 | 2 |
 | personal | 1 | 0 | 0 | 0 | 1 |
+| undocumented | 0 | 1 | 0 | 0 | 1 |
 | part | 88 | 0 | 44 | 0 | 132 |
 | total | 120 | 226 | 87 | 8 | 441 |
 
@@ -270,7 +272,7 @@ decision changes the row's cells, not its number.
 | 64 | [`787f7c3ce4964b519ddc39246377c31b`](https://geoportalpraha.cz/data-a-sluzby/787f7c3ce4964b519ddc39246377c31b) | Hřbitovy | ipr | seeded | T-5426 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-09-01 | `area-cemeteries` maps 82 of 82 areas (2026-10-25), Endpoint praha-hrbitovy | 1 | yes | seeded, `praha-hrbitovy` answers 404: not applied yet |
 | 65 | [`a74bc85ba5354490a23afcfe495693d9`](https://geoportalpraha.cz/data-a-sluzby/a74bc85ba5354490a23afcfe495693d9) | Kategorie radonového rizika | ipr | seeded | T-5429 | custom `RadonRiskArea`; closest `EnvironmentObserved` (Environment) | ngsi-ld, geojson, ogc-features, csv | other | radon risk category per area | 1 | yes | seeded, `praha-radon` answers 404: not published |
 | 66 | [`c0bca952f09d44b0bf38885f499ad59d`](https://geoportalpraha.cz/data-a-sluzby/c0bca952f09d44b0bf38885f499ad59d) | Kulturně komunitní centra | ipr | seeded | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | other | `geo-community-centres` writes 294 (2026-10-23; read against the source in T-5269) | 1 | yes | seeded, 0 entities: `praha-vybavenost` answers with no type |
-| 67 | [`98b5292d85404383a6b5d526fa0e752c`](https://geoportalpraha.cz/data-a-sluzby/98b5292d85404383a6b5d526fa0e752c) | Letní údržba komunikací TSK | ipr | integrate | P-04 | `RoadSegment` (Transportation) | ngsi-ld, geojson, ogc-features, csv | annual | street cleaning dates per street, 6,402 areas, 17.0 MB; praha.linkml.yaml has no `RoadSegment` and the file is over the 16 MiB cap of one run (split by objectid range): batch P-04 | 1 | yes | - |
+| 67 | [`98b5292d85404383a6b5d526fa0e752c`](https://geoportalpraha.cz/data-a-sluzby/98b5292d85404383a6b5d526fa0e752c) | Letní údržba komunikací TSK | ipr | seeded | T-5677 | `RoadSegment` (Transportation) | ngsi-ld, geojson, ogc-features, csv | annual | `tsk-letni-0` and `-1` map 6,402 of 6,402 street areas (2026-10-26, each part in 128 MiB), the cleaning dates as `streetCleaningDates`, Endpoint praha-letni-udrzba | 1 | yes | seeded, `praha-letni-udrzba` answers 404: not applied yet |
 | 68 | [`927f999ff604463cbce63914de97a6d7`](https://geoportalpraha.cz/data-a-sluzby/927f999ff604463cbce63914de97a6d7) | Naučné stezky na území hl. m. Prahy ve správě odboru ochrany prostředí MHMP | ipr | seeded | T-5426 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-10 | `area-nature-trails` maps 15 of 15 trails (2026-10-25), Endpoint praha-naucne-stezky | 1 | yes | seeded, `praha-naucne-stezky` answers 404: not applied yet |
 | 69 | [`bed7894d358a4d08b640c972e844d7f3`](https://geoportalpraha.cz/data-a-sluzby/bed7894d358a4d08b640c972e844d7f3) | Naučné stezky na území hl. m. Prahy ve správě odboru ochrany prostředí MHMP - Zastávky | ipr | seeded | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | annual | `geo-trail-stops` writes 153 (2026-10-23; read against the source in T-5269) | 1 | yes | seeded, 0 entities: `praha-vybavenost` answers with no type |
 | 70 | [`6fa5c5189b664394a4c39b645ec13619`](https://geoportalpraha.cz/data-a-sluzby/6fa5c5189b664394a4c39b645ec13619) | Okrsky Městské policie Praha | ipr | skip | - | `AdministrativeArea` (custom, praha seed) | ngsi-ld, geojson, ogc-features, csv | other | publishes no name or number field (objectid, id_poskyt, globalid only, 225 areas, read 2026-10-25); unusable: unnamed | 1 | unnamed | - |
@@ -293,11 +295,11 @@ decision changes the row's cells, not its number.
 | 87 | [`48719ca373c947f99d3fbdcf341c07f2`](https://geoportalpraha.cz/data-a-sluzby/48719ca373c947f99d3fbdcf341c07f2) | Přírodní parky | ipr | seeded | T-5425 | `Garden` (ParksAndGardens) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | parks | 1 | yes | seeded, `praha-zelen` answers 404: not published |
 | 88 | [`47befb94777e42808f9934f60768072b`](https://geoportalpraha.cz/data-a-sluzby/47befb94777e42808f9934f60768072b) | Sakrální objekty | ipr | seeded | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | other | `geo-places-of-worship` writes 478 (2026-10-23; read against the source in T-5269) | 1 | yes | seeded, 0 entities: `praha-vybavenost` answers with no type |
 | 89 | [`81c543a1199e46da87e18e12125e29a3`](https://geoportalpraha.cz/data-a-sluzby/81c543a1199e46da87e18e12125e29a3) | Ubytovací zařízení | ipr | seeded | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | `geo-accommodation` writes 883 (2026-10-23; read against the source in T-5269) | 1 | yes | seeded, 0 entities: `praha-vybavenost` answers with no type |
-| 90 | [`1bbe08c6c9f44c70810957c5e10f22db`](https://geoportalpraha.cz/data-a-sluzby/1bbe08c6c9f44c70810957c5e10f22db) | Uliční úseky TSK včetně zatřídění komunikací | ipr | integrate | P-04 | `RoadSegment` (Transportation) | ngsi-ld, geojson, ogc-features, csv | modified 2026-07-15 | 50,623 street sections with road class, 28.2 MB; praha.linkml.yaml has no `RoadSegment` and the file is over the 16 MiB cap of one run (split by objectid range): batch P-04 | 1 | yes | - |
+| 90 | [`1bbe08c6c9f44c70810957c5e10f22db`](https://geoportalpraha.cz/data-a-sluzby/1bbe08c6c9f44c70810957c5e10f22db) | Uliční úseky TSK včetně zatřídění komunikací | ipr | seeded | T-5677 | `RoadSegment` (Transportation) | ngsi-ld, geojson, ogc-features, csv | modified 2026-07-15 | `tsk-useky-0` to `-4` map 50,621 of 50,623 street sections (2026-10-26, each part in 128 MiB; the 2 defunct sections, typkomunik 25, are no road), name, kind of way and road class, Endpoint praha-ulicni-useky | 1 | yes | seeded, `praha-ulicni-useky` answers 404: not applied yet |
 | 91 | [`5649c54fb6ae422e89569260243870ee`](https://geoportalpraha.cz/data-a-sluzby/5649c54fb6ae422e89569260243870ee) | Veřejná hřiště | ipr | skip | - | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | other | publishes no name field (objectid, id_poskyt, typ_uap, globalid only, read 2026-10-23); the named playgrounds come from `golemio-playgrounds` (live) | 1 | duplicate | - |
 | 92 | [`143a034267e34baaacdf253b89f4f09e`](https://geoportalpraha.cz/data-a-sluzby/143a034267e34baaacdf253b89f4f09e) | Volný pohyb psů - psí zóny | ipr | seeded | T-5426 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | `area-dog-zones` maps 2,066 of 2,066 zones (2026-10-25), Endpoint praha-psi-zony; the zone kind from the layer's code list | 1 | yes | seeded, `praha-psi-zony` answers 404: not applied yet |
 | 93 | [`28a9425f2ee748328fc5346030de2d83`](https://geoportalpraha.cz/data-a-sluzby/28a9425f2ee748328fc5346030de2d83) | Vysoké školy | ipr | seeded | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | `geo-universities` writes 288 (2026-10-23; read against the source in T-5269) | 1 | yes | seeded, 0 entities: `praha-vybavenost` answers with no type |
-| 94 | [`e7f57fda3ad341199f1b254abd1d1b13`](https://geoportalpraha.cz/data-a-sluzby/e7f57fda3ad341199f1b254abd1d1b13) | Zimní údržba komunikací TSK | ipr | integrate | P-04 | `RoadSegment` (Transportation) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | 35,739 lines with only the winter maintenance order, 17.0 MB; praha.linkml.yaml has no `RoadSegment` and the file is over the 16 MiB cap of one run (split by objectid range): batch P-04 | 1 | yes | - |
+| 94 | [`e7f57fda3ad341199f1b254abd1d1b13`](https://geoportalpraha.cz/data-a-sluzby/e7f57fda3ad341199f1b254abd1d1b13) | Zimní údržba komunikací TSK | ipr | skip | - | `RoadSegment` (Transportation) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | 35,457 lines (2026-10-26) carry only idt_level (pořadí údržby: 0-5, 7-11, 41, 52-54), and neither the layer nor the geoportal item publishes what a code means; no street name; unusable: undocumented | 1 | undocumented | - |
 | 95 | [`e332ec5438b645b6a08a54a0da1accd6`](https://geoportalpraha.cz/data-a-sluzby/e332ec5438b645b6a08a54a0da1accd6) | Zookoutky Lesů HMP a dále farmy, terária, záchranné stanice a další podobné objekty jiných organizací na území Prahy | ipr | seeded | T-5269 | `PointOfInterest` (PointOfInterest) | ngsi-ld, geojson, ogc-features, csv | other | `geo-animal-corners` writes 9 (2026-10-23; read against the source in T-5269) | 1 | yes | seeded, 0 entities: `praha-vybavenost` answers with no type |
 | 96 | [`c9dc5fa395b2478a8db0a7cc5be0e447`](https://geoportalpraha.cz/data-a-sluzby/c9dc5fa395b2478a8db0a7cc5be0e447) | Záplavové území ( Q100 ) | ipr | seeded | T-5429 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | flood extent or flood defence | 1 | yes | seeded, `praha-zaplavova-uzemi` answers 404: not published |
 | 97 | [`fc295e699c5346de9cf6a7e1e634726b`](https://geoportalpraha.cz/data-a-sluzby/fc295e699c5346de9cf6a7e1e634726b) | Záplavové území ( Q20 ) | ipr | seeded | T-5429 | custom `FloodZone`; closest `FloodMonitoring` (Environment) | ngsi-ld, geojson, ogc-features, csv | modified 2026-06-01 | flood extent or flood defence | 1 | yes | seeded, `praha-zaplavova-uzemi` answers 404: not published |
@@ -710,7 +712,7 @@ of one pipeline shape.
 | P-01 | - | 0 | built by T-5680: rows 26, 27 and 105 seeded; 104, 106 and 108 answer the project key 403 (login) | `OffStreetParking`, `Vehicle` | none | - |
 | P-02 | 102 | 1 | Golemio route read per time window | `TrafficFlowObserved` | `TrafficFlowObserved` | built in T-5681 (deployment): a Pipeline's own `secretRefs` key a mapping's `http` step, so no platform change; 103, 110 and 115 proved unusable (section 7), 112 moved to P-12 |
 | T-5682 | 79, 82, 130, 131, 132 | 5 | IPR point, line and area layers without a name field, read in pages of 2,000 with the green register's shape; one entity per place | `PointOfInterest`, custom `GreenAsset` | `GreenAsset` | in flight (P-03) |
-| P-04 | 67, 90, 94 | 3 | IPR line layers over the 16 MiB read cap, read in pages of object ids; T-5683 built rows 31, 34, 60, 61 and 100 and found rows 62 and 63 stale | `RoadSegment` | `RoadSegment` | T-5426; storage measured first (node memory) |
+| P-04 | 67, 90, 94 | 3 | IPR line layers over the 16 MiB read cap, read in pages of object ids; T-5683 built rows 31, 34, 60, 61 and 100 and found rows 62 and 63 stale; T-5677 seeded rows 67 and 90 and found row 94 undocumented | `RoadSegment` | `RoadSegment` | T-5426; storage measured first (node memory) |
 | P-05 | 235-259 | 25 | IPR plan layers (MPP, part 1) | custom `PlanningArea` | `PlanningArea` | T-5426 |
 | P-06 | 260-269, 292-304 | 23 | IPR plan layers (MPP part 2, ZÚR) | custom `PlanningArea` | none (P-05 adds it) | P-05 |
 | P-07 | 228, 273, 277-285, 287-291, 307-309 | 19 | IPR land-use, ÚSES and other plan layers | custom `PlanningArea` | none (P-05 adds it) | P-05 |
