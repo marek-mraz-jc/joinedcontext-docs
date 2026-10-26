@@ -8,7 +8,7 @@
 `check` needs no network. It fails when the matrix table does not hold exactly one row per
 snapshot dataset, names a dataset the snapshot does not hold, has a decision outside
 integrate/statistics/skip, an integrate or statistics row without a batch task and a model, a
-batch outside T-5253..T-5259 and their splits T-5278, T-5378, a score outside -1..3 (a skip has none), or a skip that section 7 does not list with its reason. When the
+batch outside T-5253..T-5259 and their splits T-5278, T-5286, T-5378, a score outside -1..3 (a skip has none), or a skip that section 7 does not list with its reason. When the
 board is mounted (TASKS_DIR, default /workspace/tasks) every batch id must also be a task file
 there; CI has no board and skips that part.
 
@@ -37,7 +37,7 @@ ROOT = Path(__file__).resolve().parent.parent
 PAGE = ROOT / "Research/helsinki-open-data.md"
 SNAPSHOT = ROOT / "Research/data/helsinki-hri-snapshot-2026-10-22.tsv"
 DECISIONS = {"integrate", "statistics", "skip"}
-BATCHES = {f"T-{n}" for n in range(5253, 5260)} | {"T-5278", "T-5378"}
+BATCHES = {f"T-{n}" for n in range(5253, 5260)} | {"T-5278", "T-5286", "T-5378"}
 ROW = re.compile(r"^\| \d+ \| \[`([^`]+)`\]")
 SKIP_ITEM = re.compile(r"^- `([^`]+)`: (.+)$")
 USABLE = {
@@ -50,7 +50,7 @@ USABLE = {
     "not-data",
     "outside",
 }
-PLANS = {"live", "F1", "B1", "B2", "T-5256", "T-5286", "T-5378"}
+PLANS = {"live", "F1", "B1", "B2", "B3", "T-5256", "T-5286", "T-5378"}
 RESCORE = re.compile(r"^\| (\d+) \| `([^`]+)` \| ")
 COUNT = re.compile(r"^\| (\S+) \| (\d+) \|")
 HRI_API = "https://hri.fi/data/api/3/action/package_show?id="
@@ -274,7 +274,7 @@ def selftest() -> None:
         )
     )
     assert any(
-        "T-5259, T-5278, T-5378" in p
+        "T-5259, T-5278, T-5286, T-5378" in p
         for p in problems(good.replace("T-5253", "T-9999"), {"a", "b"}, None)
     )
     assert problems(good.replace("T-5253", "T-5378"), {"a", "b"}, None) == []
