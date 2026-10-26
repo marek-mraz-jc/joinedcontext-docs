@@ -12,6 +12,7 @@ routes:
   - /projects/$project/assistantdeployments
   - /projects/$project/agentprofiles
   - /connectors
+  - /projects/$project/mcp-elicitations/$id
 ---
 
 # Spolupráca s autonómnymi AI agentmi
@@ -122,6 +123,17 @@ Mali by ste vidieť, ako váš externý agent objaví dostupné nástroje na pre
 #### Otázkou pre asistenta
 
 Do poľa asistenta napíšte: `What is the MCP address for the helsinki-all endpoint?`. Asistent skontroluje manifest endpointu a vráti úplnú Streamable HTTP URL pripravenú na vloženie do konfigurácie vášho externého klienta.
+
+### Rozhodnutie o volaní, na ktoré sa pýta váš klient
+
+Keď váš AI klient chce spustiť MCP volanie, ktoré mení projekt, volanie sa zatiaľ nespustí. Klient vám ukáže odkaz na stránku **Rozhodnite o volaní AI klienta** v Portáli, kde sa prihlásite vlastnou reláciou.
+
+1. Prečítajte si správu klienta, operáciu, ktorú menuje, a čas, dokedy je otázka otvorená (desať minút).
+2. Otvorte **Pozrite si, čo toto volanie mení** a pozrite si zdroj, ktorý by volanie zmenilo.
+3. Vyberte **Prijať volanie**, aby sa toto jedno volanie raz spustilo, alebo **Odmietnuť volanie**, aby ste ho zastavili. Odpoveď môžete zmeniť, kým klient volanie nepošle znova.
+4. Vráťte sa k AI klientovi. Jeho ďalší pokus o to isté volanie sa spustí, alebo sa klient dozvie, že ste ho odmietli.
+
+Nič, čo povie klient, sa nepočíta ako odpoveď: platí len vaša voľba na tejto stránke. Ak stránka hlási **Táto otázka už nie je otvorená**, otázka bola zodpovedaná, vypršala, alebo ju položil klient inej osoby: požiadajte klienta, aby volanie poslal znova.
 
 ## 5. Zdroje znalostí a asistenti
 
