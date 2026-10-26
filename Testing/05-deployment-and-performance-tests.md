@@ -98,6 +98,8 @@ It takes the inventory from two sides: every CKAN dataset (`https://opendata.{do
 
 One more request checks the search filters (T-5294): `package_search?rows=0` with the facets `vocab_jc_use` and `vocab_jc_topic`, written as a row `(catalogue)` of its own. It is a `ko` when the Format filter offers no value, names anything but `table`, `map`, `live` or `api` (a file format such as CSV or OWL), or holds a value with the count of every dataset, and when the Topic filter is missing. An empty catalogue is a `skip`.
 
+Then it counts the entities of every dataset, every run (T-5768): one `ngsi-ld/v1/entities?type={type}&limit=1&count=true` read per dataset, with the dataset's own `isPartOf` when it lists one, and the count taken from the `NGSILD-Results-Count` header. A dataset without a type tries the first three types its Endpoint's `schema/index.json` lists, else those of `ngsi-ld/v1/types` (which can take the gateway's whole 10 seconds), and the first with an entity wins. The header counts even when the one entity outgrows the read's 1 MiB. The cell `count` is `ok` with the number and a `ko` at 0 entities. No allow-list exists: under the owner's order of 2026-10-26, a dataset still empty after one pipeline run leaves the catalogue (its `publish.ckan` block is removed). The 2026-10-26 sweep found all 452 Bratislava datasets empty, and the rotating checks below had reached about half of them per run, so no lane went red.
+
 For each dataset it checks the distributions the dataset itself lists. The entity type comes from the dataset's OData, OGC or resource name, and otherwise from the Endpoint's `ngsi-ld/v1/types`.
 
 | Interface | Request | `ok` when |
@@ -127,10 +129,11 @@ The cell names the row id and the failing attribute, never a value, at most thre
 
 The platform's count for the datastore check is the OGC `numberMatched` of the dataset's own `isPartOf` filter when the dataset lists one and an OGC distribution, and the OData `@odata.count` of the same filter otherwise. When the type is shared by several datasets of one Endpoint with no `isPartOf`, the check is a `skip` that names them: no per-dataset count exists. A datastore's `last_modified` is no staleness signal, because the harvest writes nothing when its source is unchanged (T-4644). A harvest that stopped shows as the failed CronJob that `_smoke` already reports.
 
-Production limits (owner, T-4716):
+Production limits (owner, T-4716; the count pass by the owner's order of 2026-10-26, T-5768):
 
-- One request at a time, at most 50 a minute, every request counted, retries and WebSocket connects included.
-- At most 10 minutes and 500 requests a run.
+- The count pass runs first and outside the budget below: 6 reads at once, 2 at once for a minute after a `429` or `503`. A `429` or `503` waits out its `Retry-After` (5 seconds without one, 60 at most) and is retried 3 times. A `429` that lasts leaves the cell `not this run`; a `503` that lasts is a `ko`. The pass stops starting datasets after 10 minutes; on `dev` (633 datasets) it takes about 5.
+- After it, one request at a time, at most 50 a minute, every request counted, retries and WebSocket connects included.
+- At most 10 minutes and 500 requests a run, after the count pass.
 - `limit=1` or `$top=1` on every read, except the NGSI-LD sample of 20 rows, and 20 seconds per request.
 - A `429` or `503` waits out its `Retry-After` inside the same budget. A timeout is a `ko` with its time.
 
