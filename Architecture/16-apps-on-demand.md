@@ -518,7 +518,7 @@ sequenceDiagram
     P-->>B: 202, or 403 layer / 429 quota
 ```
 
-The credential behind each service, the SMTP account, the model key and the object store's keys, is a `secretRef` the Portal resolves; an App never holds one (AP-167). A `wasm` component reaches the same services through host interfaces of `jc:app@0.1.1` instead of the routes, and the host asks the Portal the same three questions. The routes, the client signatures and the refusals are in [API/06](../API/06-app-services.md); why the platform offers services at all, rather than letting an App bring its own keys, is [ADR-N-045](../Decisions/adr-n-045-platform-services-for-apps.md).
+The credential behind each service, the SMTP account, the model key and the object store's keys, is a `secretRef` the Portal resolves; an App never holds one (AP-167). A `wasm` component reaches the same services through host interfaces of `jc:app@0.1.2` instead of the routes, and the host asks the Portal the same three questions. The routes, the client signatures and the refusals are in [API/06](../API/06-app-services.md); why the platform offers services at all, rather than letting an App bring its own keys, is [ADR-N-045](../Decisions/adr-n-045-platform-services-for-apps.md).
 
 ## Related
 
