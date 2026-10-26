@@ -171,16 +171,16 @@ name; a row keeps its number when a later batch changes its decision (T-5257 row
 | # | dataset | title | class | decision | batch | model | outputs | source | update | licence | probe | note | score |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 | [`datankeruukokeilu-helsingissa-liikennelaskenta-konenaon-avulla`](https://hri.fi/data/en_GB/dataset/datankeruukokeilu-helsingissa-liikennelaskenta-konenaon-avulla) | Data gatherin pilot in Helsinki: Traffic counting using machine vision | entities | integrate | T-5253 | `TrafficFlowObserved` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | JSON | not stated | CC-BY-4.0 | 200 | pilot camera counts; one import, the camera as `Device` | 1 |
-| 2 | [`helsingin-kantakaupungin-ja-asukaspysakointivyohykkeiden-pysakointipaikat`](https://hri.fi/data/en_GB/dataset/helsingin-kantakaupungin-ja-asukaspysakointivyohykkeiden-pysakointipaikat) | Parking places in Helsinki | entities | integrate | T-5253 | `OnStreetParking` (Parking) | ngsi-ld, geojson, ogc-features | WFS | not stated | CC-BY-4.0 | host timeout | capacity is an estimate from the digitised area (package note) | 1 |
-| 3 | [`helsingin-liikenne-ja-varoitusvaloliittymat`](https://hri.fi/data/en_GB/dataset/helsingin-liikenne-ja-varoitusvaloliittymat) | Intersections with traffic lights in Helsinki | entities | integrate | T-5253 | custom `TrafficSignalJunction`; closest SDM `Streetlight` | ngsi-ld, geojson, ogc-features, csv | WFS | not stated | CC-BY-4.0 | host timeout | no SDM traffic-signal class at the pin | 1 |
+| 2 | [`helsingin-kantakaupungin-ja-asukaspysakointivyohykkeiden-pysakointipaikat`](https://hri.fi/data/en_GB/dataset/helsingin-kantakaupungin-ja-asukaspysakointivyohykkeiden-pysakointipaikat) | Parking places in Helsinki | entities | integrate | T-5286 | `OnStreetParking` (Parking) | ngsi-ld, geojson, ogc-features | WFS | not stated | CC-BY-4.0 | 200 | built by T-5286: 7873 places (the 881 no-parking areas left out), the parking class and place type as SDM categories, `paikat_ala` as totalSpotNumber, an estimate from the digitised area (package note) | 1 |
+| 3 | [`helsingin-liikenne-ja-varoitusvaloliittymat`](https://hri.fi/data/en_GB/dataset/helsingin-liikenne-ja-varoitusvaloliittymat) | Intersections with traffic lights in Helsinki | entities | integrate | T-5286 | custom `TrafficSignalJunction`; closest SDM `Streetlight` | ngsi-ld, geojson, ogc-features, csv | WFS | not stated | CC-BY-4.0 | 200 | built by T-5286 as the extension `TrafficSignalJunction` (PointOfInterest base): 553 junctions with traffic lights and 12 crossings with warning lights, `Rakenteilla` as status underConstruction; no SDM traffic-signal class at the pin | 1 |
 | 4 | [`helsingin-liikennemittausten-tilastorajapinta`](https://hri.fi/data/en_GB/dataset/helsingin-liikennemittausten-tilastorajapinta) | Statistical API for traffic measurement data of the city of Helsinki | entities | integrate | T-5253 | `TrafficFlowObserved` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | CSV/JSON | continuous | CC-BY-4.0 | 200 | counting stations as `Device`; daily aggregates | 2 |
-| 5 | [`helsingin-liikennevaylat`](https://hri.fi/data/en_GB/dataset/helsingin-liikennevaylat) | City of Helsinki road map | entities | integrate | T-5253 | `RoadSegment` (Transportation) | ngsi-ld, geojson, ogc-features | WFS | continuous | CC-BY-4.0 | host timeout | street network lines; T-5254 and T-5256 reference these segments | 2 |
-| 6 | [`helsingin-matkailuliikenteen-pysakit-ja-pysakointipaikat`](https://hri.fi/data/en_GB/dataset/helsingin-matkailuliikenteen-pysakit-ja-pysakointipaikat) | Tourist traffic stops and parking places in Helsinki | entities | integrate | T-5253 | `OnStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | WFS/WMS | not stated | CC-BY-4.0 | host timeout | category coach/tourist bus | 1 |
+| 5 | [`helsingin-liikennevaylat`](https://hri.fi/data/en_GB/dataset/helsingin-liikennevaylat) | City of Helsinki road map | entities | integrate | T-5286 | `RoadSegment` (Transportation) | ngsi-ld, geojson, ogc-features | WFS | continuous | CC-BY-4.0 | 200 | street network lines; T-5254 and T-5256 reference these segments; 111404 segments on 2026-10-26, more than one pipeline run holds (~10 KB per entity): left to batch B3, paged by area | 2 |
+| 6 | [`helsingin-matkailuliikenteen-pysakit-ja-pysakointipaikat`](https://hri.fi/data/en_GB/dataset/helsingin-matkailuliikenteen-pysakit-ja-pysakointipaikat) | Tourist traffic stops and parking places in Helsinki | entities | integrate | T-5286 | `OnStreetParking` (Parking) | ngsi-ld, geojson, ogc-features, csv | WFS/WMS | not stated | CC-BY-4.0 | 200 | built by T-5286: 28 stops and 11 parking places, allowedVehicleType bus, shortTerm where the layer gives a time limit | 1 |
 | 7 | [`helsingin-pyorailijamaarat`](https://hri.fi/data/en_GB/dataset/helsingin-pyorailijamaarat) | Number of cyclists in Helsinki | entities | integrate | T-5253 | `TrafficFlowObserved` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | CSV/WFS/XLSX | half years | CC-BY-4.0 | 200 | vehicleType bicycle; counter as `Device` | 1 |
 | 8 | [`helsingin-pyoravaylat-2025`](https://hri.fi/data/en_GB/dataset/helsingin-pyoravaylat-2025) | Helsinki bicycle lanes 2025 | entities | integrate | T-5253 | `BikeLane` (Transportation) | ngsi-ld, geojson, ogc-features | SHP | ended | CC-BY-4.0 | 200 | SHP only; converted to WGS84 in the pipeline | 1 |
 | 9 | [`helsingin-seudun-pyoralaskennat`](https://hri.fi/data/en_GB/dataset/helsingin-seudun-pyoralaskennat) | Number of cyclists in Helsinki Region | entities | integrate | T-5253 | `TrafficFlowObserved` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | CSV/GEOJSON/GEOSERVICE/KML/SHP | not stated | CC-BY-4.0 | 200 | HSL counters; a counter within 20 m of a city counter is the same `Device` | 2 |
 | 10 | [`liikennemaarat-helsingissa`](https://hri.fi/data/en_GB/dataset/liikennemaarat-helsingissa) | Traffic data from Helsinki | entities | integrate | T-5253 | `TrafficFlowObserved` (Transportation) | ngsi-ld, temporal, geojson, ogc-features, csv | CSV/JSON/WFS/WMS | yearly | CC-BY-4.0 | 200 | yearly volumes per point; joins the measurement API stations within 20 m | 2 |
-| 11 | [`liikenneonnettomuudet-helsingissa`](https://hri.fi/data/en_GB/dataset/liikenneonnettomuudet-helsingissa) | Traffic Accidents in Helsinki | statistics | integrate | T-5253 | `RoadAccident` (Transportation) | ngsi-ld, geojson, ogc-features, csv | CSV | yearly | CC-BY-4.0 | 200 | moved here from the statistics class: one row per accident with coordinates | 1 |
+| 11 | [`liikenneonnettomuudet-helsingissa`](https://hri.fi/data/en_GB/dataset/liikenneonnettomuudet-helsingissa) | Traffic Accidents in Helsinki | statistics | integrate | T-5286 | `RoadAccident` (Transportation) | ngsi-ld, geojson, ogc-features, csv | CSV | yearly | CC-BY-4.0 | 200 | moved here from the statistics class: one row per accident with coordinates; its coordinates are ETRS-GK25 (EPSG:3879), which a Bloblang mapping cannot project (no atan): left to batch B3 with a projection step | 1 |
 | 12 | [`pysakointivirheet-helsingissa`](https://hri.fi/data/en_GB/dataset/pysakointivirheet-helsingissa) | Parking violations in Helsinki | entities | integrate | T-5253 | `TrafficViolation` (Transportation) | ngsi-ld, temporal, csv, geojson | CSV/SHP/WFS | half a year | CC-BY-4.0 | 200 | aggregated per street and month, no plate or person data | 1 |
 | 13 | [`helsingin-ja-espoon-kaupunkipyorilla-ajatut-matkat`](https://hri.fi/data/en_GB/dataset/helsingin-ja-espoon-kaupunkipyorilla-ajatut-matkat) | City bike stations’ Origin-Destination (OD) data | statistics | integrate | T-5254 | `OriginDestinationFlow` (Transportation) | ngsi-ld, temporal, csv | CSV | yearly | CC-BY-4.0 | 403 | deferred (T-5254): the resource answered 403, and the space has no `OriginDestinationFlow` class; monthly CSVs of all trips need an aggregation design first | 1 |
 | 14 | [`helsingin-jalankulun-ja-pyorailyn-talvihoidon-priorisoitu-reitisto`](https://hri.fi/data/en_GB/dataset/helsingin-jalankulun-ja-pyorailyn-talvihoidon-priorisoitu-reitisto) | The prioritised winter maintenance network for pedestrians and cyclists in the City of Helsinki | entities | integrate | T-5254 | `RoadSegment` (Transportation) | ngsi-ld, geojson, ogc-features | CSV/WFS/WMS | yearly | CC-BY-4.0 | host timeout | deferred (T-5254): kartta.hel.fi WFS timed out 4 times from the build host (TCP connect), so no real fixture; needs `RoadSegment` vendored | 1 |
@@ -966,19 +966,19 @@ section 10, or `-`.
 | # | dataset | usable | dev | plan |
 |---|---|---|---|---|
 | 1 | `datankeruukokeilu-helsingissa-liikennelaskenta-konenaon-avulla` | yes | not seeded | B1 |
-| 2 | `helsingin-kantakaupungin-ja-asukaspysakointivyohykkeiden-pysakointipaikat` | yes | not seeded | T-5286 |
-| 3 | `helsingin-liikenne-ja-varoitusvaloliittymat` | yes | not seeded | T-5286 |
+| 2 | `helsingin-kantakaupungin-ja-asukaspysakointivyohykkeiden-pysakointipaikat` | yes | seeded by T-5286 (`helsinki-parking`, `parking-place-*`), live after the next dev apply | T-5286 |
+| 3 | `helsingin-liikenne-ja-varoitusvaloliittymat` | yes | seeded by T-5286 (`helsinki-traffic-signals`), live after the next dev apply | T-5286 |
 | 4 | `helsingin-liikennemittausten-tilastorajapinta` | yes | live: `helsinki-traffic-counts` 33, live: `helsinki-cycle-counts` 19 | live |
-| 5 | `helsingin-liikennevaylat` | yes | not seeded | T-5286 |
-| 6 | `helsingin-matkailuliikenteen-pysakit-ja-pysakointipaikat` | yes | not seeded | T-5286 |
+| 5 | `helsingin-liikennevaylat` | yes | not seeded: 111404 segments need a paged read (T-5286 left it) | B3 |
+| 6 | `helsingin-matkailuliikenteen-pysakit-ja-pysakointipaikat` | yes | seeded by T-5286 (`helsinki-parking`, `tourist-stop-*`, `tourist-parking-*`), live after the next dev apply | T-5286 |
 | 7 | `helsingin-pyorailijamaarat` | duplicate | same Eco-Counter stations as row 4 | - |
 | 8 | `helsingin-pyoravaylat-2025` | format | SHP zips only, a planned 2025 network | - |
 | 9 | `helsingin-seudun-pyoralaskennat` | stale | yearly means 2013-2017 only | - |
 | 10 | `liikennemaarat-helsingissa` | yes | not seeded (its JSON API is row 4's LAM source) | B1 |
-| 11 | `liikenneonnettomuudet-helsingissa` | yes | not seeded | T-5286 |
+| 11 | `liikenneonnettomuudet-helsingissa` | yes | not seeded: EPSG:3879 needs a projection step (T-5286 left it) | B3 |
 | 12 | `pysakointivirheet-helsingissa` | stale | half-yearly, no file since 2024-09 | - |
 | 13 | `helsingin-ja-espoon-kaupunkipyorilla-ajatut-matkat` | dead | resource answers 403 | - |
-| 14 | `helsingin-jalankulun-ja-pyorailyn-talvihoidon-priorisoitu-reitisto` | yes | not seeded | T-5286 |
+| 14 | `helsingin-jalankulun-ja-pyorailyn-talvihoidon-priorisoitu-reitisto` | yes | not seeded: a `RoadSegment` layer beside row 5 (T-5286 left it) | B3 |
 | 15 | `hsl-n-joukkoliikenteen-pysakit` | duplicate | - | - |
 | 16 | `hsl-n-joukkoliikenteen-risteyssolmut` | not-data | - | - |
 | 17 | `hsl-n-linjat` | duplicate | - | - |
@@ -1370,11 +1370,12 @@ soonest:
 | plan | rows | live after | shape | SDM types | LinkML classes added | rows by # |
 |---|---|---|---|---|---|---|
 | F1 | 70 | 88 | fix: the three built KPI pipelines write nothing on dev | `KeyPerformanceIndicator` | none | 33, 69, 76 and the 67 T-5258 statistics rows |
-| T-5286 | 6 | 94 | `kartta.hel.fi` WFS GetFeature and one CSV, parked | `OnStreetParking`, `RoadSegment`, `RoadAccident`, custom `TrafficSignalJunction` | `RoadSegment`, `RoadAccident`, `TrafficSignalJunction` | 2, 3, 5, 6, 11, 14 |
-| T-5378 | 11 | 105 | `kartta.hel.fi` WFS GetFeature and two files, parked | `NoisePollution`, `GreenspaceRecord`, `AirQualityObserved`, `KeyPerformanceIndicator`, custom `Watercourse`, `Tree`, `LandCoverArea`, `StormwaterCatchment`, `FloodRiskArea` | `NoisePollution`, `GreenspaceRecord` and the five custom classes | 27, 28, 29, 30, 32, 34, 35, 36, 37, 40, 41 |
-| T-5256 | 24 | 128 | `kartta.hel.fi` WFS GetFeature, paged, and one CSV, parked | `Building`, `GreenspaceRecord`, `CityWork`, `RoadSegment`, custom `AdministrativeArea`, `LandUsePlanArea`, `LandParcel`, `Street`, `Address`, `MaintenanceArea`, `EnvironmentalPermit` | `Building`, `GreenspaceRecord`, `LandUsePlanArea`, `LandParcel`, `Street`, `Address`, `MaintenanceArea`, `EnvironmentalPermit` | 42 to 65 (47 already live for 3 layers) |
-| B2 | 3 | 131 | `kartta.hel.fi` WFS GetFeature, points and areas | `PointOfInterest`, custom `HeritageArea` (closest SDM `GreenspaceRecord`) | `HeritageArea` | 66, 74, 80 |
-| B1 | 2 | 133 | one-shot file import: a JSON pilot dump and a yearly CSV per counting point | `TrafficFlowObserved` | none | 1, 10 |
+| T-5286 | 3 | 91 | `kartta.hel.fi` WFS GetFeature, points and areas | `OnStreetParking`, custom `TrafficSignalJunction` | `TrafficSignalJunction` | 2, 3, 6 |
+| T-5378 | 11 | 102 | `kartta.hel.fi` WFS GetFeature and two files, parked | `NoisePollution`, `GreenspaceRecord`, `AirQualityObserved`, `KeyPerformanceIndicator`, custom `Watercourse`, `Tree`, `LandCoverArea`, `StormwaterCatchment`, `FloodRiskArea` | `NoisePollution`, `GreenspaceRecord` and the five custom classes | 27, 28, 29, 30, 32, 34, 35, 36, 37, 40, 41 |
+| T-5256 | 24 | 125 | `kartta.hel.fi` WFS GetFeature, paged, and one CSV, parked | `Building`, `GreenspaceRecord`, `CityWork`, `RoadSegment`, custom `AdministrativeArea`, `LandUsePlanArea`, `LandParcel`, `Street`, `Address`, `MaintenanceArea`, `EnvironmentalPermit` | `Building`, `GreenspaceRecord`, `LandUsePlanArea`, `LandParcel`, `Street`, `Address`, `MaintenanceArea`, `EnvironmentalPermit` | 42 to 65 (47 already live for 3 layers) |
+| B2 | 3 | 128 | `kartta.hel.fi` WFS GetFeature, points and areas | `PointOfInterest`, custom `HeritageArea` (closest SDM `GreenspaceRecord`) | `HeritageArea` | 66, 74, 80 |
+| B1 | 2 | 130 | one-shot file import: a JSON pilot dump and a yearly CSV per counting point | `TrafficFlowObserved` | none | 1, 10 |
+| B3 | 3 | 133 | `kartta.hel.fi` WFS GetFeature paged by area, and one CSV with a projection step | `RoadSegment`, `RoadAccident` | `RoadSegment`, `RoadAccident` | 5, 11, 14 |
 
 - **F1** is a fix, not a build: one cause per pipeline, so it is one task whatever its row count.
   It needs the deployer (pipeline run logs on dev), then a fix in the deployment repository.
@@ -1383,6 +1384,10 @@ soonest:
   All three stay blocked until each layer has a fixture recorded from the cluster:
   one `GetFeature ... &count=20` per layer, run by the deployer from a dev pod and committed under
   `tests/fixtures/helsinki/kartta/`, as T-5286 already describes. Section 9.2 shows the host answers dev.
+- **B3** takes what T-5286 left (2026-10-26): the road map (row 5, 111404 segments) and the winter
+  maintenance network (row 14) need a WFS read paged by area, more than one pipeline run holds at
+  ~10 KB per entity; the accident CSV (row 11) is in ETRS-GK25 (EPSG:3879), which a Bloblang mapping
+  cannot project. Fixtures of rows 5 and 14 are recorded (T-5668).
 - **B2** and **B1** are new; the supervisor files them. B2 has the same fixture need as the three
   parked batches.
 
