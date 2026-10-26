@@ -8,7 +8,7 @@
 `check` needs no network. It fails when the matrix does not hold exactly one row per entry of the
 four snapshots (city catalogue, IPR geoportal, Golemio OpenAPI paths, other sources), names an id
 its source snapshot does not hold, has a decision outside live/seeded/integrate/skip/part, a usable
-verdict outside yes/part/stale/duplicate/login/format/licence/personal or one that disagrees with the
+verdict outside yes/part/stale/duplicate/login/format/licence/personal/undocumented or one that disagrees with the
 decision (skip exactly when not usable, part with part), a live row without a `live` dev cell, a
 seeded row without a `seeded` dev cell, a live or seeded row without a build task, an integrate row
 without a parked task or a planned batch (F-n, P-nn), a planned batch over 25 rows, a live, seeded
@@ -39,8 +39,8 @@ SNAPSHOTS = {
     "other": ROOT / "Research/data/praha-other-sources-2026-10-23.tsv",
 }
 DECISIONS = {"live", "seeded", "integrate", "skip", "part"}
-UNUSABLE = {"stale", "duplicate", "login", "format", "licence", "unnamed", "personal"}
-BUILT = {"T-5268", "T-5269", "T-5270", "T-5276", "T-5423", "T-5424", "T-5426", "T-5425", "T-5428", "T-5429", "T-5680", "T-5683"}
+UNUSABLE = {"stale", "duplicate", "login", "format", "licence", "unnamed", "personal", "undocumented"}
+BUILT = {"T-5268", "T-5269", "T-5270", "T-5276", "T-5423", "T-5424", "T-5426", "T-5425", "T-5428", "T-5429", "T-5680", "T-5683", "T-5677"}
 PARKED = {"T-5427", "T-5428", "T-5684", "T-5682"}
 PLANNED = re.compile(r"^(?:F-\d|P-\d\d)$")
 CELLS = 13
