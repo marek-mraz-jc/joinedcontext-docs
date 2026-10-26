@@ -41,7 +41,7 @@ store by content digest, and refused unless the digest recorded at build matches
 The host offers the WIT package `jc:app@0.1.0`:
 
 - `sql`: `query` and `execute` with bound parameters, rows out; no DDL.
-- `blob`: `get`, `put`, `list`, `delete` and `presign` under the App's own prefix.
+- `blob`: `get`, `put`, `list`, `delete`, `presign` and (0.1.2) `presign-put`, which signs the upload's length, under the App's own prefix.
 
 A component never sees a connection string, a password or an object-store key. WASI gives it no
 environment, no file system and no sockets; its only outgoing HTTP is to its own App's Endpoint on the
