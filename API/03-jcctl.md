@@ -20,7 +20,7 @@ jcctl [COMMAND] [OPTIONS]
 | **`plan`** | `--repo-dir <path>`, `--gateway-url <url>` | Compares the seed entities a space declares with what it holds and prints the repository's flags; exit code 2 if a seed is pending. Configuration is read from the repository by every component, so it has no plan of its own (CC-72) |
 | **`apply`** | `--repo-dir <path>`, `--gateway-url <url>` | Replays the seed entities a space declares into it; configuration needs no apply, every component reads it from the repository (CC-72) |
 | **`drift`** | `--repo-dir <path>`, `--gateway-url <url>`, `[--json]`, `[--adopt-dir <path>]` | Compares the seed entities a space declares with what it holds; exit code 2 if drifted. Needs `--gateway-url`: configuration is read from the repository, so it cannot drift (CC-21, CC-38, CC-72) |
-| **`import`** | `<source> --repo-dir <path>`, `[--namespace <slug>]`, `[--org-domain <d>]`, `[--conflict fail\|skip\|replace\|rename]` | Imports a manifest or an unpacked bundle, rewritten for this project (MF-20…MF-24, PF-22) |
+| **`import`** | `<source> --repo-dir <path>`, `[--namespace <slug>]`, `[--org-domain <from>=<to>]`, `[--conflict fail\|skip\|replace\|rename]` | Imports a manifest or an unpacked bundle, rewritten for this project (MF-20…MF-24, PF-22) |
 | **`export`** | `--repo-dir <path>`, `--project <slug>`, `--out-dir <path>` | Writes `projects/{p}/` of the checkout as a bundle: manifests without `status` or secret values, native files verbatim, and a `kind: Bundle` index (MF-16, MF-17) |
 | **`validate`**| `--repo-dir <path>` | Executes local JSON Schema and Conftest validation on manifests, and refuses a write no Endpoint can serve: a write Policy no Endpoint binds, a Pipeline target that does not bind its write (PL-111) |
 | **`schema export`** | `--out <dir>` | Writes the JSON Schema draft-07 of every manifest kind to `<dir>/{Kind}.json` (default `schemas/kinds`, MF-09, CC-12) |
@@ -283,8 +283,10 @@ archive is refused with the instruction to extract it, because unpacking is what
 and an importer that opened archives itself would be a second place for a path-traversal bug to
 live. The rewrites are explicit arguments and never guessed: `--namespace` moves every
 project-scoped resource and every typed reference that named the source project, and
-`--org-domain` rewrites the `{orgDomain}` segment of every `urn:ngsi-ld:` identifier and nothing
-else (MF-22, PF-22). Every imported manifest is tagged `joinedcontext.com/imported-from` with
+`--org-domain <from>=<to>` rewrites the `{orgDomain}` segment of a `urn:ngsi-ld:` identifier
+(or an anchored `idPattern`) only where that segment is `<from>`, and nothing else: a reference to
+another organization's Entity or Endpoint keeps its domain. A bare domain without `<from>=` is
+refused with the usage (MF-22, PF-22). Every imported manifest is tagged `joinedcontext.com/imported-from` with
 the document it came from (MF-20).
 
 MF-24 is a gate and not a warning: a literal credential, an `apiVersion` this platform does not
