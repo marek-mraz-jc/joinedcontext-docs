@@ -194,6 +194,8 @@ rate_limit_resources:
       interval: "1s"
 ```
 
+On the shared runner every project has its own write budget: the Portal renders `pipeline_egress`, in the platform's gateway write and in a step that names it, as `<project>__pipeline_egress` (500 calls a second) and declares that rate limit over the runner's API before it sends the project a stream, so one project at its cap leaves every other project's writes untouched (T-5803).
+
 ---
 
 ### Sources, steps and outputs (PL-52…PL-56)
