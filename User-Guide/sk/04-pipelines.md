@@ -201,6 +201,21 @@ Po schválení broker otvorte. Prístup k témam ukazuje, ktorá rola smie kde p
 
 Keď stránka uvádza **MQTT je pre tento projekt vypnuté**, administrátor organizácie ho zapne v časti **Administrácia**, v nastaveniach MQTT daného projektu. Ten istý administrátor môže zvýšiť počet brokerov, ktoré projekt smie mať.
 
+### Pridelenie roly brokera zariadeniam
+
+Broker určuje, čo smie každá rola; servisný účet zariadenia určuje, že zariadenie rolu má. Ak chcete pustiť skupinu senzorov ovzdušia k role `air-sensor` brokera `air`, pridajte servisnému účtu skupiny jedno priradenie a navrhnite zmenu:
+
+```yaml
+# spec.roles servisného účtu air-fleet-north (výňatok)
+- role: mqtt/air/air-sensor     # mqtt/*/air-sensor: každý broker projektu s touto rolou
+  scope:
+    project: bratislava         # vždy vlastný projekt účtu
+  validity:
+    notAfter: "2027-03-31T23:59:59Z"
+```
+
+Od schválenia smie každé zariadenie účtu `air-fleet-north` publikovať tam, kam rola `air-sensor` dovoľuje, do konca marca 2027. Keď priradenie odstránite alebo uplynie `notAfter`, zariadenie skončí pri ďalšej publikácii; manifest brokera sa nemení. Broker, ktorý pri role ešte uvádza `serviceAccounts`, zatiaľ funguje ďalej a `jcctl migrate` presunie tieto mená do priradení ako vyššie.
+
 ## Súvisiace
 
 - [Organizácie, projekty a kontextové priestory](02-organizations-projects-spaces.md): správa cieľových priestorov.
