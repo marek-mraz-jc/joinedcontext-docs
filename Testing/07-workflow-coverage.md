@@ -350,6 +350,7 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 | `POST /api/v1/auth/backchannel-logout` | `session/sign-out` |
 | `POST /api/v1/auth/logout` | `session/sign-out` |
 | `POST /api/v1/mcp` | none: the MCP door carries every registered operation, and each operation is claimed by the step whose tool it is |
+| `POST /api/v1/mcp-confirmations/{id}/decision` | `change/mcp-question` |
 | `POST /api/v1/organization/people` | `people/create` |
 | `DELETE /api/v1/organization/people/{id}` | `people/remove` |
 | `PATCH /api/v1/organization/people/{id}` | `people/edit` |
