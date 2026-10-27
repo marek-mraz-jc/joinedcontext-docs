@@ -93,6 +93,8 @@ A project declares **MQTT edge brokers** as manifests, `kind: MqttBroker`. Each 
     A hostname is assigned to one project at a time: the Portal refuses a `customHostnames` entry another project's allowance holds, naming that project.
 12. **Devices by client certificate.** Some devices cannot run an OAuth flow. When the allowance's `deviceAuth` holds `clientCertificate` and the broker's `spec.deviceAuth` names it, the broker's external listener asks for a client certificate signed by the project's client CA (`clientCaRef`, uploaded by the org admin as a secret, never inline). TLS then terminates in RMQTT for that broker, on a dedicated port or behind a TCP passthrough route on 8883, so the certificate reaches the broker; Traefik does not see it. The certificate's subject common name is the device's ServiceAccount name, the gateway receives it as the CONNECT username with no password, and the gateway allows the CONNECT only when that ServiceAccount holds a role of the broker, the certificate is within its validity and not on the CRL the CA secret carries, and the client id equals `{project}-{serviceAccount}`. The ACL and the role checks are the same as for a token, and `expire_at` is one hour after the CONNECT or the certificate's `notAfter`, whichever comes first, so the device reconnects every hour and each reconnect is checked again. Revoking a device means listing its certificate on the CRL or removing its ServiceAccount from the role; an open connection ends within the hour. A broker without `clientCertificate` asks for no client certificate, and a token is still accepted on a broker that names both.
 
+13. **Allowed source networks.** `spec.allowedSources` lists at most 32 IPv4 or IPv6 networks in CIDR notation; absent or empty admits any address. A municipality uses it to keep its sensors' broker to the city APN and its office ranges. The Portal stamps a Traefik `MiddlewareTCP` `<release>-sources` with `ipAllowList.sourceRange` beside the broker's objects and names it on the broker's route on 8883 and on its dedicated-port route, so Traefik closes a connection from any other address before TLS; the middleware is the broker's own, and no other broker's route names it. Traefik sees the device's own address because the edge Service keeps the client address (`externalTrafficPolicy: Local`). The gateway's CONNECT check refuses a device whose PROXY-protocol address lies outside the list too, as the second line and to record the refusal (`source_address`) where the Portal shows it. The pipeline runner and the Portal's capture read on the internal listener and are not judged by the list. A Hetzner firewall rule cannot tell two brokers on 8883 apart, and a NetworkPolicy `ipBlock` sees Traefik's address after the hop, so neither does this job (PF-129, 2026-10-27).
+
 ## 3. Security Analysis
 
 The build tasks (T-3837…T-3839) inherit each row as a failing test.
@@ -152,6 +154,10 @@ Landed with the amendment of 2026-10-20:
 - `Requirements/platform.md`: **PF-117**…**PF-120**.
 - `Requirements/manifests.md`: **MF-62**.
 - `Requirements/pipelines.md`: **PL-86**…**PL-89**.
+
+Landed with the amendment of 2026-10-27:
+
+- `Requirements/platform.md`: **PF-129**.
 
 ## Related
 

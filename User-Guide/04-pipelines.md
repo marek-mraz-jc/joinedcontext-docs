@@ -197,7 +197,7 @@ When devices push their readings over MQTT, the project can run its own broker. 
 1. Click **New MQTT broker** and give it a **Name**.
 2. Under **Roles**, add one role per group of devices: its **Service accounts (devices)**, the topics it **May publish to** such as `sensors/+/air`, and the topics it **May subscribe to**.
 3. Choose **What the broker does**: **Ingest** (a pipeline reads each message), **Ingest and keep** (the broker also keeps the last messages under **Kept messages**) or **Two-way** (devices also receive messages).
-4. Set the **Limits**: **Largest message (bytes)**, **Messages per second per device** and **Connections at most**.
+4. Set the **Limits**: **Largest message (bytes)**, **Messages per second per device** and **Connections at most**. To admit devices only from your own networks, list them under **Allowed source networks**, one CIDR range per line such as `203.0.113.0/24`; left empty, any address may connect with a valid token.
 5. Click **Propose change**.
 
 Open the broker once it is approved. **Topic access** shows which role may publish and subscribe where; the connect panel gives the **Address**, the **Client id and user name**, how to get the **Password** and **Certificate**, and a **Try it** command to send a test message; **Measured** shows how many devices are **Connected now**; **Connections** draws who talks to whom and marks a step that needs **Fix it**.
