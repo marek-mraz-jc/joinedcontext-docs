@@ -249,6 +249,10 @@ Decided in [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) (T-3154).
 - **EP-148** [H] — `jcctl changelog` MUST list every merged change of a public Endpoint on the first-parent history of `main` within the window (default 30 days), grouped per surface, from the manifests themselves.
 - **EP-149** [S] — The changelog MUST NOT show a commit message, author, policy, role or project-list audience: an entry holds the day, the Endpoint's public name, title and address, and the change computed from the two manifests.
 
+## 26. Response compression
+
+- **EP-166** [P] — Every answer of the gateway and of the broker MUST be sent with `Content-Encoding: gzip` or `br` when the request's `Accept-Encoding` asks for one of them, and MUST carry `Vary: Accept-Encoding` appended to its other `Vary` values; the decoded body MUST be byte for byte the body sent without the header. An answer whose size is known and is 32 bytes or less, a `text/event-stream`, `image/*` or gRPC answer, a WebSocket upgrade, an answer that already has a `Content-Encoding` or `Content-Range`, and the gateway's OAuth answers (`/oauth/*`, `/.well-known/oauth-authorization-server`), which carry a fresh client or token next to text the caller sent, MUST stay plain. Request bodies MUST NOT be decompressed: a body sent with `Content-Encoding` is refused, so the body bound counts the bytes actually read. The gateway MUST NOT pass the client's `Accept-Encoding` to the broker, because it parses and rewrites the broker's answer before it sends it ([API/00 §7](../API/00-intro.md#7-response-compression), T-5847).
+
 ## Traceability
 
 | Requirement Range | Architecture Section | Test Family |
@@ -313,6 +317,7 @@ Decided in [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) (T-3154).
 | EP-140 | [Architecture/21-open-data-catalogue.md#10-the-catalogue-as-an-ngsi-ld-endpoint](../Architecture/21-open-data-catalogue.md#10-the-catalogue-as-an-ngsi-ld-endpoint) | [Testing/02-conformance-tests.md#4-model-context-protocol](../Testing/02-conformance-tests.md#4-model-context-protocol) |
 | EP-111…EP-112 | [Architecture/07-agents-and-mcp.md#7-connecting-from-a-phone](../Architecture/07-agents-and-mcp.md#7-connecting-from-a-phone) | [Testing/02-conformance-tests.md#4-model-context-protocol](../Testing/02-conformance-tests.md#4-model-context-protocol) |
 | EP-146…EP-149 | [API/10-api-change-policy.md](../API/10-api-change-policy.md) | [Testing/01-backend-tests.md#2-the-context-gateway-harness](../Testing/01-backend-tests.md#2-the-context-gateway-harness) |
+| EP-166 | [API/00-intro.md#7-response-compression](../API/00-intro.md#7-response-compression) | [Testing/01-backend-tests.md#2-the-context-gateway-harness](../Testing/01-backend-tests.md#2-the-context-gateway-harness) |
 | EP-113 | [API/02-endpoint-representations.md#10-in-the-open-data-portal](../API/02-endpoint-representations.md#10-in-the-open-data-portal) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
 ## Related
