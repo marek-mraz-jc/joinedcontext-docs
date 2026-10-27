@@ -4067,7 +4067,7 @@ GET  /api/v1/projects/{project}/mqttbrokers/{name}/watch?account=&since=   → 2
   given, newest first, each `{at, reason, account}`; the account's connected clients and the
   broker's messages per second as §44 measures them. `reason` is one of `no_token`, `expired`,
   `wrong_audience`, `invalid_token`, `wrong_client`, `unknown_account`, `other_project`,
-  `no_role`, `no_subscription`, `no_realm`. `refusalsRead: false` with `reason` when the gateway
+  `no_role`, `no_subscription`, `source_address` (the address is outside `allowedSources`, PF-129), `no_realm`. `refusalsRead: false` with `reason` when the gateway
   did not answer; a refusal is never invented and an empty list then means "unknown".
 - The gateway counts each refusal of a broker the repository declares as
   `jc_mqtt_auth_refused_total{broker,reason}` and keeps the newest 50 per broker in memory: the

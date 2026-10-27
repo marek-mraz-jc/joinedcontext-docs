@@ -194,7 +194,7 @@ Keď zariadenia posielajú svoje merania cez MQTT, projekt môže prevádzkovať
 1. Kliknite na **Nový MQTT broker** a zadajte **Názov**.
 2. V časti **Role** pridajte jednu rolu pre každú skupinu zariadení: jej **Servisné účty (zariadenia)**, témy, do ktorých **Smie publikovať do**, napríklad `sensors/+/air`, a témy, ktoré **Smie odoberať**.
 3. Vyberte **Čo broker robí**: **Príjem** (pipeline číta každú správu), **Príjem a uchovanie** (broker uchováva aj posledné správy v **Uchované správy**) alebo **Obojsmerný** (zariadenia správy aj prijímajú).
-4. Nastavte **Limity**: **Najväčšia správa (bajty)**, **Správ za sekundu na zariadenie** a **Najviac spojení**. Ak majú zariadenia prichádzať len z vašich sietí, zapíšte ich do **Povolené zdrojové siete**, jeden rozsah CIDR na riadok, napríklad `203.0.113.0/24`; prázdne pole pripustí akúkoľvek adresu s platným tokenom.
+4. Nastavte **Limity**: **Najväčšia správa (bajty)**, **Správ za sekundu na zariadenie** a **Najviac spojení**. Ak majú zariadenia prichádzať len z vašich sietí, zapíšte ich do **Povolené zdrojové siete**, jeden rozsah CIDR na riadok (ďalší pridá **Pridať**), napríklad `203.0.113.0/24`; prázdne pole pripustí akúkoľvek adresu s platným tokenom.
 5. Kliknite na **Navrhnúť zmenu**.
 
 Po schválení broker otvorte. Prístup k témam ukazuje, ktorá rola smie kde publikovať a odoberať; panel pripojenia poskytuje **Adresa**, **ID klienta a používateľské meno**, postup na získanie **Heslo** a **Certifikát** a príkaz **Vyskúšať** na odoslanie testovacej správy; časť **Namerané** ukazuje, koľko zariadení je **Práve pripojené**; časť **Spojenia** kreslí, kto s kým komunikuje, a označuje krok, ktorý vyžaduje **Opraviť**.
