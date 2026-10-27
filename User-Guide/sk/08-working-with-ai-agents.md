@@ -13,6 +13,7 @@ routes:
   - /projects/$project/agentprofiles
   - /connectors
   - /projects/$project/mcp-elicitations/$id
+  - /mcp-confirmations/$id
 ---
 
 # Spolupráca s autonómnymi AI agentmi
@@ -134,6 +135,8 @@ Keď váš AI klient chce spustiť MCP volanie, ktoré mení projekt, volanie sa
 4. Vráťte sa k AI klientovi. Jeho ďalší pokus o to isté volanie sa spustí, alebo sa klient dozvie, že ste ho odmietli.
 
 Nič, čo povie klient, sa nepočíta ako odpoveď: platí len vaša voľba na tejto stránke. Ak stránka hlási **Táto otázka už nie je otvorená**, otázka bola zodpovedaná, vypršala, alebo ju položil klient inej osoby: požiadajte klienta, aby volanie poslal znova.
+
+Zápis cez vlastnú MCP adresu endpointu, na ktorú odpovedá kontextový broker, sa pýta rovnako, na stránke `/mcp-confirmations/<id>`: namiesto operácie ukazuje pohľad a nástroj, cez ktoré zápis ide, a nemá odkaz na stránku Portálu. Broker zápis vykoná len na odpoveď, ktorú tam zaznamenáte; stránka odpovedá len osobe, ktorej klient sa pýtal.
 
 ## 5. Zdroje znalostí a asistenti
 
