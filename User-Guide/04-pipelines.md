@@ -204,6 +204,21 @@ Open the broker once it is approved. **Topic access** shows which role may publi
 
 When the page says **MQTT is off for this project**, an organization administrator turns it on under **Administration**, in the project's MQTT settings. The same administrator raises the number of brokers a project may have.
 
+### Giving devices a broker role
+
+The broker says what each role may do; a device's service account says that the device holds the role. To admit a fleet of air sensors to the role `air-sensor` of the broker `air`, add one binding to the fleet's service account and propose the change:
+
+```yaml
+# spec.roles of the ServiceAccount air-fleet-north (excerpt)
+- role: mqtt/air/air-sensor     # mqtt/*/air-sensor: every broker of the project with that role
+  scope:
+    project: bratislava         # always the account's own project
+  validity:
+    notAfter: "2027-03-31T23:59:59Z"
+```
+
+From the approval on, each device of `air-fleet-north` may publish where `air-sensor` allows, until the end of March 2027. Removing the binding, or letting `notAfter` pass, stops the device at its next publish; the broker manifest stays as it was. A broker that still lists `serviceAccounts` on a role keeps working for now, and `jcctl migrate` moves those names into bindings like the one above.
+
 ## Related
 
 - [Organizations, Projects & Context Spaces](./02-organizations-projects-spaces.md): managing target spaces.
