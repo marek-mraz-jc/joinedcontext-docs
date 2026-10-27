@@ -147,6 +147,26 @@ Server-Timing: pdp;dur=0.000, broker;dur=11.420, total;dur=12.910
 
 Anonymous answers carry the header too. It tells a caller how long the gateway and the broker took, which the caller already measures from outside within a few milliseconds; it names no Policy and no rule.
 
+## 7. Response compression
+
+Send `Accept-Encoding: gzip` or `Accept-Encoding: br` and the gateway answers with that `Content-Encoding` and `Vary: Accept-Encoding` (EP-166, T-5847). An NGSI-LD page repeats its attribute names in every entity, so it packs well: a page of 100 `KeyPerformanceIndicator` entities of 75 427 bytes is 1 578 bytes in gzip.
+
+```bash
+curl -s --compressed "https://api.{domain}/api/endpoint/{slug}/ngsi-ld/v1/entities?type=KeyPerformanceIndicator&limit=100"
+```
+
+These answers stay plain whatever the request asks:
+
+| Answer | Why |
+|---|---|
+| a body of known size up to 32 bytes | the gzip frame would be larger than the body |
+| `text/event-stream`, `image/*`, gRPC | a stream must flush per event; images are compressed already |
+| a WebSocket upgrade | the frames are not compressed either ([API/07](07-websocket.md)) |
+| an answer that already has `Content-Encoding` or `Content-Range` | never packed twice, never a partial range |
+| `Cache-Control: no-store` (the OAuth registration and token answers) | a secret never shares a compressed length with text the request sent (BREACH) |
+
+Request bodies are read as sent: a body with `Content-Encoding: gzip` is refused with `400`, never unpacked past the 4 MiB body bound. A client that wants plain bytes omits the header.
+
 ## Related
 
 - [R5](../Requirements/access-control.md) — referenced above.

@@ -795,6 +795,7 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **EP-147** | [S] | tested | ci-full, fast ci | platform `crates/context-gateway/tests/deprecation_headers_tests.rs::a_deprecated_endpoint_announces_both_dates_and_its_link_on_every_surface`, platform `crates/context-gateway/tests/deprecation_headers_tests.rs::a_surface_deprecation_is_announced_on_that_surface_alone`, platform `crates/context-gateway/tests/deprecation_headers_tests.rs::a_refusal_and_an_endpoint_without_deprecation_carry_none`, and 5 more |
 | **EP-148** | [H] | tested | ci-full, fast ci | platform `crates/jcctl/src/commands/changelog.rs::markup_in_a_title_stays_text`, platform `crates/jcctl/tests/changelog_tests.rs::every_merged_public_change_in_the_window_is_listed_newest_first`, platform `crates/jcctl/tests/changelog_tests.rs::the_page_groups_per_surface_and_carries_nothing_internal`, and 1 more |
 | **EP-149** | [S] | tested | ci-full, fast ci | platform `crates/jcctl/src/commands/changelog.rs::markup_in_a_title_stays_text`, platform `crates/jcctl/tests/changelog_tests.rs::every_merged_public_change_in_the_window_is_listed_newest_first`, platform `crates/jcctl/tests/changelog_tests.rs::the_page_groups_per_surface_and_carries_nothing_internal`, and 1 more |
+| **EP-166** | [P] | tested | ci-full | platform `crates/context-gateway/tests/compression_tests.rs::the_client_gets_gzip_and_the_broker_plain_json`, platform `crates/context-gateway/tests/oauth_anonymous_mcp_tests.rs::a_no_store_answer_is_never_compressed` |
 
 ### GW — Gateway firewall
 
