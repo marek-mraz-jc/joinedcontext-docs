@@ -181,26 +181,39 @@ result ([OPS-45](../Requirements/operations.md),
 
 :::warning
 This bypasses the review lane and takes access away immediately. Everyone holding the policy
-loses it in the same second, and step 4 is what stops the reconciler putting it back.
+loses it in the same second, and the commit of step 1 keeps the reconciler from putting it back.
 :::
 
 ```bash
 scripts/emergency-revoke.sh --instance dev --policy public-read \
+  --project helsinki --space air --forge https://example.org/git \
   --service-account helsinki-air-quality-conformance --idm https://idm.example.org \
   --verify-url "https://portal.example.org/api/endpoint/<slug>/ngsi-ld/v1/entities?type=X" \
   --verify-token-file .secrets/compromised-token
 ```
 
-1. **The `Policy` leaves the repository the gateway reads.** An access token already issued
-   stays cryptographically valid until it expires, so logging the subject out of Keycloak
-   revokes nothing on its own: only the PDP can stop honouring the token. The script removes
-   the manifest from the gateway's repository first.
-2. **The gateway replicas re-read the repository by themselves.** Each replica polls its copy
-   of the repository every second and swaps its endpoint and policy tables when a manifest
-   changes, so the script restarts nothing: a restart of the gateway every tenant shares
-   would only add its rollout time to the bound. The Verification step below proves that the
-   replicas stopped honouring the grant; a credential still accepted after the bound is
-   reported as a failed revocation, never as a success.
+`--project` and `--space` name the file `spaces/{space}/policies/{name}.yaml` in the project's
+forge repository `joinedcontext/{project}`; a layout 1 installation names it with `--forge-repo
+joinedcontext/configuration --policy-path projects/{project}/spaces/{space}/policies/{name}.yaml`.
+The script refuses `--policy` without `--verify-url` and `--verify-token-file`: a Policy is
+never removed without measuring the refusal.
+
+1. **The `Policy` leaves the forge repository the gateway reads.** An access token already
+   issued stays cryptographically valid until it expires, so logging the subject out of
+   Keycloak revokes nothing on its own: only the PDP can stop honouring the token. The script
+   deletes the manifest with a commit on the project repository's `main`, as the Portal's
+   machine user `jc-portal`, whose token it reads from the Secret `gitea-token-portal`
+   (`--forge-token-secret` names another) and passes to the forge on stdin, never on a
+   command line. A file the forge does not hold or a refused commit fails the run.
+2. **Each gateway pod fetches the project at once.** The checkouts sidecar fetches every
+   project every 10 seconds, which alone is over the bound, so the script runs one
+   `jcctl checkouts --once --only {project}` in the sidecar of every running gateway pod. That
+   pass waits for the sidecar's own pass to finish, links the new commit, and the reaper swaps
+   the endpoint and policy tables within the next second. The script restarts nothing: a
+   restart of the gateway every tenant shares would only add its rollout time to the bound. A
+   pod that cannot fetch is reported as a failed revocation. On a layout 1 installation the
+   gateway's git-sync fetches within its 10-second period, and the measurement decides whether
+   that held the bound.
 3. **Keycloak stops issuing new tokens.** Sessions are logged out for a user, the client
    secret is rotated for a service account. The script prints no token and no secret.
    For a client the platform declares (edge, portal-api, the gateway, Grafana, Gitea …) the
@@ -209,8 +222,10 @@ scripts/emergency-revoke.sh --instance dev --policy public-read \
    keycloak-config-cli imports the secret from that Secret on every apply and would otherwise
    write the revoked one back. Apply the platform afterwards: the forge's login source takes
    the new secret only then. A client the Portal created is rotated in Keycloak alone.
-4. **Commit the revocation to Git.** Delete the manifest in the configuration repository as
-   well, so the next reconcile does not bring the policy back.
+4. **Review the commit in the Portal.** Step 1 already is the commit on `main`, so the next
+   reconcile does not bring the policy back. The project's history shows it as
+   "Emergency revocation of Policy {name} (OPS-45)" by `jc-portal`; a branch opened before it
+   that still carries the Policy brings it back on merge, so close or rebase such branches.
 
 ### Verification
 
