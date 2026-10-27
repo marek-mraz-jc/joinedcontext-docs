@@ -90,7 +90,10 @@ view of the Endpoint: `/api/endpoint/{endpointSlug}/ngsi-ld/v1/{rest}` to the vi
 `{endpointSlug}`, `/cs/{space}/ngsi-ld/v1/{rest}` to the view `cs-{space}`, with the caller's
 query as sent. The broker's policy engine decides and narrows the request under the caller the
 gateway verified, which the gateway pins in `x-jc-subject`, `x-jc-groups`, `x-jc-roles` and
-`x-jc-client`; a caller under a data-space agreement is its participant's DID alone, in `x-jc-did`
+`x-jc-client` (a project's account as `{project}/{name}`, the form a Policy assignee names it by,
+PL-92; the Portal writes a bare `serviceAccount` assignee into the view as the account of the
+Policy's own project, so two projects' same-named accounts never share a grant, T-5860); a caller
+under a data-space agreement is its participant's DID alone, in `x-jc-did`
 (DS-02: no role, no account, never the public caller); the caller's token and cookie do not reach
 the broker. The gateway keeps what is
 no grant decision: the audience and the token, the rate limit and a form's daily creates, the
