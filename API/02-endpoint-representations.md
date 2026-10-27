@@ -707,9 +707,12 @@ A prohibition covering the action ends it, whatever any permission says, and ans
 
 `resource.properties.attribute` (optional, one short name or IRI) narrows the question to one
 Attribute of `resource.type` (T-5527). A permission covers the Attribute when a selector covering
-the type lists it, or lists no Attribute (the whole Entity). A prohibition refuses its whole type,
-whichever Attributes it lists, because the engine refuses a real read or write of that type the same
-way; the answer never grants a cell the real request refuses. A write of the access-control
+the type lists it, or lists no Attribute (the whole Entity). A prohibition entry naming no Attribute
+refuses its whole type. An entry naming `propertyNames` or `relationshipNames` takes back only those
+Attributes (T-5842, as the gateway PDP since T-5586): the engine serves a read without them, so a
+`q` or `attrs` naming one selects nothing, and refuses whole a write touching one (a replace or
+upsert also counts the Attributes the stored Entity holds, a delete of the Entity all of them). The
+answer follows the engine and never grants a cell the real request refuses. A write of the access-control
 vocabulary ([GW29](../Requirements/gateway-firewall.md)) is never granted. Without `attribute` the
 check answers as before.
 
