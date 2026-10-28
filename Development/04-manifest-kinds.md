@@ -68,8 +68,38 @@ Every manifest in Git has one layout, the one `jcctl fmt` writes (T-5052): the s
 | `KnowledgeSource` | `projects/{p}/assistant/sources/` | `jc-assistant` crawl worker | One body of knowledge the assistant reads: start URLs, a `CkanInstance` or the project's own catalogue, sitemap, include/exclude patterns, depth and page limits, PDF policy, schedule, languages and visibility (MF-51) |
 | `AssistantDeployment` | `projects/{p}/assistant/deployments/` | `jc-assistant` chat API | One place the assistant answers: channel, public id, prompt, sources, Endpoint MCP connectors, allowed origins, rate limit, budget, theme (MF-52) |
 | `McpServer` | `projects/{p}/mcp/`, `mcp/` | Context Gateway / reconciler → Keycloak | One named MCP server over up to ten chosen Endpoints and a `select` of spaces, projects, domains, themes and access levels resolved per caller (MF-55, ADR-N-043 §7), at `/api/mcp/{project}/{name}`, with an audience no wider than its members' (MF-53, ADR-N-043) |
+| `DelegationPolicy` | `users/delegation/{name}.yaml` | Portal connector check | The administrator's ceiling on what the people and Groups it names may hand an AI client through a connector: projects, kinds, Endpoints, verbs, longest expiry, allowed clients, approval queue (AG-150, ADR-N-064); the connectors themselves are per-person records in the Portal, not manifests (API/14) |
 | `UiSchema` | `portal/forms/{name}.uischema.yaml` | Portal UI | Form arrangement for one kind: order, widgets, help, grouping; `metadata.name` is `spec.for` lowercased (UI-02) |
 | `List`, `Bundle`, `Change`, `ChangeList` | not stored | all / import / resource API | Envelopes for download, import and write results (MF-05, MF-17, MF-12) |
+
+### DelegationPolicy
+
+An organization-level kind (`metadata.namespace: org`). Each policy names who it binds and the most a connector of theirs may carry; a person named by several policies gets their union, and a person named by none gets the organization default (`data-read`, reads only, 30 days, any client). A policy only narrows the person's own rights, never adds one (AG-150).
+
+```yaml excerpt
+kind: DelegationPolicy
+apiVersion: joinedcontext.com/v1alpha1
+metadata: { name: stewards-pipelines, namespace: org }
+spec:
+  subjects:                      # at least one; each a user (by e-mail) or a Group that exists
+    - { kind: Group, name: air-stewards }
+    - { kind: User, name: steward@example.org }
+  projects: [air, mobility]      # the projects a connector may name; "*" is refused, list them
+  segments: [data-read, context, pipeline]
+  kinds:                         # verbs per kind, from the registry's verb set
+    - { kind: Pipeline, verbs: [read, propose, run] }
+    - { kind: DataSource, verbs: [read, propose] }
+    - { kind: Endpoint, verbs: [read] }
+  endpoints: [air-quality-sensors-2026-public]   # optional; absent = the projects' Endpoints the person may read
+  writes: true                   # may a connector of theirs have writes on; default false
+  maxExpiry: P90D                # ISO 8601 duration, at most P365D
+  allowedClients:                # optional; a connector of theirs must name a subset
+    - https://claude.ai/oauth/mcp-oauth-client-metadata
+    - https://claude.ai/oauth/claude-code-client-metadata
+  aboveCeiling: queue            # refuse (default) or queue: a request above it waits for an administrator
+```
+
+Validation refuses an empty `subjects`, a subject that is neither an existing user nor a Group, a verb outside the registry's set, a segment outside the eight, `maxExpiry` above `P365D` and a wildcard in any list. A field left out allows nothing more than the default, never everything.
 
 ### Paths under layout 2
 
@@ -92,7 +122,9 @@ A new kind therefore needs no second path: it declares the `PATH_TEMPLATE` it wo
 
 `jcctl schema export` writes one draft-07 schema per kind to `schemas/kinds/{Kind}.json`, and the documentation checks manifests against the schemas of one pinned platform tag, not against `main`. Every kind in the table above has a schema in the pinned tag; a kind whose `jc-core` type lands before its schema is listed here, checked structurally and against the kind table only, until the tag carries it:
 
-None today: `McpServer` (MF-53) left the list once the pinned platform carried its schema (T-3313).
+- `DelegationPolicy` (AG-150): the `jc-core` type and schema land in T-5952.
+
+`McpServer` (MF-53) left the list once the pinned platform carried its schema (T-3313).
 
 The list is checked as strictly as the manifests are: once the pinned tag carries a schema, the entry here is reported until it is removed.
 

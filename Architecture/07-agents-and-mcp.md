@@ -499,8 +499,54 @@ A two-resource contribution takes 4 clicks from the two people together, against
 
 **Limits.** `spec.limits.contributions` bounds per person, across every channel, the open Changes, the open workspaces, the MCP calls a minute, the review requests a day and the feedback an hour (AG-141, [ADR-N-035](../Decisions/adr-n-035-organization-policies-and-limits.md)).
 
+## 11. Scoped connectors
+
+A person hands an AI client (Claude Code, claude.ai, ChatGPT, the Portal assistant) a part of what they may do, not all of it ([ADR-N-064](../Decisions/adr-n-064-scoped-connectors.md), AG-142…AG-157). The part is a **connector**: a grant the Portal keeps per person at `https://portal.{domain}/c/{id}`, a Streamable HTTP MCP server, with its routes and tools in [API/14](../API/14-connectors.md).
+
+```mermaid
+flowchart LR
+  client["AI client<br/>(Claude Code, claude.ai, ChatGPT, assistant)"] -->|"bearer, aud = /c/{id}"| conn["Portal /c/{id}"]
+  conn --> check{"per call:<br/>issuer, audience, expiry<br/>sub == owner, azp allowed<br/>ceiling ∩ live rights ∩ scope"}
+  check -->|"refused"| deny["problem+json, audit row"]
+  check -->|"allowed"| reg["operation registry"]
+  reg -->|"reads"| gw["gateway / Antares<br/>read-only token when writes off"]
+  reg -->|"plan_change / apply_change"| cr["change request"]
+  cr -->|"approve: a person in the Portal"| git["Git, reconciler"]
+```
+
+**What a connector holds.** Owner, name, segments, a scope of projects, spaces, Endpoints and pipelines (each `read` or `write`), `writes` (off by default), `expiresAt`, an optional list of allowed clients and `revokedAt`. It lives in the Portal's database, never in Git: it is one person's choice, and a repository would show it to every reviewer (ADR-N-043 §7.7 kept personal connectors in preferences for the same reason).
+
+**Who sets the ceiling.** An administrator writes `kind: DelegationPolicy` manifests in the organization repository ([Development/04](../Development/04-manifest-kinds.md#delegationpolicy)): which people and Groups may hand AI clients which projects, kinds, Endpoints and verbs, for how long and to which clients, and whether a request above it is refused or queued for approval. A person no policy names gets the organization default, `data-read` for 30 days.
+
+**Every call.** The Portal verifies the token (issuer, audience = the connector's address, expiry), requires `sub` to be the owner and `azp` to be an allowed client when the list is set, and computes the effective rights as ceiling ∩ the owner's live rights ∩ the connector's scope: the same intersection §8 draws for a profile, with two more halves. `tools/list` shows only what those rights reach; each call is checked again for its target before the operation runs; each writes one audit row. A connector never widens anything, and a lost role, a revocation or an expiry refuses the next call.
+
+**Segments.** A person picks presets when creating a connector and edits them later:
+
+| Segment | Tools | Verbs on the scope |
+|---|---|---|
+| `data-read` | `get_schema`, `list`, `get`, `query_data` over Endpoints and spaces | read |
+| `context` | as `data-read`, plus `plan_change`, `apply_change` on DataModel, ContextSpace, Endpoint, ModelProjection | read, propose |
+| `pipeline` | as `context` on Pipeline and DataSource, plus `sample_source`, `try_mapping`, `run_pipeline`, `pipeline_logs` | read, propose, run |
+| `access` | `plan_change`, `apply_change` on Policy, Role, RoleBinding, Group, ServiceAccount | read, propose |
+| `publish` | `plan_change`, `apply_change` on an Endpoint's publish block and CkanInstance | read, propose |
+| `apps` | `plan_change`, `apply_change` on App, Dashboard, Layer | read, propose |
+| `operate` | reads of runs, health, activity and limits; `run_pipeline` | read, run |
+| `admin` | every tool, within the ceiling | every verb the ceiling allows |
+
+No segment approves, merges or decides: those doors refuse a connector's token (CC-41).
+
+**Writes.** A write is two calls. `plan_change` runs it with `validate_only`: every check, nothing saved, the diff and field errors as problem+json. `apply_change` takes the plan's id unchanged and opens a change request or a workspace change. A person approves it in the Portal; in claude.ai and ChatGPT the plan renders as an MCP App view that links there.
+
+**Below the tools.** A connector with writes off gets a read-only token. The gateway and Antares refuse every write for it whatever the person's grants, so a model steered by text in the data reaches nothing a tool would have refused.
+
+**The Portal assistant is one more connector.** A conversation is a connector of the person with the segment chosen on the data bar (AG-92), the profile's `spec.access` as a further ceiling, and native tool calling over the same tools and schemas. Its own extra tools are UI actions the browser performs and shows (`navigate`, `open_form`, `highlight`, `show_diff`, `filter_table`), none of which submits.
+
+**Client binding.** claude.ai and ChatGPT identify themselves by published Client ID Metadata Documents with fixed redirect URIs, so an allowed-clients list naming them holds. Claude Code signs in through a loopback redirect any local program can use: naming it is a label, not a control. "One organization" means sign-in only through that customer's identity provider. Dynamic client registration names and DPoP give no binding today (ADR-N-064 §4).
+
 ## Related
 
+- [ADR-N-064](../Decisions/adr-n-064-scoped-connectors.md) — scoped connectors and the generic tool set (§11).
+- [API/14](../API/14-connectors.md) — the connector routes and the tool contract.
 - [ADR-N-060](../Decisions/adr-n-060-contribution-workflow-over-mcp.md) — the contribution workflow over MCP.
 - [Architecture/16](16-apps-on-demand.md) — referenced above.
 - [ADR-N-025](../Decisions/adr-n-025-one-mcp-connector-several-endpoints.md) — one connector over several Endpoints (EP-87, EP-88).
