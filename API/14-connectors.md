@@ -28,7 +28,8 @@ The Portal stores connectors in its database, one owner each, never in Git (AG-1
   "state": "active",
   "createdAt": "2026-10-28T19:00:00Z",
   "lastUsedAt": null,
-  "url": "https://portal.{domain}/c/c7m2q4x5k3w5r7t2v6y4n7p3ha"
+  "url": "https://portal.{domain}/c/c7m2q4x5k3w5r7t2v6y4n7p3ha",
+  "limits": { "callsPerMinute": 60, "parallelCalls": 4, "resultBytes": 1048576 }
 }
 ```
 
@@ -44,6 +45,7 @@ The Portal stores connectors in its database, one owner each, never in Git (AG-1
 | `allowedClients` | Optional list of OAuth client ids (a CIMD URL or a realm client id). Absent: any client of the realm. |
 | `clientIsBoundary` | Read-only. `true` only when every allowed client is one whose redirect URIs no local program can use (claude.ai, ChatGPT); `false` for Claude Code and `mcp-local`, which the Portal labels "intended for", never "only" (AG-153). |
 | `state` | Read-only: `active`, `pending` (above the ceiling, waiting for an administrator, AG-150), `expired`, `revoked`. |
+| `limits` | Read-only: what the connector may spend (§3.1). |
 
 A connector above the person's DelegationPolicy ceiling is either refused with `403` naming the field or, when the policy queues requests, stored as `pending` until an administrator approves it in the Portal.
 
@@ -90,6 +92,18 @@ Each call is judged in this order, and the first failure answers (AG-143, AG-144
 The effective rights are the DelegationPolicy ceiling ∩ the owner's live rights ∩ the connector's segments and scope, computed on every call; `tools/list` lists exactly the tools they reach. Every call, allowed or refused, writes one audit row: connector, person, client, tool, target, verdict, duration. The row never holds a token, a header or a tool's input values.
 
 A tool error answers `isError: true` with the problem document as structured content, so a model can correct its input and call again (AG-146).
+
+### 3.1 Limits
+
+The Portal counts each call on the verified token's `sub` and the connector id of the path, never on a header. The person's budget holds over all their connectors and `/api/v1/mcp` together, so a second connector adds no calls.
+
+| Limit | Per connector | Per person | Past it |
+|---|---|---|---|
+| calls a minute | 60 | 120 | `429` problem+json, `Retry-After` = seconds until the window opens, `detail` naming whose limit |
+| calls answered at once | 4 | 8 | `429` problem+json, `Retry-After: 1` |
+| bytes of one tool answer | 1 MiB | 4 MiB (the route) | tool error with status `413`, `detail` naming what to narrow (`limit`, `attrs`, one name) |
+
+A DelegationPolicy may lower these (AG-150); `limits` on the record shows the values in force. Each refusal is an audit row (`refused: rate limit`, `refused: parallel calls`, `refused: result size`), so the My connectors page shows it. The Portal assistant's model spend is capped per person per day by the agent proxy (`JC_DAILY_TOKENS_PER_PERSON`, AG-97).
 
 ## 4. The tool contract
 
