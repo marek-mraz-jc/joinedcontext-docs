@@ -36,8 +36,11 @@ PARAM = re.compile(r"\{([^}/]+)\}")
 # `/x/views` is the broker's endpoint view root: since T-3643 and T-3752 the gateway forwards an
 # Endpoint's NGSI-LD, MCP and OGC API Features requests to `/x/views/{slug}/...`, and the endpoint
 # chapter prints that upstream request as it printed the `/ngsi-ld/v1` one (API/02 section 6)
+# `/c/{id}` is a person's connector, an MCP server on the Portal host whose address is pasted into
+# an AI client, so it is short and carries no project (ADR-N-064, API/14)
 ALLOWED_PREFIXES = ("/api/v1", "/api/endpoint", "/apps", "/cs", "/ngsi-ld/v1", "/x/views/",
-                    "/live-notify", "/templates", "/healthz", "/livez", "/readyz", "/.well-known")
+                    "/live-notify", "/templates", "/healthz", "/livez", "/readyz", "/.well-known",
+                    "/c/")
 # The published specification is the Portal's own (utoipa over its axum router), so only the
 # Portal's surface is looked up in it. `/api/endpoint`, `/cs`, `/ngsi-ld/v1` and `/apps` are
 # the gateway's and the apps host's, documented here and served elsewhere; holding them to a
