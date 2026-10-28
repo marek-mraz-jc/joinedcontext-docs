@@ -61,6 +61,8 @@ The core platform runtime is Rust services and standard open-source engines: the
 
 ## 4. Architecture Chapter Map
 
+Every API follows one style per plane ([ADR-N-063](../Decisions/adr-n-063-one-api-style-no-graphql.md)): NGSI-LD and its standard read views for context data, resource REST under the conventions of [API/13](../API/13-api-conventions.md) for configuration, and generic MCP tools over both.
+
 | Chapter | Specification | Core Question Answered |
 |---|---|---|
 | **02 Principles** | [02-principles.md](02-principles.md) | What fundamental rules govern all technical decisions? |
@@ -91,5 +93,6 @@ The core platform runtime is Rust services and standard open-source engines: the
 - [02-principles.md](02-principles.md) — architectural principles governing platform engineering.
 - [03-domain-model.md](03-domain-model.md) — structural domain model, organizations, and URN syntax.
 - [05-context-gateway.md](05-context-gateway.md) — PEP firewall mechanics and AST query rewriting.
+- [../API/13-api-conventions.md](../API/13-api-conventions.md) — the API conventions every kind and route follows.
 - [14-components.md](14-components.md) — detailed component responsibilities, interfaces, and failure modes.
 - [../Deployment/04-components-and-addons.md](../Deployment/04-components-and-addons.md) — component packaging, sizing, and addon integration.
