@@ -135,9 +135,11 @@ Every tool answers its errors as `application/problem+json` (API/09) with these 
 | Tool | Input | Output | Notes |
 |---|---|---|---|
 | `plan_change` | `{project, changes[1..50]{op: create\|replace\|patch\|delete, kind, name, manifest?, patch?}, workspace?}` | `{planId, baseEtag, expiresAt, diff, verdict {ok, findings[{level, path, message}]}}` | The resource API's `?dryRun=All` for each change (AG-62): every check, nothing saved. A failing check answers `422` with every finding. A plan holds `secretRef` names only. |
-| `apply_change` | `{planId}` | `{changeRequest {id, url, lane, state}}` or `{workspaceChange {workspace, id, url}}` | Only a plan this connector made, unchanged, within 30 minutes, with `write` on every item. Never approves: a person approves at `url` (AG-149, AG-151). |
+| `apply_change` | `{planId}` | `{changeRequests[{id, url, lane, state}]}`, one per change, or with `workspace` `{workspaceChanges[{workspace, id, branch, lane}]}` | Only a plan this connector made, unchanged, within 30 minutes, with `write` on every item. Never approves: a person approves at `url` (AG-149, AG-151). |
 
 `plan_change` is offered whenever a segment proposes; `apply_change` only when `writes` is true. With writes off a person still sees the plan and applies it in the Portal.
+
+In the Portal's operation registry the two tools are `jc_change_plan` and `jc_change_apply` (the `jc_<noun>_<verb>` names of every other operation). A change's `op` is `create` (the object must not exist), `replace` (it must), `patch` (an RFC 7386 merge patch onto the current manifest) or `delete`. A plan's etag covers each object's `metadata` and `spec`; a status the reconciler writes does not move it. An apply answers `404` for a plan that expired, was applied, or belongs to another person or connector, so a plan id tells nobody else anything. The Portal keeps plans in memory for their 30 minutes: after a Portal restart the client plans again.
 
 ### 4.4 Pipelines
 
