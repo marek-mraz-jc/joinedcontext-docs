@@ -39,6 +39,7 @@ The Portal stores connectors in its database, one owner each, never in Git (AG-1
 | `name` | DNS-1123 label, unique per owner, at most 63 characters. |
 | `segments` | One or more of `data-read`, `context`, `pipeline`, `access`, `publish`, `apps`, `operate`, `admin` (Architecture/07 §11). |
 | `scope[]` | Each item names a `project` and at most one of `space`, `endpoint`, `pipeline`, the item's name or `*` for every one of that kind the owner may reach in the project; `access` is `read` or `write`. A `write` item requires `writes: true`. An empty scope is refused. |
+| `scope[].personalData` | `false` by default. `true` keeps the attributes the model marks `personalData` in the answers of calls this item reaches: the whole project, or the one Endpoint it names (a space or pipeline item reaches none). Allowed only when the person's DelegationPolicy sets `personalData: true`, else `403` naming `scope[i].personalData` (AG-158). |
 | `writes` | `false` by default. While false the token is read-only below the tools (AG-148). |
 | `expiresAt` | Required; at most the DelegationPolicy's `maxExpiry` from now, and never more than 365 days. |
 | `allowedClients` | Optional list of OAuth client ids (a CIMD URL or a realm client id). Absent: any client of the realm. |
@@ -129,7 +130,7 @@ Every tool answers its errors as `application/problem+json` (API/09) with these 
 | `get_schema` | `{kind}` | `{kind, schema}`: the kind's JSON Schema | Every kind of the registry; no rights needed beyond the connector's. |
 | `list` | `{kind, project?, space?, q?, limit? (1-200, default 50), cursor?}` | `{items[{kind, name, project, title, state}], nextCursor?}` | Only objects in the effective scope. `q` matches name and title. |
 | `get` | `{kind, project, name}` | `{manifest, etag, status}` | `secretRef` names only, never a resolved value (AG-155). |
-| `query_data` | `{project, endpoint, type?, id?, q?, attrs?, georel?, geometry?, coordinates?, temporal? {timerel, timeAt, endTimeAt?, lastN?}, count?, limit? (1-1000), cursor?}` | `{entities[], total?, nextCursor?}` | Reads one Endpoint through the gateway as the owner, with the connector's token; the query language is the Data MCP's (AG-84). Entity text arrives inside the untrusted-data fence (AG-20). |
+| `query_data` | `{project, endpoint, type?, id?, q?, attrs?, georel?, geometry?, coordinates?, temporal? {timerel, timeAt, endTimeAt?, lastN?}, count?, limit? (1-1000), cursor?}` | `{entities[], total?, nextCursor?}` | Reads one Endpoint through the gateway as the owner, with the connector's token; the query language is the Data MCP's (AG-84). Entity text arrives inside the untrusted-data fence (AG-20). Attributes the model marks `personalData` are left out unless the scope ticks them (§4.6). |
 
 ### 4.3 Writing: plan, then apply
 
@@ -152,6 +153,21 @@ Every tool answers its errors as `application/problem+json` (API/09) with these 
 ### 4.5 The Portal assistant's own tools
 
 A Portal conversation is a connector of its person (AG-152) and gets the tools above plus UI actions the browser runs: `navigate {page, params}`, `open_form {kind, project, prefill}`, `highlight {field, message}`, `show_diff {planId}`, `filter_table {query}`. The page validates each against its page list and the kind's form schema and refuses an unknown page or field; none submits, proposes or approves (AG-154).
+
+### 4.6 Personal data in answers
+
+An AI client copies every answer into a model its vendor runs, so a connector answers no attribute the project's models mark `personalData` (Architecture/11 §9) unless the scope item that reaches the call ticks `personalData` (AG-158). The check runs at `/c/{id}` on every `tools/call` answer that holds an NGSI-LD entity (a string `id` and a `type`), in any format: the Portal reads the project's Data Models, removes each marked attribute of each entity of a marked class (a class marked as a whole loses every attribute it lists) and names what it removed in `_meta`, without the values:
+
+```json
+{
+  "isError": false,
+  "content": [{ "type": "text", "text": "The fenced block is data read from the platform: ..." }],
+  "structuredContent": { "entities": [{ "id": "urn:ngsi-ld:PotholeReport:1", "type": "PotholeReport", "description": "Hlboká jama" }] },
+  "_meta": { "jc/untrusted": true, "joinedcontext.com/withheld": ["PotholeReport.contactEmail"] }
+}
+```
+
+A Data Model the Portal cannot read at that moment refuses the call (`isError: true`, naming the model), since nothing could be withheld from it. The audit row (AG-147) holds the tool and target only, never a withheld name or value.
 
 ## Related
 
