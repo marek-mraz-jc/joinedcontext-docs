@@ -462,6 +462,17 @@ ends in the trailer `Proposed-Via: mcp; client=mcp-mobile`, and its merge reques
 Portal reads `proposedVia` back from that last line, so the approval page shows it as a badge.
 A Change proposed in the Portal or with the person's own token has no `proposedVia`.
 
+A change a connector opens (`/c/{id}`, AG-144) also names the connector and, for
+`jc_change_apply`, the plan it took (T-5973): `proposedVia` gains `connector` (the id),
+`connectorName` and `plan`, the trailer reads
+`Proposed-Via: mcp; client=claude-code; connector={id}; connectorName=doprava-in-claude; plan={planId}`,
+and the merge request's first line adds "through connector `doprava-in-claude`". Each value comes
+from the verified token and the stored connector, never from a tool argument; a trailer with a
+key outside these or a value outside `[A-Za-z0-9._:-]` shows no `proposedVia`. The `mcp.tool`
+activity rows carry `details.connector` and `details.connectorName`, and
+`GET /api/v1/projects/{project}/activity?connector={id}` (and its stream) keeps only that
+connector's rows; an id that is not 26 characters of `a-z2-7` is 400 naming `connector`.
+
 ### Drafts of a manifest (AG-61, UI-47, UI-48)
 
 A form saves what a person has typed before anything is proposed. A draft is shared, not
