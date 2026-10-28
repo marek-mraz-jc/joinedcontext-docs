@@ -154,6 +154,18 @@ In the Portal's operation registry the two tools are `jc_change_plan` and `jc_ch
 
 A Portal conversation is a connector of its person (AG-152) and gets the tools above plus UI actions the browser runs: `navigate {page, params}`, `open_form {kind, project, prefill}`, `highlight {field, message}`, `show_diff {planId}`, `filter_table {query}`. The page validates each against its page list and the kind's form schema and refuses an unknown page or field; none submits, proposes or approves (AG-154).
 
+### 4.6 The plan view (MCP Apps)
+
+`plan_change` and `try_mapping` render in an MCP Apps host (claude.ai, ChatGPT, VS Code) as one view (AG-157, AG-155). Each tool names it in `tools/list` as `_meta.ui.resourceUri` (and the older flat key `_meta["ui/resourceUri"]`).
+
+| Field | Value |
+|---|---|
+| `uri` | `ui://joinedcontext/plan-view.html` |
+| `mimeType` | `text/html;profile=mcp-app` |
+| `_meta.ui.csp` | `{connectDomains: [], resourceDomains: []}`: the view loads and connects to nothing outside itself |
+
+`/c/{id}` answers `resources/read` for this one URI and `-32601` for every other resource; `/api/v1/mcp` lists it in `resources/list` too. The view is a static page: it renders only the tool result the host posts to it, as text, and holds no token. Its one link, "Open in Portal to approve" (`/projects/{project}/approvals`; `/projects/{project}/pipelines` for a mapping), goes to the Portal origin the Portal writes into the page when it serves it, and only when `project` is a DNS-1123 label; the host opens it through `ui/open-link`.
+
 ## Related
 
 - [ADR-N-064](../Decisions/adr-n-064-scoped-connectors.md) — the decision and its threat model.
