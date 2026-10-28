@@ -12,6 +12,7 @@ routes:
   - /projects/$project/assistantdeployments
   - /projects/$project/agentprofiles
   - /connectors
+  - /ai-connectors
   - /projects/$project/mcp-elicitations/$id
   - /mcp-confirmations/$id
 ---
@@ -186,6 +187,16 @@ Stránka bez úryvku sa v odpovedi nikdy nepoužije.
 3. Kliknite na **Uložiť**, potom skopírujte **Adresa** do svojho AI klienta.
 
 Označenie endpointu hviezdičkou na jeho vlastnej stránke ho pridá do konektora s názvom `favourites`.
+
+Časť **Moje AI konektory** na `/ai-connectors` vo vašom vlastnom menu drží adresy pre Claude Code, claude.ai, ChatGPT alebo VS Code, ktoré siahajú na vlastné nástroje Portálu, až 20. Každý siaha len na to, čo zaškrtnete, a nikdy nie na viac, než smiete vy sami: Portál pri každom volaní znova číta vaše práva. Stránka neukazuje žiadny token; každý AI klient vás prihlási sám.
+
+1. Kliknite na **Nový AI konektor** a zadajte **Názov**, napríklad `doprava-v-claude`.
+2. Vyberte **Predvoľby**, napríklad **Čítanie údajov**. Sivá predvoľba vyžaduje schválenie vašou organizáciou.
+3. V časti **Na čo siaha** zaškrtnite celý projekt alebo jednotlivé priestory, Endpointy či pipelines. Zoznam obsahuje len to, čo smiete čítať, a Portál každú položku overí znova, keď kliknete na **Vytvoriť**.
+4. Zvoľte, dokedy **Platí do**, najviac 30 dní odo dneška, a prípadne **Povolení klienti**.
+5. Kliknite na **Vytvoriť**. V časti **Nastaviť** skopírujte riadok `claude mcp add` pre Claude Code, záznam pre VS Code, alebo postupujte podľa krokov pre claude.ai a ChatGPT.
+
+**Aktivita** uvádza každé volanie cez konektor za posledných 30 dní. **Upraviť** mení, na čo siaha alebo dokedy platí; názov ostáva. **Zrušiť** a potom **Zrušiť teraz** odmietne ďalšie volanie cez neho.
 
 ## Súvisiace
 
