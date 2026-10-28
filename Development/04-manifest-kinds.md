@@ -81,9 +81,9 @@ kind: DelegationPolicy
 apiVersion: joinedcontext.com/v1alpha1
 metadata: { name: stewards-pipelines, namespace: org }
 spec:
-  subjects:                      # at least one; each a user (by e-mail) or a Group that exists
+  subjects:                      # at least one; a Group by name, a user by Keycloak user id (ADR-N-061)
     - { kind: Group, name: air-stewards }
-    - { kind: User, name: steward@example.org }
+    - { kind: User, id: 3f1c9a52-6b1e-4d0a-9a4e-0c8d1b7e2f10 }
   projects: [air, mobility]      # the projects a connector may name; "*" is refused, list them
   segments: [data-read, context, pipeline]
   kinds:                         # verbs per kind, from the registry's verb set
@@ -99,7 +99,7 @@ spec:
   aboveCeiling: queue            # refuse (default) or queue: a request above it waits for an administrator
 ```
 
-Validation refuses an empty `subjects`, a subject that is neither an existing user nor a Group, a verb outside the registry's set, a segment outside the eight, `maxExpiry` above `P365D` and a wildcard in any list. A field left out allows nothing more than the default, never everything.
+Validation refuses an empty `subjects`, a user subject that is not a Keycloak user id (the `sub` claim; an e-mail, a username or a name is refused, ADR-N-061), a Group that does not exist, a verb outside the registry's set, a segment outside the eight, `maxExpiry` above `P365D` and a wildcard in any list. A field left out allows nothing more than the default, never everything.
 
 ### Paths under layout 2
 
