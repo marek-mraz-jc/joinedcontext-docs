@@ -99,7 +99,7 @@ spec:
   aboveCeiling: queue            # refuse (default) or queue: a request above it waits for an administrator
 ```
 
-Validation refuses an empty `subjects`, a user subject that is not a Keycloak user id (the `sub` claim; an e-mail, a username or a name is refused, ADR-N-061), a Group that does not exist, a verb outside the registry's set, a segment outside the eight, `maxExpiry` above `P365D` and a wildcard in any list. A field left out allows nothing more than the default, never everything.
+Validation refuses an empty `subjects`, a user subject that is not a Keycloak user id (the `sub` claim; an e-mail, a username or a name is refused, ADR-N-061), a Group that does not exist, a verb outside the registry's set (`read`, `propose`, `run`; `run` on `Pipeline` only, and no verb approves), a kind outside the registry, a segment outside the eight, a missing or empty `projects`, a `maxExpiry` other than whole days from `P1D` to `P365D`, an allowed client that is neither an `https` CIMD URL nor a realm client id, an empty list where a list is given, a value listed twice and a wildcard in any list. A field left out allows nothing more than the default, never everything: no `segments` is `data-read`, no `kinds` is `read` on the kinds the segments reach, no `maxExpiry` is `P30D`. A change to a DelegationPolicy takes the red lane, like the other grant kinds.
 
 ### Paths under layout 2
 
