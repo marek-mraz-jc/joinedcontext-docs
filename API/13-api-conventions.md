@@ -37,22 +37,22 @@ GET /api/v1/projects/{project}/pipelines?filter=spec.schedule:*%20AND%20labels.t
 |---|---|
 | `filter` | a subset of [AIP-160](https://google.aip.dev/160): `field = value`, `!=`, `<`, `<=`, `>`, `>=`, `:` (has; `field:*` is present), `AND`, `OR`, `NOT`, parentheses, quoted strings. Fields are dotted manifest paths (`metadata.name`, `spec.space`) and `labels.{key}`. A field the kind's schema lacks or a malformed expression is `400` `invalid-request` naming the field and its position |
 | `orderBy` | one field, optionally followed by `desc`; default `metadata.name` |
-| `limit` | 1 to 500, default 500; `0` is `400`, a larger value is served as 500 (today's rule) |
+| `limit` | 1 to 500; `0` is `400`, a larger value is served as 500; without `limit` a resource list answers every readable object in one page |
 | `cursor` | the opaque `nextCursor` of the previous answer; a cursor from another filter, order or caller is `400` |
 
 The answer is `{ "items": [...], "nextCursor": "…" }`; `nextCursor` is absent on the last page. A cursor is signed and carries the filter it was made for, so it cannot be edited into another query.
 
 A list counts and pages only over the objects the caller may read: the filter runs after `may_read_manifest`, so an unreadable object never shifts a page, shows in a total or turns a `400` into a `200`. A caller who may read nothing of the kind gets an empty list, and a caller who may not read the project `404`.
 
-Today: the resource lists take `labelSelector` and `fieldSelector` in Kubernetes syntax (`joinedcontext-portal/src/resource/selector.rs`) and page with `limit` and `continue` (`joinedcontext-portal/src/api/resources.rs`); activity and agent-run lists use `cursor`; catalogue lists use `page`. The old parameters stay accepted beside `filter` and `cursor` until the notice of §7 ends.
+Every kind's list (`GET /api/v1/projects/{project}/{plural}`) is one handler over the kind catalogue (`joinedcontext-portal/src/api/resources.rs`) and takes `filter`, `orderBy`, `limit` and `cursor`; the filter checks its fields against the kind's jc-core JSON Schema (`joinedcontext-portal/src/resource/filter.rs`). A cursor is signed with a key of the running Portal, so a restart ends an open listing with a `400` that says to list again. The answer also keeps `metadata.continue` and `metadata.remainingItemCount`, and the list still takes `labelSelector`, `fieldSelector` and `continue` (Kubernetes syntax, `joinedcontext-portal/src/resource/selector.rs`) until the notice of §7 ends; `continue` pages by `metadata.name` only. Lists that are not a kind keep their own parameters: activity and agent-run lists use `cursor`, catalogue and change-history lists use `page`.
 
 ## 3. Concurrency: ETag and If-Match
 
-- `GET` of one manifest answers `ETag: "<Git blob id of the manifest at the branch head>"`. `GET` with `If-None-Match` of the same value answers `304` with no body.
+- `GET` of one manifest answers `ETag: "<SHA-256 of the manifest as JSON, without status>"`; `status` is computed by the Portal and never part of the stored manifest. `GET` with `If-None-Match` of the same value answers `304` with no body.
 - `PUT`, `PATCH` and `DELETE` take `If-Match`. A stale value is `412` `precondition-failed` with the current `ETag` in the answer, and no Change is opened. A write without `If-Match` is accepted in `v1` (clients that never sent one keep working); `apply_change` always sends the plan's value.
 - An `ETag` is strong and changes with every byte of the stored manifest.
 
-Today: no resource route answers an `ETag`; the internal listener and the static app host do (`joinedcontext-portal/src/api/internal/mod.rs`).
+An `If-Match` is compared only against a manifest the caller may read; for any other the write answers what it answers without one (`404` or `403`), so a `412` never tells that an unreadable object exists.
 
 ## 4. Errors
 
