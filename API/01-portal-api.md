@@ -427,7 +427,9 @@ forge, with the gate's own document (`reason` is `verdict_absent`, `verdict_fail
 ```
 
 The check is the same request with `?dryRun=All`, so a client sends the manifest twice: first to
-check it, then, unchanged, to propose it. `?validate_only=true` (AIP-163) is the same check under
+check it, then, unchanged, to propose it. The `409` is a problem document of type
+`verdict-required` (`application/problem+json`) that keeps `error`, `check` and `reason` beside
+`type`, `title` and `status`. `?validate_only=true` (AIP-163) is the same check under
 the name other API styles use: every write the resource API takes (create, replace, patch, delete,
 a draft, a workspace write, a model's source, an import) answers it as `?dryRun=All`, saves nothing
 and returns the plan; a caller who may not write the resource gets the answer `?dryRun=All` gives
