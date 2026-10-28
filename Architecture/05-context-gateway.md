@@ -219,6 +219,17 @@ The Context Gateway runs as an independent proxy container in front of external 
 - **Latency Overhead:** ≤ 3.5 ms p99 gateway overhead for cached policy decisions (excluding broker execution).
 - **Memory Footprint:** ≤ 45 MiB baseline resident set size per replica.
 
+### Requests in flight and the load generator (T-4782, T-5124, T-5921)
+
+Each replica works on at most `JC_GATEWAY_MAX_IN_FLIGHT` requests at once (default 128) and one caller on at most `JC_GATEWAY_MAX_IN_FLIGHT_PER_CALLER` of them (default 32). The caller is the principal of a token the realm signed, else the client address. Anonymous requests share half the slots and are answered `429` past it; an eighth stays reserved for signed-in writes; any other refusal is `503` with `Retry-After`.
+
+At about 100 ms per answer, 32 in flight hold one caller near 320 requests a second, so a load generator could not measure the platform at 1,000. The gateway therefore knows one load generator class:
+
+- The class is the Keycloak client `JC_GATEWAY_LOADTEST_CLIENT` names (empty: no class). Only a token the realm signed, checked by `Verifier::identify`, whose `azp` is that client, enters it. A token that merely claims the client, and any client address, meets the plain caps.
+- A read of the class is held to `JC_GATEWAY_LOADTEST_IN_FLIGHT` (default 512) in place of the caller's 32. It still takes a slot of the total and of the readers' share, so the replica's total and the writers' reserve hold, and the anonymous share is untouched.
+- The class only reads. Any other method from that client is refused `403` before the request reaches the Policy or the broker, whatever the client's Policy says.
+- The client's ServiceAccount holds the role `public` only, so it reads what an anonymous caller reads ([Security §7](13-security.md)). Keycloak keeps the client disabled outside a load run.
+
 ### Fail-Secure Guarantees (R5, GW5)
 
 The gateway enforces a hard fail-closed architecture across all failure conditions:

@@ -122,6 +122,14 @@ the runner's proxy, and the kubelet's probes stay authorized.
 - **AG-52** [agents][identity] — the run callbacks carry the proxy's bearer, and the proxy presents
   the run's own mesh identity to reach them.
 
+## 7. The load generator's account (T-5921)
+
+The weekly load run reads through prod's gateway with one token, so the gateway gives that client a larger in-flight share ([Context Gateway §5](05-context-gateway.md)). Three controls keep the account from widening access:
+
+- **Read-only.** Its ServiceAccount holds the role `public` and no Policy of its own, so it reads what an anonymous caller reads. The gateway refuses any request of the client other than GET, HEAD or OPTIONS with `403`, so a Policy granted to it later cannot turn it into a writer.
+- **Disabled outside its window.** The realm declares the Keycloak client with `enabled: false`. The run's runner enables it with `kcadm` when the run starts and disables it on exit, so a leaked client secret mints no token between runs. Its secret comes from a `secretRef` and is never logged.
+- **Verified identity only.** The gateway grants the larger share only on a token whose signature, issuer and expiry `Verifier::identify` checked and whose `azp` equals `JC_GATEWAY_LOADTEST_CLIENT`. A forged or unsigned token naming the client, and every client address, keep the plain caps.
+
 ## Related
 
 - [Security Hardening & Phase-1 Baseline](../Deployment/08-security-hardening.md) — actionable deployment hardening layers and verification commands.
