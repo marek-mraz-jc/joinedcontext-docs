@@ -54,6 +54,7 @@ Contract for T-5950 and T-5951. The routes are not in the Portal's published Ope
 |---|---|---|
 | `GET` | `/api/v1/connectors` | the caller's connectors; an administrator adds `?owner=` to read one person's |
 | `POST` | `/api/v1/connectors` | create; `?dryRun=All` validates only |
+| `GET` | `/api/v1/connectors/options` | what a connector of the caller may name: every preset, the caller's ceiling (presets, writes, longest life), per project they read the spaces, Endpoints and pipelines they read, and the realm's MCP clients; create and edit check every item again, and a named object the caller does not read answers the same `422` as one that is not there |
 | `GET` | `/api/v1/connectors/{id}` | one of the caller's connectors |
 | `PATCH` | `/api/v1/connectors/{id}` | edit segments, scope, writes, expiresAt, allowedClients (JSON merge patch) |
 | `DELETE` | `/api/v1/connectors/{id}` | revoke: state `revoked`, the next call through it is refused |
