@@ -427,7 +427,11 @@ forge, with the gate's own document (`reason` is `verdict_absent`, `verdict_fail
 ```
 
 The check is the same request with `?dryRun=All`, so a client sends the manifest twice: first to
-check it, then, unchanged, to propose it. A proposal that became a Change forgets the draft its
+check it, then, unchanged, to propose it. `?validate_only=true` (AIP-163) is the same check under
+the name other API styles use: every write the resource API takes (create, replace, patch, delete,
+a draft, a workspace write, a model's source, an import) answers it as `?dryRun=All`, saves nothing
+and returns the plan; a caller who may not write the resource gets the answer `?dryRun=All` gives
+them (T-5949). A proposal that became a Change forgets the draft its
 check created; a person's draft of the same resource with other content stays.
 
 A DataSource with an `authorization` answers `"probe": { "skipped": "the source declares a credential; a dry run resolves none (MF-38)" }`.
