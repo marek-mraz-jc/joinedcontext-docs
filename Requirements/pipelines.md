@@ -6,7 +6,7 @@ description: Normative requirements for data integration, transformation, and in
 
 # Pipeline Execution & Processing
 
-Family **PL** (PL-01…PL-114). Owning chapter: [Architecture/08-pipelines.md](../Architecture/08-pipelines.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
+Family **PL** (PL-01…PL-116). Owning chapter: [Architecture/08-pipelines.md](../Architecture/08-pipelines.md). Verified by: [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md).
 
 ## 1. Manifest Envelope and Native Payloads
 
@@ -35,6 +35,8 @@ Family **PL** (PL-01…PL-114). Owning chapter: [Architecture/08-pipelines.md](.
 - **PL-12** [P] — An individual Pipeline Runner Deployment MUST NOT host more than 50 concurrent resident streams, partitioning across multiple runner pools when exceeded.
 - **PL-13** [P] — Idle resident streams MUST maintain a memory footprint not exceeding 30 MiB per stream.
   > Note: Not measured yet. [Architecture/08 §2](../Architecture/08-pipelines.md#2-bento-streams-mode-architecture) gives 15–30 MiB as the range observed, and no benchmark holds a runner to it. The check is a runner benchmark in the performance lane ([Testing/05 §5](../Testing/05-deployment-and-performance-tests.md#5-the-k6-budgets)): idle streams added one by one, the runner's resident memory read after each. Phase `next`.
+
+- **PL-116** [P][S] — `Project.spec.quotas.minPipelinePeriodSeconds` and `Organization.spec.projects.quota.minPipelinePeriodSeconds` MAY set the shortest clock a Pipeline of the project runs on, in seconds; the stricter of the two holds, so a project only tightens its organization's floor. A Pipeline whose `spec.period`, or the shortest gap between two runs of its `spec.schedule`, is shorter MUST be refused at every door, the dry run and `jc_change_plan` included, naming the field, the floor and where it is set (S-22, T-5994).
 
 ## 5. Secret Handling and Reference Resolution
 
@@ -242,6 +244,7 @@ How a pipeline's writes become history rows (DM-104…DM-109) is a choice per wr
 | PL-113 | [Architecture/08-pipelines.md#a-response-body-bound-pl-113](../Architecture/08-pipelines.md#a-response-body-bound-pl-113) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
 | PL-114 | [Architecture/08-pipelines.md#6-external-feeds-the-datasource-kind-mf-35-pl-39](../Architecture/08-pipelines.md#6-external-feeds-the-datasource-kind-mf-35-pl-39) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
 | PL-115 | [API/01-portal-api.md#481-a-persons-request-on-an-endpoint-pl-115](../API/01-portal-api.md#481-a-persons-request-on-an-endpoint-pl-115) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
+| PL-116 | [Architecture/08-pipelines.md](../Architecture/08-pipelines.md) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
 | PL-86…PL-89 | [ADR-N-048](../Decisions/adr-n-048-mqtt-edge-brokers.md) | [Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines](../Testing/04-configuration-and-pipeline-tests.md#5-bento-pipelines) |
 | PL-90…PL-93 | [API/01-portal-api.md#48-pipeline-access-requests-pl-90pl-93](../API/01-portal-api.md#48-pipeline-access-requests-pl-90pl-93) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | PL-94…PL-95 | [Architecture/08-pipelines.md#5-security--isolation-controls](../Architecture/08-pipelines.md#5-security--isolation-controls) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
