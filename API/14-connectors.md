@@ -68,6 +68,18 @@ Every route takes the person's Portal session or a bearer whose audience is the 
 
 Another person's connector answers `404`, the same body as an id that does not exist.
 
+### 2.1 A paired Portal tab (T-5967)
+
+"Connect this tab" on My connectors pairs the person's open Portal tab with one of their live connectors. While it is paired, `tools/list` at `/c/{id}` adds the assistant's five UI tools (`jc_ui_navigate`, `jc_ui_open_form`, `jc_ui_highlight`, `jc_ui_show_diff`, `jc_ui_filter_table`, [Architecture/07](../Architecture/07-agents-and-mcp.md)), each with a required `project` out of the connector's scope. A call is checked as the assistant's is (the page against the Portal's table, the kind and every field against the kind's schema, read permission, the person's own plan), held to the connector's scope (a kind of its segments, an object its scope reaches), and handed to that tab only. None of the tools saves, proposes or approves; the person proposes from the form the tab opened.
+
+| Method | Path | What it does |
+|---|---|---|
+| `POST` | `/api/v1/connectors/{id}/tab` | pairs the caller's tab; `201` with `tab` (the stream's id), `connector`, `name`, `until` (the session's end). A newer tab replaces the one paired before |
+| `DELETE` | `/api/v1/connectors/{id}/tab` | ends the pairing; `204` |
+| `GET` | `/api/v1/connectors/{id}/tab/{tab}/events` | server-sent `action` events: `frame` (`navigate` or `ui`), its checked `payload`, `tool`, `project`, `from` (connector name, MCP client), `at` |
+
+Only the person signed in in the tab pairs it: a workload's account, and a bearer token whose `azp` is an MCP client (Claude Code's `mcp-local` among them), are refused `403`. The stream answers only the session that paired it: another person, a later sign-in of the same person or another tab id is `404`. The pairing ends with that session, a disconnect, a revoke of the connector, or a Portal restart (it is held in memory). A UI tool called with no tab paired, or with the paired tab closed, answers a tool error (`409`) that tells the model to ask the person to press Connect this tab. The tool's answer names what the tab showed and nothing of the tab or the session. The connector's audit (AG-147) keeps one row per action and one per `tab/connect` and `tab/disconnect`. The browser standard for this, WebMCP (`navigator.modelContext`), is noted for later and not built.
+
 ## 3. The MCP server at `/c/{id}`
 
 | Method | Path | What it does |
