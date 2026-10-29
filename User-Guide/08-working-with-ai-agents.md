@@ -15,6 +15,7 @@ routes:
   - /ai-connectors
   - /projects/$project/mcp-elicitations/$id
   - /mcp-confirmations/$id
+  - /projects/$project/secrets/new
 ---
 
 # Collaborating with Autonomous AI Agents
@@ -197,6 +198,14 @@ Starring an Endpoint on its own page adds it to a connector called `favourites`.
 5. Click **Create**. Under **Set up**, copy the `claude mcp add` line for Claude Code, the entry for VS Code, or follow the steps for claude.ai and ChatGPT.
 
 **Activity** lists every call through a connector in the last 30 days. **Edit** changes what it reaches or when it expires; its name stays. **Revoke**, then **Revoke now**, refuses the next call through it.
+
+## 8. Entering a Secret a Plan Needs
+
+A source often needs an API key or a password. Never type one into a chat with the assistant or an AI connector: the Portal refuses any tool call that carries a credential-shaped value and answers `secret-in-argument`, naming the field and never the value. When a plan needs a credential, it lists it under `needsSecret` with a link to the secret form at `/projects/{project}/secrets/new`.
+
+1. Open the link. **Secret name** and **Key** come filled from the plan, for example `counters-api` and `apiKey`.
+2. Paste the credential into **Value**. Nobody can read it back on this page.
+3. Click **Encrypt and propose**. The Portal encrypts the value into the project's repository and opens a change for an approver; the plan then names the secret only by `secretRef`.
 
 ## Related
 
