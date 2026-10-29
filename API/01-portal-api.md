@@ -3619,6 +3619,21 @@ POST   /api/v1/notifications/{id}/read                                mark one o
 - A notification names the space, the URN, the comment, its author and the first 200 characters;
   `GET /notifications` answers the caller's own (matched by their username and their e-mail, lower
   case), at most 100, newest first, with `unread` counted. The Portal sends no e-mail of its own.
+- Each notification has a `kind`: `mention` (above), or one of three connector events (AG-150,
+  T-5979), which carry `link`, a Portal path to act on it, and no `commentId`:
+  - `change.opened`: a change a connector opened with `jc_change_apply` waits for approval. Every
+    person who holds `approve` in the project (PF-50) learns of it, except the person who opened
+    it; `urn` is the change id, `link` its approval page `/projects/{project}/approvals/{id}`.
+  - `connector.pending`: a connector request above the ceiling waits in the queue. Every person who
+    decides such requests (an organization administrator, or `approve` on DelegationPolicy) learns
+    of it, except the owner; `link` is `/ai-connectors`.
+  - `connector.expiring`: a live connector of the caller's ends within 7 days; a new `expiresAt`
+    is a new notification. `link` is `/ai-connectors`.
+
+  The text a connector event carries is the person's name, the connector's name, the project and
+  the change or connector id: never a manifest, a scope or a secret. One event is one notification
+  per recipient. The approvers and deciders are judged when they read `GET /notifications`, by
+  their rights at that moment, so a person who lost the right gets no new notification of it.
 - A project or a space the caller may not read is `404`, as in §27. Listing or adding the
   comments of an entity first reads that entity on the space surface
   (`/cs/{space}/ngsi-ld/v1/entities/{urn}`) with the caller's own token: an entity their Policy
