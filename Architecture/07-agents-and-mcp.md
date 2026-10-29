@@ -531,9 +531,9 @@ flowchart LR
 | `data-read` | `get_schema`, `list`, `get`, `query_data` over Endpoints and spaces | read |
 | `context` | as `data-read`, plus `plan_change`, `apply_change` on DataModel, ContextSpace, Endpoint, ModelProjection | read, propose |
 | `pipeline` | as `context` on Pipeline and DataSource, plus `sample_source`, `try_mapping`, `run_pipeline`, `pipeline_logs` | read, propose, run |
-| `access` | `plan_change`, `apply_change` on Policy, Role, RoleBinding, Group, ServiceAccount | read, propose |
-| `publish` | `plan_change`, `apply_change` on an Endpoint's publish block and CkanInstance | read, propose |
-| `apps` | `plan_change`, `apply_change` on App, Dashboard, Layer | read, propose |
+| `access` | `plan_change`, `apply_change` on Policy, Role, RoleBinding, Group, ServiceAccount, plus `member_list` (the project's people, no e-mail) | read, propose |
+| `publish` | `plan_change`, `apply_change` on an Endpoint's publish block and CkanInstance, plus `model_source_get` and `kpi_compute` | read, propose |
+| `apps` | `plan_change`, `apply_change` on App, Dashboard, Layer; the UI actions while the owner's Portal tab is paired | read, propose |
 | `operate` | reads of runs, health, activity and limits; `run_pipeline` | read, run |
 | `admin` | every tool, within the ceiling | every verb the ceiling allows |
 

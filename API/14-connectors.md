@@ -47,6 +47,14 @@ The Portal stores connectors in its database, one owner each, never in Git (AG-1
 | `state` | Read-only: `active`, `pending` (above the ceiling, waiting for an administrator, AG-150), `expired`, `revoked`. |
 | `limits` | Read-only: what the connector may spend (§3.1). |
 
+Each segment lists the reads its jobs need besides `jc_change_plan` (T-6039):
+
+| Segment | Lookup reads |
+|---|---|
+| `access` | `jc_member_list`: the people a RoleBinding of the project reaches, directly or through a Group, with the roles they hold there. Each carries the subject as the binding names it (a Keycloak user id, or an e-mail where the binding names one) and the realm's first and last name; no other e-mail. `search` matches the subject and the name. Only a project the connector's scope names, and only with `read` on RoleBinding there, else `403`. |
+| `publish` | `jc_model_source_get` (the LinkML text, so a KPI or publish block names real attributes) and `jc_kpi_compute`. |
+| `apps` | `Dashboard` and `Layer` besides `App`, and the five UI tools of §2.2 while the owner's Portal tab is paired; none submits. A client without a paired tab gets the plan's `portal` link instead. |
+
 A connector above the person's DelegationPolicy ceiling is either refused with `403` naming the field or, when the policy queues requests, stored as `pending` until an administrator approves it in the Portal.
 
 ## 2. Managing connectors
