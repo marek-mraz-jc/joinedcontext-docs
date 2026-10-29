@@ -183,7 +183,7 @@ A DataModel change may carry `source`, the whole LinkML file its `spec.linkml` n
 | `run_pipeline` | `{project, name}` | `{run, state: queued}` | Queues one run of the approved pipeline now and answers at once, never waiting for the run (PL-78). Offered only with `writes` on a connector whose segments reach Pipeline (`pipeline`, `operate`), held to a scope item with `write` on that pipeline; the caller needs propose and approve on Pipeline. The run writes through its own Endpoint and Policy, never as the connector. A run in progress or a pipeline that always runs is `409`. |
 | `pipeline_logs` | `{project, name, run?, limit? (1-50, default 10), cursor?}` | `{runs[{run, sent, rejected, failed, …}], run, lines[{id, at, recordId, step?, outcome, message}], next?}` | The newest runs with their counts and one run's log (the newest unless `run` names one), newest line first. A page holds at most 32 KiB of lines; `next` is the `cursor` of the following page. Masked as the activity pipeline masks them (OPS-48). |
 
-In the Portal's operation registry they are `jc_pipeline_sample_source`, `jc_pipeline_try_mapping`, `jc_pipeline_run` and `jc_pipeline_logs`; segment `pipeline` lists all but the run, `operate` lists `jc_pipeline_logs` (T-6028).
+In the Portal's operation registry they are `jc_pipeline_sample_source`, `jc_pipeline_try_mapping`, `jc_pipeline_run` and `jc_pipeline_logs`; segment `pipeline` lists all but the run, `operate` lists `jc_pipeline_logs` (T-6028). Segment `pipeline` also lists `jc_pipeline_test`, the sample test a Pipeline plan needs before it holds (T-4840), with no `sample.url` through a connector either (T-6040).
 
 ### 4.5 The Portal assistant's own tools
 
