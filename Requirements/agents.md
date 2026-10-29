@@ -245,6 +245,7 @@ Decided in [ADR-N-060](../Decisions/adr-n-060-contribution-workflow-over-mcp.md)
 - **AG-155** [S] — A connector answer, plan, MCP App view or audit row MUST NOT carry a resolved secret: manifests carry `secretRef` names only, and entity text arrives inside the untrusted-data fence (AG-20).
 - **AG-156** [S] — Connector calls MUST be limited per connector and per person, keyed on the verified token only, and answered `429` with `Retry-After` past the limit.
 - **AG-157** [H] — A My connectors page MUST let a person create, edit, revoke and read the activity of their connectors, pick segments and scope items from dropdowns the server filters by their rights and the ceiling, and copy the connector's address; `plan_change` and `try_mapping` results MUST render in claude.ai and ChatGPT as an MCP App view that links to the Portal for approval.
+- **AG-158** [A][S] — A connector answer MUST NOT carry an attribute its project's model marks `personalData` (DM-122) unless the scope item that reaches the call's Endpoint ticks `personalData` and the person's DelegationPolicy sets `personalData: true`; an answer whose models the Portal cannot read MUST be refused, and the answer MUST name each attribute left out without its value.
 
 ## Assistant paths
 
@@ -312,6 +313,7 @@ Decided in [ADR-N-032](../Decisions/adr-n-032-assistant-paths.md) (T-2691).
 | AG-137…AG-141 | [Architecture/07-agents-and-mcp.md#10-contribution-workflow](../Architecture/07-agents-and-mcp.md#10-contribution-workflow) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 | AG-142…AG-149 | [Architecture/07-agents-and-mcp.md#11-scoped-connectors](../Architecture/07-agents-and-mcp.md#11-scoped-connectors) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 | AG-150…AG-156 | [ADR-N-064](../Decisions/adr-n-064-scoped-connectors.md) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
+| AG-158 | [Operations/04-ai-connectors-dpia.md](../Operations/04-ai-connectors-dpia.md) | [Testing/06-security-tests.md#4-mcp-authorization-and-isolation](../Testing/06-security-tests.md#4-mcp-authorization-and-isolation) |
 | AG-157 | [Architecture/07-agents-and-mcp.md#11-scoped-connectors](../Architecture/07-agents-and-mcp.md#11-scoped-connectors) | [Testing/03-frontend-and-e2e-tests.md#2-playwright-twice](../Testing/03-frontend-and-e2e-tests.md#2-playwright-twice) |
 
 ## Related

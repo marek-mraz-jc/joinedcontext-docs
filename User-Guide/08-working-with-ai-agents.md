@@ -12,6 +12,7 @@ routes:
   - /projects/$project/assistantdeployments
   - /projects/$project/agentprofiles
   - /connectors
+  - /ai-connectors
   - /projects/$project/mcp-elicitations/$id
   - /mcp-confirmations/$id
 ---
@@ -186,6 +187,16 @@ A page with **No passage** is never used in an answer.
 3. Click **Save**, then copy the **Address** into your AI client.
 
 Starring an Endpoint on its own page adds it to a connector called `favourites`.
+
+**My AI connectors**, at `/ai-connectors` in your own menu, holds addresses for Claude Code, claude.ai, ChatGPT or VS Code that reach the Portal's own tools, up to 20. Each one reaches only what you tick, and never more than you may do yourself: the Portal reads your rights again at every call. The page shows no token; each AI client signs you in itself.
+
+1. Click **New AI connector** and give it a **Name** such as `doprava-in-claude`.
+2. Pick the **Presets**, such as **Data read**. A greyed preset needs your organization's approval.
+3. Under **What it reaches**, tick a whole project or single spaces, Endpoints or pipelines. The list holds only what you may read, and the Portal checks every tick again when you click **Create**.
+4. Choose when it **Expires**, at most 30 days from today, and optionally the **Allowed clients**.
+5. Click **Create**. Under **Set up**, copy the `claude mcp add` line for Claude Code, the entry for VS Code, or follow the steps for claude.ai and ChatGPT.
+
+**Activity** lists every call through a connector in the last 30 days. **Edit** changes what it reaches or when it expires; its name stays. **Revoke**, then **Revoke now**, refuses the next call through it.
 
 ## Related
 
