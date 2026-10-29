@@ -141,7 +141,7 @@ A DelegationPolicy may lower these (AG-150); `limits` on the record shows the va
 
 ## 4. The tool contract
 
-Every tool's input is a JSON Schema 2020-12 object with `additionalProperties: false`; every output is structured content beside a short text summary. `kind` is a kind of the platform registry (Development/04 §2) and `project` a project slug. Names are DNS-1123 labels.
+Every tool's input is a JSON Schema 2020-12 object with `additionalProperties: false`; every output is structured content beside a short text summary. `kind` is a kind of the platform registry (Development/04 §2) and `project` a project slug. At `/c/{id}` of a connector whose scope names one project, `project` is optional and defaults to that project, taken from the stored scope and never from the request; a call naming another project is still `403` naming the target. The `initialize` instructions name the projects the connector reaches (T-6064). Names are DNS-1123 labels.
 
 ### 4.1 Errors
 
