@@ -246,7 +246,6 @@ One registry, every door (ADR-N-021): the table below lists the configuration op
 | `jc_change_list` | `*` | Green | `readOnlyHint: true` | Lists open change proposals and merge requests for review |
 | `jc_change_reject` | `Change` | Yellow | `destructiveHint: false` | Rejects a change proposal with a reason and closes its merge request |
 | `jc_datasource_check` | `DataSource` | Green | `readOnlyHint: true` | Dry-runs a DataSource manifest and probes the external feed |
-| `jc_datasource_propose` | `DataSource` | Yellow | `destructiveHint: false` | Proposes creation or update of a DataSource manifest, from a draft when one is named |
 | `jc_draft_drop` | `*` | Green | `destructiveHint: true` | Discards a shared draft (AG-61) |
 | `jc_draft_get` | `*` | Green | `readOnlyHint: true` | Reads one shared draft with its verdict (AG-61) |
 | `jc_draft_list` | `*` | Green | `readOnlyHint: true` | Lists the shared drafts of a project (AG-61) |
@@ -255,15 +254,12 @@ One registry, every door (ADR-N-021): the table below lists the configuration op
 | `jc_kpi_compute` | `Endpoint` | Green | `readOnlyHint: true` | Folds an attribute over context entities and renders a KeyPerformanceIndicator entity |
 | `jc_manifest_dry_run` | `*` | Green | `readOnlyHint: true` | Dry-runs candidate manifest changes and returns validation result and plan diff |
 | `jc_model_infer` | `DataModel` | Green | `readOnlyHint: true` | Infers a draft LinkML data model from sample data bytes or text, or from what an http(s) `url` answers, fetched on the project's runner with `propose` on `DataSource` (DM-54) |
-| `jc_model_propose` | `DataModel` | Yellow | `destructiveHint: false` | Proposes creation or update of a DataModel manifest, from a draft when one is named |
-| `jc_pipeline_propose` | `Pipeline` | Yellow | `destructiveHint: false` | Proposes creation or update of a Pipeline manifest, from a draft when one is named |
 | `jc_pipeline_test` | `Pipeline` | Green | `readOnlyHint: true` | Tests candidate pipeline mapping and validation on runner without writing |
 | `jc_resource_delete` | `*` | Red | `destructiveHint: true` | Proposes removing a resource by kind and name, its name typed back; refused while other resources reference it |
 | `jc_resource_get` | `*` | Green | `readOnlyHint: true` | Reads one resource's manifest and status by kind and name |
 | `jc_resource_list` | `*` | Green | `readOnlyHint: true` | Lists the resources of one kind in the project, optionally of one context space |
 | `jc_resource_propose` | `*` | Yellow | `destructiveHint: false` | Proposes creating or changing a resource of any kind from its manifest or a draft; the change waits for a person's approval |
 | `jc_space_complete` | `ContextSpace` | Yellow | `destructiveHint: false` | Opens an endpoint or folder that partly defines a space and completes LinkML, data source, and pipeline drafts (MCP clients pass the files) |
-| `jc_space_propose` | `ContextSpace` | Yellow | `destructiveHint: false` | Proposes creation or update of a ContextSpace manifest, from a draft when one is named |
 
 Three properties hold across this catalogue too. The lane is the operation's, not the caller's: a `Yellow` operation leaves a change for a person to approve, a `Red` one needs the red lane's approval, and nothing an agent calls approves itself (AG-63). An operation that only renders a manifest writes nothing, which is why `jc_kpi_compute` is `readOnlyHint: true`: it answers with what a person then submits. The annotation says what the operation can do, not what its lightest path does — `jc_endpoint_propose` renders from parameters and opens a change from a manifest or a draft, so it is not read-only, and an agent runtime asks a person before calling it (AG-07, AG-63). And the arguments are validated against the operation's own JSON Schema, `additionalProperties: false`, before the body runs (AG-31).
 

@@ -437,7 +437,7 @@ Whatever a person can read, change or remove in a project, they can do through a
 
 | Kinds | Portal | REST | Operations and MCP | Assistant |
 |---|---|---|---|---|
-| ContextSpace, DataModel | list, create and edit (Spaces, Models, Complete this space) | list, get, create, update, delete | search, `jc_space_propose`, `jc_model_propose`, `jc_model_infer`, `jc_space_complete` | `space_complete`, catalog search |
+| ContextSpace, DataModel | list, create and edit (Spaces, Models, Complete this space) | list, get, create, update, delete | search, `jc_resource_propose`, `jc_model_infer`, `jc_space_complete` | `space_complete`, catalog search |
 | DataSource, Pipeline, Endpoint | list, create, edit | list, get, create, update, delete | `jc_*_propose`, `jc_datasource_check`, `jc_pipeline_test`, `jc_endpoint_propose` | `propose_endpoint`, `edit_endpoint`, `draft_kpi_pipeline` |
 | Dashboard, App | list, create, edit; apps through runs | list, get, create, update, delete | none | application runs |
 | RoleBinding, Role, ServiceAccount, AgentProfile | Access page: who holds which role (Grant a role, Edit, Remove), effective permissions, agent access; Organization → Agent profiles creates and edits an AgentProfile through a form (T-1536) | list, get, create, update, delete | `jc_resource_*` | `grant_role`, `change_resource` |
