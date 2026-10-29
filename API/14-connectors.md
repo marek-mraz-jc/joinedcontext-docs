@@ -100,14 +100,14 @@ Only the person signed in in the tab pairs it: a workload's account, and a beare
 | `POST` | `/c/{id}` | Streamable HTTP, MCP protocol `2026-07-28` |
 | `GET` | `/c/{id}/.well-known/oauth-protected-resource` | RFC 9728 metadata, `resource` = `https://portal.{domain}/c/{id}` |
 
-An unauthenticated call answers `401` with `WWW-Authenticate: Bearer resource_metadata="https://portal.{domain}/c/{id}/.well-known/oauth-protected-resource"`. The metadata names the organization's realm as the authorization server; the client asks for a token with `resource=https://portal.{domain}/c/{id}` (RFC 8707).
+An unauthenticated call answers `401` with `WWW-Authenticate: Bearer resource_metadata="https://portal.{domain}/c/{id}/.well-known/oauth-protected-resource", scope="connector:{id}"`. The metadata names the organization's realm as the authorization server and lists `connector:{id}` in `scopes_supported`; the client asks for a token with that scope. A `resource=https://portal.{domain}/c/{id}` parameter (RFC 8707) is accepted and ignored: Keycloak 26.8 cannot mint an audience per connector (ADR-N-064 §3.3).
 
 Each call is judged in this order, and the first failure answers (AG-143, AG-144):
 
 | Check | Failure |
 |---|---|
 | token signature, issuer = the organization's realm, not expired | `401` |
-| audience = this connector's address | `401` |
+| audience `portal-connectors`, and the token's `connector:` scopes are exactly `connector:{id}` | `401` |
 | connector exists and `sub` = its owner | `404`, the body of an unknown id |
 | connector `active` (not pending, expired or revoked) | `403` naming the state |
 | `azp` in `allowedClients`, when set | `403` naming the client |
