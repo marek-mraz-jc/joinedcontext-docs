@@ -27,7 +27,7 @@ A browser cannot set an `Authorization` header on a WebSocket, so the token trav
 
 A token in the query string is refused with `400`. A browser page opens the socket only from an origin the installation allows; any other `Origin` answers `403` (a client without an `Origin` header, such as websocat or Python, is not affected). Without a valid token, an Endpoint that is not public answers the upgrade `401` with the same `WWW-Authenticate` header as its REST surface.
 
-A plain `GET` of the address without an upgrade (a browser tab, `curl`) answers `426 Upgrade Required` with `Upgrade: websocket` and `Link: <https://{host}/docs/API/07-websocket>; rel="help"`: an HTML page for a browser (`Accept: text/html`) and a problem+json (`upgrade-required`) otherwise, naming the address, the subprotocol, whether a token is needed, one `x-subscribe` message for a type the Endpoint serves and a websocat line. The Endpoint's DCAT record lists the WebSocket distribution at the same address, with a one-sentence `dct:description` in the Endpoint's languages, `foaf:page` and `dct:conformsTo` both naming this page.
+A plain `GET` of the address without an upgrade (a browser tab, `curl`) answers `426 Upgrade Required` with `Upgrade: websocket` (over HTTP/1.1; HTTP/2 forbids the field, RFC 9113 8.2.2) and `Link: <https://{host}/docs/API/07-websocket>; rel="help"`: an HTML page for a browser (`Accept: text/html`) and a problem+json (`upgrade-required`) otherwise, naming the address, the subprotocol, whether a token is needed, one `x-subscribe` message for a type the Endpoint serves and a websocat line. The Endpoint's DCAT record lists the WebSocket distribution at the same address, with a one-sentence `dct:description` in the Endpoint's languages, `foaf:page` and `dct:conformsTo` both naming this page.
 
 An AI agent finds the socket through the Endpoint's MCP surface (T-5045). Where the Endpoint serves the WebSocket, `initialize.instructions` names the address, and `describe_access` (format `permissions`) and the `access://{endpointSlug}` resource carry `liveUpdates`:
 
@@ -87,6 +87,8 @@ A notification carries only the attributes your grant reads. A change to an attr
 | Connection lifetime | the token's `exp`, at most 300 s, with a token; 24 h anonymous | `x-closing: lifetime`; reconnect and resume |
 
 The 64 KiB bound applies only to what you send. A notification carries one entity and may be up to 1 MiB.
+
+When the gateway ends a connection with a close frame, it then reads and discards what you still send until your own close frame arrives, for at most 5 s, before it closes the TCP connection (RFC 6455 7.1.1). A client that floods and then reads still receives `x-closing` and the close code; a dropped connection would reach it as a reset without them.
 
 The `ws-fanout` rig (EP-115) measures one gateway replica on a 4-vCPU GitHub runner, its clients in the same process, every notification checked against the ground truth. At 20 changes a second, the rate of dev's transit stream: 1 000 sockets p50 7 ms and p99 15 ms from change to socket; 5 000 sockets p50 25 ms and p99 237 ms, with 2.4 GiB resident. At 200 changes a second, 1 000 sockets reach p50 3.4 s and p99 6.5 s: the stream outruns one replica, and coalescing keeps each socket's latest state.
 
