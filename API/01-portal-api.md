@@ -990,17 +990,18 @@ PUT /api/v1/preferences      replaces them whole; answers 200 with what is now s
   space, connect a data source, run a pipeline, see the data, share it); the help menu shows it
   again by clearing it. Absent means shown. Each step ticks itself from the project's own state,
   never from this record (T-3233).
-- `connectors` holds up to ten personal MCP connectors (UI-98, ADR-N-043 §7): a DNS-label `name`,
-  unique in the list, and a `select` of the McpServer selector fields (MF-55) plus `endpoints`, up to
-  50 Endpoint slugs; a slug the caller may not read when saved, an eleventh connector or a fifty-first
-  slug is a `400`. The gateway reads them for `/api/mcp/me/{name}` by the caller's `sub` alone (EP-123):
-  `GET /internal/connectors/{sub}` on the Portal's internal listener answers
-  `{ "connectors": [ { "name": "my-air", "select": { … } } ] }`, an empty list for a `sub` with
-  none, with the same Keycloak ServiceAccount check as `/internal/previews` (the gateway's own
-  token, audience `portal-internal`; any other token or none is a `401`, and the NetworkPolicy
-  opens the listener to the gateway alone). The gateway keeps an answer at most 60 seconds per
-  `sub` and answers `503` while the Portal cannot be read, never an older list. `me` is
-  therefore no project a named server can be declared in.
+- Personal MCP connectors are no preference since T-5970: they are connector records (API/14,
+  ADR-N-064 §9); a body naming `connectors` is a `400`, and a list an older Portal stored moves
+  into the connector store once (`data-read`, every item `read`, the default ceiling's expiry). The
+  gateway reads a person's live `data-read` connectors for `/api/mcp/me/{name}` by the caller's
+  `sub` alone (EP-123): `GET /internal/connectors/{sub}` on the Portal's internal listener answers
+  `{ "connectors": [ { "id": "…", "name": "my-air", "scope": [ … ], "expiresAt": "…",
+  "allowedClients": [ … ] } ] }`, an empty list for a `sub` with none, with the same Keycloak
+  ServiceAccount check as `/internal/previews` (the gateway's own token, audience
+  `portal-internal`; any other token or none is a `401`, and the NetworkPolicy opens the listener
+  to the gateway alone). The gateway keeps an answer at most 60 seconds per `sub` and answers
+  `503` while the Portal cannot be read, never an older list. `me` is therefore no project a named
+  server can be declared in.
 - `recent` holds the last ten item pages the person opened, newest first, and `favourites` up to
   fifty pages they starred (UI-90). Each place is a `path` inside the Portal, with its query and
   without `lang`, and the `title` the page had: a path that is not one of this Portal's (`//host`,
