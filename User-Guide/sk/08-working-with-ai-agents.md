@@ -15,6 +15,7 @@ routes:
   - /ai-connectors
   - /projects/$project/mcp-elicitations/$id
   - /mcp-confirmations/$id
+  - /projects/$project/secrets/new
 ---
 
 # Spolupráca s autonómnymi AI agentmi
@@ -197,6 +198,14 @@ Označenie endpointu hviezdičkou na jeho vlastnej stránke ho pridá do konekto
 5. Kliknite na **Vytvoriť**. V časti **Nastaviť** skopírujte riadok `claude mcp add` pre Claude Code, záznam pre VS Code, alebo postupujte podľa krokov pre claude.ai a ChatGPT.
 
 **Aktivita** uvádza každé volanie cez konektor za posledných 30 dní. **Upraviť** mení, na čo siaha alebo dokedy platí; názov ostáva. **Zrušiť** a potom **Zrušiť teraz** odmietne ďalšie volanie cez neho.
+
+## 8. Zadanie tajomstva, ktoré plán potrebuje
+
+Zdroj často potrebuje kľúč API alebo heslo. Nikdy ho nepíšte do rozhovoru s asistentom ani s AI konektorom: Portál odmietne každé volanie nástroja, ktoré nesie hodnotu podobnú prihlasovaciemu údaju, a odpovie `secret-in-argument`, pričom uvedie pole, nikdy hodnotu. Keď plán potrebuje prihlasovací údaj, uvedie ho v `needsSecret` s odkazom na formulár tajomstva na `/projects/{project}/secrets/new`.
+
+1. Otvorte odkaz. **Názov tajomstva** a **Kľúč** sú vyplnené z plánu, napríklad `counters-api` a `apiKey`.
+2. Vložte prihlasovací údaj do poľa **Hodnota**. Na tejto stránke ho nikto nemôže prečítať späť.
+3. Kliknite na **Zašifrovať a navrhnúť**. Portál zašifruje hodnotu do repozitára projektu a otvorí zmenu na schválenie; plán potom tajomstvo pomenúva len cez `secretRef`.
 
 ## Súvisiace
 
