@@ -55,7 +55,7 @@ Contract for T-5950 and T-5951. The routes are not in the Portal's published Ope
 
 | Method | Path | What it does |
 |---|---|---|
-| `GET` | `/api/v1/connectors` | the caller's connectors; an administrator adds `?owner=` to read one person's |
+| `GET` | `/api/v1/connectors` | the caller's connectors |
 | `POST` | `/api/v1/connectors` | create; `?dryRun=All` validates only |
 | `GET` | `/api/v1/connectors/options` | what a connector of the caller may name: every preset, the caller's ceiling (presets, writes, longest life), per project they read the spaces, Endpoints and pipelines they read, and the realm's MCP clients; create and edit check every item again, and a named object the caller does not read answers the same `422` as one that is not there |
 | `GET` | `/api/v1/connectors/{id}` | one of the caller's connectors |
@@ -67,6 +67,19 @@ Contract for T-5950 and T-5951. The routes are not in the Portal's published Ope
 Every route takes the person's Portal session or a bearer whose audience is the Portal. A connector token is refused on every one of them with `403`: a connector cannot create, widen, approve or revoke connectors (AG-151). `approve` requires the approver to hold every right the connector asks for (`within_own_rights`, PF-51) and refuses the owner approving their own request.
 
 Another person's connector answers `404`, the same body as an id that does not exist.
+
+### 2.1 The organization's connectors
+
+An organization administrator (approve and delete on `RoleBinding` at organization scope, PF-03) reads and revokes every person's connectors on routes of their own, so the owner routes above keep answering `404` for anybody else's connector (T-5975):
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/api/v1/organization/connectors` | every connector, live ones first, at most 500: the record of §1 plus `callsPerDay`, `denialsPerDay` and `flagged` |
+| `DELETE` | `/api/v1/organization/connectors/{id}` | revoke any person's connector; the activity feed names who revoked it |
+
+`callsPerDay` and `denialsPerDay` count the audit rows of the last 24 hours, `denialsPerDay` those with a `refused` verdict. `flagged` is true at `denialsFlag` (10) refusals in that day: a client probing past its scope. The answer carries counts only, never a call's input, a token or a target beyond the audit row's own `project/kind/name`. Anybody else gets `403`, and so does a bearer token, an administrator's own agent or a service account bound to the administrator role included: both routes answer a person's Portal session alone (AG-133).
+
+Offboarding: disabling a person (`POST /api/v1/organization/people/{id}/disable`), removing them, or proposing their removal revokes every live connector of theirs in the same request, and a `person.changed` activity row names how many. Enabling the person again revives none: they create new connectors within the rights they then hold.
 
 ## 3. The MCP server at `/c/{id}`
 
