@@ -3297,7 +3297,8 @@ GET /api/v1/projects/{project}/spaces/{space}/usage     the space's entity count
 ```
 
 ```json
-{ "entities": 14232, "broker": "main", "observedAt": "2026-09-25T11:40:00Z",
+{ "entities": 14232, "attrInstances": 90311, "estimated": false,
+  "broker": "main", "observedAt": "2026-09-25T11:40:00Z",
   "bytes": { "entities": 48211968, "attrInstances": 1203456,
              "byType": { "https://smartdatamodels.org/dataModel.Environment/AirQualityObserved": 48211968 } } }
 ```
@@ -3313,12 +3314,18 @@ GET /api/v1/projects/{project}/spaces/{space}/usage     the space's entity count
 - The per-type breakdown on the space's page is the gateway's own `count=true` per type, read
   with the person's token, so it narrows as the person's grants do.
 - `bytes` is the storage the space takes, measured by the broker in its store (`GET
-  /q/tenants/{tenant}` `bytes`, T-2890), never estimated: `entities` the current state,
+  /q/tenants/{tenant}` `bytes`, T-2890): `entities` the current state,
   `attrInstances` the history, `byType` the current state by each Entity's first type as the
   broker stores it (an expanded IRI), summing to `entities`. Like the count it is the space's,
   the same for everyone who reads the space; the type names are the space's DataModels, which the
   reader already sees. A broker that cannot measure leaves `bytes` out, and so does a space it has
   no tenant for yet; the page then shows no size, never a zero.
+- `attrInstances` is the space's history, its temporal attribute instances, as the broker counts
+  them (`counts.attrInstances`, T-6085); left out when the broker neither counted nor estimated
+  them, never a zero. The broker counts and sizes the history exactly within one second; a longer
+  history it estimates from its database's statistics, and `estimated` is `true`: then
+  `attrInstances` and `bytes.attrInstances` are estimates, and the page says so. The space's page
+  shows the entity count, the history count, the current-state and history sizes and their total.
 - The Context Spaces list and the space's page show the size in binary units (KiB, MiB, GiB) with
   the locale's separators and the exact bytes in the tooltip; the space's per-type table adds the
   size of each type beside its count. The list still sorts by the entity count.
