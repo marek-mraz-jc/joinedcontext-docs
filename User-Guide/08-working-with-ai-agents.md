@@ -181,13 +181,7 @@ A page with **No passage** is never used in an answer.
 2. **Tools you would get** lists the reads and writes the server will offer. Click **Check and propose**. A public server needs an approver who may publish.
 3. On the server's card, copy the **Address** or the **Entry for the AI client's configuration**. A public server also has **Open the public connect page**, the page described in [The Catalogue and Public Pages](17-catalogue-and-public-pages.md#5-connect-an-ai-assistant-to-public-data).
 
-**My MCP connectors**, at `/connectors`, holds your own addresses, up to ten, outside any project. Only your sign-in opens them, and each reaches only Endpoints you may read.
-
-1. Click **New connector** and give it a **Name** such as `traffic`: lowercase letters, digits and dashes, the last part of its address.
-2. Narrow it with **Projects**, **Context spaces**, **Domains** and **Themes**, and choose **Access**: **Public**, **Whole organization**, **My projects** or **Shared with me**. "Reaches now" says how many Endpoints it reaches.
-3. Click **Save**, then copy the **Address** into your AI client.
-
-Starring an Endpoint on its own page adds it to a connector called `favourites`.
+The old address of your own connectors, `/connectors`, now opens **My AI connectors**.
 
 **My AI connectors**, at `/ai-connectors` in your own menu, holds addresses for Claude Code, claude.ai, ChatGPT or VS Code that reach the Portal's own tools, up to 20. Each one reaches only what you tick, and never more than you may do yourself: the Portal reads your rights again at every call. The page shows no token; each AI client signs you in itself.
 
@@ -197,7 +191,7 @@ Starring an Endpoint on its own page adds it to a connector called `favourites`.
 4. Choose when it **Expires**, at most 30 days from today, and optionally the **Allowed clients**.
 5. Click **Create**. Under **Set up**, copy the `claude mcp add` line for Claude Code, the entry for VS Code, or follow the steps for claude.ai and ChatGPT.
 
-**Activity** lists every call through a connector in the last 30 days. **Edit** changes what it reaches or when it expires; its name stays. **Revoke**, then **Revoke now**, refuses the next call through it.
+**Activity** lists every call through a connector in the last 30 days. **Edit** changes what it reaches or when it expires; its name stays. **Revoke**, then **Revoke now**, refuses the next call through it. [Connect Claude Code, claude.ai, ChatGPT and VS Code](21-connect-ai-clients.md) gives each client's steps, what each preset allows and what each refusal means.
 
 ## 8. Entering a Secret a Plan Needs
 
