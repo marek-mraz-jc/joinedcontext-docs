@@ -2353,6 +2353,11 @@ run and a person get the same answer (T-4453 removed the `GET …/assistant/cata
 POST /api/v1/projects/{project}/ops/jc_catalog_search   { "q": "bike availability", "scope": "Endpoint" }
 ```
 
+Without `scope`, or with `"scope": "Dataset"`, the answer adds `datasets`: at most 10 public
+datasets of the installation's open-data catalogues (CKAN `package_search`, read anonymously as
+the catalogue page reads them), each `{ title, url, publisher, formats }` with `url` the dataset's
+page; a catalogue that did not answer is named in `unavailable` (T-6027).
+
 ```json
 {
   "q": "bike availability",
@@ -2547,8 +2552,19 @@ route's problem document.
     → 200 { "items": [{ "kind": "Pipeline", "name": "bikes-hsl", "space": "helsinki",
                         "title": "…", "phase": "Ready", "sourceUrl": "…" }] }
     → 422 { "error": "invalid_input", "path": "/kind", "message": "'Bikes' is not a kind …; the kinds are …" }
+    An Endpoint's line adds `types` (its spec's `entityTypes`, else the classes of its space's
+    model) and `url`, its address on the data host (T-6027).
   jc_resource_get      { "kind": "Endpoint", "name": "helsinki-bikes" }
     → 200 the manifest with its status; secret values never, `secretRef` names only
+    An Endpoint's answer adds `access`: `url`, `types`, `surfaces` (one `{ name, url }` per address
+    of each representation the Endpoint serves: `ngsi-ld/v1/`, `odata/v4/`, `ogc/features/` and a
+    `geojson` items address per type, `file.csv`, `sta/v1.1`, `ws`, `mcp`, each feed and calendar
+    output; a representation it does not serve is not offered) and, for a public Endpoint, `embed`,
+    the viz host's frame (`https://viz.{domain}/embed.html#{slug}&type={T}`, as its Embed button
+    writes it). `"writers": true` adds `writers`: each person, group, role or ServiceAccount the
+    gateway grants a write on one of its types, with the types and the Policies (`via`), from the
+    access matrix (§57), so only an organization administrator or a reader of the space's Policies
+    is answered (`403` otherwise) and the read is recorded; on another kind `writers` is `422`.
     → 404 problem: "Endpoint 'helsinki-bike' not found in project 'helsinki'; it has helsinki-bikes, …"
   jc_resource_propose  { "manifest": { "apiVersion": "…", "kind": "Pipeline",
                                        "metadata": { "name": "bikes-hsl" }, "spec": { … } } }
