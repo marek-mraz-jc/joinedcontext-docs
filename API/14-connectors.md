@@ -178,10 +178,12 @@ A DataModel change may carry `source`, the whole LinkML file its `spec.linkml` n
 
 | Tool | Input | Output | Notes |
 |---|---|---|---|
-| `sample_source` | `{project, datasource \| source {…}, limit? (1-50, default 10)}` | `{rows[], contentType, bytes, truncated}` | Reads through the outbound allow-list; never writes Git, never stores the sample. |
-| `try_mapping` | `{project, mapping, input[1..50] \| datasource}` | `{outputs[], errors[{index, message}], verdict}` | Runs the mapping in the pipeline test sandbox (PL-43); writes nothing. |
-| `run_pipeline` | `{project, pipeline}` | `{runId, state, url}` | Requires `run` on the pipeline (segments `pipeline`, `operate`); the run writes through its own Endpoint and Policy, never as the connector. |
-| `pipeline_logs` | `{project, pipeline, runId?, limit? (1-500, default 100)}` | `{lines[{at, level, step, message}], state}` | Masked as the activity pipeline masks them (OPS-48). |
+| `sample_source` | `{project, dataSource \| sample {text, format}}` | `{records[≤20], fields[], count, truncated, errors[]}`; a streaming source `{streamed, seconds, …}` | The project's runner reads the declared DataSource under its egress policy; never writes Git, never stores the sample. Through a connector `sample.url` is refused: a URL a prompt carries is never fetched inside the cluster (T-6028). |
+| `try_mapping` | `{project, pipeline \| draft, sample {text, format} \| messages[]}` | `{input, records[], errors[{stage, step, line, message}]}` | Runs the candidate's steps in the pipeline test sandbox (PL-43); writes nothing. As `sample_source`, no `sample.url` through a connector. |
+| `run_pipeline` | `{project, name}` | `{run, state: queued}` | Queues one run of the approved pipeline now and answers at once, never waiting for the run (PL-78). Offered only with `writes` on a connector whose segments reach Pipeline (`pipeline`, `operate`), held to a scope item with `write` on that pipeline; the caller needs propose and approve on Pipeline. The run writes through its own Endpoint and Policy, never as the connector. A run in progress or a pipeline that always runs is `409`. |
+| `pipeline_logs` | `{project, name, run?, limit? (1-50, default 10), cursor?}` | `{runs[{run, sent, rejected, failed, …}], run, lines[{id, at, recordId, step?, outcome, message}], next?}` | The newest runs with their counts and one run's log (the newest unless `run` names one), newest line first. A page holds at most 32 KiB of lines; `next` is the `cursor` of the following page. Masked as the activity pipeline masks them (OPS-48). |
+
+In the Portal's operation registry they are `jc_pipeline_sample_source`, `jc_pipeline_try_mapping`, `jc_pipeline_run` and `jc_pipeline_logs`; segment `pipeline` lists all but the run, `operate` lists `jc_pipeline_logs` (T-6028).
 
 ### 4.5 The Portal assistant's own tools
 
