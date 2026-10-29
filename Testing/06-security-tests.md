@@ -32,14 +32,14 @@ Every attack of this kind is a permanent case, in the crate that enforces the ru
 
 | Attack | Asserted in |
 |---|---|
-| a caller reads a space their grants do not reach | `crates/context-gateway/tests/edge_app_space_record_tests.rs`, `tests/security/test_tenant_isolation.py` |
-| a caller widens what a Policy allows | `crates/context-gateway/tests/attack_policy_widening_tests.rs`, `tests/security/test_policy_bypass.py` |
-| an entity id or tenant header of another space | `crates/context-gateway/tests/attack_foreign_space_ids_tests.rs`, `tests/security/test_tenancy_injection.py` |
+| a caller reads a space their grants do not reach | `crates/context-gateway/tests/it/edge_app_space_record_tests.rs`, `tests/security/test_tenant_isolation.py` |
+| a caller widens what a Policy allows | `crates/context-gateway/tests/it/attack_policy_widening_tests.rs`, `tests/security/test_policy_bypass.py` |
+| an entity id or tenant header of another space | `crates/context-gateway/tests/it/attack_foreign_space_ids_tests.rs`, `tests/security/test_tenancy_injection.py` |
 | a grant that narrows is applied silently and the caller is not told | `tests/security/test_silent_narrowing.py` |
 | one representation shows what another hides | `tests/security/test_representation_parity.py` |
-| a token from the wrong realm, client, audience or algorithm | `crates/context-gateway/tests/attack_identity_token_tests.rs` |
+| a token from the wrong realm, client, audience or algorithm | `crates/context-gateway/tests/it/attack_identity_token_tests.rs` |
 | notifications as an amplifier or a way out | the broker's view delivers notifications since T-3654; Antares covers it in its antares-api security_regression tests |
-| a file or bulk surface as a resource bomb | `crates/context-gateway/tests/attack_resource_bomb_tests.rs` |
+| a file or bulk surface as a resource bomb | `crates/context-gateway/tests/it/attack_resource_bomb_tests.rs` |
 | the edge as the decision point instead of the enforcement point | `joinedcontext-deployment/tests/test_edge_attack_surface.py` |
 
 ### An existing resource the caller may not read
@@ -182,7 +182,7 @@ State of the register on 2026-09-20: 50 vectors, 5 proven, 45 open.
 | gateway | The JSON-LD context and other URLs the gateway fetches for a caller | T-1698 | R46 |  | open |
 | gateway | Notifications as an amplifier or a leak | T-1699 | R46, PL-23 |  | open |
 | gateway | File and bulk surfaces as a resource bomb | T-1700 | GW26 |  | open |
-| identity | A token from the wrong realm, client, audience or algorithm | T-1677 | PF-46 | `joinedcontext-platform/crates/context-gateway/tests/attack_identity_token_tests.rs::an_algorithm_the_key_is_not_of_is_refused_however_plausible_the_header_looks`, `joinedcontext-platform/crates/context-gateway/tests/attack_identity_token_tests.rs::the_published_verification_key_signs_nothing_when_it_comes_back_as_an_hmac_secret` | proven |
+| identity | A token from the wrong realm, client, audience or algorithm | T-1677 | PF-46 | `joinedcontext-platform/crates/context-gateway/tests/it/attack_identity_token_tests.rs::an_algorithm_the_key_is_not_of_is_refused_however_plausible_the_header_looks`, `joinedcontext-platform/crates/context-gateway/tests/it/attack_identity_token_tests.rs::the_published_verification_key_signs_nothing_when_it_comes_back_as_an_hmac_secret` | proven |
 | identity | Session fixation, theft and logout | T-1678 | PF-46 |  | open |
 | identity | A write without the CSRF token, or from another origin | T-1679 | PF-46 |  | open |
 | identity | Password guessing and the demo accounts in production | T-1680 | PF-46 |  | open |

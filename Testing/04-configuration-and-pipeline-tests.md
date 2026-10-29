@@ -49,7 +49,7 @@ The draft-07 schemas themselves are published by `jcctl schema export [--out <di
 
 ### Which changes need an approver
 
-`crates/jcctl/src/lanes.rs` derives the approval lane from what a change does, never from what the author says about it: green is auto-approved by the policy bot, yellow needs one domain approver, red needs the full chain. A proposal takes the lane of its strictest change, so one deletion among twenty additions still needs the red chain. Deletion, public exposure, federation and identity kinds are red; raising an agent profile's limits or widening its egress is red as well ([CC-63](../Requirements/city-as-code.md), CC-70, AG-47). `crates/jcctl/tests/lanes_tests.rs` is where a new kind's lane is asserted.
+`crates/jcctl/src/lanes.rs` derives the approval lane from what a change does, never from what the author says about it: green is auto-approved by the policy bot, yellow needs one domain approver, red needs the full chain. A proposal takes the lane of its strictest change, so one deletion among twenty additions still needs the red chain. Deletion, public exposure, federation and identity kinds are red; raising an agent profile's limits or widening its egress is red as well ([CC-63](../Requirements/city-as-code.md), CC-70, AG-47). `crates/jcctl/tests/it/lanes_tests.rs` is where a new kind's lane is asserted.
 
 ---
 
@@ -75,7 +75,7 @@ jcctl apply --repo-dir ./banskabystrica [--prune] [--confirm-deletions]
 jcctl drift --repo-dir ./banskabystrica [--json] [--adopt-dir <path>]
 ```
 
-`plan` prints what the repository declares and, with `--gateway-url`, what the live side holds. Idempotency is asserted in `crates/jcctl/tests/apply_tests.rs`: apply, plan again, and the second plan is empty ([CC-18](../Requirements/city-as-code.md#3-reconciler-jcctl)). Drift is the same comparison in the other direction, and `--adopt-dir` writes the live state out as manifests to adopt.
+`plan` prints what the repository declares and, with `--gateway-url`, what the live side holds. Idempotency is asserted in `crates/jcctl/tests/it/apply_tests.rs`: apply, plan again, and the second plan is empty ([CC-18](../Requirements/city-as-code.md#3-reconciler-jcctl)). Drift is the same comparison in the other direction, and `--adopt-dir` writes the live state out as manifests to adopt.
 
 There is no `--assert-empty` and no `--diff` flag, and no CI lane of ours posts a plan as a merge request comment: [TS-20](../Requirements/testing.md) is open, and the MVP has no pull requests to comment on. In the Portal the plan a person reads before approving is rendered from the same `ChangeSet`.
 
