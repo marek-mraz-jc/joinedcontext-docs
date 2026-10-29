@@ -113,17 +113,19 @@ Asistent vyplní predvoľbu KPI v štúdiu, zostaví vzorec ukazovateľa a vypo�
 
 #### Ručne
 
-1. Prejdite na **Toky** na `/projects/helsinki/flows`.
-2. Prezrite si galériu šablón. Skontrolujte štítok rizika posúdenia (**Schvaľuje sa automaticky**, **Jeden schvaľovateľ** alebo **Úplné schválenie**).
-3. Kliknite na **Nastaviť** na karte (napríklad šablóna na príjem údajov zo senzorov MQTT).
-4. Vyplňte parametre vygenerované zo schémy šablóny (ako je adresa brokera, cieľový priestor a model).
-5. Kliknite na **Vytvoriť**.
+1. Prejdite na **Zdroje údajov** na `/projects/helsinki/datasources`.
+2. V časti **Pripravené nastavenia** si prečítajte karty: kanál GBFS mestských bicyklov, kanál JSON načítavaný do kontextového priestoru, kanál MQTT. Každá karta ukazuje cestu posúdenia (**Schvaľuje sa automaticky**, **Jeden schvaľovateľ** alebo **Úplné schválenie**). Časť ukazuje iba nastavenia, ktoré vaša rola smie spustiť; ak žiadne nie sú, chýba.
+3. Kliknite na **Nastaviť** na karte.
+4. Vyplňte parametre vygenerované zo schémy šablóny (ako je adresa kanála, interval načítania a Endpoint, cez ktorý tok zapisuje).
+5. Kliknite na **Navrhnúť zmenu**. **Späť na zdroje údajov** odíde bez zápisu.
 6. Platforma rozbalí šablónu do manifestov a otvorí návrh zmeny.
 7. V `/projects/helsinki/approvals` schvaľovateľ návrh schváli.
 
+Aplikácia zo zadania sa začína v **Aplikácie** tlačidlom **Nová aplikácia**. Stará adresa `/projects/helsinki/flows` otvorí domovskú stránku projektu.
+
 #### Požiadaním asistenta
 
-Asistent vás môže nasmerovať na `/projects/helsinki/flows` a odporučiť šablóny zodpovedajúce vášmu zdroju údajov, ale formuláre parametrov musíte odoslať a skontrolovať vy.
+Asistent vám môže odporučiť šablóny zodpovedajúce vášmu zdroju údajov a spustiť ich nástrojom `jc_flow_start`, ale formuláre parametrov musíte odoslať a skontrolovať vy.
 
 ## 6. Pozastavenie, spustenie a stav prúdu
 
