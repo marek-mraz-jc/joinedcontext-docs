@@ -215,7 +215,7 @@ A request does not pay any of these: the slug table is a hash map swapped whole,
 
 ### 6.1 Finding one dataset among 10,000
 
-`mod scale` in `crates/context-gateway/tests/mcp_hub_catalog_tests.rs` generates a catalogue a person would search, seeded so a seed gives the same catalogue each run (T-4497). Each Dataset has one public Endpoint and is built from:
+`mod scale` in `crates/context-gateway/tests/it/mcp_hub_catalog_tests.rs` generates a catalogue a person would search, seeded so a seed gives the same catalogue each run (T-4497). Each Dataset has one public Endpoint and is built from:
 
 - one of 14 Smart Data Model topics, with titles and descriptions in Slovak and English;
 - one of 518 places: the names of dev's AdministrativeArea entities, in `tests/fixtures/places-dev.txt`;

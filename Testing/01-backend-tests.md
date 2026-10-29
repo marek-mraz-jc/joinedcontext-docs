@@ -50,7 +50,7 @@ The files are grouped by the surface they cover: `edge_pdp_*` (about 20 files) f
 - A header a client supplies, `NGSILD-Tenant` included, never reaches the broker unless the claims put it there ([GW20](../Requirements/gateway-firewall.md#5-tenants-pinning-and-chaining)).
 - Every representation of one endpoint shows the same data as every other one.
 
-One case, from `crates/context-gateway/tests/edge_app_space_record_tests.rs`:
+One case, from `crates/context-gateway/tests/it/edge_app_space_record_tests.rs`:
 
 ```rust
 /// The first case: no other spelling of a space name is that name. The names are guessable words,
@@ -93,9 +93,9 @@ jcctl pipeline test --pipeline <manifest.yaml> --sample <file> [--format csv|jso
 jcctl schema export [--out <dir>]
 ```
 
-- **Idempotency.** `crates/jcctl/tests/apply_tests.rs` applies a repository, then plans again and asserts the second plan is empty ([CC-18](../Requirements/city-as-code.md#3-reconciler-jcctl)).
-- **Determinism.** `crates/jcctl/tests/blueprint_tests.rs` re-renders a committed blueprint instance and asserts byte-identical output; maps are ordered before rendering, so two runs and two machines agree.
-- **Artifacts.** `crates/jcctl/tests/rebuild_tests.rs` rebuilds the artifacts of a space at a revision and compares them with the committed ones. The same comparison runs in the platform's fast lane as `jcctl model diff --repo-dir examples/datamodels` against a live generator.
+- **Idempotency.** `crates/jcctl/tests/it/apply_tests.rs` applies a repository, then plans again and asserts the second plan is empty ([CC-18](../Requirements/city-as-code.md#3-reconciler-jcctl)).
+- **Determinism.** `crates/jcctl/tests/it/blueprint_tests.rs` re-renders a committed blueprint instance and asserts byte-identical output; maps are ordered before rendering, so two runs and two machines agree.
+- **Artifacts.** `crates/jcctl/tests/it/rebuild_tests.rs` rebuilds the artifacts of a space at a revision and compares them with the committed ones. The same comparison runs in the platform's fast lane as `jcctl model diff --repo-dir examples/datamodels` against a live generator.
 - **Pipelines.** `crates/jc-manifest/tests/bento_datasource_render_tests.rs` and its neighbours render a pipeline manifest into a Bento configuration; `bento lint` and `bento test` then run over `examples/ingestion/` in CI.
 
 ---
