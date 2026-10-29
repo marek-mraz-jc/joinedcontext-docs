@@ -992,7 +992,11 @@ PUT /api/v1/preferences      replaces them whole; answers 200 with what is now s
   never from this record (T-3233).
 - Personal MCP connectors are no preference since T-5970: they are connector records (API/14,
   ADR-N-064 §9); a body naming `connectors` is a `400`, and a list an older Portal stored moves
-  into the connector store once (`data-read`, every item `read`, the default ceiling's expiry). The
+  into the connector store once (`data-read`, every item `read`, the default ceiling's expiry). An
+  old connector that does not move (its selector takes no Endpoint, its name is live already, the
+  person holds the most live connectors) stays in the stored row under `connectorsNotMoved` as
+  `{name, select, reason}`, and a list the Portal cannot read stays under `connectors`; no read
+  answers either key and a `PUT` carries both over, so the move loses nothing a person made. The
   gateway reads a person's live `data-read` connectors for `/api/mcp/me/{name}` by the caller's
   `sub` alone (EP-123): `GET /internal/connectors/{sub}` on the Portal's internal listener answers
   `{ "connectors": [ { "id": "…", "name": "my-air", "scope": [ … ], "expiresAt": "…",
