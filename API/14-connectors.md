@@ -136,13 +136,15 @@ Every tool answers its errors as `application/problem+json` (API/09) with these 
 
 | Tool | Input | Output | Notes |
 |---|---|---|---|
-| `plan_change` | `{project, changes[1..50]{op: create\|replace\|patch\|delete, kind, name, manifest?, patch?}, workspace?}` | `{planId, baseEtag, expiresAt, diff, verdict {ok, findings[{level, path, message}]}}` | The resource API's `?dryRun=All` for each change (AG-62): every check, nothing saved. A failing check answers `422` with every finding. A plan holds `secretRef` names only. |
+| `plan_change` | `{project, changes[1..50]{op: create\|replace\|patch\|delete, kind, name, manifest?, patch?, source?}, workspace?}` | `{planId, baseEtag, expiresAt, diff, verdict {ok, findings[{level, path, message}]}}` | The resource API's `?dryRun=All` for each change (AG-62): every check, nothing saved. A failing check answers `422` with every finding. A plan holds `secretRef` names only. |
 | `apply_change` | `{planId}` | `{changeRequests[{id, url, lane, state}]}`, one per change, or with `workspace` `{workspaceChanges[{workspace, id, branch, lane}]}` | Only a plan this connector made, unchanged, within 30 minutes, with `write` on every item. Never approves: a person approves at `url` (AG-149, AG-151). |
 | `revert_plan` | `{project, id, workspace?}` | as `plan_change`, plus `reverts` | The plan that undoes merged change `id`: every file it touched goes back to its version at the commit the change was cut from (`replace`, `create` for a file it deleted, `delete` for one it added). A file the default branch changed since the merge is `409` naming the file; a file outside the project or not a manifest is `422` naming it. Needs the right the original write needed on every item; applied with `apply_change` like any plan (S-53). |
 
 `plan_change` is offered whenever a segment proposes; `apply_change` only when `writes` is true. With writes off a person still sees the plan and applies it in the Portal.
 
-In the Portal's operation registry the tools are `jc_change_plan`, `jc_change_revert_plan` and `jc_change_apply` (the `jc_<noun>_<verb>` names of every other operation). A change's `op` is `create` (the object must not exist), `replace` (it must), `patch` (an RFC 7386 merge patch onto the current manifest) or `delete`. A plan's etag covers each object's `metadata` and `spec`; a status the reconciler writes does not move it. An apply answers `404` for a plan that expired, was applied, or belongs to another person or connector, so a plan id tells nobody else anything. The Portal keeps plans in memory for their 30 minutes: after a Portal restart the client plans again.
+In the Portal's operation registry the tools are `jc_change_plan`, `jc_change_revert_plan` and `jc_change_apply` (the `jc_<noun>_<verb>` names of every other operation). A change's `op` is `create` (the object must not exist), `replace` (it must), `patch` (an RFC 7386 merge patch onto the current manifest) or `delete`. A plan's etag covers each object's `metadata` and `spec`; a status the reconciler writes does not move it.
+
+A DataModel change may carry `source`, the whole LinkML file its `spec.linkml` names (`patch` may then be left out). The plan runs the check `PUT .../datamodels/{name}/source?dryRun=All` runs (DM-22, DM-24): no literal secret, a range that names a class, enum or type the model, its imports or `linkml:types` define (else `422` at `/changes/N/source/classes/<Class>/attributes/<slot>/range` naming the class), and Model Tools compiles it. The diff's `model` member names the file, the `severity`, the `version` the model takes (a breaking change bumps the major), the `lane`, and each change; a breaking one carries `affectedEntities`, the stored entities of the classes it touches in the model's space as the broker counts them by type, or `notCounted` with the reason. The plan's etag also covers the published LinkML file. An apply opens one change request with the manifest, the source and the generated artifacts; `source` is not taken with `workspace`. An apply answers `404` for a plan that expired, was applied, or belongs to another person or connector, so a plan id tells nobody else anything. The Portal keeps plans in memory for their 30 minutes: after a Portal restart the client plans again.
 
 ### 4.4 Pipelines
 
@@ -171,6 +173,18 @@ An AI client copies every answer into a model its vendor runs, so a connector an
 ```
 
 A Data Model the Portal cannot read at that moment refuses the call (`isError: true`, naming the model), since nothing could be withheld from it. The audit row (AG-147) holds the tool and target only, never a withheld name or value.
+
+### 4.7 The plan view (MCP Apps)
+
+`plan_change` and `try_mapping` render in an MCP Apps host (claude.ai, ChatGPT, VS Code) as one view (AG-157, AG-155). Each tool names it in `tools/list` as `_meta.ui.resourceUri` (and the older flat key `_meta["ui/resourceUri"]`).
+
+| Field | Value |
+|---|---|
+| `uri` | `ui://joinedcontext/plan-view.html` |
+| `mimeType` | `text/html;profile=mcp-app` |
+| `_meta.ui.csp` | `{connectDomains: [], resourceDomains: []}`: the view loads and connects to nothing outside itself |
+
+`/c/{id}` answers `resources/read` for this one URI and `-32601` for every other resource; `/api/v1/mcp` lists it in `resources/list` too. The view is a static page: it renders only the tool result the host posts to it, as text, and holds no token. Its one link, "Open in Portal to approve" (`/projects/{project}/approvals`; `/projects/{project}/pipelines` for a mapping), goes to the Portal origin the Portal writes into the page when it serves it, and only when `project` is a DNS-1123 label; the host opens it through `ui/open-link`.
 
 ## Related
 
