@@ -45,9 +45,14 @@ The Portal stores connectors in its database, one owner each, never in Git (AG-1
 | `allowedClients` | Optional list of OAuth client ids (a CIMD URL or a realm client id). Absent: any client of the realm. |
 | `clientIsBoundary` | Read-only. `true` only when every allowed client is one whose redirect URIs no local program can use (claude.ai, ChatGPT); `false` for Claude Code and `mcp-local`, which the Portal labels "intended for", never "only" (AG-153). |
 | `state` | Read-only: `active`, `pending` (above the ceiling, waiting for an administrator, AG-150), `expired`, `revoked`. |
+| `aboveCeiling` | Read-only, present on a request that was queued: one line per field it asked above the owner's ceiling, such as `writes: DelegationPolicy analysts-doprava lets a connector read only`. |
+| `approval` | Read-only, `{by, at}` once an administrator approved the request: the approver's Keycloak user id and the time. |
+| `narrowedBy` | Read-only, on an `active` connector: what the owner's ceiling takes from it today, one line per part (`segment pipeline`, `project skolstvo`, `client mcp-local`). Calls run without those parts; the Portal shows each as a "narrowed by policy" mark. Empty when the connector fits. |
 | `limits` | Read-only: what the connector may spend (§3.1). |
 
 A connector above the person's DelegationPolicy ceiling is either refused with `403` naming the field or, when the policy queues requests, stored as `pending` until an administrator approves it in the Portal.
+
+The ceiling is read on every call, not stored with the connector: a policy an administrator narrows (a segment, a project, an Endpoint, a client, a shorter `maxExpiry` counted from the connector's creation) narrows every existing connector of the people it binds at their next call. An approved request keeps what it asked only while a DelegationPolicy binding its owner still has `aboveCeiling: queue`; a policy turned to `refuse`, or one that no longer names the owner, takes the approval back at the next call (Decided, worker-t5953, owner may override: the administrator's lever over an approval is the policy itself; options: approvals held forever until revoked, or re-approval per policy change).
 
 ## 2. Managing connectors
 
@@ -62,9 +67,10 @@ Contract for T-5950 and T-5951. The routes are not in the Portal's published Ope
 | `PATCH` | `/api/v1/connectors/{id}` | edit segments, scope, writes, expiresAt, allowedClients (JSON merge patch) |
 | `DELETE` | `/api/v1/connectors/{id}` | revoke: state `revoked`, the next call through it is refused |
 | `GET` | `/api/v1/connectors/{id}/activity` | the audit rows of this connector (AG-147) |
+| `GET` | `/api/v1/connectors/pending` | an administrator reads every `pending` connector, oldest first |
 | `POST` | `/api/v1/connectors/{id}/approve` | an administrator approves a `pending` connector |
 
-Every route takes the person's Portal session or a bearer whose audience is the Portal. A connector token is refused on every one of them with `403`: a connector cannot create, widen, approve or revoke connectors (AG-151). `approve` requires the approver to hold every right the connector asks for (`within_own_rights`, PF-51) and refuses the owner approving their own request.
+Every route takes the person's Portal session or a bearer whose audience is the Portal. A connector token is refused on every one of them with `403`: a connector cannot create, widen, approve or revoke connectors (AG-151). An administrator here is a person who administers the organization (`approve` and `delete` on `RoleBinding`, PF-03) or may approve a `DelegationPolicy` change. `approve` requires the approver to hold every right the connector asks for (`within_own_rights`, PF-51: `read` on each kind its segments reach in each scope project, `propose` where an item writes) and refuses the owner approving their own request; `pending` and `approve` refuse an AI client's token (`mcp-local`, `mcp-hub`, `mcp-mobile`) with `403`.
 
 Another person's connector answers `404`, the same body as an id that does not exist.
 
