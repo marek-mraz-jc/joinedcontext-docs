@@ -50,7 +50,7 @@ Certificates came from `letsencrypt-staging` for the first apply and come from `
 
 - **PostgreSQL, target:** CloudNativePG writes a base backup every day and archives the WAL continuously to a Hetzner Object Storage bucket, through the Secret `postgres-backup-s3`. It keeps 30 days. Off until the owner supplies the bucket keys.
 - **PostgreSQL, until then:** the CronJob `postgres-cluster-local-backup` writes a `pg_dumpall` of the platform cluster every night at 02:30 UTC onto a volume of the node and keeps 7 days (`postgres.databases.localBackup`). It covers a dropped table or a broken migration. It does not cover the loss of the node: **the instance has no off-site backup yet.**
-- **Restore from a dump:** copy the newest `*.sql.gz` out of the volume and feed it to `psql` as the cluster's superuser against `postgres-cluster-rw`; the dump drops and recreates every object it carries.
+- **Restore from a dump:** each dump is age-encrypted (`*.sql.gz.age`) to the operator's dev age key and to the drill key. Copy the newest one out of the volume to a machine that holds the operator's key, then run `age -d -i <key> <file> | gunzip | psql` as the cluster's superuser against `postgres-cluster-rw`, as [07-backup-restore.md](07-backup-restore.md) section 2 shows; the dump drops and recreates every object it carries.
 - **Configuration:** the forge repositories are the source of truth for every object the Portal manages. Back them up as [07-backup-restore.md](07-backup-restore.md) section 3 describes.
 
 ## 5. Restore runbook

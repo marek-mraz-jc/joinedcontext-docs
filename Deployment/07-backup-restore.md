@@ -79,14 +79,42 @@ object storage, the drill there records `no-backup` and no number exists.
 ### The nightly local dump and its restore check
 
 An instance without object storage (production until its S3 keys exist) keeps a nightly
-`pg_dumpall --clean --if-exists | gzip` instead: the CronJob `postgres-cluster-local-backup`
-(02:30 UTC, `postgres.databases.localBackup`) writes `/backup/<date>.sql.gz` to a node volume of
+`pg_dumpall --clean --if-exists | gzip | age` instead: the CronJob `postgres-cluster-local-backup`
+(02:30 UTC, `postgres.databases.localBackup`) writes `/backup/<date>.sql.gz.age` to a node volume of
 `size` (10Gi) and keeps `keepDays` (7) days. It covers a dropped table or a broken migration, not
 the loss of the node. Just before each dump the job counts every table of every database into
-`<date>.sql.gz.counts` beside it; `excludeDatabases` (empty by default) leaves named databases
+`<date>.sql.gz.age.counts` beside it (table names and row counts, no row value); `excludeDatabases` (empty by default) leaves named databases
 out of both. The job fails when pg_dumpall fails or when one dump exceeds 80 % of the volume
 (that dump is kept; the fix is a larger `localBackup.size`), and `PostgresBackupStale` fires
 once no dump has succeeded for 26 hours.
+
+The dump is encrypted in the pipe, so no plain byte of it reaches the volume (T-5839, CC-06). The
+job seals it in the age v1 format to two kinds of key:
+
+- `localBackup.ageRecipients`: the operator's age public keys. The default is the dev age key of
+  the deployment repository's `.sops.yaml`, whose private half only the operator's secret store
+  holds. The render fails when the dump is on and the list is empty.
+- The drill key: the generated Secret `{cluster}-local-backup-key` (64 hex digits, an X25519
+  key) in the cluster's namespace, which the monthly drill opens the dump with. Rotating it alone
+  leaves the older dumps readable only with the operator's key.
+
+The cluster's image has no `age` binary, so the job and the drill run the chart's
+`files/age.py` (ConfigMap `{cluster}-local-backup-age`) on the image's python3-cryptography; the
+`age` CLI opens what it writes. Dumps written before the encryption (`*.sql.gz`) expire with the
+retention; the drill reads only `*.sql.gz.age`.
+
+To restore a dump by hand, copy the newest `<date>.sql.gz.age` off the volume to a machine that
+holds the operator's key, never into the cluster, and stream it into the cluster's primary as
+its superuser:
+
+```bash
+age -d -i <operator-age-key-file> <date>.sql.gz.age | gunzip \
+  | psql -X -v ON_ERROR_STOP=1 "host=127.0.0.1 port=5432 user=postgres dbname=postgres"
+```
+
+Run it through `kubectl -n postgres port-forward svc/postgres-cluster-rw 5432` with
+`PGPASSWORD` read from the Secret `postgres-cluster-superuser`. The dump drops and recreates every
+object it carries. `age` refuses a damaged or truncated file before `psql` sees a byte of it.
 
 local-path does not enforce `size`, and the volume sits on the disk Postgres runs on, so the
 job holds itself to it:
@@ -107,8 +135,10 @@ archive restore, in an init container of its own Job pod:
 
 1. The init container `dump` runs the cluster's image, with the dump volume mounted read-only
    and an `emptyDir` of `drDrill.storageSize` for the data. It starts a Postgres of its own.
-2. It tests the gzip whole, then feeds it to `psql -v ON_ERROR_STOP=1`. A truncated file or the
-   first refused statement fails the stage.
+2. It decrypts the dump with the drill key in the pipe, tests the gzip whole, then decrypts it
+   again into `psql -v ON_ERROR_STOP=1`. A file the key does not open, a damaged or truncated
+   chunk, a truncated gzip or the first refused statement fails the stage. The init container
+   alone mounts the drill key; the drill container that holds the API token does not.
 3. It counts every table of the copy and holds it to the dump's `.counts` file, within
    `tolerancePercent` and at least one row. A table the copy lacks fails the stage by name.
 4. It stops Postgres, deletes the copy's files and hands its verdict to the drill container,
