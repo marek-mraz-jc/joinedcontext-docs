@@ -20,7 +20,7 @@ Nič v tejto príručke sa nestane aktívnym, keď stlačíte Uložiť. Každý 
 
 1. Otvorte Portál. Prihlasovacia stránka patrí vašej organizácii; zadajte používateľské meno a heslo, ktoré ste dostali. Keď sa prihlásite, Portál sa otvorí v projekte.
 2. Lišta navrchu uvádza názov projektu, na ktorý sa pozeráte. Ak patríte do viacerých projektov, použite ju na prepnutie: všetko pod ňou, každá stránka a každý zoznam, patrí projektu, ktorý je tam uvedený.
-3. Ľavá navigácia predstavuje celý Portál: **Kontextové priestory**, **Endpointy**, **Zdroje údajov**, **Pipeliny**, **Dashboardy**, **Aplikácie**, **Schvaľovania**, **Prístup**, **Prehliadať dáta**, **Dátové modely**, **Toky**, **Kópie**, **Otvorené dáta** a **Aktivita**.
+3. Ľavá navigácia predstavuje celý Portál: **Kontextové priestory**, **Endpointy**, **Zdroje údajov**, **Pipeliny**, **Dashboardy**, **Aplikácie**, **Schvaľovania**, **Prístup**, **Prehliadať dáta**, **Dátové modely**, **Kópie**, **Otvorené dáta** a **Aktivita**.
 4. Asistent sedí v rohu za tlačidlom **Otvoriť asistenta**. Dokáže čítať stránky, ktoré môžete čítať vy, a vypĺňať formuláre, ktoré môžete vypĺňať vy, a môže navrhnúť zmenu rovnako ako vy; nemôže ju však schváliť.
 
 Ak stránka hovorí, že niečo nesmiete vidieť, hovorí to vaša rola, nie je to chyba. Stránka **Prístup** ukazuje, čo vám vaše roly dovoľujú robiť.
@@ -67,7 +67,7 @@ Dve časti v tomto poradí: zdroj údajov hovorí, odkiaľ sa má čítať, a pi
 
 **Opýtaním sa asistenta:** *načítaj kanál kvality ovzdušia mesta z tejto URL do nového priestoru každých pätnásť minút*. Asistent pripraví návrh zdroja údajov, pipeliny aj priestoru spoločne a nechá ich vyplnené, aby ste si ich prečítali. Oznámenie nad formulárom uvádza, že ho vyplnil asistent; pred navrhnutím ho skontrolujte, pretože zmena odchádza pod vaším menom.
 
-Alebo začnite z toku: **Toky** je galéria celých prípadov použitia. Tlačidlo **Nastaviť** sa opýta iba na to, čo daný prípad použitia potrebuje, a zapíše priestor, zdroj, pipeline aj endpoint spoločne.
+Alebo začnite z pripraveného nastavenia: **Zdroje údajov** ich ukazujú v časti **Pripravené nastavenia**. Tlačidlo **Nastaviť** sa opýta iba na to, čo daný kanál potrebuje, a zapíše zdroj, jeho pipeline aj plán spoločne.
 
 ## 5. Zverejnite ho
 
