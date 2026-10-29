@@ -23,6 +23,8 @@ The platform does not let a client register itself: a client that tries finds no
 
 The token a client receives names the Portal's MCP server and nothing else. It carries your platform roles and groups, so the client sees exactly what you see in the Portal and no more. A token of `mcp-local` lasts five minutes and is refreshed while your sign-in lasts, at most eight hours; then the client asks you to sign in again.
 
+Where your data goes: every answer the platform gives the client leaves the platform for the client's vendor, Anthropic for claude.ai, Claude Desktop and Claude Code, OpenAI for ChatGPT, where its model reads it beside your prompt and the vendor keeps it as your plan's settings say. A connector leaves out the attributes a data model marks as personal, such as a citizen's e-mail or phone number, unless your organization allows them and you tick them on the connector. Your data protection officer's assessment of this is in [Data Protection Impact Assessment for AI Connectors](../Operations/04-ai-connectors-dpia.md).
+
 ## 2. claude.ai and Claude Desktop
 
 Claude Desktop uses the connectors of your claude.ai account, so one setup serves both.

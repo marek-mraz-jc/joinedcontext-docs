@@ -198,6 +198,7 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **AG-155** | [S] | open |  |  |
 | **AG-156** | [S] | open |  |  |
 | **AG-157** | [H] | open |  |  |
+| **AG-158** | [A][S] | open |  |  |
 | **AG-87** | [H] | tested | ci-full, fast ci | portal `src/agents/paths.rs::building_an_app_may_draft_the_space_it_needs`, portal `src/agents/paths.rs::every_path_says_its_steps_with_tools_it_may_call`, portal `src/agents/paths.rs::every_path_has_an_id_that_reads_back_and_a_first_question`, and 41 more |
 | **AG-88** | [A] | built |  | `joinedcontext-portal/src/agents/oneshot/conversation.rs` |
 | **AG-89** | [A] [S] | tested | fast ci | portal `src/ops/pipeline_steps.rs::fields_are_every_key_once_in_name_order` |
