@@ -55,7 +55,7 @@ Contract for T-5950 and T-5951. The routes are not in the Portal's published Ope
 
 | Method | Path | What it does |
 |---|---|---|
-| `GET` | `/api/v1/connectors` | the caller's connectors; an administrator adds `?owner=` to read one person's |
+| `GET` | `/api/v1/connectors` | the caller's connectors |
 | `POST` | `/api/v1/connectors` | create; `?dryRun=All` validates only |
 | `GET` | `/api/v1/connectors/options` | what a connector of the caller may name: every preset, the caller's ceiling (presets, writes, longest life), per project they read the spaces, Endpoints and pipelines they read, and the realm's MCP clients; create and edit check every item again, and a named object the caller does not read answers the same `422` as one that is not there |
 | `GET` | `/api/v1/connectors/{id}` | one of the caller's connectors |
@@ -68,7 +68,20 @@ Every route takes the person's Portal session or a bearer whose audience is the 
 
 Another person's connector answers `404`, the same body as an id that does not exist.
 
-### 2.1 A paired Portal tab (T-5967)
+### 2.1 The organization's connectors
+
+An organization administrator (approve and delete on `RoleBinding` at organization scope, PF-03) reads and revokes every person's connectors on routes of their own, so the owner routes above keep answering `404` for anybody else's connector (T-5975):
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/api/v1/organization/connectors` | every connector, live ones first, at most 500: the record of §1 plus `callsPerDay`, `denialsPerDay` and `flagged` |
+| `DELETE` | `/api/v1/organization/connectors/{id}` | revoke any person's connector; the activity feed names who revoked it |
+
+`callsPerDay` and `denialsPerDay` count the audit rows of the last 24 hours, `denialsPerDay` those with a `refused` verdict. `flagged` is true at `denialsFlag` (10) refusals in that day: a client probing past its scope. The answer carries counts only, never a call's input, a token or a target beyond the audit row's own `project/kind/name`. Anybody else gets `403`, and so does a bearer token, an administrator's own agent or a service account bound to the administrator role included: both routes answer a person's Portal session alone (AG-133).
+
+Offboarding: disabling a person (`POST /api/v1/organization/people/{id}/disable`), removing them, or proposing their removal revokes every live connector of theirs in the same request, and a `person.changed` activity row names how many. Enabling the person again revives none: they create new connectors within the rights they then hold.
+
+### 2.2 A paired Portal tab (T-5967)
 
 "Connect this tab" on My connectors pairs the person's open Portal tab with one of their live connectors. While it is paired, `tools/list` at `/c/{id}` adds the assistant's five UI tools (`jc_ui_navigate`, `jc_ui_open_form`, `jc_ui_highlight`, `jc_ui_show_diff`, `jc_ui_filter_table`, [Architecture/07](../Architecture/07-agents-and-mcp.md)), each with a required `project` out of the connector's scope. A call is checked as the assistant's is (the page against the Portal's table, the kind and every field against the kind's schema, read permission, the person's own plan), held to the connector's scope (a kind of its segments, an object its scope reaches), and handed to that tab only. None of the tools saves, proposes or approves; the person proposes from the form the tab opened.
 
