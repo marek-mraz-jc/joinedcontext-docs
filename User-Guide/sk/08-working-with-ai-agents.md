@@ -181,13 +181,7 @@ Stránka bez úryvku sa v odpovedi nikdy nepoužije.
 2. Položka **Nástroje, ktoré by ste dostali** uvádza čítania a zápisy, ktoré server ponúkne. Kliknite na **Skontrolovať a navrhnúť**. Verejný server potrebuje schvaľovateľa, ktorý má oprávnenie publikovať.
 3. Na karte servera skopírujte **Adresa** alebo **Záznam do konfigurácie AI klienta**. Verejný server má aj voľbu **Otvoriť verejnú stránku pripojenia**, stránku popísanú v príručke [Katalóg a verejné stránky](17-catalogue-and-public-pages.md).
 
-Časť **Moje MCP konektory** na `/connectors` drží vaše vlastné adresy, až desať, mimo akéhokoľvek projektu. Otvára ich iba vaše prihlásenie a každý dosiahne iba na endpointy, ktoré smiete čítať.
-
-1. Kliknite na **Nový konektor** a zadajte **Názov**, napríklad `traffic`: malé písmená, číslice a pomlčky, posledná časť jeho adresy.
-2. Zúžte ho pomocou **Projekty**, **Kontextové priestory**, **Domény** a **Témy**, a vyberte **Prístup**: **Verejné**, **Celá organizácia**, **Moje projekty** alebo **Zdieľané so mnou**. Text „Práve pripojené“ uvádza, koľko endpointov dosahuje.
-3. Kliknite na **Uložiť**, potom skopírujte **Adresa** do svojho AI klienta.
-
-Označenie endpointu hviezdičkou na jeho vlastnej stránke ho pridá do konektora s názvom `favourites`.
+Stará adresa vašich vlastných konektorov, `/connectors`, teraz otvára **Moje AI konektory**.
 
 Časť **Moje AI konektory** na `/ai-connectors` vo vašom vlastnom menu drží adresy pre Claude Code, claude.ai, ChatGPT alebo VS Code, ktoré siahajú na vlastné nástroje Portálu, až 20. Každý siaha len na to, čo zaškrtnete, a nikdy nie na viac, než smiete vy sami: Portál pri každom volaní znova číta vaše práva. Stránka neukazuje žiadny token; každý AI klient vás prihlási sám.
 
@@ -197,7 +191,7 @@ Označenie endpointu hviezdičkou na jeho vlastnej stránke ho pridá do konekto
 4. Zvoľte, dokedy **Platí do**, najviac 30 dní odo dneška, a prípadne **Povolení klienti**.
 5. Kliknite na **Vytvoriť**. V časti **Nastaviť** skopírujte riadok `claude mcp add` pre Claude Code, záznam pre VS Code, alebo postupujte podľa krokov pre claude.ai a ChatGPT.
 
-**Aktivita** uvádza každé volanie cez konektor za posledných 30 dní. **Upraviť** mení, na čo siaha alebo dokedy platí; názov ostáva. **Zrušiť** a potom **Zrušiť teraz** odmietne ďalšie volanie cez neho.
+**Aktivita** uvádza každé volanie cez konektor za posledných 30 dní. **Upraviť** mení, na čo siaha alebo dokedy platí; názov ostáva. **Zrušiť** a potom **Zrušiť teraz** odmietne ďalšie volanie cez neho. [Pripojenie Claude Code, claude.ai, ChatGPT a VS Code](21-connect-ai-clients.md) uvádza kroky pre každého klienta, čo dovoľuje každá predvoľba a čo znamená každé odmietnutie.
 
 ## 8. Zadanie tajomstva, ktoré plán potrebuje
 
