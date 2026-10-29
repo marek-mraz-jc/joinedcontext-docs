@@ -4229,6 +4229,7 @@ the newest messages a broker received. The allowance is written only as a field 
 GET    /api/v1/projects/{project}/mqtt/allowance                       → 200
 GET    /api/v1/projects/{project}/mqttbrokers/{name}/captured?topic=&limit= → 200
 GET    /api/v1/projects/{project}/mqttbrokers/{name}/bindings          → 200
+GET    /api/v1/projects/{project}/mqttbrokers/{name}/access?account=   → 200
 DELETE /api/v1/projects/{project}/mqttbrokers/{name}/captured          → 204
 ```
 
@@ -4310,6 +4311,22 @@ DELETE /api/v1/projects/{project}/mqttbrokers/{name}/captured          → 204
   flow map (§50), an Endpoint by its space. A hidden hop ends the row there: nothing it leads to
   is shown. A pipeline of another project is never joined. Nothing here holds a secret, a
   password reference or a payload.
+- `access?account=<serviceAccount>` explains which roles of the broker the account holds now:
+  the answer of jc-core `mqtt::roles_held` at the time of the request, the decision the gateway
+  makes at CONNECT and publish (ADR-N-048 §2.13), read over the two manifests and decided nowhere
+  else. Each held role carries its `publish` and `subscribe` filters, `bound` (a RoleBinding
+  `mqtt/<broker>/<role>` or `mqtt/*/<role>` in force), `legacy` (the deprecated
+  `serviceAccounts` list) and `until`, when its last grant ends. `outOfWindow` lists the
+  account's grants of this broker outside their validity window. A caller who may not read the
+  project gets `404` (PF-59), a member who may not read `MqttBroker` `403`, an unknown broker or
+  an account the caller may not read `404`, a missing or malformed `account` `400`.
+
+```json
+{"broker": "air", "account": "air-fleet", "at": "2026-10-29T12:00:00Z",
+ "roles": [{"role": "sensor", "publish": ["air/${clientid}/pm10"], "subscribe": [],
+            "legacy": false, "bound": true, "until": "2026-12-01T00:00:00Z"}],
+ "outOfWindow": []}
+```
 
 ## 48. Pipeline access requests (PL-90…PL-93)
 
