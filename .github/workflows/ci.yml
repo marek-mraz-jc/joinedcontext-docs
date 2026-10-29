@@ -31,6 +31,8 @@ jobs:
       # The User Guide shows only the screenshots the live journeys take (T-3270).
       - run: python3 scripts/check-guide-shots.py --selftest && python3 scripts/check-guide-shots.py
       - run: python3 scripts/ux-photo-audit.py --selftest
+      - name: the connector efficiency tables are the ones its data renders (T-6030)
+        run: python3 scripts/connector-efficiency.py selftest && python3 scripts/connector-efficiency.py render --check Testing/09-connector-efficiency.md
       - name: the manifest and API checkers need a yaml and a schema library
         run: pip install --quiet --disable-pip-version-check pyyaml==6.0.3 jsonschema==4.26.0
       - run: python3 scripts/audit-i18n-docs.py
