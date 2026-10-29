@@ -4785,6 +4785,32 @@ GET /api/v1/projects/{project}/endpoints/{name}/access/attributes?type=T&attribu
 - The gateway unreachable is `503`; the panel keeps the gateway's chips and says the Policy
   could not be named.
 
+## 59. The secret form (T-5971, MF-24, CC-06)
+
+A credential a source or a plan needs is typed into the Portal's secret form, never into a chat,
+a tool argument or a manifest. The form writes it encrypted into the project's repository.
+
+```text
+GET  /api/v1/projects/{project}/secrets   → 200 {"items": [{"name", "keys", "path"}]}
+POST /api/v1/projects/{project}/secrets   → 202 Change
+```
+
+```json
+{"name": "counters-api", "values": {"apiKey": "…"}}
+```
+
+- `GET` lists the names and keys every `*.enc.yaml` of the repository declares, never a value.
+- `POST` encrypts the values with SOPS + age for the Portal's own recipient, and for every
+  recipient the replaced file had, into `projects/{project}/secrets/{name}.enc.yaml`, and opens a
+  change request a person approves. A secret that exists is replaced whole: send every key.
+  `name` and each key are letters, digits, `-` and `_` (1 to 63); a value is 1 to 16 KiB; at most
+  10 keys. A bad field is `422` naming it; a name another file declares is `409`.
+- Both doors take a person's Portal session with `propose` on `DataSource`; a token of a
+  connector, an agent or a service account is `403`. A Portal without an age identity answers
+  `503`.
+- The page `/projects/{project}/secrets/new?name=…&key=…` is the form; `jc_change_plan` answers
+  its link in `needsSecret` for each `secretRef` the repository does not hold (API/14 §4.3).
+
 ## Related
 
 - [00-intro](00-intro.md) — all API surfaces.

@@ -119,6 +119,7 @@ Every tool answers its errors as `application/problem+json` (API/09) with these 
 | 404 | `resource-not-found` | the object does not exist or the caller may not read it (one answer for both) |
 | 409 | `conflict` | `apply_change` on a plan whose base moved, or a plan already applied |
 | 422 | `unprocessable` | the manifest is well-formed but fails a check; `errors[]` holds `{path, message}` per finding |
+| 422 | `secret-in-argument` | an argument holds a value that reads like a credential; `errors[]` names each path, never the value |
 | 429 | `too-many-requests` | a limit was reached; `Retry-After` set |
 
 ### 4.2 Reading
@@ -134,8 +135,10 @@ Every tool answers its errors as `application/problem+json` (API/09) with these 
 
 | Tool | Input | Output | Notes |
 |---|---|---|---|
-| `plan_change` | `{project, changes[1..50]{op: create\|replace\|patch\|delete, kind, name, manifest?, patch?}, workspace?}` | `{planId, baseEtag, expiresAt, diff, verdict {ok, findings[{level, path, message}]}}` | The resource API's `?dryRun=All` for each change (AG-62): every check, nothing saved. A failing check answers `422` with every finding. A plan holds `secretRef` names only. |
+| `plan_change` | `{project, changes[1..50]{op: create\|replace\|patch\|delete, kind, name, manifest?, patch?}, workspace?}` | `{planId, baseEtag, expiresAt, diff, verdict {ok, findings[{level, path, message}]}, needsSecret[{name, key, form}]}` | The resource API's `?dryRun=All` for each change (AG-62): every check, nothing saved. A failing check answers `422` with every finding. A plan holds `secretRef` names only. |
 | `apply_change` | `{planId}` | `{changeRequest {id, url, lane, state}}` or `{workspaceChange {workspace, id, url}}` | Only a plan this connector made, unchanged, within 30 minutes, with `write` on every item. Never approves: a person approves at `url` (AG-149, AG-151). |
+
+A credential never passes through a connector (MF-24, T-5971). Every tool refuses an argument holding one with `secret-in-argument`, before anything reads it. A plan whose manifests name a `secretRef` the repository does not hold answers `needsSecret[{name, key, form}]`: `form` is the Portal's secret form (API/01 §59), where the person types the value. Every tool answer to a connector or an agent run is masked: a value under a credential's name, a credential-shaped string and each such word of a log line read `***`.
 
 `plan_change` is offered whenever a segment proposes; `apply_change` only when `writes` is true. With writes off a person still sees the plan and applies it in the Portal.
 
