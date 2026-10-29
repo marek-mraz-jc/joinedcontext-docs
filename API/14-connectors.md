@@ -77,7 +77,7 @@ An organization administrator (approve and delete on `RoleBinding` at organizati
 | `GET` | `/api/v1/organization/connectors` | every connector, live ones first, at most 500: the record of §1 plus `callsPerDay`, `denialsPerDay` and `flagged` |
 | `DELETE` | `/api/v1/organization/connectors/{id}` | revoke any person's connector; the activity feed names who revoked it |
 
-`callsPerDay` and `denialsPerDay` count the audit rows of the last 24 hours, `denialsPerDay` those with a `refused` verdict. `flagged` is true at `denialsFlag` (10) refusals in that day: a client probing past its scope. The answer carries counts only, never a call's input, a token or a target beyond the audit row's own `project/kind/name`. Anybody else gets `403`.
+`callsPerDay` and `denialsPerDay` count the audit rows of the last 24 hours, `denialsPerDay` those with a `refused` verdict. `flagged` is true at `denialsFlag` (10) refusals in that day: a client probing past its scope. The answer carries counts only, never a call's input, a token or a target beyond the audit row's own `project/kind/name`. Anybody else gets `403`, and so does a bearer token, an administrator's own agent or a service account bound to the administrator role included: both routes answer a person's Portal session alone (AG-133).
 
 Offboarding: disabling a person (`POST /api/v1/organization/people/{id}/disable`), removing them, or proposing their removal revokes every live connector of theirs in the same request, and a `person.changed` activity row names how many. Enabling the person again revives none: they create new connectors within the rights they then hold.
 
