@@ -5,7 +5,6 @@ description: Tvorba, import, prispôsobovanie a verziovanie dátových modelov p
 routes:
   - /projects/$project/models
   - /projects/$project/models/$name
-  - /projects/$project/models/$name/diagram
   - /projects/$project/datamodels
   - /projects/$project/projections
   - /projects/$project/mappings
@@ -95,10 +94,6 @@ Napíšte do poľa pre asistenta:
 `Add an optional float slot called airQualityIndex to the WeatherObserved class`
 
 Asistent aplikuje operáciu na návrh modelu a obnoví zobrazenie editora. Vy kliknete na **Skontrolovať** a uložiť model, aby ste navrhli zmenu.
-
-### Model ako diagram
-
-Na stránke modelu otvorte diagram na adrese `/projects/helsinki/models/WeatherObserved/diagram`: každá trieda je karta so svojimi poľami a vzťahmi. Vyberte triedu v diagrame a uvidíte jej polia, endpointy, ktoré ju poskytujú, a pipeliny, ktoré ju zapisujú.
 
 ## 4. Konfigurácia projekcií modelu pre endpointy
 
