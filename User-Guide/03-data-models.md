@@ -5,6 +5,7 @@ description: Authoring, importing, adapting, and versioning data models using Li
 routes:
   - /projects/$project/models
   - /projects/$project/models/$name
+  - /projects/$project/models/$name/diagram
   - /projects/$project/datamodels
   - /projects/$project/projections
   - /projects/$project/mappings
@@ -94,6 +95,10 @@ Type into the assistant composer:
 `Add an optional float slot called airQualityIndex to the WeatherObserved class`
 
 The assistant applies the operation to the model draft and refreshes the editor view. You click **Check** and **Save model** to propose the change.
+
+### Read the Model as a Diagram
+
+On a model's page, click **Show diagram** to open `/projects/helsinki/models/WeatherObserved/diagram`: every class as a card with its fields and relations. Pick a class on the diagram to see its fields, the Endpoints that serve it and the Pipelines that write it.
 
 ## 4. Configuring Model Projections for Endpoints
 
