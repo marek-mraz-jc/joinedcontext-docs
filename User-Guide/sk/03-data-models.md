@@ -5,6 +5,7 @@ description: Tvorba, import, prispôsobovanie a verziovanie dátových modelov p
 routes:
   - /projects/$project/models
   - /projects/$project/models/$name
+  - /projects/$project/models/$name/diagram
   - /projects/$project/datamodels
   - /projects/$project/projections
   - /projects/$project/mappings
@@ -71,6 +72,8 @@ Priložte súbor CSV alebo JSON v paneli asistenta a napíšte:
 Asistent analyzuje štruktúru vzorky, naplní editor LinkML a predloží návrh na `/projects/helsinki/models`.
 
 ## 3. Úprava tried a slotov
+
+Na prehľade modelu **Otvoriť na celú obrazovku** otvorí diagram modelu na samostatnej stránke (`/projects/helsinki/models/<name>/diagram`) spolu s endpointmi, ktoré jednotlivé triedy sprístupňujú.
 
 ### Vytváranie atribútov vo vizuálnom editore
 
