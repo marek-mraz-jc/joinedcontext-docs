@@ -73,6 +73,8 @@ The assistant analyzes the sample structure, populates the LinkML editor, and pr
 
 ## 3. Editing Classes and Slots
 
+On a model's overview, **Open full screen** opens the model diagram on its own page (`/projects/helsinki/models/<name>/diagram`), with the Endpoints that serve each class beside it.
+
 ### Author Attributes in the Visual Editor
 
 #### By hand

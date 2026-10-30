@@ -73,6 +73,8 @@ Asistent analyzuje štruktúru vzorky, naplní editor LinkML a predloží návrh
 
 ## 3. Úprava tried a slotov
 
+Na prehľade modelu **Otvoriť na celú obrazovku** otvorí diagram modelu na samostatnej stránke (`/projects/helsinki/models/<name>/diagram`) spolu s endpointmi, ktoré jednotlivé triedy sprístupňujú.
+
 ### Vytváranie atribútov vo vizuálnom editore
 
 #### Ručne
