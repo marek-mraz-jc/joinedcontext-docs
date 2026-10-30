@@ -5,6 +5,7 @@ description: Tvorba, import, prispôsobovanie a verziovanie dátových modelov p
 routes:
   - /projects/$project/models
   - /projects/$project/models/$name
+  - /projects/$project/models/$name/diagram
   - /projects/$project/datamodels
   - /projects/$project/projections
   - /projects/$project/mappings

@@ -5,6 +5,7 @@ description: Authoring, importing, adapting, and versioning data models using Li
 routes:
   - /projects/$project/models
   - /projects/$project/models/$name
+  - /projects/$project/models/$name/diagram
   - /projects/$project/datamodels
   - /projects/$project/projections
   - /projects/$project/mappings
