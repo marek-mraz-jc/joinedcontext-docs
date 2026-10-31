@@ -3289,16 +3289,19 @@ T-2996): `GET /ngsi-ld/v1/entities?local=true&count=true&limit=0` with `NGSILD-T
 read from `NGSILD-Results-Count`. `local=true` counts every type of the tenant's own entities and
 none of a registered source's. A `404` whose problem type is `NonexistentTenant` is a space never
 written to (`0`); any other `404`, an answer without a readable count, or a broker that does not
-answer is `503` with the reason, never a zero. The Portal keeps each answer for five minutes;
-these are dashboard numbers, not per-request work.
+answer is `503` with the reason, never a zero. The Portal keeps each answer: these are dashboard
+numbers, not per-request work. A space under 10 000 rows (entities and history together) is
+measured again on a read after five minutes; a larger one is kept for an hour, and the Portal's
+health sweep measures every space within that hour (T-6208).
 
 ```text
-GET /api/v1/projects/{project}/spaces/{space}/usage     the space's entity count → 200
+GET  /api/v1/projects/{project}/spaces/{space}/usage               the kept count and size → 200
+POST /api/v1/projects/{project}/spaces/{space}/usage/recalculate   measure the space again → 200
 ```
 
 ```json
 { "entities": 14232, "attrInstances": 90311, "estimated": false,
-  "broker": "main", "observedAt": "2026-09-25T11:40:00Z",
+  "broker": "main", "observedAt": "2026-09-25T11:40:00Z", "measuredAt": "2026-09-25T11:38:12Z",
   "bytes": { "entities": 48211968, "attrInstances": 1203456,
              "byType": { "https://smartdatamodels.org/dataModel.Environment/AirQualityObserved": 48211968 } } }
 ```
@@ -3326,6 +3329,14 @@ GET /api/v1/projects/{project}/spaces/{space}/usage     the space's entity count
   history it estimates from its database's statistics, and `estimated` is `true`: then
   `attrInstances` and `bytes.attrInstances` are estimates, and the page says so. The space's page
   shows the entity count, the history count, the current-state and history sizes and their total.
+- `measuredAt` is when the broker measured the size: the broker keeps a measured size for five
+  minutes (Antares `TENANT_BYTES_TTL`), so it can be older than `observedAt`, when the broker
+  answered. A broker that sends no `measuredAt` gives `observedAt`.
+- `recalculate` measures the space again for anyone who may read it (`404` otherwise, as the
+  read). Concurrent asks of one space share one broker read, and an answer under 30 seconds old
+  stands, so repeated clicks cost the broker nothing. It answers the same body as the read.
+- The Context Spaces list shows the count and size with an (i) beside them: its panel says when
+  the size was measured and holds the Recalculate button.
 - The Context Spaces list and the space's page show the size in binary units (KiB, MiB, GiB) with
   the locale's separators and the exact bytes in the tooltip; the space's per-type table adds the
   size of each type beside its count. The list still sorts by the entity count.
