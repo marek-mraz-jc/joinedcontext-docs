@@ -51,6 +51,7 @@ Each segment lists the reads its jobs need besides `jc_change_plan` (T-6039):
 
 | Segment | Lookup reads |
 |---|---|
+| `data-read` | `jc_catalog_search`: the Endpoints, ContextSpaces and DataModels of the call's project whose words match, filtered by the owner's read rights, and the published open datasets of the CKAN catalogue with their links. The datasets are public open data every anonymous reader sees (EP-67), so they are not held to the scope. Listed only for a scope item that reaches the whole project: a search names objects a narrowed item does not reach (T-6194). |
 | `access` | `jc_member_list`: the people a RoleBinding of the project reaches, directly or through a Group, with the roles they hold there. Each carries the subject as the binding names it (a Keycloak user id, or an e-mail where the binding names one) and the realm's first and last name; no other e-mail. `search` matches the subject and the name. Only a project the connector's scope names, and only with `read` on RoleBinding there, else `403`. |
 | `publish` | `jc_model_source_get` (the LinkML text, so a KPI or publish block names real attributes) and `jc_kpi_compute`. |
 | `apps` | `Dashboard` and `Layer` besides `App`, and the five UI tools of §2.2 while the owner's Portal tab is paired; none submits. A client without a paired tab gets the plan's `portal` link instead. |
