@@ -4658,9 +4658,10 @@ GET /api/v1/organization/costs/export?month=2026-09   → 200 text/csv
 
 What each Endpoint answered, per UTC day and surface, for its publisher. Every gateway replica
 counts the calls it answered with a status below 400, by the Endpoint slug of the path and the
-surface of the route (`ngsi-ld`, `ogc`, `odata`, `sta`, `ical`, `mcp`, `websocket`, `download`
-for `file.csv`), and posts what it counted since its last post every five minutes. The Portal
-adds the counts into one row per project, Endpoint, surface and day and keeps rows 400 days.
+surface of the route (`ngsi-ld`, `ogc`, `odata`, `sta`, `ical`, `feed`, `mcp`, `websocket`,
+`download` for `file.csv`) and the kind of caller (T-6186), and posts what it counted since its
+last post every five minutes. The Portal adds the counts into one row per project, Endpoint,
+surface, kind of caller and day and keeps rows 400 days.
 
 ```text
 GET  /api/v1/projects/{project}/endpoints/{name}/usage?days=30    → 200 EndpointUsage
@@ -4671,11 +4672,20 @@ GET  /api/v1/projects/{project}/usage/endpoints/export?month=2026-10 → 200 tex
 ```json
 {"name": "air", "from": "2026-09-23", "to": "2026-10-22",
  "days": [{"day": "2026-10-22", "calls": {"ngsi-ld": 120, "download": 3}, "total": 123}],
- "totals": {"ngsi-ld": 120, "download": 3}, "total": 123}
+ "totals": {"ngsi-ld": 120, "download": 3},
+ "callers": {"person": 20, "agent": 100, "anonymous": 3}, "total": 123}
 ```
 
-- The gateway posts to the internal listener's `/internal/usage` (`204`); the body is `{"counts": [{"endpoint": "<slug>", "surface": "ogc", "count": 7}]}`, at most
-  5,000 lines and 10,000,000 per line; any other member, an unknown surface or a slug that is no
+- The kind of caller comes from the bearer token the realm signed (signature, issuer, lifetime
+  checked), never from one it did not: `agent` for an MCP connector's client (`mcp-*`, a client
+  metadata document URL) or the Portal's assistant (`jc-assistant`), `workload` for a Keycloak
+  service account or a token without a username, `person` for any other username, and
+  `anonymous` for no token or one the realm did not sign. Rows counted before the split, or posted
+  by a gateway that sends no kind, are `unknown`. `callers` holds the window's calls per kind in
+  `EndpointUsage` and in each line of `ProjectUsage`.
+
+- The gateway posts to the internal listener's `/internal/usage` (`204`); the body is `{"counts": [{"endpoint": "<slug>", "surface": "ogc", "caller": "person", "count": 7}]}`, at most
+  5,000 lines and 10,000,000 per line; any other member, an unknown surface or kind of caller, or a slug that is no
   DNS-1123 name refuses the whole post with `400`. A slug no Endpoint has is dropped. The route
   is on the internal listener and answers the gateway's own workload token alone (PF-46); any
   other caller gets `401` before the body is read.
@@ -4683,11 +4693,11 @@ GET  /api/v1/projects/{project}/usage/endpoints/export?month=2026-10 → 200 tex
   `total: 0`. `ProjectUsage` lists every Endpoint the caller may read, with `daily` holding one
   total per day, oldest first.
 - The export is `day,endpoint,surface,calls`, one line per day, Endpoint and surface with calls,
-  for the Endpoints the caller may read; `month` other than `YYYY-MM` is `400`.
+  every kind of caller summed, for the Endpoints the caller may read; `month` other than `YYYY-MM` is `400`.
 - Who may read: whoever may read the Endpoint (`read` on `Endpoint` in its Context Space); a
   project the caller cannot read, or an Endpoint they cannot read, is `404`.
-- Nothing personal is kept: the gateway sends no address, token, person, query or entity id, and
-  `endpoint_usage_daily` has no column for one.
+- Nothing personal is kept: the gateway sends no address, token, subject, client id, query or
+  entity id, only a kind of caller, and `endpoint_usage_daily` has no column for one.
 
 ## 55. Checking a KPI over several sources (PL-102…PL-105, T-4935)
 

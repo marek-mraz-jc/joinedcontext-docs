@@ -180,7 +180,7 @@ Registrácia oznámi brokerovi priestoru, že časť jeho údajov má iný zdroj
 
 ## 9. Ako sa endpoint používa
 
-Stránka každého endpointu má časť **Využitie** a stránka endpointov projektu uvádza každý endpoint, ktorý smiete čítať, s počtom volaní. Jeden stĺpec je jeden deň; pod stĺpcami sú volania podľa spôsobu čítania: NGSI-LD API, OGC API Features, OData, SensorThings, kalendár, asistenti cez MCP, živé klienty WebSocket a stiahnutia CSV. Vyberte **Obdobie**, napríklad posledných 30 dní. Na správu za mesiac zvoľte **Mesiac na stiahnutie**, napríklad `2026-10`, a vyberte **Stiahnuť CSV**: jeden riadok za deň, endpoint a spôsob čítania, `day,endpoint,surface,calls`.
+Stránka každého endpointu má časť **Využitie** a stránka endpointov projektu uvádza každý endpoint, ktorý smiete čítať, s počtom volaní. Jeden stĺpec je jeden deň; pod stĺpcami sú volania podľa spôsobu čítania: NGSI-LD API, OGC API Features, OData, SensorThings, kalendár, asistenti cez MCP, živé klienty WebSocket a stiahnutia CSV. Vyberte **Obdobie**, napríklad posledných 30 dní. Na správu za mesiac zvoľte **Mesiac na stiahnutie**, napríklad `2026-10`, a vyberte **Stiahnuť CSV**: jeden riadok za deň, endpoint a spôsob čítania, `day,endpoint,surface,calls`. Stĺpec volaní v zozname endpointov po ukázaní na číslo uvádza aj to, kto volal: ľudia, aplikácie a služby, agenti a MCP klienti a neprihlásení návštevníci. Počet uvádza druh volajúceho, nikdy osobu.
 
 Brána počíta každé zodpovedané volanie a posiela počty do Portálu každých päť minút, takže nové volanie sa ukáže zhruba do piatich minút. Odmietnuté volanie (chýbajúce právo, neznáma adresa) sa nepočíta. Dni sú dni v UTC a uchovávajú sa 400 dní. Vidíte využitie práve tých endpointov, ktoré smiete čítať.
 
