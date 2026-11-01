@@ -630,6 +630,17 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **DM-140** | [S] | open |  |  |
 | **DM-141** | [S] | tested | fast ci | deployment `tests/test_bbsk_events_pipelines.py::test_each_point_says_how_precise_it_is_and_an_unplaced_venue_takes_its_towns_office`, deployment `tests/test_bbsk_events_pipelines.py::test_the_venue_pipeline_writes_each_venue_once_as_a_valid_point_of_interest`, deployment `tests/test_bbsk_events_venues.py::test_one_name_within_50_m_is_one_venue_and_200_m_apart_two`, and 5 more |
 | **DM-142** | [S] | open |  |  |
+| **DM-143** | [S] | open |  |  |
+| **DM-144** | [S] | open |  |  |
+| **DM-145** | [S] | open |  |  |
+| **DM-146** | [S] | open |  |  |
+| **DM-147** | [S] | open |  |  |
+| **DM-148** | [S] | open |  |  |
+| **DM-149** | [S] | open |  |  |
+| **DM-150** | [S] | open |  |  |
+| **DM-151** | [S] | open |  |  |
+| **DM-152** | [S] | open |  |  |
+| **DM-153** | [S] | open |  |  |
 
 ### DS — Data space connector
 

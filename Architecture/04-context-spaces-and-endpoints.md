@@ -189,7 +189,10 @@ GET /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/access        Accept: application/j
 
 One entry per grant, not per type: two policies reaching the same type are two entries, and the
 caller's rights on that type are their union. An unconstrained grant carries `"attributes": "*"`
-and empty `constraints` — there is no separate `full` flag to keep in step with them. The
+and empty `constraints` — there is no separate `full` flag to keep in step with them. A grant
+whose Policy carries per-attribute capabilities ([ADR-N-066](../Decisions/adr-n-066-attribute-capabilities-in-a-policy.md))
+lists them under `capabilities`, keyed by attribute, so a client knows before asking whether a
+history or a version read of one attribute will pass. The
 document's identity is in the ODRL representation's `uid`, which is the digest of the grants
 themselves; the permissions document carries no digest of its own.
 

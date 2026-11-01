@@ -8,9 +8,10 @@ title: "ADR-N-054: History Recording Modes, Versions of a Measurement, Provenanc
 Date: 2026-10-18  
 Status: Accepted  
 Amended: 2026-10-21, T-5056 (owner: "when I just update the values from another source it should not create temporal values"): history is opt-in, `observed` its default record mode, and `never` per attribute (2.2)  
+Amended: 2026-11-01, T-6332 (owner: "it shouldn't be like default per entity type or per database or tenant ... when the platform adds this ... it should create this version of that, and I should see when someone changed that"): versions on request, `JC-Record: version` (2.9)  
 Decision Makers: product owner (history design of 2026-10-18 17:58–18:02Z: "a new measurement without changes must be saved", "sometimes no new measurement and still updated", "sometimes i want to create a old value", "with every version, manualy, with pipeline, inserted", "GDPR compliance for certain records", "and also manually with UI", then "all that are proposed"); the shape proposed by the supervisor, recorded by worker-3 (T-4664), owner may override
 
-This record says what the broker keeps when a value is written: which writes become history rows, how a corrected or late value relates to the one it replaces, who and what wrote each row, and how attributes that identify a person are kept, shown, exported and erased. It extends the retention rules of [ADR-N-046](adr-n-046-data-lifecycle-and-quality.md) and binds the broker (T-4665), the gateway and its Policy (T-4666), the Portal (T-4667) and every store that holds a copy of context data (T-4668). Requirements DM-104…DM-129.
+This record says what the broker keeps when a value is written: which writes become history rows, how a corrected or late value relates to the one it replaces, who and what wrote each row, and how attributes that identify a person are kept, shown, exported and erased. It extends the retention rules of [ADR-N-046](adr-n-046-data-lifecycle-and-quality.md) and binds the broker (T-4665), the gateway and its Policy (T-4666), the Portal (T-4667) and every store that holds a copy of context data (T-4668). Requirements DM-104…DM-129, DM-143…DM-146.
 
 ## 1. Context
 
@@ -175,6 +176,8 @@ Audit metadata (provenance of tombstones, the erasure log, the read log) holds n
 
 ### 2.8 Audit mode and the change log
 
+Superseded in part by [ADR-N-066](adr-n-066-attribute-capabilities-in-a-policy.md): the Endpoint's `spec.audit` and `spec.metadata` below move into the Policy grant as per-attribute capabilities (`versions: [keep]`, `metadata`). The change log, `modifiedBy` and the audit retention stay here.
+
 Several organizations can share one space, each through its own Endpoint. An Endpoint's `spec.audit` says whether the space keeps an audit trail of what came through it (DM-136):
 
 - `off`, the default: the type's history rule (§2.2, DM-132) alone decides which rows exist.
@@ -191,6 +194,21 @@ Served today: the gateway sends `JC-Provenance-Audit: changes` and the broker ke
 **What an Endpoint passes.** `spec.metadata` lists the metadata members an Endpoint passes on every read, current and history alike: `observedAt`, `unitCode`, `createdAt`, `modifiedAt`, `modifiedBy.organization`, `modifiedBy.actorKind`, `modifiedBy.actor`, `provenance`. A member means the same on both: on the current value it describes the last change, on a history row that row's change. Only the version chain itself (`versions=all`, the change log) is history's own, gated by `readVersions`. A public Endpoint passes `observedAt`, `unitCode` and `modifiedAt` unless it lists more; any other Endpoint also `modifiedBy.organization` and `modifiedBy.actorKind`. `modifiedBy.actor` and `provenance` pass only where listed and only to `readVersions`. A member not listed is stripped from answers, notifications and exports, and a `q` or `orderBy` on it answers `400`, so nobody probes hidden metadata by filtering (DM-139). The Portal and the Policy compiler refuse a public Endpoint that lists `modifiedBy.actor` or `provenance`, because an actor is a person's `sub` or a client id (DM-140).
 
 **Required for a dataset.** Before a space is published through an Endpoint and its catalogue entry, the Portal requires: owner organization, a steward contact (a role mailbox, never a person's name on a public page), licence, a one-line purpose, update frequency, history retention or `off`, personal data yes or no (yes needs §2.6's legal basis and maximum retention), access level and source (a URL or a system). Per value nothing is typed by hand: `observedAt` comes from the source, `modifiedAt` and `modifiedBy` from the broker and the gateway, `unitCode` from the model; only a manual correction or delete asks for a reason (DM-113).
+
+### 2.9 Versions on request
+
+A writer that edits by hand asks the broker to keep the change, per request, for any attribute of any type, whatever the type's history rule or the Endpoint's `spec.audit` says (DM-143). It sends the request header `JC-Record: version` on the write. The Portal's forms and grid edits and the Portal's `jc_*` MCP writes send it on every edit; a Pipeline sends it only where its manifest says so.
+
+- **Trigger.** The gateway reads `JC-Record` on a write through an Endpoint and turns `version` into the broker's `JC-Provenance-Audit: changes` (2.8), a header the broker believes only from the gateway's mesh identity. The client's `JC-Record` itself never reaches the broker. On a read the gateway drops the header unread. Any other value answers `400 bad-request` naming `JC-Record`. The header adds rows and never rights: the write still needs its Policy, a refused write stores nothing, and the provenance fields stay the gateway's (DM-144).
+- **What is kept.** A write that changes a value (canonical JSON differs, 2.1) stores the new value as a version row with its provenance and `audit: true`. When the attribute has no row yet, because the type keeps no history or the Entity was written before without the header, the broker first stores the value it replaces as a row, with that value's own `observedAt` or `modifiedAt` and `operation: create`, so the first change already shows the old and the new value. An exact repeat stores nothing (DM-145).
+- **Identity of a version.** A value without `observedAt` is identified by (Entity, attribute, `datasetId`), its versions ordered by `writtenAt`, and two versions written in the same millisecond by their instance id, so every read answers one order; a value with `observedAt` keeps the identity of 2.1.
+- **Reading.** `versions=all&attrs=<attribute>` on a temporal read answers the chain, oldest first, each version with its provenance (actor, organization, `writtenAt`, `reason`) and `supersededAt`, only to a caller the space's Policy grants `readVersions` (2.4, DM-114). A temporal read without `versions=all` on a type that keeps no history answers no rows of these versions, so a chart and a public Endpoint see nothing new (DM-146).
+- **Retention.** These rows are audit rows: the retention sweep keeps them for the audit retention (`P2Y`, `JC_AUDIT_RETENTION`, 2.7), not the type's history retention, and erasure and rectification reach them like any row (2.6). Served today: the gateway's translation, the replaced value and the reads; the rows still follow the type's history retention like the audit rows of 2.8 until the audit retention is built (T-6337).
+
+- **An extension, named as one.** `versions`, `supersededAt`, `provenance`, `modifiedBy` and `JC-Record` are joinedcontext extensions of NGSI-LD. Their terms get their own namespace in the platform's JSON-LD `@context`, so a later NGSI-LD parameter or member of the same name cannot collide with them. Served today: the members are answered as plain JSON keys; the namespace is target, with T-6336.
+- **Out of scope here.** Versions over many Entities (`versions=all` on a temporal query, the space-wide change log of 2.8), a Pipeline manifest flag that sends `JC-Record`, and forcing versions by Policy ([ADR-N-066](adr-n-066-attribute-capabilities-in-a-policy.md), T-6336) are later work; a temporal query (5.7.4) answers no Attribute of an Entity whose type keeps no history, as a retrieve does.
+
+Decided (supervisor and worker-t6332, owner may override): a request header, because it changes no data and no vanilla NGSI-LD client sends it; options: an NGSI-LD `options=` value (a vanilla client would send it to other brokers too), a per-attribute sub-Property (changes the data), a type or space setting (the owner refused it).
 
 ## 3. Alternatives considered
 
@@ -211,6 +229,7 @@ Served today: the gateway sends `JC-Provenance-Audit: changes` and the broker ke
 ## Related
 
 - [ADR-N-046](adr-n-046-data-lifecycle-and-quality.md) — the retention rules this record extends.
+- [ADR-N-066](adr-n-066-attribute-capabilities-in-a-policy.md) — attribute capabilities in a Policy, which supersede §2.8's `spec.audit` and `spec.metadata`.
 - [Requirements/data-models.md §17](../Requirements/data-models.md#17-history-versions-provenance-and-personal-data) — DM-104…DM-129.
 - [Architecture/11-data-models.md §9](../Architecture/11-data-models.md#9-personal-data-in-a-model) — the classification annotations in a model.
 - [API/02 §2b](../API/02-endpoint-representations.md#2b-history-versions-and-provenance) — the query parameters and headers.
