@@ -37,7 +37,7 @@ The Portal stores connectors in its database, one owner each, never in Git (AG-1
 |---|---|
 | `id` | 26 random base32 characters (`a-z`, `2-7`), set by the Portal. Not a secret; useless without the owner's token. |
 | `name` | DNS-1123 label, unique per owner, at most 63 characters. |
-| `segments` | One or more of `data-read`, `context`, `pipeline`, `access`, `publish`, `apps`, `operate`, `admin` (Architecture/07 §11). |
+| `segments` | One or more of `data-read`, `context`, `pipeline`, `access`, `publish`, `apps`, `operate`, `knowledge`, `admin` (Architecture/07 §11). |
 | `scope[]` | Each item names a `project` and at most one of `space`, `endpoint`, `pipeline`, the item's name or `*` for every one of that kind the owner may reach in the project; `access` is `read` or `write`. A `write` item requires `writes: true`. An empty scope is refused. |
 | `scope[].personalData` | `false` by default. `true` keeps the attributes the model marks `personalData` in the answers of calls this item reaches: the whole project, or the one Endpoint it names (a space or pipeline item reaches none). Allowed only when the person's DelegationPolicy sets `personalData: true`, else `403` naming `scope[i].personalData` (AG-158). |
 | `writes` | `false` by default. While false the token is read-only below the tools (AG-148). |
@@ -224,6 +224,17 @@ A Data Model the Portal cannot read at that moment refuses the call (`isError: t
 | `_meta.ui.csp` | `{connectDomains: [], resourceDomains: []}`: the view loads and connects to nothing outside itself |
 
 `/c/{id}` answers `resources/read` for this one URI and `-32601` for every other resource; `/api/v1/mcp` lists it in `resources/list` too. The view is a static page: it renders only the tool result the host posts to it, as text, and holds no token. Its one link, "Open in Portal to approve" (`/projects/{project}/approvals`; `/projects/{project}/pipelines` for a mapping), goes to the Portal origin the Portal writes into the page when it serves it, and only when `project` is a DNS-1123 label; the host opens it through `ui/open-link`.
+
+### 4.8 Knowledge
+
+Segment `knowledge` reaches KnowledgeSource and AssistantDeployment through `plan_change`, `apply_change`, `get_schema`, `list` and `get`, and adds two reads (T-6284):
+
+| Tool | Input | Output | Notes |
+|---|---|---|---|
+| `knowledge_status` | `{project, source?}` | `{items[{source, type, startUrls, state, lastCrawl, pages, documents, passages, failed, job, …}], errors?[{url, kind, reason}]}` | The project's sources with what the assistant holds of each, `state: not-crawled` before the first crawl. With `source` only that one, and its last failed reads (at most 50) when the caller may propose a KnowledgeSource; a reader gets the counts alone, as `GET .../knowledge/sources/{source}/errors` decides (API/01 §34). |
+| `knowledge_search` | `{project, source, q (1-300), limit? (1-10, default 5)}` | `{hits[{title, url, publisher, text, score, chunkId, …}]}` | The hits `search_documents` answers from that one source, best first, each with the address and title of its page, so an answer names its sources. Passages pass the personal-data filter and size cap of every `/c/{id}` answer (§4.6). |
+
+Neither tool fetches anything: a crawl reads only the `startUrls` a merged KnowledgeSource declares, under the crawler's host rules. In the Portal's operation registry they are `jc_knowledge_status` and `jc_knowledge_search`.
 
 ## Related
 
