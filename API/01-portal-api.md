@@ -2657,20 +2657,26 @@ MCP (Streamable HTTP, protocol 2026-07-28):
   `destructiveHint`, never runs on the agent's word. The first `tools/call` runs nothing and
   answers
     { "isError": false, "status": "input_required",
-      "structuredContent": { "elicitation": {
+      "content": [{ "type": "text", "text": "<the sentence>\n\nThe person decides here: <url>\n…" }],
+      "_meta": { "joinedcontext.com/elicitation": { "elicitation": {
         "elicitationId": "eli-…", "mode": "url", "url": "https://portal…/projects/{project}/…",
         "message": "<what this call would do, in one sentence>",
-        "expiresIn": 600 } } }
-  A proposal whose check has not run carries the route's own refusal beside the question
-  (PF-57, ADR-N-021): `structuredContent` gains `"error": "verdict_required"`, `"check": "<the
-  operation to run>"`, `"reason": "verdict_absent" | "verdict_failed" | "stale"` and the same
-  one-sentence `detail`, at its top level where the REST route puts them, with `elicitation`
-  beside them. A client that reads `verdict_required` on the route reads it here too and knows
-  which check to run, and the person still has the URL to run it at. The door refuses either
-  way: nothing is proposed without a fresh Verdict.
+        "expiresIn": 600 } } } }
+  The text names the URL and the `elicitationId`, because a client hands its model the text
+  alone (T-6361). The answer carries no `structuredContent`: every tool declares an
+  `outputSchema` and a question is not the tool's output, so `_meta` holds the same fields for a
+  client that reads them by name. A proposal whose check has not run carries the route's own
+  refusal beside the question (PF-57, ADR-N-021): the `_meta` object gains `"error":
+  "verdict_required"`, `"check": "<the operation to run>"`, `"reason": "verdict_absent" |
+  "verdict_failed" | "stale"` and the same one-sentence `detail` at its top level, with
+  `elicitation` beside them, and the text names the check. A client that reads
+  `verdict_required` on the route reads it here too and knows which check to run, and the person
+  still has the URL to run it at. The door refuses either way: nothing is proposed without a
+  fresh Verdict.
   The host shows it to the person, who opens the URL and decides; the client then repeats the
-  same `tools/call` with `params.elicitation = { "elicitationId": "eli-…", "action": "accept" }`
-  and the operation runs. `"action": "decline"` (or `"cancel"`) answers a refusal and nothing
+  same `tools/call` with `params.elicitation = { "elicitationId": "eli-…" }`, or with
+  `elicitation` among its `arguments` for a client that can only fill arguments, and the
+  operation runs once the person accepted on the page. `"action": "decline"` (or `"cancel"`) answers a refusal and nothing
   runs. An id is one-shot, belongs to the token's subject, expires in ten minutes and is bound to
   the operation and the arguments it was asked for: different arguments need a new answer. Every
   `tools/call` naming a known operation in a project the caller reads is one `mcp.tool` row from
