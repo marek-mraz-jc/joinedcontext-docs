@@ -7,7 +7,7 @@ title: "Data Models & the LinkML Editor"
 
 Family **DM** (DM-01…DM-140). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
-This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-129**. Consumer classes per `00-index.md`.
+This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-146**. Consumer classes per `00-index.md`.
 
 ## 1. Source of truth and artifacts
 
@@ -221,6 +221,10 @@ NGSI-LD gives an Entity and each of its Attributes members that describe the dat
 - **DM-140** [S] — The Portal and the Policy compiler MUST refuse an Endpoint with `audience: public` whose `spec.metadata` lists `modifiedBy.actor` or `provenance`.
 - **DM-141** [S] — Every event a Slovak event store (`slovensko-podujatia`, `bbsk-podujatia`) holds MUST carry `areaServed`, the official name of its municipality, and, when it has a point, `location` as a WGS 84 GeoJSON Point with `locationPrecision` `source`, `building`, `office` or `centre`, filled in that order from the source's coordinates, the venue table, the organizer's address and the municipality's office or centre; an event placed from the venue table MUST link that venue as `refPointOfInterest`, one `PointOfInterest` per venue (rows of one name within 50 m merge); and no pipeline MUST call a geocoder at run time (T-5364, [Architecture/11 §10](../Architecture/11-data-models.md#10-where-an-event-takes-place-dm-141)).
 - **DM-142** [S] — An erasure MUST take two people: one owner of the space proposes it, another person with `approve` on its ContextSpace approves it by typing the subject again, which MUST hash to the proposal's; the proposer MUST NOT approve it (`403 self-approval`), a bearer token MUST NOT decide it, and a proposal undecided for 7 days MUST expire unapproved (T-5356).
+- **DM-143** [S] — A write through an Endpoint carrying `JC-Record: version` MUST keep each changed attribute as a version, for any type, whatever its history rule or the Endpoint's `spec.audit` says (T-6332, [ADR-N-054 §2.9](../Decisions/adr-n-054-history-versions-provenance-gdpr.md#29-versions-on-request)).
+- **DM-144** [S] — The gateway MUST turn `JC-Record: version` into its own audit mark only on a write, MUST NOT forward the client's `JC-Record` to the broker, MUST drop it on a read and MUST answer `400` naming `JC-Record` to any other value; the header MUST NOT widen what the Policy allows or set provenance.
+- **DM-145** [S] — On such a write the broker MUST store the replaced value first when the attribute has no row yet, MUST store nothing for an exact repeat, and MUST mark each row `audit: true` in its provenance.
+- **DM-146** [S] — These versions MUST be answered only by a `versions=all` read to a caller with `readVersions`, MUST NOT appear in a plain temporal read of a type that keeps no history, and the retention sweep MUST keep them for the audit retention (`P2Y` by default, ADR-N-054 §2.7) instead of the history retention.
 
 ## Traceability
 
@@ -233,6 +237,7 @@ NGSI-LD gives an Entity and each of its Attributes members that describe the dat
 | DM-142 | Four eyes on an erasure | [API/01 §46](../API/01-portal-api.md#46-personal-data-of-a-space-dm-124dm-127-dm-142) | portal `tests/erasure_db_tests.rs`, `src/api/erasures.rs` |
 | DM-104…DM-129 | History, versions, provenance and personal data | [ADR-N-054](../Decisions/adr-n-054-history-versions-provenance-gdpr.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | DM-136…DM-140 | Audit mode, change log, `modifiedBy` and the metadata an Endpoint passes | [ADR-N-054 §2.8](../Decisions/adr-n-054-history-versions-provenance-gdpr.md#28-audit-mode-and-the-change-log) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
+| DM-143…DM-146 | Versions on request (`JC-Record: version`) | [ADR-N-054 §2.9](../Decisions/adr-n-054-history-versions-provenance-gdpr.md#29-versions-on-request) | platform `crates/context-gateway/tests/it/subject_headers_tests.rs`, Antares `crates/antares-api/tests/temporal_versions_2_4.rs` |
 | DM-98…DM-103 | Display order, key attributes and labels | [04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md#display-order-key-attributes-and-labels) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-60 | Multi-dimensional indicators (RDF Data Cube) | [03-domain-model.md](../Architecture/03-domain-model.md) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-59 | Units and their QUDT anchor | [11-data-models.md](../Architecture/11-data-models.md) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
