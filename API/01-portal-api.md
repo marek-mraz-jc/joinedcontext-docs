@@ -1002,13 +1002,20 @@ PUT /api/v1/preferences      replaces them whole; answers 200 with what is now s
   again by clearing it. Absent means shown. Each step ticks itself from the project's own state,
   never from this record (T-3233).
 - Personal MCP connectors are no preference since T-5970: they are connector records (API/14,
-  ADR-N-064 §9); a body naming `connectors` is a `400`, and a list an older Portal stored moves
-  into the connector store once (`data-read`, every item `read`, the default ceiling's expiry). An
-  old connector that does not move (its selector takes no Endpoint, its name is live already, the
-  person holds the most live connectors) stays in the stored row under `connectorsNotMoved` as
-  `{name, select, reason}`, and a list the Portal cannot read stays under `connectors`; no read
-  answers either key and a `PUT` carries both over, so the move loses nothing a person made. The
-  gateway reads a person's live `data-read` connectors for `/api/mcp/me/{name}` by the caller's
+  ADR-N-064 §9); a body naming `connectors` is a `400`. A list an older Portal stored moves into
+  the connector store once, on that person's first signed-in `GET` or `PUT` of this resource
+  (T-6362): the start-up and the gateway know no person's groups, so neither moves it, and a person
+  who only calls `/api/mcp/me/{name}` gets an empty list there until they sign in to the Portal
+  once. A client token moves nothing (AG-151). Each moved connector is `data-read`, every item
+  `read`, expiring after the `maxExpiry` of the person's own DelegationPolicy ceiling, and holds
+  only the Endpoints, spaces and projects that person may read today and the ceiling admits,
+  checked item by item as `POST /api/v1/connectors` checks them. An old connector that does not
+  move (its selector takes no Endpoint the person may read, the ceiling would queue or refuse it,
+  its name is live already, the person holds the most live connectors) stays in the stored row
+  under `connectorsNotMoved` as `{name, select, reason}`, and a list the Portal cannot read stays
+  under `connectors`; no read answers either key and a `PUT` carries both over, so the move loses
+  nothing a person made. The gateway reads a person's live `data-read` connectors for
+  `/api/mcp/me/{name}` by the caller's
   `sub` alone (EP-123): `GET /internal/connectors/{sub}` on the Portal's internal listener answers
   `{ "connectors": [ { "id": "…", "name": "my-air", "scope": [ … ], "expiresAt": "…",
   "allowedClients": [ … ] } ] }`, an empty list for a `sub` with none, with the same Keycloak
