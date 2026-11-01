@@ -634,6 +634,13 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **DM-144** | [S] | open |  |  |
 | **DM-145** | [S] | open |  |  |
 | **DM-146** | [S] | open |  |  |
+| **DM-147** | [S] | open |  |  |
+| **DM-148** | [S] | open |  |  |
+| **DM-149** | [S] | open |  |  |
+| **DM-150** | [S] | open |  |  |
+| **DM-151** | [S] | open |  |  |
+| **DM-152** | [S] | open |  |  |
+| **DM-153** | [S] | open |  |  |
 
 ### DS — Data space connector
 

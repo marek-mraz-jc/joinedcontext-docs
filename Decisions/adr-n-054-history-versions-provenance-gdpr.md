@@ -176,6 +176,8 @@ Audit metadata (provenance of tombstones, the erasure log, the read log) holds n
 
 ### 2.8 Audit mode and the change log
 
+Superseded in part by [ADR-N-066](adr-n-066-attribute-capabilities-in-a-policy.md): the Endpoint's `spec.audit` and `spec.metadata` below move into the Policy grant as per-attribute capabilities (`versions: [keep]`, `metadata`). The change log, `modifiedBy` and the audit retention stay here.
+
 Several organizations can share one space, each through its own Endpoint. An Endpoint's `spec.audit` says whether the space keeps an audit trail of what came through it (DM-136):
 
 - `off`, the default: the type's history rule (§2.2, DM-132) alone decides which rows exist.
@@ -204,7 +206,7 @@ A writer that edits by hand asks the broker to keep the change, per request, for
 - **Retention.** These rows are audit rows: the retention sweep keeps them for the audit retention (`P2Y`, `JC_AUDIT_RETENTION`, 2.7), not the type's history retention, and erasure and rectification reach them like any row (2.6). Served today: the gateway's translation, the replaced value and the reads; the rows still follow the type's history retention like the audit rows of 2.8 until the audit retention is built (T-6337).
 
 - **An extension, named as one.** `versions`, `supersededAt`, `provenance`, `modifiedBy` and `JC-Record` are joinedcontext extensions of NGSI-LD. Their terms get their own namespace in the platform's JSON-LD `@context`, so a later NGSI-LD parameter or member of the same name cannot collide with them. Served today: the members are answered as plain JSON keys; the namespace is target, with T-6336.
-- **Out of scope here.** Versions over many Entities (`versions=all` on a temporal query, the space-wide change log of 2.8), a Pipeline manifest flag that sends `JC-Record`, and forcing versions by Policy (T-6336) are later work; a temporal query (5.7.4) answers no Attribute of an Entity whose type keeps no history, as a retrieve does.
+- **Out of scope here.** Versions over many Entities (`versions=all` on a temporal query, the space-wide change log of 2.8), a Pipeline manifest flag that sends `JC-Record`, and forcing versions by Policy ([ADR-N-066](adr-n-066-attribute-capabilities-in-a-policy.md), T-6336) are later work; a temporal query (5.7.4) answers no Attribute of an Entity whose type keeps no history, as a retrieve does.
 
 Decided (supervisor and worker-t6332, owner may override): a request header, because it changes no data and no vanilla NGSI-LD client sends it; options: an NGSI-LD `options=` value (a vanilla client would send it to other brokers too), a per-attribute sub-Property (changes the data), a type or space setting (the owner refused it).
 
@@ -227,6 +229,7 @@ Decided (supervisor and worker-t6332, owner may override): a request header, bec
 ## Related
 
 - [ADR-N-046](adr-n-046-data-lifecycle-and-quality.md) — the retention rules this record extends.
+- [ADR-N-066](adr-n-066-attribute-capabilities-in-a-policy.md) — attribute capabilities in a Policy, which supersede §2.8's `spec.audit` and `spec.metadata`.
 - [Requirements/data-models.md §17](../Requirements/data-models.md#17-history-versions-provenance-and-personal-data) — DM-104…DM-129.
 - [Architecture/11-data-models.md §9](../Architecture/11-data-models.md#9-personal-data-in-a-model) — the classification annotations in a model.
 - [API/02 §2b](../API/02-endpoint-representations.md#2b-history-versions-and-provenance) — the query parameters and headers.
