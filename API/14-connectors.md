@@ -21,6 +21,10 @@ The Portal stores connectors in its database, one owner each, never in Git (AG-1
     { "project": "air", "pipeline": "*", "access": "write" },
     { "project": "air", "endpoint": "air-quality-sensors-2026-public", "access": "read" }
   ],
+  "kinds": [
+    { "kind": "Pipeline", "verbs": ["read", "create", "run"] },
+    { "kind": "DataSource", "verbs": ["read", "create", "edit"] }
+  ],
   "writes": true,
   "expiresAt": "2026-11-27T00:00:00Z",
   "allowedClients": ["https://claude.ai/oauth/claude-code-client-metadata"],
@@ -40,6 +44,7 @@ The Portal stores connectors in its database, one owner each, never in Git (AG-1
 | `segments` | One or more of `data-read`, `context`, `pipeline`, `access`, `publish`, `apps`, `operate`, `knowledge`, `admin` (Architecture/07 §11). |
 | `scope[]` | Each item names a `project` and at most one of `space`, `endpoint`, `pipeline`, the item's name or `*` for every one of that kind the owner may reach in the project; `access` is `read` or `write`. A `write` item requires `writes: true`. An empty scope is refused. |
 | `scope[].personalData` | `false` by default. `true` keeps the attributes the model marks `personalData` in the answers of calls this item reaches: the whole project, or the one Endpoint it names (a space or pipeline item reaches none). Allowed only when the person's DelegationPolicy sets `personalData: true`, else `403` naming `scope[i].personalData` (AG-158). |
+| `kinds[]` | Optional verbs per kind, each `{kind, verbs}`: `kind` one the segments reach, `verbs` from `read`, `create`, `edit`, `delete`, `run` (`run` on `Pipeline` only). A kind the list leaves out gets `read` only, and a list where no kind names a verb beyond `read` makes the connector read-only below `plan_change`. A plan's change needs `create` when its object does not exist in the project yet, `edit` for `replace` and `patch`, `delete` for `delete`; the Portal judges which from the forge at plan time, never from the client's `op`. Every verb must also be in the DelegationPolicy ceiling's `kinds` when the policy lists them, else `403` naming `kinds[i].verbs`. Absent (connectors made before T-6302): every change on the kinds the segments reach, as before. No verb approves (CC-41). |
 | `writes` | `false` by default. While false the token is read-only below the tools (AG-148). |
 | `expiresAt` | Required; at most the DelegationPolicy's `maxExpiry` from now, and never more than 365 days. |
 | `allowedClients` | Optional list of OAuth client ids (a CIMD URL or a realm client id). Absent: any client of the realm. |
@@ -177,7 +182,7 @@ Every tool answers its errors as `application/problem+json` (API/09) with these 
 
 A credential never passes through a connector (MF-24, T-5971). Every tool refuses an argument holding one with `secret-in-argument`, before anything reads it. A plan whose manifests name a `secretRef` the repository does not hold answers `needsSecret[{name, key, form}]`: `form` is the Portal's secret form (API/01 §59), where the person types the value. Every tool answer to a connector or an agent run is masked: a value under a credential's name, a credential-shaped string and each such word of a log line read `***`.
 
-`plan_change` is offered whenever a segment proposes; `apply_change` only when `writes` is true. With writes off a person still sees the plan and applies it in the Portal.
+`plan_change` is offered whenever a segment proposes; `apply_change` only when `writes` is true. With `kinds` set, each change of a plan is held to the verb it needs on its kind (§1): a `create` of an Endpoint that already exists, or a `patch` of one the connector may only create, is `403` whose detail names the kind and the missing verb, such as "this connector may not edit Endpoint counters: its verbs on Endpoint are read, create". `revert_plan` needs the verb of each file it writes back (`create`, `edit` or `delete`), and `run_pipeline` needs `run` on Pipeline. With writes off a person still sees the plan and applies it in the Portal.
 
 A plan of two or more creates, replaces or patches of the project's own objects, outside a workspace, is bundled: each change is checked with its siblings, so an Endpoint names the space created beside it and a write Policy counts the Endpoint planned beside it (MF-13, PL-111), and `apply_change` opens one change request a person approves whole (T-6282). A plan holding a `delete`, a DataModel with its `source`, or an object kept in another namespace opens one change request per change, each checked against the project as it is; a reference to an object that is neither in the plan nor in the project still answers `422` at the field naming it.
 
