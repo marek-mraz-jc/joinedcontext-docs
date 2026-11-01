@@ -5,7 +5,7 @@ title: "Data Models & the LinkML Editor"
 
 # Data Models & the LinkML Editor
 
-Family **DM** (DM-01…DM-140). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
+Family **DM** (DM-01…DM-153). Owning chapter: [11-data-models.md](../Architecture/11-data-models.md). Verified by: [02-conformance-tests.md](../Testing/02-conformance-tests.md).
 
 This chapter specifies how data models are authored, imported, generated, versioned and consumed. The architecture is in [Architecture/11-data-models](../Architecture/11-data-models.md); the decision in [ADR-N-010](../Decisions/adr-n-010-linkml-data-models.md). Requirement family **DM-01…DM-146**. Consumer classes per `00-index.md`.
 
@@ -250,7 +250,7 @@ A Policy grant says per attribute what a caller may do with it: read the current
 | DM-104…DM-129 | History, versions, provenance and personal data | [ADR-N-054](../Decisions/adr-n-054-history-versions-provenance-gdpr.md) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | DM-136…DM-140 | Audit mode, change log, `modifiedBy` and the metadata an Endpoint passes | [ADR-N-054 §2.8](../Decisions/adr-n-054-history-versions-provenance-gdpr.md#28-audit-mode-and-the-change-log) | [Testing/04-configuration-and-pipeline-tests.md](../Testing/04-configuration-and-pipeline-tests.md) |
 | DM-147…DM-153 | Attribute capabilities in a Policy | [ADR-N-066](../Decisions/adr-n-066-attribute-capabilities-in-a-policy.md) | platform `crates/jc-core/tests/it/policy_tests.rs` |
-| DM-143…DM-146 | Versions on request (`JC-Record: version`) | [ADR-N-054 §2.9](../Decisions/adr-n-054-history-versions-provenance-gdpr.md#29-versions-on-request) | platform `crates/context-gateway/tests/it/subject_headers_tests.rs`, Antares `crates/antares-api/tests/temporal_versions_2_4.rs` |
+| DM-143…DM-146 | Versions on request (`JC-Record: version`) | [ADR-N-054 §2.9](../Decisions/adr-n-054-history-versions-provenance-gdpr.md#29-versions-on-request) | platform `crates/context-gateway/tests/it/subject_headers_tests.rs`, Antares (crate antares-api) `tests/temporal_versions_2_4.rs` |
 | DM-98…DM-103 | Display order, key attributes and labels | [04-context-spaces-and-endpoints.md](../Architecture/04-context-spaces-and-endpoints.md#display-order-key-attributes-and-labels) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-60 | Multi-dimensional indicators (RDF Data Cube) | [03-domain-model.md](../Architecture/03-domain-model.md) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
 | DM-59 | Units and their QUDT anchor | [11-data-models.md](../Architecture/11-data-models.md) | [02-conformance-tests.md](../Testing/02-conformance-tests.md) |
