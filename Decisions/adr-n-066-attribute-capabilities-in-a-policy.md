@@ -30,10 +30,10 @@ The owner wants one matrix: a public Endpoint that shows the history and the ver
 
 Each `information` entry of a Policy grant (and of each rule of `rules[]`, ADR-N-057) MAY carry `attributes`, a map from an attribute name, or `*` for every attribute the entry reaches, to that attribute's capabilities:
 
-```yaml
-apiVersion: joinedcontext.com/v1
+```yaml excerpt
+apiVersion: joinedcontext.com/v1alpha1
 kind: Policy
-metadata: { name: public-air }
+metadata: { name: public-air, namespace: banskabystrica }
 spec:
   contextSpaceRef: { name: air }
   assigner: did:web:banskabystrica.sk
