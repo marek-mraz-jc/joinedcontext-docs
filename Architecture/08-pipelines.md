@@ -1170,6 +1170,30 @@ required fields first, advanced ones folded, and every secret field a `secretRef
 writes the interpolation into `input` and the reference into `secrets`. The typed four keep
 their own forms.
 
+### Personal fields (AG-158)
+
+A source's records can hold personal data before any mapping names it, such as the rider of a
+bike-share trip. `spec.personalFields` lists those fields by name (at most 256, each 1 to 256
+bytes, named once):
+
+```yaml
+spec:
+  type: http
+  http:
+    url: https://opendata.example.sk/trips.csv
+    format: csv
+  personalFields: [rider, phone]
+```
+
+`jc_pipeline_sample_source` of the source, and `jc_pipeline_try_mapping` of a pipeline whose
+`source.dataSourceRef` or `sources[].dataSourceRef` names it, called through an MCP door or by
+an agent run, answer the records without those fields: each record that is not an NGSI-LD entity
+(a string `id` and a `type`) loses them, a first input message that is text is left out, and the
+answer names each field removed in `_meta["joinedcontext.com/withheld"]` as
+`DataSource/{name}.{field}`, without its value (API/14 §4.6). A mapped entity is judged by the
+Data Model's `personalData` marks instead. The Portal's own pipeline editor, signed in, shows the
+fields.
+
 ### How a pipeline references one
 
 ```yaml
