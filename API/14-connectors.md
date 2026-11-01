@@ -236,7 +236,7 @@ Segment `knowledge` reaches KnowledgeSource and AssistantDeployment through `pla
 | `knowledge_status` | `{project, source?}` | `{items[{source, type, startUrls, state, lastCrawl, pages, documents, passages, failed, job, …}], errors?[{url, kind, reason}]}` | The project's sources with what the assistant holds of each, `state: not-crawled` before the first crawl. With `source` only that one, and its last failed reads (at most 50) when the caller may propose a KnowledgeSource; a reader gets the counts alone, as `GET .../knowledge/sources/{source}/errors` decides (API/01 §34). |
 | `knowledge_search` | `{project, source, q (1-300), limit? (1-10, default 5)}` | `{hits[{title, url, publisher, text, score, chunkId, …}]}` | The hits `search_documents` answers from that one source, best first, each with the address and title of its page, so an answer names its sources. Passages pass the personal-data filter and size cap of every `/c/{id}` answer (§4.6). |
 
-Neither tool fetches anything: a crawl reads only the `startUrls` a merged KnowledgeSource declares, under the crawler's host rules. In the Portal's operation registry they are `jc_knowledge_status` and `jc_knowledge_search`.
+Neither tool fetches anything: a crawl reads only the `startUrls` a merged KnowledgeSource declares, under the crawler's host rules. The Portal's operation registry names them as it names the others (`jc_<noun>_<verb>`).
 
 ## Related
 
