@@ -245,6 +245,23 @@ Segment `knowledge` reaches KnowledgeSource and AssistantDeployment through `pla
 
 Neither tool fetches anything: a crawl reads only the `startUrls` a merged KnowledgeSource declares, under the crawler's host rules. The Portal's operation registry names them as it names the others (`jc_<noun>_<verb>`).
 
+### 4.9 The pages' reads and the entity write
+
+Each read below calls its Portal route's own function, so the grant and the answer are the route's (JC2-28..34, JC2-59, JC2-60, T-6271). The segments list them beside their lookup reads:
+
+| Segment | Reads |
+|---|---|
+| `data-read` | `jc_attribute_explain` `{project, name, type, attribute, action?}`: what decided one attribute of an Endpoint for the owner and, where they may read it, the deciding Policy (API/01 §58). |
+| `context` | `jc_model_sdm_search` `{project, q (2-100), subject?}`: the Smart Data Models catalogue's models whose name, description or attributes match, at most 25 and `more` past them; `jc_model_sdm_import` `{project, model}`: one catalogue model compiled to LinkML, `{model, source, classes[{name, slots}], errors}`, the `source` a DataModel `plan_change` takes; a model the catalogue does not list is `422` at `/model`, and a URL is never one; `jc_model_generate` `{project, source}`: the artifacts of a LinkML source or the messages of one that does not compile; `jc_endpoint_preview` `{project, name, type, projection?, hiddenAttributes?, id?, limit?, offset?}`: the count and one page under a draft filter; `jc_space_governance`. Model Tools alone fetches, and only from the Smart Data Models organisation (DM-10). |
+| `pipeline` | `jc_pipeline_inspect` `{project, name, view: samples\|stats\|rejected\|sourceDeletes, limit?, cursor?}`: one panel of the pipeline page; `jc_mqtt_test_publish` `{project, name, account, topic, payload}`: the broker card's dry run of one device message, nothing published or written (API/01 §44a); `jc_space_governance`. |
+| `access` | `jc_access_simulate` `{project, endpoint, subject, action, type?}` and `jc_access_explore` `{project, subject}`: what the gateway decides for, and what reaches, another subject (`{kind: person, id}`, `{kind: group\|role\|serviceAccount, name}` or `{kind: public}`); organization administrators only, as on the Policies page, else `403`. |
+| `publish` | `jc_catalogue_draft` `{project, endpoint}`: the `spec.catalog` and `spec.publish` the publish flow drafts, and whether publishing makes the Endpoint public; `403` without propose on Endpoint, `409` with no CkanInstance; `jc_endpoint_preview`. |
+| `operate` | `jc_change_history` `{project, page?, kind?, name?, author?, since?, until?}`: the merged and rejected changes, most recently closed first, with `next`; `jc_pipeline_inspect`. |
+
+`jc_space_governance` `{project, space, aspect, pipeline?}` reads one of `quality`, `qualityChecks`, `usage`, `temporalAudit` (narrowed by `pipeline`), `surfaceFit` or `drift` (the scan's findings in that space). `jc_permissions_me` `{project}`, the owner's effective rules, is in no segment: a connector's rights are its ceiling's, and `/api/v1/mcp` lists it. That door's `initialize` instructions name the projects the person reads, at most 50; a connector's name its scope.
+
+`write_data` `{project, endpoint, action: create|upsert|merge|delete, entities[1..100]?, ids[1..100]?}` → `{written[], errors[{entityId, error}]}`, registry name `jc_data_write`, writes entities through one Endpoint of the project as the owner (T-6389). Like `apply_change` it is offered only with `writes` on both the connector and its DelegationPolicy, and only to a connector whose segments reach Endpoint; the scope's `endpoints` hold it as they hold `query_data`. The Portal exchanges the call's token as `query_data` does and never writes with one of its own; the Endpoint's Policy decides each entity, and a `207` names the refused ones. `create`, `upsert` and `merge` take entities with `id` and `type`, `delete` takes ids; anything else is `422` at the member. A public Endpoint of another project is `404`: it is read, never written. The person confirms each call (yellow lane).
+
 ## Related
 
 - [ADR-N-064](../Decisions/adr-n-064-scoped-connectors.md) — the decision and its threat model.
