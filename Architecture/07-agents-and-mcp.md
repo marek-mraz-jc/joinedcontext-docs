@@ -525,8 +525,8 @@ flowchart LR
 | Segment | Tools | Verbs on the scope |
 |---|---|---|
 | `data-read` | `get_schema`, `list`, `get`, `query_data` over Endpoints and spaces | read |
-| `context` | as `data-read`, plus `plan_change`, `apply_change` on DataModel, ContextSpace, Endpoint, ModelProjection | read, propose |
-| `pipeline` | as `context` on Pipeline and DataSource, plus `sample_source`, `try_mapping`, `run_pipeline`, `pipeline_logs` | read, propose, run |
+| `context` | as `data-read`, plus `plan_change`, `apply_change` on DataModel, ContextSpace, Endpoint, ModelProjection, Subscription | read, propose |
+| `pipeline` | as `context` on Pipeline, DataSource and Subscription, plus `sample_source`, `try_mapping`, `run_pipeline`, `pipeline_logs` | read, propose, run |
 | `access` | `plan_change`, `apply_change` on Policy, Role, RoleBinding, Group, ServiceAccount, plus `member_list` (the project's people, no e-mail) | read, propose |
 | `publish` | `plan_change`, `apply_change` on an Endpoint's publish block and CkanInstance, plus `model_source_get` and `kpi_compute` | read, propose |
 | `apps` | `plan_change`, `apply_change` on App, Dashboard, Layer; the UI actions while the owner's Portal tab is paired | read, propose |
@@ -535,6 +535,8 @@ flowchart LR
 | `admin` | every tool, within the ceiling | every verb the ceiling allows |
 
 No segment approves, merges or decides: those doors refuse a connector's token (CC-41).
+
+A kind no row names is out of every connector, `admin` included, until a row names it. DelegationPolicy and Organization stay out for good: a connector never edits its own ceiling or the organization (CC-41). The DelegationPolicy ceiling still gates each kind a row names: a policy whose `kinds` list leaves one out refuses it.
 
 **Writes.** A write is two calls. `plan_change` runs it with `validate_only`: every check, nothing saved, the diff and field errors as problem+json. `apply_change` takes the plan's id unchanged and opens a change request or a workspace change. A person approves it in the Portal; in claude.ai and ChatGPT the plan renders as an MCP App view that links there.
 

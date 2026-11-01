@@ -211,6 +211,8 @@ An AI client copies every answer into a model its vendor runs, so a connector an
 }
 ```
 
+A sample of a source has no entity to judge, so its `DataSource` names the personal fields itself (`spec.personalFields`, Architecture/08 §6). `jc_pipeline_sample_source` and `jc_pipeline_try_mapping` called through `/c/{id}`, the MCP hub or an agent run leave those fields out of every record that is not an entity, leave out a first input message that is text, and name each one as `DataSource/{name}.{field}` in the same `_meta` key, also in `structuredContent.withheld`; a ticked `personalData` scope item does not bring them back, since the source's fields reach no Endpoint. A signed-in session keeps them.
+
 A Data Model the Portal cannot read at that moment refuses the call (`isError: true`, naming the model), since nothing could be withheld from it. The audit row (AG-147) holds the tool and target only, never a withheld name or value.
 
 ### 4.7 The plan view (MCP Apps)
