@@ -18,7 +18,7 @@ The `decidim` component runs the city's own Decidim instance on `participacia.{d
 
 The database `decidim` lives in the shared CNPG cluster `postgres-cluster` (`components/decidim/databases.yaml`), owned by role `decidim`. All three run as non-root users with a read-only root filesystem; Rails writes only to `/tmp`, `/code/tmp` and `/code/log` (emptyDirs) and to the claim.
 
-The image is `ghcr.io/marek-mraz-jc/joinedcontext-decidim:0.31.6`, built from `images/decidim/` by `.github/workflows/image-decidim.yml`, which scans it before the push and refuses it on any fixed HIGH or CRITICAL finding, then signs it and attests its CycloneDX bill of materials; it runs by hand only while the findings of ADR-N-065 section 4 stand.
+The image is `ghcr.io/marek-mraz-jc/joinedcontext-decidim:0.32.2`, built from `images/decidim/` by `.github/workflows/image-decidim.yml`, which scans it before the push and refuses it on any fixed HIGH or CRITICAL finding, then signs it and attests its CycloneDX bill of materials; it runs by hand only while the finding of ADR-N-065 section 4 stands.
 
 ## 2. Configuration
 
