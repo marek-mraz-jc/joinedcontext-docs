@@ -534,6 +534,8 @@ flowchart LR
 | `knowledge` | `plan_change`, `apply_change` on KnowledgeSource and AssistantDeployment, plus `knowledge_status` (crawl state, page and passage counts, last errors) and `knowledge_search` (passages, each with its page address and title) | read, propose |
 | `admin` | every tool, within the ceiling | every verb the ceiling allows |
 
+`propose` in this table and in a DelegationPolicy is shorthand for three verbs a person can tick apart: `create` (a change whose object does not exist in the project's forge yet), `edit` (`replace` or `patch` of an existing one) and `delete`. The connector dialog shows a row per kind under each ticked preset with read, create, edit and delete (and run for Pipeline), read alone by default, and greys a verb the ceiling withholds; "the whole project: read" stays one scope item. So a connector can read every Endpoint of a project, create new Endpoints and Pipelines, edit no existing one, and edit Apps. The Portal decides create against edit from the forge at plan time, never from what the client says (API/14 §1). Every change is still a change request a person approves.
+
 No segment approves, merges or decides: those doors refuse a connector's token (CC-41).
 
 A kind no row names is out of every connector, `admin` included, until a row names it. DelegationPolicy and Organization stay out for good: a connector never edits its own ceiling or the organization (CC-41). The DelegationPolicy ceiling still gates each kind a row names: a policy whose `kinds` list leaves one out refuses it.
