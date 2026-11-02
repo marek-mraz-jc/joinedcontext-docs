@@ -3,6 +3,7 @@ sidebar_position: 13
 title: Správa vašej organizácie a projektov
 description: Kde sa nachádzajú nastavenia, členovia, role a projekty organizácie a kde sídlia nastavenia jedného projektu.
 routes:
+  - /settings
   - /organization
   - /organization/$tab
   - /organization/$tab/$
