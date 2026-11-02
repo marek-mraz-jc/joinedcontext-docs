@@ -40,7 +40,7 @@ Certificates came from `letsencrypt-staging` for the first apply and come from `
 - **Same as `dev`:** every organization, project, Context Space, DataModel, Endpoint, Policy, Pipeline with its DataSource, App, visualization, AssistantDeployment, KnowledgeSource, MCP server, the branding, the texts and the CKAN catalogue with its datasets. They come from the same seed files under `components/*/seed/`. Current state fills from the same public sources within one pipeline cycle; the HSL vehicles stay at the owner's five lines.
 - **History starts at the first write.** No history is copied from `dev`.
 - **Never on this instance:**
-  - demo users with known passwords. The owner's account, from `global.initialUserEmail`, is the only account at start;
+  - demo users with known passwords. The owner's account, from `global.initialUserEmail`, is the only account at start, beside `participacia.steward`, the Decidim administrator ([18-decidim.md](18-decidim.md)): a generated password, a second factor, no Portal role, group or data right;
   - the eval and conformance copies of assistants and Keycloak clients, and the `eval-uploads` knowledge source;
   - any Secret of `dev`. Every Secret is generated in this cluster or supplied by the operator through `secretRef`. The sops files of this instance use their own age key;
   - the model key, unless the owner says yes to it. Without one, the assistants deploy with `model` unset and say so.
