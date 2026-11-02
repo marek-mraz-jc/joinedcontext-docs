@@ -18,7 +18,7 @@ The `decidim` component runs the city's own Decidim instance on `participacia.{d
 
 The database `decidim` lives in the shared CNPG cluster `postgres-cluster` (`components/decidim/databases.yaml`), owned by role `decidim`. All three run as non-root users with a read-only root filesystem; Rails writes only to `/tmp`, `/code/tmp` and `/code/log` (emptyDirs) and to the claim.
 
-The image is `ghcr.io/marek-mraz-jc/joinedcontext-decidim:0.32.2`, built from `images/decidim/` by `.github/workflows/image-decidim.yml`, which scans it before the push and refuses it on any fixed HIGH or CRITICAL finding, then signs it and attests its CycloneDX bill of materials; it runs by hand only while the finding of ADR-N-065 section 4 stands.
+The image is `ghcr.io/marek-mraz-jc/joinedcontext-decidim:0.32.2`, built from `images/decidim/` by `.github/workflows/image-decidim.yml`, which scans it before the push and refuses it on any fixed HIGH or CRITICAL finding or private key, then signs it and attests its CycloneDX bill of materials. It runs on every change under `images/decidim`, monthly and by hand.
 
 ## 2. Configuration
 
@@ -64,12 +64,12 @@ Measured on 2026-11-01 (T-6316) on a throwaway Docker network, because kind cann
 | `decidim-redis` | 4 MiB | 64 Mi / 160 Mi | 64 Mi / 160 Mi |
 | PostgreSQL connections | 8 backends, database 16 MB | in the shared cluster | in the shared cluster |
 
-The production profile asks about 1.6 GiB of requests, and the shared cluster's 8 more backends add about 150 MiB at the roughly 19 MiB per backend dev measured. That fits prod's 24 GB node at 61 % requested (about 8 GiB free on 2026-11-01). The development profile asks about 1.15 GiB, which the dev node does not have today: T-6317 checks headroom before the install. The connection budget tests (`tests/test_postgres_connection_budget.py`) count Decidim's pools once an environment lists the component.
+Stage and smartcity use the development column, because their `valuesProfile` is `development`: about 1.15 GiB of requests. Their pools hold 5 connections (web 3, Sidekiq 2), so both environments raise the shared cluster to `max_connections` 61 and its memory limit to 2560 Mi (`environments/<env>/postgres.yaml.gotmpl`); that change restarts PostgreSQL once, on the apply that installs the component. Prod's 24 GB node (21.7 GiB allocatable) stood at 61 % requested and 16.2 GiB used (76 %) on 2026-11-02, so the measured 1.1 GiB leaves about 4.4 GiB free (80 % used). Stage's 32 GB node has room for either column. The dev node has no room for 1.15 GiB, so dev does not list the component. The connection budget tests (`tests/test_postgres_connection_budget.py`) count Decidim's pools once an environment lists the component.
 
 ## 6. Install and operate
 
 1. Pin the digest `image-decidim.yml` printed in its run summary in `components/decidim/images.yaml` (`web` and `sidekiq` carry the same one).
-2. Add `decidim` to the environment's `components` list, set `decidim.web.adminEmail` and, for mail, `decidim.web.smtp`, and regenerate `gitops/<env>.yaml`.
+2. Add `decidim` to the environment's `components` list, set `decidim.web.adminEmail` and, for mail, `decidim.web.smtp`, and regenerate `gitops/<env>.yaml`. On a production-profile realm set `global.participationStewardId` to a fresh id: the realm then seeds `participacia.steward@{orgDomain}`, the address `adminEmail` names. That person holds a generated password and TOTP seed in Secret `keycloak-user-participacia-steward`, signs in with the second factor, and has no Portal role, group or data right.
 3. Apply the component's releases with a scoped apply, then open `https://participacia.{domain}/up` (200) and sign in as the admin.
 4. The harvester reads the public GraphQL API at `https://participacia.{domain}/api` (T-6317).
 
