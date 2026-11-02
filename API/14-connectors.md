@@ -99,6 +99,8 @@ Offboarding: disabling a person (`POST /api/v1/organization/people/{id}/disable`
 
 "Connect this tab" on My connectors pairs the person's open Portal tab with one of their live connectors. While it is paired, `tools/list` at `/c/{id}` adds the assistant's five UI tools (`jc_ui_navigate`, `jc_ui_open_form`, `jc_ui_highlight`, `jc_ui_show_diff`, `jc_ui_filter_table`, [Architecture/07](../Architecture/07-agents-and-mcp.md)), each with a required `project` out of the connector's scope. A call is checked as the assistant's is (the page against the Portal's table, the kind and every field against the kind's schema, read permission, the person's own plan), held to the connector's scope (a kind of its segments, an object its scope reaches), and handed to that tab only. None of the tools saves, proposes or approves; the person proposes from the form the tab opened.
 
+A connector draws a map through the Portal's Explore page, not through a Layer: `initialize` names the address `/projects/{project}/explore?endpoint=…&type=…&colorBy=…&view=map`, which reads as the person who opens it, and `jc_ui_navigate` with page `map` opens it in a paired tab; without a tab its refusal carries the same address. While the installation hides the Dashboards page (`JC_PORTAL_DASHBOARDS`), `jc_schema_get` of a Layer or a Dashboard says that nothing draws it. `jc_run_create` stays out of every segment: a run is a person's (AG-93).
+
 | Method | Path | What it does |
 |---|---|---|
 | `POST` | `/api/v1/connectors/{id}/tab` | pairs the caller's tab; `201` with `tab` (the stream's id), `connector`, `name`, `until` (the session's end). A newer tab replaces the one paired before |
