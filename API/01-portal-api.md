@@ -2701,8 +2701,10 @@ MCP (Streamable HTTP, protocol 2026-07-28):
   `"forbidden"`. A task belongs to the token's subject: another caller's `tasks/get` answers
   `unknown task`, the same as one that never existed. A finished task is kept ten minutes.
   Limits (AG-60), counted by the token's subject in the Portal itself, so an in-cluster caller
-  is bounded too: 120 requests a minute → 429 with `Retry-After`, a request body over 1 MiB and
-  an answer over 4 MiB → 413 naming what to narrow. The edge's own bucket stays on top of them.
+  is bounded too: a ninth call running at once, counted with the person's connectors → 429 with
+  `Retry-After`; a request body over 1 MiB and an answer over 4 MiB →
+  413 naming what to narrow. Calls a minute have no limit in the Portal (T-6484). The edge's own
+  bucket stays on top of them.
 ```
 
 ## 22. Workspaces (CC-76…CC-81, PF-82, PF-83, AG-82, UI-61…UI-63)
