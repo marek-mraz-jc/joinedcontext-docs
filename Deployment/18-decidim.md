@@ -69,7 +69,7 @@ Stage and smartcity use the development column, because their `valuesProfile` is
 ## 6. Install and operate
 
 1. Pin the digest `image-decidim.yml` printed in its run summary in `components/decidim/images.yaml` (`web` and `sidekiq` carry the same one).
-2. Add `decidim` to the environment's `components` list, set `decidim.web.adminEmail` and, for mail, `decidim.web.smtp`, and regenerate `gitops/<env>.yaml`. On a production-profile realm set `global.participationStewardId` to a fresh id: the realm then seeds `participacia.steward@{orgDomain}`, the address `adminEmail` names. That person holds a generated password and TOTP seed in Secret `keycloak-user-participacia-steward`, signs in with the second factor, and has no Portal role, group or data right.
+2. Add `decidim` to the environment's `components` list, set `decidim.web.adminEmail` and, for mail, `decidim.web.smtp`, and regenerate `gitops/<env>.yaml`. On a production-profile realm set `global.participationStewardId` to a fresh id: the realm then seeds `participacia.steward@{orgDomain}`, the address `adminEmail` names. That person holds a generated password in Secret `keycloak-user-participacia-steward`, signs in with a second factor, and has no Portal role, group or data right. With `global.participationStewardEnrols: true`, set on smartcity, the realm seeds no TOTP and the person enrols a device at first sign-in; a test instance leaves it false and keeps a generated TOTP seed in the same Secret for scripted sign-ins.
 3. Apply the component's releases with a scoped apply, then open `https://participacia.{domain}/up` (200) and sign in as the admin.
 4. The harvester reads the public GraphQL API at `https://participacia.{domain}/api` (T-6317).
 
