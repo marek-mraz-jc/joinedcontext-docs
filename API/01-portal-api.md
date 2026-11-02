@@ -4375,7 +4375,7 @@ DELETE /api/v1/projects/{project}/mqttbrokers/{name}/captured          → 204
 A pipeline that reads or writes a Context Space it has no grant on asks the space's owner for one. The request lives in the owning project and grants nothing until an owner there approves it; approval proposes the grant as a Change of the owning project, through its lane.
 
 ```text
-POST   /api/v1/projects/{project}/pipelines/{name}/access-requests   { "endpoint": { "project", "name" }, "operations": "read"|"write", "types": [{ "type", "attrs": [...] }], "until"?, "reason" } → 201
+POST   /api/v1/projects/{project}/pipelines/{name}/access-requests   { "endpoint": { "project", "name" }, "operations": "read"|"write"|"history", "types": [{ "type", "attrs": [...] }], "until"?, "reason" } → 201
 GET    /api/v1/projects/{project}/pipelines/{name}/access-requests   the pipeline's requests, outgoing → 200
 GET    /api/v1/projects/{project}/pipelines/{name}/access-requests/endpoints   the Endpoints the request may name → 200
 GET    /api/v1/projects/{project}/access-requests                        the requests into this project's spaces, incoming → 200
@@ -4758,6 +4758,14 @@ POST /api/v1/projects/{project}/kpis/check   {pipeline, preview?}   → 200 KpiC
   the query is the source's type, `q`, its `attrs` and the join key. `rows` counts what each
   page held; `problem` says in words why nothing was computed (a division by zero, an average
   over nothing, a source that did not answer, PL-104).
+- A `prev` term (PL-117) adds one read per source and period: `rows` holds it under
+  `parking@P7D`, at most 100 rows. The broker's view preview serves current pages only, so this
+  read goes through the gateway to the Endpoint's Temporal API, with the person's token
+  exchanged for the Endpoint (anonymous on a public one). A session without the person's token,
+  and a read with no rows, give `problem` in words and no value.
+- `readable` for a source with a `prev` term also needs `queryTemporal`; the pipeline access
+  request (§48) asks for it with `operations: history`, which grants `retrieveOps` and
+  `queryTemporal`.
 - Who may call: a person with `propose` on `Pipeline` in the project; anyone else gets `403`,
   and so does a workload token, whose reading is its ServiceAccount's grants.
 
