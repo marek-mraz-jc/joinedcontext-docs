@@ -265,7 +265,7 @@ The Context Gateway keeps the endpoints in an in-memory map (`ArcSwap<HashMap<St
 ### Audience Control
 
 - `project-list`: Access is restricted to explicitly listed Projects within the Organization. External and unlisted callers receive `404 Not Found`.
-- `organization`: Access is permitted to any authenticated user or service account belonging to the parent Organization.
+- `organization`: Access is permitted to any member of the parent Organization: a person whose verified `jc_org` claim names it, a person whose groups name one of its projects, or a service account of one of its projects (EP-171, [ADR-N-067](../Decisions/adr-n-067-organization-members-read-internal-datasets.md)). Admission is only the door: what a member reads is decided by the Endpoint's Policies.
 - `public`: Access is permitted without authentication under the `public` anonymous role grant (GW22).
 
 An Endpoint MAY set `callerRole: true` and list `roles[]` of `{name, subjects}`; a caller it admits holds `endpoint:{project}/{endpoint}` and the matching `endpoint:{project}/{endpoint}/{role}` for that request only, which is how an application's grants stay inside the application (AP-96, AP-97, [16 §12](16-apps-on-demand.md#12-roles-of-an-application)).
@@ -979,7 +979,7 @@ The CKAN API token is resolved from a `secretRef` at reconcile time and lives in
 
 ### Visibility is the endpoint's, not CKAN's
 
-A dataset is private in CKAN when the endpoint behind it is not public, and the flip happens on the next reconcile rather than by hand: narrowing an endpoint from `public` to `organization` rewrites the dataset in the same run that rewrites its resources. Who may then open a private dataset is decided in Keycloak, not in CKAN: membership of the CKAN organization is the realm role, synced through the CKAN OIDC extension, and the platform creates no CKAN-local users. A DataStore table under a private dataset is private with it, because the row API answers only to a member of the owning organization.
+A dataset is private in CKAN when the endpoint behind it is not public, and the flip happens on the next reconcile rather than by hand: narrowing an endpoint from `public` to `organization` rewrites the dataset in the same run that rewrites its resources. The platform gives nobody membership of the CKAN organization and creates no CKAN-local users: a member of the Organization reads a non-public dataset in the Portal catalogue, live through its Endpoint and Policies ([ADR-N-067 §2.4](../Decisions/adr-n-067-organization-members-read-internal-datasets.md)). A DataStore table under a private dataset is private with it, because the row API answers only to a member of the owning organization.
 
 The record itself says the same thing to a harvester that never logs in: `dcterms:accessRights` is `PUBLIC` or `RESTRICTED` from the EU authority list, and a restricted endpoint's record points at its own access document with `odrl:hasPolicy`, which is the offer a data space connector negotiates against (EP-69, DS-08).
 
