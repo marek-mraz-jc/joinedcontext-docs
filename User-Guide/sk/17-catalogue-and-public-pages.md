@@ -5,6 +5,7 @@ description: Čo návštevník bez účtu nájde v Portáli, ako vyhľadávať v
 routes:
   - /catalogue
   - /catalogue/$name
+  - /catalogue/endpoint/$slug
   - /v/$slug
   - /d/$slug
   - /f/$slug
