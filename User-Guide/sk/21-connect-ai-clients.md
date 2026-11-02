@@ -125,7 +125,7 @@ Správca vidí konektory každej osoby v prehľade organizácie a môže ktorýk
 | `403` „this connector answers only …; the token was obtained by …“ | **Povolení klienti** konektora neobsahujú klienta, ktorého ste použili. | Použite uvedeného klienta alebo **Upraviť** **Povolení klienti** konektora. |
 | `403` s nástrojom, druhom alebo cieľom mimo rozsahu | Volanie siaha na nástroj alebo položku, ktorú predvoľby a zaškrtnutia konektora nepokrývajú, alebo to nedovoľuje vaša vlastná rola. | **Upraviť** **Predvoľby** alebo **Na čo siaha** konektora. Ak vašej role chýba právo, požiadajte správcu projektu; pozri [Používatelia, roly, schvaľovania a správa driftu](07-users-roles-approvals.md). |
 | `422` `secret-in-argument` | Argument nástroja obsahuje hodnotu, ktorá vyzerá ako heslo alebo kľúč. | Prihlasovací údaj zadajte vo formulári tajomstva v Portáli; nikdy ho nepíšte do četu. |
-| `429` s `Retry-After` | Konektor urobil viac než 60 volaní za minútu (120 spolu za všetky vaše konektory) alebo viac než 4 naraz. | Počkajte toľko sekúnd, koľko uvádza `Retry-After`; požiadajte klienta o menej a väčších čítaní. |
+| `429` s `Retry-After` | Konektor mal naraz rozbehnutých viac než 4 volania alebo vy viac než 8 spolu za všetky vaše konektory. | Počkajte toľko sekúnd, koľko uvádza `Retry-After`; požiadajte klienta o menej volaní naraz. |
 | Odpoveď nástroja je príliš veľká (`413`) | Jedna odpoveď by prekročila 1 MiB. | Zúžte čítanie pomocou `limit`, `attrs` alebo jedného názvu. |
 
 ## 8. Spoločná MCP adresa Portálu
