@@ -33,7 +33,7 @@ The Portal stores connectors in its database, one owner each, never in Git (AG-1
   "createdAt": "2026-10-28T19:00:00Z",
   "lastUsedAt": null,
   "url": "https://portal.{domain}/c/c7m2q4x5k3w5r7t2v6y4n7p3ha",
-  "limits": { "callsPerMinute": 60, "parallelCalls": 4, "resultBytes": 1048576 }
+  "limits": { "parallelCalls": 4, "resultBytes": 1048576 }
 }
 ```
 
@@ -58,7 +58,7 @@ Each segment lists the reads its jobs need besides `jc_change_plan` (T-6039):
 |---|---|
 | `data-read` | `jc_catalog_search`: the Endpoints, ContextSpaces and DataModels of the call's project whose words match, filtered by the owner's read rights, and the published open datasets of the CKAN catalogue with their links: the dataset page and each resource's `{format, url}`, the download a DataSource reads (T-6269). The datasets are public open data every anonymous reader sees (EP-67), so they are not held to the scope. Listed only for a scope item that reaches the whole project: a search names objects a narrowed item does not reach (T-6194). |
 | `access` | `jc_member_list`: the people a RoleBinding of the project reaches, directly or through a Group, with the roles they hold there and `bindings`: each binding's name, role, how many subjects it names and the Group that carries the person, so a plan can delete the right one. Each carries the subject as the binding names it (a Keycloak user id, or an e-mail where the binding names one) and the realm's first and last name; no other e-mail. `search` matches the subject and the name. Only a project the connector's scope names, and only with `read` on RoleBinding there, else `403`. |
-| `publish` | `jc_model_source_get` (the LinkML text, so a KPI or publish block names real attributes) and `jc_kpi_compute`. |
+| `publish` | `jc_model_source_get` (the LinkML text, so a KPI or publish block names real attributes) and `jc_kpi_compute`, which folds an Endpoint it names as the caller or `rows` the client sends. It folds every matching entity or refuses past 10,000; `count` asks the Endpoint's total, and an attribute or `q` naming a `personalData` attribute is refused unless the scope ticks it (AG-158). |
 | `apps` | `Dashboard` and `Layer` besides `App`, and the five UI tools of §2.2 while the owner's Portal tab is paired; none submits. A client without a paired tab gets the plan's `portal` link instead. |
 
 A connector above the person's DelegationPolicy ceiling is either refused with `403` naming the field or, when the policy queues requests, stored as `pending` until an administrator approves it in the Portal.
@@ -137,15 +137,14 @@ A tool error answers `isError: true` with the problem document as structured con
 
 ### 3.1 Limits
 
-The Portal counts each call on the verified token's `sub` and the connector id of the path, never on a header. The person's budget holds over all their connectors and `/api/v1/mcp` together, so a second connector adds no calls.
+The Portal counts each call on the verified token's `sub` and the connector id of the path, never on a header. The person's budget holds over all their connectors and `/api/v1/mcp` together, so a second connector adds no parallel calls. Calls a minute have no limit for a signed-in person (owner order, T-6484); a caller without a token keeps the gateway's limit per address, and the edge's bucket stays in front of the Portal.
 
 | Limit | Per connector | Per person | Past it |
 |---|---|---|---|
-| calls a minute | 60 | 120 | `429` problem+json, `Retry-After` = seconds until the window opens, `detail` naming whose limit |
-| calls answered at once | 4 | 8 | `429` problem+json, `Retry-After: 1` |
+| calls answered at once | 4 | 8 | `429` problem+json, `Retry-After: 1`, `detail` naming whose limit |
 | bytes of one tool answer | 1 MiB | 4 MiB (the route) | tool error with status `413`, `detail` naming what to narrow (`limit`, `attrs`, one name) |
 
-A DelegationPolicy may lower these (AG-150); `limits` on the record shows the values in force. Each refusal is an audit row (`refused: rate limit`, `refused: parallel calls`, `refused: result size`), so the My connectors page shows it. The Portal assistant's model spend is capped per person per day by the agent proxy (`JC_DAILY_TOKENS_PER_PERSON`, AG-97).
+A DelegationPolicy may lower these (AG-150); `limits` on the record shows the values in force. Each refusal is an audit row (`refused: parallel calls`, `refused: result size`), so the My connectors page shows it. The Portal assistant's model spend is capped per person per day by the agent proxy (`JC_DAILY_TOKENS_PER_PERSON`, AG-97).
 
 ## 4. The tool contract
 
