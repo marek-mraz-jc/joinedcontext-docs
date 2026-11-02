@@ -39,6 +39,8 @@ A measurement is identified by **(Entity, attribute, `datasetId`, `observedAt`)*
 | same identity, another value | a **correction**: a new version of that measurement, the one before kept as superseded (DM-105) | changes only when the corrected measurement is the current one |
 | new identity, `observedAt` before the current one | a **backfill**: a row in history only (DM-106) | unchanged |
 
+The platform broker runs `ANTARES_HISTORY_BACKFILL=on`, which makes the table's last row hold for a Core API write; off, an older write replaces the current value, as CIM 009 has it. An Endpoint's view serves no temporal write (5.6.11 to 5.6.16), so the Portal's edit, backfill, correction and revert are all `PATCH …/entities/{id}/attrs` with the measurement's `observedAt`, and this table decides which one each write is.
+
 A write without `observedAt` has no identity to compare. A pipeline maps the source's own time into `observedAt` (the Portal's pipeline editor offers the mapping for every attribute of a time series type). When a write still arrives without one, the broker stamps the time it received the write and records `observedAtSource: received` in the row's provenance, so a chart can tell a measured time from a received one (DM-107).
 
 Decided (worker-3, owner may override): `observedAt`, not `modifiedAt` or the instance's arrival, is the time a measurement belongs to, because a late or re-sent reading has the same observation time and a different arrival time, and only the former tells a re-send from a new reading.
