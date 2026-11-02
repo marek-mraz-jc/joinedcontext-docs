@@ -829,6 +829,7 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **EP-169** | [S] | tested | unknown | platform `crates/context-gateway/src/pdp/evaluator.rs::a_group_grant_matches_the_group_of_the_policys_organization_only`, platform `crates/jc-core/src/auth/token.rs::an_organization_reads_only_its_own_members_and_groups` |
 | **EP-170** | [S] | tested | unknown | platform `crates/jcctl/tests/it/taxonomy_tests.rs::a_member_reads_no_endpoint_and_proposes_nothing` |
 | **EP-171** | [S] | tested | unknown | platform `crates/context-gateway/tests/it/attack_organization_audience_tests.rs::a_member_of_the_organization_in_no_project_is_admitted_by_jc_org` |
+| **EP-172** | [S] | tested | unknown | platform `crates/context-gateway/tests/it/attack_organization_audience_tests.rs::a_person_bound_in_a_project_is_admitted_to_its_organization_endpoint`, portal `tests/reconciler_groups_tests.rs::the_derived_groups_follow_the_bindings_of_their_organization_only` |
 
 ### GW — Gateway firewall
 
