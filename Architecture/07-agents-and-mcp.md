@@ -251,7 +251,7 @@ One registry, every door (ADR-N-021): the table below lists the configuration op
 | `jc_draft_list` | `*` | Green | `readOnlyHint: true` | Lists the shared drafts of a project (AG-61) |
 | `jc_draft_put` | `*` | Green | `destructiveHint: false` | Writes the shared draft of a manifest every window, assistant run and MCP client sees (AG-61) |
 | `jc_endpoint_propose` | `Endpoint` | Yellow | `destructiveHint: false` | Renders an Endpoint and its draft Policy manifests from a request to share data, and proposes them when it is given a manifest or a draft |
-| `jc_kpi_compute` | `Endpoint` | Green | `readOnlyHint: true` | Folds an attribute over context entities and renders a KeyPerformanceIndicator entity |
+| `jc_kpi_compute` | `Endpoint` | Green | `readOnlyHint: true` | Folds an attribute over an Endpoint or rows into a KeyPerformanceIndicator entity |
 | `jc_manifest_dry_run` | `*` | Green | `readOnlyHint: true` | Dry-runs candidate manifest changes and returns validation result and plan diff |
 | `jc_model_infer` | `DataModel` | Green | `readOnlyHint: true` | Infers a draft LinkML data model from sample data bytes or text, or from what an http(s) `url` answers, fetched on the project's runner with `propose` on `DataSource` (DM-54) |
 | `jc_pipeline_test` | `Pipeline` | Green | `readOnlyHint: true` | Tests candidate pipeline mapping and validation on runner without writing |
@@ -497,7 +497,7 @@ A two-resource contribution takes 4 clicks from the two people together, against
 
 **The platform's own behaviour.** Code and product changes come in as feedback (API/01 §38), from any Portal page or over MCP with the feedback operation of ADR-N-060 §2 (follow-up F6, not built yet) after the person reads the text. Feedback is anonymous unless the person signs it, may link the Change that showed the need, and reaches the board as a blocked proposed task (AG-140).
 
-**Limits.** `spec.limits.contributions` bounds per person, across every channel, the open Changes, the open workspaces, the MCP calls a minute, the review requests a day and the feedback an hour (AG-141, [ADR-N-035](../Decisions/adr-n-035-organization-policies-and-limits.md)).
+**Limits.** `spec.limits.contributions` bounds per person, across every channel, the open Changes, the open workspaces, the review requests a day and the feedback an hour (AG-141, [ADR-N-035](../Decisions/adr-n-035-organization-policies-and-limits.md)).
 
 ## 11. Scoped connectors
 

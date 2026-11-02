@@ -77,7 +77,7 @@ The threat model, each with the control that holds and the test that proves it:
 | A connector approves a change (its own plan or anyone's) | every decision door refuses `identity.client` of a connector; apply never approves | S-44, an approval-by-connector-token refusal per door (T-5953, T-5956) |
 | A secret in an answer (a DataSource credential, a token in a log) | manifests carry `secretRef` only; `get` and `plan_change` return the reference, never the value; audit rows hold no token; logs never print a bearer | S-29, a grep test over every tool answer of the harness fixtures (T-5947, T-5956) |
 | A connector outlives the person's role | rights read live per call, nothing cached; expiry at most the policy's `maxExpiry` (365 days at most) | S-32 (T-5950) |
-| Flooding through a connector | per-connector and per-person limits keyed on the verified token, `429` with `Retry-After` | flood test (T-5968) |
+| Flooding through a connector | per-connector and per-person limits on calls running at once, keyed on the verified token, `429` with `Retry-After`; no limit on calls a minute (owner order, T-6484) | flood test (T-6484) |
 
 What stays open: a person can always hand a model everything they themselves may do, inside the ceiling; the ceiling and writes-off-by-default are what bound it.
 
