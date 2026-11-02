@@ -1522,6 +1522,7 @@ The inference answer (DM-54): the model as source and as the operations the visu
 
 The editor's operations (DM-13) are `addClass`, `removeClass`, `renameClass`, `setClass`, `addSlot`, `removeSlot`, `renameSlot`, `attachSlot`, `detachSlot`, `setSlot`, `setTitle`, `addEnum` and `addEnumValue`, applied in order and all or nothing. A rename carries `to` and follows the element through the model: a renamed class is renamed in every `is_a` and every slot `range` that names it, a renamed slot in every class's slot list. An operation naming an element the model does not have, or a new name it already has, is refused with its index and the reason.
 
+- `sdm-catalog` and `import-sdm` answer from the Smart Data Models mirror when the image holds one (`JC_PORTAL_SDM_MIRROR_DIR`): the catalogue names each model's upstream `commit` (DM-08) and lists in `failed` the models that did not convert, each with its `finding`. A failed model is never offered: `import-sdm` refuses it with that finding. A model the mirror lacks, or a stored file that no longer matches the catalogue's pin, goes to Model Tools as before.
 - `sdm-catalog` is the index the import wizard browses (DM-07): the subjects and their models, with
   the attribute names and descriptions the wizard searches. Model Tools caches it and refreshes it
   daily; `?refresh=true` asks for a refresh now, and an index Model Tools could not refresh is
