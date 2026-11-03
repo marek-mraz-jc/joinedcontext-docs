@@ -4,6 +4,7 @@ title: Dashboardy a geopriestorová vizualizácia
 description: Vytváranie mapových dashboardov a vrstiev nad endpointmi projektu a skúmanie entít za nimi.
 routes:
   - /projects/$project/dashboards
+  - /projects/$project/grafana
   - /projects/$project/explore
 ---
 
@@ -96,6 +97,10 @@ Napíšte do poľa pre asistenta:
 `Show me bike stations with available bikes in the helsinki space`
 
 Asistent vykoná dopyt a prejde na `/projects/helsinki/explore?space=helsinki&endpoint=helsinki-bikes&type=BikeHireDockingStation&q=availableBikeNumber>0` s tabuľkou filtrovanou na zodpovedajúce záznamy.
+
+## 5. Uloženie grafu do Grafany
+
+V menu projektu otvorte **Grafana**, vyberte Endpoint, typ, atribút a vizualizáciu, zadajte názov a stlačte **Uložiť do Grafany**. **Otvoriť v Grafane** ju ukáže v priečinku projektu. Údaje panelu človek vidí len tam, kam siahajú jeho vlastné práva, takže kolega s menšími právami môže vidieť prázdny panel.
 
 ## Súvisiace
 
