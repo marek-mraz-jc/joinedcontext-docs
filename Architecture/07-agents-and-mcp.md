@@ -530,7 +530,7 @@ flowchart LR
 | `access` | `plan_change`, `apply_change` on Policy, Role, RoleBinding, Group, ServiceAccount, plus `member_list` (the project's people, no e-mail) | read, propose |
 | `publish` | `plan_change`, `apply_change` on an Endpoint's publish block and CkanInstance, plus `model_source_get` and `kpi_compute` | read, propose |
 | `apps` | `plan_change`, `apply_change` on App, Dashboard, Layer; the UI actions while the owner's Portal tab is paired | read, propose |
-| `operate` | reads of runs, health, activity and limits; `run_pipeline` | read, run |
+| `operate` | reads of runs, health, activity and limits; `run_pipeline`; with `writes` on, `syncsource_pause` (pauses or resumes a SyncSource's loop, no manifest change) | read, run, edit on SyncSource |
 | `knowledge` | `plan_change`, `apply_change` on KnowledgeSource and AssistantDeployment, plus `knowledge_status` (crawl state, page and passage counts, last errors) and `knowledge_search` (passages, each with its page address and title) | read, propose |
 | `admin` | every tool, within the ceiling | every verb the ceiling allows |
 
