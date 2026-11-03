@@ -898,6 +898,11 @@ For `spec.federation.identity`:
   its own account or to the caller's original token. A member registered by an address outside
   this platform keeps `serviceAccount` or an `authSecretRef`: no exchanged token leaves the
   platform.
+- **`anonymous`** — the hub's broker forwards no credential at all (T-6545), so the source
+  answers what it answers any visitor. Only for an `https` `endpoint` outside this platform (an
+  `endpointRef` or plain `http` is refused at validation, and so is a `serviceAccountRef`); the
+  gateway asks for no exchange and serves the read like any other hub. Stage reads prod's public
+  Endpoints this way.
 
 ### The federation graph (UI-27, UI-28)
 
