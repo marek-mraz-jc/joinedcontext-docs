@@ -974,7 +974,7 @@ names are used wherever they exist, so an author reading the generated `bento.ya
 | `spec.type` | Bento input | Rendered from |
 |---|---|---|
 | `mqtt` | `mqtt` | `urls`, `topics`, `qos`, `cleanSession`, `username`, `passwordRef`; `client_id` is `jc-{project}-{pipeline}` |
-| `http` | `http_client` | `url`, `verb`, `headers`, `authorization`, `timeout`, `maxBytes` (below, PL-113); how often it is fetched stays with the pipeline's class and `spec.period` (section 1); with `archive`, the ranged zip read below (PL-72); with `format: csv`, an `unarchive: csv` processor before the author's steps (PL-114) |
+| `http` | `http_client` | `url`, `verb`, `headers`, `authorization`, `timeout`, `maxBytes` (below, PL-113); how often it is fetched stays with the pipeline's class and `spec.period` (section 1); with `archive`, the ranged zip read below (PL-72); with `format: csv`, an `unarchive: csv` processor before the author's steps, and with `records: data.stations`, the array at that path split by `unarchive: json_array` (PL-114) |
 | `websocket` | `websocket` | `url`, `openMessage` |
 | `gtfs-rt` | `http_client` plus a `protobuf` processor | `url` and `feed`; the GTFS-realtime descriptor set ships in the runner image, so no pipeline carries one |
 | any other input of the runner | that input, verbatim | `spec.input`, the input's own document (PL-50, below) |
