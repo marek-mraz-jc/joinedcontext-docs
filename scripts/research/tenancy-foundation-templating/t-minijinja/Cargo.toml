@@ -1,0 +1,8 @@
+[package]
+name = "t-minijinja"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+minijinja = { version = "3.0.5", features = ["serde"] }
+serde = { version = "1.0.229", features = ["derive"] }
