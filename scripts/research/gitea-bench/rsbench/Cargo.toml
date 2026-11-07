@@ -1,0 +1,11 @@
+[workspace]
+[package]
+name = "rsbench"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+gix = { version = "=0.90.0", default-features = false, features = ["max-performance", "sha1"] }
+gix-pack = { version = "=0.77.0", features = ["generate"] }
+git2 = { version = "=0.21.0", default-features = false }
+anyhow = "1"
