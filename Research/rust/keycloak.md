@@ -1,12 +1,12 @@
 ---
 sidebar_position: 2
-title: "Keycloak and VCVerifier for wardkeep"
-description: Research input for wardkeep, the Rust identity server that replaces Keycloak 26.8.1 and FIWARE VCVerifier 6.31.0; capability inventory, internals, extension model, security, tenancy, operations, test oracles, Argon pack plan and the MCP mapping, every claim with its source (T-6637).
+title: "Keycloak and VCVerifier for kaisatsu"
+description: Research input for kaisatsu, the Rust identity server that replaces Keycloak 26.8.1 and FIWARE VCVerifier 6.31.0; capability inventory, internals, extension model, security, tenancy, operations, test oracles, Argon pack plan and the MCP mapping, every claim with its source (T-6637).
 ---
 
-# Keycloak and VCVerifier for wardkeep
+# Keycloak and VCVerifier for kaisatsu
 
-This page is the research input for wardkeep (T-6633): one Rust identity server for every organization of an installation, replacing Keycloak and FIWARE VCVerifier. It lists what upstream does, what the platform uses today with file:line, how upstream works inside, what the Rust design keeps, changes or drops, and which upstream files feed the Argon generation. Readers: the worker who builds the wardkeep pack, the reviewer of the generated code, the owner deciding the open questions in section 10.
+This page is the research input for kaisatsu (T-6633): one Rust identity server for every organization of an installation, replacing Keycloak and FIWARE VCVerifier. It lists what upstream does, what the platform uses today with file:line, how upstream works inside, what the Rust design keeps, changes or drops, and which upstream files feed the Argon generation. Readers: the worker who builds the kaisatsu pack, the reviewer of the generated code, the owner deciding the open questions in section 10.
 
 ## 1. Sources and pins
 
@@ -31,24 +31,24 @@ Upstream's own feature list is the enum `Profile.Feature` (`KC common/src/main/j
 
 | Capability | Upstream source | Verdict |
 |---|---|---|
-| OIDC authorization code + PKCE | `S/protocol/oidc/endpoints/AuthorizationEndpoint.java`, `S/protocol/oidc/utils/PkceUtils.java` | used: Portal login `POR src/auth/oidc.rs`, every browser client (`RI:702-876`); wardkeep: S256 only |
+| OIDC authorization code + PKCE | `S/protocol/oidc/endpoints/AuthorizationEndpoint.java`, `S/protocol/oidc/utils/PkceUtils.java` | used: Portal login `POR src/auth/oidc.rs`, every browser client (`RI:702-876`); kaisatsu: S256 only |
 | Refresh tokens, offline tokens | `S/protocol/oidc/TokenManager.java`, `S/protocol/oidc/grants/RefreshTokenGrantType.java` | used: offline sessions 30 d idle, 60 d max (`RI:133-135`), claude.ai asks `offline_access` (`RI:435-437`) |
 | client_credentials | `S/protocol/oidc/grants/ClientCredentialsGrantType.java` | used: every workload client, `DEP components/*/keycloak-clients.yaml` (13 files) |
-| Resource owner password grant | `S/protocol/oidc/grants/ResourceOwnerPasswordCredentialsGrantType.java` | used only by journeys and `scripts/keycloak-login-journey.py` (`DEP components/keycloak/README.md` "Password grant"); drop in wardkeep: OAuth 2.1 removes it; journeys move to a browser or a test-only signed assertion |
+| Resource owner password grant | `S/protocol/oidc/grants/ResourceOwnerPasswordCredentialsGrantType.java` | used only by journeys and `scripts/keycloak-login-journey.py` (`DEP components/keycloak/README.md` "Password grant"); drop in kaisatsu: OAuth 2.1 removes it; journeys move to a browser or a test-only signed assertion |
 | Implicit flow | `S/protocol/oidc/endpoints/AuthorizationEndpoint.java` | drop: off on every client (`RI:760` `implicitFlowEnabled false`) |
 | Standard token exchange V2 (RFC 8693) | `S/protocol/oidc/tokenexchange/StandardTokenExchangeProvider.java` (390 lines); feature `TOKEN_EXCHANGE_STANDARD_V2` default (`Profile.java:93`) | used: Portal person to Endpoint (`POR src/auth/oidc.rs:372`, `DEP components/portal/keycloak-clients.yaml:59-64`), agent proxy (`DEP components/agent-runner/keycloak-clients.yaml:33-34`), gateway to brokers (`RI:857-862`) |
 | Token exchange V1 (legacy, impersonation, IdP tokens) | `S/protocol/oidc/tokenexchange/` V1 providers; feature `TOKEN_EXCHANGE` preview, deprecated | drop: never enabled; CVE class GHSA-75p6-52g3-rqc8 |
-| Token exchange delegation (`act` claim) | feature `TOKEN_EXCHANGE_DELEGATION` preview (`Profile.java:94`) | needed: an agent acting for a person (`docs Architecture/07-agents-and-mcp.md`); wardkeep emits `act` from day one |
+| Token exchange delegation (`act` claim) | feature `TOKEN_EXCHANGE_DELEGATION` preview (`Profile.java:94`) | needed: an agent acting for a person (`docs Architecture/07-agents-and-mcp.md`); kaisatsu emits `act` from day one |
 | JWT authorization grant (RFC 7523 assertion) | `JWT_AUTHORIZATION_GRANT` default (`Profile.java:96`) | needed: device by own key pair (`docs Architecture/12-identity-and-access.md` §3 "A device by its own key pair") |
 | Identity Assertion JWT (ID-JAG, cross-domain chaining) | `IDENTITY_ASSERTION_JWT` experimental (`Profile.java:192`), `KC docs/guides/securing-apps/identity-assertion-jwt-authorization-grant.adoc` | needed later: one organization's agent reaching another installation; not in the first run |
 | Device authorization grant | `S/protocol/oidc/grants/device/`, `DEVICE_FLOW` default | drop for now: no TV-style client; GHSA-f5h4-wmp5-xhg6 shows the risk |
 | CIBA | `CIBA` default | drop: no backchannel-auth client |
 | PAR (RFC 9126) | `S/protocol/oidc/par/`, `PAR` default | needed: required by FAPI 2 and HAIP, cheap |
 | DPoP (RFC 9449) | `DPOP` default, `KC docs/guides/securing-apps/dpop.adoc` | needed: binds connector refresh tokens to the client key |
-| Resource indicators (RFC 8707) | `S/protocol/oidc/resourceindicators/`, `RESOURCE_INDICATORS` experimental | needed and kept off today: 26.8 matches `resource` against a static list only (`DEP components/keycloak/values/app/base-values.yaml.gotmpl:195-198`); wardkeep resolves `resource` to an Endpoint or connector at request time |
+| Resource indicators (RFC 8707) | `S/protocol/oidc/resourceindicators/`, `RESOURCE_INDICATORS` experimental | needed and kept off today: 26.8 matches `resource` against a static list only (`DEP components/keycloak/values/app/base-values.yaml.gotmpl:195-198`); kaisatsu resolves `resource` to an Endpoint or connector at request time |
 | Parameterized scopes | `PARAMETERIZED_SCOPES` preview (`Profile.java:90`), SPI `ParameterizedScopeType` | used: `connector:{id}` with regexp `[a-z2-7]{26}` (`RI:473-480`) |
 | CIMD (Client ID Metadata Document) | `S/protocol/oauth2/cimd/clientpolicy/executor/ClientIdMetadataDocumentExecutor.java`, `CIMD` experimental (`Profile.java:190`) | used: claude.ai and VS Code clients (`RI:443-465`) |
-| Dynamic client registration (RFC 7591) | `S/services/clientregistration/` | drop as open registration: CVE class GHSA-95cx-vmr5-3cmr, GHSA-95rm-h7g9-rhcf, GHSA-r7rc-c989-86g6; wardkeep registers clients only from manifests and CIMD |
+| Dynamic client registration (RFC 7591) | `S/services/clientregistration/` | drop as open registration: CVE class GHSA-95cx-vmr5-3cmr, GHSA-95rm-h7g9-rhcf, GHSA-r7rc-c989-86g6; kaisatsu registers clients only from manifests and CIMD |
 | Token introspection (RFC 7662) | `S/protocol/oidc/AccessTokenIntrospectionProvider.java` | needed: APISIX edge and Gitea read opaque state today by JWKS; introspection serves revoked-token checks |
 | Revocation (RFC 7009) | `S/protocol/oidc/endpoints/TokenRevocationEndpoint.java` | used: refresh-token revocation ends sibling grants (KNOWLEDGE T-6483) |
 | RP-initiated and back-channel logout | `S/protocol/oidc/endpoints/LogoutEndpoint.java`, `BackchannelLogoutResponse.java` | used: `POST /api/v1/auth/backchannel-logout` (`POR src/auth/oidc.rs:1004-1029`) |
@@ -56,16 +56,16 @@ Upstream's own feature list is the enum `Profile.Feature` (`KC common/src/main/j
 | Discovery, JWKS, key rotation | `S/protocol/oidc/OIDCWellKnownProvider.java`, `S/keys/` | used: `PLT crates/jc-core/src/auth/jwks.rs:38-96` polls JWKS |
 | ES256 default, RS256 per client, HS512 off | `S/keys/` providers `ecdsa-generated`, `rsa-generated`, `hmac-generated` | used: `RI:119`, `RI:354-433`; RS256 only for APISIX `edge` (lua-resty-openidc) |
 | SAML 2.0 IdP (Keycloak as SAML server) | `KC saml-core`, `S/protocol/saml/` | drop: no SAML service provider; 9 of 83 GHSA are SAML parsing or signature classes |
-| SAML 2.0 broker (upstream SAML IdP) | `S/broker/saml/` | needed: ADFS and Entra ID by SAML (PF-127, T-6633 scope); wardkeep takes SAML through a separate adapter process (section 5.4) |
+| SAML 2.0 broker (upstream SAML IdP) | `S/broker/saml/` | needed: ADFS and Entra ID by SAML (PF-127, T-6633 scope); kaisatsu takes SAML through a separate adapter process (section 5.4) |
 | OIDC broker (upstream OIDC IdP) | `S/broker/oidc/` | needed: an organization's own Entra ID or Google Workspace |
 | Social brokers (Google, GitHub, Twitter, Instagram, ...) | `S/social/` | drop as named providers: a generic OIDC broker covers the useful ones |
 | Kerberos / SPNEGO | `KERBEROS` default (`Profile.java:119`) | drop: no Windows domain login requirement |
 | Docker registry auth | `DOCKER` disabled | drop |
 | SSF transmitter (Shared Signals) | `KC ssf/`, `SSF` experimental | needed later: push session revocation to the gateway instead of polling (`PLT crates/jc-core/src/auth/token.rs:279` `replace_revocations`) |
-| AuthZEN PDP | `KC authzen/`, `AUTHZEN` experimental | drop in wardkeep: the platform's AuthZEN endpoints are the gateway's (`docs Architecture/12-identity-and-access.md:401-436`); jc-auth decides |
+| AuthZEN PDP | `KC authzen/`, `AUTHZEN` experimental | drop in kaisatsu: the platform's AuthZEN endpoints are the gateway's (`docs Architecture/12-identity-and-access.md:401-436`); jc-auth decides |
 | UMA / Authorization Services | `KC authz/`, `AUTHORIZATION` default | drop: forbidden by I1 (`docs Architecture/12-identity-and-access.md:28`); GHSA-w3p3-7cjg-vgfw, GHSA-2888-g6qc-w4mj, GHSA-f5p5-6xmx-p252 are all in this module |
 | SCIM 2.0 server | `KC scim/`, `SCIM_API` default | needed: an organization's HR system provisions people (PF-127 `source: provider`) |
-| Client policies and profiles | `S/services/clientpolicy/`, `CLIENT_POLICIES` | used for CIMD only (`RI:443-465`); wardkeep replaces the engine by fixed per-client-kind rules |
+| Client policies and profiles | `S/services/clientpolicy/`, `CLIENT_POLICIES` | used for CIMD only (`RI:443-465`); kaisatsu replaces the engine by fixed per-client-kind rules |
 | Client secret rotation | `CLIENT_SECRET_ROTATION` | drop: no client secret exists for workloads (PF-47); remaining secrets rotate by the reconciler |
 | Federated client auth (Kubernetes SA tokens) | `S/authentication/authenticators/client/FederatedJWTClientAuthenticator.java`, `S/broker/kubernetes/KubernetesIdentityProvider.java`, `KUBERNETES_SERVICE_ACCOUNTS` default | used: `RI:783-795` `clientAuthenticatorType federated-jwt`, `jwt.credential.issuer kubernetes`; IdP `RI:929-934`; Portal writes them `POR src/reconciler/workload_clients.rs:4-7` |
 | SPIFFE trust | `SPIFFE` preview | drop now: Linkerd identities are not SPIFFE SVIDs at the edge; revisit with a mesh change |
@@ -75,7 +75,7 @@ Upstream's own feature list is the enum `Profile.Feature` (`KC common/src/main/j
 
 | Capability | Upstream source | Verdict |
 |---|---|---|
-| Authentication flows and executions | `S/authentication/`, tables `AUTHENTICATION_FLOW`, `AUTHENTICATION_EXECUTION` | used: browser step-up, direct grant, master browser (`RI:1022-1250`, `RI:1281-`); wardkeep replaces configurable flows with one fixed state machine per login kind (section 3.3) |
+| Authentication flows and executions | `S/authentication/`, tables `AUTHENTICATION_FLOW`, `AUTHENTICATION_EXECUTION` | used: browser step-up, direct grant, master browser (`RI:1022-1250`, `RI:1281-`); kaisatsu replaces configurable flows with one fixed state machine per login kind (section 3.3) |
 | Level of assurance (`acr`), step-up | `STEP_UP_AUTHENTICATION`, `acr.loa.map` | used: `{"pwd":1,"mfa":2}` (`RI:348`); Portal refuses decisions without `amr otp` or `acr mfa` (`POR src/auth/session.rs:108-109`) |
 | `amr` claim | `oidc-amr-mapper` | used: every platform client (`RI:530`, `RI:825`) |
 | Password with policy | `KC server-spi-private/src/main/java/org/keycloak/policy/` | used: `length(12) and upperCase(1) and lowerCase(1) and digits(1) and notUsername and notEmail and passwordHistory(5)` (`RI:178`); master `length(20)...` (`RI:1267`) |
@@ -83,16 +83,16 @@ Upstream's own feature list is the enum `Profile.Feature` (`KC common/src/main/j
 | TOTP | `S/authentication/authenticators/browser/OTPFormAuthenticator.java`, `OTPCredentialModel` | used: HmacSHA256, 6 digits, 30 s, look-ahead 1 (`RI:181-187`); required for realm role `mfa-required` |
 | HOTP | `otpPolicyType hotp` | drop |
 | WebAuthn second factor | `S/authentication/authenticators/browser/WebAuthnAuthenticator.java`, `WEB_AUTHN` | configured, not enforced (`RI:191-212`, empty `webAuthnPolicyRpId` means the host, `S/authentication/requiredactions/WebAuthnRegister.java:174-175`) |
-| Passkeys (passwordless, conditional UI) | `PASSKEYS` default (`Profile.java:162`) | needed: PF-128, T-6633 scope; first-class in wardkeep |
+| Passkeys (passwordless, conditional UI) | `PASSKEYS` default (`Profile.java:162`) | needed: PF-128, T-6633 scope; first-class in kaisatsu |
 | Recovery codes | `RECOVERY_CODES` default | needed: replaces the break-glass kcadm credential delete (`DEP components/keycloak/README.md` "Break-glass") for ordinary people |
 | Brute-force protection | `S/services/managers/DefaultBruteForceProtector.java`, `LOGIN_FAILURES_V2` persistent | used: 10 failures in 12 h, 60 s step to 15 min, never permanent (`RI:165-177`, README table) |
 | Required actions (verify e-mail, update password, configure TOTP, terms) | `S/authentication/requiredactions/` | used: CONFIGURE_TOTP (`RI:977-1021`), Portal `send_actions` (`POR src/people.rs:373`) |
 | Reset credentials by e-mail | `resetCredentialsFlow` (`RI:342`) | used |
-| User profile (declarative attributes) | `S/userprofile/` | used implicitly; wardkeep: typed person record, attributes per organization schema |
+| User profile (declarative attributes) | `S/userprofile/` | used implicitly; kaisatsu: typed person record, attributes per organization schema |
 | Sessions: SSO, client, offline | `S/services/managers/UserSessionManager.java`, tables `OFFLINE_USER_SESSION`, `OFFLINE_CLIENT_SESSION`; `PERSISTENT_USER_SESSIONS` default | used: SSO 60 min idle, 10 h max, no remember-me (`RI:126-129`) |
 | Impersonation | `IMPERSONATION` default | drop for people: GHSA-7fpj-9hr8-28vh, GHSA-w354-2f3c-qvg9; support reads through jc-auth instead |
 | Consents | tables `USER_CONSENT*` | used: Portal lists and revokes (`POR src/people.rs:451-458`); `mcp-*` clients consent on (`POR src/reconciler/mcp_clients.rs:4-5`) |
-| Account console | `ACCOUNT_V3` | drop: the Portal owns the person's own page; wardkeep serves only login, enrolment and recovery pages |
+| Account console | `ACCOUNT_V3` | drop: the Portal owns the person's own page; kaisatsu serves only login, enrolment and recovery pages |
 | Themes (FreeMarker login, account) | `KC themes/`, `S/theme/` | used: `DEP components/keycloak/charts/theme/files/` (login.ftl 62, template.ftl 277, field.ftl 166 lines, 4 locales) |
 | Organizations (identity-first, domains, invitations) | `S/organization/` (23 files, 50 270 tokens), `ORGANIZATION` default (`Profile.java:160`) | not used: one realm, one group subtree per Organization (`docs Decisions/adr-n-058-several-organizations-per-installation.md:48-50`); section 6 |
 | Workflows | `WORKFLOWS` default, table `WORKFLOW_STATE` | drop: joiner/leaver automation belongs to the Portal's change lanes |
@@ -108,9 +108,9 @@ Upstream's own feature list is the enum `Profile.Feature` (`KC common/src/main/j
 | User/group attribute mapper (`jc_org`, `jc_groups`) | `oidc-usermodel-attribute-mapper`, aggregate attrs | used: `RI:516`, `RI:843` |
 | Audience mapper | `oidc-audience-mapper` | used: 5 scopes (`RI:575-600`, broker audiences per `contextBrokers`) |
 | Partial import | `S/partialimport/` | used: `DEP components/keycloak/charts/people/files/ensure-user-ids.sh` (fixed ids, PF-126) and presenter credential copy (`DEP components/keycloak/README.md` "The presenter") |
-| Realm import by keycloak-config-cli | external tool, `DEP components/keycloak/images.yaml:17-22` | used for the whole realm; wardkeep reads the same declarations as manifests (section 7.1) |
-| Fine-grained admin permissions V2 | `ADMIN_FINE_GRAINED_AUTHZ_V2` default | used by `DEP components/keycloak/charts/admin-permissions/files/sync-admin-permissions.sh` (201 lines); wardkeep: jc-auth decides admin calls; GHSA-2qxf-v3g6-73v9, GHSA-27gp-8389-hm4w are this class |
-| Admin REST API v2 (clients) | `KC rest/admin-v2`, `CLIENT_ADMIN_API_V2` preview | drop: wardkeep's admin API is the Portal ops registry (section 11) |
+| Realm import by keycloak-config-cli | external tool, `DEP components/keycloak/images.yaml:17-22` | used for the whole realm; kaisatsu reads the same declarations as manifests (section 7.1) |
+| Fine-grained admin permissions V2 | `ADMIN_FINE_GRAINED_AUTHZ_V2` default | used by `DEP components/keycloak/charts/admin-permissions/files/sync-admin-permissions.sh` (201 lines); kaisatsu: jc-auth decides admin calls; GHSA-2qxf-v3g6-73v9, GHSA-27gp-8389-hm4w are this class |
+| Admin REST API v2 (clients) | `KC rest/admin-v2`, `CLIENT_ADMIN_API_V2` preview | drop: kaisatsu's admin API is the Portal ops registry (section 11) |
 | Events (user, admin) | `S/events/`, tables `EVENT_ENTITY`, `ADMIN_EVENT_ENTITY` | used: 16 enabled types, 30 d expiry, `jboss-logging` listener (`RI:240-260`), admin events with details (`RI:324-325`) |
 | Metrics, OpenTelemetry | `USER_EVENT_METRICS`, `OPENTELEMETRY` default | used: metrics on (`DEP .../app/base-values.yaml.gotmpl:199`); GHSA-3692-rrj9-24qw (label cardinality) |
 | LDAP user federation | `KC federation/ldap` (105 files) | needed: PF-127 Active Directory, OpenLDAP; none configured (`grep -ril ldap DEP components/keycloak` empty) |
@@ -133,7 +133,7 @@ Upstream's own feature list is the enum `Profile.Feature` (`KC common/src/main/j
 | Gaia-X registry | `VCV gaiax/` | drop: no Gaia-X compliance chain is specified |
 | Credential status (status lists) | `VCV verifier/credential_status_client.go` (1121 lines), `common/credential_status.go` | needed: revocation of issued and presented credentials |
 | JSON-LD proofs | `VCV common/ldproof.go` (1357 lines) | drop in run 1: SD-JWT and JOSE first; LDP behind a feature if a partner needs it |
-| Decentralized Claims Protocol (data space) | not in `KC` or `VCV`; `docs Architecture/18-data-space-connector.md:72-107` | needed: wardkeep issues the participant's credentials, the connector presents them; agreement tokens today are realm tokens with `agreementId` (`PLT crates/context-gateway/src/auth/dataspace_token.rs:1-15`) |
+| Decentralized Claims Protocol (data space) | not in `KC` or `VCV`; `docs Architecture/18-data-space-connector.md:72-107` | needed: kaisatsu issues the participant's credentials, the connector presents them; agreement tokens today are realm tokens with `agreementId` (`PLT crates/context-gateway/src/auth/dataspace_token.rs:1-15`) |
 
 ## 3. Internals
 
@@ -151,9 +151,9 @@ Upstream's own feature list is the enum `Profile.Feature` (`KC common/src/main/j
 
 ### 3.2 Data model
 
-Tables from `@Table` annotations in `KC model/jpa/src/main/java` (80 tables). Grouped by what wardkeep keeps:
+Tables from `@Table` annotations in `KC model/jpa/src/main/java` (80 tables). Grouped by what kaisatsu keeps:
 
-| Group | Upstream tables | wardkeep table (every row carries `installation_id`, `org_id` where it is tenant data) |
+| Group | Upstream tables | kaisatsu table (every row carries `installation_id`, `org_id` where it is tenant data) |
 |---|---|---|
 | Realm config | `REALM`, `REALM_ATTRIBUTE`, `REALM_REQUIRED_CREDENTIAL`, `REALM_LOCALIZATIONS`, `COMPONENT`, `COMPONENT_CONFIG`, `REQUIRED_ACTION_PROVIDER`, `AUTHENTICATION_FLOW`, `AUTHENTICATION_EXECUTION`, `AUTHENTICATOR_CONFIG` | `installation`, `organization` (policy columns: password rules, MFA requirement, session lengths), `signing_key`; no flow tables (fixed state machine) |
 | People | `USER_ENTITY`, `USER_ATTRIBUTE`, `USER_REQUIRED_ACTION`, `CREDENTIAL`, `FEDERATED_IDENTITY`, `BROKER_LINK`, `FED_*` (9 tables for federated storage) | `person`, `person_attribute`, `credential` (typed: password, totp, webauthn, recovery), `upstream_link`, `pending_action` |
@@ -165,7 +165,7 @@ Tables from `@Table` annotations in `KC model/jpa/src/main/java` (80 tables). Gr
 | Consent | `USER_CONSENT`, `USER_CONSENT_CLIENT_SCOPE` | `consent` |
 | Credentials issued/held | `ISSUED_VER_CREDENTIAL`, `USER_VER_CREDENTIAL`, `FED_ISSUED_VER_CREDENTIAL`, `FED_USER_VER_CREDENTIAL` | `issued_credential`, `status_list` |
 | Audit | `EVENT_ENTITY`, `ADMIN_EVENT_ENTITY`, `OUTBOX_ENTRY` | `audit_event` (one table, append-only, partitioned by month), outbox for SSF |
-| Dropped | `RESOURCE_SERVER*` (5), `RESOURCE_ATTRIBUTE`, `WORKFLOW_STATE`, `CLUSTER_EVENT`, `MIGRATION_MODEL`, `SERVER_CONFIG` | UMA, workflows and Infinispan bookkeeping have no wardkeep counterpart |
+| Dropped | `RESOURCE_SERVER*` (5), `RESOURCE_ATTRIBUTE`, `WORKFLOW_STATE`, `CLUSTER_EVENT`, `MIGRATION_MODEL`, `SERVER_CONFIG` | UMA, workflows and Infinispan bookkeeping have no kaisatsu counterpart |
 
 Credential payloads (the migration contract, section 5.5): `CREDENTIAL.SECRET_DATA` holds JSON `{value, salt, additionalParameters}` (`KC server-spi/.../credential/dto/PasswordSecretData.java:18-31`), `CREDENTIAL_DATA` holds `{hashIterations, algorithm, additionalParameters}` (`PasswordCredentialData.java:12-33`); argon2 puts `type`, `version`, `hashLength`, `memory`, `parallelism` in `additionalParameters` (`Argon2PasswordHashProviderFactory.java:22-27`). OTP: secret value plus `{subType, digits, counter, period, algorithm, secretEncoding}` (`OTPCredentialData.java:7-16`, encoding UTF8 or BASE32 `OTPCredentialModel.java:25`). WebAuthn: `{aaguid, credentialId, counter, attestationStatement, credentialPublicKey, attestationStatementFormat, transports}` (`WebAuthnCredentialData.java:33-42`).
 
@@ -183,11 +183,11 @@ Workload token today: the pod's projected ServiceAccount token goes as `client_a
 
 Token exchange today: the Portal holds the person's token, posts `grant_type urn:ietf:params:oauth:grant-type:token-exchange` with `audience {endpoint slug}` (`POR src/auth/oidc.rs:372`); Keycloak checks `standard.token.exchange.enabled` on the requester, the subject token's `aud` contains the requester, the requested scope is optional on the requester and an audience mapper exists (KNOWLEDGE T-6063).
 
-wardkeep keeps the wire for every one of these and drops the configurable flow graph: four fixed state machines (browser person, upstream broker, workload assertion, wallet presentation), each a Rust enum whose transitions are unit-tested, with per-organization policy columns choosing which steps are mandatory. Reason: second-factor, step-up and flow bypasses recur in the advisories (GHSA-5jfq-x6xp-7rw2, GHSA-4f53-xh3v-g8x4, GHSA-4pc7-vqv5-5r3v, GHSA-c9h6-v78w-52wj, section 5.3), and a flow graph an administrator can rewire is a test matrix nobody covers.
+kaisatsu keeps the wire for every one of these and drops the configurable flow graph: four fixed state machines (browser person, upstream broker, workload assertion, wallet presentation), each a Rust enum whose transitions are unit-tested, with per-organization policy columns choosing which steps are mandatory. Reason: second-factor, step-up and flow bypasses recur in the advisories (GHSA-5jfq-x6xp-7rw2, GHSA-4f53-xh3v-g8x4, GHSA-4pc7-vqv5-5r3v, GHSA-c9h6-v78w-52wj, section 5.3), and a flow graph an administrator can rewire is a test matrix nobody covers.
 
 ### 3.4 Background work, caching, scaling
 
-| Concern | Keycloak | wardkeep |
+| Concern | Keycloak | kaisatsu |
 |---|---|---|
 | Expired sessions, events, single-use | Quarkus timers (`S/timer/`), event expiry 30 d (`RI:241`) | one tokio task per table: partition drop for `audit_event`, `DELETE ... WHERE expires_at < now()` in batches of 1000 for sessions and single-use |
 | Key rotation | manual or by provider priority | scheduled: new ES256 key published in JWKS 24 h before it signs, old key kept 2x max token life |
@@ -217,7 +217,7 @@ A provider is a JAR in `/opt/keycloak/providers`, picked up at `kc.sh build`; it
 
 ### 4.2 Rust equivalent
 
-| Keycloak SPI | wardkeep | Mechanism |
+| Keycloak SPI | kaisatsu | Mechanism |
 |---|---|---|
 | Authenticator, RequiredAction | fixed steps: password, totp, webauthn, recovery code, upstream OIDC, upstream SAML (adapter), LDAP bind (adapter), wallet presentation, terms acceptance | built-in modules behind Cargo features `saml`, `ldap`, `oid4vp`, `oid4vci`, `scim`; no runtime-loaded authenticators |
 | ProtocolMapper | claim rules per client kind: `groups` (full path), `jc_org`, `jc_groups`, `amr`, `acr`, `aud` from scopes, `act` | data, not code: a manifest field per client kind; an organization may add attribute claims from its own person schema |
@@ -226,22 +226,22 @@ A provider is a JAR in `/opt/keycloak/providers`, picked up at `kc.sh build`; it
 | Theme | per-organization branding: logo, colours, texts per locale, from the Organization manifest; templates compiled in (askama), no template upload | data only; CSP nonce per page |
 | Custom endpoint, custom claim logic | WASM component on the platform wasm-host | WIT interface `jc:identity/claims@0.1` (input: person attributes the organization exposes, client id; output: extra claims of a declared schema); fuel 10 M per call, 16 MiB memory, no network, no clock beyond the request time, deadline 50 ms; a component failing or timing out yields no extra claims and an audit row |
 
-Decided (worker-t6637, owner may override): wardkeep has no in-process plugin that can read credentials or sessions; the only code extension is the claims component above, because every upstream SPI runs with full database access and the CVE history (section 5.3) shows mapper and policy plugins as a privilege-escalation path. Options: (a) WASM claims hook only (chosen), (b) WASM authenticator steps with a capability API, (c) no extension at all.
+Decided (worker-t6637, owner may override): kaisatsu has no in-process plugin that can read credentials or sessions; the only code extension is the claims component above, because every upstream SPI runs with full database access and the CVE history (section 5.3) shows mapper and policy plugins as a privilege-escalation path. Options: (a) WASM claims hook only (chosen), (b) WASM authenticator steps with a capability API, (c) no extension at all.
 
 ## 5. Security
 
-### 5.1 Flows in wardkeep (sequence per flow)
+### 5.1 Flows in kaisatsu (sequence per flow)
 
 Browser person (`org` chosen first, identity-first):
 
-1. `GET /authorize` (PKCE S256 required, PAR optional, `client_id` known or CIMD-fetched): wardkeep resolves the installation by host and the organization by host (custom domain), by `org` hint, or by the e-mail domain the person types (`org_domain`, exact beats wildcard as upstream, `KC docs/documentation/server_admin/topics/organizations/managing-domains.adoc`).
+1. `GET /authorize` (PKCE S256 required, PAR optional, `client_id` known or CIMD-fetched): kaisatsu resolves the installation by host and the organization by host (custom domain), by `org` hint, or by the e-mail domain the person types (`org_domain`, exact beats wildcard as upstream, `KC docs/documentation/server_admin/topics/organizations/managing-domains.adoc`).
 2. Organization policy picks the first factor: passkey (conditional UI), upstream IdP (domain routing, auto-redirect only when the person has no local first factor, same rule as upstream), or password.
 3. Second factor when the organization, the client, `acr_values=mfa` or a role marked MFA-required demands it: passkey (counts as both), TOTP, recovery code.
 4. Pending actions (enrol TOTP or passkey, accept terms, change temporary password).
 5. Session row (`session_id`, `org_id`, `person_id`, `acr`, `amr`, `auth_time`), cookie `__Host-wk` (Secure, HttpOnly, SameSite=Lax, 32 random bytes, stored hashed).
 6. Code (single-use row, 60 s), token endpoint, tokens with `iss` (one issuer per installation), `org`, `sub`, `azp`, `aud`, `acr`, `amr`, `sid`, `groups` (full paths inside `org`), `scope`.
 
-Workload: `client_credentials` with `client_assertion` = projected Kubernetes token (kept wire-compatible with `federated-jwt`), or RFC 7523 private-key JWT for devices; the Kubernetes issuer keys are fetched with wardkeep's own projected token as today.
+Workload: `client_credentials` with `client_assertion` = projected Kubernetes token (kept wire-compatible with `federated-jwt`), or RFC 7523 private-key JWT for devices; the Kubernetes issuer keys are fetched with kaisatsu's own projected token as today.
 
 Connector (AI client): code + PKCE from a CIMD client (document fetched from an allow-listed host, exact redirect URIs, `RI:443-465`); scope `connector:{id}` resolved against the Portal connector at request time, so `aud` names the connector door (closes the 26.8 gap noted at `RI:466-472`); DPoP-bound refresh token; revocation by connector id.
 
@@ -251,9 +251,9 @@ Token exchange: requester client must be allowed to exchange for that audience b
 
 ### 5.2 Authorization, secrets, crypto, limits
 
-| Topic | Keycloak today | wardkeep |
+| Topic | Keycloak today | kaisatsu |
 |---|---|---|
-| Admin authorization | realm-management client roles + FGAP v2 (`DEP components/keycloak/charts/admin-permissions`) | every admin call is a Portal op checked by jc-auth (`Effective` today, `POR src/permissions.rs`); wardkeep's admin API accepts only the Portal's workload identity and the person's token, and re-checks the organization of every target row |
+| Admin authorization | realm-management client roles + FGAP v2 (`DEP components/keycloak/charts/admin-permissions`) | every admin call is a Portal op checked by jc-auth (`Effective` today, `POR src/permissions.rs`); kaisatsu's admin API accepts only the Portal's workload identity and the person's token, and re-checks the organization of every target row |
 | Data authorization | none (I1) | none: jc-auth and Antares views decide data (ADR-N-050) |
 | Secrets at rest | client secrets in `CLIENT.SECRET` (plain), TOTP secrets plain in `CREDENTIAL.SECRET_DATA`, signing keys in `COMPONENT_CONFIG` | TOTP secrets and signing keys encrypted with an installation key from the secrets mount (AES-256-GCM, key id per row); client secrets stored as argon2id hashes; no secret in logs |
 | Token signing | ES256 default, RS256 for `edge` (`RI:354-433`) | ES256 default, EdDSA optional, RS256 per client kind `edge` until APISIX moves; algorithm taken from the key, never from the header (as `PLT crates/jc-core/src/auth/token.rs:9-10`) |
@@ -265,7 +265,7 @@ Token exchange: requester client must be allowed to exchange for that audience b
 
 Classification by worker-t6637 from the 83 advisory summaries (`GHSA` command in section 1, output kept in the task evidence `evidence/T-6637/ghsa.tsv`); a class count is the number of summaries that name it, rounded into the closest class.
 
-| Class | Count | Examples | wardkeep answer |
+| Class | Count | Examples | kaisatsu answer |
 |---|---|---|---|
 | Redirect URI validation (open redirect, path traversal, wildcard, case) | 9 | GHSA-mpwq-j3xf-7m5w, GHSA-72vp-xfrc-42xm, GHSA-mrv8-pqfj-7gp5, GHSA-g8q8-fggx-9r3q, GHSA-w8gr-xwp4-r9f7, GHSA-cvg2-7c3j-g36j, GHSA-v3f7-2p4r-mwfw | exact string match only, no wildcard, no normalisation; parsed with `url` crate then compared byte-for-byte; test corpus of the upstream bypass shapes |
 | XSS and HTML injection in pages | 9 | GHSA-9hhc-pj4w-w5rv, GHSA-8rmm-gm28-pj8q, GHSA-27gc-wj6x-9w55, GHSA-755v-r4x4-qf7m, GHSA-w9mf-83w3-fv49 | askama auto-escaping, no user-supplied template, `error_description` never rendered (fixed message per error code), CSP with nonce, no inline handlers |
@@ -287,21 +287,21 @@ Classification by worker-t6637 from the 83 advisory summaries (`GHSA` command in
 
 ### 5.4 Federation adapters
 
-SAML and LDAP stay out of the token-signing process. `wardkeep-saml` and `wardkeep-ldap` run as separate workloads with their own ServiceAccount, speak the legacy protocol, and post a signed internal assertion (ES256, 60 s, audience `wardkeep`) to wardkeep's broker endpoint. A parser bug there yields at most a forged login for that organization's upstream, never key material or another organization's people. Decided (worker-t6637, owner may override): separate adapter processes, because 12 of 83 GHSA sit in SAML and LDAP code. Options: in-process behind features, separate adapters (chosen), drop SAML and LDAP.
+SAML and LDAP stay out of the token-signing process. `kaisatsu-saml` and `kaisatsu-ldap` run as separate workloads with their own ServiceAccount, speak the legacy protocol, and post a signed internal assertion (ES256, 60 s, audience `kaisatsu`) to kaisatsu's broker endpoint. A parser bug there yields at most a forged login for that organization's upstream, never key material or another organization's people. Decided (worker-t6637, owner may override): separate adapter processes, because 12 of 83 GHSA sit in SAML and LDAP code. Options: in-process behind features, separate adapters (chosen), drop SAML and LDAP.
 
 ### 5.5 Credential migration from Keycloak without resets
 
 | Credential | Keycloak storage | Migration |
 |---|---|---|
-| Password | argon2id (default since the FIPS-off order 300 factory) or pbkdf2-sha512/-sha256/-sha1 rows (3.2) | copy `SECRET_DATA` and `CREDENTIAL_DATA` into `credential.legacy`; verify with the stored algorithm and parameters (`argon2` crate, `pbkdf2` crate); on the first successful login rehash with wardkeep's parameters and clear `legacy`. The deployment already copies hashed credentials between realms (`DEP components/keycloak/README.md` "The presenter", `scripts/presenter-secret.sh`), which proves the export path |
+| Password | argon2id (default since the FIPS-off order 300 factory) or pbkdf2-sha512/-sha256/-sha1 rows (3.2) | copy `SECRET_DATA` and `CREDENTIAL_DATA` into `credential.legacy`; verify with the stored algorithm and parameters (`argon2` crate, `pbkdf2` crate); on the first successful login rehash with kaisatsu's parameters and clear `legacy`. The deployment already copies hashed credentials between realms (`DEP components/keycloak/README.md` "The presenter", `scripts/presenter-secret.sh`), which proves the export path |
 | TOTP | secret value and parameters in `CREDENTIAL` | copy secret (encrypt at rest), algorithm HmacSHA256, digits, period, encoding; codes keep working with no re-enrolment |
-| WebAuthn and passkeys | public key, credential id, counter, AAGUID; RP ID = Keycloak host when `webAuthnPolicyRpId` is empty (`WebAuthnRegister.java:174-175`), so `idm.{domain}` today (`DEP components/keycloak/apisix-routes.yaml:6`) | copy rows; a credential answers only to the RP ID it was made for, so wardkeep keeps RP ID `idm.{domain}` and serves logins of migrated passkeys on that host |
+| WebAuthn and passkeys | public key, credential id, counter, AAGUID; RP ID = Keycloak host when `webAuthnPolicyRpId` is empty (`WebAuthnRegister.java:174-175`), so `idm.{domain}` today (`DEP components/keycloak/apisix-routes.yaml:6`) | copy rows; a credential answers only to the RP ID it was made for, so kaisatsu keeps RP ID `idm.{domain}` and serves logins of migrated passkeys on that host |
 | Recovery codes | hashed codes | copy hashes |
 | Sessions, offline tokens | `OFFLINE_*` tables | not migrated: people sign in once after cut-over; connectors re-consent (offline tokens are bound to Keycloak's key and session ids) |
 | Upstream links | `FEDERATED_IDENTITY` | copy (`upstream_idp`, `subject`) |
 | User ids | Keycloak UUIDs, fixed for demo people (`DEP components/keycloak/demo-users.yaml`) | kept as `person_id`: manifests name people by id (ADR-N-061, PF-126) |
 
-Export: a one-shot `wardkeep import --from-keycloak <postgres url>` reads the Keycloak database read-only (no admin API, which does not return hashes), maps the group subtree `/{organization}/...` to `org_id` + group path, and writes a dry-run report first.
+Export: a one-shot `kaisatsu import --from-keycloak <postgres url>` reads the Keycloak database read-only (no admin API, which does not return hashes), maps the group subtree `/{organization}/...` to `org_id` + group path, and writes a dry-run report first.
 
 ## 6. Tenancy
 
@@ -322,7 +322,7 @@ Export: a one-shot `wardkeep import --from-keycloak <postgres url>` reads the Ke
 
 One realm per installation (PF-01). Each Organization owns a group subtree `/{organization}` (`docs Decisions/adr-n-058-several-organizations-per-installation.md:48-50`); jc-core `Organization`, `Project`, `ContextSpace`, `Role`, `RoleBinding`, `Group`, `Policy`, `DelegationPolicy`, `ServiceAccount` are manifests in the forge, the Portal reconciler writes Keycloak groups (`POR src/reconciler/groups.rs:1-6`, attribute `managed-by: joinedcontext`) and clients (`workload_clients.rs`, `app_clients.rs`, `mcp_clients.rs`). Tokens carry `groups` with full paths and `jc_org` (`RI:505-516`); `PLT crates/jc-core/src/auth/token.rs:141-148` `member_of`, `groups_in`. Known traps: bare group names matched across organizations until full paths (KNOWLEDGE T-6408), seed Organization `hel` owning subtree `/helsinki` (KNOWLEDGE T-6461), demo people with no `jc_org` (KNOWLEDGE T-6464). Members join an organization's `members` group (`POR src/people.rs:503`).
 
-### 6.3 wardkeep design
+### 6.3 kaisatsu design
 
 | Requirement | Design |
 |---|---|
@@ -330,7 +330,7 @@ One realm per installation (PF-01). Each Organization owns a group subtree `/{or
 | Forced RLS | `ALTER TABLE ... FORCE ROW LEVEL SECURITY`; policy `org_id = current_setting('wk.org')::uuid`; the app role is not BYPASSRLS; cross-organization reads (login before the organization is known, token endpoint) go through `SECURITY DEFINER` functions that return one row by unique key (host, client id, code hash) and nothing else. Predicates use btree keys (leakproof operators only, KNOWLEDGE T-4852) |
 | Custom domain and TLS | `org_domain` (login host) per organization or identity domain; certificates by cert-manager HTTP-01 per host (no wildcard, per CLAUDE.md cluster rule); issuer stays one per installation, `org` is a claim (`Research/next-platform/03-identity-and-authz.md` §2) |
 | Organization choice | by host first, then `org` hint from the client, then e-mail domain; a person in two organizations has two `person` rows linked by a verified e-mail, never one row with two orgs (avoids cross-org inference through one account) |
-| One identity, one policy engine | wardkeep issues tokens, jc-auth decides; both share the `jc-auth` crate types (`OrgId`, `Subject`, `Decision`) |
+| One identity, one policy engine | kaisatsu issues tokens, jc-auth decides; both share the `jc-auth` crate types (`OrgId`, `Subject`, `Decision`) |
 | Quotas | per organization and per identity domain: people count, clients, logins per minute, token mints per minute, audit retention days; enforced in the same transaction as the write (`SELECT ... FOR UPDATE` on the quota row) |
 | Keys | one signing key set per installation (gateway and Antares trust one JWKS); per-organization keys only if the owner asks (section 10) |
 
@@ -349,21 +349,21 @@ Isolation tests (each a Rust integration test over Postgres with forced RLS, two
 
 ### 7.1 Config as code
 
-Today: realm from `RI` by keycloak-config-cli, people by partial import (`DEP components/keycloak/charts/people`), admin permissions by a script Job, clients written by the Portal reconciler at runtime. wardkeep reads the Organization, Group, ServiceAccount and client-kind manifests the reconciler already stages, plus an `IdentityConfig` per organization (policy columns, branding, domains, upstream IdPs with `secretRef`). No admin UI writes configuration outside a manifest except people, sessions and credentials (personal data stays out of git, ADR-N-061).
+Today: realm from `RI` by keycloak-config-cli, people by partial import (`DEP components/keycloak/charts/people`), admin permissions by a script Job, clients written by the Portal reconciler at runtime. kaisatsu reads the Organization, Group, ServiceAccount and client-kind manifests the reconciler already stages, plus an `IdentityConfig` per organization (policy columns, branding, domains, upstream IdPs with `secretRef`). No admin UI writes configuration outside a manifest except people, sessions and credentials (personal data stays out of git, ADR-N-061).
 
 ### 7.2 Migrations, backups, upgrades
 
-| Topic | Keycloak | wardkeep |
+| Topic | Keycloak | kaisatsu |
 |---|---|---|
 | Schema migration | Liquibase at boot, 79 changelogs; a major upgrade wants a dump first (`DEP components/keycloak/images.yaml:13-14`, T-4124) | sqlx migrations, forward-only, `migrations.rollback.toml` as Antares does; boot under an advisory lock |
-| Backup | the shared CNPG cluster dump (nightly on prod) | same database cluster, own schema; `pg_dump --schema=wardkeep` drill per release |
+| Backup | the shared CNPG cluster dump (nightly on prod) | same database cluster, own schema; `pg_dump --schema=kaisatsu` drill per release |
 | Upgrade | rolling for patch releases (`ROLLING_UPDATES_V2`) | rolling: two consecutive versions read the same schema |
 
 ### 7.3 Observability and budget
 
 Keycloak on dev: heap capped at 25 % of a 2048 Mi limit with 146 MB live (`DEP .../app/base-values.yaml.gotmpl:57-64`, T-5282), sat at 1021 Mi before the cap (T-5892); the build init container alone asks 256 Mi to 1 Gi (`:200-206`); keycloak-config-cli 512 Mi to 1 Gi per apply (`RI:19-24`).
 
-wardkeep budget at 100 req/s (mix: 80 % JWKS, discovery, introspection and token refresh; 15 % token exchange and client_credentials; 5 % browser logins = 5 password checks/s):
+kaisatsu budget at 100 req/s (mix: 80 % JWKS, discovery, introspection and token refresh; 15 % token exchange and client_credentials; 5 % browser logins = 5 password checks/s):
 
 | Resource | Budget | Basis |
 |---|---|---|
@@ -380,10 +380,10 @@ Signals: Prometheus metrics with fixed label sets (`outcome`, `flow`, `org` as a
 | Oracle | What it proves | How |
 |---|---|---|
 | OpenID Foundation conformance suite | OIDC basic, config, PKCE, FAPI 2 security profile, OID4VCI issuer (HAIP and non-HAIP), OID4VP verifier | containers `mongodb`, `conformance`, `nginx` as upstream runs them (`KC tests/conformance/README.md`, suite `release-v5.2.2`); one plan per profile, 100 % of modules passing or a written waiver per module |
-| Differential run against Keycloak 26.8.1 | the Portal's admin calls and every token our services read | same manifests applied to Keycloak (pinned image) and wardkeep; a recorder replays the calls of `POR src/people.rs`, `src/reconciler/{groups,workload_clients,app_clients,mcp_clients,hub_scopes}.rs` and compares status and normalised bodies; tokens compared claim by claim (`iss`, `aud`, `groups`, `jc_org`, `amr`, `acr`, `scope`, `azp`) |
-| Our consumers' tests | the platform still verifies wardkeep tokens | `PLT crates/jc-core` auth tests (`--features auth`), `context-gateway` `tests/` (subject, accounts), Portal `tests/` that sign in (wiremock realm helpers `auth::oidc::tests`) |
-| Deployment journeys | browser flows end to end | `DEP scripts/keycloak-login-journey.py` modes steward, enrol, lockout, stepup, grant; `tests/test_keycloak_login_hardening.py` rule checks rewritten against wardkeep config |
-| Upstream unit and integration tests as specification | edge cases per protocol | `KC testsuite/integration-arquillian` (1454 files) and `KC tests/base` (799 files): mined for cases (redirect validation, token exchange, PKCE, brute force), rewritten as Rust tests; never executed against wardkeep |
+| Differential run against Keycloak 26.8.1 | the Portal's admin calls and every token our services read | same manifests applied to Keycloak (pinned image) and kaisatsu; a recorder replays the calls of `POR src/people.rs`, `src/reconciler/{groups,workload_clients,app_clients,mcp_clients,hub_scopes}.rs` and compares status and normalised bodies; tokens compared claim by claim (`iss`, `aud`, `groups`, `jc_org`, `amr`, `acr`, `scope`, `azp`) |
+| Our consumers' tests | the platform still verifies kaisatsu tokens | `PLT crates/jc-core` auth tests (`--features auth`), `context-gateway` `tests/` (subject, accounts), Portal `tests/` that sign in (wiremock realm helpers `auth::oidc::tests`) |
+| Deployment journeys | browser flows end to end | `DEP scripts/keycloak-login-journey.py` modes steward, enrol, lockout, stepup, grant; `tests/test_keycloak_login_hardening.py` rule checks rewritten against kaisatsu config |
+| Upstream unit and integration tests as specification | edge cases per protocol | `KC testsuite/integration-arquillian` (1454 files) and `KC tests/base` (799 files): mined for cases (redirect validation, token exchange, PKCE, brute force), rewritten as Rust tests; never executed against kaisatsu |
 | EUDI reference wallet | real wallet interop for OID4VCI and OID4VP | issuance and presentation of an SD-JWT VC end to end |
 | Credential migration | no reset needed | import a dump of a Keycloak realm with argon2, pbkdf2-sha256 and TOTP and WebAuthn users; scripted logins succeed; rows rehashed after first login |
 | Isolation tests | section 6.3 list | required green before merge |
@@ -411,12 +411,12 @@ Contract file (shared by every run, written before run 1, about 15k tokens): cra
 
 | Run | Packs | Tokens | Output |
 |---|---|---|---|
-| 1 core protocol | contract + A1 + O3 + O4 | about 400k | `wardkeep-oidc` (authorize, token, exchange, revocation, introspection, discovery, keys, CIMD, DPoP, PAR), `wardkeep-store` sessions part; about 12k lines |
-| 2 login and organizations | contract + A2 + O1 + O4 | about 417k | `wardkeep-login` state machines, password/TOTP/passkey/recovery, organizations, domains, branding pages; about 10k lines |
-| 3 data model and Portal contract | contract + A3 + O2 + O4 | about 451k | `wardkeep-store` (sqlx migrations, RLS policies), Keycloak importer, admin API matching the Portal's calls; about 9k lines |
-| 4 admin, events, federation adapters | contract + B1 + O4 + `POR src/people.rs` | about 425k | admin ops, audit, SCIM server, `wardkeep-ldap` adapter, OIDC broker, `wardkeep-saml` adapter skeleton; about 10k lines |
-| 5 credential issuance | contract + C1 + O3 + O4 | about 270k | `wardkeep-vci` (OID4VCI, SD-JWT VC, status lists), OID4VP broker; about 6k lines |
-| 6 verifier and trust | contract + C2 + O4 | about 306k | `wardkeep-vp` (did:web, did:key, did:jwk, TIR client, eIDAS behind a feature, internal JWT); about 6k lines |
+| 1 core protocol | contract + A1 + O3 + O4 | about 400k | `kaisatsu-oidc` (authorize, token, exchange, revocation, introspection, discovery, keys, CIMD, DPoP, PAR), `kaisatsu-store` sessions part; about 12k lines |
+| 2 login and organizations | contract + A2 + O1 + O4 | about 417k | `kaisatsu-login` state machines, password/TOTP/passkey/recovery, organizations, domains, branding pages; about 10k lines |
+| 3 data model and Portal contract | contract + A3 + O2 + O4 | about 451k | `kaisatsu-store` (sqlx migrations, RLS policies), Keycloak importer, admin API matching the Portal's calls; about 9k lines |
+| 4 admin, events, federation adapters | contract + B1 + O4 + `POR src/people.rs` | about 425k | admin ops, audit, SCIM server, `kaisatsu-ldap` adapter, OIDC broker, `kaisatsu-saml` adapter skeleton; about 10k lines |
+| 5 credential issuance | contract + C1 + O3 + O4 | about 270k | `kaisatsu-vci` (OID4VCI, SD-JWT VC, status lists), OID4VP broker; about 6k lines |
+| 6 verifier and trust | contract + C2 + O4 | about 306k | `kaisatsu-vp` (did:web, did:key, did:jwk, TIR client, eIDAS behind a feature, internal JWT); about 6k lines |
 
 Every run stays under 500k tokens. Expected total output about 53k lines of Rust plus tests, matching the 45-60k estimate in T-6633.
 
@@ -425,7 +425,7 @@ Every run stays under 500k tokens. Expected total output about 53k lines of Rust
 - Decided (worker-t6637, owner may override): one issuer per installation, organization as the `org` claim and as rows, no realm per organization, because the gateway, Antares and the Portal trust one JWKS today and ADR-N-058 already chose one realm with organization subtrees. Options: realm per organization (Keycloak style), one issuer per organization.
 - Decided (worker-t6637, owner may override): fixed login state machines with per-organization policy columns instead of configurable flows, because second-factor and flow bypasses recur in the upstream advisories (section 5.3) and a fixed machine is fully testable.
 - Decided (worker-t6637, owner may override): SAML and LDAP in separate adapter workloads (section 5.4).
-- Decided (worker-t6637, owner may override): Keycloak's built-in OID4VP broker (`S/broker/oid4vp`) and VCVerifier are both reference behaviour; wardkeep follows the OpenID conformance verifier plan, so I2's "short internal JWT" is wardkeep's own token, not a second issuer.
+- Decided (worker-t6637, owner may override): Keycloak's built-in OID4VP broker (`S/broker/oid4vp`) and VCVerifier are both reference behaviour; kaisatsu follows the OpenID conformance verifier plan, so I2's "short internal JWT" is kaisatsu's own token, not a second issuer.
 - Decided (worker-t6637, owner may override): password grant, implicit flow, impersonation, UMA, open dynamic registration, account console, front-channel logout, device flow and CIBA are not built.
 - Decided (worker-t6637, owner may override): migrated passkeys keep the login host `idm.{domain}`; an organization's custom login domain serves its own new passkeys and offers the platform host for passkeys made before.
 - Owner question: per-organization signing keys (each organization its own JWKS) or one installation key set? One key set is assumed.
@@ -461,7 +461,7 @@ Read tools filter by the caller's jc-auth decision before paging and counting: `
 ## Related
 
 - [Identity and access](../../Architecture/12-identity-and-access.md): I1-I3 and the organization, group and role model this design keeps.
-- [Data space connector](../../Architecture/18-data-space-connector.md): the Decentralized Claims Protocol side wardkeep issues credentials for.
+- [Data space connector](../../Architecture/18-data-space-connector.md): the Decentralized Claims Protocol side kaisatsu issues credentials for.
 - [Next platform identity and authorization](../next-platform/03-identity-and-authz.md): the provider scope and the one-issuer decision this page details.
 - [ADR-N-058](../../Decisions/adr-n-058-several-organizations-per-installation.md): several organizations in one realm, the starting point for section 6.
 - [ADR-N-064](../../Decisions/adr-n-064-scoped-connectors.md): `connector:{id}` scopes and CIMD clients, kept wire-compatible in section 5.1.

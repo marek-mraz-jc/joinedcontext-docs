@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Re-measures the token counts of the wardkeep Argon pack plan (Research/rust/keycloak.md section 9).
+# Re-measures the token counts of the kaisatsu Argon pack plan (Research/rust/keycloak.md section 9).
 # Clones the pinned upstream sources (Keycloak 26.8.1, FIWARE VCVerifier 6.31.0) into WORK and runs
 # repomix over each pack group. Our own repositories are measured from sibling clones when present.
-# Usage: scripts/research/keycloak-sources.sh [WORK_DIR]   (default: ${TMPDIR:-/tmp}/wardkeep-sources)
+# Usage: scripts/research/keycloak-sources.sh [WORK_DIR]   (default: ${TMPDIR:-/tmp}/kaisatsu-sources)
 set -euo pipefail
 
-WORK=${1:-${TMPDIR:-/tmp}/wardkeep-sources}
+WORK=${1:-${TMPDIR:-/tmp}/kaisatsu-sources}
 REPOMIX=${REPOMIX:-/workspace/.cache/npm/_npx/cad0f0e99bf115c9/node_modules/.bin/repomix}
 KC_TAG=26.8.1          # quay.io/keycloak/keycloak:26.8.1, deployment components/keycloak/images.yaml
 VCV_TAG=6.31.0         # FIWARE/VCVerifier, newest release tag on 2026-11-07
@@ -51,7 +51,7 @@ for g in "${PACKS[@]}"; do
   total=$((total + ${tok:-0}))
 done
 
-# Our side: the files a wardkeep generation must read (paths relative to /workspace/agents/<you>).
+# Our side: the files a kaisatsu generation must read (paths relative to /workspace/agents/<you>).
 OURS=$(cd "$HERE/.." && pwd)
 measure_ours() { # name dir globs
   if [ -d "$OURS/$2" ]; then
