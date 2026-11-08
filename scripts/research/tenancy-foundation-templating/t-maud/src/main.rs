@@ -1,0 +1,7 @@
+use maud::{html, DOCTYPE, Markup, PreEscaped};
+struct Row { id: String, name: String, status: String }
+fn rows() -> Vec<Row> { (0..100).map(|i| Row { id: format!("urn:ngsi-ld:Pipeline:{i}"), name: format!("Pipeline <{i}> & \"x\""), status: if i % 3 == 0 { "failed".into() } else { "ok".into() } }).collect() }
+fn bench(f: impl Fn() -> String) { let s = f(); let n = 20000; let t = std::time::Instant::now(); let mut b = 0; for _ in 0..n { b += std::hint::black_box(f()).len(); } let e = t.elapsed(); println!("bytes={} us_per_render={:.2} total_bytes={}", s.len(), e.as_secs_f64()*1e6/n as f64, b); }
+fn layout(title: &str, nonce: &str, content: Markup) -> Markup { html! { (DOCTYPE) html lang="en" { head { title { (title) } script nonce=(nonce) { (PreEscaped("document.documentElement.dataset.js=\"1\"")) } } body { nav { a href="/" { "Home" } a href="/pipelines" { "Pipelines" } } main { h1 { (title) } (content) } } } } }
+fn page(form_name: &str, error: Option<&str>, rows: &[Row]) -> Markup { html! { form method="post" { label for="n" { "Name" } input id="n" name="n" value=(form_name) aria-describedby="n-h"; p id="n-h" { "Example: helsinki-bikes" } @if let Some(e) = error { p role="alert" { (e) } } } table { tr { th { "Id" } th { "Name" } th { "Status" } } @for r in rows { tr { td { (r.id) } td { (r.name) } td { (r.status) } } } } } }
+fn main() { let rows = rows(); bench(|| layout("Pipelines", "abc123", page("x<y", Some("Name is taken"), &rows)).into_string()); }
