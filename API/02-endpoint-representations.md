@@ -901,6 +901,31 @@ the AuthZEN document. Types the caller may not see are absent.
 
 `scopeQ`, `geoQ` and `temporalQ` have a known shape, so they become `where` branches. A residual `q` does not: it is an NGSI-LD query filter, and [R56](../Requirements/policy-firewall.md) allows exactly one grammar for those, the broker's own parser compiled to Wasm, which the gateway does not host. So `q` travels verbatim beside `where`, and a client applies it as it applies any other NGSI-LD filter. Leaving it out would understate the residual and let a client compile a filter wider than its grant.
 
+### The access routes as OData operations (`access/odata`)
+
+Each Endpoint also serves its access routes as OData 4.01 operations under one service root,
+`/api/endpoint/{endpointSlug}/access/odata` (T-6657), so an OData client reads them from a
+`$metadata` document instead of a hand-written contract. Each operation calls the plain route's
+own handler: the same caller check, rate charge, input rules and answer. A success adds
+`@odata.context` and `OData-Version: 4.01`; a refusal is the plain route's Problem Details, byte
+for byte.
+
+| Plain route | OData twin | Result type |
+|---|---|---|
+| `GET …/access` (AuthZEN JSON) | `GET …/access/odata/Access()` | `Gateway.Access.AccessDocument` |
+| `GET …/access/attributes?type=T` | `GET …/access/odata/Attributes(type='T')` or `Attributes(type=@t)?@t='T'` | `Gateway.Access.AttributeTable` |
+| `POST …/access/check` | `POST …/access/odata/Check` (same body) | `Gateway.Access.Decision` |
+| `POST …/access/simulate` | `POST …/access/odata/Simulate` (same body, Portal only) | `Gateway.Access.Decision` |
+
+`GET …/access/odata/$metadata` answers CSDL XML, or CSDL JSON with `$format=json`; the service
+document lists the two functions. The result types are open complex types: the documents are the
+broker engine's and carry what it carries. The service document and `$metadata` are refused to
+whoever `access` refuses (the public on a members-only Endpoint, an unknown slug), so they reveal
+no more than the plain route. ODRL, Turtle and the grant tree stay on `GET …/access` by `Accept`.
+The AuthZEN `access/v1/evaluation(s)` routes are a standard API of their own and have no twin. The
+gateway serves no usage read (it posts its counts to the Portal) and its request cost lives on the
+metrics port, so neither has an OData twin here.
+
 ## 7c. Filter preview (`preview`)
 
 The Portal's preview ([API/01 §40](01-portal-api.md), T-3802) replaces this route: it compiles the
