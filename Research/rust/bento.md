@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 10
 title: "Bento for ekiben"
 description: "Bento 1.22.0 internals, plugins, security and multi-organization streaming, measured against the Portal's pipeline runner and ekiben, as input for an Argon pack."
 ---
