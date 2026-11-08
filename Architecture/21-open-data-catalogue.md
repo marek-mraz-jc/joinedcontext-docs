@@ -217,6 +217,21 @@ On the MCP hub and on every named server, `endpoint: catalog` is the caller's ow
 
 Not yet in the entities: the entity types an Endpoint holds with their counts, first and last `observedAt`, and the ready-to-run second call per type (`nextQuery`, T-4486). They need one broker read per Endpoint and land in a follow-up task.
 
+## 11. One Endpoint, several datasets
+
+Every public Endpoint is one dataset without a publication block, and an Endpoint that lists `spec.catalog.datasets` is one dataset per entry instead ([ADR-N-068](../Decisions/adr-n-068-catalogue-datasets-of-an-endpoint.md), EP-174…EP-178). The Portal reconciler and `jcctl publish ckan` read the same list (`jc_manifest::catalogue::datasets`), so a run from a shell and the reconciler publish the same names.
+
+| Endpoint declares | Datasets | Instance |
+|---|---|---|
+| `audience: public`, no `spec.publish` | one, named `metadata.name` | the project's only `CkanInstance`, else the installation's catalogue |
+| `spec.publish.ckan` | one, named `publish.ckan.name` or `metadata.name` | `publish.ckan.instanceRef` |
+| `spec.catalog.datasets` | one per entry, named `name` | as either row above |
+| `harvest: false`, or an App's own `app-{name}` | none | |
+
+A dataset of the list is built from its own record, `GET /api/endpoint/{slug}/datasets/{name}`, which the gateway derives from the Endpoint's record (`jc_dcat::dataset_slice`): the entry's title, description, keywords and licence, the Endpoint's other catalogue terms, and the distributions narrowed to the entry. Its CKAN resources are the narrowed NGSI-LD query (`ngsi-ld/v1/entities?type={types}&q={q}`, which is also what §10 reads as the dataset's own rows), the narrowed `file.csv`, the OGC items of each type when the entry has no `q`, the schema index, the dataset's record and the schema artifacts. A dataset never links MCP, WebSocket, OData or SensorThings: those answer the whole Endpoint, which the record names as its `dcat:DataService`.
+
+The reconciler withdraws by name. Before a change and after it, it computes the `(catalogue, name)` pairs the repository publishes, and a pair that left the set is withdrawn with `package_delete`; a pair that moved from one Endpoint to another is updated in place. Removing one entry withdraws that dataset and nothing else (EP-178).
+
 ## Related
 
 - [../Decisions/adr-n-053-declarative-visualizations.md](../Decisions/adr-n-053-declarative-visualizations.md) — the charts a dataset shows and why they cannot run code.

@@ -1301,7 +1301,7 @@ curl -sS "https://api.{domain}/api/endpoints?limit=2" -H "authorization: Bearer 
 
 ## 10. In the open data portal
 
-A published Endpoint (`spec.publish.ckan`) is one CKAN dataset with one resource per surface it serves (EP-108). Each surface resource says in its description how to use it, so a person who finds the dataset can start without reading this page:
+A public Endpoint is one CKAN dataset with one resource per surface it serves (EP-108, EP-174), and an Endpoint listing `spec.catalog.datasets` is one dataset per entry, whose resources are the NGSI-LD query, the CSV and the OGC items narrowed to the entry's `types` and `q`, beside its own record at `/api/endpoint/{endpointSlug}/datasets/{name}` (EP-176). Each surface resource says in its description how to use it, so a person who finds the dataset can start without reading this page:
 
 | Resource | Format | Usage description names |
 |---|---|---|

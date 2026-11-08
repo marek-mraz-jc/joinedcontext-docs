@@ -340,7 +340,8 @@ spec:
 | `applicableLegislation` | `dcatap:applicableLegislation` | an ELI IRI, for a high-value dataset the Implementing Regulation (EU) 2023/138 |
 | `personalData` | `leg:personalDataContainmentType`, `pu:osobní-údaje` | `contains` or `does-not-contain`, stated by whoever publishes the Endpoint and never read from the data; only the DCAT-AP-SK and DCAT-AP-CZ renderings carry it ([API/08](../API/08-dcat-profiles.md) section 5) |
 | `visualizations` | a CKAN resource view, not a record term | up to 20 Vega-Lite 5 or Vega 5 charts over the Endpoint's own sources, published as CKAN visualization views (below, EP-130…EP-132) |
-| `harvest` | none: whether the feeds list the record | `true` unless set; `false` for a door over data other datasets publish (a whole space split into one dataset per type): the record stays, the installation and project feeds leave it out, and `spec.publish.ckan` beside it is refused (EP-139) |
+| `harvest` | none: whether the feeds list the record | `true` unless set; `false` for a door over data other datasets publish (a whole space split into one dataset per type): the record stays, the installation and project feeds leave it out, the Endpoint is no catalogue dataset, and `spec.publish.ckan` or `datasets` beside it is refused (EP-139) |
+| `datasets` | one `dcat:Dataset` per entry at `{endpoint}/datasets/{name}` | 1 to 50 entries of `name`, `title`, `description`, `types` and optional `q`, `keywords`, `license`; the list replaces the Endpoint's single catalogue dataset, each entry only narrows what the Endpoint serves, and the feeds carry each entry's record in place of the Endpoint's ([ADR-N-068](../Decisions/adr-n-068-catalogue-datasets-of-an-endpoint.md), EP-175…EP-177) |
 
 The Endpoint itself is a `dcat:DataService`: its `dcat:endpointURL` is the endpoint's own URL, it `dcat:servesDataset` the record, and every representation distribution names it in `dcat:accessService`. Both serialisations carry the same graph, and the Turtle is written from the JSON-LD so they cannot drift apart. The JSON-LD keeps its compact keys (`dct:title`, `dcat:accessURL`) and declares their prefixes and IRI-valued terms in its own `@context`, so a reader that reads keys and a reader that expands to RDF see the same record; the classes DCAT-AP requires of a referenced value (`dct:LicenseDocument`, `dct:RightsStatement`, `dct:MediaType`, `dct:Standard`, `skos:Concept` with its label) are stated in `@included`. `dcat:mediaType` is the IANA media-type IRI (`https://www.iana.org/assignments/media-types/application/ld+json`) and `dct:format` the EU file-type IRI, because DCAT-AP ranges both over IRIs; a reader that wants the bare media type takes the part after `media-types/`. A dataset with no description of its own, on the endpoint or the space, says which space it serves, because DCAT-AP makes `dct:description` mandatory. The platform pins the SEMIC DCAT-AP 3.0 SHACL shapes in its repository and the fast CI lane validates both serialisations of every record variant against them (EP-78).
 
@@ -925,7 +926,7 @@ When the consumer is a participant the organisation has no relationship with, th
 
 ## 7. Publication to an open-data portal
 
-An open-data catalogue is where a citizen, a journalist or a partner looks first, and the platform's endpoints belong in it. An Endpoint that declares `spec.publish.ckan` becomes one dataset in a CKAN instance, with one resource per representation it already serves. Nothing about the dataset is authored a second time: the metadata is the DCAT-AP record the endpoint answers with (EP-27), so the catalogue and the endpoint cannot drift apart.
+An open-data catalogue is where a citizen, a journalist or a partner looks first, and the platform's endpoints belong in it. Every public Endpoint becomes one dataset in a CKAN instance without a publication block, and an Endpoint that declares `spec.publish.ckan` chooses the instance, organization, name and licence of that dataset; `spec.catalog.datasets` makes several datasets of one Endpoint ([Architecture/21 §11](21-open-data-catalogue.md#11-one-endpoint-several-datasets), EP-174). Each dataset has one resource per representation the Endpoint already serves. Nothing about the dataset is authored a second time: the metadata is the DCAT-AP record the endpoint answers with (EP-27), so the catalogue and the endpoint cannot drift apart.
 
 ```yaml
 apiVersion: joinedcontext.com/v1alpha1
@@ -944,7 +945,6 @@ spec:
       organization: helsingin-kaupunki # the CKAN organization slug
       name: ilmanlaatu # optional; the endpoint name by default
       license: cc-by # optional; a CKAN licence id (CC-BY 4.0)
-      datastore: { representation: csv, refresh: onChange } # optional row mirror
 ```
 
 The licence is the one member that may say something the endpoint's record does not: the CKAN licence id the organization chose, used when the Endpoint declares no `spec.catalog.license` and the record therefore names none (§3a).
