@@ -23,6 +23,7 @@ declare -A groups=(
   [G5-alerting]="pkg/services/ngalert/api/tooling/definitions pkg/services/ngalert/models pkg/services/ngalert/eval pkg/services/ngalert/schedule pkg/services/ngalert/state pkg/services/ngalert/notifier pkg/services/provisioning/alerting"
   [G6-tenancy-authz]="pkg/services/org pkg/services/team pkg/services/folder pkg/services/accesscontrol pkg/services/dashboards/dashboardaccess pkg/services/datasources"
   [G7-panels]="public/app/plugins/panel/timeseries public/app/plugins/panel/table public/app/plugins/panel/stat public/app/plugins/panel/bargauge public/app/plugins/panel/geomap"
+  [G8-public]="pkg/services/publicdashboards pkg/services/dashboardsnapshots pkg/api/dashboard_snapshot.go"
 )
 
 paths=()

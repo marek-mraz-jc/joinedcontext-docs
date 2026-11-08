@@ -1,7 +1,7 @@
 ---
 sidebar_position: 7
 title: "Grafana for controlroom"
-description: Research input for controlroom, the Rust dashboard server that replaces Grafana 12.4.14 on the platform; capability inventory, internals, datasource plugins and expressions, security, tenancy, operations, Grafana JSON compatibility and import, test oracles, Portal embedding and the Argon pack plan, every claim with its source (T-6649).
+description: Research input for controlroom, the Rust dashboard server that replaces Grafana 12.4.14 on the platform; capability inventory, internals, datasource plugins and expressions, security, tenancy, operations, Grafana JSON compatibility and import, public dashboards, test oracles, Portal embedding and the Argon pack plan, every claim with its source (T-6649).
 ---
 
 # Grafana for controlroom
@@ -305,6 +305,47 @@ Counted from `ADV` (28 advisories: 3 critical, 7 high, 18 medium) plus the advis
 | Sensitive cache | CVE-2022-23498 | query cache keyed by organization and subject class; `Cache-Control: private, no-store` on data answers |
 | Container base CVEs | 7 fixable CRITICALs in 12.3.1, a CISA KEV row in 12.4.12 (`DEP components/grafana/images.yaml:9-15`) | no extra image: controlroom ships inside the `jc` binary |
 
+### 4.4 Public dashboards, anonymous access and snapshots
+
+The owner's order of 2026-11-07 says this Grafana alternative can be public. Grafana 12.4.14 has three ways to show a dashboard to someone who is not signed in. Each one leaks something different.
+
+| Grafana mechanism | How it works at the pin | What it leaks or risks | Our setting today |
+|---|---|---|---|
+| Public (externally shared) dashboard | Row in `dashboard_public`: `uid`, `dashboard_uid`, `org_id` (never marshalled), `access_token`, `time_selection_enabled`, `is_enabled`, `annotations_enabled`, `share` `public` or `email` (email is Enterprise) (`GF pkg/services/publicdashboards/models/models.go:29-57`). The access token is a random UUID without dashes (`GF …/service/service.go:536-538`, checked by `GF …/validation/validation.go:45-49`). Anonymous routes: `GET /api/public/dashboards/{accessToken}`, `GET …/annotations`, `POST …/panels/{panelId}/query` (`GF …/api/api.go:78-81`). The query body carries only `IntervalMs`, `MaxDataPoints`, `QueryCachingTTL`, `TimeRange` (`GF …/models/models.go:153-158`). The server rebuilds the queries from the stored panel and clamps interval and resolution (`GF …/service/query.go:164-184`). The time range is honoured only when `time_selection_enabled` is set (`GF …/validation/validation.go:19-42`, `GF …/service/query.go:469-488`). Creating one needs `dashboards.public:write`, granted to the org Admin role (`GF pkg/api/accesscontrol.go:485-496`) | the dashboard JSON with `expr`, `query` and `rawSql` deleted from targets (`GF …/service/query.go:444-466`) but every other target field (datasource uid and type, legend format, NGSI-LD plugin fields such as entity type and attribute names) kept; frame metadata with `ExecutedQueryString` blanked (`:433-442`) but labels, field names and units kept; the datasource runs with its stored credential, so a panel shows whatever the datasource account may read, not what the dashboard author meant; anyone holding the URL reads it until it is revoked (a bearer link, no expiry); no rate limit on the query route in OSS beyond the data source cache | `[public_dashboards] enabled = true` default (`GF conf/defaults.ini:2212-2214`), not overridden in `DEP components/grafana/values/grafana/base-values.yaml.gotmpl`; only `platform-admin` maps to Admin (`base-values.yaml.gotmpl:148-164`), and the Portal's `grafana-admin` server account can also create one |
+| Anonymous access | `[auth.anonymous]`: every request without a session becomes `org_role` (default Viewer) in `org_name` (`GF conf/defaults.ini:712-726`) | the whole organization as a Viewer: every dashboard, every datasource query through `/api/ds/query`, Explore; one org only, so it cannot be per dashboard | `enabled: false` (`DEP …/base-values.yaml.gotmpl:118-119`) |
+| Snapshot | `POST /api/snapshots` stores the dashboard JSON with the browser-captured frames embedded, under a random `key` and a `deleteKey`, optional `expires`, optional `external` copy to `external_snapshot_url` (`GF pkg/services/dashboardsnapshots/models.go:12-27`); `GET /api/snapshots/{key}` serves it to anyone holding the key (`GF pkg/api/dashboard_snapshot.go:112-125`). Creating one needs `snapshots:create` plus read on that dashboard (`GF pkg/api/dashboard_snapshot.go:93`), granted to Editor (`GF pkg/api/accesscontrol.go:524-534`) | a frozen copy of data the creator could see, readable without login, outliving later permission changes; the external option sends that copy to a third-party host (`snapshots.raintank.io` by default) | `[snapshots] enabled = true`, `external_enabled = true`, `public_mode = false` defaults (`GF conf/defaults.ini:482-493`), not overridden; nobody but `platform-admin` is Editor or above in our mapping |
+
+CVE history of these paths, from `ADV`: CVE-2021-39226 (critical, snapshot authentication bypass: unauthenticated read and delete of snapshots), CVE-2022-39324 (medium, a snapshot's `originalUrl` could be spoofed to send viewers elsewhere). Further classes the code above shows without a CVE: query intent disclosure through kept target fields, datasource over-reach through a shared datasource account, and unbounded anonymous query load (each public panel view is a datasource call).
+
+**Decided (worker-t6649, owner may override):** controlroom publishes per dashboard or per panel, opt-in, off by default, and drops anonymous organization access and snapshots. Options considered: (a) Grafana's model as is (bearer-link dashboard, stored datasource credential); (b) per-dashboard publishing with a separate public projection and a public datasource identity (chosen); (c) snapshots only. (b) is the only option where the viewer can change neither the query nor the data scope, and where the data scope is a Policy the steward reads, not a credential.
+
+Design:
+
+| Rule | controlroom |
+|---|---|
+| Opt-in | a `publication` block on the Dashboard manifest (`enabled`, `panels` all or a list of panel ids, `host` or path, `timeRange` default and `maxRange`, `minRefresh`, `variables` allow list per variable, `annotations` on or off); absent means not public; enabling it is a change that needs the approver's verdict like any other write |
+| Identity of the query | public panels run as the organization's public ServiceAccount, the same identity an anonymous NGSI-LD read gets through a public Endpoint (KNOWLEDGE T-5921); a datasource is public-capable only when it is an NGSI-LD or OData Endpoint that is itself public, or a Prometheus or Postgres datasource marked `public: true` by the organization admin with its own read-only role; a publication naming a panel on any other datasource is refused at plan time with the panel id |
+| Only saved queries run | the public route is `GET /p/{org}/{publicId}/panels/{panelId}?from=&to=&var-x=`; it takes no query text, datasource, expression or transformation; the server loads the stored panel, substitutes only allowed variable values, runs the calculation step and returns frames |
+| Time and refresh caps | `from`/`to` clamped to `maxRange` (default 7 days) and to the space's retention; the refresh interval is never shorter than `minRefresh` (default 60 s); `maxDataPoints` and `intervalMs` computed by the server from the clamped range, never from the request |
+| Variables | a value outside the variable's allow list (static list, or the stored query result of a `query` variable captured at publish time) answers 422 naming the variable; `$__all` only when the author allowed it; free-text and `adhoc` variables refused for public panels at plan time |
+| Cache and rate limit | answers cached per (publication, panel, clamped range bucket, variable values) for `max(minRefresh, 30 s)`; one datasource call per cache key (singleflight); per client address 60 panel reads per minute with 429 and `Retry-After`; per publication a concurrent-query cap from the organization's quota |
+| What an answer holds | frames with field names, units and display config only: no target fields, no datasource uid, type or URL, no `executedQueryString`, no internal hostnames, no user or org ids, no error detail from the datasource (a failed panel answers "this panel is unavailable" with a request id); `Cache-Control: public, max-age=<ttl>`, `X-Robots-Tag` per publication |
+| Revocation | `publicId` is a 128-bit random id, separate from the dashboard uid; disabling the publication or rotating the id answers 404 at once; publications list in the organization's audit with who enabled them |
+| Embedding | the public panel renders as a server-rendered HTML fragment plus a small script with the SDK chart, mountable in the open data portal (dataroom), city sites and the Portal's public pages; `frame-ancestors` from the publication's own allow list when a site must frame it |
+
+Public dashboard tests (Rust integration tests with organizations `a` and `b`, plus one Playwright journey):
+
+1. A dashboard without `publication` answers 404 on every `/p/...` route, with the same body as an unknown `publicId`.
+2. A publication of `a` naming a panel on a non-public datasource is refused at plan time; the error names the panel id and the datasource title.
+3. The public route refuses a body or query parameter carrying query text, datasource uid, expression or transformation (400 naming the parameter); the datasource mock receives exactly the stored query.
+4. A variable value outside its allow list answers 422 naming the variable; no datasource call is made (mock call count 0).
+5. `from`/`to` wider than `maxRange` are clamped, and the datasource mock receives the clamped range; a refresh faster than `minRefresh` is served from cache (mock call count 1 for 10 reads).
+6. 61 reads in a minute from one address: the 61st answers 429 with `Retry-After`; another address still gets 200.
+7. Answer scan: no answer of any public route contains a datasource uid, URL, hostname, secret, target field, `executedQueryString`, org id or user id (string scan over every frame and header against the stored dashboard and datasource rows); a datasource error answers the generic text with a request id.
+8. A public panel of `a` whose Endpoint policy narrows rows returns only those rows; `b`'s rows with the same type and ids never appear, and a publication of `a` naming `b`'s datasource uid binds nothing.
+9. Disabling the publication or rotating `publicId` turns the next read into 404 with no cache hit.
+10. Journey: an anonymous browser opens a published panel embedded in a dataroom page at 1440 and 400 px, sees the chart with an accessible data table, changes the time range inside the cap and gets a capped range outside it.
+
 ## 5. Tenancy
 
 ### 5.1 Grafana's model and limits
@@ -333,6 +374,7 @@ One realm per installation; each Organization owns a group subtree and tokens ca
 | Folders | Grafana folder uid and path kept; a folder belongs to one project; nested to Grafana's limit |
 | Datasource scope | a datasource belongs to an organization and is granted to projects; querying needs read on the datasource and, for NGSI-LD and OData, the Endpoint's own Policy |
 | Quotas per organization | dashboards, panels per dashboard, datasources, WASM plugins, queries per minute, concurrent queries, cache bytes, alert rules, evaluations per minute; enforced in the write transaction (`SELECT … FOR UPDATE` on the quota row) and at the query door |
+| Public publications | `cr_publication` carries `installation_id`, `org_id`, `instance_id`, forced RLS like the other tables; the public route resolves `publicId` to exactly one organization before any read and then runs under that organization's public ServiceAccount (section 4.4) |
 | Domains and services | a dashboard can be served on the organization's own host through jc-router; uids are unique per organization, so two organizations import the same Grafana uid (`jc-portal`) without collision |
 
 Isolation tests (Rust integration tests over Postgres with forced RLS, organizations `a` and `b` holding dashboards with the same uid, folders with the same title, datasources with the same name):
@@ -408,6 +450,19 @@ Verdicts: **supports** (kept and drawn), **maps** (kept in the document, drawn t
 
 Offline check (no cluster, no network): `jc controlroom check <dir>` validates each JSON against the CUE-derived JSON Schema, runs the migrations and the import dry run, and fails on any refusal not listed in an allow file. Plan: the reconciler diff of dashboards, folders and datasources against the live state, printed in the change. Apply: the reconciler after approval. The same three steps the deployment uses for config as code (owner rule: files are the only source, validate before apply).
 
+### 7.4 Importing Grafana public dashboards and snapshots
+
+| Grafana source | Import verdict |
+|---|---|
+| Public dashboard row (`GET /api/dashboards/uid/{uid}/public-dashboards`) with `share: public` | maps: a `publication` block, panels all, `timeRange` from the dashboard, `maxRange` 7 days when `timeSelectionEnabled` is true, else fixed to the dashboard's range, `annotations` from `annotationsEnabled`; `isEnabled` false imports as `enabled: false`. A new `publicId` is minted and the report lists the old access token's URL as dead (warning `public.token-not-kept`), because a bearer link must not survive a move to another server |
+| `share: email` (Enterprise) | refuses with `public.email-share-unsupported`; recipients are people, so the steward grants them read through a RoleBinding instead |
+| Public dashboard whose panels use a datasource that is not public-capable | maps the dashboard, imports the publication as `enabled: false` and lists each panel in warning `public.datasource-not-public` |
+| Public dashboard with template variables | maps: each variable's allow list taken from its `options` or a static `query`; a `textbox` or `adhoc` variable makes the publication `enabled: false` with warning `public.variable-free-text` |
+| Snapshot (`GET /api/snapshots/{key}`) | refuses with `snapshot.unsupported`; the report offers importing the dashboard part without the embedded data |
+| `[auth.anonymous]` enabled in an imported `grafana.ini` | refuses with `anonymous.org-wide`; the report names the dashboards to publish one by one instead |
+
+Export writes a `publication` back as a Grafana public dashboard config (`timeSelectionEnabled`, `annotationsEnabled`, `isEnabled`, `share: public`) without the access token. The round trip test of 7.2 excludes the token and `publicId` and covers one published fixture per verdict row above.
+
 ## 8. Test oracles
 
 | Oracle | What it proves | Source |
@@ -453,6 +508,19 @@ The Portal never embeds Grafana: the Grafana page lists saved visualizations and
 
 Shared components needed: SDK chart (timeseries, bar), SDK grid (exists), SDK map (exists in the grid's map mode), stat tile, legend, time range picker, variable bar, query editor form generated from `editor()`, empty, loading and error states; each new Portal component exported and vitested (KNOWLEDGE T-5186).
 
+### 9.4 Public panels outside the Portal
+
+Public panels (section 4.4) serve the open data portal (dataroom), city sites and the Portal's signed-out pages through jc-router on the organization's public host. They use the same `<PanelView>` component in a public mode, which fetches `/p/{org}/{publicId}/panels/{panelId}` instead of the signed-in render route and shows no edit, query editor, datasource name or variable outside the allow list. At 400 px the panel keeps the phone rules of 9.2. Pages that should carry public panels today:
+
+| Page | Public panel | Source |
+|---|---|---|
+| Public Endpoint page (signed out) | entity count over time and last update of a public Endpoint | `POR ui/src/pages/endpoints` |
+| Catalogue dataset page | the dataset's chart beside the sample table | `POR src/api/catalogue.rs` (KNOWLEDGE T-5850) |
+| Dataroom (CKAN theme) dataset page | the same panel as an embedded fragment | `DEP components/ckan` (theme `jc_theme`, `README.md`) |
+| City site or App | air quality, traffic, parking panels from public Endpoints | jc-core `Visualization` kind, `PLT crates/jc-core/src/kinds/visualization.rs` |
+
+The publication editor in the Portal's dashboard page has a hint line with an example for each field ("Longest time range a viewer may pick, for example 7 days"), offers the panels whose datasource is public-capable as a checklist (the server filters them and checks the submitted ids again: 422 naming the panel), and shows the public URL with a copy button only after the approver's verdict.
+
 ## 10. Argon pack plan
 
 Token counts measured 2026-11-07 by `scripts/research/grafana-sources.sh` (non-blank bytes / 4, tests, testdata, mocks and generated protobuf excluded), `GF` at `3c98af3`:
@@ -466,6 +534,7 @@ Token counts measured 2026-11-07 by `scripts/research/grafana-sources.sh` (non-b
 | G5-alerting | `pkg/services/ngalert/{api/tooling/definitions,models,eval,schedule,state,notifier}`, `pkg/services/provisioning/alerting` | 140 | 238 971 |
 | G6-tenancy-authz | `pkg/services/{org,team,folder,accesscontrol,datasources}`, `pkg/services/dashboards/dashboardaccess` | 96 | 192 651 |
 | G7-panels | `public/app/plugins/panel/{timeseries,table,stat,bargauge,geomap}` | 114 | 114 429 |
+| G8-public | `pkg/services/{publicdashboards,dashboardsnapshots}`, `pkg/api/dashboard_snapshot.go` | 27 | 33 998 |
 
 Our side, measured the same way: O1 deployment (`DEP components/grafana/**`, monitoring rules, `images/grafana/Dockerfile`) 35 405; O2 Portal and platform (`POR src/grafana.rs`, `src/api/grafana.rs`, `GrafanaPage.tsx`, `PLT jc-core/src/kinds/{dashboard,visualization}.rs`, `wasm-host/src/limits.rs`) 32 882; O3 SDK grid (`POR sdk/src/grid`, no tests) 123 241; O4 docs (this page, Architecture/09 and /10, ADR-N-053, ADR-N-058) about 45 000; `NGP src/*.ts` without tests about 25 000.
 
@@ -477,7 +546,7 @@ Contract file (shared by every run, about 15k tokens): crate layout `controlroom
 | 2 query and expressions | contract + G2 + G3 + O2 + `NGP` | about 290k | `controlroom-query` (trait, Prometheus, NGSI-LD, Postgres, OData, query cache, WASM adapter), `controlroom-expr` (math, reduce, resample, threshold, classic, sql subset); about 10k lines |
 | 3 transformations and frames | contract + G4 + O3 | about 251k | `controlroom-tx` (44 ids, first 13 complete), `FrameSet`, units and formatting shared with the SDK; about 7k lines |
 | 4 alerting | contract + G5 + O1 | about 289k | `controlroom-alert` (scheduler, state, rule and contact point model, provisioning import); about 8k lines |
-| 5 tenancy, API and Portal | contract + G6 + G7 + O2 + O4 | about 400k | `controlroom-api` (routes, jc-auth checks, RLS, quotas, Grafana-compatible paths), Portal `DashboardView`, `PanelView`, query editor; about 9k lines |
+| 5 tenancy, API and Portal | contract + G6 + G7 + O2 + O4 + G8 | about 434k | `controlroom-api` (routes, jc-auth checks, RLS, quotas, Grafana-compatible paths, public publication routes with cache and rate limit), Portal `DashboardView`, `PanelView` (signed-in and public modes), query editor, publication editor; about 10k lines |
 
 Every run stays under 500k tokens. Expected output about 43k lines of Rust and TypeScript plus tests.
 
