@@ -68,7 +68,9 @@ The domain form (`bbsk.sk:` in the owner segment) is accepted because it names t
 
 ### 3.6 The deployment setting
 
-`JC_GATEWAY_URN_OWNER_PREFIX` is `enforce` (the default) or `off`. On a deployment whose repository holds one Organization the operator may write `off`: a foreign or missing owner is then accepted. With two or more Organizations the check runs whatever the setting says. Minting writes the prefix in both cases, so a single deployment can grow without re-minting.
+`JC_GATEWAY_URN_OWNER_PREFIX` is `enforce` (the default), `warn` or `off`. On a deployment whose repository holds one Organization the operator may write `off`: a foreign or missing owner is then accepted. With two or more Organizations the check runs whatever the setting says. Minting writes the prefix in both cases, so a single deployment can grow without re-minting.
+
+`warn` (T-6793) is the re-mint window for a deployment whose live ids predate this decision: a create or upsert whose URN names another owner, or none, is written, counted in `jc_gateway_urn_owner_mismatch_total` (one per entity, no Organization label) and logged once an hour per space and owner segment. `warn` needs `JC_GATEWAY_URN_OWNER_WARN_UNTIL`, a date `YYYY-MM-DD` at most 14 days ahead; without it, or with a later one, the gateway does not start. Past that day the gateway refuses such writes as under `enforce` and logs why once. The operator sets `enforce` once the re-mint (T-6770) leaves no foreign-prefix id. Authorization reads the prefix in no mode (TEN-02).
 
 ### 3.7 What the prefix is not
 
