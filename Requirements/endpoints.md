@@ -272,6 +272,16 @@ Decided in [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) (T-3154).
 - **EP-178** [S] — `GET /api/endpoint/{slug}/facets?attr=` MUST answer the distinct values of one attribute with their counts, counted through the caller's view under the reader's Policy, at most `limit` (1 to 100, default 20) values with a `truncated` flag. `attr` MUST name an attribute of `spec.facets` (at most 10, enum, boolean, string or Relationship of the model); an attribute that is not facetable, unknown or hidden from the caller MUST get the same `400`.
 - **EP-179** [S] — `/api/endpoint/{slug}/ngsi-ld/v1/entities` MUST keep `application/ld+json`, `application/json` and `application/geo+json` as its only media types, answer `406` to any other `Accept` with a problem naming the alias path, and carry `Vary: Accept`. A value written into a generated link's `q` MUST pass one shared quoting helper (quoted, `"` and `\` escaped, percent-encoded).
 
+## 29. Addresses v1
+
+- **EP-180** [A][S] — With the deployment setting "Organization in the path" on, every public address of an Organization MUST have the Organization id as its first path segment on a shared host (`https://{host}/{org}/...`), a bound host MUST serve the prefix-less path as canonical and keep the prefixed form answering, and the v1 address of a path served today without an Organization MUST be `/{org}` followed by that path unless [API/15 §4](../API/15-addresses-v1.md#4-management-identity-catalogue-and-module-addresses) names another.
+- **EP-181** [A][H] — A kept address of [API/15 §6](../API/15-addresses-v1.md#6-kept-addresses) MUST be served in place with the v1 address's status, headers and body for API, feed, MCP and Git calls, MUST answer `308` to the v1 address for a browser page, and MUST NOT be removed while the access log counts a call to it in the last 12 months.
+- **EP-182** [S] — The router MUST decide a request's Organization once, from the first path segment through the registry, from the host row of a bound host, from the MQTT credential, or for a kept address from the one row the address names, and MUST NOT derive an Organization or a right from URN segments, host text or a header; only a listing alias MAY cover more than one Organization, and only for anonymous public reads.
+- **EP-183** [S] — The identity module MUST use `https://{canonical-host}/{org}/id` as the issuer of an Organization, with `{canonical-host}` the host the Organization had at its creation and kept for its life, built from the registry and never from `Host`, `X-Forwarded-Host` or `Forwarded`.
+- **EP-184** [A] — An MCP door MUST name each tool `{kind}_{verb}` in `tools/list` and MUST run today's `jc_`-prefixed name of the same operation as an alias with no end date.
+- **EP-185** [S] — CI MUST fail when a public path, surface or MCP tool name is added, removed or renamed unless the committed route golden and [API/15](../API/15-addresses-v1.md) change in the same commit.
+- **EP-186** [S] — An Organization id MUST be the Organization's domain with its labels reversed and joined by `_` (`bbsk.sk` is `sk_bbsk`), MUST match `[a-z][a-z0-9_-]{1,62}` and contain `_`, and MUST be minted only by an operator from a domain whose ownership a DNS TXT record verified ([API/15 §2](../API/15-addresses-v1.md#the-organization-id)).
+
 ## Traceability
 
 | Requirement Range | Architecture Section | Test Family |
@@ -340,6 +350,7 @@ Decided in [ADR-N-043](../Decisions/adr-n-043-named-mcp-servers.md) (T-3154).
 | EP-166 | [API/00-intro.md#7-response-compression](../API/00-intro.md#7-response-compression) | [Testing/01-backend-tests.md#2-the-context-gateway-harness](../Testing/01-backend-tests.md#2-the-context-gateway-harness) |
 | EP-168…EP-173 | [Decisions/adr-n-067-organization-members-read-internal-datasets.md](../Decisions/adr-n-067-organization-members-read-internal-datasets.md) | [Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation](../Testing/06-security-tests.md#2-policy-bypass-and-privilege-escalation) |
 | EP-174…EP-179 | [API/02-endpoint-representations.md#4a-one-query-many-formats-entitiescsvicsrssatomjson](../API/02-endpoint-representations.md#4a-one-query-many-formats-entitiescsvicsrssatomjson) | [Testing/01-backend-tests.md#2-the-context-gateway-harness](../Testing/01-backend-tests.md#2-the-context-gateway-harness) |
+| EP-180…EP-186 | [API/15-addresses-v1.md](../API/15-addresses-v1.md) | [Testing/01-backend-tests.md#2-the-context-gateway-harness](../Testing/01-backend-tests.md#2-the-context-gateway-harness) |
 | EP-113 | [API/02-endpoint-representations.md#10-in-the-open-data-portal](../API/02-endpoint-representations.md#10-in-the-open-data-portal) | [Testing/03-frontend-and-e2e-tests.md](../Testing/03-frontend-and-e2e-tests.md) |
 
 ## Related
