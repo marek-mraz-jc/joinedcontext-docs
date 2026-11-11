@@ -831,6 +831,12 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **EP-171** | [S] | tested | unknown | platform `crates/context-gateway/tests/it/attack_organization_audience_tests.rs::a_member_of_the_organization_in_no_project_is_admitted_by_jc_org` |
 | **EP-172** | [S] | tested | unknown | platform `crates/context-gateway/tests/it/attack_organization_audience_tests.rs::a_person_bound_in_a_project_is_admitted_to_its_organization_endpoint`, portal `tests/reconciler_groups_tests.rs::the_derived_groups_follow_the_bindings_of_their_organization_only` |
 | **EP-173** | [S] | tested | unknown | platform `crates/context-gateway/tests/it/attack_organization_audience_tests.rs::a_vendor_bound_on_a_project_reaches_only_that_projects_organization_endpoint`, portal `tests/reconciler_groups_tests.rs::only_an_organization_scoped_binding_gives_the_organization`, platform `crates/context-gateway/src/pdp/evaluator.rs::an_organization_grant_reaches_its_own_members_only` |
+| **EP-174** | [A] [S] | open |  |  |
+| **EP-175** | [S] | open |  |  |
+| **EP-176** | [P] [S] | open |  |  |
+| **EP-177** | [H] | open |  |  |
+| **EP-178** | [S] | open |  |  |
+| **EP-179** | [S] | open |  |  |
 
 ### GW — Gateway firewall
 
