@@ -148,6 +148,14 @@ The body's `Content-Type` is not one the operation reads.
 
 What to do: Send the body as application/json or application/ld+json.
 
+### `urn-owner` {#urn-owner}
+
+**Entity Identifier Names Another Owner**, status 422.
+
+An entity id written through an Endpoint does not carry the id of the Organization that owns the space, `urn:ngsi-ld:{Type}:{orgId}:{id}` ([ADR-N-068](../Decisions/adr-n-068-urn-owner-prefix.md)). The problem names `field: id`.
+
+What to do: Write the id as urn:ngsi-ld:{Type}:{orgId}:{id}, with the id of the Organization that owns the space (sk_bbsk for bbsk.sk).
+
 ### `upgrade-required` {#upgrade-required}
 
 **Upgrade Required**, status 426.
