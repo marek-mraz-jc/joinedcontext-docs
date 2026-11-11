@@ -111,6 +111,8 @@ jobs:
           }
           fetch joinedcontext-platform "${JC_PLATFORM_TAG}"
           fetch joinedcontext-portal "${JC_PORTAL_TAG}"
+          # jc's monorepo ships the problem catalogue that answers on the wire (T-6189).
+          fetch joinedcontext main
           echo "JC_CODE_DIR=${RUNNER_TEMP}/code" >> "$GITHUB_ENV"
           echo "OPENAPI_JSON=${RUNNER_TEMP}/code/joinedcontext-portal/ui/openapi.json" >> "$GITHUB_ENV"
       - name: what the docs assert about the code is true of the code (T-2139)

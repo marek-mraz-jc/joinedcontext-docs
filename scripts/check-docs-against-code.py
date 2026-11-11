@@ -52,6 +52,7 @@ import argparse
 import os
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -314,8 +315,22 @@ def check(docs: pathlib.Path, code: pathlib.Path) -> list[str]:
                 checkouts,
             )
         )
-    bad.extend(problem_pages(docs, code_text, checkouts))
+    bad.extend(problem_pages(docs, *catalogue(code, code_text, checkouts)))
     return bad
+
+
+# jc ships the Portal and the gateway from one monorepo, whose vendored platform carries the
+# problem catalogue that answers on the wire; the old repositories stopped at 57 slugs. When that
+# tree is read, the problem page is judged against it alone (T-6189, run 43121034924).
+MONOREPO = "joinedcontext"
+
+
+def catalogue(code: pathlib.Path, code_text: str, checkouts: frozenset[str]) -> tuple[str, frozenset[str]]:
+    mono = code / MONOREPO
+    if not mono.is_dir():
+        return code_text, checkouts
+    text = "\n".join(path.read_text(encoding="utf-8", errors="ignore") for path in walk(mono) if path.suffix == ".rs")
+    return text, checkouts | {"joinedcontext-platform", "joinedcontext-portal"}
 
 
 def present(code: pathlib.Path) -> list[str]:
@@ -521,6 +536,15 @@ def selftest() -> int:
         if not (any("no section for the problem type quota" in p for p in found) and any("nothing answers with gone" in p for p in found)):
             print("a problem page out of step with the code passed:", *found, sep="\n  ", file=sys.stderr)
             return 1
+        # With the monorepo read, its catalogue alone decides: `gone` answers there.
+        (code / MONOREPO / "crates").mkdir(parents=True)
+        (code / MONOREPO / "crates" / "error.rs").write_text(
+            'ProblemType { slug: "forbidden", status: 403 },\nProblemType { slug: "gone", status: 410 },\n', encoding="utf-8"
+        )
+        if problem_pages(docs, *catalogue(code, inventory(code, docs)[1], frozenset(present(code)))):
+            print("a problem page matching the monorepo catalogue was refused", file=sys.stderr)
+            return 1
+        shutil.rmtree(code / MONOREPO)
         (docs / PROBLEM_PAGE).unlink()
 
         # A failure names the code commits it read and the merge-order way out (T-4925).
