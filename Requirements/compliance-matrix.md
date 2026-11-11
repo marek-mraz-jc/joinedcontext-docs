@@ -837,6 +837,13 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **EP-177** | [H] | open |  |  |
 | **EP-178** | [S] | open |  |  |
 | **EP-179** | [S] | open |  |  |
+| **EP-180** | [A] [S] | open |  |  |
+| **EP-181** | [A] [H] | open |  |  |
+| **EP-182** | [S] | open |  |  |
+| **EP-183** | [S] | open |  |  |
+| **EP-184** | [A] | open |  |  |
+| **EP-185** | [S] | open |  |  |
+| **EP-186** | [S] | open |  |  |
 
 ### GW — Gateway firewall
 
