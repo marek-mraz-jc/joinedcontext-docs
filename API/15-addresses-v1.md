@@ -17,7 +17,7 @@ This page is the address contract a client can store for years: the grammar of e
 
 ## 2. The grammar
 
-Every address of an Organization has the Organization slug as its first path segment, on every host (ARCHITECTURE-TARGET §7):
+Every address of an Organization has the Organization id as its first path segment, on every host (ARCHITECTURE-TARGET §7):
 
 ```text
 https://{host}/{org}/                                   Portal UI
@@ -301,7 +301,7 @@ The issuer of prod's realm (`smartcity`) is not kept: tokens expire within 5 min
 - Every kept address that names an object is bound to exactly that object's Organization, and follows it when the object moves between Organizations. Only a listing alias covers more than one Organization, and only for anonymous public reads.
 - An Organization id is minted only by an operator, from a domain whose ownership a DNS TXT record verified (EP-186).
 - A kept address answers with the same authorization, Policy, limits and audit as its v1 address: it is a second path into the same handler, never a side path.
-- Issuer, discovery, redirect URIs, cookie attributes, mail links and `@id` values are built from the registry's canonical host and the slug, never from request headers (EP-183).
+- Issuer, discovery, redirect URIs, cookie attributes, mail links and `@id` values are built from the registry's canonical host and the Organization id, never from request headers (EP-183).
 
 ## Related
 
