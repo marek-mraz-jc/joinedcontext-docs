@@ -54,7 +54,7 @@ The id in the path is the Organization's verified domain with its labels reverse
 
 The domains are confirmed when each Organization is created. An id matches `[a-z][a-z0-9_-]{1,62}` and contains `_`. A hostname holds no `_`, so the map from domain to id is one-to-one, and no route segment (`api`, `data`, `id`, `-`) can equal an id, so no reserved-word list exists. Only an operator mints an id, and only from a domain whose ownership a DNS TXT record verified: without the check anyone could take `com_google`. The id is a label: rows, tokens and logs carry the internal OrgId, and a later domain change keeps the id or adds an alias. An id in a `frozen` row is permanent; a rename keeps the old id answering in place for API, feed and MCP rows (`308` for pages), bound to the same OrgId.
 
-Entity URNs keep the form they have today, `urn:ngsi-ld:{Type}:bbsk.sk:{space}:{id}`, which names the same domain: `bbsk.sk` and `sk_bbsk` map mechanically, so no URN is minted again (an entity's identity is its Context Space and URN, and temporal history and outside links hold today's ids). Nothing derives an Organization or a right from a URN (ADR-N-041).
+Entity URNs carry the owning Organization's id, `urn:ngsi-ld:{Type}:sk_bbsk:{rest}` ([ADR-N-068](../Decisions/adr-n-068-urn-owner-prefix.md)). Ids minted before carry the domain, `urn:ngsi-ld:{Type}:bbsk.sk:{space}:{id}`, which names the same Organization and stays valid; no URN is minted again (an entity's identity is its Context Space and URN, and temporal history and outside links hold today's ids). Nothing derives an Organization or a right from a URN (ADR-N-041).
 
 ### Hosts and the two deployment settings
 

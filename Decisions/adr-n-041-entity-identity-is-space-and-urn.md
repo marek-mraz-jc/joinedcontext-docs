@@ -7,6 +7,7 @@ title: "ADR-N-041: An Entity Is Its Context Space and Its URN; the URN Prefix Is
 
 Date: 2026-10-06  
 Status: Accepted  
+Amended: "the URN prefix is optional" is superseded by [ADR-N-068](adr-n-068-urn-owner-prefix.md) (2026-11-11)  
 Decision Makers: product owner (order of 2026-10-06, T-3080)
 
 ## 1. Context
