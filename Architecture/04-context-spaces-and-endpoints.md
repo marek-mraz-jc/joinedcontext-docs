@@ -613,7 +613,7 @@ The standards an Endpoint serves (EP-104). "Default" is what an Endpoint whose m
 | Standard | `Representation` | Child path | Default | Writes |
 |---|---|---|---|---|
 | NGSI-LD (ETSI GS CIM 009, TS 104 175) | `ngsi-ld` | `ngsi-ld/v1/` | always (EP-10) | what the Policy grants |
-| Model Context Protocol | `mcp` | `mcp` | always, `spec.mcp: false` turns it off (EP-24) | what the Policy grants |
+| Model Context Protocol | `mcp` | `mcp` | an internal Endpoint always, `spec.mcp: false` turns it off; a public one only with `spec.mcp: true` or `mcp` listed (EP-24, T-6761) | what the Policy grants |
 | CSV | `csv` | `file.csv`, the one file an Endpoint publishes (T-4597) | on | none |
 | OGC API - Features, Parts 1 to 5 | `ogc-features` | `ogc/features/` | on | none: every non-safe method answers `405` (EP-39) |
 | OData v4 | `odata` | `odata/v4/` | on | none yet: every non-safe method answers `405` until the gateway applies the Endpoint's write guards to it (T-3939); then what the Policy grants |
