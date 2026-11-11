@@ -380,7 +380,7 @@ Each alias reads its own allow-list. A parameter outside it, or one given twice,
 
 `from` and `to` are the calendar's and the feed's window, a platform extension: an event is in it when it overlaps `[from, to)`, a feed item when its `updated` falls in it; `from` not before `to` is `400`. They never stand for NGSI-LD `timerel`, which reads temporal history. `options` and `format` are refused on every alias, so `keyValues` cannot rename a CSV column or a calendar field.
 
-`file.csv` (§4) is a permanent alias of `entities.csv` and reads the same allow-list; `/ical/v1/{name}.ics` (§8b) is a permanent alias of `calendars/{name}.ics` (below). Neither answers `301` or `410`: a subscribed calendar and a published download link keep working.
+`file.csv` (§4) is a permanent alias of `entities.csv` and reads the same allow-list; `/ical/v1/{name}.ics` (§8b) is a permanent alias of `feeds/{name}.ics` (below). Neither answers `301` or `410`: a subscribed calendar and a published download link keep working.
 
 ### The admit gate, Policy and hidden attributes
 
@@ -411,7 +411,7 @@ spec:
         sources: [{ type: Event, preset: sdm-event }]
 ```
 
-An older output's `filter` object loads as the equivalent `query`. `/api/endpoint/{slug}/calendars/koncerty-bb.ics` and `/ical/v1/koncerty-bb.ics` serve the same bytes; a feed preset answers at `calendars/{name}.rss`, `.atom` and `.json`, and every preset at `calendars/{name}.csv`. A request query string on a preset path is read with the alias's allow-list and joined to the preset's query, so it narrows the preset. A preset is checked when the Endpoint is saved: its query must parse, name only allowed parameters and name attributes the space's model has, or the save is refused naming the preset and the parameter. Only a preset the publisher stored is a `dcat:Distribution` of the Endpoint's DCAT-AP record and a CKAN resource (EP-150); a link generated from facets (below) never is.
+An older output's `filter` object loads as the equivalent `query`. `/api/endpoint/{slug}/feeds/koncerty-bb.ics` and `/ical/v1/koncerty-bb.ics` serve the same bytes; a feed preset answers at `feeds/{name}.rss`, `.atom` and `.json`, and every preset at `feeds/{name}.csv`. A request query string on a preset path is read with the alias's allow-list and joined to the preset's query, so it narrows the preset. A preset is checked when the Endpoint is saved: its query must parse, name only allowed parameters and name attributes the space's model has, or the save is refused naming the preset and the parameter. Only a preset the publisher stored is a `dcat:Distribution` of the Endpoint's DCAT-AP record and a CKAN resource (EP-150); a link generated from facets (below) never is.
 
 ### Links a person copies end in the extension
 
@@ -419,11 +419,15 @@ A link a person copies or a subscribe button gives ends in the format's extensio
 
 | Link | Path | Stored |
 |---|---|---|
-| a publisher's preset | `/api/endpoint/{slug}/calendars/{preset}.{ics,csv,rss,atom,json}` | the preset (above) |
-| an ad-hoc query | `/api/endpoint/{slug}/feeds/{token}.{ics,csv,rss,atom,json}` | nothing |
+| a publisher's preset | `/api/endpoint/{slug}/feeds/{preset}.{ics,csv,rss,atom,json}` | the preset (above) |
+| a preset narrowed by a query | `/api/endpoint/{slug}/feeds/{filter}/{preset}.{ics,csv,rss,atom,json}` | nothing |
 | a developer's or script's query | `/api/endpoint/{slug}/entities.{ics,csv,rss,atom,json}?<query>` | nothing |
 
-`{token}` is the base64url (RFC 4648 §5, no padding) of the normalized Query Entities query string: parameters sorted by name, each value percent-encoded once. It is deterministic, so one query always gives one link, and nothing is stored. The gateway decodes it on each request and reads the result exactly as the query string of `entities.{ext}`: the same allow-list, admit gate, Policy and caps. A token longer than 2 048 characters, one that does not decode, one that is not UTF-8 or one that carries a parameter outside the allow-list answers `400`; a request on a `feeds/` path that also has a query string answers `400`, so the link holds the whole query. The three paths of one query answer the same bytes and the same `ETag`. The open-data page and the Portal build these links.
+`{filter}` is a Query Entities query string (`q=…&georel=…&geometry=…&coordinates=…`, and `from`/`to` where the format reads them) written as one path segment, any `/` in a value percent-encoded as `%2F` (owner 2026-11-11 ~14:2xZ). `feeds/{filter}/{preset}.{ext}` is exactly `feeds/{preset}.{ext}?{filter}`: the gateway splits the raw path on `/` before any percent-decoding and hands the segment, unchanged, to the same Query Entities reading as the query string, so the same allow-list, admit gate, Policy and caps apply, the preset's query is joined with it and never widened, and both forms answer the same bytes and the same `ETag`. A filter segment that is empty, longer than 2 048 characters or not a query string, and a path-form request that also carries a query string, answer `400` naming the `?` form. The preset name selects the mapping and the base query, so a link's name cannot claim content its query does not give. The open-data page and the Portal build these links:
+
+```http
+GET /api/endpoint/hqgmj6ie3vbwqk5dn2rx7tfs4u/feeds/q=category==%22music%22&georel=near;maxDistance==5000&geometry=Point&coordinates=%5B19.15,48.73%5D/events.ics
+```
 
 ### Facets: distinct values with counts
 
