@@ -22,7 +22,7 @@ flowchart LR
     
     GW --> R1["/ngsi-ld/v1/... (ETSI Normalized & Concise)"]
     GW --> R3["/file.csv (Flattened Tabular Data)"]
-    GW --> R4["/query.csv .ics .rss .atom .json (one query, many formats)"]
+    GW --> R4["/entities.csv .ics .rss .atom .json (one query, many formats)"]
     GW --> R5["/ogc/features/... (OGC API - Features)"]
     GW --> R6["/sta/v1.1/... (OGC SensorThings API)"]
     GW --> R7["/mcp (Model Context Protocol)"]
@@ -341,27 +341,27 @@ The gateway pages through the broker with `limit` and `offset` and appends each 
 
 ---
 
-## 4a. One query, many formats (`query.{csv,ics,rss,atom,json}`)
+## 4a. One query, many formats (`entities.{csv,ics,rss,atom,json}`)
 
-One Endpoint, one NGSI-LD query, then a format (owner 2026-11-11, T-6754, EP-174…EP-179). A caller that can set `Accept` reads the NGSI-LD surface; a link that cannot set a header (a calendar subscription, a download link, a feed reader) names the format in the path and keeps the query string of NGSI-LD Query Entities:
+One Endpoint, one NGSI-LD query, then a format (owner 2026-11-11, T-6754, EP-174…EP-179). A person turns any NGSI-LD query URL into a file by replacing `ngsi-ld/v1/entities` with `entities.ics` (or `.csv`, `.rss`, `.atom`, `.json`) and keeping the query string as it is. The extension alone picks the format; these paths read no `Accept`. A suffix after the query string cannot work: in `…&georel=near.ical` the suffix is part of the `georel` value to every server and client.
 
 | Path | Media type | Representation admitted |
 |---|---|---|
-| `/api/endpoint/{slug}/query.csv` | `text/csv; charset=utf-8; header=present` | `csv` |
-| `/api/endpoint/{slug}/query.ics` | `text/calendar; charset=utf-8` | `ical` |
-| `/api/endpoint/{slug}/query.rss` | `application/rss+xml; charset=utf-8` | `feed` |
-| `/api/endpoint/{slug}/query.atom` | `application/atom+xml; charset=utf-8` | `feed` |
-| `/api/endpoint/{slug}/query.json` | `application/feed+json; charset=utf-8` (JSON Feed 1.1, not NGSI-LD) | `feed` |
+| `/api/endpoint/{slug}/entities.csv` | `text/csv; charset=utf-8; header=present` | `csv` |
+| `/api/endpoint/{slug}/entities.ics` | `text/calendar; charset=utf-8` | `ical` |
+| `/api/endpoint/{slug}/entities.rss` | `application/rss+xml; charset=utf-8` | `feed` |
+| `/api/endpoint/{slug}/entities.atom` | `application/atom+xml; charset=utf-8` | `feed` |
+| `/api/endpoint/{slug}/entities.json` | `application/feed+json; charset=utf-8` (JSON Feed 1.1, not NGSI-LD) | `feed` |
 
 ```http
-GET /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/query.ics?type=Event&q=address[addressLocality]==%22Zvolen%22&from=2026-11-01&to=2026-12-01
+GET /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/entities.ics?type=Event&q=address[addressLocality]==%22Zvolen%22&from=2026-11-01&to=2026-12-01
 ```
 
 ```http
-GET /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/query.csv?type=Hospital&attrs=name,address&delimiter=semicolon&bom=true
+GET /api/endpoint/zt4qm7ge2xdv6ksb3ncf5arw2y/entities.csv?type=Hospital&attrs=name,address&delimiter=semicolon&bom=true
 ```
 
-There is no `query.geojson`: GeoJSON stays `Accept: application/geo+json` on the NGSI-LD surface (§3) and OGC API - Features (§6), as the GeoJSON download was retired (T-4597). NGSI-LD's own `format` parameter keeps its meaning (`normalized`, `concise`, `keyValues`) and never picks a file format.
+There is no `entities.geojson`: GeoJSON stays `Accept: application/geo+json` on the NGSI-LD surface (§3) and OGC API - Features (§6), as the GeoJSON download was retired (T-4597). NGSI-LD's own `format` parameter keeps its meaning (`normalized`, `concise`, `keyValues`) and never picks a file format.
 
 ### The NGSI-LD surface keeps its media types
 
@@ -373,14 +373,14 @@ Each alias reads its own allow-list. A parameter outside it, or one given twice,
 
 | Format | Allowed parameters |
 |---|---|
-| every alias | the Query Entities parameters `type`, `id`, `idPattern`, `q`, `scopeQ`, `attrs`, `pick`, `omit`, `georel`, `geometry`, `coordinates`, `geoproperty`, `lang`, `orderBy` (a local query), and `preset` (below) |
-| `query.csv` | the above, `limit` and `offset` (pages the gateway reads itself, §4), `delimiter` (`comma`, `semicolon`, `tab`), `bom` (`true`), `humanHeaders` (`true`) |
-| `query.ics` | the above, `from` and `to` (RFC 3339 date or date-time) |
-| `query.rss`, `query.atom`, `query.json` | the above, `from` and `to`, `limit` (1 to 200, default 50) and `offset` |
+| every alias | the Query Entities parameters `type`, `id`, `idPattern`, `q`, `scopeQ`, `attrs`, `pick`, `omit`, `georel`, `geometry`, `coordinates`, `geoproperty`, `lang` and `orderBy` (a local query) |
+| `entities.csv` | the above, `limit` and `offset` (pages the gateway reads itself, §4), `delimiter` (`comma`, `semicolon`, `tab`), `bom` (`true`), `humanHeaders` (`true`) |
+| `entities.ics` | the above, `from` and `to` (RFC 3339 date or date-time) |
+| `entities.rss`, `entities.atom`, `entities.json` | the above, `from` and `to`, `limit` (1 to 200, default 50) and `offset` |
 
 `from` and `to` are the calendar's and the feed's window, a platform extension: an event is in it when it overlaps `[from, to)`, a feed item when its `updated` falls in it; `from` not before `to` is `400`. They never stand for NGSI-LD `timerel`, which reads temporal history. `options` and `format` are refused on every alias, so `keyValues` cannot rename a CSV column or a calendar field.
 
-`file.csv` (§4) is a permanent alias of `query.csv` and reads the same allow-list; `/ical/v1/{name}.ics` (§8b) is a permanent alias of `query.ics?preset={name}`. Neither answers `301` or `410`: a subscribed calendar and a published download link keep working.
+`file.csv` (§4) is a permanent alias of `entities.csv` and reads the same allow-list; `/ical/v1/{name}.ics` (§8b) is a permanent alias of `calendars/{name}.ics` (below). Neither answers `301` or `410`: a subscribed calendar and a published download link keep working.
 
 ### The admit gate, Policy and hidden attributes
 
@@ -390,13 +390,13 @@ How a type's fields become calendar fields or feed roles stays the per-type mapp
 
 ### Buffered output, limits and caching
 
-The gateway builds the whole body before it sends the first byte, so a strong `ETag` (the SHA-256 of the bytes) is known and a refusal comes before any data. `If-None-Match` with that tag answers `304` with no body. The first row or event that would cross the cap ends the request with `413 Payload Too Large`, whose detail names the cap and asks for a narrower query; an alias never sends a truncated body that looks complete. The caps: `spec.fileLimits.maxFileRows` and `maxFileBytes` for `query.csv` (§4), the preset's `limit` (1 to 10 000) or else 10 000 events for `query.ics`, the broker's residual-scan cap for a feed page.
+The gateway builds the whole body before it sends the first byte, so a strong `ETag` (the SHA-256 of the bytes) is known and a refusal comes before any data. `If-None-Match` with that tag answers `304` with no body. The first row or event that would cross the cap ends the request with `413 Payload Too Large`, whose detail names the cap and asks for a narrower query; an alias never sends a truncated body that looks complete. The caps: `spec.fileLimits.maxFileRows` and `maxFileBytes` for `entities.csv` (§4), the preset's `limit` (1 to 10 000) or else 10 000 events for `entities.ics`, the broker's residual-scan cap for a feed page.
 
 Every answer carries `Cache-Control: no-cache` and `Vary: Accept-Encoding, Authorization`. Only an anonymous answer of an Endpoint with no personal attributes enters the gateway's shared build cache (T-5629); an answer to a token is built for that caller alone and never shared. `Content-Disposition: attachment` names the file after the Endpoint slug or the preset name, literals the gateway controls, so no caller text reaches the header.
 
 ### Stored presets
 
-A preset is a saved query with a name: the named outputs of `spec.representations.ical` and `spec.representations.feed` are the stored presets of their format (API/11 EP-159). A preset holds `name` (part of the URL), `title` and `description` per language, `timezone` (calendar), `sort`, `limit` and `query`, a query string over the alias's allow-list, `preset` excluded:
+A preset is a saved query with a name: the named outputs of `spec.representations.ical` and `spec.representations.feed` are the stored presets of their format (API/11 EP-159). A preset holds `name` (part of the URL), `title` and `description` per language, `timezone` (calendar), `sort`, `limit` and `query`, a query string over the alias's allow-list:
 
 ```yaml excerpt
 spec:
@@ -411,7 +411,19 @@ spec:
         sources: [{ type: Event, preset: sdm-event }]
 ```
 
-An older output's `filter` object loads as the equivalent `query`. `query.ics?preset=koncerty-bb` and `/ical/v1/koncerty-bb.ics` serve the same bytes. A preset is checked when the Endpoint is saved: its query must parse, name only allowed parameters and name attributes the space's model has, or the save is refused naming the preset and the parameter. Only a preset the publisher stored is a `dcat:Distribution` of the Endpoint's DCAT-AP record and a CKAN resource (EP-150); a link generated from facets (below) never is.
+An older output's `filter` object loads as the equivalent `query`. `/api/endpoint/{slug}/calendars/koncerty-bb.ics` and `/ical/v1/koncerty-bb.ics` serve the same bytes; a feed preset answers at `calendars/{name}.rss`, `.atom` and `.json`, and every preset at `calendars/{name}.csv`. A request query string on a preset path is read with the alias's allow-list and joined to the preset's query, so it narrows the preset. A preset is checked when the Endpoint is saved: its query must parse, name only allowed parameters and name attributes the space's model has, or the save is refused naming the preset and the parameter. Only a preset the publisher stored is a `dcat:Distribution` of the Endpoint's DCAT-AP record and a CKAN resource (EP-150); a link generated from facets (below) never is.
+
+### Links a person copies end in the extension
+
+A link a person copies or a subscribe button gives ends in the format's extension (owner 2026-11-11 ~14:3xZ), because some calendar clients and feed readers decide by the last characters of the URL:
+
+| Link | Path | Stored |
+|---|---|---|
+| a publisher's preset | `/api/endpoint/{slug}/calendars/{preset}.{ics,csv,rss,atom,json}` | the preset (above) |
+| an ad-hoc query | `/api/endpoint/{slug}/feeds/{token}.{ics,csv,rss,atom,json}` | nothing |
+| a developer's or script's query | `/api/endpoint/{slug}/entities.{ics,csv,rss,atom,json}?<query>` | nothing |
+
+`{token}` is the base64url (RFC 4648 §5, no padding) of the normalized Query Entities query string: parameters sorted by name, each value percent-encoded once. It is deterministic, so one query always gives one link, and nothing is stored. The gateway decodes it on each request and reads the result exactly as the query string of `entities.{ext}`: the same allow-list, admit gate, Policy and caps. A token longer than 2 048 characters, one that does not decode, one that is not UTF-8 or one that carries a parameter outside the allow-list answers `400`; a request on a `feeds/` path that also has a query string answers `400`, so the link holds the whole query. The three paths of one query answer the same bytes and the same `ETag`. The open-data page and the Portal build these links.
 
 ### Facets: distinct values with counts
 
@@ -1177,7 +1189,7 @@ One connection carries NGSI-LD Subscriptions made over the socket and the Notifi
 
 ## 8b. Domain standards and the data model they need
 
-A domain standard, such as iCalendar, is a representation of the Endpoint's entities in another standard's terms. It is served only where `spec.enabledRepresentations` lists it (never by the EP-104 default). It reads through the same view and the same NGSI-LD query as the NGSI-LD surface: `type`, `q`, `scopeQ`, `georel`/`geometry`/`coordinates`, `attrs` and the paging parameters pass through, so it serves only what the Endpoint's Policy grants the caller; its only parameters of its own are the `from`/`to` window of a calendar or feed. The same formats answer one ad-hoc query at `query.ics`, `query.rss`, `query.atom` and `query.json` (§4a), where a named output is a stored preset. Events in one town are `?q=address.addressLocality=="Zvolen"`, not a `town=` parameter.
+A domain standard, such as iCalendar, is a representation of the Endpoint's entities in another standard's terms. It is served only where `spec.enabledRepresentations` lists it (never by the EP-104 default). It reads through the same view and the same NGSI-LD query as the NGSI-LD surface: `type`, `q`, `scopeQ`, `georel`/`geometry`/`coordinates`, `attrs` and the paging parameters pass through, so it serves only what the Endpoint's Policy grants the caller; its only parameters of its own are the `from`/`to` window of a calendar or feed. The same formats answer one ad-hoc query at `entities.ics`, `entities.rss`, `entities.atom` and `entities.json` (§4a), where a named output is a stored preset. Events in one town are `?q=address.addressLocality=="Zvolen"`, not a `town=` parameter.
 
 How the standard's fields come from the NGSI-LD attributes is a mapping written on the Endpoint, `spec.representations.<name>` (EP-125). A mapping is data, never code: each field names attributes of the type and at most the remaps listed below, never an expression or a template. `jcctl validate`, the Portal's propose and the Endpoint form check it against the Context Space's data model with the same code (platform `jc-core`, `kinds::ical_mapping`) and the same sentences. [`schemas/surface-requirements.md`](https://github.com/marek-mraz-jc/joinedcontext-platform/blob/main/schemas/surface-requirements.md) in the platform repository lists the fields, the presets and the ranges each remap accepts; it is generated from that code and checked by the platform's tests.
 
