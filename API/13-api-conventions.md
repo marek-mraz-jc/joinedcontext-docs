@@ -1,12 +1,12 @@
 ---
 sidebar_position: 14
 title: API Conventions
-description: The rules every configuration kind and Portal route follows: the same verbs, one list filter, cursor paging, ETag and If-Match, problem+json, validate-only, a version per kind and one shape for long-running work; a new feature is a kind or a view, never a new API style.
+description: The rules of the management API: one OData 4.01 service per Organization at /{org}/api/v1/ (entity sets for reads, actions that open a Change for writes), and the REST compat routes it replaces with their list filter, cursor paging, ETag and If-Match, problem+json, validate-only, a version per kind and one shape for long-running work.
 ---
 
 # API Conventions
 
-[ADR-N-063](../Decisions/adr-n-063-one-api-style-no-graphql.md) gives the platform one API style per plane: NGSI-LD and its standard views for context data, resource REST for configuration, generic MCP tools over both. This page is the rule set of the resource REST plane. A data view follows its own standard instead ([API/02](02-endpoint-representations.md)); an MCP tool takes the same arguments as the REST operation it maps to and answers the same body.
+[ADR-N-063](../Decisions/adr-n-063-one-api-style-no-graphql.md) gives the platform one API style per plane: NGSI-LD and its standard views for context data, generic MCP tools over both. [ADR-N-070](../Decisions/adr-n-070-odata-management-api-per-organization.md) makes the configuration plane one OData 4.01 service per Organization (§2a); the resource REST routes of §1 to §7 stay as compat wrappers over the same operations, frozen: nothing is added to them, and an [API/10](10-api-change-policy.md) notice ends them. This page is the rule set of both. A data view follows its own standard instead ([API/02](02-endpoint-representations.md)); an MCP tool takes the same arguments as the REST operation it maps to and answers the same body.
 
 Each section says what the rule is and, where today's Portal differs, what it does now. T-5965 moves the routes onto the rules; a route that keeps an exception names its reason in its own API section.
 
@@ -52,7 +52,36 @@ A list counts and pages only over the objects the caller may read: the filter ru
 
 Every kind's list (`GET /api/v1/projects/{project}/{plural}`) is one handler over the kind catalogue (`joinedcontext-portal/src/api/resources.rs`); the organization's Endpoints list (`GET /api/v1/endpoints`) takes the same parameters, orders by project and then name by default and breaks a tie in a `sort` the same way. Both judge the list parameters after the read check, so a project the caller may not read is `404` whatever the query says. The filter checks its fields against the kind's jc-core JSON Schema (`joinedcontext-portal/src/resource/filter.rs`). A cursor is signed with a key of the running Portal, so a restart ends an open listing with a `400` that says to list again. The answer also keeps `metadata.continue` and `metadata.remainingItemCount`, and the list still takes `labelSelector`, `fieldSelector` and `continue` (Kubernetes syntax, `joinedcontext-portal/src/resource/selector.rs`) until the notice of §7 ends; `continue` pages by `metadata.name` only. Lists that are not a kind keep their own parameters until they move to the extractor: activity and agent-run lists use `cursor`, catalogue and change-history lists use `page`.
 
-**OData per project (T-6632, T-6655).** Every project is one OData 4.01 service generated from the operation registry, for OData clients (Excel, Power BI, Microsoft.OData.Client): the service document at `/api/v1/projects/{project}/odata/`, the CSDL model at `…/odata/$metadata`. Each list operation is an entity set: `jc_resource_list` once per kind under the kind's REST plural (`…/odata/endpoints`, `…/odata/pipelines`), `jc_change_list` as `changes` and `jc_workspace_list` as `workspaces`; the entity type holds the scalar members of the operation's output rows, key `name`. A set answers `$filter` (`eq`, `ne`, `gt`, `ge`, `lt`, `le`, `in`, `and`, `or`, `not`, `contains`, `startswith`, `endswith`), `$select`, `$orderby`, `$top`, `$skip`, `$count`, `/$count` and a key (`endpoints('air-counters')`); an answer holds at most 1000 rows and `@odata.nextLink` names the next page by `$skiptoken`. A name the model lacks is `400`, an option outside that list (`$expand`, `$search`, `$apply`, `$compute`) `501`, both as an OData error body (`{"error": {"code", "message"}}`). Each writing operation is an unbound action of its own name, its parameters the operation's input schema: `POST …/odata/jc_resource_propose` runs what `POST …/ops/jc_resource_propose` runs. A read calls the list operation through the registry, so its permission check and rows are the REST door's and MCP's: the check runs before any option, a `$filter` only narrows what the caller may read, and a project the caller may not read is `404`. The list operations not mapped yet and why are in T-6655.
+**OData per project (T-6632, T-6655).** The alias of §2a's project navigations until the API/10 notice ends. Every project is one OData 4.01 service generated from the operation registry, for OData clients (Excel, Power BI, Microsoft.OData.Client): the service document at `/api/v1/projects/{project}/odata/`, the CSDL model at `…/odata/$metadata`. Each list operation is an entity set: `jc_resource_list` once per kind under the kind's REST plural (`…/odata/endpoints`, `…/odata/pipelines`), `jc_change_list` as `changes` and `jc_workspace_list` as `workspaces`; the entity type holds the scalar members of the operation's output rows, key `name`. A set answers `$filter` (`eq`, `ne`, `gt`, `ge`, `lt`, `le`, `in`, `and`, `or`, `not`, `contains`, `startswith`, `endswith`), `$select`, `$orderby`, `$top`, `$skip`, `$count`, `/$count` and a key (`endpoints('air-counters')`); an answer holds at most 1000 rows and `@odata.nextLink` names the next page by `$skiptoken`. A name the model lacks is `400`, an option outside that list (`$expand`, `$search`, `$apply`, `$compute`) `501`, both as an OData error body (`{"error": {"code", "message"}}`). Each writing operation is an unbound action of its own name, its parameters the operation's input schema: `POST …/odata/jc_resource_propose` runs what `POST …/ops/jc_resource_propose` runs. A read calls the list operation through the registry, so its permission check and rows are the REST door's and MCP's: the check runs before any option, a `$filter` only narrows what the caller may read, and a project the caller may not read is `404`. The list operations not mapped yet and why are in T-6655.
+
+## 2a. The OData service per Organization
+
+[ADR-N-070](../Decisions/adr-n-070-odata-management-api-per-organization.md) decides this service; T-6809 and its follow-ups build it. The Portal UI, the SDK and jcctl call it; MCP tools run the same operations.
+
+```text
+GET  /{org}/api/v1/                                              service document
+GET  /{org}/api/v1/$metadata                                     CSDL XML (JSON with $format=application/json), per caller
+GET  /{org}/api/v1/projects?$filter=…&$orderby=…&$top=50&$count=true
+GET  /{org}/api/v1/projects/air/endpoints?$select=name,audience  key-as-segment; = projects('air')/endpoints
+GET  /{org}/api/v1/endpoints(project='air',name='counters')      organization-wide set
+GET  /{org}/api/v1/projects('air')?$expand=endpoints             one level
+POST /{org}/api/v1/projects('air')/JoinedContext.Portal.propose_create              → Change
+POST /{org}/api/v1/projects('air')/endpoints('counters')/JoinedContext.Portal.propose_update   If-Match → Change
+POST /{org}/api/v1/changes('42')/JoinedContext.Portal.approve                       If-Match → Change
+```
+
+| Rule | What the service does |
+|---|---|
+| Organization | from the `/{org}/` segment or the bound host's row, once; never a header, query option, key or URN; another Organization's key is `404` |
+| Reads | `projects` keyed by `name`; each project kind a navigation of its project and an organization-wide set keyed by `(project,name)`; organization kinds (`roles`, `rolebindings`, `groups`, `members`) sets of the service; the Organization and `me` singletons; set names are the REST plurals |
+| Writes | only actions named by the registry operation: bound `propose_update`, `propose_delete` on an entity, `approve`, `reject`, `apply` on a Change; `propose_create` bound to its project (or unbound for an organization kind); each answers the Change; `dryRun` answers the plan. `POST` to a set, `PATCH`, `PUT`, `DELETE` and deep insert are `405` naming the action |
+| Concurrency | `@odata.etag` on every entity (§3's value); a bound write action needs `If-Match`: absent `428`, stale `412` with the current ETag, no Change opened |
+| Query options | `$filter` (`eq`, `ne`, `gt`, `ge`, `lt`, `le`, `in`, `and`, `or`, `not`, `contains`, `startswith`, `endswith`), `$select`, `$orderby` (4 items), `$top` (1 to 1000), `$skip`, `$count`, `/$count`, a key, `$expand` one level on a declared navigation |
+| Refused | `501`: `$search`, `$apply`, `$compute`, `$levels`, `$index`, `$schemaversion`, delta, `$batch`, any undeclared function or action. `400`: `$expand` deeper or on a non-navigation, `$top` over 1000, an unknown or repeated option, a name the caller's `$metadata` lacks, a query over the parser limits (4096 characters, 128 nodes, depth 16, 100 `in` values). `406`: a format other than JSON (XML too for `$metadata`). Nothing is silently ignored |
+| Paging | 1000 rows a page at most, lower with `Prefer: odata.maxpagesize`; `@odata.nextLink` with a `$skiptoken` signed for the caller, set and query; at most 10,000 readable rows evaluated per request, past that `400` asking for a narrower `$filter` |
+| Errors | the OData error object, `application/json`, with API/09's members inside: `{"error": {"code", "message", "target", "details", "type", "title", "status"}}`; `code` is the problem type's last segment |
+| Authorization | the registry's `Caller::grants`, `Effective::may` and `Effective::may_read_manifest`, before any option; `$count` counts readable rows only; a hidden attribute is no property (`$filter` on it is the same `400` as a typo); `$metadata` lists only what the caller may use, so a viewer's holds no write action; anonymous callers get `401` except on what a public Endpoint publishes |
+| Compat | under `/{org}/api/v1/`, a request with `OData-Version`, `OData-MaxVersion`, a `$` option, `$metadata`, the service document or an action is OData; any other request is REST compat with today's body. `Vary: OData-Version, OData-MaxVersion` |
 
 ## 3. Concurrency: ETag and If-Match
 
@@ -94,10 +123,11 @@ A write that a person reviews or a job that runs longer than a request answers `
 
 ## 8. What a new feature adds
 
-A new feature is a new kind, a new operation of the registry (`joinedcontext-portal/src/ops/mod.rs`) or a new data view. It follows §1 to §7 and gets its REST route, its OpenAPI entry, its JSON Schema, its MCP tool definition and its UI form from the registry, never written by hand twice. A new API style needs a decision record that supersedes ADR-N-063.
+A new feature is a new kind, a new operation of the registry (`joinedcontext-portal/src/ops/mod.rs`) or a new data view. It follows §2a and gets its entity set or action, its `$metadata` entry, its OpenAPI entry, its JSON Schema, its MCP tool definition and its UI form from the registry, never written by hand twice. No REST route is added (ADR-N-070). A new API style needs a decision record that supersedes ADR-N-070.
 
 ## Related
 
+- [ADR-N-070](../Decisions/adr-n-070-odata-management-api-per-organization.md): OData as the management API, one service per Organization.
 - [ADR-N-063](../Decisions/adr-n-063-one-api-style-no-graphql.md): why one style per plane and no GraphQL.
 - [API/01 §4](01-portal-api.md#4-resource-api-mf-11mf-15): the resource API as built.
 - [API/09](09-errors.md): the problem types.
