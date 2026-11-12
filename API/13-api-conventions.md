@@ -56,32 +56,48 @@ Every kind's list (`GET /api/v1/projects/{project}/{plural}`) is one handler ove
 
 ## 2a. The OData service per Organization
 
-[ADR-N-070](../Decisions/adr-n-070-odata-management-api-per-organization.md) decides this service; T-6809 and its follow-ups build it. The Portal UI, the SDK and jcctl call it; MCP tools run the same operations.
+[ADR-N-070](../Decisions/adr-n-070-odata-management-api-per-organization.md) decides this service; T-6809 builds it in slices. The Portal UI, the SDK and jcctl call it; MCP tools run the same operations.
 
 ```text
-GET  /{org}/api/v1/                                              service document
+GET  /{org}/api/v1/                                              service document, per caller
 GET  /{org}/api/v1/$metadata                                     CSDL XML (JSON with $format=application/json), per caller
 GET  /{org}/api/v1/projects?$filter=…&$orderby=…&$top=50&$count=true
 GET  /{org}/api/v1/projects/air/endpoints?$select=name,audience  key-as-segment; = projects('air')/endpoints
-GET  /{org}/api/v1/endpoints(project='air',name='counters')      organization-wide set
+GET  /{org}/api/v1/endpoints(project='air',name='counters')      organization-wide set, composite key
 GET  /{org}/api/v1/projects('air')?$expand=endpoints             one level
-POST /{org}/api/v1/projects('air')/JoinedContext.Portal.propose_create              → Change
-POST /{org}/api/v1/projects('air')/endpoints('counters')/JoinedContext.Portal.propose_update   If-Match → Change
-POST /{org}/api/v1/changes('42')/JoinedContext.Portal.approve                       If-Match → Change
+POST /{org}/api/v1/projects('air')/JoinedContext.Portal.propose_create                          → Change
+POST /{org}/api/v1/projects('air')/endpoints('counters')/JoinedContext.Portal.propose_update     If-Match → Change
+POST /{org}/api/v1/changes('42')/JoinedContext.Portal.approve                                   If-Match → Change
+GET  /-/api/v1/organizations                                     installation scope, operators only
 ```
 
 | Rule | What the service does |
 |---|---|
-| Organization | from the `/{org}/` segment or the bound host's row, once; never a header, query option, key or URN; another Organization's key is `404` |
-| Reads | `projects` keyed by `name`; each project kind a navigation of its project and an organization-wide set keyed by `(project,name)`; organization kinds (`roles`, `rolebindings`, `groups`, `members`) sets of the service; the Organization and `me` singletons; set names are the REST plurals |
-| Writes | only actions named by the registry operation: bound `propose_update`, `propose_delete` on an entity, `approve`, `reject`, `apply` on a Change; `propose_create` bound to its project (or unbound for an organization kind); each answers the Change; `dryRun` answers the plan. `POST` to a set, `PATCH`, `PUT`, `DELETE` and deep insert are `405` naming the action |
-| Concurrency | `@odata.etag` on every entity (§3's value); a bound write action needs `If-Match`: absent `428`, stale `412` with the current ETag, no Change opened |
-| Query options | `$filter` (`eq`, `ne`, `gt`, `ge`, `lt`, `le`, `in`, `and`, `or`, `not`, `contains`, `startswith`, `endswith`), `$select`, `$orderby` (4 items), `$top` (1 to 1000), `$skip`, `$count`, `/$count`, a key, `$expand` one level on a declared navigation |
-| Refused | `501`: `$search`, `$apply`, `$compute`, `$levels`, `$index`, `$schemaversion`, delta, `$batch`, any undeclared function or action. `400`: `$expand` deeper or on a non-navigation, `$top` over 1000, an unknown or repeated option, a name the caller's `$metadata` lacks, a query over the parser limits (4096 characters, 128 nodes, depth 16, 100 `in` values). `406`: a format other than JSON (XML too for `$metadata`). Nothing is silently ignored |
-| Paging | 1000 rows a page at most, lower with `Prefer: odata.maxpagesize`; `@odata.nextLink` with a `$skiptoken` signed for the caller, set and query; at most 10,000 readable rows evaluated per request, past that `400` asking for a narrower `$filter` |
-| Errors | the OData error object, `application/json`, with API/09's members inside: `{"error": {"code", "message", "target", "details", "type", "title", "status"}}`; `code` is the problem type's last segment |
-| Authorization | the registry's `Caller::grants`, `Effective::may` and `Effective::may_read_manifest`, before any option; `$count` counts readable rows only; a hidden attribute is no property (`$filter` on it is the same `400` as a typo); `$metadata` lists only what the caller may use, so a viewer's holds no write action; anonymous callers get `401` except on what a public Endpoint publishes |
-| Compat | under `/{org}/api/v1/`, a request with `OData-Version`, `OData-MaxVersion`, a `$` option, `$metadata`, the service document or an action is OData; any other request is REST compat with today's body. `Vary: OData-Version, OData-MaxVersion` |
+| Organization | decided once from the `/{org}/` segment (shared host), the bound host's row (root mapped to `/{org}/`) or the single Organization (path off); never a header, query option, key or URN. Unknown id, or a path id on a host bound to another: `404` with the unknown-path body. Another Organization's token or session: `401`. Another Organization's key: `404` |
+| Sessions | path mode shares one origin: the session cookie (`Path=/{org}/`) and the CSRF token are bound to the Organization and checked on every request |
+| Reads | `projects` keyed by `name`; each project kind a navigation of its project and an organization-wide set keyed by `(project,name)`; organization kinds (`roles`, `rolebindings`, `groups`, `members`) sets of the service; the Organization and `me` singletons; set names are the REST plurals; a read with arguments is a function (§2b). Installation Roles, RoleBindings and the Organization list only at `/-/api/v1/`, to operators |
+| Writes | a Change-proposing operation (§2b) is an action named by it: `propose_update`, `propose_delete` bound to an entity, `approve`, `reject`, `apply` bound to a Change, `propose_create` bound to its project or unbound for an organization kind; each answers the Change; `dryRun` answers the plan. Any other action keeps its registry permission and lane and opens no Change. `POST` to a set, `PATCH`, `PUT`, `DELETE` and deep insert are `405` naming the action |
+| Concurrency, caching | `@odata.etag` = a hash of the caller-visible projection and the revision (a hidden property's change does not move it); a bound write action needs `If-Match`: absent `428`, stale `412` with the current ETag, no Change opened. `Cache-Control: private`, `Vary: Authorization, Cookie`; `304` only after the authorization check |
+| Query options | `$filter` (`eq`, `ne`, `gt`, `ge`, `lt`, `le`, `in`, `and`, `or`, `not`, `contains`, `startswith`, `endswith`), `$select`, `$orderby`, `$top`, `$skip`, `$count`, `/$count`, a key, `$expand` one level on a declared navigation; nested options, property paths and `$count` pass the readable-property check |
+| Refused | `501`: `$apply`, `$search`, `$compute`, `$levels`, `$deltatoken` and delta links, lambda `any`/`all`, `/$ref`, `/$value`, `$batch`, an undeclared function or action. `400`: `$expand` deeper or on a non-navigation, `$top` or `$skip` over the limits, an unknown or repeated option, a name the caller's `$metadata` lacks (hidden, unknown and other-Organization names answer a byte-identical body). `406`: a format other than JSON (XML too for `$metadata`). Nothing is silently ignored |
+| Limits | deployment-wide, never per Organization: `odata.page_max` 1000 (`Prefer: odata.maxpagesize` lowers it), `odata.read_max` 10,000 readable rows per request (past it `400`, never a cut set), `odata.skip_max` 10,000, `odata.filter_max_nodes` 64, `odata.filter_max_depth` 8, `odata.expand_depth` 1 |
+| Paging | `@odata.nextLink` with an opaque `$skiptoken`, MAC-signed over Organization, caller, set, query hash and expiry (replay, tamper or another caller: `400` or `404`); every page re-runs the authorization and holds readable rows only; the link's base comes from the host registry or path root, never `Host` or `X-Forwarded-Host` |
+| Errors | the OData error object, `application/json`: `{"error": {"code": <the API/09 problem type>, "message", "target", "details", "title", "status", "trace_id"}}`; REST compat keeps `application/problem+json` with the same `type` and `trace_id` |
+| Authorization | the registry's `Caller::grants`, `Effective::may` and `Effective::may_read_manifest`, before any option; `$count` counts readable rows only; `$metadata` and the service document list only what the caller may use (a viewer's hold no write action; no `secretRef`, `sourceUrl` or personal property); anonymous `401` unless the Organization has a public Endpoint, then only the public sets |
+| Compat | under `/{org}/api/v1/`, a request with `OData-Version`, `OData-MaxVersion`, a `$` option, `$metadata`, the service document, a function or an action is OData; any other request is REST compat with today's body; `Vary: OData-Version, OData-MaxVersion` |
+
+## 2b. Operation classes
+
+Every operation of the registry (`crates/portal/src/ops`, 105 operations at jc `75e834b`, 2026-11-12) takes one of four OData forms. A new operation names its class when it is registered.
+
+| Class | OData form | Operations |
+|---|---|---|
+| Entity set, singleton or navigation | `GET` of a set, a key or a navigation | `jc_resource_list`, `jc_resource_get` (a set per kind), `jc_project_get`, `jc_project_revisions`, `jc_endpoint_list_all` (organization-wide `endpoints`), `jc_change_list`, `jc_change_get`, `jc_run_list`, `jc_run_get`, `jc_draft_list`, `jc_draft_get`, `jc_workspace_list`, `jc_workspace_get`, `jc_activity_list`, `jc_member_list`, `jc_person_list`, `jc_person_get` (people-admin), `jc_access_request_list`, `jc_organization_read` (singleton), `jc_permissions_me` (`me`), `jc_repository_list`, `jc_repository_commits`, `jc_repository_commit`, `jc_repository_refs`, `jc_repository_pulls`, `jc_repository_pull` |
+| Function (read-only, with arguments) | `GET` of a bound or unbound function | `jc_change_history`, `jc_catalog_search`, `jc_knowledge_search`, `jc_knowledge_status`, `jc_model_sdm_search`, `jc_kpi_compute`, `jc_federation_graph`, `jc_model_source_get`, `jc_schema_get`, `jc_repository_tree`, `jc_repository_file`, `jc_repository_settings`, `jc_ckan_status`, `jc_syncsource_status`, `jc_pipeline_metrics`, `jc_pipeline_logs`, `jc_pipeline_inspect`, `jc_pipeline_validate`, `jc_app_services`, `jc_space_governance`, `jc_serviceaccount_access`, `jc_access_explore`, `jc_access_simulate`, `jc_attribute_explain`, `jc_endpoint_preview`, `jc_catalogue_draft`, `jc_workspace_compare`, `jc_workspace_preview_get`, `jc_mqtt_captured`, `jc_project_export`, `jc_data_query` (through the Endpoint's view, ADR-N-050) |
+| Change-proposing action | `POST` of an action; opens, plans or decides a Change; bound ones need `If-Match` | `jc_resource_propose`, `jc_resource_delete`, `jc_endpoint_propose`, `jc_model_source_put`, `jc_project_create`, `jc_project_delete`, `jc_project_import`, `jc_space_complete`, `jc_flow_start`, `jc_workspace_propose`, `jc_access_request_decide`, `jc_syncsource_detach`, `jc_change_approve`, `jc_change_reject`, `jc_change_apply` |
+| Other action (no Change; keeps its registry permission and lane) | `POST` of an action | runs: `jc_run_create`, `jc_run_cancel`, `jc_run_publish`, `jc_run_answer`, `jc_run_message`, `jc_pipeline_run`, `jc_syncsource_sync`, `jc_syncsource_pause`; drafts and sessions: `jc_draft_put`, `jc_draft_drop`, `jc_workspace_open`, `jc_workspace_update_from_main`, `jc_workspace_discard`, `jc_workspace_preview_start`, `jc_workspace_preview_stop`; dry runs and computations: `jc_change_plan`, `jc_change_revert_plan`, `jc_manifest_dry_run`, `jc_datasource_check`, `jc_pipeline_test`, `jc_pipeline_sample_source`, `jc_pipeline_try_mapping`, `jc_mqtt_test_publish`, `jc_model_infer`, `jc_model_generate`, `jc_model_sdm_import`; people in the identity provider (people-admin): `jc_person_create`, `jc_person_edit`, `jc_person_disable`, `jc_person_enable`, `jc_person_sign_out`; data through an Endpoint's Policy: `jc_data_write`, `jc_thing_write` |
+
+The drafts' event channel (`jc_draft_events`, an SSE stream) is no operation and stays on its transport, on the UI gate's allow-list beside OIDC, MCP, WebSocket and uploads.
 
 ## 3. Concurrency: ETag and If-Match
 
