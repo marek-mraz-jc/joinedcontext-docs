@@ -38,7 +38,9 @@ PARAM = re.compile(r"\{([^}/]+)\}")
 # chapter prints that upstream request as it printed the `/ngsi-ld/v1` one (API/02 section 6)
 # `/c/{id}` is a person's connector, an MCP server on the Portal host whose address is pasted into
 # an AI client, so it is short and carries no project (ADR-N-064, API/14)
-ALLOWED_PREFIXES = ("/api/v1", "/api/endpoint", "/apps", "/cs", "/ngsi-ld/v1", "/x/views/",
+# `/{org}/api/v1` is an Organization's OData service root in path mode and `/-/api/v1` the
+# installation scope's, both served by the Portal (ADR-N-070, API/13 section 2a, API/15)
+ALLOWED_PREFIXES = ("/api/v1", "/{org}/api/v1", "/-/api/v1", "/api/endpoint", "/apps", "/cs", "/ngsi-ld/v1", "/x/views/",
                     "/live-notify", "/templates", "/healthz", "/livez", "/readyz", "/.well-known",
                     "/c/")
 # The published specification is the Portal's own (utoipa over its axum router), so only the
@@ -231,6 +233,12 @@ GET    /api/endpoint/{endpointSlug}/ngsi-ld/v1/entities   entities
         ("the broker's view root, as the gateway forwards to it",
          page.replace("GET    /api/endpoint/{endpointSlug}/ngsi-ld/v1/entities",
                       "GET    /x/views/{viewId}/ogc/features/collections"), None, None),
+        ("an Organization's OData root and the installation scope",
+         page.replace("GET    /api/endpoint/{endpointSlug}/ngsi-ld/v1/entities   entities",
+                      "GET    /{org}/api/v1/$metadata   metadata\nGET    /-/api/v1/organizations   list"),
+         None, None),
+        ("an unknown Organization-style root", page.replace("GET    /api/v1/projects", "GET    /{org}/internal/projects"),
+         "outside the documented URL scheme", None),
         ("another broker extension root", page.replace("GET    /api/v1/projects", "GET    /x/admin/projects"),
          "outside the documented URL scheme", None),
         ("parameter spelled two ways", page.replace("{endpointSlug}", "{projectId}"),

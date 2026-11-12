@@ -185,7 +185,9 @@ def inventory(code: pathlib.Path, docs: pathlib.Path) -> tuple[set[str], str]:
     """Every path the code tree holds, and the text of every source file in it."""
     paths: set[str] = set()
     sources: list[str] = []
-    roots = [(name, code / name) for name in REPOSITORIES if (code / name).is_dir()]
+    # The jc monorepo ships the Portal, the gateway and the forge: its paths and its `jc_*`
+    # operations are claims the pages make too (T-6809).
+    roots = [(name, code / name) for name in (*REPOSITORIES, MONOREPO) if (code / name).is_dir()]
     roots.append(("docs", docs))
     for name, root in roots:
         for path in walk(root):
@@ -334,7 +336,7 @@ def catalogue(code: pathlib.Path, code_text: str, checkouts: frozenset[str]) -> 
 
 
 def present(code: pathlib.Path) -> list[str]:
-    return [name for name in REPOSITORIES if (code / name).is_dir()]
+    return [name for name in (*REPOSITORIES, MONOREPO) if (code / name).is_dir()]
 
 
 def report(bad: list[str], code: pathlib.Path, checkouts: list[str]) -> str:
@@ -544,7 +546,24 @@ def selftest() -> int:
         if problem_pages(docs, *catalogue(code, inventory(code, docs)[1], frozenset(present(code)))):
             print("a problem page matching the monorepo catalogue was refused", file=sys.stderr)
             return 1
+        # An operation and a file only the monorepo has are true claims once it is read (T-6809).
+        (code / MONOREPO / "crates" / "forge").mkdir()
+        (code / MONOREPO / "crates" / "forge" / "NOTES.md").write_text("notes\n", encoding="utf-8")
+        (code / MONOREPO / "crates" / "ops.rs").write_text('const OP: &str = "jc_forge_only";\n', encoding="utf-8")
+        mono_page = docs / "Architecture" / "monorepo.md"
+        mono_page.write_text(
+            "---\ntitle: Monorepo\n---\n\n# Monorepo\n\nThe forge calls `jc_forge_only` (`crates/forge/NOTES.md`).\n",
+            encoding="utf-8",
+        )
+        mono_found = [p for p in check(docs, code) if "monorepo.md" in p]
+        if mono_found:
+            print("a claim only the monorepo holds was called missing:", *mono_found, sep="\n  ", file=sys.stderr)
+            return 1
         shutil.rmtree(code / MONOREPO)
+        if not any("monorepo.md" in p and "jc_forge_only" in p for p in check(docs, code)):
+            print("an operation nobody defines passed without the monorepo", file=sys.stderr)
+            return 1
+        mono_page.unlink()
         (docs / PROBLEM_PAGE).unlink()
 
         # A failure names the code commits it read and the merge-order way out (T-4925).
