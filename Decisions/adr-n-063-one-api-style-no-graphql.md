@@ -6,7 +6,8 @@ title: "ADR-N-063: One API Style for the Platform, No GraphQL"
 # ADR-N-063: One API Style for the Platform, No GraphQL
 
 Date: 2026-10-28  
-Status: Proposed  
+Status: Superseded  
+Superseded by: [ADR-N-070](adr-n-070-odata-management-api-per-organization.md) for the control plane (option B, §3.2, the last bullet of §5); the data-plane, agent and no-GraphQL decisions stand  
 Decision Makers: product owner (2026-10-28: "how to unify the apis and mcp ... What do you recommend about ODATA or graphql? Because this application will be huge"); decided by the supervisor, drafted by worker-t5964 (T-5964), owner may override
 
 This record fixes which API styles the platform serves and forbids adding another. [API/13](../API/13-api-conventions.md) carries the conventions every kind and route follows; T-5965 brings today's list routes onto them and T-5948 builds the operation registry they are generated from.
@@ -53,6 +54,7 @@ The conventions keep the controls that GraphQL would weaken: reads stay `GET` so
 
 ## Related
 
+- [ADR-N-070](adr-n-070-odata-management-api-per-organization.md): OData as the management API, which supersedes this record for the control plane.
 - [API/13](../API/13-api-conventions.md): the conventions this record orders.
 - [ADR-N-021](adr-n-021-one-operation-registry-behind-ui-api-assistant-and-mcp.md): the operation registry the routes and tools come from.
 - [ADR-N-050](adr-n-050-broker-views-decide-context-data.md): the broker's views decide context data on every surface.
