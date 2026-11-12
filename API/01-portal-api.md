@@ -3925,6 +3925,23 @@ POST /api/v1/projects/{project}/endpoints/{name}/preview   → 200
 - `503` when the Portal has no broker address or admin token, or has not compiled the Endpoint's
   view yet; a broker that refuses the page answers through the route with its status.
 
+### 40.1 Whether the gateway admits you (T-6802, EP-14, EP-15)
+
+```text
+GET /api/v1/projects/{project}/endpoints/{name}/admission   → 200 {"admitted": false}
+```
+
+- The Endpoint page and settings/access ask this once before they read anything under
+  `/api/endpoint/{slug}`: the Portal decides it with the gateway's own `admission` rule from the
+  session's groups and `jc_org` and the Endpoint's `audience` and `allowedProjects`. A `public`
+  Endpoint admits everyone.
+- `admitted: false` when the person's groups name no project the audience admits; a Portal role
+  never widens it. The page then shows who decides (the Endpoint's Policies) and a link to
+  request access, and makes no gateway call.
+- The answer names no group and no Policy. A person whose project is of another Organization
+  gets the `404` the gateway gives; who may ask and a workload token's `403` are as for the
+  preview above.
+
 ## 41. What a principal reaches (T-3792, EP-103, EP-59)
 
 The Access explorer (Access → Explorer): everything one person, group member, realm-role holder or
