@@ -17,6 +17,10 @@ A further portal serves a theme or an audience of its own, for example `mobility
 - `/{org}/opendata/-/{path}/` on the platform's shared host, for example `/bratislava/opendata/-/mobility/`. The `-` segment is never a dataset, group or page name, so a portal can never take over an address of `default`.
 - or its own host, for example `mobility.bratislava.sk`, when the operator of the deployment has listed that host for your Organization. A host nobody listed is refused when the Change is proposed (section 4).
 
+A portal on its own host chooses what its path address does with `spec.slug`. `redirect`, the default, answers every request on the path address `/{org}/opendata/[-/{path}/]...` with `308` to the same path and query on the host. `keep` answers on both, and every page and feed names the host as the canonical address.
+
+Changing a portal's address never changes a dataset IRI: an IRI keeps the address the dataset was first published under, and that first address redirects to the new one (ODP-08).
+
 A portal's `path` is a DNS label: lower-case letters, digits and hyphens, at most 63 characters, starting and ending with a letter or digit, and unique in the Organization. Example: `mobility`. Its manifest's `metadata.name` is the file's key among the manifests of every Organization, so it carries the Organization in front, for example `bratislava-mobility`; the `default` portal of an Organization needs no manifest until you describe it.
 
 The deployment caps how many portals all its Organizations hold together: `portals.max` in the deployment configuration (`[dataroom] portals_max` in `jc.toml`), by default three per Organization the deployment serves. The operator lists the hosts an Organization's portals may take under that Organization's `hosts.portals`. Every `default` portal counts toward it and is always created.
@@ -41,7 +45,7 @@ A portal is configuration as code: one manifest in the Organization's repository
 
 A second portal for a theme:
 
-```yaml
+```yaml excerpt
 apiVersion: joinedcontext.com/v1alpha1
 kind: Portal
 metadata:
@@ -70,7 +74,7 @@ A source tells the portal where its datasets come from (ODP-10). Each source has
 
 Federation with another deployment, of this platform or of any DCAT-AP catalogue, is a `dcat-ap` source at that catalogue's public address:
 
-```yaml
+```yaml excerpt
 apiVersion: joinedcontext.com/v1alpha1
 kind: Portal
 metadata:
