@@ -163,7 +163,7 @@ The Portal refuses a model that marks personal data without `legalBasis`, `purpo
 
 Backups cannot be edited. The CNPG backups expire after their `retentionPolicy`, which the platform's deployment sets to 30 days and states to the data subject, and the Portal keeps an **erasure log** (the subject's keyed hash, the space, when, the counts per store, never a value); after a restore the reconciler re-applies every erasure in the log before the restored data is served (DM-127).
 
-**Read log.** Every read of a personal attribute through an Endpoint is logged: who, when, which Endpoint, how many Entities, never values or ids beyond the Entities' URNs (DM-128).
+**Read log.** Every read of a personal attribute through an Endpoint is logged: who, when, which Endpoint, how many Entities, never values or ids beyond the Entities' URNs (DM-128). The same line is written on every door that serves Entity data: NGSI-LD, `file.csv` and MCP (the Endpoint's own MCP address, the hub and the named servers, for each tool call or resource read that can carry an Entity). An answer whose Entities the gateway cannot list (too large to hold, not JSON, or a shape it does not know) is refused with a request for fewer Entities, and the attempt is logged without URNs.
 
 ### 2.7 Precedence
 
