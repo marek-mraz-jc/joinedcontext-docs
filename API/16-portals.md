@@ -48,11 +48,8 @@ The catalogue row of a path-mode portal stores the synthetic host `{path}.{org}.
 | `spec.slug` | `redirect` or `keep`, only with `spec.host` | `422`, field `spec.slug` |
 | total count | at most `portals.max` across every Organization of the deployment | `422`, "portals.max (N) reached" |
 | delete of the portal at path `default` | never | `422`, "the default portal cannot be deleted" |
-<<<<<<< HEAD
-=======
 | `spec.sources[].url` | `https://` (the harvest guard fetches nothing else), its host inside `allowedHosts` and the deployment's harvest allow-list | `422`, field `spec.sources[i].url` |
 | `spec.sources[].projects` | an `endpoints` source names only projects of the portal's Organization | `422`, field `spec.sources[i].projects` |
->>>>>>> f0cafce3f6f96c238e71531b6e5b08a6c4484dd3
 | unknown field | `deny_unknown_fields` | `422`, the field named |
 
 Sources carry no credentials in this version: a source field that would hold a secret does not exist, and a `secretRef` in a source is refused as an unknown field.
