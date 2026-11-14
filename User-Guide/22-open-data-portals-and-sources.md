@@ -59,18 +59,14 @@ spec:
     en: Mobility in Bratislava
   languages: [sk, en]
   profiles: [dcat-ap-3.0.1]
-  sources:
-    - name: transport-endpoints
-      type: endpoints
-      projects: [transport]
 ```
 
 ## 3. Sources
 
 A source tells the portal where its datasets come from (ODP-10). Each source has a `name`, unique in the portal, and a `type`:
 
-- `endpoints`: this Organization's Endpoints that are already published, narrowed by `projects`, `spaces`, `tags` or `names`. A source never publishes anything by itself: an Endpoint appears only when it has opted in to publishing and carries a `public` Policy, or is listed as `public` (see [Endpoints and Sharing](05-endpoints-and-sharing.md)).
-- `dcat-ap`, `ckan-action`, `nkod-sparql`, `arcgis-hub`: a catalogue elsewhere that the portal harvests on a `schedule`. Each takes the catalogue's `url`, `allowedHosts` (each inside the deployment's harvest allow-list), a `budget` of records and bytes per run, and the harvest options the deployment already knows (publisher, rewrite_hosts, skip, titles, spelling, require_column, converted_file, gateway, name_prefix).
+- `endpoints`: this Organization's Endpoints that are already published, narrowed by `projects`, `spaces`, `tags` or `names`. A source never publishes anything by itself: an Endpoint appears only when it has opted in to publishing and carries a `public` Policy, or is listed as `public` (see [Endpoints and Sharing](05-endpoints-and-sharing.md)). Until the catalogue lists published Endpoints per portal, a further portal refuses an `endpoints` source (`422`, field `spec.sources[i].type`); the `default` portal lists the Organization's published Endpoints already.
+- `dcat-ap`, `ckan-action`, `nkod-sparql`, `arcgis-hub`: a catalogue elsewhere that the portal harvests on a `schedule`. Each takes the catalogue's `url` (`https://` only), `allowedHosts` (each inside the deployment's harvest allow-list), a `budget` of records and bytes per run, and the harvest options the deployment already knows: `publisher`, `publisherTitle`, `publisherUri`, `publisherDescription`, `spatialUri`, `namePrefix`, `rewriteHosts`, `skip`, `titles`, `spelling`, `requireColumn` and `gateway`.
 
 Federation with another deployment, of this platform or of any DCAT-AP catalogue, is a `dcat-ap` source at that catalogue's public address:
 
