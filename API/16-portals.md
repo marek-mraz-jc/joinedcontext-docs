@@ -26,10 +26,12 @@ The reconciler is the only writer of the catalogue rows behind a portal (ODP-11)
 | Portal | Address |
 |---|---|
 | `default` | `/{org}/opendata/` on the shared host, or the Organization's open data host |
-| any other, no `spec.host` | `/{org}/opendata/-/{name}/` on the shared host |
-| any other, with `spec.host` | `https://{host}/`, a host the operator listed for the Organization |
+| any other, no `spec.host` | `/{org}/opendata/-/{path}/` on the shared host, `/-/{path}/` on the Organization's open data host |
+| any other, with `spec.host` | `https://{host}/`, a host the operator listed for the Organization; its path address answers `308` there (`spec.slug: redirect`, the default) or serves too (`keep`) |
 
-The catalogue row of a path-mode portal stores the synthetic host `{name}.{org}.portal.invalid`: the `.invalid` top-level domain never resolves, so no request can reach a portal through it. The deployment-wide catalogue at `/opendata/` is the `default` portal of the installation Organization (`ops`).
+A dataset keeps the identifier it was first published under: when a portal's address changes, every dataset without an identifier of its own is pinned to its old address, which keeps answering.
+
+The catalogue row of a path-mode portal stores the synthetic host `{path}.{org}.portal.invalid`: the `.invalid` top-level domain never resolves, so no request can reach a portal through it. The deployment-wide catalogue at `/opendata/` is the `default` portal of the installation Organization (`ops`).
 
 ## 3. Validation
 
@@ -37,10 +39,12 @@ The catalogue row of a path-mode portal stores the synthetic host `{name}.{org}.
 
 | Field | Rule | Refusal |
 |---|---|---|
-| `metadata.name` | a DNS label (1 to 63 lower-case letters, digits and hyphens, a letter or digit at each end), unique in the Organization | `422`, field `metadata.name` |
+| `metadata.name` | a DNS label (1 to 63 lower-case letters, digits and hyphens, a letter or digit at each end), unique in namespace `org` | `422`, field `metadata.name` |
+| `spec.organizationRef` | an Organization of the deployment, never changed on an existing portal | `422`, field `spec.organizationRef` |
+| `spec.path` | a DNS label, unique in the Organization; `default` is the Organization's own portal | `422`, field `spec.path` |
 | `spec.host` | one of the hosts the deployment configuration lists for this Organization, checked against every mount host | `422`, field `spec.host`, "host is not listed for this Organization" |
 | total count | at most `portals.max` across every Organization of the deployment | `422`, "portals.max (N) reached" |
-| delete of `default` | never | `422`, "the default portal cannot be deleted" |
+| delete of the portal at path `default` | never | `422`, "the default portal cannot be deleted" |
 | `spec.sources[].url` | `https://` or `http://`, its host inside `allowedHosts` and the deployment's harvest allow-list | `422`, field `spec.sources[i].url` |
 | unknown field | `deny_unknown_fields` | `422`, the field named |
 

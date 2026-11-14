@@ -14,12 +14,12 @@ Every Organization has the portal `default`. The platform creates it the first t
 
 A further portal serves a theme or an audience of its own, for example `mobility` for transport data or `education` for the schools of a region (ODP-08). It answers at:
 
-- `/{org}/opendata/-/{name}/` on the platform's shared host, for example `/bratislava/opendata/-/mobility/`. The `-` segment is never a dataset, group or page name, so a portal can never take over an address of `default`.
+- `/{org}/opendata/-/{path}/` on the platform's shared host, for example `/bratislava/opendata/-/mobility/`. The `-` segment is never a dataset, group or page name, so a portal can never take over an address of `default`.
 - or its own host, for example `mobility.bratislava.sk`, when the operator of the deployment has listed that host for your Organization. A host nobody listed is refused when the Change is proposed (section 4).
 
-A portal's `name` is a DNS label: lower-case letters, digits and hyphens, at most 63 characters, starting and ending with a letter or digit, and unique in the Organization. Example: `mobility`.
+A portal's `path` is a DNS label: lower-case letters, digits and hyphens, at most 63 characters, starting and ending with a letter or digit, and unique in the Organization. Example: `mobility`. Its manifest's `metadata.name` is the file's key among the manifests of every Organization, so it carries the Organization in front, for example `bratislava-mobility`; the `default` portal of an Organization needs no manifest until you describe it.
 
-The deployment caps how many portals all its Organizations hold together: `portals.max` in the deployment configuration, by default three per Organization the deployment is sized for. Every `default` portal counts toward it and is always created.
+The deployment caps how many portals all its Organizations hold together: `portals.max` in the deployment configuration (`[dataroom] portals_max` in `jc.toml`), by default three per Organization the deployment serves. The operator lists the hosts an Organization's portals may take under that Organization's `hosts.portals`. Every `default` portal counts toward it and is always created.
 
 ## 2. Describe a Portal
 
@@ -27,10 +27,13 @@ A portal is configuration as code: one manifest in the Organization's repository
 
 | Field | What it holds | Example |
 |---|---|---|
-| `metadata.name` | the portal's name (section 1) | `mobility` |
+| `metadata.name` | the manifest's key, unique in the deployment | `bratislava-mobility` |
+| `spec.organizationRef` | the Organization the portal belongs to; it never changes | `bratislava` |
+| `spec.path` | the portal's name in the Organization (section 1); `default` is the Organization's own portal | `mobility` |
 | `spec.title` | the title on every page of the portal, per language | `{sk: "Doprava", en: "Mobility"}` |
 | `spec.languages` | the languages the portal is shown in, the first one the default | `[sk, en]` |
 | `spec.host` | its own host, one the operator listed for the Organization; absent means the path address | `mobility.bratislava.sk` |
+| `spec.slug` | with a `host`: `redirect` (the default) answers the path address with `308` to the same page on the host; `keep` answers both and names the host in every link and identifier | `keep` |
 | `spec.appearance` | overrides of the Organization's appearance (logo, colours) for this portal only | `{accent: "#0b6e4f"}` |
 | `spec.profiles` | the DCAT-AP profiles the portal's feeds serve | `[dcat-ap-3.0.1, dcat-ap-sk]` |
 | `spec.sources` | where its datasets come from (section 3) | |
@@ -42,8 +45,11 @@ A second portal for a theme:
 apiVersion: joinedcontext.com/v1alpha1
 kind: Portal
 metadata:
-  name: mobility
+  name: bratislava-mobility
+  namespace: org
 spec:
+  organizationRef: bratislava
+  path: mobility
   title:
     sk: Doprava v Bratislave
     en: Mobility in Bratislava
@@ -68,8 +74,11 @@ Federation with another deployment, of this platform or of any DCAT-AP catalogue
 apiVersion: joinedcontext.com/v1alpha1
 kind: Portal
 metadata:
-  name: region
+  name: bratislava-region
+  namespace: org
 spec:
+  organizationRef: bratislava
+  path: region
   title:
     en: Open data of the region
   languages: [en]
