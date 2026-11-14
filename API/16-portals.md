@@ -53,7 +53,6 @@ The catalogue row of a path-mode portal stores the synthetic host `{path}.{org}.
 | `spec.sources[].projects` | an `endpoints` source names only projects of the portal's Organization | `422`, field `spec.sources[i].projects` |
 =======
 | `spec.sources[].url` | `https://` (the harvest guard fetches nothing else), its host inside `allowedHosts` and the deployment's harvest allow-list | `422`, field `spec.sources[i].url` |
-| `spec.sources[].type: endpoints` | refused until the dataroom lists published Endpoints per portal; the `default` portal lists them | `422`, field `spec.sources[i].type` |
 >>>>>>> f0cafce3f6f96c238e71531b6e5b08a6c4484dd3
 | unknown field | `deny_unknown_fields` | `422`, the field named |
 
