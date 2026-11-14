@@ -19,7 +19,7 @@ A `Portal` is an Organization-scoped manifest kind (ODP-08): one open data porta
 
 A request without a session answers `401`. A person who is not an administrator of the portal's Organization answers `403` on every write, and a read of another Organization's portal answers `404`, as if it did not exist (ODP-12). An Organization administrator's Change touches only that Organization's portals.
 
-The reconciler is the only writer of the catalogue rows behind a portal (ODP-11). It applies an approved Change in-process: it creates, updates or deletes the portal's catalogue and its harvest sources without a restart. The `[[dataroom.harvest]]` seeds of the deployment configuration migrate once, with every field, into sources of each Organization's `default` portal; after that the config block and the direct `harvest_source.propose` operation are refused naming ODP-11. No route of the open data surface gains a write verb for it, and each portal's catalogue has its own publish principal, so the principal of one portal cannot write another.
+The reconciler is the only writer of the catalogue rows behind a portal (ODP-11). It applies an approved Change in-process: it creates, updates or deletes the portal's catalogue and its harvest sources without a restart. The `[[dataroom.harvest]]` seeds of the deployment configuration migrate once, with every field, into sources of each Organization's `default` portal; after that the config block is refused naming ODP-11. The direct `harvest_source.propose` operation is refused, naming ODP-11. No route of the open data surface gains a write verb for it, and each portal's catalogue has its own publish principal, so the principal of one portal cannot write another.
 
 ## 2. Addresses
 
@@ -49,6 +49,7 @@ The catalogue row of a path-mode portal stores the synthetic host `{path}.{org}.
 | total count | at most `portals.max` across every Organization of the deployment | `422`, "portals.max (N) reached" |
 | delete of the portal at path `default` | never | `422`, "the default portal cannot be deleted" |
 | `spec.sources[].url` | `https://` or `http://`, its host inside `allowedHosts` and the deployment's harvest allow-list | `422`, field `spec.sources[i].url` |
+| `spec.sources[].projects` | an `endpoints` source names only projects of the portal's Organization | `422`, field `spec.sources[i].projects` |
 | unknown field | `deny_unknown_fields` | `422`, the field named |
 
 Sources carry no credentials in this version: a source field that would hold a secret does not exist, and a `secretRef` in a source is refused as an unknown field.
