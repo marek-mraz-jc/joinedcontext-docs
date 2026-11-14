@@ -43,13 +43,18 @@ The catalogue row of a path-mode portal stores the synthetic host `{path}.{org}.
 |---|---|---|
 | `metadata.name` | a DNS label (1 to 63 lower-case letters, digits and hyphens, a letter or digit at each end), unique in namespace `org` | `422`, field `metadata.name` |
 | `spec.organizationRef` | an Organization of the deployment, never changed on an existing portal | `422`, field `spec.organizationRef` |
-| `spec.path` | a DNS label, unique in the Organization; `default` is the Organization's own portal | `422`, field `spec.path` |
-| `spec.host` | one of the hosts the deployment configuration lists for this Organization, checked against every mount host | `422`, field `spec.host`, "host is not listed for this Organization" |
+| `spec.path` | a DNS label, unique in the Organization, never changed on an existing portal (a new path is a new catalogue and would move every dataset IRI); `default` is the Organization's own portal | `422`, field `spec.path` |
+| `spec.host` | one of the hosts the deployment configuration lists for this Organization, checked against every mount host, and no other portal's | `422`, field `spec.host`, "host is not listed for this Organization" or "another portal answers on" |
 | `spec.slug` | `redirect` or `keep`, only with `spec.host` | `422`, field `spec.slug` |
 | total count | at most `portals.max` across every Organization of the deployment | `422`, "portals.max (N) reached" |
 | delete of the portal at path `default` | never | `422`, "the default portal cannot be deleted" |
+<<<<<<< HEAD
 | `spec.sources[].url` | `https://` or `http://`, its host inside `allowedHosts` and the deployment's harvest allow-list | `422`, field `spec.sources[i].url` |
 | `spec.sources[].projects` | an `endpoints` source names only projects of the portal's Organization | `422`, field `spec.sources[i].projects` |
+=======
+| `spec.sources[].url` | `https://` (the harvest guard fetches nothing else), its host inside `allowedHosts` and the deployment's harvest allow-list | `422`, field `spec.sources[i].url` |
+| `spec.sources[].type: endpoints` | refused until the dataroom lists published Endpoints per portal; the `default` portal lists them | `422`, field `spec.sources[i].type` |
+>>>>>>> f0cafce3f6f96c238e71531b6e5b08a6c4484dd3
 | unknown field | `deny_unknown_fields` | `422`, the field named |
 
 Sources carry no credentials in this version: a source field that would hold a secret does not exist, and a `secretRef` in a source is refused as an unknown field.
