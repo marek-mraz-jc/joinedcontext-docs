@@ -65,6 +65,7 @@ Every manifest in Git has one layout, the one `jcctl fmt` writes (T-5052): the s
 | `SharedSpaceReference` | `projects/{p}/shares/` | Context Gateway | Cross-project or cross-instance mount of another Endpoint (EP-15, DS-17) |
 | `ContextSourceRegistration` | `.../spaces/{s}/registrations/` | Antares Broker | Where part of a space's data actually lives, so the broker can forward and merge; a hub space holds only these; a member of another project is named through a `SharedSpaceReference` (MF-36, EP-70, PF-48, PF-125) |
 | `CkanInstance` | `projects/{p}/ckan/` | `jcctl` publisher / Portal API | One open-data portal an Endpoint may publish to: base URL, default organization and the API token `secretRef` (EP-62, EP-67) |
+| `Portal` | `portals/{name}.yaml` | reconciler → dataroom catalogue | One open data portal of the Organization: name, address (`/{org}/opendata/-/{name}/` or an operator-listed host), title, languages, appearance, DCAT-AP profiles, sources and hidden datasets; `default` is generated per Organization and cannot be deleted (ODP-08…ODP-11) |
 | `KnowledgeSource` | `projects/{p}/assistant/sources/` | `jc-assistant` crawl worker | One body of knowledge the assistant reads: start URLs, a `CkanInstance` or the project's own catalogue, sitemap, include/exclude patterns, depth and page limits, PDF policy, schedule, languages and visibility (MF-51) |
 | `AssistantDeployment` | `projects/{p}/assistant/deployments/` | `jc-assistant` chat API | One place the assistant answers: channel, public id, prompt, sources, Endpoint MCP connectors, allowed origins, rate limit, budget, theme (MF-52) |
 | `McpServer` | `projects/{p}/mcp/`, `mcp/` | Context Gateway / reconciler → Keycloak | One named MCP server over up to ten chosen Endpoints and a `select` of spaces, projects, domains, themes and access levels resolved per caller (MF-55, ADR-N-043 §7), at `/api/mcp/{project}/{name}`, with an audience no wider than its members' (MF-53, ADR-N-043) |
@@ -124,6 +125,7 @@ A new kind therefore needs no second path: it declares the `PATH_TEMPLATE` it wo
 `jcctl schema export` writes one draft-07 schema per kind to `schemas/kinds/{Kind}.json`, and the documentation checks manifests against the schemas of one pinned platform tag, not against `main`. Every kind in the table above has a schema in the pinned tag; a kind whose `jc-core` type lands before its schema is listed here, checked structurally and against the kind table only, until the tag carries it:
 
 - `DelegationPolicy` (AG-150): the `jc-core` type and schema land in T-5952.
+- `Portal` (ODP-08): the `jc-core` type and schema land in T-6873.
 
 `McpServer` (MF-53) left the list once the pinned platform carried its schema (T-3313).
 
