@@ -485,12 +485,15 @@ that targets it and a `ScopeDefinition` exists before the `Policy` that names it
 | 1 | `ContextSpace`, `DataModel`, `Mapping`, `ServiceAccount` |
 | 2 | `ScopeDefinition`, `Policy` |
 | 3 | `CkanInstance`, `Endpoint` |
-| 4 | `SharedSpaceReference`, `DataOffer`, `DataAgreement` |
+| 4 | `SharedSpaceReference`, `DataOffer`, `DataAgreement`, `Portal` |
 | 5 | `DataSource`, `Pipeline`, `App`, `SyncSource` |
 
 A `CkanInstance` converges in wave 3 before the `Endpoint`s that publish to it, because
 publishing is part of exposing a space: the catalogue connection and its API token have to
 resolve before an Endpoint's `spec.publish.ckan` block can be acted on (EP-62, EP-67).
+
+A `Portal` converges in wave 4, after the `Endpoint`s it lists and beside the other
+federation kinds, because it harvests other catalogues into its Organization's own (ODP-08, ODP-10).
 
 `Bundle` carries no wave: it is an export artifact read by `jcctl import`, not a
 resource the reconciler converges (CC-22). Neither does `Blueprint`, which is expanded at

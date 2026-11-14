@@ -241,7 +241,7 @@ Headers:
 | `X-Request-Id` | response | the id the row's `provenance.requestId` holds |
 | `JC-Provenance-*` | never | dropped at the edge; the gateway sets them for the broker (DM-112, DM-136) |
 
-`lastN` counts measurements, not versions. Provenance is `channel`, `actor`, `organization`, `actorKind`, `operation`, `reason`, `requestId` and `writtenAt` ([ADR-N-054 §2.3](../Decisions/adr-n-054-history-versions-provenance-gdpr.md#23-provenance-on-every-write)).
+`lastN` counts measurements, not versions. Provenance is `channel`, `actor`, `organization`, `actorKind`, `operation`, `reason`, `requestId` and `writtenAt` ([ADR-N-054 §2.3](../Decisions/adr-n-054-history-versions-provenance-gdpr.md#23-provenance-on-every-write)). An anonymous caller reads no `actor`, `client`, `reason` or `requestId`, and no `modifiedBy` (GDPR, T-6878).
 
 ## 3. GeoJSON for maps
 
@@ -875,14 +875,16 @@ all of them; each row is the decision `access/check` gives with `resource.proper
 
 ```json
 {"type": "AirQualityObserved",
- "attributes": [{"name": "pm10", "read": true, "write": true, "delete": false, "reason": "grant"},
-                {"name": "pm25", "read": true, "write": false, "delete": false, "reason": "formula"},
-                {"name": "stationName", "read": false, "write": false, "delete": false, "reason": "not_in_grant"}]}
+ "attributes": [{"name": "pm10", "read": true, "write": true, "delete": false, "history": true, "reason": "grant"},
+                {"name": "pm25", "read": true, "write": false, "delete": false, "history": false, "reason": "formula"},
+                {"name": "stationName", "read": false, "write": false, "delete": false, "history": false, "reason": "not_in_grant"}]}
 ```
 
 `read` is `retrieveEntity` (a `GET` with `attrs=`), `write` is `updateAttrs` (a `PATCH` of the
-Attribute), `delete` is `deleteAttrs`, each through the Endpoint's view. `reason` is the strongest
-of the three verdicts: `prohibited` (a prohibition covers the type for one of them), `formula` (a
+Attribute), `delete` is `deleteAttrs`, each through the Endpoint's view. `history` is
+`retrieveTemporal` of the Attribute: whether the caller reads its temporal values, so a grid shows a
+history mark and opens the history only where the read is granted (T-6878); it does not count in
+`reason`. `reason` is the strongest of the three verdicts of the current value: `prohibited` (a prohibition covers the type for one of them), `formula` (a
 grant with a condition on the stored Entity, `q`, `scopeQ`, `geoQ` or a window, so the cell holds
 only for the entities that meet it), `grant`, `not_in_grant` (a permission covers the type but
 lists other Attributes) or `no_grant`. Deny is the default: with no grant every cell is `false`.
@@ -892,7 +894,7 @@ Endpoint serves (an Endpoint without a model, or whose view serves another model
 `400`, and so is a class of more than 200 served Attributes. A class with no served Attribute (a
 draft model that names classes and no slot, so it has no generated schema yet, or a projection
 that keeps none) answers `200` with an empty `attributes` list, and the view is not asked (T-6137). The answer pays the Endpoint's `rateLimits` as `evaluations` does: one request per 100
-decisions (three per Attribute), and a quota that cannot pay it is a `429`.
+decisions (three per Attribute; `history` is not charged), and a quota that cannot pay it is a `429`.
 
 `POST …/access/simulate` answers the same question for someone else (EP-103, T-3311): the decision
 `access/check` would give a named subject on this Endpoint, from the same admission and the same
@@ -1175,6 +1177,77 @@ curl -sS -X POST "https://api.{domain}/api/mcp" \
   }
 }
 ```
+
+### A chart of one read (`render_chart`, T-6881)
+
+The hub draws one read of one Endpoint as a PNG for any caller, anonymous or signed in. It takes
+three arguments, nothing else:
+
+- `endpoint`: the Endpoint's slug or title, as every other hub tool takes it.
+- `spec`: the closed Vega-Lite 5 subset the Portal's `jc_render` takes (API/14 §4): `mark` (line,
+  bar, area, point, arc, rule), `encoding` with `x`, `y`, `color`, `size`, `theta` (each `{field,
+  type, title?}`, `type` quantitative, temporal or nominal; `tooltip` ignored), `title`,
+  `description`, `width` (50 to 1200 px) and `height` (50 to 800 px; 800 x 450 when absent) and `$schema`
+  (named, never fetched).
+- `data`: `{tool, arguments}`, where `tool` is `query_entities` or `query_temporal` and
+  `arguments` are that tool's arguments without `endpoint` and `count`.
+
+The rows come from exactly one call of that tool through the hub as the caller: the same
+Policy, the same withheld attributes, the same Organization isolation and, without a token, the
+same anonymous bounds (a history read names `type` or `id` and a window of at most 31 days). No
+next page is followed. Each row keeps only the fields the channels read and `observedAt`.
+
+Caps, per gateway process: 1,000 points, 1200 x 800 px, a PNG of at most 256 KiB, 3 s of
+drawing and two renders at once inside the hub's 10 s call deadline. A call that finds both
+render slots taken for 500 ms is a tool error `busy, retry`. The per-address and per-Endpoint
+budgets count it as one call.
+
+Refused as a tool error (`isError: true`, no image): any member outside the subset, naming it
+(`url`, `data` or `values` in the spec, `transform`, `params`, expressions, `href`, the `image`
+mark, any other member); a `data.tool` other than the two reads; a channel field or `attrs`
+naming an attribute the Endpoint's model marks personal, for every caller (chart personal data
+in the Portal, where the Policy and the personal-read record apply); an Endpoint outside the
+caller's reach, answered as an unknown one; a refused read, answered as the read's own error.
+
+The answer is MCP image content (`image/png`, base64), a text line and `structuredContent`
+`{rows, categories, sources, truncated, untrusted: true}`. Only the caller's title and axis
+titles, numbers and dates are drawn (ASCII, at most 120 characters); category values come from
+the data, so the picture numbers them `#1`, `#2` and `categories` names each. `truncated: true`,
+with a line in the text, says the read had a next page or more than 1,000 points: the chart is
+not complete.
+
+```bash
+curl -sS -X POST "https://api.{domain}/api/mcp" \
+  -H 'content-type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"render_chart","arguments":{
+    "endpoint":"k4y7pq2mzt6vhx3nbwrs5cjd8f",
+    "spec":{"title":"PM10","mark":"line","encoding":{
+      "x":{"field":"observedAt","type":"temporal"},"y":{"field":"pm10","type":"quantitative"}}},
+    "data":{"tool":"query_temporal","arguments":{"type":"AirQualityObserved","attrs":"pm10",
+      "timerel":"between","timeAt":"2026-11-01T00:00:00Z","endTimeAt":"2026-11-08T00:00:00Z"}}}}}'
+```
+
+#### The chart view (MCP Apps, T-6882)
+
+A host that speaks MCP Apps (SEP-1865) also draws the chart live. Every hub and named-server
+`initialize` declares `resources`; `resources/list` names `ui://joinedcontext/chart-view.html`
+(`text/html;profile=mcp-app`), and `render_chart` names it in `tools/list` under
+`_meta.ui.resourceUri` and the flat `_meta["ui/resourceUri"]`. `resources/read` of that exact
+URI answers the page, the same bytes for every caller, anonymous included: it holds no data.
+Any other `ui://` URI is `-32002` resource not found.
+
+The page is the Portal's chart view (API/14 §4.7), served from one copy. On this door it draws
+no link: no origin is written into it, neither from configuration nor from the request's
+`Host`. Its resource `_meta.ui.csp` names no `connectDomains` and no `resourceDomains`, so the
+host's frame connects nowhere and loads nothing; the page reads the tool result the host posts
+to it from its parent frame, JSON-RPC 2.0 only, draws inline SVG and sets every text, category
+values included, as text.
+
+A drawn answer's `_meta` carries `joinedcontext.com/chartSpec` (the checked spec: mark, title,
+size, each channel's scale and title), `joinedcontext.com/chartPoints` (at most 1,000 points,
+each only `x`, `y`, `color`, `size`, `theta` and `observedAt`) and
+`joinedcontext.com/pointsTruncated`. None of them is in the text or `structuredContent`, and a
+refusal carries none. The PNG stays in the answer for hosts without MCP Apps.
 
 ### OAuth for an assistant that needs it
 
