@@ -52,9 +52,37 @@ The id in the path is the Organization's verified domain with its labels reverse
 | `hel.fi` | `fi_hel` |
 | `banskabystrica.sk` | `sk_banskabystrica` |
 
-The domains are confirmed when each Organization is created. An id matches `[a-z][a-z0-9_-]{1,62}` and contains `_`. A hostname holds no `_`, so the map from domain to id is one-to-one, and no route segment (`api`, `data`, `id`, `-`) can equal an id, so no reserved-word list exists. Only an operator mints an id, and only from a domain whose ownership a DNS TXT record verified: without the check anyone could take `com_google`. The id is a label: rows, tokens and logs carry the internal OrgId, and a later domain change keeps the id or adds an alias. An id in a `frozen` row is permanent; a rename keeps the old id answering in place for API, feed and MCP rows (`308` for pages), bound to the same OrgId.
+The domains are confirmed when each Organization is created. An id matches `[a-z][a-z0-9_-]{1,62}` and contains `_`. A hostname holds no `_`, so the map from domain to id is one-to-one, and no route segment (`api`, `data`, `id`, `-`) can equal an id; until such ids are minted, the reserved names below apply. Only an operator mints an id, and only from a domain whose ownership a DNS TXT record verified: without the check anyone could take `com_google`. The id is a label: rows, tokens and logs carry the internal OrgId, and a later domain change keeps the id or adds an alias. An id in a `frozen` row is permanent; a rename keeps the old id answering in place for API, feed and MCP rows (`308` for pages), bound to the same OrgId.
 
 Entity URNs carry the owning Organization's id, `urn:ngsi-ld:{Type}:sk_bbsk:{rest}` ([ADR-N-068](../Decisions/adr-n-068-urn-owner-prefix.md)). Ids minted before carry the domain, `urn:ngsi-ld:{Type}:bbsk.sk:{space}:{id}`, which names the same Organization and stays valid; no URN is minted again (an entity's identity is its Context Space and URN, and temporal history and outside links hold today's ids). Nothing derives an Organization or a right from a URN (ADR-N-041).
+
+### Reserved names
+
+Until ids of the form above are minted, the Organization in a path is its `metadata.name` (a DNS-1123 label such as `bratislava`, no `_`), and the same name may become a host label (`bratislava.{base}`). A name the platform's routing uses would take that path segment or host label from the service, so no Organization takes one. The list is `jc_core::names::RESERVED_LABELS` (T-6974), and it only grows:
+
+- every first path segment jc places on a shared host: the module slugs (`id`, `opendata`, `dashboards`, `streams`, `broker`, `api`, `portal`, `git`, `assistant`, `viz`, `model-tools`), the gateway's and the assistant's root paths (`cs`, `catalog`, `oauth`, `d`), jc's own pages (`closed`, `healthz`, `metrics`), the Portal's roots (`assets`, `docs`) and page roots (`projects`, `organization`, `catalogue`, `login` and the others of its router), and the deployment's `grafana`;
+- every host label: `idm`, `data`, `status`, `tiles`, `apps`, `mcp` and the module labels;
+- the labels the domain layout plans: `login`, `embed`, `git`, `www`, `mail`, `admin`, `ops`, `autodiscover`.
+
+A Portal door refuses a reserved Organization name with `422` naming `metadata.name` ("reserved for the platform"). The reconciler's load of `main` and `jcctl validate` refuse it through the kind's own validation, and jc refuses to start with one in `[[organizations]]`. A bins/jc test fails when jc places a path segment or host label, or the Portal adds a page root, that is not on the list. An existing Organization's name is never added: `bbsk` stays usable, although jc-prod serves a landing page on `bbsk.{base}`.
+
+### One host per Organization
+
+The domain layout (T-6975) gives each Organization at most one host of its own: a bound host whose root maps to `/{org}/`.
+
+| Address | Serves |
+| --- | --- |
+| `https://{org host}/` | Portal pages and `/api/v1/` |
+| `https://{org host}/opendata/` | open data catalogue |
+| `https://{org host}/api/endpoint/...`, `/cs/...`, `/catalog...`, `/api/mcp...` | gateway: the rows of §3 to §5, unchanged |
+| `https://{org host}/dashboards/`, `/assistant/`, `/apps/{app}/` | dashboards, assistant, a public App in path mode |
+| `https://{base}/{org}/...` | an Organization without a host of its own |
+| `https://login.{base}/`, `https://git.{base}/` | sign-in and forge, deployment-wide |
+| `https://{app}.apps.{apps-base}/`, `https://embed.{apps-base}/`, `https://tiles.{apps-base}/` | untrusted content: an App with its own sign-in, embeds (today `viz.`), map tiles |
+
+- **Redirect rule.** For an Organization with a host of its own, `https://{base}/{org}/{rest}?{query}` answers `308` to `https://{org host}/{rest}?{query}`, for pages and API alike. The Location's host is the Organization's configured host, never a request header or parameter, and a path starting with `//` or `/\` is refused `400` before any redirect. On the Organization's own host the prefixed form keeps the rule below: API in place, pages `308`.
+- **Cookies.** Every session cookie is `__Host-` (host-only, `Path=/`, no `Domain`), the sign-in cookies included (T-6974), so a page on a sibling host cannot plant or overwrite one.
+- **Path-mode Apps.** A public App under `/apps/{app}/` is served with a `sandbox` Content-Security-Policy without `allow-same-origin`: its code runs in an opaque origin on the Organization's host and reads public Endpoints only. An App that needs sign-in, storage or a private Endpoint gets its own host.
 
 ### Hosts and the two deployment settings
 
