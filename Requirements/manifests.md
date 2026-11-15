@@ -73,7 +73,7 @@ Family **MF** (MF-01…MF-62). Owning chapter: [Architecture/06-configuration-as
 
 ## 7. External Feed Connections
 
-- **MF-35** [S] — A `DataSource` manifest MUST declare one connection: a typed one (`mqtt`, `http`, `websocket`, `gtfs-rt`, `webhook` (PL-118), each with its own block) or any input the pinned runner ships named in `spec.type` with its configuration in `spec.input` (PL-50); it MUST express every credential as a `secretRef` (`passwordRef`, `caCertRef`, `authorization.headerRef` on the typed blocks; `spec.secrets` entries referenced by `${VAR}` interpolation from the runner input's secret fields), the schema carrying no field a plaintext credential could be written into and a literal in a runner-documented secret field being refused (CC-06).
+- **MF-35** [S] — A `DataSource` manifest MUST declare one connection: a typed one (`mqtt`, `http`, `websocket`, `gtfs-rt`, `webhook` (PL-122), each with its own block) or any input the pinned runner ships named in `spec.type` with its configuration in `spec.input` (PL-50); it MUST express every credential as a `secretRef` (`passwordRef`, `caCertRef`, `authorization.headerRef` on the typed blocks; `spec.secrets` entries referenced by `${VAR}` interpolation from the runner input's secret fields), the schema carrying no field a plaintext credential could be written into and a literal in a runner-documented secret field being refused (CC-06).
   > Note: The connection blocks, their Bento inputs and the reference rules are in [Architecture/08-pipelines.md §6](../Architecture/08-pipelines.md#6-external-feeds-the-datasource-kind-mf-35-pl-39); a `DataSource` moves no data on its own and is referenced by a Pipeline (PL-39).
 
 ## 8. Federation Registrations

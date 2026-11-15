@@ -1172,7 +1172,7 @@ required fields first, advanced ones folded, and every secret field a `secretRef
 writes the interpolation into `input` and the reference into `secrets`. The typed four keep
 their own forms.
 
-### A pushed feed: webhook (PL-118)
+### A pushed feed: webhook (PL-122)
 
 A feed that pushes (The Things Network, ChirpStack, a form tool) cannot sign in to an Endpoint,
 and PL-50 refuses an author-written listener. The one managed listener is `type: webhook`

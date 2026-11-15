@@ -44,7 +44,7 @@ This record adds one managed DataSource type, `webhook`, that receives pushed ev
 
 ## 5. Consequences
 
-- PL-50 names `webhook` as the one managed listener; [PL-118](../Requirements/pipelines.md) holds the rules above.
+- PL-50 names `webhook` as the one managed listener; [PL-122](../Requirements/pipelines.md) holds the rules above.
 - The Portal's DataSource form gains the `webhook` type; the reconciler, `jcctl validate` and the Portal Check share the jc-core validation.
 - A provider that signs another way (a timestamped signature, a JWT) needs its own `auth` variant and a new record.
 
