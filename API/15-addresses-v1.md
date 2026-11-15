@@ -66,14 +66,25 @@ Until ids of the form above are minted, the Organization in a path is its `metad
 
 A Portal door refuses a reserved Organization name with `422` naming `metadata.name` ("reserved for the platform"). The reconciler's load of `main` and `jcctl validate` refuse it through the kind's own validation, and jc refuses to start with one in `[[organizations]]`. A bins/jc test fails when jc places a path segment or host label, or the Portal adds a page root, that is not on the list. An existing Organization's name is never added: `bbsk` (jc-prod serves a landing page on `bbsk.{base}`) and `ops` (a jc-dev Organization) stay usable.
 
-### One host per Organization
+### Origins of an Organization
 
-The domain layout (T-6975) gives each Organization at most one host of its own: a bound host whose root maps to `/{org}/`, so every path of the grammar above answers on it without the prefix (`https://data.bratislava.sk/data/`, `https://data.bratislava.sk/api/endpoint/{slug}/...`, `https://data.bratislava.sk/id/`). An Organization without one answers on the shared host only. Both kinds run in one deployment.
+The domain layout (T-6975, amended by T-6991) gives an Organization on its own domain up to five origins, each a bound host of the registry, because a different kind of person or code uses each one. An Organization may take fewer, or none and answer on the shared host only; both kinds run in one deployment.
 
-- **Settings.** One `base_domain` per deployment; per Organization an optional `host` (a customer's domain, or `auto` for `{org}.{base}`); `[[hosts]]` rows with a root prefix as above. The old four-host form (`portal`, `opendata`, `api`, `mcp`) is read as one `host` and three `[[hosts]]` rows with roots `/data` and `/api`.
-- **Redirect rule.** For an Organization with a host of its own, a page asked on the shared host (`https://{base}/{org}/{rest}?{query}`) answers `308` to `https://{org host}/{rest}?{query}`; an API, feed, MCP or Git call is served in place, as the permanence rule below says. The Location's host is the Organization's configured host, never a request header or parameter.
-- **Issuer.** The issuer stays the canonical host's `/{org}/id` (§4) when an Organization gains a host of its own; the new host answers discovery in place.
-- **Cookies.** Every session cookie is `__Host-` (host-only, `Path=/`, no `Domain`), the sign-in cookies included (T-6974), so a page on a sibling host cannot plant or overwrite one.
+| Origin (default label) | Serves | Refuses |
+| --- | --- | --- |
+| working host (`smartcity.{domain}`) | Portal, assistant, dashboards, `/api/v1`, the gateway paths the Portal pages read | nothing beyond §8 |
+| open data host (`opendata.{domain}`) | open data pages, catalogue, feeds, the open-data Endpoints' read surfaces, anonymously | every method but `GET`, `HEAD`, `OPTIONS` (`405`); `Cookie` and `Authorization` removed before any module; `Set-Cookie` removed; an Endpoint that is not open data answers `404` |
+| API host (`api.{domain}`) | Endpoint data API and MCP, every Endpoint of the Organization | `Cookie` removed before any module; `Set-Cookie` removed; Portal pages `404` |
+| sign-in host (the installation's, `login.{base}`) | identity (§4) | Portal, data and App paths `404` |
+| Apps (`*.apps.{domain}` or the installation's Apps domain) | `{app}--{org}.{apps-base}`, embeds on `embed.{apps-base}` | no session cookie of another origin is scoped there |
+
+- **Settings.** `[[organizations]].hosts = { portal, opendata, api, apps, portals }`: `portal` required, the others optional; an absent one is served as paths on the working host (`/data/`, `/api/`), or for `apps` on the installation's Apps domain. `mcp` is read one release as a second API host. `host = "auto"` derives the working host `{org}.{base}` and uses the installation's shared `opendata.{base}`, `api.{base}` and sign-in hosts with `/{org}/` in the path, so the origins stay apart without a customer record. `data.` is no default label.
+- **Smaller setups.** One host with paths puts open data pages on the session's origin; two hosts (working, open data) put the data API on it. The design (T-6991 §1) lists what each smaller setup loses; `jc doctor domains` prints it for the configuration it reads.
+- **Writes.** An open-data Endpoint refuses every write on every host (T-6972); the open data host's method rule is a second lock. The API host also serves the open-data Endpoints, read-only, so the kept addresses of §6 hold.
+- **CORS.** No answer carries `Access-Control-Allow-Credentials: true`. `/api/v1` allows no other origin; the API host allows the Endpoint's `allowedOrigins` and the Organization's own hosts, with `Authorization`; the open data host allows `*` for reads.
+- **Sign-in.** The sign-in host is the installation's: kaisatsu builds the issuer from the host a request arrives on, so a sign-in host per Organization would be a second issuer for one realm, which the gateway and the Portal (one configured issuer each) refuse. An Organization created under this layout has the issuer `https://{sign-in host}/{org}/id`; an existing one keeps its issuer (§4).
+- **Redirect rule.** For an Organization with hosts of its own, a page asked on the shared host (`https://{base}/{org}/{rest}?{query}`) answers `308` to the host of its group with the same rest and query; a page on another group's host answers `308` to its own group's host; an API, feed, MCP or Git call is served in place, as the permanence rule below says. The Location's host is a configured host, never a request header or parameter, and a return address a person supplies is a registered redirect URI or a path starting with one `/`.
+- **Cookies.** Every cookie jc reads is `__Host-` (host-only, `Path=/`, no `Domain`), the sign-in and CSRF cookies included (T-6974), so a sibling host of the same site cannot plant or overwrite one.
 - **Path-mode Apps.** A public App may be served as `/{org}/app/{app}/` with a `sandbox` Content-Security-Policy without `allow-same-origin` on every response under that prefix: its code runs in an opaque origin and reads public Endpoints only. An App that needs sign-in, storage, functions, services or a private Endpoint keeps its own host `{app}--{org}.{apps-base}`.
 
 ### Hosts and the two deployment settings
