@@ -1050,6 +1050,7 @@ POST /api/v1/projects/{project}/scripts/test
 - Each test is one run of the PL-43 harness on the project's runner: the test's `input` as the one message and `code` as the one `javascript` step, in the sandbox the live stream uses. Nothing is written and neither the code nor a value is logged.
 - The answer is `{results: [{name, ok, output?, error?, millis}]}` in the order sent; `ok` is true when the script made exactly `expected`, `error` is the throw or the limit that ended it, `millis` the run's round trip.
 - The caller needs `propose` on `Script` in the project (`403`); `code` over 64 KiB, no test or more than 20, a limit outside 1 to 200 ms or 1 to 64 MiB, and a record over 64 KiB of JSON are `422` naming the field; no runner is `503`, a second test in the project while one runs `409`.
+- The MCP operation `jc_script_test` takes the same body and answers the same results, under the same `propose` on `Script` (API/13 §2b, other action).
 
 ### 8a. Form arrangements (UI-02, CC-29)
 
