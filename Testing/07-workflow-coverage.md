@@ -54,6 +54,7 @@ A workflow with no field that can hold a secret (people, groups, changes) has no
 |---|---|---|---|---|---|
 | `read` | `joinedcontext-portal/src/branding.rs` | `tests/branding_api_tests.rs` | `ui/tests/organization_page.test.tsx` | `ui/e2e/live/organization.spec.ts` › "an administrator reads the organization and grants a role that reaches the person" | `jc_resource_get` |
 | `edit-settings` | `joinedcontext-portal/src/quotas.rs` | `tests/ui_limits_tests.rs` | `ui/tests/organization_route.test.tsx` | `ui/e2e/live/readiness.spec.ts` › "2. the organization: a settings edit rejected, a new person edited, disabled, enabled and reset, a group with a role, and the person's page" | `jc_resource_propose` |
+| `mint-id` | `joinedcontext-portal/src/api/organization_ids.rs` | `tests/organization_ids_tests.rs` | none: no Portal page mints an id; the operator calls the door | `ui/e2e/live/organization-ids.spec.ts` › "a person of no operators' group is refused the Organization id challenge and the mint" | person only: an Organization id is minted once and never reused (PF-78): only the installation's operator decides it, after the domain's TXT proof (EP-186, AG-11) |
 | `refused-no-permission` | `joinedcontext-portal/src/api/people.rs` | `tests/roles_matrix_tests.rs` | `ui/tests/organization_page.test.tsx` | `ui/e2e/live/organization.spec.ts` › "a viewer is told who can see the members, and the list is never fetched for them" | `jc_resource_propose` |
 
 ### 3.3 People (`people`)
@@ -351,6 +352,8 @@ Every mutating operation of the Portal's OpenAPI document (`ui/openapi.json`), w
 | `POST /api/v1/auth/logout` | `session/sign-out` |
 | `POST /api/v1/mcp` | none: the MCP door carries every registered operation, and each operation is claimed by the step whose tool it is |
 | `POST /api/v1/mcp-confirmations/{id}/decision` | `change/mcp-question` |
+| `POST /api/v1/organization-ids` | `organization/mint-id` |
+| `POST /api/v1/organization-ids/challenge` | `organization/mint-id` |
 | `POST /api/v1/organization/people` | `people/create` |
 | `DELETE /api/v1/organization/people/{id}` | `people/remove` |
 | `PATCH /api/v1/organization/people/{id}` | `people/edit` |
