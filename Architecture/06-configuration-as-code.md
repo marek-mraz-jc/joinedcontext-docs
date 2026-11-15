@@ -486,7 +486,7 @@ that targets it and a `ScopeDefinition` exists before the `Policy` that names it
 | 2 | `ScopeDefinition`, `Policy` |
 | 3 | `CkanInstance`, `Endpoint` |
 | 4 | `SharedSpaceReference`, `DataOffer`, `DataAgreement`, `Portal` |
-| 5 | `DataSource`, `Pipeline`, `App`, `SyncSource` |
+| 5 | `DataSource`, `Script`, `Pipeline`, `App`, `SyncSource` |
 
 A `CkanInstance` converges in wave 3 before the `Endpoint`s that publish to it, because
 publishing is part of exposing a space: the catalogue connection and its API token have to
