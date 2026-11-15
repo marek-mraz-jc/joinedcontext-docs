@@ -60,7 +60,7 @@ Entity URNs carry the owning Organization's id, `urn:ngsi-ld:{Type}:sk_bbsk:{res
 
 Until ids of the form above are minted, the Organization in a path is its `metadata.name` (a DNS-1123 label such as `bratislava`, no `_`), and the same name may become a host label (`bratislava.{base}`). A name the platform's routing uses would take that path segment or host label from the service, so no Organization takes one. The list is `jc_core::names::RESERVED_LABELS` (T-6974), and it only grows:
 
-- every first path segment jc places on a shared host: the module slugs (`id`, `opendata`, `dashboards`, `streams`, `broker`, `api`, `portal`, `git`, `assistant`, `viz`, `model-tools`), the gateway's and the assistant's root paths (`cs`, `catalog`, `oauth`, `d`), jc's own pages (`closed`, `healthz`, `metrics`), the Portal's roots (`assets`, `docs`) and page roots (`projects`, `organization`, `catalogue`, `login` and the others of its router), and the deployment's `grafana`;
+- every first path segment jc places on a shared host: the module slugs (`id`, `opendata`, `dashboards`, `streams`, `broker`, `api`, `portal`, `git`, `assistant`, `embed` and its old name `viz` (which answers `308` to the same path and query under `embed`, T-6992), `model-tools`), the gateway's and the assistant's root paths (`cs`, `catalog`, `oauth`, `d`), jc's own pages (`closed`, `healthz`, `metrics`), the Portal's roots (`assets`, `docs`) and page roots (`projects`, `organization`, `catalogue`, `login` and the others of its router), and the deployment's `grafana`;
 - every host label: `idm`, `data`, `status`, `tiles`, `apps`, `mcp` and the module labels;
 - the labels the domain layout plans: `login`, `embed`, `git`, `www`, `mail`, `admin`, `autodiscover`.
 
