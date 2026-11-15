@@ -56,6 +56,19 @@ The domains are confirmed when each Organization is created. An id matches `[a-z
 
 Entity URNs carry the owning Organization's id, `urn:ngsi-ld:{Type}:sk_bbsk:{rest}` ([ADR-N-068](../Decisions/adr-n-068-urn-owner-prefix.md)). Ids minted before carry the domain, `urn:ngsi-ld:{Type}:bbsk.sk:{space}:{id}`, which names the same Organization and stays valid; no URN is minted again (an entity's identity is its Context Space and URN, and temporal history and outside links hold today's ids). Nothing derives an Organization or a right from a URN (ADR-N-041).
 
+### The broker tenant
+
+The NGSI-LD Tenant that holds a Context Space's data names the space's Organization and its `{space}` segment (PF-130):
+
+| Organization id | Space segment | Broker tenant |
+|---|---|---|
+| `sk_bbsk` | `helsinki-mobility` | `sk_bbsk__helsinki-mobility` |
+| `fi_hel` | `mobility-parking` | `fi_hel__mobility-parking` |
+
+The name splits at the first `__`: the left half is an Organization id, which holds no `__`; the right half is the segment, which holds no `_`. Two Organizations with the same Project and space names therefore never share a Tenant. The name is at most 128 characters and stays a plain Tenant string (ETSI GS CIM 009 §4.14), so an NGSI-LD client needs nothing new; a client on an Endpoint never sends it, because the gateway pins the Tenant on its internal hop (EP-22) and drops a client's `NGSILD-Tenant`.
+
+Entity ids keep the segment alone: `urn:ngsi-ld:{Type}:sk_bbsk:{rest}` names the Organization, the Tenant names the Organization and the space. The broker compares the Organization of the Tenant with the Organization the gateway admitted the caller for, and answers a mismatch as it answers an unknown Tenant (EP-188). An existing Tenant gets its new name only through the rename procedure, which moves every row and its history in one transaction and compares counts and digests per table before and after.
+
 ### Reserved names
 
 Until ids of the form above are minted, the Organization in a path is its `metadata.name` (a DNS-1123 label such as `bratislava`, no `_`), and the same name may become a host label (`bratislava.{base}`). A name the platform's routing uses would take that path segment or host label from the service, so no Organization takes one. The list is `jc_core::names::RESERVED_LABELS` (T-6974), and it only grows:
