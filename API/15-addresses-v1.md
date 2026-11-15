@@ -68,21 +68,13 @@ A Portal door refuses a reserved Organization name with `422` naming `metadata.n
 
 ### One host per Organization
 
-The domain layout (T-6975) gives each Organization at most one host of its own: a bound host whose root maps to `/{org}/`.
+The domain layout (T-6975) gives each Organization at most one host of its own: a bound host whose root maps to `/{org}/`, so every path of the grammar above answers on it without the prefix (`https://data.bratislava.sk/data/`, `https://data.bratislava.sk/api/endpoint/{slug}/...`, `https://data.bratislava.sk/id/`). An Organization without one answers on the shared host only. Both kinds run in one deployment.
 
-| Address | Serves |
-| --- | --- |
-| `https://{org host}/` | Portal pages and `/api/v1/` |
-| `https://{org host}/opendata/` | open data catalogue |
-| `https://{org host}/api/endpoint/...`, `/cs/...`, `/catalog...`, `/api/mcp...` | gateway: the rows of §3 to §5, unchanged |
-| `https://{org host}/dashboards/`, `/assistant/`, `/apps/{app}/` | dashboards, assistant, a public App in path mode |
-| `https://{base}/{org}/...` | an Organization without a host of its own |
-| `https://login.{base}/`, `https://git.{base}/` | sign-in and forge, deployment-wide |
-| `https://{app}.apps.{apps-base}/`, `https://embed.{apps-base}/`, `https://tiles.{apps-base}/` | untrusted content: an App with its own sign-in, embeds (today `viz.`), map tiles |
-
-- **Redirect rule.** For an Organization with a host of its own, `https://{base}/{org}/{rest}?{query}` answers `308` to `https://{org host}/{rest}?{query}`, for pages and API alike. The Location's host is the Organization's configured host, never a request header or parameter, and a path starting with `//` or `/\` is refused `400` before any redirect. On the Organization's own host the prefixed form keeps the rule below: API in place, pages `308`.
+- **Settings.** One `base_domain` per deployment; per Organization an optional `host` (a customer's domain, or `auto` for `{org}.{base}`); `[[hosts]]` rows with a root prefix as above. The old four-host form (`portal`, `opendata`, `api`, `mcp`) is read as one `host` and three `[[hosts]]` rows with roots `/data` and `/api`.
+- **Redirect rule.** For an Organization with a host of its own, a page asked on the shared host (`https://{base}/{org}/{rest}?{query}`) answers `308` to `https://{org host}/{rest}?{query}`; an API, feed, MCP or Git call is served in place, as the permanence rule below says. The Location's host is the Organization's configured host, never a request header or parameter.
+- **Issuer.** The issuer stays the canonical host's `/{org}/id` (§4) when an Organization gains a host of its own; the new host answers discovery in place.
 - **Cookies.** Every session cookie is `__Host-` (host-only, `Path=/`, no `Domain`), the sign-in cookies included (T-6974), so a page on a sibling host cannot plant or overwrite one.
-- **Path-mode Apps.** A public App under `/apps/{app}/` is served with a `sandbox` Content-Security-Policy without `allow-same-origin`: its code runs in an opaque origin on the Organization's host and reads public Endpoints only. An App that needs sign-in, storage or a private Endpoint gets its own host.
+- **Path-mode Apps.** A public App may be served as `/{org}/app/{app}/` with a `sandbox` Content-Security-Policy without `allow-same-origin` on every response under that prefix: its code runs in an opaque origin and reads public Endpoints only. An App that needs sign-in, storage, functions, services or a private Endpoint keeps its own host `{app}--{org}.{apps-base}`.
 
 ### Hosts and the two deployment settings
 
