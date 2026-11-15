@@ -67,7 +67,7 @@ The NGSI-LD Tenant that holds a Context Space's data names the space's Organizat
 
 The name splits at the first `__`: the left half is an Organization id, which holds no `__`; the right half is the segment, which holds no `_`. Two Organizations with the same Project and space names therefore never share a Tenant. The name is at most 128 characters and stays a plain Tenant string (ETSI GS CIM 009 §4.14), so an NGSI-LD client needs nothing new; a client on an Endpoint never sends it, because the gateway pins the Tenant on its internal hop (EP-22) and drops a client's `NGSILD-Tenant`.
 
-Entity ids keep the segment alone: `urn:ngsi-ld:{Type}:sk_bbsk:{rest}` names the Organization, the Tenant names the Organization and the space. The broker compares the Organization of the Tenant with the Organization the gateway admitted the caller for, and answers a mismatch as it answers an unknown Tenant (EP-188). An existing Tenant gets its new name only through the rename procedure, which moves every row and its history in one transaction and compares counts and digests per table before and after.
+Entity ids keep the segment alone: `urn:ngsi-ld:{Type}:sk_bbsk:{rest}` names the Organization, the Tenant names the Organization and the space. The broker compares the Organization of the Tenant with the Organization the gateway admitted the caller for, and answers a mismatch as it answers an unknown Tenant (EP-188). A space whose Project names no Organization with a verified domain gets no broker tenant, and its Endpoints answer `503`. An existing broker tenant gets its new name only through the rename procedure, which moves every row and its history, compares counts and digests per table before and after, and keeps the old name refused for good.
 
 ### Reserved names
 
