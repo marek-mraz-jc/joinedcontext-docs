@@ -844,6 +844,7 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **EP-184** | [A] | open |  |  |
 | **EP-185** | [S] | open |  |  |
 | **EP-186** | [S] | open |  |  |
+| **EP-187** | [S] | open |  |  |
 
 ### GW — Gateway firewall
 

@@ -270,6 +270,16 @@ The Context Gateway keeps the endpoints in an in-memory map (`ArcSwap<HashMap<St
 
 An Endpoint MAY set `callerRole: true` and list `roles[]` of `{name, subjects}`; a caller it admits holds `endpoint:{project}/{endpoint}` and the matching `endpoint:{project}/{endpoint}/{role}` for that request only, which is how an application's grants stay inside the application (AP-96, AP-97, [16 §12](16-apps-on-demand.md#12-roles-of-an-application)).
 
+### Open data is read-only
+
+An Endpoint that sets `spec.publish`, or whose audience is `public` and which binds a Policy granted to the role `public`, is open data, and open data only reads (EP-187, owner 2026-11-15). Every caller holds `public`, anonymous or signed in, so a public grant that wrote would let anyone change the published entities. Three places hold it, each from the one function `EndpointSpec::is_open_data` in jc-core:
+
+- **Validation.** A Policy assigned `public` grants no write but `createEntity`, which a public form (`spec.creates`, EP-97) takes; an open-data Endpoint binds no Policy that writes, whoever its assignee. `jcctl validate` and the Portal's change judge refuse both at every door, naming the Endpoint, the Policy and the operation.
+- **The gateway.** Every write through an open-data Endpoint answers `403 open-data-read-only` before any Policy decides, on NGSI-LD, temporal, batch, OData and MCP alike, and its MCP `tools/list` names the reads alone. This also holds for a manifest that predates the validation.
+- **The reconciler.** It marks each open-data Endpoint `OpenData` (the Portal's Endpoint page shows "Open data: read-only") and one that already binds a write Policy also `Degraded`, reason `OpenDataWritePolicy`, with the sentence `jcctl validate` prints. It changes no data.
+
+The data owner's pipelines and Apps keep writing the same entities through an internal Endpoint of the space (`audience: organization` or `project-list`), because live open data (sensors, timetables) must keep updating; freezing the entities for every writer would stop it. A subscription changes no data, so a signed-in reader may still register one on an open-data Endpoint.
+
 ### Stopping an Endpoint
 
 An Endpoint has no lifecycle (EP-89, decided 2026-09-25 in T-2286). You stop one by deleting it: the Portal's Endpoint page says so and opens the same deletion as its menu, a red `Change` an approver takes. Once the Change lands, the reaper drops the slug from the table and the gateway answers `404 ResourceNotFound`, the answer an unknown slug gets (`resolver.resolve(slug).ok_or_else(not_found)` in `app.rs`). The slug is not minted again (EP-75), so a stopped address never starts answering something else.
