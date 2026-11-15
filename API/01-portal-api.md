@@ -1037,7 +1037,7 @@ PUT /api/v1/preferences      replaces them whole; answers 200 with what is now s
 - `503` with `problem+json` when the Portal runs without a preferences database. The UI then works
   from browser defaults; nothing else depends on this tier (UI-09).
 
-#### Testing a Script version (PL-118, T-7084)
+### Testing a Script version (PL-118, T-7084)
 
 ```text
 POST /api/v1/projects/{project}/scripts/test
