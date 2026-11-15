@@ -1191,7 +1191,7 @@ spec:
 
 The reconciler renders `http_server` on ekiben's shared ingest listener at
 `/{dataSource}` of the pipeline's stream, POST only, the credential as a `${VAR}` of the injected
-environment and `sync_response.status: "202"`. A sender posts to
+environment; it answers `200` once the pipeline took the event. A sender posts to
 `https://portal.{domain}/ingest/default/{project}.{pipeline}/{dataSource}`; a missing or wrong
 credential answers `401`, a body over the cap `413`, too many requests at once `503`, and a deleted
 pipeline's route `404`. The Portal's DataSource page lists each reading pipeline's URL and sends a
