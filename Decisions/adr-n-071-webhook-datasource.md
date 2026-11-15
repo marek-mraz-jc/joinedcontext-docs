@@ -39,7 +39,8 @@ This record adds one managed DataSource type, `webhook`, that receives pushed ev
 - An unknown project, pipeline or source answers `404`; a missing or wrong credential on a known route answers `401` with the same body whether the credential is absent or wrong.
 - The body is capped before any step runs (`413`), concurrent requests are capped (`503`), and the edge's per-address rate limit applies in front.
 - Deleting the pipeline or the DataSource removes the route; a later POST answers `404`.
-- The test-event action requires the DataSource's update permission, since it writes through the pipeline like a real event.
+- The test-event action requires `propose` on the DataSource, the grant its connection test needs, and names only a pipeline that reads the source; the event runs through the pipeline like a real one.
+- In a jc installation the ingest entry serves only the ingest router; ekiben's `/streams` API stays on the in-pod listener, which the edge never routes.
 
 ## 5. Consequences
 
