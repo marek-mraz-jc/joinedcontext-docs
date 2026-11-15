@@ -62,9 +62,9 @@ Until ids of the form above are minted, the Organization in a path is its `metad
 
 - every first path segment jc places on a shared host: the module slugs (`id`, `opendata`, `dashboards`, `streams`, `broker`, `api`, `portal`, `git`, `assistant`, `viz`, `model-tools`), the gateway's and the assistant's root paths (`cs`, `catalog`, `oauth`, `d`), jc's own pages (`closed`, `healthz`, `metrics`), the Portal's roots (`assets`, `docs`) and page roots (`projects`, `organization`, `catalogue`, `login` and the others of its router), and the deployment's `grafana`;
 - every host label: `idm`, `data`, `status`, `tiles`, `apps`, `mcp` and the module labels;
-- the labels the domain layout plans: `login`, `embed`, `git`, `www`, `mail`, `admin`, `ops`, `autodiscover`.
+- the labels the domain layout plans: `login`, `embed`, `git`, `www`, `mail`, `admin`, `autodiscover`.
 
-A Portal door refuses a reserved Organization name with `422` naming `metadata.name` ("reserved for the platform"). The reconciler's load of `main` and `jcctl validate` refuse it through the kind's own validation, and jc refuses to start with one in `[[organizations]]`. A bins/jc test fails when jc places a path segment or host label, or the Portal adds a page root, that is not on the list. An existing Organization's name is never added: `bbsk` stays usable, although jc-prod serves a landing page on `bbsk.{base}`.
+A Portal door refuses a reserved Organization name with `422` naming `metadata.name` ("reserved for the platform"). The reconciler's load of `main` and `jcctl validate` refuse it through the kind's own validation, and jc refuses to start with one in `[[organizations]]`. A bins/jc test fails when jc places a path segment or host label, or the Portal adds a page root, that is not on the list. An existing Organization's name is never added: `bbsk` (jc-prod serves a landing page on `bbsk.{base}`) and `ops` (a jc-dev Organization) stay usable.
 
 ### One host per Organization
 
