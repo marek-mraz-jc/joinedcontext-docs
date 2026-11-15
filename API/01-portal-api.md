@@ -1037,6 +1037,20 @@ PUT /api/v1/preferences      replaces them whole; answers 200 with what is now s
 - `503` with `problem+json` when the Portal runs without a preferences database. The UI then works
   from browser defaults; nothing else depends on this tier (UI-09).
 
+#### Testing a Script version (PL-118, T-7084)
+
+```text
+POST /api/v1/projects/{project}/scripts/test
+```
+
+```json
+{ "code": "let m = bento.v0_msg_as_structured(); m.ok = true; bento.v0_msg_set_structured(m);", "limits": { "timeoutMs": 50 }, "tests": [{ "name": "flags-one", "input": { "id": 1 }, "expected": { "id": 1, "ok": true } }] }
+```
+
+- Each test is one run of the PL-43 harness on the project's runner: the test's `input` as the one message and `code` as the one `javascript` step, in the sandbox the live stream uses. Nothing is written and neither the code nor a value is logged.
+- The answer is `{results: [{name, ok, output?, error?, millis}]}` in the order sent; `ok` is true when the script made exactly `expected`, `error` is the throw or the limit that ended it, `millis` the run's round trip.
+- The caller needs `propose` on `Script` in the project (`403`); `code` over 64 KiB, no test or more than 20, a limit outside 1 to 200 ms or 1 to 64 MiB, and a record over 64 KiB of JSON are `422` naming the field; no runner is `503`, a second test in the project while one runs `409`.
+
 ### 8a. Form arrangements (UI-02, CC-29)
 
 ```text
