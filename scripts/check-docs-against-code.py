@@ -194,6 +194,12 @@ def inventory(code: pathlib.Path, docs: pathlib.Path) -> tuple[set[str], str]:
             relative = path.relative_to(root).as_posix()
             paths.add(relative)
             paths.add(f"{name}/{relative}")
+            if name == MONOREPO:
+                for subtree, repository in MONOREPO_SUBTREES.items():
+                    if relative.startswith(subtree):
+                        inner = relative[len(subtree) :]
+                        paths.add(inner)
+                        paths.add(f"{repository}/{inner}")
             if path.suffix in SOURCE_SUFFIXES or path.name == "justfile":
                 try:
                     sources.append(path.read_text(encoding="utf-8", errors="ignore"))
@@ -325,6 +331,13 @@ def check(docs: pathlib.Path, code: pathlib.Path) -> list[str]:
 # problem catalogue that answers on the wire; the old repositories stopped at 57 slugs. When that
 # tree is read, the problem page is judged against it alone (T-6189, run 43121034924).
 MONOREPO = "joinedcontext"
+# The monorepo holds the Portal and the platform under these folders, and the pages name their
+# files as the old repositories did (`joinedcontext-portal/src/…`, `ui/e2e/live/…`): the old
+# Portal repository stopped on 2026-11-09, so a file added since lives only here (T-7083).
+MONOREPO_SUBTREES = {
+    "crates/portal/": "joinedcontext-portal",
+    "vendor/joinedcontext-platform/": "joinedcontext-platform",
+}
 
 
 def catalogue(code: pathlib.Path, code_text: str, checkouts: frozenset[str]) -> tuple[str, frozenset[str]]:
@@ -553,6 +566,17 @@ def selftest() -> int:
         mono_page = docs / "Architecture" / "monorepo.md"
         mono_page.write_text(
             "---\ntitle: Monorepo\n---\n\n# Monorepo\n\nThe forge calls `jc_forge_only` (`crates/forge/NOTES.md`).\n",
+            encoding="utf-8",
+        )
+        # A Portal file the old repository never had is found under the monorepo's crates/portal (T-7083).
+        portal = code / MONOREPO / "crates" / "portal"
+        (portal / "src" / "api").mkdir(parents=True)
+        (portal / "src" / "api" / "script_test.rs").write_text("fn f() {}\n", encoding="utf-8")
+        (portal / "ui" / "e2e" / "live").mkdir(parents=True)
+        (portal / "ui" / "e2e" / "live" / "scripts.spec.ts").write_text("test();\n", encoding="utf-8")
+        mono_page.write_text(
+            mono_page.read_text(encoding="utf-8")
+            + "Tests: `joinedcontext-portal/src/api/script_test.rs`, `ui/e2e/live/scripts.spec.ts`.\n",
             encoding="utf-8",
         )
         mono_found = [p for p in check(docs, code) if "monorepo.md" in p]
