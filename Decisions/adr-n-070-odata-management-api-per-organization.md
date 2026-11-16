@@ -41,6 +41,7 @@ This record makes OData 4.01 the one API of the control plane: every Organizatio
    - An action on `Role`, `RoleBinding`, `Policy` or the `Organization` opens a red-lane Change that an `org-admin` other than its author approves (PF-58).
 10. **Sessions per Organization.** In path mode every Organization shares one origin, so the session cookie and the CSRF token are bound to the Organization (cookie `Path=/{org}/`, and the Organization claim checked on every request): a valid cookie and CSRF token of Organization A sent to B's root are refused.
 11. **MCP calls the same operations.** A `tools/call` runs the registry operation the matching OData request runs, with the same Organization rule and the same checks.
+   A REST door no tool may answer (a temporary password, a secret, a consent, a person's connector or access request, an agent's grant) is a Portal door instead (API/13 §2b, T-7100): a `portal_*` function or action that runs that REST handler for a person in a browser session only, never an MCP or assistant tool, and in `$metadata` only for a session that may call it.
 12. **REST stays as compat, frozen.** Today's REST routes stay thin wrappers over the same operations and answer today's bodies until an [API/10](../API/10-api-change-policy.md) notice ends them. Under `/{org}/api/v1/` a request is OData when it sends `OData-Version` or `OData-MaxVersion`, any `$` system query option, or names `$metadata`, the service document, a function or an action; otherwise it is a REST compat request. Answers carry `Vary: OData-Version, OData-MaxVersion` beside item 4's. No route, parameter or body is added to REST.
 
 ## 3. Alternatives considered
@@ -57,6 +58,7 @@ This record makes OData 4.01 the one API of the control plane: every Organizatio
 - The Organization is decided once from the path or the host; a key, a URN or a header naming another Organization reaches nothing (`404`), and a token, a session cookie or a CSRF token of another Organization is refused.
 - Per-caller `$metadata` is the field-level control: a property the caller may not read does not exist for them, in `$select`, `$filter`, `$orderby` and `$expand` alike, and its refusal is byte-identical to a misspelt name's.
 - A `$skiptoken` is signed for one caller and one query and re-runs the authorization on every page; the `nextLink` base never comes from a request header.
+- A Portal door (`portal_*`) answers a person's browser session only: a bearer token is refused before the handler runs, and no MCP `tools/list` or assistant names one.
 - Every OData route has its line in the Portal's `authz_matrix` and `route_coverage` tests; a new action without one fails CI.
 
 ## 5. Consequences

@@ -97,6 +97,30 @@ Every operation of the registry (`crates/portal/src/ops`, 105 operations at jc `
 | Change-proposing action | `POST` of an action; opens, plans or decides a Change; bound ones need `If-Match` | `jc_resource_propose`, `jc_resource_delete`, `jc_endpoint_propose`, `jc_model_source_put`, `jc_project_create`, `jc_project_delete`, `jc_project_import`, `jc_space_complete`, `jc_flow_start`, `jc_workspace_propose`, `jc_access_request_decide`, `jc_syncsource_detach`, `jc_change_approve`, `jc_change_reject`, `jc_change_apply` |
 | Other action (no Change; keeps its registry permission and lane) | `POST` of an action | runs: `jc_run_create`, `jc_run_cancel`, `jc_run_publish`, `jc_run_answer`, `jc_run_message`, `jc_pipeline_run`, `jc_syncsource_sync`, `jc_syncsource_pause`; drafts and sessions: `jc_draft_put`, `jc_draft_drop`, `jc_workspace_open`, `jc_workspace_update_from_main`, `jc_workspace_discard`, `jc_workspace_preview_start`, `jc_workspace_preview_stop`; dry runs and computations: `jc_change_plan`, `jc_change_revert_plan`, `jc_manifest_dry_run`, `jc_datasource_check`, `jc_pipeline_test`, `jc_script_test`, `jc_pipeline_sample_source`, `jc_pipeline_try_mapping`, `jc_mqtt_test_publish`, `jc_model_infer`, `jc_model_generate`, `jc_model_sdm_import`; people in the identity provider (people-admin): `jc_person_create`, `jc_person_edit`, `jc_person_disable`, `jc_person_enable`, `jc_person_sign_out`; data through an Endpoint's Policy: `jc_data_write`, `jc_thing_write` |
 
+### Portal doors (no registry operation)
+
+A REST door that no tool may answer (its reason is its row in `crates/portal/tests/route_coverage_tests.rs`: a temporary password, a secret, a consent, a person's connector, an agent's grant, a person's own access request) is no registry operation, so no MCP `tools/list` and no assistant names it. The service still serves it, as a door of the Portal itself (T-7100):
+
+- Named `portal_*`, bound to the `Organization` singleton (the installation's Organization only) or to a project, a `GET` door a function and every other an action.
+- Answered only to a person in a browser session (Portal cookie or edge session, `identity.client` empty); a bearer token gets `403` naming the Portal, before anything runs.
+- Each call runs its REST door's handler, routed by the API router itself: the same permission check, second factor, lane, status and refusal sentence; a success is the REST body under `value` (`204` becomes `200` with `value: null`) and keeps the REST answer's `Cache-Control`, so a temporary password answers once and is never cached.
+- The REST path's members are the function's or action's parameters (`Organization/JoinedContext.Portal.portal_person_reset_password` with `{"person":"…"}`); an action's REST body goes in its `body` parameter, a REST query member is a parameter of its own. A secret's value goes in and only its `secretRef` comes back, as the REST door answers.
+- `$metadata` lists a door only for a session that may call it: a person-only door for any person, a people door for a holder of `Person` at the Organization, the connectors' for its administrator, a project's when the person reads one.
+
+| Door | REST door |
+|---|---|
+| `portal_people_remove`, `portal_people_name_by_id` (`dry_run`), `portal_person_names` (`ids`) | `POST /organization/people/remove`, `POST …/people/name-by-id`, `GET …/people/names` |
+| `portal_person_reset_password`, `portal_person_resend_invitation`, `portal_person_remove_second_factor`, `portal_person_consent_revoke` (`client`) | `POST /organization/people/{person}/…`, `DELETE …/consents/{client}` |
+| `portal_connector_list`, `portal_connector_revoke` (`connector`) | `GET /organization/connectors`, `DELETE …/{connector}` |
+| `portal_notification_list`, `portal_notification_read` (`notification`) | `GET /notifications`, `POST /notifications/{notification}/read` |
+| `portal_preferences_get`, `portal_preferences_set`, `portal_preferences_recent` | `GET`, `PUT /preferences`, `POST /preferences/recent` |
+| `portal_visualization_template` (`template`, `x`, `y`, `color`, `facet`) | `GET /visualization-templates/{template}` |
+| `portal_secret_list`, `portal_secret_set` (project) | `GET`, `POST /projects/{project}/secrets` |
+| `portal_serviceaccount_secret_issue`, `portal_serviceaccount_revoke` (`account`) | `POST /projects/{project}/serviceaccounts/{account}/secret`, `…/revoke` |
+| `portal_access_request_list`, `portal_access_request_file`, `portal_endpoint_quality` (`endpoint`) | `GET`, `POST /projects/{project}/endpoints/{endpoint}/access-requests`, `GET …/quality` |
+
+Files stay on the UI gate's allow-list beside uploads: the costs CSV (`/organization/costs/export`) and an App's export (`/projects/{project}/apps/{name}/export`) are downloads, and the catalogue's standards (`/catalogue/endpoints/{slug}/standards`) answer a visitor with no session, which the service does not serve.
+
 The drafts' event channel (`jc_draft_events`, an SSE stream) is no operation and stays on its transport, on the UI gate's allow-list beside OIDC, MCP, WebSocket and uploads.
 
 ## 3. Concurrency: ETag and If-Match
