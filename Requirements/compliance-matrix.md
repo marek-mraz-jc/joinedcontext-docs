@@ -1372,6 +1372,7 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **PL-119** | [S] | tested | fast ci | platform `crates/jc-core/src/kinds/pipeline.rs::each_broken_script_field_is_refused_by_name`, portal `src/scripts.rs::a_pin_of_a_draft_or_an_unknown_version_is_refused`, portal `src/scripts.rs::applied_scripts_run_at_the_start_or_before_output` |
 | **PL-120** | [S] | tested | fast ci | portal `src/scripts.rs::a_new_version_changes_nothing_until_the_pin_moves`, portal `src/scripts.rs::a_tampered_version_renders_no_processor`, portal `src/api/pipeline_test.rs::the_harness_runs_a_pinned_script_as_its_code` |
 | **PL-121** | [S] | tested | fast ci | portal `tests/edge_change_lane_tests.rs::access_and_federation_are_red_whatever_their_spec_says`, `src/api/changes.rs::a_script_is_approved_by_a_second_person` |
+| **PL-122** | [S] | open |  |  |
 
 ### R — Access control and federation
 
