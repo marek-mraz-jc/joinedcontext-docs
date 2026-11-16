@@ -960,6 +960,7 @@ Generated 2026-10-23 from: `docs` e8c95a7, `conformance` a840c18, `deployment` 4
 | **MF-59** | [S] | tested | ci-full | platform `crates/jc-core/tests/assistant_tests.rs::exclude_names_endpoints_once_in_the_connector_form`, platform `crates/jc-manifest/tests/validate_tests.rs::an_assistant_selects_inside_its_reach_and_excludes_declared_endpoints` |
 | **MF-60** | [H] | tested | ci-full | platform `crates/jc-core/tests/assistant_tests.rs::categories_are_eu_data_theme_codes` |
 | **MF-62** | [S] | open |  |  |
+| **MF-63** | [S] | tested | ci | portal `crates/portal/tests/import_api_tests.rs` (format=files), `tests/changes_tests.rs` (`{orgDomain}` at approval) |
 | **MF-61** | [S] | built |  | `joinedcontext-platform/crates/context-gateway/src/mcp/server.rs`, `joinedcontext-platform/crates/jc-core/src/kinds/mcp_server.rs`, `joinedcontext-platform/crates/jc-core/src/reach.rs`, and more |
 
 ### MIM — OASC interoperability
