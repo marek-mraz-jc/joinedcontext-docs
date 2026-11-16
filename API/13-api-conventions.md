@@ -109,7 +109,7 @@ A REST door that no tool may answer (its reason is its row in `crates/portal/tes
 
 | Door | REST door |
 |---|---|
-| `portal_people_remove`, `portal_people_name_by_id` (`dry_run`), `portal_person_names` (`ids`) | `POST /organization/people/remove`, `POST …/people/name-by-id`, `GET …/people/names` |
+| `portal_people_remove`, `portal_people_name_by_id` (`dryRun`), `portal_person_names` (`ids`) | `POST /organization/people/remove`, `POST …/people/name-by-id`, `GET …/people/names` |
 | `portal_person_reset_password`, `portal_person_resend_invitation`, `portal_person_remove_second_factor`, `portal_person_consent_revoke` (`client`) | `POST /organization/people/{person}/…`, `DELETE …/consents/{client}` |
 | `portal_connector_list`, `portal_connector_revoke` (`connector`) | `GET /organization/connectors`, `DELETE …/{connector}` |
 | `portal_notification_list`, `portal_notification_read` (`notification`) | `GET /notifications`, `POST /notifications/{notification}/read` |
