@@ -1315,7 +1315,10 @@ POST /api/v1/projects/{project}/import?dryRun=All
   renders it, with the bundle import's refusals and the one judge, and each manifest is asked of
   the proposer's rights (PF-50, `403` naming the kind). Another project's path, an organization
   manifest, a file that is not UTF-8 text or a path twice is `400`; an unencrypted file under
-  `secrets/` is `403`. `dryRun` answers `200` with `created`, `replaced` and `unchanged` paths
+  `secrets/` is `403`. Before the Portal's first sync since it started it answers `503` (retry once
+  `GET /api/v1/ready` answers `ready`), and in layout 2 a project with no repository of its own is
+  `409`: the files of a layout 2 project land in its own repository, never under `projects/{project}/`
+  of the organization repository (CC-85). `dryRun` answers `200` with `created`, `replaced` and `unchanged` paths
   and the `lane`, and is the check PF-57 holds the import to, over the archive's SHA-256; the
   import then answers `202` and the `Change`. It is the door a migration of a live repository
   takes, such as the write doors of EP-187.
