@@ -1307,6 +1307,18 @@ POST /api/v1/projects/{project}/import?dryRun=All
   exported. A failure after the repository exists removes it again (CC-85). `dryRun` answers
   `200` with the repository it would create and the head, and is the check PF-57 holds the
   import to, over the archive's SHA-256, the project and the name.
+- `?format=files` lands files of the project's own repository as they are, one Change (MF-63,
+  T-6972): the body is `multipart/form-data` with a zip as `file`, each entry at its path from the
+  repository root (`spaces/air/endpoints/air.yaml`) or under `projects/{project}/`. Every file is
+  written byte for byte, so `{orgDomain}` (CC-74), comments and an Endpoint's `slug` stay as
+  written; a file `main` already holds unchanged is not written. Each file is judged as the loader
+  renders it, with the bundle import's refusals and the one judge, and each manifest is asked of
+  the proposer's rights (PF-50, `403` naming the kind). Another project's path, an organization
+  manifest, a file that is not UTF-8 text or a path twice is `400`; an unencrypted file under
+  `secrets/` is `403`. `dryRun` answers `200` with `created`, `replaced` and `unchanged` paths
+  and the `lane`, and is the check PF-57 holds the import to, over the archive's SHA-256; the
+  import then answers `202` and the `Change`. It is the door a migration of a live repository
+  takes, such as the write doors of EP-187.
 - The `{"url": …}` source of MF-20 answers `501`. Fetching a host the caller names is an egress
   decision the Portal has no policy behind, and the upload form carries the same bundle; see
   `OPEN-QUESTIONS.md`.
