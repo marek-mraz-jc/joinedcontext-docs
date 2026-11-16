@@ -101,7 +101,7 @@ Every operation of the registry (`crates/portal/src/ops`, 105 operations at jc `
 
 A REST door that no tool may answer (its reason is its row in `crates/portal/tests/route_coverage_tests.rs`: a temporary password, a secret, a consent, a person's connector, an agent's grant, a person's own access request) is no registry operation, so no MCP `tools/list` and no assistant names it. The service still serves it, as a door of the Portal itself (T-7100):
 
-- Named `portal_*`, bound to the `Organization` singleton (the installation's Organization only) or to a project, a `GET` door a function and every other an action.
+- Named `portal_*`, bound to the `Organization` singleton (the installation's Organization only, except the person's own notification and preferences doors, which answer on any Organization the caller reaches) or to a project, a `GET` door a function and every other an action.
 - Answered only to a person in a browser session (Portal cookie or edge session, `identity.client` empty); a bearer token gets `403` naming the Portal, before anything runs.
 - Each call runs its REST door's handler, routed by the API router itself: the same permission check, second factor, lane, status and refusal sentence; a success is the REST body under `value` (`204` becomes `200` with `value: null`) and keeps the REST answer's `Cache-Control`, so a temporary password answers once and is never cached.
 - The REST path's members are the function's or action's parameters (`Organization/JoinedContext.Portal.portal_person_reset_password` with `{"person":"…"}`); an action's REST body goes in its `body` parameter, a REST query member is a parameter of its own. A secret's value goes in and only its `secretRef` comes back, as the REST door answers.
