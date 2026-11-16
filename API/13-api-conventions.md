@@ -105,6 +105,7 @@ A REST door that no tool may answer (its reason is its row in `crates/portal/tes
 - Answered only to a person in a browser session (Portal cookie or edge session, `identity.client` empty); a bearer token gets `403` naming the Portal, before anything runs.
 - Each call runs its REST door's handler, routed by the API router itself: the same permission check, second factor, lane, status and refusal sentence; a success is the REST body under `value` (`204` becomes `200` with `value: null`) and keeps the REST answer's `Cache-Control`, so a temporary password answers once and is never cached.
 - The REST path's members are the function's or action's parameters (`Organization/JoinedContext.Portal.portal_person_reset_password` with `{"person":"…"}`); an action's REST body goes in its `body` parameter, a REST query member is a parameter of its own. A secret's value goes in and only its `secretRef` comes back, as the REST door answers.
+- The `org` namespace's own Changes are doors too (T-7041): a registry operation reads them in that namespace, but the service's `changes` set holds only the projects' Changes, so the Administration pages read them here until the service serves them.
 - `$metadata` lists a door only for a session that may call it: a person-only door for any person, a people door for a holder of `Person` at the Organization, the connectors' for its administrator, a project's when the person reads one.
 
 | Door | REST door |
@@ -118,6 +119,8 @@ A REST door that no tool may answer (its reason is its row in `crates/portal/tes
 | `portal_secret_list`, `portal_secret_set` (project) | `GET`, `POST /projects/{project}/secrets` |
 | `portal_serviceaccount_secret_issue`, `portal_serviceaccount_revoke` (`account`) | `POST /projects/{project}/serviceaccounts/{account}/secret`, `…/revoke` |
 | `portal_access_request_list`, `portal_access_request_file`, `portal_endpoint_quality` (`endpoint`) | `GET`, `POST /projects/{project}/endpoints/{endpoint}/access-requests`, `GET …/quality` |
+| `portal_opendata_pages`, `portal_opendata_page_preview`, `portal_opendata_page_set` and `portal_opendata_page_revert` (`page`, `lang`) | `GET /organization/opendata/pages`, `POST …/preview`, `PUT`, `DELETE …/{page}/{lang}` (the open data pages editor, T-7041) |
+| `portal_organization_change_list`, `portal_organization_change_history` (`page`, `kind`, `name`), `portal_organization_change_get` and `portal_organization_change_manifests` (`id`) | `GET /projects/org/changes`, `…/history`, `…/{id}`, `…/{id}/manifests`: the `org` namespace's own Changes, which the service's `changes` set (the projects' Changes) leaves out |
 
 Files stay on the UI gate's allow-list beside uploads: the costs CSV (`/organization/costs/export`) and an App's export (`/projects/{project}/apps/{name}/export`) are downloads, and the catalogue's standards (`/catalogue/endpoints/{slug}/standards`) answer a visitor with no session, which the service does not serve.
 
