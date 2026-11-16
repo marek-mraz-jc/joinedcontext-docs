@@ -1172,6 +1172,31 @@ required fields first, advanced ones folded, and every secret field a `secretRef
 writes the interpolation into `input` and the reference into `secrets`. The typed four keep
 their own forms.
 
+### A pushed feed: webhook (PL-122)
+
+A feed that pushes (The Things Network, ChirpStack, a form tool) cannot sign in to an Endpoint,
+and PL-50 refuses an author-written listener. The one managed listener is `type: webhook`
+([ADR-N-071](../Decisions/adr-n-071-webhook-datasource.md)):
+
+```yaml
+spec:
+  type: webhook
+  webhook:
+    auth:
+      hmac: { header: X-Hub-Signature-256, secretRef: { name: ttn-webhook, key: secret } }
+      # or: bearer: { tokenRef: { name: chirpstack, key: token } }
+    maxBodyBytes: 1048576 # 1 to 16777216
+    maxInFlight: 64       # 1 to 1024
+```
+
+The reconciler renders `http_server` on ekiben's shared ingest listener at
+`/{dataSource}` of the pipeline's stream, POST only, the credential as a `${VAR}` of the injected
+environment; it answers `200` once the pipeline took the event. A sender posts to
+`https://portal.{domain}/ingest/default/{project}.{pipeline}/{dataSource}`; a missing or wrong
+credential answers `401`, a body over the cap `413`, too many requests at once `503`, and a deleted
+pipeline's route `404`. The Portal's DataSource page lists each reading pipeline's URL and sends a
+test event through the same handler, signed with the referenced secret on the server.
+
 ### Personal fields (AG-158)
 
 A source's records can hold personal data before any mapping names it, such as the rider of a
