@@ -8,6 +8,7 @@ title: "ADR-N-024: Workspaces: Copy, Change, Test and Bring Back, Renamed at Ren
 Date: 2026-09-18  
 Status: Accepted  
 Amended by: ADR-N-029: a project workspace is a branch of the project repository, an organization workspace a branch of the organization repository  
+Superseded in part (2026-11-17, T-7190, owner 2026-11-16): a preview or prototype is a branch project with its own random project id and a `parent` (ARCHITECTURE-TARGET TEN-12, CHG-10, CHG-15 to CHG-17); the render prefix `ws-{name}-` of section 3 and the preview address `/{org}/api/preview/{change}/` give way to separation by project id and the address `/{org}/{projectId}/api/...`. Sections 2, 4 and 5 (names never renamed at rest, bring back as one reviewed Change) stand.  
 Decision Makers: product owner
 
 ## 1. Context
