@@ -15,7 +15,7 @@ The `prometheus` component (kube-prometheus-stack) scrapes them: one Prometheus 
 
 | Component | Metric Endpoint | Key Exposed Metrics |
 |---|---|---|
-| **Context Gateway** | `:8080/metrics` | `jc_gateway_requests_total{route,method,endpoint,status}`<br/>`jc_gateway_request_duration_seconds{route,method,endpoint}`<br/>`jc_gateway_pdp_decisions_total{operation,verdict}`<br/>`jc_gateway_broker_request_duration_seconds{reached}` |
+| **Context Gateway** | `:8080/metrics` | `jc_gateway_requests_total{route,method,status}`<br/>`jc_gateway_request_duration_seconds{route,method}` (no `endpoint` label: per-Endpoint traffic is the usage tally, T-7485)<br/>`jc_gateway_pdp_decisions_total{operation,verdict}`<br/>`jc_gateway_broker_request_duration_seconds{reached}` |
 | **Portal** | `:8080/metrics` | `jc_portal_requests_total{route,method,status}`<br/>`jc_portal_request_duration_seconds{route,method}`<br/>`jc_portal_changes_total{lane,kind}`<br/>`jc_agent_answer_duration_seconds`<br/>`jc_agent_model_call_duration_seconds{kind}`<br/>`jc_agent_model_tokens_total{kind,part}`<br/>`jc_agent_runs_finished_total{kind,status}`<br/>`jc_agent_tool_steps_total{tool,status}` |
 | **Antares Broker** | `:8080/q/metrics` | `antares_http_requests_total`<br/>`antares_http_request_duration_seconds`<br/>`antares_notifications_sent_total`<br/>`antares_pg_pool_timeouts_total` |
 | **APISIX Standalone** | `:9091/apisix/prometheus/metrics` | `apisix_http_status`<br/>`apisix_latency_bucket`<br/>`apisix_bandwidth` |
