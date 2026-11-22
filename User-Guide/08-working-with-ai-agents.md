@@ -191,7 +191,7 @@ The old address of your own connectors, `/connectors`, now opens **My AI connect
 4. Choose when it **Expires**, at most 30 days from today, and optionally the **Allowed clients**.
 5. Click **Create**. Under **Set up**, copy the `claude mcp add` line for Claude Code, the entry for VS Code, or follow the steps for claude.ai and ChatGPT.
 
-**Activity** lists every call through a connector in the last 30 days. **Edit** changes what it reaches or when it expires; its name stays. **Revoke**, then **Revoke now**, refuses the next call through it. [Connect Claude Code, claude.ai, ChatGPT and VS Code](21-connect-ai-clients.md) gives each client's steps, what each preset allows and what each refusal means.
+**Activity** lists every call through a connector that the installation still keeps (400 days by default). **Edit** changes what it reaches or when it expires; its name stays. **Revoke**, then **Revoke now**, refuses the next call through it. [Connect Claude Code, claude.ai, ChatGPT and VS Code](21-connect-ai-clients.md) gives each client's steps, what each preset allows and what each refusal means.
 
 ## 8. Entering a Secret a Plan Needs
 

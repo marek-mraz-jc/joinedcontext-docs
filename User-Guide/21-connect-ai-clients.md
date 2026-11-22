@@ -109,7 +109,7 @@ The connector leaves out each attribute a data model marks as personal, such as 
 
 ## 6. Watch, Change and Revoke
 
-- **Activity** lists every call through the connector in the last 30 days: when, the tool, its target, the client and the verdict. It never shows a token or the values a tool was given.
+- **Activity** lists every call through the connector that the installation still keeps (400 days by default): when, the tool, its target, the client and the verdict. It never shows a token or the values a tool was given.
 - **Edit** changes the presets, what it reaches, the expiry or the allowed clients; its name stays. The Portal checks the result as it checks a new connector.
 - **Revoke**, then **Revoke now**, refuses the next call through the connector. A revoked connector cannot be turned on again; create a new one.
 
