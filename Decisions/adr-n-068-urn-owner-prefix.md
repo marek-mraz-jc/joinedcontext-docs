@@ -7,6 +7,7 @@ title: "ADR-N-068: The URN Owner Prefix"
 
 Date: 2026-11-11  
 Status: Accepted  
+Amended: §3.8, the owner pin for the time between a move and the re-mint (2026-11-22, T-7500)  
 Decision Makers: product owner (order of 2026-11-11, supervisor session: "urn:ngsi-ld:KeyPerformanceIndicator:sk_bbsk ... is mandatory ... is the owner of the data"; "for the single deployment it is not mandatory"); drafted by worker-t6769 (T-6769)
 
 Every entity URN names the Organization that owns the data: `urn:ngsi-ld:{Type}:{orgId}:{rest}`. This record states the grammar, the map from a domain to the id, who the owner is, and where the prefix is minted and checked. It supersedes the "prefix optional" part of [ADR-N-041](adr-n-041-entity-identity-is-space-and-urn.md) and keeps the rest of it: an entity is still its Context Space and its URN, and nothing derives a space, an Organization or a right from the URN.
@@ -75,6 +76,16 @@ The domain form (`bbsk.sk:` in the owner segment) is accepted because it names t
 ### 3.7 What the prefix is not
 
 The prefix is checked, never trusted. The space still comes from the address or the Endpoint, and the Policy of that space decides the write (TEN-02, ADR-N-041 §3.2, §3.5). A URN naming Organization A written by a member of A into a space of Organization B is refused by B's Policy, never accepted because the URN names A.
+
+### 3.8 Between a change of owner and the re-mint
+
+An entity is its space and its URN (ADR-N-041 §3.1), so a writer that starts minting another owner writes every stored entity a second time, and its Relationships name targets nobody stored. The minted owner therefore changes with the re-mint of the stored ids, never by itself:
+
+- `Project.spec.urnOwner` is the domain whose ids the project holds. While it is set, the reconciler writes that domain and its id over `JC_ORG_DOMAIN` and `JC_ORG_ID` in the project's streams, and the project's indicators are minted under it. Absent, it is the project's Organization, as in §3.4.
+- A `ProjectMove` of a project with Pipelines to an Organization of another domain waits, and the Project Change naming that Organization is refused at `spec.urnOwner`, until that Change names the owner minted today or the target's. The target's says that no stored id carries another owner.
+- The stored ids are re-minted to the new owner with the project's Pipelines paused, then a Change removes the pin.
+
+The pin is read by what mints and by nothing else. §3.3, §3.5 and §3.7 hold unchanged: the owner of the data is the space's Organization, the gateway does not read the pin, and no right follows from it. A pinned project's creates and upserts are written inside a `warn` window (§3.6) and refused `422` outside one, so its re-mint belongs to the move.
 
 ## 4. Consequences
 
