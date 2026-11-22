@@ -188,8 +188,14 @@ A window over 31 days is read only aggregated (T-7526): `query_temporal` with a 
 up to 20 Entities (`limit` is 20 when absent) and no `lastN` or other filter, by `observedAt`. The
 period a range takes by default is one table (`crates/shared/jc-time/src/granularity.json` in jc):
 readings up to 7 days, hours up to 31 days, days up to 732 days, months up to 14,640 days, years
-beyond. The broker aggregates inside the temporal window of each Policy rule, so no instance outside
-it is counted, and ends such a read after 10 seconds. A raw read keeps the 31 days.
+beyond. The aggregation runs after the Policy's clamp. The store computes it inside the windows of
+the rules that decide the types asked; where it cannot (a rule with a condition, rules of those types
+with different windows, an Attribute recorded `onChange`, a text value), the broker computes it over
+the instances each rule shows. Either way no instance outside a rule's window is counted. Every
+statement of such a read, one run again included, shares one budget of 10 seconds (less when the
+database session's `statement_timeout` is shorter); past it the answer is 403 TooManyResults, which
+asks for a shorter window, fewer Entities or fewer `attrs`. A read matching more Entities than the
+store's ceiling before the rules filter them is 403 TooManyResults too. A raw read keeps the 31 days.
 
 Never an argument, on any tool: `space`, `tenant`, `NGSILD-Tenant`, `endpoint`, an upstream URL and
 `via`. The space is the URL's (AG-05); the rest are the deployment's, not a caller's.
