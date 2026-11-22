@@ -32,7 +32,9 @@ A visualization is a Vega-Lite 5 or Vega 5 specification: the open, BSD-licensed
 | `csv` | `file.csv` of the Endpoint | `type`, the entity type |
 | `ogc` | the items of one OGC API Features collection | `collection`; optional `filter` (CQL2 text) and `properties` |
 | `odata` | one OData entity set | `entitySet`; optional `$filter`, `$select`, `$apply`, `$orderby` |
-| `temporal` | NGSI-LD Query Temporal Evolution of Entities | `type`, `attrs`, `last` (an ISO 8601 duration up to `P31D`); optional `aggrMethod` and `aggrPeriod` |
+| `temporal` | NGSI-LD Query Temporal Evolution of Entities | `type`, `attrs`, `last` (an ISO 8601 duration up to `P31D`); optional `aggrMethod`, `aggrPeriod` and `controls` (a boolean, default `true`) |
+
+A `temporal` source's `last`, `aggrPeriod` and `aggrMethod` are the defaults of the reader's toolbar. `controls: false` hides the toolbar, and the renderer then ignores those settings in the link's fragment. The member fixes what the chart draws and grants or withholds no data: the Endpoint's Policy decides every read.
 
 The view holds the Endpoint slug beside the spec; the renderer resolves the source against that Endpoint's URL on `api.{domain}`, fetches it, and hands the rows to the spec as its one named dataset `source`. A spec reads `{"data": {"name": "source"}}`; it never states where the rows come from.
 

@@ -377,7 +377,9 @@ A chart on the dataset is part of the Endpoint, so it is reviewed, versioned and
 | `csv` | `file.csv` | `type` |
 | `ogc` | `ogc/features/collections/{collection}/items` | `collection`; optional `filter` (CQL2 text), `properties` |
 | `odata` | `odata/v4/{entitySet}` | `entitySet`; optional `$filter`, `$select`, `$apply`, `$orderby` |
-| `temporal` | NGSI-LD Query Temporal Evolution of Entities | `type`, `attrs`, `last` (ISO 8601 duration, at most `P31D`); optional `aggrMethod`, `aggrPeriod` |
+| `temporal` | NGSI-LD Query Temporal Evolution of Entities | `type`, `attrs`, `last` (ISO 8601 duration, at most `P31D`); optional `aggrMethod`, `aggrPeriod`, `controls` (boolean, default `true`) |
+
+A `temporal` chart opens with a toolbar whose defaults are its `last`, `aggrPeriod` and `aggrMethod`; readers change the range, granularity and method there, and a link keeps their choice. With `controls: false` the renderer draws no toolbar and takes none of these settings from the link, so the chart shows what its publisher set. It is a setting of the chart: what a reader may read through the Endpoint stays with its Policy.
 
 OData and OGC read the current value of each entity; a line over time reads `temporal`. The weather Endpoint of Banská Bystrica, which serves the SHMÚ stations as `WeatherObserved`, carries a bar chart of the temperature now at each station, from `odata`, and the temperature of each station over the last 24 hours, from `temporal`:
 
