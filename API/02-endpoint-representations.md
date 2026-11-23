@@ -1196,7 +1196,8 @@ three arguments, nothing else:
 
 The rows come from exactly one call of that tool through the hub as the caller: the same
 Policy, the same withheld attributes, the same Organization isolation and, without a token, the
-same anonymous bounds (a history read names `type` or `id` and a window of at most 31 days). No
+same anonymous bounds (a history read names `type` or `id` and a window of at most 31 days, or is
+the bounded aggregated read of a longer one, [Agents and MCP](../Architecture/07-agents-and-mcp.md)). No
 next page is followed. Each row keeps only the fields the channels read and `observedAt`.
 
 Caps, per gateway process: 1,000 points, 1200 x 800 px, a PNG of at most 256 KiB, 3 s of

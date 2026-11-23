@@ -174,13 +174,28 @@ The temporal grammar, on `query_temporal`, `retrieve_temporal` and the temporal 
 A caller without a token on the hub or a named server (T-4168) reads history at a bounded cost,
 because the per-IP request limit counts calls, not the attribute instances one call makes the
 broker read (T-4261). Before anything reaches the broker, `query_temporal` and `retrieve_temporal`
-need `timerel: between` with `timeAt` and `endTimeAt` at most 31 days apart; `query_temporal` needs
+need `timerel: between` with `timeAt` and `endTimeAt` at most 31 days apart (the one exception is the
+aggregated read below); `query_temporal` needs
 `type` or `id`; `lastN` is 100 when absent and a larger one is refused; `limit` stays at or below the
 page cap of 1000; and `aggrMethods` needs an `aggrPeriodDuration` of at least `PT1H` (a year as 365
 days, a month as 30). A call outside a bound is the tool error (`isError: true`) that names the
 bound, as SP-17 names an ungranted operation. The broker has 10 seconds to answer such a call; past
 them the caller gets a tool error, not a held stream. A caller with a token keeps the Endpoint
 Policy's own limits and none of these.
+
+A window over 31 days is read only aggregated (T-7526): `query_temporal` with a `type`, up to 5
+`attrs`, up to 3 `aggrMethods`, an `aggrPeriodDuration` that leaves at most 750 periods in the window,
+up to 20 Entities (`limit` is 20 when absent) and no `lastN` or other filter, by `observedAt`. The
+period a range takes by default is one table (`crates/shared/jc-time/src/granularity.json` in jc):
+readings up to 7 days, hours up to 31 days, days up to 732 days, months up to 14,640 days, years
+beyond. The aggregation runs after the Policy's clamp. The store computes it inside the windows of
+the rules that decide the types asked; where it cannot (a rule with a condition, rules of those types
+with different windows, an Attribute recorded `onChange`, a text value), the broker computes it over
+the instances each rule shows. Either way no instance outside a rule's window is counted. Every
+statement of such a read, one run again included, shares one budget of 10 seconds (less when the
+database session's `statement_timeout` is shorter); past it the answer is 403 TooManyResults, which
+asks for a shorter window, fewer Entities or fewer `attrs`. A read matching more Entities than the
+store's ceiling before the rules filter them is 403 TooManyResults too. A raw read keeps the 31 days.
 
 Never an argument, on any tool: `space`, `tenant`, `NGSILD-Tenant`, `endpoint`, an upstream URL and
 `via`. The space is the URL's (AG-05); the rest are the deployment's, not a caller's.
